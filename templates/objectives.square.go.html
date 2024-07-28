@@ -1,0 +1,71 @@
+{{ define "content" }}
+
+<!--这是全部茶话会页面-->
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">集锦@茶话会</li>
+ 
+</ol>
+
+<div class="well">
+  <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+  <a href="/v1/objective/new">我的茶话会</a>
+</div>
+
+<!--展示全部茶话会资料-->
+{{ range .ObjectiveList }}
+
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left media-middle">
+        <a href="#">
+          <span class="badge">{{ .NumProjects }}</span>
+          <img class="media-object" src="/v1/static/image/{{ .Cover }}.jpeg" alt="茶话会封面">
+        </a>
+      </div>
+      <div class="media-body">
+        <p>
+          <h4 class="media-heading">
+            <a href="/v1/objective/detail?id={{ .Uuid }}">
+              {{ .Title }}
+
+            </a>
+          </h4>
+
+          {{ if (eq .Class 1) }}
+          <span class="label label-success" style="margin-inline-end: 30px;">
+            {{ .GetProperty }}
+          </span>
+          
+          {{ else }}
+          <span class="label label-default" style="margin-inline-end: 30px;">
+            {{ .GetProperty }}
+          </span>
+          
+          {{ end }}
+
+          <span style="margin-inline-end: 30px;">
+            {{ .User.Name }}
+          </span>
+
+          <span style="font-weight: lighter;">
+            {{ .CreatedAtDate }}
+          </span>
+        </p>
+        {{ .Body }} ...
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+  {{ end }}
+
+
+
+{{ end }}

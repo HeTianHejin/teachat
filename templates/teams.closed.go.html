@@ -1,0 +1,97 @@
+{{ define "content" }}
+
+<!-- 这是所有的封闭式茶团展示页面 -->
+
+<ol class="breadcrumb">
+  <!-- 这是所有的封闭式茶团展示页面内导航条 -->
+  
+  <li>大堂</li>
+  <li class="active">全部封闭式茶团</li>
+
+</ol>
+
+<!-- 这是所有的封闭式茶团展示页面标签栏 -->
+<div style="margin: 20px;">
+  <ul class="nav nav-tabs nav-justified">
+    <li role="presentation"><a href="/v1/team/open">开放式茶团</a></li>
+    <li role="presentation" class="active"><a href="/v1/team/closed">封闭式茶团</a></li>
+  </ul>
+</div>
+
+
+<!-- 这是所有的封闭式茶团展示页面逐一展示茶团 -->
+{{ range .TeamList }}
+
+<div class="media">
+  <div class="media-left media-middle">
+    <a href="/v1/team/detail?id={{ .Uuid }}">
+      <img class="media-object" src="/v1/static/image/{{ .Logo }}.jpeg" alt="茶团旗帜">
+    </a>
+  </div>
+  <div class="media-body">
+    <div class="panel panel-default">
+
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <a href="/v1/team/detail?id={{ .Uuid }}">
+              {{ .Abbreviation }}
+          </a>
+          </div>
+          
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; font-size: smaller;text-align: center;">
+              <span class="label label-default">{{ .TeamProperty }}
+              </span>
+              
+            </span>
+          </div>
+          
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="pull-right">
+              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">
+                {{ .Founder.Name }}
+              </a>
+              {{ .CreatedAtDate }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        {{ .Mission }} ...
+      </div>
+    
+      <div class="panel-footer">
+          <span style="margin-inline-end: 20px;" title="团号">
+          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+           {{ .Id }}
+          </span>
+         
+          <span style="margin-inline-end: 20px;">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+             {{ .NumMembers }}
+            </span>
+        <div class="pull-right">
+          <a href="/v1/team/detail?id={{ .Uuid }}">
+          <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+    
+    </div>
+  </div>
+</div>
+
+
+
+
+{{ end }}
+
+<div class="well">
+  <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+    <a href="/v1/team/new">茶团</a>
+
+</div>
+
+{{ end }}

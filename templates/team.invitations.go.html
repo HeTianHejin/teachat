@@ -1,0 +1,66 @@
+{{ define "content" }}
+
+<!--这是 查看茶团已发出的全部邀请函 页面-->
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}@茶团</a></li>
+    <li class="active">全部邀请函</li>
+
+</ol>
+
+{{ range .InvitationList }}
+
+<div class="panel panel-default">
+
+  <div class="panel-heading">
+
+    <div class="row">
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+          <a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+      </div>
+
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <span style="display: block; font-size: smaller;text-align: center;">
+          {{ .CreatedAtDate }}
+        </span>
+      </div>
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <span style="display: block; text-align: right;">
+          <span class="label label-success">{{ .GetStatus }}
+          </span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel-body">
+    <h4>邀请函</h4>
+    <p>
+      受邀人邮箱：{{ .InviteEmail }}
+    </p>
+  </div>
+
+  <div class="panel-footer">
+      <a href="/v1/team/team_member/invitation?id={{ .Uuid }}">
+        <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+        <span style="font-size: smaller;">
+          打开
+        </span>
+      </a>
+   
+
+  </div>
+
+</div>
+
+{{ end }}
+
+<div class="well">
+  茶团共发出{{ .Team.NumInvitations }}封邀请函
+</div>
+
+
+
+{{ end }}

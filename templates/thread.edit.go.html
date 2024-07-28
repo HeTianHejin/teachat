@@ -1,0 +1,80 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?id={{ .Objective.Uuid }}">{{ .Objective.Title }}@茶话会</a></li>
+  <li><a href="#">{{ .Project.Title }}@茶台</a></li>
+  <li class="active">加水@茶议</li>
+
+</ol>
+
+<div class="panel panel-default">
+
+  <div class="panel-heading">
+    <div class="row">
+
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <a href="/v1/user/biography?id={{ .User.Uuid }}">{{ .User.Name }}
+
+        </a>
+        <span style="font-size: smaller;">
+        </span>
+      </div>
+
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <span style="display: block; font-size: smaller;text-align: center;">
+          {{ .CreatedAtDate }}
+        </span>
+      </div>
+
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <span style="display: block; text-align: right;">
+          <span class="label label-success">{{ .Status }}
+          </span>
+        </span>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body">
+    <h4>{{ .TypeStatus }}: {{ .Title }}</h4>
+
+    {{ .Topic }}
+  </div>
+
+  <div class="panel-footer">
+    <span style="font-size: smaller;"><a href="/v1/thread/edit?id={{ .Uuid }}">斟酌</a>？次于{{ .CreatedAtDate }}
+    </span>
+  </div>
+</div>
+
+<div class="panel panel-default">
+
+  <div class="panel-heading">
+    加水-输入补充说明内容，总字数要求少于456字。
+  </div>
+
+  <form role="form" action="/v1/thread/update" method="post">
+    <div class="panel-body">
+
+      <div class="form-group">
+        <textarea class="form-control" name="additional" id="additional" rows="3" minlength="17" maxlength="567"
+          required>
+      </textarea>
+      </div>
+
+      <input type="hidden" name="uuid" value="{{ .Uuid }}">
+
+      <div class="form-group  col-xs-2 col-sm-2 col-md-2 col-lg-2">
+
+        <button class="btn btn-primary pull-right" type="submit">提交
+        </button>
+      </div>
+
+    </div>
+  </form>
+
+</div>
+
+{{ end }}

@@ -1,0 +1,218 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?id={{ .Post.Objective.Uuid }}">{{ .Post.Objective.Title }}@茶话会</a></li>
+  <li><a href="/v1/project/detail?id={{ .Post.Project.Uuid }}">{{ .Post.Project.Title }}@茶台</a></li>
+  <li><a href="/v1/thread/detail?id={{ .Post.Thread.Uuid }}">{{ .Post.Thread.Title }}@茶议</a></li>
+  <li class="active">品味-详情</li>
+</ol>
+
+<!--这是某个 品味 的详情页-->
+
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/user/biography?id={{ .Post.User.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .Post.User.Avatar }}.jpeg" alt="个人头像">
+    </a>
+  </div>
+  <div class="media-body">
+    {{ if .IsAuthor }}
+    <div class="panel panel-success">
+      {{ else }}
+    <div class="panel panel-default">
+        {{ end }}
+        <div class="panel-heading">
+          <div class="row">
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              {{ .Post.User.Name }}
+            </div>
+
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <span style="display: block; text-align: center;">
+                <span class="label label-default">{{ .Post.Atti }}
+                </span>
+              </span>
+            </div>
+
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <span style="display: block; text-align: right;">
+                {{ .Post.CreatedAtDate }}
+              </span>
+
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-body">
+
+          <p>
+            {{ .Post.Body }}
+          </p>
+
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <span class="label label-default">引用</span>
+              <a href="/v1/user/biography?id={{ .QuoteThreadAuthor.Uuid }}">
+                {{ .QuoteThreadAuthor.Name }}
+              </a>
+              <span style="font-weight: lighter;">
+                {{ .QuoteThread.TypeStatus }}
+                : {{ .QuoteThread.Title }}
+                {{ .QuoteThread.Body }} ...
+              </span>
+
+            </div>
+          </div>
+
+        </div>
+        <div class="panel-footer">
+          <a href="#">
+            <span class="glyphicon glyphicon-comment" aria-hidden="true"></span>
+          </a>
+          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Post.NumThreads }}</span>
+
+          <a href="#">
+            <span class="glyphicon glyphicon-heart-empty" aria-hidden="true"></span>
+          </a>
+          <span style="margin-inline-end: 30px;"> 123 </span>
+
+          {{ if .Post.IsEdited }}
+
+          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Post.EditAtDate }} </span>
+          {{ else }}
+          <!--没有编辑过（补充内容）则留空白-->
+          {{ end }}
+          <div class="pull-right">
+            <a href="#"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--这是 额外增加的“新茶议+” 撰写模版-->
+  <div class="panel panel-default">
+
+    <div class="panel-body">
+
+      <form role="form" action="/v1/thread/plus" method="post">
+        <div class="form-group">
+          <fieldset>
+           新茶议标题（2～24字）前缀：
+            <input type="radio" name="type" id="ifeel" style="width: fit-content;" value=0 required />
+            <label for="ifeel" style="margin-inline-end: 30px;">我觉得</label>
+
+            <input type="radio" name="type" id="ithink" style="width: fit-content;" value=1 required />
+            <label for="ithink" style="margin-inline-end: 30px;">我认为</label>
+
+            <input type="radio" name="type" id="ipropose" style="width: fit-content;" value=2 required />
+            <label for="ipropose" style="margin-inline-end: 30px;">我提议</label>
+
+            <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="32" required>
+          </fieldset>
+        </div>
+
+        <div class="form-group">
+          <label for="topic">内容（17～456字）</label>
+          <textarea class="form-control" name="topic" id="topic" rows="3" minlength="17" maxlength="567"
+            required></textarea>
+        </div>
+
+        <!--这是品味post的id提交-->
+        <input type="hidden" name="uuid" id="uuid" value="{{ .Post.Uuid }}" />
+
+        <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+          <button type="submit" class="btn btn-default">开泡</button>
+        </div>
+
+    </div>
+    </form>
+
+  </div>
+
+
+  <!--以下是针对这个品味的茶议展示，一页一打dozen，如果超过就显示“下一页”按钮-->
+  {{ range .ThreadList }}
+
+  <div class="media">
+
+    <div class="media-left">
+      <a href="/v1/user/biography?id={{ .User.Uuid }}">
+        <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+      </a>
+    </div>
+
+    <div class="media-body">
+
+      <div class="panel panel-default">
+
+        <div class="panel-heading">
+          <div class="row">
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <a href="/v1/user/biography?id={{ .User.Uuid }}">{{ .User.Name }}</a>
+            </div>
+
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <span style="display: block; text-align: center;">
+                <span class="label label-default">{{ .Status }}</span>
+              </span>
+            </div>
+
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <span style="display: block; text-align: right;">
+                {{ .CreatedAtDate }}
+              </span>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="panel-body">
+          <a href="/v1/thread/detail?id={{ .Uuid }}">
+            <h4>{{ .Title }}
+            </h4>
+          </a>
+          {{ .Body }}
+        </div>
+
+        <div class="panel-footer">
+
+          <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>
+
+          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .NumReplies }} </span>
+
+          {{ if .IsEdited }}
+          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .EditAtDate }}</span>
+          {{ else }}
+          <!--没有“追加”编辑过，留空白-->
+          {{ end }}
+
+          <div class="pull-right">
+            <a href="/v1/thread/detail?id={{ .Uuid }}">
+              <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+            </a>
+            {{ .NumReads }}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  {{ end }}
+
+  {{ if .IsOverTwelve }}
+
+  <nav aria-label="下一页">
+    <ul class="pager">
+      <li><a href="#">上一页</a></li>
+      <li><a href="#">下一页 </a></li>
+    </ul>
+  </nav>
+
+  {{ end }}
+
+  {{ end }}

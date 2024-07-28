@@ -1,0 +1,145 @@
+{{ define "content" }}
+
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?id={{ .Project.Objective.Uuid }}">{{ .Project.Objective.Title }}</a>@茶话会</li>
+  <li class="active">{{ .Project.Title }}@茶台</li>
+</ol>
+
+<div class="well">
+  <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+  <a href="/v1/thread/new?id={{ .Project.Uuid }}">我的茶议</a>
+</div>
+
+<!--这是某个茶台的详情页-->
+<div class="media">
+
+  <div class="media-left">
+    <img class="media-object" src="/v1/static/image/{{ .Project.Cover }}.jpeg" alt="茶台封面">
+    </a>
+  </div>
+
+  <div class="media-body">
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            {{ .Project.Title }}
+
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block;text-align: center;">
+              {{ if .Open }}
+              <span class="label label-info">{{ .Project.GetProperty }}
+                {{ else }}
+                <span class="label label-default">{{ .Project.GetProperty }}
+                  {{ end }}
+                </span>
+              </span>
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: right; font-size: smaller;">
+              <a href="/v1/user/biography?id={{ .Master.Uuid }}">
+                {{ .Master.Name }}
+              </a>
+                <span class="label label-info">{{ .Master.GetGender }}</span>
+                {{ .Project.CreatedAtDate }}
+              </span>
+            </span>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        {{ .Project.Body }}
+
+      </div>
+      <div class="panel-footer">
+        <a href="/v1/thread/new?id={{ .Project.Uuid }}">
+          <span class="glyphicon glyphicon-glass" aria-hidden="true" title="品味"></span>
+        </a>
+        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .ThreadCount }}</span>
+
+        <a href="#">
+          <span class="glyphicon glyphicon-heart-empty" aria-hidden="true"></span>
+        </a>
+        <span style="margin-inline-end: 30px;"> 1516 </span>
+
+        {{ if .IsEdited }}
+
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Project.EditAtDate }} </span>
+        {{ else }}
+        <!--没有编辑过（补充内容）则留空白-->
+        {{ end }}
+        <div class="pull-right">
+          <a href="#"></a>
+        </div>
+      </div>
+    </div>
+
+   
+
+    <!--以下是此茶台茶议展示，一页一打dozen，如果超过就显示“下一页”按钮-->
+    {{ range .ThreadAndAuthorList }}
+
+    <div class="media">
+      <div class="media-left">
+        <span class=" badge">
+          {{ .PostCount }}
+        </span>
+        <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+          <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
+        </a>
+      </div>
+      <div class="media-body">
+        <p>
+
+          <h5>
+            <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
+          </h5>
+
+          <span style="font-size: small;">
+            <span class="label label-default" style="margin-inline-end: 20px;">{{ .Thread.Status }}</span>
+
+            <span>{{ .Author.Name }}</span>
+            <span class="label label-info">{{ .Author.GetGender }}</span>@
+            <span style="margin-inline-end: 20px">
+              <a href="/v1/team/detail?id={{ .DefaultTeam.Uuid }}">{{ .DefaultTeam.Abbreviation }}</a></span>
+            
+
+            <span style="margin-inline-end: 20px;">{{ .Thread.CreatedAtDate }}</span>
+          </span>
+        </p>
+
+        {{ .Thread.Body }} ...
+      </div>
+
+    </div>
+
+    {{ end }}
+
+  </div>
+</div>
+
+{{ if .IsOverTwelve }}
+
+<div style="margin-top: 66px;">
+<nav aria-label="next pager">
+  <ul class="pager">
+    <li><a href="#">上一页</a></li>
+    <li><a href="#">下一页 </a></li>
+  </ul>
+</nav>
+</div>
+{{ end }}
+
+
+
+{{ end }}

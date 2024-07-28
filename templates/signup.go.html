@@ -1,0 +1,41 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">注册新账号</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="lead">新茶友出没注意</span>
+  </div>
+
+  <div class="panel-body">
+    <form class="form-signin" role="form" action="/v1/signup_account" method="post">
+
+      <input id="name" type="text" name="name" class="form-control" placeholder="花名" required autofocus>
+      <input id="email" type="email" name="email" class="form-control" placeholder="电子邮箱" required>
+      <label for="biography">也许8个字母、数字和英文标点组合容易记住</label>
+      <input id="password" type="password" name="password" class="form-control" placeholder="密码" minlength="6"
+        maxlength="24" required>
+      <label for="biography">个人简介</label>
+      <input id="biography" type="text" name="biography" class="form-control" value="千红一窟，饮到荼蘼花事了。" required>
+
+      <div>
+        <fieldset>
+          <legend style="font-size: small;">请选择您的洗手间服务：
+            <input type="radio" name="gender" id="male" style="width: fit-content;" value=1 required />
+            <label for="male">男洗手间</label>
+            <input type="radio" name="gender" id="female" style="width: fit-content;" value=0 required />
+            <label for="female ">女洗手间</label>
+          </legend>
+        </fieldset>
+      </div>
+
+      <button class="btn btn-lg btn-primary btn-block" type="submit">注 册</button>
+    </form>
+  </div>
+
+</div>
+
+{{ end }}

@@ -1,0 +1,104 @@
+{{ define "content" }}
+
+<!-- 这是 全部已加入的茶团展示 页面 -->
+
+<ol class="breadcrumb">
+
+  <li>大堂</li>
+  <li class="active">已加入茶团@茶团</li>
+
+</ol>
+
+<div style="margin: 20px;">
+
+  <ul class="nav nav-tabs nav-justified">
+    <li role="presentation"><a href="/v1/team/hold">我的茶团</a></li>
+    <li role="presentation"><a href="/v1/team/joined">已进茶团</a></li>
+    <li role="presentation" class="active"><a href="/v1/team/employed">核心管理</a></li>
+  </ul>
+
+</div>
+
+{{ range .TeamList }}
+
+<div class="media">
+  <div class="media-left media-middle">
+    <a href="/v1/team/detail?id={{ .Uuid }}">
+      <img class="media-object" src="/v1/static/image/{{ .Logo }}.jpeg" alt="茶团旗帜">
+    </a>
+  </div>
+  <div class="media-body">
+    <div class="panel panel-default">
+
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <a href="/v1/team/detail?id={{ .Uuid }}">
+              {{ .Abbreviation }}
+          </a>
+          </div>
+          
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; font-size: smaller;text-align: center;">
+              {{ if (eq .Class 1) }}
+              <span class="label label-success">{{ .TeamProperty }}
+                {{ else }}
+              <span class="label label-default">{{ .TeamProperty }}
+                {{ end }}
+              
+            </span>
+          </div>
+          
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="pull-right">
+              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">
+                {{ .Founder.Name }}
+              </a>
+              {{ .CreatedAtDate }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+       
+        {{ .Mission }} ...
+      </div>
+
+      <div class="panel-footer">
+        <span style="margin-inline-end: 20px;" title="团号">
+          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+          {{ .Id }}
+        </span>
+
+        <span style="margin-inline-end: 20px;" title="人数">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+          {{ .NumMembers }}
+        </span>
+
+        <span style="margin-inline-end: 20px;" title="退团">
+          <a href="/v1/team/team_member/quit?={{ .Uuid }}">
+          <span class="glyphicon glyphicon-log-out" aria-hidden="true"></span>
+          </a>
+        </span>
+
+        <div class="pull-right">
+          <a href="/v1/team/detail?id={{ .Uuid }}" title="查看">
+            <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{{ else }}
+
+<div class="well">
+  您好，您目前还没有担任任何茶团的核心管理成员。
+</div>
+
+{{ end }}
+
+{{ end }}

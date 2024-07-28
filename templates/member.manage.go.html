@@ -1,0 +1,125 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/office">茶团写字室</a></li>
+    <li class="active">管理茶团成员角色</li>
+</ol>
+
+<div class="panel panel-default">
+
+    <div class="panel-heading">
+        调整 {{ .Team.Name }} 茶团成员角色
+    </div>
+
+    <div class="panel-body">
+
+        <form class="form-horizontal" role="form" action="/v1/team/team_member/manage_page" method="post">
+
+            <div class="form-group">
+
+                <label for="member_name" class="col-sm-2 control-label">拟调整角色成员花名：</label>
+
+                <div class="col-sm-10">
+
+                    <input type="text" name="member_name" class="form-control" id="member_name" minlength="3"
+                        maxlength="54" value="{{ .User.Name }}" readonly>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="member_email" class="col-sm-2 control-label">拟调整角色成员邮箱：</label>
+
+                <div class="col-sm-10">
+
+                    <input type="email" name="member_email" class="form-control" id="member_email" minlength="3"
+                        maxlength="54" value="{{ .User.Email }}" readonly>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="member_role" class="col-sm-2 control-label">成员原扮演角色：</label>
+
+                <div class="col-sm-10">
+
+                    <input type="text" name="member_role" class="form-control" id="member_role" minlength="3"
+                        maxlength="54" value="{{ .Role }}" readonly>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="manage_word" class="col-sm-2 control-label">角色调整声明：</label>
+
+                <div class="col-sm-10">
+
+                    <textarea class="form-control" name="manage_word" id="manage_word" rows="3" minlength="9"
+                        maxlength="567" placeholder="请输入一些话语" required></textarea>
+
+                </div>
+
+            </div>
+
+            <div class="form-group col-sm-offset-2 col-sm-10">
+
+                <fieldset>
+
+                    <legend style="font-size: small;">为成员选择新角色：
+
+                        <input type="radio" name="new_role" id="CEO" style="width: fit-content;" value=CEO checked />
+
+                        <label for="CEO">首席执行官</label>
+
+                        <input type="radio" name="new_role" id="CTO" style="width: fit-content;" value=CTO />
+
+                        <label for="CTO">首席技术官</label>
+
+                        <input type="radio" name="new_role" id="CMO" style="width: fit-content;" value=CMO />
+
+                        <label for="CMO">首席营销官</label>
+
+                        <input type="radio" name="new_role" id="CFO" style="width: fit-content;" value=CFO />
+
+                        <label for="CFO">首席财务官</label>
+
+                        <input type="radio" name="new_role" id="member" style="width: fit-content;" value=品茶师 />
+
+                        <label for="member">品茶师</label>
+
+                    </legend>
+
+                </fieldset>
+
+            </div>
+
+            <input type="hidden" name="team_id" id="team_id" value="{{ .Team.Id }}">
+
+            <div class="form-group">
+
+                <div class="col-sm-offset-2 col-sm-10">
+
+                    <button type="submit" class="btn btn-default">发送</button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <div class="panel-footer">
+        Panel footer
+    </div>
+
+</div>
+
+{{ end }}

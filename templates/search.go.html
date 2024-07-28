@@ -1,0 +1,55 @@
+{{ define "content"}}
+
+<!--这是查找页面-->
+
+<div class="alert alert-info">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    <strong>您好！</strong> 在这里，可以帮您找到茶话会、茶台、茶议、品味和用户 ...
+</div>
+
+
+
+<form role="form" action="/v1/search" method="post">
+
+    <div class="panel-body form-group">
+
+      <div >
+        <fieldset> 
+          
+          选择类别：
+            <input type="radio" name="class" id="thread" style="width: fit-content;" value=0 required checked />
+            <label for="thread">茶议</label>
+            <input type="radio" name="class" id="user" style="width: fit-content;" value=1 required />
+            <label for="user">茶友</label>
+            <input type="radio" name="class" id="team" style="width: fit-content;" value=2 required />
+            <label for="team">茶团</label>
+            <input type="radio" name="class" id="objective" style="width: fit-content;" value=3 required />
+            <label for="objective">茶话会</label>
+            <input type="radio" name="class" id="project" style="width: fit-content;" value=4 required />
+            <label for="project">茶台</label>
+         
+        </fieldset>
+      </div>
+
+      <div class="form-group">
+        <label for="name">填关键词：</label>
+        <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="24" required autofocus>
+      </div>
+     
+      <div class="form-group">
+        
+        <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+            
+            <button class="btn btn-primary pull-right" type="submit">执行查询</button>
+        </div>
+        
+      </div>
+
+    </div>
+  </form>
+
+
+
+
+
+{{ end }}

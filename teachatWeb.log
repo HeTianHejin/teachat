@@ -1,0 +1,910 @@
+ERROR 2023/09/19 10:54:44 utils.go:100: sql: no rows in result set Cannot find user
+ERROR 2023/09/19 10:55:09 utils.go:100: sql: no rows in result set Cannot find user
+ERROR 2023/09/19 10:56:13 utils.go:100: pq: duplicate key value violates unique constraint "users_email_key" Cannot create user
+ERROR 2023/09/19 11:00:21 utils.go:100: pq: duplicate key value violates unique constraint "users_email_key" Cannot create user
+WARNING 2023/09/19 11:28:33 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/10/10 10:27:24 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/10/10 11:24:39 utils.go:105: <nil> Failed to get cookie
+ERROR 2023/10/12 20:16:18 utils.go:100: pq: INSERT has more expressions than target columns Cannot create thread
+WARNING 2023/10/23 15:42:24 utils.go:105: <nil> Failed to get cookie
+ERROR 2023/10/25 10:27:43 utils.go:100: sql: no rows in result set Cannot find user
+WARNING 2023/11/27 09:37:25 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/01 17:26:29 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/18 11:12:38 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/19 08:52:21 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/19 08:54:24 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/19 09:02:24 utils.go:105: <nil> Failed to get cookie
+ERROR 2023/12/19 09:26:30 utils.go:100: sql: expected 7 destination arguments in Scan, not 6 Cannot find user
+ERROR 2023/12/19 09:26:39 utils.go:100: sql: expected 7 destination arguments in Scan, not 6 Cannot find user
+ERROR 2023/12/19 09:27:26 utils.go:100: sql: expected 7 destination arguments in Scan, not 6 Cannot find user
+ERROR 2023/12/19 09:28:56 utils.go:100: sql: expected 7 destination arguments in Scan, not 6 Cannot find user
+ERROR 2023/12/19 09:35:50 utils.go:100: sql: Scan error on column index 6, name "biography": converting NULL to string is unsupported Cannot find user
+ERROR 2023/12/20 10:16:31 utils.go:100: sql: Scan error on column index 6, name "biography": converting NULL to string is unsupported Cannot find user
+WARNING 2023/12/20 11:11:21 utils.go:105: <nil> Failed to get cookie
+ERROR 2023/12/21 19:08:09 utils.go:100: sql: Scan error on column index 6, name "biography": converting NULL to string is unsupported Cannot find user
+WARNING 2023/12/21 19:20:19 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/21 19:44:13 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/22 14:01:03 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/22 14:11:25 utils.go:105: <nil> Failed to get cookie
+WARNING 2023/12/22 16:09:14 utils.go:105: <nil> Failed to get cookie
+WARNING 2024/01/02 17:41:40 utils.go:105: <nil> Failed to get cookie
+WARNING 2024/01/02 17:52:47 utils.go:105: <nil> Failed to get cookie
+WARNING 2024/01/03 20:15:00 utils.go:105: <nil> Failed to get cookie
+WARNING 2024/01/04 11:04:33 utils.go:105: <nil> Failed to get cookie
+WARNING 2024/01/05 11:16:04 utils.go:105: <nil> Failed to get cookie
+WARNING 2024/01/05 11:28:07 utils.go:105: <nil> Failed to get cookie
+INFO 2024/01/11 19:48:51 utils.go:95: test@gmail.com 验证登录密码匹配
+WARNING 2024/01/11 20:56:33 utils.go:105: <nil> Failed to get cookie
+INFO 2024/01/11 20:56:33 utils.go:95: 0 Session deleted
+ERROR 2024/01/11 20:56:40 utils.go:100: sql: Scan error on column index 7, name "set": converting NULL to string is unsupported Cannot find user
+INFO 2024/01/11 20:56:40 utils.go:95: test@gmail.com 验证登录密码匹配
+WARNING 2024/01/11 21:01:18 utils.go:105: <nil> Failed to get cookie
+INFO 2024/01/11 21:01:18 utils.go:95: 0 Session deleted
+INFO 2024/01/11 21:01:31 utils.go:95: test@gmail.com 验证登录密码匹配
+INFO 2024/01/12 10:50:36 utils.go:95: test@gmail.com 验证登录密码匹配
+INFO 2024/01/12 10:51:30 utils.go:95:  试图打卡登出
+INFO 2024/01/12 10:51:30 utils.go:95: Session deleted
+INFO 2024/01/12 11:06:05 utils.go:95: test@gmail.com 验证登录密码匹配
+INFO 2024/01/12 11:06:41 utils.go:95: 0 试图打卡登出
+INFO 2024/01/12 11:06:41 utils.go:95: Session deleted
+INFO 2024/01/12 11:11:16 utils.go:95: test@gmail.com 验证登录密码匹配
+INFO 2024/01/12 11:11:25 utils.go:95: e926b3fa-4f23-443b-6e54-b418feea4f46 试图打卡登出
+INFO 2024/01/12 11:11:25 utils.go:95: Session deleted
+WARNING 2024/01/12 14:07:21 utils.go:105: test@gmail.com 试图登入失败
+INFO 2024/01/12 14:07:46 utils.go:95: test@gmail.com 验证登录密码匹配
+INFO 2024/01/12 14:08:38 utils.go:95:  试图打卡登出
+INFO 2024/01/12 14:08:38 utils.go:95: Session deleted
+WARNING 2024/01/12 14:13:50 utils.go:105: test@gmail.com 试图登入失败
+INFO 2024/01/12 14:14:03 utils.go:95: test@gmail.com 登入成功
+INFO 2024/01/12 14:14:34 utils.go:95:  试图打卡登出
+INFO 2024/01/12 14:14:34 utils.go:95: Session deleted
+WARNING 2024/01/12 14:19:51 utils.go:105: test@gmail.com 试图登入失败
+INFO 2024/01/12 14:19:56 utils.go:95: test@gmail.com 登入成功
+INFO 2024/01/12 14:20:02 utils.go:95: 656b35f0-8e4f-40b4-5c3d-9a44d45c8539  试图登出
+INFO 2024/01/12 14:20:02 utils.go:95: Session deleted
+WARNING 2024/01/12 14:24:39 utils.go:105: test@gmail.com 试图登入失败
+INFO 2024/01/12 14:24:44 utils.go:95: test@gmail.com 登入成功
+ERROR 2024/01/12 14:24:45 utils.go:100: sql: no rows in result set Uuid查询用户失败
+INFO 2024/01/12 14:24:45 utils.go:95: b7a5b5b2-a9c7-4c7c-66d8-f51ef8d63d3b  试图登出
+INFO 2024/01/12 14:24:45 utils.go:95: Session deleted
+INFO 2024/01/12 14:38:24 utils.go:95: test@gmail.com 登入成功
+ERROR 2024/01/12 14:38:28 utils.go:100: sql: no rows in result set SessionEmail查询用户失败
+INFO 2024/01/12 14:38:28 utils.go:95: Session deleted
+INFO 2024/01/12 14:55:03 utils.go:95: test@gmail.com 登入成功
+INFO 2024/01/12 14:55:12 utils.go:95: test@gmail.com 尝试登出
+INFO 2024/01/12 14:55:12 utils.go:95: Session deleted
+INFO 2024/01/12 15:16:13 utils.go:95: test@gmail.com 登入成功
+INFO 2024/01/12 15:16:22 utils.go:95: test@gmail.com 尝试登出
+INFO 2024/01/12 15:16:22 utils.go:95: Session deleted
+WARNING 2024/01/15 10:42:13 utils.go:105: test@gmail.com 试图登入失败
+INFO 2024/01/15 10:42:28 utils.go:95: test@gmail.com 登入成功
+INFO 2024/01/15 10:42:45 utils.go:95: test@gmail.com 尝试登出
+INFO 2024/01/15 10:42:45 utils.go:95: test@gmail.com Session deleted
+WARNING 2024/01/15 20:45:16 utils.go:105: sql: no rows in result set 用户登录时提交的口令出现错误
+INFO 2024/01/15 20:45:39 utils.go:95: 闻香识茶 口令核对正确
+WARNING 2024/01/15 20:45:39 utils.go:105: test@gmail.com 试图登入失败
+INFO 2024/01/15 20:48:09 utils.go:95: 闻香识茶 口令核对正确
+WARNING 2024/01/15 20:48:09 utils.go:105: test@gmail.com 试图登入失败
+INFO 2024/01/15 20:48:17 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/15 20:48:17 utils.go:95: test@gmail.com 登入成功
+INFO 2024/01/15 21:40:28 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/15 21:41:34 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/15 21:41:34 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/15 21:42:45 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/15 21:42:45 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/15 21:42:54 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/15 21:44:45 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/15 21:44:45 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/16 11:43:22 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/16 11:43:22 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/16 12:00:26 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/16 13:03:33 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/16 13:03:33 utils.go:95: test@gmail.com 密码匹配成功
+WARNING 2024/01/16 13:21:13 utils.go:105: sql: no rows in result set 未能读取用户简介！
+INFO 2024/01/16 13:21:35 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/16 13:21:45 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/16 13:21:45 utils.go:95: test@gmail.com 密码匹配成功
+WARNING 2024/01/16 13:21:56 utils.go:105: sql: no rows in result set 未能读取用户简介！
+WARNING 2024/01/16 13:29:15 utils.go:105: sql: no rows in result set 未能读取用户简介！
+WARNING 2024/01/16 13:33:04 utils.go:105: sql: no rows in result set 未能读取用户简介！
+INFO 2024/01/16 13:45:06 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/16 13:45:16 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/16 13:45:16 utils.go:95: test@gmail.com 密码匹配成功
+WARNING 2024/01/16 13:45:25 utils.go:105: sql: no rows in result set 未能读取用户简介！
+WARNING 2024/01/16 13:48:06 utils.go:105: sql: no rows in result set 未能读取用户简介！
+WARNING 2024/01/16 13:48:13 utils.go:105: sql: no rows in result set 未能读取用户简介！
+WARNING 2024/01/16 13:48:32 utils.go:105: sql: no rows in result set 未能读取用户简介！
+INFO 2024/01/16 13:49:13 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/16 13:49:13 utils.go:95: test@gmail.com 密码匹配成功
+WARNING 2024/01/16 13:49:29 utils.go:105: sql: no rows in result set 未能读取用户简介！
+INFO 2024/01/16 14:03:03 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/16 14:03:03 utils.go:95: test@gmail.com 密码匹配成功
+WARNING 2024/01/16 14:03:20 utils.go:105: sql: no rows in result set 未能读取用户简介！
+INFO 2024/01/18 14:12:58 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/18 14:12:58 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/18 21:05:50 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/18 21:05:50 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/18 21:13:57 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/19 15:57:58 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/19 15:57:58 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/19 16:14:54 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/20 09:12:41 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/20 09:12:41 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/20 11:56:12 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/21 11:20:51 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/21 11:20:51 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/22 21:05:04 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/22 21:05:04 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/22 21:16:39 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/23 12:25:07 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/23 12:25:07 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/23 12:26:12 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/23 14:16:51 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/23 14:16:51 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/23 21:46:29 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/23 21:46:29 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/24 12:34:37 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/24 12:34:37 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/28 11:19:37 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/28 11:19:37 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/28 11:37:21 utils.go:95: 闻香识茶 口令核对正确
+INFO 2024/01/28 11:37:21 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/28 14:02:30 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/01/28 14:02:30 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/28 21:47:09 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/01/28 21:47:09 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/29 10:14:41 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/01/29 10:14:41 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/29 10:52:09 utils.go:95: test@gmail.com Session deleted
+INFO 2024/01/29 10:54:17 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/01/29 10:54:17 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/29 11:00:38 utils.go:95: test@gmail.com Session deleted
+WARNING 2024/01/29 17:03:45 utils.go:105: pq: insert or update on table "reads" violates foreign key constraint "reads_user_id_fkey" Cannot create read guest
+WARNING 2024/01/29 17:03:55 utils.go:105: pq: insert or update on table "reads" violates foreign key constraint "reads_user_id_fkey" Cannot create read guest
+WARNING 2024/01/29 17:04:53 utils.go:105: pq: insert or update on table "reads" violates foreign key constraint "reads_user_id_fkey" Cannot create read guest
+WARNING 2024/01/29 17:04:59 utils.go:105: pq: insert or update on table "reads" violates foreign key constraint "reads_user_id_fkey" Cannot create read guest
+WARNING 2024/01/29 17:08:25 utils.go:105: pq: insert or update on table "reads" violates foreign key constraint "reads_user_id_fkey" Cannot create read guest
+WARNING 2024/01/29 17:08:32 utils.go:105: pq: insert or update on table "reads" violates foreign key constraint "reads_user_id_fkey" Cannot create read guest
+WARNING 2024/01/29 17:49:33 utils.go:105: sql: no rows in result set 未能读取用户简介！
+INFO 2024/01/29 21:35:15 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/01/29 21:35:15 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/01/29 21:56:54 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/01/29 21:56:54 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/01 08:53:25 utils.go:100: pq: column "project_id" does not exist 查询公开茶语失败
+INFO 2024/02/01 11:47:06 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/01 11:47:06 utils.go:95: test@gmail.com 密码匹配成功
+WARNING 2024/02/01 11:51:34 utils.go:105: sql: no rows in result set 未能读取用户简介！
+WARNING 2024/02/01 12:00:58 utils.go:105: sql: no rows in result set 未能读取用户简介！
+INFO 2024/02/01 12:07:12 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/01 12:07:12 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/01 14:00:06 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/01 14:00:06 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/01 14:15:15 utils.go:95: 闻香识茶 用户口令核对正确
+ERROR 2024/02/01 14:15:15 utils.go:100: sql: no rows in result set Cannot find user
+INFO 2024/02/01 14:15:15 utils.go:95:  因为该用户没有权限登入
+INFO 2024/02/01 16:46:21 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/01 16:46:21 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/01 17:00:34 utils.go:95: test@gmail.com Session deleted
+INFO 2024/02/01 21:34:17 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/01 21:34:17 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/02 10:54:43 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/02 10:54:43 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/04 20:14:30 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/04 20:14:30 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/04 20:14:50 utils.go:100: pq: duplicate key value violates unique constraint "subjects_pkey" Cannot create objective
+INFO 2024/02/06 10:04:46 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/06 10:04:46 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/06 15:25:22 utils.go:95: test@gmail.com Session deleted
+INFO 2024/02/08 10:10:41 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/08 10:10:41 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/08 11:07:51 utils.go:95: test@gmail.com Session deleted
+INFO 2024/02/08 11:14:36 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/08 11:14:36 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/08 14:53:01 utils.go:100: sql: no rows in result set Cannot read project
+ERROR 2024/02/08 15:12:18 utils.go:100: sql: Scan error on column index 1, name "uuid": converting driver.Value type string ("a36ff775-2929-4da5-5210-5f193acba157") to a int: invalid syntax Cannot create project
+INFO 2024/02/08 21:21:26 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/08 21:21:26 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/09 10:03:35 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/09 10:03:35 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/09 17:01:57 utils.go:95: sql: no rows in result set Cannot read thread
+INFO 2024/02/09 17:03:01 utils.go:95: sql: no rows in result set Cannot read thread
+WARNING 2024/02/09 18:00:37 utils.go:105: http: named cookie not present 试图访问未公开的thread
+WARNING 2024/02/09 19:05:57 utils.go:105: http: named cookie not present 试图访问未公开的thread
+WARNING 2024/02/09 19:42:23 utils.go:105: http: named cookie not present 试图访问未公开的thread
+ERROR 2024/02/10 12:16:15 utils.go:100: pq: syntax error at or near "ORDER" 查询公开茶语失败
+ERROR 2024/02/10 12:16:31 utils.go:100: pq: syntax error at or near "ORDER" 查询公开茶语失败
+ERROR 2024/02/10 16:15:59 utils.go:100: pq: column "threads.id" must appear in the GROUP BY clause or be used in an aggregate function 查询公开茶语失败
+ERROR 2024/02/10 16:16:05 utils.go:100: pq: column "threads.id" must appear in the GROUP BY clause or be used in an aggregate function 查询公开茶语失败
+ERROR 2024/02/10 16:16:11 utils.go:100: pq: column "threads.id" must appear in the GROUP BY clause or be used in an aggregate function 查询公开茶语失败
+ERROR 2024/02/10 16:29:05 utils.go:100: pq: column "threads.id" must appear in the GROUP BY clause or be used in an aggregate function 查询公开茶语失败
+ERROR 2024/02/10 16:29:14 utils.go:100: pq: column "threads.id" must appear in the GROUP BY clause or be used in an aggregate function 查询公开茶语失败
+ERROR 2024/02/10 16:31:11 utils.go:100: pq: missing FROM-clause entry for table "thread" 查询公开茶语失败
+ERROR 2024/02/10 17:57:45 utils.go:100: pq: column "threads.id" must appear in the GROUP BY clause or be used in an aggregate function 查询公开茶语失败
+ERROR 2024/02/10 17:59:54 utils.go:100: pq: column "threads.id" must appear in the GROUP BY clause or be used in an aggregate function 查询公开茶语失败
+ERROR 2024/02/10 18:17:59 utils.go:100: pq: column "threads.id" must appear in the GROUP BY clause or be used in an aggregate function 查询公开茶语失败
+INFO 2024/02/10 22:37:04 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/10 22:37:04 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/14 16:18:29 utils.go:100: dial tcp [::1]:5432: connect: connection refused 查询公开茶语失败
+ERROR 2024/02/14 16:18:34 utils.go:100: dial tcp [::1]:5432: connect: connection refused 查询公开茶语失败
+INFO 2024/02/14 20:00:23 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/14 20:00:23 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/14 20:14:22 utils.go:100: pq: column "class" does not exist Cannot get teams
+ERROR 2024/02/14 20:14:36 utils.go:100: pq: column "class" does not exist Cannot get teams
+ERROR 2024/02/14 20:31:55 utils.go:100: strconv.Atoi: parsing "": invalid syntax Cannot convert class to int
+ERROR 2024/02/14 20:57:27 utils.go:100: strconv.Atoi: parsing "": invalid syntax Cannot convert class to int
+ERROR 2024/02/14 21:05:08 utils.go:100: sql: no rows in result set Cannot create team
+INFO 2024/02/15 13:58:44 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/15 13:58:44 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/17 15:14:52 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/17 15:14:52 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/17 15:15:34 utils.go:100: pq: column "valid" does not exist Cannot get pilots
+ERROR 2024/02/17 15:16:14 utils.go:100: pq: column "valid" does not exist Cannot get pilots
+INFO 2024/02/17 17:13:18 utils.go:95: test@gmail.com Session deleted
+INFO 2024/02/17 17:16:31 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/17 17:16:31 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/17 20:11:52 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/17 20:11:52 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/17 20:28:34 utils.go:100: sql: no rows in result set Cannot find user by email
+ERROR 2024/02/17 22:18:53 utils.go:100: sql: no rows in result set Cannot get project
+ERROR 2024/02/17 22:36:44 utils.go:100: sql: no rows in result set Cannot get project
+ERROR 2024/02/20 10:03:27 utils.go:100: sql: no rows in result set Cannot get project
+INFO 2024/02/20 10:03:53 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/20 10:03:53 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/23 20:40:05 utils.go:95: 闻香识茶 用户口令核对正确
+ERROR 2024/02/23 20:40:05 utils.go:100: sql: expected 9 destination arguments in Scan, not 10 Cannot find user
+INFO 2024/02/23 20:40:16 utils.go:95: 闻香识茶 用户口令核对正确
+ERROR 2024/02/23 20:40:16 utils.go:100: sql: expected 9 destination arguments in Scan, not 10 Cannot find user
+INFO 2024/02/23 20:44:31 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/23 20:44:31 utils.go:95: test@gmail.com 因为该用户没有权限登入
+INFO 2024/02/23 20:46:20 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/23 20:46:20 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/24 10:21:26 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/24 10:21:26 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/24 10:25:24 utils.go:100: pq: column "name" does not exist Cannot get administrator
+ERROR 2024/02/24 10:25:24 utils.go:100: pq: syntax error at or near "," Cannot save invited code
+ERROR 2024/02/24 10:25:24 utils.go:100: pq: syntax error at or near "," Cannot save invited email
+ERROR 2024/02/24 10:33:48 utils.go:100: pq: syntax error at or near "," <->Cannot save invited code
+ERROR 2024/02/24 10:33:48 utils.go:100: pq: syntax error at or near "," <->Cannot save invited email
+ERROR 2024/02/24 10:58:02 utils.go:100: pq: missing FROM-clause entry for table "code" <->Cannot save invited code
+ERROR 2024/02/24 10:58:02 utils.go:100: pq: missing FROM-clause entry for table "email" <->Cannot save invited email
+ERROR 2024/02/24 11:05:43 utils.go:100: pq: column "administrator_id" of relation "invited_codes" does not exist <->Cannot save invited code
+ERROR 2024/02/24 11:05:43 utils.go:100: pq: column "administrator_id" of relation "invited_emails" does not exist <->Cannot save invited email
+ERROR 2024/02/24 11:16:01 utils.go:100: pq: missing FROM-clause entry for table "code" <->Cannot save invited code
+ERROR 2024/02/24 11:16:01 utils.go:100: pq: missing FROM-clause entry for table "email" <->Cannot save invited email
+ERROR 2024/02/24 11:21:48 utils.go:100: pq: missing FROM-clause entry for table "code" <->Cannot save invited code
+ERROR 2024/02/24 11:21:48 utils.go:100: pq: missing FROM-clause entry for table "email" <->Cannot save invited email
+ERROR 2024/02/24 11:31:52 utils.go:100: pq: missing FROM-clause entry for table "invited_code" <->Cannot save invited code
+ERROR 2024/02/24 11:31:52 utils.go:100: pq: missing FROM-clause entry for table "invited_email" <->Cannot save invited email
+INFO 2024/02/24 11:47:23 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/24 11:47:23 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/02/24 11:47:34 utils.go:100: pq: missing FROM-clause entry for table "invited_code" <->Cannot save invited code
+ERROR 2024/02/24 11:47:34 utils.go:100: pq: missing FROM-clause entry for table "invited_email" <->Cannot save invited email
+WARNING 2024/02/24 16:09:10 utils.go:105: pq: column "code" does not exist gyps@god.com 提交的邀请码无效
+WARNING 2024/02/24 16:21:27 utils.go:105: pq: column "administrators_id" does not exist gyps@god.com 提交的邀请码无效
+WARNING 2024/02/24 16:29:40 utils.go:105: sql: no rows in result set gyps@god.com 提交的邀请码无效
+INFO 2024/02/24 16:51:12 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/24 16:51:12 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/24 16:52:39 utils.go:95:  <->invited email saved
+INFO 2024/02/24 16:53:50 utils.go:95: test@gmail.com Session deleted
+WARNING 2024/02/24 16:54:25 utils.go:105: sql: no rows in result set gyps@god.com 提交注册的邮箱地址不在邀请列表中
+INFO 2024/02/24 17:09:24 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/24 17:09:24 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/24 17:09:32 utils.go:95: gyps@god.com <->invited email saved
+INFO 2024/02/24 17:09:43 utils.go:95: test@gmail.com Session deleted
+ERROR 2024/02/24 17:10:15 utils.go:100: pq: INSERT has more target columns than expressions <->Cannot create user
+INFO 2024/02/24 17:16:34 utils.go:95: gyps@god.com 注册新账号成功
+INFO 2024/02/24 17:17:01 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/24 17:17:01 utils.go:95: gyps@god.com 密码匹配成功
+INFO 2024/02/24 20:07:42 utils.go:95: 778c86d0-458c-4d1c-5741-58f9ffe8e46f
+INFO 2024/02/24 20:09:15 utils.go:95: gyps@god.com Session deleted
+INFO 2024/02/24 20:09:26 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/24 20:09:26 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/24 20:12:15 utils.go:95: tsz@god.com <->invited email saved
+INFO 2024/02/24 20:12:36 utils.go:95: monkeyking@god.com <->invited email saved
+INFO 2024/02/24 20:13:12 utils.go:95: zbj@god.com <->invited email saved
+INFO 2024/02/24 20:13:25 utils.go:95: ss@god.com <->invited email saved
+INFO 2024/02/24 20:14:03 utils.go:95: whitehourse@god.com <->invited email saved
+INFO 2024/02/24 20:15:42 utils.go:95: test@gmail.com Session deleted
+INFO 2024/02/24 20:23:08 utils.go:95: tsz@god.com 注册新账号成功
+INFO 2024/02/24 20:27:30 utils.go:95: monkeyking@god.com 注册新账号成功
+INFO 2024/02/24 20:31:57 utils.go:95: zbj@god.com 注册新账号成功
+INFO 2024/02/24 20:34:47 utils.go:95: ss@god.com 注册新账号成功
+INFO 2024/02/24 20:40:04 utils.go:95: whitehorse@god.com 注册新账号成功
+INFO 2024/02/24 20:40:32 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/24 20:40:32 utils.go:95: ss@god.com 密码匹配成功
+INFO 2024/02/24 20:42:03 utils.go:95: ss@god.com Session deleted
+INFO 2024/02/24 20:42:16 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/24 20:42:16 utils.go:95: gyps@god.com 密码匹配成功
+INFO 2024/02/24 20:42:35 utils.go:95: 778c86d0-458c-4d1c-5741-58f9ffe8e46f
+ERROR 2024/02/26 21:11:32 utils.go:100: sql: no rows in result set <->Cannot get project
+INFO 2024/02/28 09:27:29 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/28 09:27:29 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/28 10:30:25 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/28 10:30:25 utils.go:95: gyps@god.com 密码匹配成功
+INFO 2024/02/29 11:43:19 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/29 11:43:19 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/02/29 12:17:15 utils.go:95: test@gmail.com Session deleted
+INFO 2024/02/29 12:17:58 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/02/29 12:17:58 utils.go:95: gyps@god.com 密码匹配成功
+INFO 2024/03/02 20:54:45 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/02 20:54:45 utils.go:95: tsz@god.com 密码匹配成功
+INFO 2024/03/02 20:59:24 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/02 20:59:24 utils.go:95: tsz@god.com 密码匹配成功
+INFO 2024/03/02 21:11:16 utils.go:95: tsz@god.com Session deleted
+INFO 2024/03/02 21:14:58 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/02 21:14:58 utils.go:95: tsz@god.com 密码匹配成功
+INFO 2024/03/02 21:18:28 utils.go:95: tsz@god.com Session deleted
+INFO 2024/03/02 21:18:42 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/02 21:18:42 utils.go:95: tsz@god.com 密码匹配成功
+ERROR 2024/03/02 21:28:15 utils.go:100: sql: no rows in result set <->Cannot get team
+ERROR 2024/03/02 21:28:27 utils.go:100: sql: no rows in result set <->Cannot get team
+ERROR 2024/03/05 15:02:44 utils.go:100: pq: database "cocoonsWebdb" does not exist <->查询公开茶语失败
+INFO 2024/03/05 15:13:03 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/05 15:13:03 utils.go:95: tsz@god.com 密码匹配成功
+ERROR 2024/03/05 16:09:13 utils.go:100: sql: no rows in result set <->Cannot get team
+ERROR 2024/03/05 16:19:04 utils.go:100: sql: no rows in result set <->Cannot get team
+INFO 2024/03/05 16:33:07 utils.go:95: 778c86d0-458c-4d1c-5741-58f9ffe8e46f
+INFO 2024/03/05 16:33:23 utils.go:95: 778c86d0-458c-4d1c-5741-58f9ffe8e46f
+INFO 2024/03/05 16:33:28 utils.go:95: 778c86d0-458c-4d1c-5741-58f9ffe8e46f
+INFO 2024/03/05 16:35:08 utils.go:95: 778c86d0-458c-4d1c-5741-58f9ffe8e46f
+INFO 2024/03/05 16:35:45 utils.go:95: 778c86d0-458c-4d1c-5741-58f9ffe8e46f
+INFO 2024/03/06 10:22:51 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/06 10:22:51 utils.go:95: tsz@god.com 密码匹配成功
+ERROR 2024/03/06 11:17:05 utils.go:100: http: named cookie not present <->Cannot get session
+INFO 2024/03/07 19:41:57 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/07 19:41:57 utils.go:95: tsz@god.com 密码匹配成功
+INFO 2024/03/09 13:58:08 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/09 13:58:08 utils.go:95: gyps@god.com 密码匹配成功
+ERROR 2024/03/09 18:17:57 utils.go:100: pq: syntax error at or near "Command" gyps@god.com <->Cannot create invitation
+INFO 2024/03/10 20:28:17 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/10 20:28:17 utils.go:95: monkeyking@god.com 密码匹配成功
+INFO 2024/03/10 21:26:30 utils.go:95: monkeyking@god.com Session deleted
+INFO 2024/03/11 15:42:57 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/11 15:42:57 utils.go:95: zbj@god.com 密码匹配成功
+INFO 2024/03/11 16:03:41 utils.go:95: zbj@god.com Session deleted
+INFO 2024/03/11 16:03:54 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/11 16:03:54 utils.go:95: ss@god.com 密码匹配成功
+INFO 2024/03/11 16:04:17 utils.go:95: ss@god.com Session deleted
+INFO 2024/03/11 16:04:32 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/11 16:04:32 utils.go:95: gyps@god.com 密码匹配成功
+INFO 2024/03/11 16:07:02 utils.go:95: gyps@god.com Session deleted
+ERROR 2024/03/11 16:07:24 utils.go:100: invalid session <->Cannot get session
+INFO 2024/03/11 22:01:25 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/11 22:01:25 utils.go:95: tsz@god.com 密码匹配成功
+INFO 2024/03/11 22:09:12 utils.go:95: tsz@god.com Session deleted
+INFO 2024/03/11 22:09:28 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/11 22:09:28 utils.go:95: gyps@god.com 密码匹配成功
+INFO 2024/03/11 22:10:52 utils.go:95: gyps@god.com Session deleted
+INFO 2024/03/11 22:11:01 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/11 22:11:01 utils.go:95: ss@god.com 密码匹配成功
+WARNING 2024/03/11 22:13:13 utils.go:105: <nil> ss@god.com <->Cannot process invitation
+WARNING 2024/03/11 22:13:28 utils.go:105: <nil> ss@god.com <->Cannot process invitation
+WARNING 2024/03/11 22:13:38 utils.go:105: <nil> ss@god.com <->Cannot process invitation
+WARNING 2024/03/11 22:23:26 utils.go:105: <nil> ss@god.com <->Cannot process invitation
+ERROR 2024/03/12 10:08:21 utils.go:100: http: named cookie not present <->Cannot get session
+INFO 2024/03/12 10:09:55 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/12 10:09:55 utils.go:95: tsz@god.com 密码匹配成功
+ERROR 2024/03/12 10:15:48 utils.go:100: sql: no rows in result set tsz@god.com <->Cannot search user given email
+INFO 2024/03/12 10:17:12 utils.go:95: tsz@god.com Session deleted
+WARNING 2024/03/12 10:18:32 utils.go:105: <nil> whitehorse@god.com 提交注册的邮箱地址已经注册
+INFO 2024/03/12 10:18:32 utils.go:95: whitehorse@god.com 注册新账号
+ERROR 2024/03/12 10:18:32 utils.go:100: pq: duplicate key value violates unique constraint "users_email_key" <->Cannot create user
+INFO 2024/03/12 10:20:40 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/12 10:20:40 utils.go:95: whitehorse@god.com 密码匹配成功
+INFO 2024/03/12 10:42:54 utils.go:95: whitehorse@god.com Session deleted
+INFO 2024/03/12 10:47:26 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/12 10:47:26 utils.go:95: test@gmail.com 密码匹配成功
+INFO 2024/03/12 20:42:39 utils.go:95: test@gmail.com Session deleted
+INFO 2024/03/13 11:25:57 utils.go:95: 闻香识茶 用户口令核对正确
+WARNING 2024/03/13 11:25:57 utils.go:105: test@gmail.com 试图登入失败
+INFO 2024/03/13 11:26:06 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/13 11:26:06 utils.go:95: test@gmail.com 密码匹配成功
+ERROR 2024/03/13 20:33:07 utils.go:100: http: named cookie not present <->Cannot get session
+INFO 2024/03/14 15:29:53 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/14 15:29:53 utils.go:95: monkeyking@god.com 密码匹配成功
+INFO 2024/03/15 10:41:12 utils.go:95: monkeyking@god.com Session deleted
+INFO 2024/03/15 10:41:28 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/15 10:41:28 utils.go:95: tsz@god.com 密码匹配成功
+ERROR 2024/03/17 20:06:48 utils.go:100: dial tcp [::1]:5432: connect: connection refused <->查询公开茶语失败
+ERROR 2024/03/17 20:06:54 utils.go:100: dial tcp [::1]:5432: connect: connection refused <->查询公开茶语失败
+INFO 2024/03/17 21:46:01 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/17 21:46:01 utils.go:95: ss@god.com 密码匹配成功
+INFO 2024/03/17 22:04:58 utils.go:95: ss@god.com Session deleted
+INFO 2024/03/17 22:07:06 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/17 22:07:06 utils.go:95: whitehorse@god.com 密码匹配成功
+INFO 2024/03/17 22:39:06 utils.go:95: whitehorse@god.com Session deleted
+INFO 2024/03/19 09:52:57 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/19 09:52:57 utils.go:95: tsz@god.com 密码匹配成功
+ERROR 2024/03/19 10:01:23 utils.go:100: sql: no rows in result set <->Cannot get this team
+ERROR 2024/03/19 10:02:16 utils.go:100: sql: no rows in result set <->Cannot get this team
+INFO 2024/03/19 10:04:51 utils.go:95: 闻香识茶 用户口令核对正确
+INFO 2024/03/19 10:04:51 utils.go:95: tsz@god.com 密码匹配成功
+ERROR 2024/03/19 10:09:36 utils.go:100: sql: no rows in result set <->Cannot get this team
+ERROR 2024/03/24 22:47:12 utils.go:100: http: named cookie not present <->Cannot get session
+INFO 2024/03/29 14:59:04 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/03/29 14:59:04 utils.go:105: gyps@god.com 密码匹配成功
+INFO 2024/03/30 09:45:48 utils.go:105: gyps@god.com Session deleted
+INFO 2024/03/30 21:22:51 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/03/30 21:22:51 utils.go:105: tsz@god.com 密码匹配成功
+INFO 2024/03/31 09:03:45 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/03/31 09:03:45 utils.go:105: zbj@god.com 密码匹配成功
+ERROR 2024/04/01 14:00:07 utils.go:110: Cannot edit other user's thread
+ERROR 2024/04/01 14:12:55 utils.go:110: Cannot edit other user's thread
+INFO 2024/04/01 16:53:51 utils.go:105: zbj@god.com Session deleted
+INFO 2024/04/01 20:01:45 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/01 20:01:45 utils.go:105: gyps@god.com 密码匹配成功
+INFO 2024/04/02 08:51:05 utils.go:105: gyps@god.com Session deleted
+INFO 2024/04/02 08:51:22 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/02 08:51:22 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/02 11:10:09 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/02 11:10:09 utils.go:105: monkeyking@god.com 密码匹配成功
+WARNING 2024/04/02 15:49:26 utils.go:115: sql: no rows in result set <->未能读取用户简介！
+WARNING 2024/04/02 15:49:34 utils.go:115: sql: no rows in result set <->未能读取用户简介！
+INFO 2024/04/03 09:44:26 utils.go:105: zbj@god.com Session deleted
+ERROR 2024/04/03 10:28:52 utils.go:110: pq: column "hit_count" does not exist <->查询公开茶语失败
+ERROR 2024/04/03 10:28:52 utils.go:110: pq: column "hit_count" does not exist <->查询公开茶语失败
+ERROR 2024/04/03 10:28:52 utils.go:110: pq: column "hit_count" does not exist <->查询公开茶语失败
+ERROR 2024/04/03 10:31:12 utils.go:110: pq: column "hit_count" does not exist <->查询公开茶语失败
+ERROR 2024/04/03 10:31:19 utils.go:110: pq: column "hit_count" does not exist <->查询公开茶语失败
+WARNING 2024/04/05 22:18:49 utils.go:115: http: named cookie not present <->试图访问未公开的thread
+INFO 2024/04/07 13:55:28 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/07 13:55:28 utils.go:105: test@gmail.com 密码匹配成功
+ERROR 2024/04/07 13:55:28 utils.go:110: sql: expected 9 destination arguments in Scan, not 10 <->查询会员的茶语失败
+ERROR 2024/04/07 13:55:36 utils.go:110: sql: expected 9 destination arguments in Scan, not 10 <->查询会员的茶语失败
+ERROR 2024/04/07 13:56:26 utils.go:110: sql: expected 9 destination arguments in Scan, not 10 <->查询会员的茶语失败
+INFO 2024/04/08 09:48:42 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/08 09:48:42 utils.go:105: test@gmail.com 密码匹配成功
+INFO 2024/04/08 10:02:53 utils.go:105: test@gmail.com Session deleted
+INFO 2024/04/08 11:34:41 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/08 11:34:41 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/08 11:39:51 utils.go:105: zbj@god.com Session deleted
+INFO 2024/04/08 11:58:51 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/08 11:58:51 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/08 12:04:51 utils.go:105: zbj@god.com Session deleted
+INFO 2024/04/08 12:09:27 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/08 12:09:27 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/08 13:54:34 utils.go:105: zbj@god.com Session deleted
+INFO 2024/04/08 13:56:53 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/08 13:56:53 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/08 14:04:42 utils.go:105: zbj@god.com Session deleted
+INFO 2024/04/09 18:54:57 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/09 18:54:57 utils.go:105: test@gmail.com 密码匹配成功
+INFO 2024/04/09 19:29:40 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/09 19:29:40 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/09 19:42:08 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/09 19:42:08 utils.go:105: test@gmail.com 密码匹配成功
+INFO 2024/04/09 19:48:40 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/09 19:48:40 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/09 19:58:19 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/09 19:58:19 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/09 21:45:56 utils.go:105: zbj@god.com Session deleted
+INFO 2024/04/10 11:20:34 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/10 11:20:34 utils.go:105: test@gmail.com 密码匹配成功
+INFO 2024/04/10 16:26:57 utils.go:105: test@gmail.com Session deleted
+INFO 2024/04/10 16:27:19 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/10 16:27:19 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/10 16:32:23 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/10 16:32:23 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/10 17:30:12 utils.go:105: zbj@god.com Session deleted
+INFO 2024/04/10 17:30:44 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/10 17:30:44 utils.go:105: test@gmail.com 密码匹配成功
+ERROR 2024/04/10 17:40:38 utils.go:110: Cannot edit other user's thread
+INFO 2024/04/11 09:27:02 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/11 09:27:02 utils.go:105: test@gmail.com 密码匹配成功
+INFO 2024/04/11 10:13:46 utils.go:105: test@gmail.com Session deleted
+INFO 2024/04/11 10:17:05 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/11 10:17:05 utils.go:105: gyps@god.com 密码匹配成功
+INFO 2024/04/11 18:39:59 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/11 18:39:59 utils.go:105: monkeyking@god.com 密码匹配成功
+WARNING 2024/04/11 18:53:24 utils.go:115: sql: no rows in result set <->未能读取用户简介！
+ERROR 2024/04/13 14:38:09 utils.go:110: pq: SELECT DISTINCT ON expressions must match initial ORDER BY expressions <->Cannot get objectives
+INFO 2024/04/13 14:54:49 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/13 14:54:49 utils.go:105: zbj@god.com 密码匹配成功
+WARNING 2024/04/18 11:27:47 utils.go:116: http: named cookie not present <->试图访问未公开的thread
+WARNING 2024/04/18 15:51:50 utils.go:116: http: named cookie not present <->试图访问未公开的thread
+INFO 2024/04/29 13:30:47 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/29 13:30:47 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/30 08:49:51 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/30 08:49:51 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/04/30 09:13:39 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/04/30 09:13:39 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/05/01 09:08:05 utils.go:105: 闻香识茶 用户口令核对正确
+INFO 2024/05/01 09:08:05 utils.go:105: zbj@god.com 密码匹配成功
+INFO 2024/05/02 09:20:13 utils.go:107: 闻香识茶 用户口令核对正确
+INFO 2024/05/02 09:20:13 utils.go:107: zbj@god.com 密码匹配成功
+INFO 2024/05/02 09:36:29 utils.go:107: 闻香识茶 用户口令核对正确
+INFO 2024/05/02 09:36:29 utils.go:107: zbj@god.com 密码匹配成功
+INFO 2024/05/04 08:20:13 utils.go:107: 闻香识茶 用户口令核对正确
+INFO 2024/05/04 08:20:13 utils.go:107: zbj@god.com 密码匹配成功
+INFO 2024/05/04 08:20:36 utils.go:107: zbj@god.com Session deleted
+INFO 2024/05/04 10:20:20 utils.go:107: xuebaochai@storetravels.com 注册新账号ok
+INFO 2024/05/04 10:20:50 utils.go:107: 闻香识茶 用户口令核对正确
+INFO 2024/05/04 10:20:50 utils.go:107: xuebaochai@storetravels.com 密码匹配成功
+INFO 2024/05/04 20:00:07 utils.go:108: xuebaochai@storetravels.com Session deleted
+INFO 2024/05/04 20:01:09 utils.go:108: lindaiyu@storetravels.com 注册新账号ok
+INFO 2024/05/04 20:01:20 utils.go:108: 闻香识茶 用户口令核对正确
+ERROR 2024/05/04 20:01:20 utils.go:113: sql: no rows in result set <->Cannot find user
+INFO 2024/05/04 20:01:51 utils.go:108: 闻香识茶 用户口令核对正确
+INFO 2024/05/04 20:01:51 utils.go:108: lindaiyu@storetravels.com 密码匹配成功
+ERROR 2024/05/04 20:02:13 utils.go:113: <nil> 头像文件类型错误
+ERROR 2024/05/04 20:07:22 utils.go:113: <nil> 文件大小超过30kb
+ERROR 2024/05/04 20:09:33 utils.go:113: <nil> 头像尺寸错误
+INFO 2024/05/04 20:23:02 utils.go:108: lindaiyu@storetravels.com Session deleted
+INFO 2024/05/04 20:23:40 utils.go:108: miaoyu@storetravels.com 注册新账号ok
+INFO 2024/05/04 20:23:51 utils.go:108: 闻香识茶 用户口令核对正确
+INFO 2024/05/04 20:23:51 utils.go:108: miaoyu@storetravels.com 密码匹配成功
+ERROR 2024/05/04 20:25:07 utils.go:113: <nil> 头像尺寸错误
+INFO 2024/05/04 20:28:47 utils.go:108: miaoyu@storetravels.com Session deleted
+INFO 2024/05/04 20:28:54 utils.go:108: 闻香识茶 用户口令核对正确
+INFO 2024/05/04 20:28:54 utils.go:108: lindaiyu@storetravels.com 密码匹配成功
+INFO 2024/05/04 20:30:49 utils.go:108: 闻香识茶 用户口令核对正确
+INFO 2024/05/04 20:30:49 utils.go:108: lindaiyu@storetravels.com 密码匹配成功
+INFO 2024/05/06 15:38:15 utils.go:109: 闻香识茶 用户口令核对正确
+INFO 2024/05/06 15:38:15 utils.go:109: lindaiyu@storetravels.com 密码匹配成功
+INFO 2024/05/06 16:36:14 utils.go:109: lindaiyu@storetravels.com Session deleted
+WARNING 2024/05/06 16:38:05 utils.go:119: invalid session  试图访问未公开的thread
+INFO 2024/05/06 17:02:26 utils.go:109: 闻香识茶 用户口令核对正确
+INFO 2024/05/06 17:02:26 utils.go:109: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/05/08 13:26:39 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/08 13:26:39 utils.go:112: miaoyu@storetravels.com 密码匹配成功
+ERROR 2024/05/08 13:27:02 utils.go:117: image: unknown format 获取图片尺寸失败
+ERROR 2024/05/08 13:37:23 utils.go:117: image: unknown format 获取图片尺寸失败
+ERROR 2024/05/08 13:45:57 utils.go:117: image: unknown format 获取图片尺寸失败
+INFO 2024/05/08 15:19:51 utils.go:110: miaoyu@storetravels.com Session deleted
+INFO 2024/05/08 15:19:57 utils.go:110: 闻香识茶 用户口令核对正确
+INFO 2024/05/08 15:19:57 utils.go:110: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/05/08 15:20:20 utils.go:110: miaoyu@storetravels.com Session deleted
+INFO 2024/05/08 15:20:29 utils.go:110: 闻香识茶 用户口令核对正确
+INFO 2024/05/08 15:20:29 utils.go:110: zbj@god.com 密码匹配成功
+INFO 2024/05/08 15:23:20 utils.go:110: zbj@god.com Session deleted
+INFO 2024/05/08 15:23:26 utils.go:110: 闻香识茶 用户口令核对正确
+INFO 2024/05/08 15:23:26 utils.go:110: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/05/08 15:31:06 utils.go:110: miaoyu@storetravels.com Session deleted
+INFO 2024/05/08 15:31:15 utils.go:110: 闻香识茶 用户口令核对正确
+INFO 2024/05/08 15:31:15 utils.go:110: xuebaochai@storetravels.com 密码匹配成功
+INFO 2024/05/08 15:31:49 utils.go:110: 闻香识茶 用户口令核对正确
+INFO 2024/05/08 15:31:49 utils.go:110: xuebaochai@storetravels.com 密码匹配成功
+INFO 2024/05/10 09:16:46 utils.go:110: 闻香识茶 用户口令核对正确
+INFO 2024/05/10 09:16:46 utils.go:110: zbj@god.com 密码匹配成功
+INFO 2024/05/14 11:22:48 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/14 11:22:48 utils.go:112: zbj@god.com 密码匹配成功
+INFO 2024/05/14 11:36:08 utils.go:112: zbj@god.com Session deleted
+INFO 2024/05/14 11:38:15 utils.go:112: xuepan@storetravels.com 注册新账号ok
+INFO 2024/05/14 11:39:30 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/14 11:39:30 utils.go:112: xuepan@storetravels.com 密码匹配成功
+INFO 2024/05/15 09:08:58 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/15 09:08:58 utils.go:112: zbj@god.com 密码匹配成功
+INFO 2024/05/15 09:40:11 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/15 09:40:11 utils.go:112: zbj@god.com 密码匹配成功
+INFO 2024/05/16 08:12:30 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/16 08:12:30 utils.go:112: zbj@god.com 密码匹配成功
+INFO 2024/05/16 11:07:50 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/16 11:07:50 utils.go:112: zbj@god.com 密码匹配成功
+ERROR 2024/05/16 12:26:04 utils.go:117: sql: no rows in result set <->Cannot read project
+ERROR 2024/05/16 12:26:15 utils.go:117: sql: no rows in result set <->Cannot read project
+INFO 2024/05/16 16:18:24 utils.go:112: zbj@god.com Session deleted
+WARNING 2024/05/16 16:19:17 utils.go:122: invalid session  试图访问未公开的thread
+WARNING 2024/05/16 16:21:12 utils.go:122: invalid session  试图访问未公开的thread
+INFO 2024/05/17 09:20:07 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/17 09:20:07 utils.go:112: zbj@god.com 密码匹配成功
+ERROR 2024/05/17 09:20:25 utils.go:117: Cannot edit other user's thread
+INFO 2024/05/17 09:21:26 utils.go:112: zbj@god.com Session deleted
+INFO 2024/05/17 09:27:38 utils.go:112: 闻香识茶 用户口令核对正确
+WARNING 2024/05/17 09:27:38 utils.go:122: test@gmail.com 试图空降茶棚失败
+INFO 2024/05/17 09:27:54 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/17 09:27:54 utils.go:112: test@gmail.com 密码匹配成功
+INFO 2024/05/17 09:44:30 utils.go:112: test@gmail.com Session deleted
+INFO 2024/05/17 09:44:40 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/17 09:44:40 utils.go:112: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/05/17 10:12:59 utils.go:112: miaoyu@storetravels.com Session deleted
+INFO 2024/05/17 10:13:06 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/17 10:13:06 utils.go:112: zbj@god.com 密码匹配成功
+INFO 2024/05/23 08:37:50 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/23 08:37:50 utils.go:112: zbj@god.com 密码匹配成功
+ERROR 2024/05/23 08:38:24 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:40:36 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:41:13 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:41:51 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:42:20 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:43:15 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:44:41 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:45:05 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:45:54 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:45:55 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:46:27 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:49:44 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:50:32 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:51:13 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:53:14 utils.go:117: Cannot edit other user's thread
+ERROR 2024/05/23 08:53:58 utils.go:117: Cannot edit other user's thread
+INFO 2024/05/23 09:30:05 utils.go:112: zbj@god.com Session deleted
+INFO 2024/05/23 09:30:39 utils.go:112: 闻香识茶 用户口令核对正确
+ERROR 2024/05/23 09:30:39 utils.go:117: sql: no rows in result set <->Cannot find user
+INFO 2024/05/23 09:30:49 utils.go:112: 闻香识茶 用户口令核对正确
+ERROR 2024/05/23 09:30:49 utils.go:117: sql: no rows in result set <->Cannot find user
+INFO 2024/05/23 09:31:20 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/23 09:31:20 utils.go:112: test@gmail.com 密码匹配成功
+INFO 2024/05/23 10:18:08 utils.go:112: test@gmail.com Session deleted
+INFO 2024/05/23 10:18:20 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/23 10:18:20 utils.go:112: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/05/23 11:07:24 utils.go:112: miaoyu@storetravels.com Session deleted
+INFO 2024/05/23 11:07:31 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/23 11:07:31 utils.go:112: zbj@god.com 密码匹配成功
+INFO 2024/05/23 11:08:30 utils.go:112: zbj@god.com Session deleted
+INFO 2024/05/23 11:08:42 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/23 11:08:42 utils.go:112: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/05/24 09:59:01 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/24 09:59:01 utils.go:112: zbj@god.com 密码匹配成功
+INFO 2024/05/28 10:02:41 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/28 10:02:41 utils.go:112: gyps@god.com 密码匹配成功
+WARNING 2024/05/28 17:00:27 utils.go:122: write ./public/image/778c86d0-458c-4d1c-5741-58f9ffe8e46f.jpeg: bad file descriptor 写入头像文件失败
+INFO 2024/05/29 11:27:37 utils.go:112: shixiangyun@storetravels.com 注册新账号ok
+INFO 2024/05/29 13:59:17 utils.go:112: wangxifeng@storetravels.com 注册新账号ok
+INFO 2024/05/29 14:00:03 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/29 14:00:03 utils.go:112: wangxifeng@storetravels.com 密码匹配成功
+INFO 2024/05/29 14:05:59 utils.go:112: wangxifeng@storetravels.com Session deleted
+INFO 2024/05/29 14:10:38 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/29 14:10:38 utils.go:112: wangxifeng@storetravels.com 密码匹配成功
+INFO 2024/05/29 15:51:46 utils.go:112: wangxifeng@storetravels.com Session deleted
+INFO 2024/05/29 15:53:37 utils.go:112: qinkeqing@storetravels.com 注册新账号ok
+INFO 2024/05/29 15:58:36 utils.go:112: jiayuanchun@storetravels.com 注册新账号ok
+INFO 2024/05/29 16:09:38 utils.go:112: liwan@storetravels.com 注册新账号ok
+INFO 2024/05/29 16:16:39 utils.go:112: jiayingchun@storetravels.com 注册新账号ok
+INFO 2024/05/29 16:21:00 utils.go:112: jiaxichun@storetravels.com 注册新账号ok
+INFO 2024/05/29 16:24:44 utils.go:112: jiatanchun@storetravels.com 注册新账号ok
+INFO 2024/05/29 16:29:34 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/29 16:29:34 utils.go:112: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/05/29 16:30:01 utils.go:112: miaoyu@storetravels.com Session deleted
+INFO 2024/05/29 16:32:41 utils.go:112: 闻香识茶 用户口令核对正确
+ERROR 2024/05/29 16:32:41 utils.go:117: sql: no rows in result set <->Cannot find user
+INFO 2024/05/29 16:36:49 utils.go:112: jiabaoyu@storetravels.com 注册新账号ok
+INFO 2024/05/29 17:00:18 utils.go:112: liulaolao@storetravels.com 注册新账号ok
+INFO 2024/05/29 17:15:49 utils.go:112: fengziying@storetravels.com 注册新账号ok
+INFO 2024/05/30 10:21:12 utils.go:112: 闻香识茶 用户口令核对正确
+WARNING 2024/05/30 10:21:12 utils.go:122: fengziying@storetravels.com 试图空降茶棚失败
+INFO 2024/05/30 10:21:26 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/30 10:21:26 utils.go:112: fengziying@storetravels.com 密码匹配成功
+ERROR 2024/05/30 15:54:08 utils.go:117: sql: no rows in result set <->Cannot create team
+INFO 2024/05/31 08:46:54 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/31 08:46:54 utils.go:112: fengziying@storetravels.com 密码匹配成功
+INFO 2024/05/31 09:34:17 utils.go:112: fengziying@storetravels.com Session deleted
+INFO 2024/05/31 09:34:36 utils.go:112: 闻香识茶 用户口令核对正确
+WARNING 2024/05/31 09:34:36 utils.go:122: jiabaoyu@storetravels.com 试图空降茶棚失败
+INFO 2024/05/31 09:34:46 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/05/31 09:34:46 utils.go:112: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/06/02 09:05:53 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/06/02 09:05:53 utils.go:112: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/06/02 16:43:31 utils.go:112: jiabaoyu@storetravels.com Session deleted
+INFO 2024/06/02 16:43:44 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/06/02 16:43:44 utils.go:112: fengziying@storetravels.com 密码匹配成功
+INFO 2024/06/02 16:47:00 utils.go:112: fengziying@storetravels.com Session deleted
+INFO 2024/06/02 16:47:12 utils.go:112: 闻香识茶 用户口令核对正确
+WARNING 2024/06/02 16:47:12 utils.go:122: xuepan@storetravels.com 试图空降茶棚失败
+INFO 2024/06/02 16:47:20 utils.go:112: 闻香识茶 用户口令核对正确
+INFO 2024/06/02 16:47:20 utils.go:112: xuepan@storetravels.com 密码匹配成功
+INFO 2024/06/04 15:34:13 utils.go:113: 闻香识茶 用户口令核对正确
+INFO 2024/06/04 15:34:13 utils.go:113: xuepan@storetravels.com 密码匹配成功
+INFO 2024/06/04 15:34:26 utils.go:113: 闻香识茶 用户口令核对正确
+INFO 2024/06/04 15:34:26 utils.go:113: xuepan@storetravels.com 密码匹配成功
+INFO 2024/06/04 15:35:12 utils.go:113: 闻香识茶 用户口令核对正确
+INFO 2024/06/04 15:35:12 utils.go:113: xuepan@storetravels.com 密码匹配成功
+INFO 2024/06/05 09:29:17 utils.go:113: 闻香识茶 用户口令核对正确
+INFO 2024/06/05 09:29:17 utils.go:113: fengziying@storetravels.com 密码匹配成功
+INFO 2024/06/05 09:36:20 utils.go:113: pq: relation "accept_messages" does not exist  Cannot send accept message
+ERROR 2024/06/05 09:36:20 utils.go:118: pq: relation "accept_messages" does not exist  Cannot send message
+INFO 2024/06/05 09:53:23 utils.go:113: 闻香识茶 用户口令核对正确
+INFO 2024/06/05 09:53:23 utils.go:113: zbj@god.com 密码匹配成功
+INFO 2024/06/05 09:54:14 utils.go:113: fengziying@storetravels.com Session deleted
+INFO 2024/06/05 09:54:54 utils.go:113: 闻香识茶 用户口令核对正确
+INFO 2024/06/05 09:54:54 utils.go:113: fengziying@storetravels.com 密码匹配成功
+INFO 2024/06/05 09:56:27 utils.go:113: 闻香识茶 用户口令核对正确
+INFO 2024/06/05 09:56:27 utils.go:113: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/06/05 09:56:42 utils.go:113: pq: column "gender" does not exist  Cannot get 2 gender random sess_user id
+INFO 2024/06/05 09:56:42 utils.go:113: pq: column "user_id" does not exist  Cannot get 2 gender random user id
+INFO 2024/06/05 09:56:42 utils.go:113: pq: insert or update on table "accept_messages" violates foreign key constraint "accept_messages_to_user_id_fkey"  Cannot send accept message
+INFO 2024/06/05 10:27:42 utils.go:113: zbj@god.com 密码匹配成功
+INFO 2024/06/05 10:28:44 utils.go:113: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/06/05 10:29:03 utils.go:113: fengziying@storetravels.com 密码匹配成功
+INFO 2024/06/05 10:29:42 utils.go:113: sql: no rows in result set  Cannot add user new-message-count
+INFO 2024/06/06 09:20:55 utils.go:113: zbj@god.com 密码匹配成功
+INFO 2024/06/07 17:19:42 utils.go:117: zbj@god.com 密码匹配成功
+INFO 2024/06/15 08:35:29 utils.go:117: zbj@god.com 密码匹配成功
+INFO 2024/06/17 11:30:03 utils.go:117: sql: Scan error on column index 7, name "abbreviation": converting NULL to string is unsupported  Cannot get open teams
+INFO 2024/06/17 11:35:29 utils.go:117: zbj@god.com 密码匹配成功
+INFO 2024/06/17 11:45:32 utils.go:117: pq: column teams.abbreviated does not exist  Cannot get joined teams
+INFO 2024/06/18 11:19:35 utils.go:117: zbj@god.com 密码匹配成功
+INFO 2024/06/19 13:43:04 utils.go:117: monkeyking@god.com 密码匹配成功
+ERROR 2024/06/19 13:58:58 utils.go:122: sql: no rows in result set  Cannot get project
+ERROR 2024/06/19 14:00:55 utils.go:122: sql: no rows in result set  Cannot get project
+INFO 2024/06/20 11:19:30 utils.go:117: zbj@god.com 密码匹配成功
+INFO 2024/06/24 17:12:17 utils.go:117: rulai@god.com 注册新账号ok
+INFO 2024/06/24 17:12:37 utils.go:117: rulai@god.com 密码匹配成功
+INFO 2024/06/25 14:41:54 utils.go:117: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/06/25 14:44:19 utils.go:117: jiabaoyu@storetravels.com Session deleted
+INFO 2024/06/25 14:44:24 utils.go:117: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/06/25 14:44:32 utils.go:117: jiabaoyu@storetravels.com Session deleted
+INFO 2024/06/25 14:44:43 utils.go:117: xuepan@storetravels.com 密码匹配成功
+INFO 2024/06/25 14:51:58 utils.go:117: pq: relation "proje_invited_teams" does not exist  Cannot read project invited team ids
+INFO 2024/06/25 14:52:16 utils.go:117: pq: relation "proje_invited_teams" does not exist  Cannot read project invited team ids
+INFO 2024/06/25 14:56:56 utils.go:117: xuepan@storetravels.com Session deleted
+INFO 2024/06/25 14:59:33 utils.go:117: heixiongjing@god.com 注册新账号ok
+INFO 2024/06/25 14:59:50 utils.go:117: heixiongjing@god.com 密码匹配成功
+INFO 2024/06/25 15:03:54 utils.go:117: pq: relation "proje_invited_teams" does not exist  Cannot read project invited team ids
+INFO 2024/06/25 15:05:13 utils.go:117: heixiongjing@god.com Session deleted
+INFO 2024/06/25 15:05:33 utils.go:117: gyps@god.com 密码匹配成功
+INFO 2024/06/25 15:40:55 utils.go:117: gyps@god.com Session deleted
+INFO 2024/06/25 15:41:01 utils.go:117: heixiongjing@god.com 密码匹配成功
+INFO 2024/06/25 20:11:29 utils.go:117: monkeyking@god.com 密码匹配成功
+INFO 2024/06/26 09:56:10 utils.go:117: heixiongjing@god.com 密码匹配成功
+INFO 2024/06/26 09:57:59 utils.go:117: pq: relation "proje_invited_teams" does not exist  Cannot read project invited team ids
+INFO 2024/06/26 10:35:13 utils.go:117: <nil> This tea party host has not invited any teams to drink tea.
+INFO 2024/06/26 10:38:46 utils.go:117: <nil> This tea party host has not invited any teams to drink tea.
+INFO 2024/06/26 11:02:49 utils.go:117: <nil> This tea party host has not invited any teams to drink tea.
+INFO 2024/06/26 16:58:24 utils.go:117: heixiongjing@god.com Session deleted
+INFO 2024/06/26 16:59:09 utils.go:117: sql: no rows in result set  Cannot find user
+INFO 2024/06/28 13:03:29 utils.go:117: heixiongjing@god.com 密码匹配成功
+INFO 2024/06/29 17:01:40 utils.go:117: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/01 09:25:19 utils.go:117: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/01 09:26:40 utils.go:117: heixiongjing@god.com Session deleted
+INFO 2024/07/01 09:27:32 utils.go:117: monkeyking@god.com 密码匹配成功
+INFO 2024/07/02 16:26:24 utils.go:113: rulai@god.com 密码匹配成功
+INFO 2024/07/03 09:04:11 utils.go:113: fengziying@storetravels.com 密码匹配成功
+INFO 2024/07/03 13:10:39 utils.go:113: fengziying@storetravels.com 密码匹配成功
+INFO 2024/07/03 20:44:02 utils.go:113: fengziying@storetravels.com Session deleted
+INFO 2024/07/03 20:46:30 utils.go:113: invalid session  Cannot get session
+INFO 2024/07/03 20:47:25 utils.go:113: gyps@god.com 密码匹配成功
+INFO 2024/07/03 20:49:06 utils.go:113: gyps@god.com Session deleted
+INFO 2024/07/04 10:26:22 utils.go:113: zbj@god.com 密码匹配成功
+INFO 2024/07/04 10:26:37 utils.go:113: zbj@god.com Session deleted
+INFO 2024/07/04 11:23:54 utils.go:113: zbj@god.com 密码匹配成功
+INFO 2024/07/04 11:57:14 utils.go:113: zbj@god.com Session deleted
+INFO 2024/07/04 19:34:55 utils.go:113: zbj@god.com 密码匹配成功
+INFO 2024/07/04 19:45:52 utils.go:113: zbj@god.com Session deleted
+INFO 2024/07/04 19:47:14 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/05 16:14:28 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/05 16:17:45 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/05 16:17:54 utils.go:113: xuepan@storetravels.com 密码匹配成功
+INFO 2024/07/06 10:22:19 utils.go:113: xuepan@storetravels.com 密码匹配成功
+INFO 2024/07/07 10:07:56 utils.go:113: xuepan@storetravels.com 密码匹配成功
+ERROR 2024/07/07 10:08:03 utils.go:118: <nil> Cannot get object
+ERROR 2024/07/07 10:10:23 utils.go:118: <nil> Cannot get object
+INFO 2024/07/08 10:58:50 utils.go:113: xuepan@storetravels.com 密码匹配成功
+ERROR 2024/07/08 11:00:10 utils.go:118: sql: no rows in result set Cannot get object
+ERROR 2024/07/08 11:13:02 utils.go:118: sql: no rows in result set Cannot get object
+ERROR 2024/07/08 11:15:20 utils.go:118: sql: no rows in result set Cannot get object
+ERROR 2024/07/08 11:22:45 utils.go:118: sql: no rows in result set Cannot get object
+WARNING 2024/07/08 11:56:42 utils.go:123: sql: no rows in result set Cannot get accept-message invitation
+WARNING 2024/07/08 16:44:28 utils.go:123: sql: expected 2 destination arguments in Scan, not 3 Cannot subtract 1 user message
+INFO 2024/07/09 10:19:57 utils.go:113: xuepan@storetravels.com 密码匹配成功
+INFO 2024/07/09 10:48:26 utils.go:113: xuepan@storetravels.com Session deleted
+INFO 2024/07/09 10:48:34 utils.go:113: fengziying@storetravels.com 密码匹配成功
+INFO 2024/07/09 11:08:00 utils.go:113: fengziying@storetravels.com Session deleted
+INFO 2024/07/09 11:08:12 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/09 11:23:42 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/09 11:30:00 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/09 14:22:40 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/09 14:23:24 utils.go:113: jiayuanchun@storetravels.com 密码匹配成功
+INFO 2024/07/12 15:49:32 utils.go:113: jiayuanchun@storetravels.com 密码匹配成功
+ERROR 2024/07/12 15:52:55 utils.go:118: <nil>  Cannot get form value civilizer
+ERROR 2024/07/12 15:55:05 utils.go:118: <nil> Cannot get accept new tea
+ERROR 2024/07/12 15:57:13 utils.go:118: <nil>  Cannot get form value civilizer
+ERROR 2024/07/12 15:59:27 utils.go:118: <nil> Cannot get accept new tea
+ERROR 2024/07/12 16:02:42 utils.go:118: pq: insert or update on table "acceptances" violates foreign key constraint "acceptances_y_user_id_fkey"  Cannot create acceptance
+INFO 2024/07/12 16:12:49 utils.go:113: jiayuanchun@storetravels.com Session deleted
+INFO 2024/07/12 16:13:01 utils.go:113: xuepan@storetravels.com 密码匹配成功
+INFO 2024/07/12 16:13:09 utils.go:113: xuepan@storetravels.com Session deleted
+INFO 2024/07/12 16:13:22 utils.go:113: jiayuanchun@storetravels.com 密码匹配成功
+INFO 2024/07/12 16:13:27 utils.go:113: jiayuanchun@storetravels.com Session deleted
+INFO 2024/07/12 16:13:35 utils.go:113: xuepan@storetravels.com 密码匹配成功
+INFO 2024/07/12 16:15:36 utils.go:113: xuepan@storetravels.com Session deleted
+INFO 2024/07/12 16:15:48 utils.go:113: jiayuanchun@storetravels.com 密码匹配成功
+INFO 2024/07/12 16:25:18 utils.go:113: jiayuanchun@storetravels.com Session deleted
+INFO 2024/07/12 16:25:29 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/13 09:02:51 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/14 15:24:49 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/14 15:39:12 utils.go:113: pq: syntax error at or near "created_at"  Cannot create objective
+INFO 2024/07/14 15:57:34 utils.go:113: sql: expected 4 destination arguments in Scan, not 6  Cannot create objective
+INFO 2024/07/14 16:46:25 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/14 16:46:33 utils.go:113: lindaiyu@storetravels.com 密码匹配成功
+INFO 2024/07/14 16:47:36 utils.go:113: lindaiyu@storetravels.com Session deleted
+INFO 2024/07/14 16:48:13 utils.go:113: shixiangyun@storetravels.com 密码匹配成功
+ERROR 2024/07/14 16:48:46 utils.go:118: sql: no rows in result set Cannot get objective
+INFO 2024/07/15 15:57:09 utils.go:113: shixiangyun@storetravels.com 密码匹配成功
+INFO 2024/07/15 15:59:02 utils.go:113: shixiangyun@storetravels.com Session deleted
+INFO 2024/07/15 15:59:33 utils.go:113: jiayingchun@storetravels.com 密码匹配成功
+INFO 2024/07/15 16:04:42 utils.go:113: jiayingchun@storetravels.com Session deleted
+INFO 2024/07/15 16:04:52 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/15 16:07:36 utils.go:113: sql: Scan error on column index 0, name "team_id": unsupported Scan, storing driver.Value type int64 into type *[]int  Cannot read objective invited team ids
+INFO 2024/07/15 16:25:36 utils.go:113: jiatanchun@storetravels.com Session deleted
+ERROR 2024/07/15 16:26:25 utils.go:118: invalid session  Cannot get session
+INFO 2024/07/15 16:26:29 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/15 17:20:40 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/15 17:20:48 utils.go:113: jiayingchun@storetravels.com 密码匹配成功
+INFO 2024/07/15 17:21:11 utils.go:113: jiayingchun@storetravels.com Session deleted
+INFO 2024/07/15 17:21:21 utils.go:113: fengziying@storetravels.com 密码匹配成功
+INFO 2024/07/15 18:05:04 utils.go:113: fengziying@storetravels.com Session deleted
+INFO 2024/07/15 18:05:11 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/15 18:15:18 utils.go:113: sql: no rows in result set  Cannot get team
+INFO 2024/07/16 15:55:49 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/16 15:58:00 utils.go:113: sql: no rows in result set  Cannot get team
+INFO 2024/07/16 16:17:07 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/16 16:17:21 utils.go:113: jiayuanchun@storetravels.com 密码匹配成功
+INFO 2024/07/16 16:29:48 utils.go:113: jiayuanchun@storetravels.com Session deleted
+INFO 2024/07/16 16:29:55 utils.go:113: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/07/16 17:04:35 utils.go:113: jiabaoyu@storetravels.com Session deleted
+INFO 2024/07/16 17:04:42 utils.go:113: lindaiyu@storetravels.com 密码匹配成功
+INFO 2024/07/16 19:40:38 utils.go:113: lindaiyu@storetravels.com Session deleted
+INFO 2024/07/16 19:40:48 utils.go:113: monkeyking@god.com 密码匹配成功
+INFO 2024/07/16 19:41:03 utils.go:113: monkeyking@god.com Session deleted
+INFO 2024/07/16 19:41:13 utils.go:113: xuebaochai@storetravels.com 密码匹配成功
+WARNING 2024/07/16 19:55:26 utils.go:123: pq: duplicate key value violates unique constraint "team_members_pkey" xuebaochai@storetravels.com  Cannot create team_member
+INFO 2024/07/16 20:05:31 utils.go:113: xuebaochai@storetravels.com Session deleted
+INFO 2024/07/16 20:06:17 utils.go:113: liwan@storetravels.com 密码匹配成功
+INFO 2024/07/16 20:25:51 utils.go:113: liwan@storetravels.com Session deleted
+INFO 2024/07/16 20:26:01 utils.go:113: lindaiyu@storetravels.com 密码匹配成功
+INFO 2024/07/16 20:29:36 utils.go:113: lindaiyu@storetravels.com Session deleted
+INFO 2024/07/16 20:29:59 utils.go:113: xuebaochai@storetravels.com 密码匹配成功
+INFO 2024/07/16 20:30:15 utils.go:113: xuebaochai@storetravels.com Session deleted
+INFO 2024/07/16 20:30:31 utils.go:113: jiayingchun@storetravels.com 密码匹配成功
+INFO 2024/07/16 20:32:17 utils.go:113: jiayingchun@storetravels.com Session deleted
+INFO 2024/07/16 20:32:44 utils.go:113: jiaxichun@storetravels.com 密码匹配成功
+INFO 2024/07/16 20:34:29 utils.go:113: jiaxichun@storetravels.com Session deleted
+INFO 2024/07/16 20:34:40 utils.go:113: jiayingchun@storetravels.com 密码匹配成功
+INFO 2024/07/16 20:35:11 utils.go:113: jiayingchun@storetravels.com Session deleted
+INFO 2024/07/16 20:35:33 utils.go:113: sql: no rows in result set  Cannot find user
+INFO 2024/07/16 20:36:07 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/16 20:37:24 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/16 20:37:31 utils.go:113: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/07/17 10:28:42 utils.go:113: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/17 10:31:25 utils.go:113: heixiongjing@god.com Session deleted
+INFO 2024/07/17 10:32:06 utils.go:113: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/07/17 11:11:36 utils.go:113: jiabaoyu@storetravels.com Session deleted
+INFO 2024/07/17 11:11:53 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/17 11:15:02 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/17 11:15:11 utils.go:113: liwan@storetravels.com 密码匹配成功
+ERROR 2024/07/17 11:41:49 utils.go:118: pq: duplicate key value violates unique constraint "message_counts_pkey" liwan@storetravels.com  Cannot add user message count
+INFO 2024/07/17 15:37:29 utils.go:113: liwan@storetravels.com Session deleted
+INFO 2024/07/17 15:38:10 utils.go:113: wangxifeng@storetravels.com 密码匹配成功
+INFO 2024/07/18 09:02:30 utils.go:113: wangxifeng@storetravels.com 密码匹配成功
+INFO 2024/07/19 17:14:27 utils.go:113: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/20 08:48:42 utils.go:113: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/20 10:49:16 utils.go:113: heixiongjing@god.com Session deleted
+INFO 2024/07/20 10:49:25 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/21 19:59:47 utils.go:113: http: named cookie not present  Cannot get session
+INFO 2024/07/21 20:58:27 utils.go:113: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/07/21 21:01:01 utils.go:113: jiatanchun@storetravels.com Session deleted
+INFO 2024/07/21 21:01:07 utils.go:113: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/07/22 21:01:47 utils.go:113: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/07/22 21:01:56 utils.go:113: sql: Scan error on column index 0, name "team_id": unsupported Scan, storing driver.Value type int64 into type *[]int  Cannot read objective invited team ids
+INFO 2024/07/22 21:11:54 utils.go:113: sql: Scan error on column index 0, name "team_id": unsupported Scan, storing driver.Value type int64 into type *[]int  Cannot read objective invited team ids
+INFO 2024/07/24 11:42:13 utils.go:113: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/07/24 15:26:31 utils.go:113: jiabaoyu@storetravels.com Session deleted
+INFO 2024/07/24 15:30:03 utils.go:113: <nil> jiabaoyu@storetravels.com 提交注册的邮箱地址已经注册。
+INFO 2024/07/24 15:34:43 utils.go:113: <nil> tonglingbaoyu@storetravels.com 提交注册的邮箱地址已经注册。
+INFO 2024/07/24 15:35:22 utils.go:113:  因为该用户没有权限登入
+WARNING 2024/07/24 16:04:29 utils.go:123: jiabaoyu@storetravels.com 提交注册的邮箱地址已经注册。
+INFO 2024/07/24 16:04:45 utils.go:113: tonglinbaoyu@storetravels.com 注册新账号ok
+INFO 2024/07/24 16:10:18 utils.go:113:  因为该用户没有权限登入
+INFO 2024/07/24 16:10:35 utils.go:113: tonglingbaoyu@storetravels.com 密码匹配成功
+INFO 2024/07/24 16:14:57 utils.go:113: sql: Scan error on column index 9, name "updated_at": unsupported Scan, storing driver.Value type <nil> into type *time.Time  Cannot get user from session
+INFO 2024/07/24 16:17:06 utils.go:113: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/24 19:24:31 utils.go:113: heixiongjing@god.com Session deleted
+INFO 2024/07/24 19:53:51 utils.go:113: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/24 20:24:07 utils.go:113: heixiongjing@god.com Session deleted
+INFO 2024/07/24 21:08:42 utils.go:124: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/24 21:57:04 utils.go:124: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/24 21:58:24 utils.go:124: heixiongjing@god.com Session deleted
+INFO 2024/07/24 21:58:29 utils.go:124: invalid session  Cannot get session
+INFO 2024/07/24 21:59:12 utils.go:124: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/25 10:08:37 utils.go:124: http: named cookie not present  Cannot get session
+INFO 2024/07/25 10:09:28 utils.go:124: http: named cookie not present  Cannot get session
+INFO 2024/07/25 10:11:23 utils.go:124: zbj@god.com 密码匹配成功
+INFO 2024/07/25 11:05:12 utils.go:124: zbj@god.com Session deleted
+INFO 2024/07/25 11:39:50 utils.go:124: zbj@god.com 密码匹配成功
+INFO 2024/07/25 11:40:32 utils.go:124: zbj@god.com Session deleted
+INFO 2024/07/25 11:40:52 utils.go:124: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/25 16:39:22 utils.go:124: heixiongjing@god.com Session deleted
+INFO 2024/07/26 21:32:15 utils.go:124: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/26 21:45:43 utils.go:124: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/26 21:51:18 utils.go:124: heixiongjing@god.com 密码匹配成功
+INFO 2024/07/27 21:42:48 utils.go:124: heixiongjing@god.com 密码匹配成功

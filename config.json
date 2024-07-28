@@ -1,6 +1,11 @@
 {
-  "Address"        : "0.0.0.0:8080",
-  "ReadTimeout"    : 10,
-  "WriteTimeout"   : 600,
-  "Static"         : "public"
+"Address"             : "0.0.0.0:8000",
+"ReadTimeout"         : 10,
+"WriteTimeout"        : 600,
+"Static"              : "public",
+"SysMail_Username"    : "xxxxxxx@exmail.com",
+"SysMail_Password"    : "your password",
+"SysMail_Host"        : "smtp.exmail.qq.com",
+"SysMail_Port"        : "465",
+"MaxInviteTeams"      : 9         
 }

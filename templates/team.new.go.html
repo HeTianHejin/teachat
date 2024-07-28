@@ -1,0 +1,61 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">新建一个茶话团队</li>
+
+</ol>
+
+<div class="panel panel-default">
+
+  <div class="panel-heading">
+    新建茶话团队
+  </div>
+
+  <form role="form" action="/v1/team/create" method="post">
+
+    <div class="panel-body">
+
+      <div class=" form-group">
+        <fieldset>
+          <span style="margin-inline-end: 30px;">选择您的茶团属性：</span>
+          <input type="radio" name="class" id="public" style="width: fit-content;" value=10 />
+          <label for="public" style="margin-inline-end: 30px;">开放式-所有人均可申请加入</label>
+
+          <input type="radio" name="class" id="private" style="width: fit-content;" value=20 />
+          <label for="private">封闭式-仅受邀人可以加入</label>
+
+        </fieldset>
+      </div>
+
+      <div class="form-group">
+        <label for="name">请赐名新茶团（4～19字）</label>
+        <input type="text" class="form-control" name="name" id="name" minlength="4" maxlength="24" required autofocus />
+      </div>
+
+      <div class="form-group">
+        <label for="abbreviation">茶团简称（4～6字）</label>
+        <input type="text" class="form-control" name="abbreviation" id="abbreviation" minlength="4" maxlength="8"
+          required />
+      </div>
+
+      <div class="form-group">
+        <label for="mission">请介绍茶团愿景（17～456字，需要友邻盲评通过）</label>
+        <textarea class="form-control" name="mission" id="mission" rows="3" minlength="17" maxlength="567"
+          required></textarea>
+      </div>
+
+      <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+        <button type="submit" class="btn btn-default">提交</button>
+      </div>
+
+    </div>
+  </form>
+
+  <div class="panel-footer">
+    神经兮兮的茶博士：举杯邀明月，对影成三人。三人行，必有茶师焉。择其善者而品之，其不善者而泡之。
+  </div>
+
+</div>
+
+{{ end }}

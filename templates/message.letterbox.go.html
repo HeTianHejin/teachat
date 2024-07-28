@@ -1,0 +1,106 @@
+{{ define "content" }}
+<!--这是 用户的信箱首页 页面-->
+
+<ol class="breadcrumb">
+
+  <li>大堂</li>
+  <li class="active">我的信箱</li>
+ 
+
+</ol>
+
+
+<div style="margin: 20px;">
+  <ol class="nav nav-tabs nav-justified">
+    <li class="active"><a href="#">茶团邀请
+      {{ if .SessUser.HasUnreadMessage }}
+      <span class="badge">{{ .SessUser.GetNewMessageCount }}</span>
+      {{ else }}
+      {{ end }}
+    </a></li>
+    <li><a href="/v1/message/accept">新茶评审
+      {{ if .SessUser.HasNewAcceptMessage }}
+      <span class="badge">{{ .SessUser.UnreadAcceptMessagesCount }}</span>
+      {{ else }}
+      {{ end }}
+    </a></li>
+    <li><a href="/v1/office/note">茶棚纸条</a></li>
+  </ol>
+</div>
+
+
+
+
+{{ range .InvitationList }}
+
+<div class="panel panel-default">
+
+  <div class="panel-heading">
+
+    <div class="row">
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+    
+          <a href="/v1/user/biography?id={{ .TeamCEO.Uuid }}">{{ .TeamCEO.Name }}</a>
+       
+      </div>
+
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <span style="display: block; font-size: smaller;text-align: center;">
+          {{ .CreatedAtDate }}
+        </span>
+      </div>
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <span style="display: block; text-align: right;">
+          <span class="label label-success">{{ .GetStatus }}
+          </span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel-body">
+    <a href="/v1/team/team_member/invitation?id={{ .Uuid }}">
+      
+      <h4>茶团邀请函</h4>
+    </a>
+
+    <p>
+      受邀请人邮箱：{{ .InviteEmail }}
+    </p>
+    <p>
+      发自：<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>@茶团
+    </p>
+  </div>
+
+</div>
+
+{{ else }}
+<div class="well">
+  你好，没有收到任何茶团的邀请函。
+</div>
+{{ end }}
+
+
+<div class="list-group">
+  <a href="#" class="list-group-item active">
+    <span class="badge">{{ .SessUser.InvitationUnviewedCount }}</span>
+    待处理
+  </a>
+  <a href="#" class="list-group-item">
+    <span class="badge">{{ .SessUser.InvitationViewedCount }}</span>
+    已查看</a>
+    <a href="#" class="list-group-item">
+    <span class="badge">{{ .SessUser.InvitationAcceptedCount }}</span>
+    已接受</a>
+    <a href="#" class="list-group-item">
+    <span class="badge">{{ .SessUser.InvitationRejectedCount }}</span>
+    已婉拒</a>
+    <a href="#" class="list-group-item">
+    <span class="badge">{{ .SessUser.InvitationsCount }}</span>
+    共收到</a>
+
+</div>
+
+
+{{ end }}

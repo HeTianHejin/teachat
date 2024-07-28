@@ -1,0 +1,66 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+   
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?id={{ .Uuid }}">{{ .Title }}@茶话会</a></li>
+  <li class="active">新开茶台</li>
+
+</ol>
+
+<div class="panel panel-default">
+
+  <div class="panel-heading">
+    新茶台
+  </div>
+
+  <form role="form" action="/v1/project/new" method="post">
+
+    <div class="panel-body">
+
+      <div class="form-group">
+        <fieldset>
+          <span style="margin-inline-end: 30px;">选择属性：
+            <input type="radio" name="class" id="public" style="width: fit-content;" value=10 required checked />
+            <label for="public" style="margin-inline-end: 20px;">开放式-所有茶团都可以品茶</label>
+
+              <input type="radio" name="class" id="private" style="width: fit-content;" value=20 required />
+              <label for="private"  style="margin-inline-end: 20px;">封闭式-仅受邀团队可以品茶</label>
+          </span>
+        </fieldset>
+      </div>
+
+      <div class="form-group">
+        <label for="name">请命名您的茶台（2-24字）</label>
+        <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="24" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="description">请介绍你的茶台（17-456字，需要友邻盲评通过）</label>
+        <textarea class="form-control" name="description" id="description" rows="3" minlength="17" maxlength="567"
+          required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="invite-team-ids">封闭式茶台请指定邀请的茶团号，以逗号分隔。</label>
+        <input type="text" class="form-control" name="invite-team-ids" id="invite-team-ids" required />
+      </div>
+
+      <input type="hidden" name="uuid" id="uuid" value="{{ .Uuid }}">
+      
+   
+        <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+          <button type="submit" class="btn btn-default">开台</button>
+        </div>
+      
+
+    </div>
+  </form>
+
+  <div class="panel-footer">
+    神经兮兮的茶博士：您知道吗？船长非常迷信月光之神，说月圆月缺一轮回才能拓摆一围茶，月升月落一圈才能开新茶台。
+  </div>
+
+</div>
+
+{{ end }}

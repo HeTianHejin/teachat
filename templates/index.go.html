@@ -1,0 +1,175 @@
+{{ define "content" }}
+
+<!--这是星服务茶棚主页-->
+
+<ol class="breadcrumb">
+  <li role="presentation">大堂</li>
+
+</ol>
+
+<!--展示全部茶议-->
+{{ range .ThreadList }}
+
+{{ if .PageData.IsAuthor }}
+<!--检测是否茶议作者，是,安排右侧头像布局-->
+<div class="media">
+
+  <div class="media-body">
+
+    <div class="panel panel-success">
+
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            {{ .User.Name }}
+           
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+              <span class="label label-default">{{ .Status }}
+              </span>
+            </span>
+          
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; font-size: smaller;text-align: center;">
+              {{ .CreatedAtDate }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        <h4>{{ .TypeStatus }}:
+          <a href="/v1/thread/detail?id={{ .Uuid }}">
+            {{ .Title }}
+          </a>
+        </h4>
+
+        <p>
+          {{ .Body }} ...
+        </p>
+
+      </div>
+
+      <div class="panel-footer">
+        <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .NumReplies }} </span>
+        {{ if .IsEdited }}
+        <a href="/v1/thread/edit?id={{ .Uuid }}">
+          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        </a>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .EditAtDate }} </span>
+        {{ else }}
+        <!--没有编辑过（补充内容）则没有加水时间-->
+        <a href="/v1/thread/edit?id={{ .Uuid }}">
+          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        </a>
+        {{ end }}
+
+        <span class="pull-right">
+          <a href="/v1/thread/detail?id={{.Uuid }}">
+            <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+
+          </a> {{ .NumReads }}
+        </span>
+      </div>
+
+    </div>
+  </div>
+  <div class="media-right">
+    <span class=" badge">
+      {{ .NumReplies }} 
+    </span>
+    <a href="/v1/user/biography?id={{ .User.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+    </a>
+  </div>
+</div>
+
+{{ else }}
+<!--检测是否茶议作者，否,安排左侧头像布局-->
+
+<div class="media">
+  <div class="media-left">
+    <span class=" badge">
+      {{ .NumReplies }} 
+    </span>
+    <a href="/v1/user/biography?id={{ .User.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+    </a>
+
+  </div>
+  <div class="media-body">
+
+    <div class="panel panel-default">
+
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            {{ .User.Name }}
+           
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+              <span class="label label-default">{{ .Status }}
+              </span>
+            </span>
+          
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; font-size: smaller;text-align: right">
+              {{ .CreatedAtDate }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <h4>{{ .TypeStatus }}:
+          <a href="/v1/thread/detail?id={{ .Uuid }}">
+            {{ .Title }}
+          </a>
+        </h4>
+
+        <p>
+          {{ .Body }} ...
+        </p>
+
+      </div>
+
+      <div class="panel-footer">
+
+        <span>
+          {{ .NumSupport }}
+        </span>
+        <span class="glyphicon glyphicon-hand-right" aria-hidden="true" style="margin-inline-end: 10px;"></span>
+        <span class="glyphicon glyphicon-hand-left" aria-hidden="true"></span>
+        {{ .NumOppose }}
+
+        {{ if .IsEdited }}
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .EditAtDate }} </span>
+        {{ else }}
+        <!--没有编辑过（补充内容）则留空白-->
+        {{ end }}
+
+        <span class="pull-right">
+          <a href="/v1/thread/detail?id={{.Uuid }}">
+            <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+          </a> {{ .NumReads }}
+        </span>
+        </span>
+      </div>
+
+    </div>
+  </div>
+</div>
+{{ end }}
+
+{{ end }}
+
+{{ end }}

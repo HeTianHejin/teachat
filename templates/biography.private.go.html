@@ -1,0 +1,98 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+
+      <li>大堂</li>
+      <li class="active">{{ .SessUser.Name }}的个人主页</li>
+      
+</ol>
+
+
+
+<p>编辑个人资料</p>
+<div class="media">
+      <div class="media-left">
+            <a href="/v1/user/avatar">
+              <img class="img-circle" src="/v1/static/image/{{ .SessUser.Avatar }}.jpeg" alt="个人头像">
+            </a>
+          </div>
+      <div class="media-body">
+            <div class="panel panel-default">
+                  <div class="panel-heading">
+                      <span class="lead">{{ .SessUser.Name }}</span>
+                  </div>
+                  <div class="panel-body">
+                      <span class="lead">{{ .SessUser.Email }}</span>
+                      <div class="pull-right">
+                          <a href="/v1/user/forgot">修改密码</a>
+                      </div>
+                  </div>
+              </div>
+      </div>
+</div>
+
+
+{{if .IsAuthor }}
+
+<form role="form" action="/v1/user/edit" method="post">
+
+    <label for="name">请输入新的花名:</label>
+    <input id="name" type="text" name="name" class="form-control" value="{{ .SessUser.Name }}" required>
+    <br />
+
+    <label for="biography">请输入新的简介，需要友邻盲评通过:</label>
+    <textarea name="biography" id="biography"  type="text" class="form-control" rows="3" cols="33" minlength="3" maxlength="567" autofocus>{{ .SessUser.Biography }}</textarea>
+    
+    <br />
+    <button class="btn btn-primary" type="submit">提交</button>
+    <br />
+</form>
+<br />
+
+{{ else }}
+
+
+<div class="alert alert-info">
+      <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+      <strong>机关算尽太聪明</strong> 反误了卿卿性命 ...
+</div>
+
+
+{{ end }}
+
+
+<div class="panel panel-default">
+      <div class="panel-heading">
+            <h3 class="panel-title">魔法</h3>
+      </div>
+      <div class="panel-body">
+            <p>天罡三十六变</p>
+            <p>地煞三十六变</p>
+      </div>
+</div>
+
+
+<div class="panel panel-default">
+      <div class="panel-heading">
+            <h3 class="panel-title">宝贝</h3>
+      </div>
+      <div class="panel-body">
+            金箍棒
+      </div>
+</div>
+
+
+<div class="panel panel-default">
+      <div class="panel-heading">
+            <h3 class="panel-title">藏宝盒</h3>
+      </div>
+      <div class="panel-body">
+            虎皮花袄
+      </div>
+</div>
+
+
+
+
+{{ end }}
+

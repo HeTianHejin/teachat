@@ -1,0 +1,142 @@
+{{ define "content"}}
+
+<!-- 这是指定茶团详情展示页面面包屑导航栏 -->
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/open">茶团</a></li>
+
+</ol>
+
+
+<div class="well">
+
+  {{ if .Open }}
+  <span style="margin-inline-end: 30px;">
+    <a href="/v1/team/team_member/join?id={{ .Team.Uuid }}">申请加入该团</a>
+  </span>
+  <a href="/v1/team/team_member/invite_page?id={{ .Team.Uuid }}">邀请新成员拼团</a>
+  {{ else }}
+  <a href="/v1/team/team_member/invite_page?id={{ .Team.Uuid }}">邀请新成员拼团</a>
+  {{ end }}
+
+  <div class="pull-right">
+    <a href="/v1/team/invitations?id={{ .Team.Uuid }}">查看已发邀请</a>
+  </div>
+
+</div>
+
+<!-- 这是指定茶团详情展示页面 -->
+
+<div class="media">
+  <div class="media-left">
+
+    <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="茶团旗帜">
+
+  </div>
+  <div class="media-body">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            {{ .Team.Name }}
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block;text-align: center;">
+              {{ if .Open }}
+              <span class="label label-success">{{ .Team.TeamProperty }}
+                {{ else }}
+                <span class="label label-default">{{ .Team.TeamProperty }}
+                  {{ end }}
+                </span>
+              </span>
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: right; font-size: smaller;">
+              <a href="/v1/user/biography?id={{ .Team.Founder.Uuid }}">{{ .Founder.Name }}</a>
+              <span class="label label-info">{{ .Founder.GetGender }}</span>
+              {{ .Team.CreatedAtDate }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        {{ .Team.Mission }}
+
+      </div>
+      <div class="panel-footer">
+        <span style="margin-inline-end: 20px;" title="团号">
+          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+          {{ .Team.Id }}
+        </span>
+
+        <span style="margin-inline-end: 20px;" title="成员数">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+          {{ .TeamMemberCount }}
+        </span>
+
+      </div>
+    </div>
+
+    <!-- 这是茶团核心成员展示页面 -->
+    {{ range .CoreMemberDataList }}
+
+    <div class="media">
+      <div class="media-left">
+        <a href="/v1/user/biography?id={{ .User.Uuid }}">
+          <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+        </a>
+      </div>
+      <div class="media-body">
+
+        <a href="/v1/user/biography?id={{ .User.Uuid }}">
+          {{ .User.Name }}
+        </a>
+        <span  style="font-size: small;">
+        <span class="label label-info">{{ .User.GetGender }}</span>
+      </span>
+    
+        <h5>{{ .TeamMemberRole }}</h5>
+
+        <span style="font-style: italic;">{{ .User.Email }}</span>
+
+      </div>
+    </div>
+    {{ end }}
+
+    {{ range .NormalMemberDataList }}
+
+    <div class="media">
+      <div class="media-left">
+        <a href="/v1/user/biography?id={{ .User.Uuid }}">
+          <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+        </a>
+      </div>
+      <div class="media-body">
+
+        <a href="/v1/user/biography?id={{ .User.Uuid }}">
+          {{ .User.Name }}
+        </a>
+
+        <span  style="font-size: small;">
+        <span class="label label-info">{{ .User.GetGender }}</span>
+        </span>
+   
+        <h5>{{ .TeamMemberRole }}</h5>
+        <span style="font-style: italic;">{{ .User.Email }}</span>
+
+      </div>
+    </div>
+
+    {{ end }}
+
+  </div>
+</div>
+
+
+
+{{ end }}
