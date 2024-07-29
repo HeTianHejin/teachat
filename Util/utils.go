@@ -136,7 +136,7 @@ func Warning(args ...interface{}) {
 
 // Version
 func Version() string {
-	return "0.6"
+	return "0.7"
 }
 
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
