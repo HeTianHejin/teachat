@@ -50,7 +50,7 @@ func (invitation *Invitation) Create() (err error) {
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(
-		CreateUuid(),
+		CreateUUID(),
 		invitation.TeamId,
 		invitation.InviteEmail,
 		invitation.Role,
@@ -136,7 +136,7 @@ func (invitationReply *InvitationReply) Create() (err error) {
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(
-		CreateUuid(),
+		CreateUUID(),
 		invitationReply.InvitationId,
 		invitationReply.UserId,
 		invitationReply.ReplyWord,

@@ -6,15 +6,15 @@ import (
 
 // 茶议 teaThread
 // 议程，主张或者提议，或者观点，论题...
-// 茶议的开放性是跟随茶台的class，如果茶台是开放式，则是开放式，否则是封闭式，
+// 茶议的开放性是跟随茶台的class，如果茶台是开放式，则茶议是开放式，否则是封闭式，
 type Thread struct {
-	Id        int       `json:"id,omitempty"`
-	Uuid      string    `json:"uuid,omitempty"`
-	Body      string    //内容
-	UserId    int       `json:"user_id,omitempty"` //作者
-	CreatedAt time.Time `json:"created_at,omitempty"`
-	Class     int       `json:"class,omitempty"` //状态0: "加水",1: "品茶",2: "定味",3: "展示",4: "已删除",
-	Title     string    //标题
+	Id        int
+	Uuid      string
+	Body      string //内容
+	UserId    int    //作者
+	CreatedAt time.Time
+	Class     int    //状态0: "加水",1: "品茶",2: "定味",3: "展示",4: "已删除",
+	Title     string //标题
 	EditAt    time.Time
 	ProjectId int //茶台号
 	HitCount  int //点击计数
@@ -230,7 +230,7 @@ func (t *Thread) Save() (err error) {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(CreateUuid(), t.Body, t.UserId, time.Now(), t.Class, t.Title, time.Now(), t.ProjectId, t.HitCount, t.Type, t.PostId)
+	_, err = stmt.Exec(CreateUUID(), t.Body, t.UserId, time.Now(), t.Class, t.Title, time.Now(), t.ProjectId, t.HitCount, t.Type, t.PostId)
 	if err != nil {
 		return
 	}

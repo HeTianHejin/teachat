@@ -128,7 +128,7 @@ func (user *User) CreateObjective(title, body, cover string, class int) (objecti
 	}
 	defer stmt.Close()
 	// use QueryRow to return a row and scan the returned id into the objective struct
-	err = stmt.QueryRow(CreateUuid(), title, body, time.Now(), user.Id, class, time.Now(), 0, cover).Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover)
+	err = stmt.QueryRow(CreateUUID(), title, body, time.Now(), user.Id, class, time.Now(), 0, cover).Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover)
 	return
 }
 

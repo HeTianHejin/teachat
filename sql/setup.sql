@@ -32,6 +32,7 @@ drop table families;
 drop table communities;
 drop table administrators;
 drop table watchwords;
+drop table monologues;
 
 
 
@@ -360,3 +361,14 @@ CREATE TABLE communities (
     updated_at                            TIMESTAMP,
     flag                                   VARCHAR(255)
 );
+
+CREATE TABLE monologues {
+    id                                    SERIAL PRIMARY KEY,
+    uuid                                  VARCHAR(255),
+    title                                 VARCHAR(255),
+    content                               TEXT,
+    user_id                               INTEGER references users(id),
+    note                                  VARCHAR(255)
+    category                              INTEGER default 0,
+    created_at                            TIMESTAMP
+};

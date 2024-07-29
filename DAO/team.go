@@ -278,7 +278,7 @@ func (user *User) CreateTeam(name, abbreviation, mission, logo string, class int
 		return
 	}
 	defer stmt.Close()
-	cmd := stmt.QueryRow(CreateUuid(), name, mission, user.Id, time.Now(), class, abbreviation, logo)
+	cmd := stmt.QueryRow(CreateUUID(), name, mission, user.Id, time.Now(), class, abbreviation, logo)
 	err = cmd.Scan(
 		&team.Id,
 		&team.Uuid,
@@ -308,7 +308,7 @@ func AddTeamMember(teamId int, user_id int, role string) (teamMember TeamMember,
 		return
 	}
 	defer stmt.Close()
-	cmd := stmt.QueryRow(CreateUuid(), teamId, user_id, role, time.Now())
+	cmd := stmt.QueryRow(CreateUUID(), teamId, user_id, role, time.Now())
 	err = cmd.Scan(
 		&teamMember.Id,
 		&teamMember.Uuid,
@@ -428,7 +428,7 @@ func (teamMember *TeamMember) Create() (err error) {
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(
-		CreateUuid(),
+		CreateUUID(),
 		teamMember.TeamId,
 		teamMember.UserId,
 		teamMember.Role,

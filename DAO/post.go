@@ -84,7 +84,7 @@ func (user *User) CreatePost(thread_id int, attitude bool, body string) (post Po
 	}
 	defer stmt.Close()
 	// use QueryRow to return a row and scan the returned id into the post struct
-	err = stmt.QueryRow(CreateUuid(), body, user.Id, thread_id, time.Now(), time.Now(), attitude).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score)
+	err = stmt.QueryRow(CreateUUID(), body, user.Id, thread_id, time.Now(), time.Now(), attitude).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score)
 	return
 }
 
