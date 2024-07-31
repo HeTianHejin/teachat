@@ -11,9 +11,9 @@ import (
 // Show the Login page
 // 打开登录页面
 func Login(w http.ResponseWriter, r *http.Request) {
-	_, err := util.Session(r)
+	_, err := Session(r)
 	if err != nil {
-		t := util.ParseTemplateFiles("layout", "navbar.public", "login")
+		t := ParseTemplateFiles("layout", "navbar.public", "login")
 		t.Execute(w, nil)
 		return
 	}
@@ -23,7 +23,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // GET /SignupForm
 // 新用户注册页面
 func SignupForm(w http.ResponseWriter, r *http.Request) {
-	util.GenerateHTML(w, nil, "layout", "navbar.public", "signup")
+	GenerateHTML(w, nil, "layout", "navbar.public", "signup")
 }
 
 // POST /signup
@@ -40,11 +40,11 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	biography := r.PostFormValue("biography")
 	gender, err := strconv.Atoi(r.PostFormValue("gender"))
 	if err != nil {
-		util.Report(w, r, "您好，请确认您的洗手间服务选择是否正确。")
+		Report(w, r, "您好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
 	if gender != 0 && gender != 1 {
-		util.Report(w, r, "您好，请确认您的洗手间服务选择是否正确。")
+		Report(w, r, "您好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
 
@@ -59,25 +59,25 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 		Avatar:    "teaSet",
 	}
 	// 用正则表达式匹配一下提交的邮箱格式是否正确
-	if ok := data.VerifyEmailFormat(newU.Email); !ok {
-		util.Report(w, r, "您好，请确认邮箱拼写是否正确。")
+	if ok := VerifyEmailFormat(newU.Email); !ok {
+		Report(w, r, "您好，请确认邮箱拼写是否正确。")
 		return
 	}
 	// 检查提交的邮箱是否已经注册过了
 	exist, _ := data.UserExistByEmail(newU.Email)
 	if exist {
 		util.Warning(newU.Email, "提交注册的邮箱地址已经注册。")
-		util.Report(w, r, "你好，提交注册的邮箱地址已经注册,请确认后再试。")
+		Report(w, r, "你好，提交注册的邮箱地址已经注册,请确认后再试。")
 		return
 	}
 	// 存储新用户（测试时不作邮箱有效性检查，直接激活账户）
 	if err := newU.Create(); err != nil {
 		util.Danger(err, " Cannot create user")
-		util.Report(w, r, "您好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
+		Report(w, r, "您好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	} else {
 		util.Info(newU.Email, "注册新账号ok")
-		util.Report(w, r, "新茶客你好！欢迎光临星际茶棚，祝愿你拥有一段美好时光。")
+		Report(w, r, "新茶客你好！欢迎光临星际茶棚，祝愿你拥有一段美好时光。")
 		return
 	}
 
@@ -131,7 +131,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				} else {
 					//密码和用户名不匹配
 					util.Warning(user.Email, "试图空降茶棚失败")
-					util.Report(w, r, "无所事事的茶博士嘀咕说，请确认密码是否正确，键盘大小写灯是否有电。")
+					Report(w, r, "无所事事的茶博士嘀咕说，请确认密码是否正确，键盘大小写灯是否有电。")
 					return
 				}
 
@@ -144,7 +144,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		} else {
 			//输入了错误的口令
 			util.Info(watchword, "因为口令不正确导致登入失败")
-			util.Report(w, r, "您好，这是星际茶棚，想喝茶需要知香识味。")
+			Report(w, r, "您好，这是星际茶棚，想喝茶需要知香识味。")
 			return
 		}
 

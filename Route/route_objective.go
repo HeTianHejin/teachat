@@ -28,7 +28,7 @@ func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 // 返回objective.new页面
 func CreateObjectivePage(w http.ResponseWriter, r *http.Request) {
 	//尝试从http请求中读取用户会话信息
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -39,21 +39,21 @@ func CreateObjectivePage(w http.ResponseWriter, r *http.Request) {
 	// 填写页面数据
 	SessUser := u
 	// 给请求用户返回新建茶话会页面
-	util.GenerateHTML(w, &SessUser, "layout", "navbar.private", "objective.new")
+	GenerateHTML(w, &SessUser, "layout", "navbar.private", "objective.new")
 }
 
 // POST /objective/create
 // create the objective
 // 创建新茶话会
 func CreateObjective(w http.ResponseWriter, r *http.Request) {
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Report(w, r, "您好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		Report(w, r, "您好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 	u, _ := s.User()
@@ -69,12 +69,12 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 
 	// 检测一下name是否>2中文字，body是否在17-456中文字，
 	// 如果不是，返回错误信息
-	if util.CnStrLen(title) < 2 {
-		util.Report(w, r, "您好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
+	if CnStrLen(title) < 2 {
+		Report(w, r, "您好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
-	if util.CnStrLen(body) < 17 || util.CnStrLen(body) > 456 {
-		util.Report(w, r, "您好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
+	if CnStrLen(body) < 17 || CnStrLen(body) > 456 {
+		Report(w, r, "您好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return
 	}
 
@@ -90,7 +90,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 
 			// 记录错误，提示用户新开茶话会未成功
 			util.Warning(err, " Cannot create objective")
-			util.Report(w, r, "您好，偷来梨蕊三分白，借得梅花一缕魂。")
+			Report(w, r, "您好，偷来梨蕊三分白，借得梅花一缕魂。")
 			return
 		}
 
@@ -100,9 +100,9 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		tIds_str := r.PostFormValue("invite-team-ids")
 
 		//用正则表达式检测茶团号TeamIds，是否符合“整数，整数，整数...”的格式
-		if !data.VerifyTeamIdListFormat(tIds_str) {
+		if !VerifyTeamIdListFormat(tIds_str) {
 			util.Warning(err, " TeamId list format is wrong")
-			util.Report(w, r, "您好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
+			Report(w, r, "您好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 			return
 		}
 		//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId,以便处理
@@ -110,7 +110,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
 		if len(te_ids_str) > util.Config.MaxInviteTeams {
 			util.Warning(err, " Too many team ids")
-			util.Report(w, r, "您好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，茶壶不够用，请确认后再试。")
+			Report(w, r, "您好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，茶壶不够用，请确认后再试。")
 			return
 		}
 		team_id_list := make([]int, 0, util.Config.MaxInviteTeams)
@@ -124,7 +124,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 			// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
 			util.Warning(err, " Cannot create objective")
-			util.Report(w, r, "您好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
+			Report(w, r, "您好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
 			return
 		}
 
@@ -143,7 +143,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 	default:
 		// 未知的茶话会属性
 		util.Warning(err, " Unknown objective class")
-		util.Report(w, r, "您好，茶博士还在研究茶话会的围字是不是有四种写法，忘记创建茶话会了，请稍后再试。")
+		Report(w, r, "您好，茶博士还在研究茶话会的围字是不是有四种写法，忘记创建茶话会了，请稍后再试。")
 		return
 	}
 
@@ -154,7 +154,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = aO.Create(); err != nil {
 		util.Warning(err, "Cannot create accept_object")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
 	// 发送盲评请求消息给两个在线用户
@@ -168,13 +168,13 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 	// 发送消息给两个在线用户
 	if err = AcceptMessageSendExceptUserId(u.Id, mess); err != nil {
 		util.Warning(err, "Cannot send 2 acceptMessage")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能创建新茶，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶，请稍后再试。")
 		return
 	}
 
 	t := fmt.Sprintf("您好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", ob.Title)
 	// 提示用户草稿保存成功
-	util.Report(w, r, t)
+	Report(w, r, t)
 
 }
 
@@ -198,25 +198,25 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	oSpD.ObjectiveList, err = data.GetAllObjectives()
 	if err != nil {
 		util.Info(err, " Cannot get objectives")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
 		return
 	}
 	// 缩短.Body
 	for i := range oSpD.ObjectiveList {
-		oSpD.ObjectiveList[i].Body = util.Substr(oSpD.ObjectiveList[i].Body, 86)
+		oSpD.ObjectiveList[i].Body = Substr(oSpD.ObjectiveList[i].Body, 86)
 	}
 
 	// 如果茶话会状态是草围（未经邻座盲评审核的草稿）,对其名称和描述内容局部进行随机遮盖处理。
 	for i := range oSpD.ObjectiveList {
 		if oSpD.ObjectiveList[i].Class == 10 || oSpD.ObjectiveList[i].Class == 20 {
 			// 随机遮盖50%处理
-			oSpD.ObjectiveList[i].Title = util.MarsString(oSpD.ObjectiveList[i].Title, 50)
-			oSpD.ObjectiveList[i].Body = util.MarsString(oSpD.ObjectiveList[i].Body, 50)
+			oSpD.ObjectiveList[i].Title = MarsString(oSpD.ObjectiveList[i].Title, 50)
+			oSpD.ObjectiveList[i].Body = MarsString(oSpD.ObjectiveList[i].Body, 50)
 		}
 	}
 
 	//检查用户是否已经登录
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		//未登录！游客
 		//准备页面数据
@@ -230,7 +230,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//返回页面
-		util.GenerateHTML(w, &oSpD, "layout", "navbar.public", "objectives.square")
+		GenerateHTML(w, &oSpD, "layout", "navbar.public", "objectives.square")
 		return
 	}
 	//已登录
@@ -252,7 +252,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 			oSpD.ObjectiveList[i].PageData.IsAuthor = false
 		}
 	}
-	util.GenerateHTML(w, &oSpD, "layout", "navbar.private", "objectives.square")
+	GenerateHTML(w, &oSpD, "layout", "navbar.private", "objectives.square")
 
 }
 
@@ -265,13 +265,13 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	if uuid == "" {
-		util.Report(w, r, "您好，茶博士迷糊了，请稍后再试。")
+		Report(w, r, "您好，茶博士迷糊了，请稍后再试。")
 		return
 	}
 	// 根据uuid查询茶话会资料
 	obDetailPD.Objective, err = data.GetObjectiveByUuid(uuid)
 	if err != nil {
-		util.Report(w, r, "您好，茶博士摸摸满头大汗，居然自言自语说外星人把这个茶话会资料带走了。")
+		Report(w, r, "您好，茶博士摸摸满头大汗，居然自言自语说外星人把这个茶话会资料带走了。")
 		return
 	}
 
@@ -279,10 +279,10 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	case 1, 2:
 		break
 	case 10, 20:
-		util.Report(w, r, "您好，这个茶话会需要等待友邻盲评通过之后才能启用呢。")
+		Report(w, r, "您好，这个茶话会需要等待友邻盲评通过之后才能启用呢。")
 		return
 	default:
-		util.Report(w, r, "您好，这个茶话会主人据说因为很帅，资料似乎被外星人看中带走了。")
+		Report(w, r, "您好，这个茶话会主人据说因为很帅，资料似乎被外星人看中带走了。")
 		return
 	}
 
@@ -295,15 +295,15 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	obDetailPD.ProjectList, _ = obDetailPD.Objective.Projects()
 	//截短project.Body
 	for i := range obDetailPD.ProjectList {
-		obDetailPD.ProjectList[i].Body = util.Substr(obDetailPD.ProjectList[i].Body, 86)
+		obDetailPD.ProjectList[i].Body = Substr(obDetailPD.ProjectList[i].Body, 86)
 	}
 
 	//检查用户是否已经登录
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		//未登录！
 		//配置公开导航条的茶话会详情页面
-		util.GenerateHTML(w, &obDetailPD, "layout", "navbar.public", "objective.detail")
+		GenerateHTML(w, &obDetailPD, "layout", "navbar.public", "objective.detail")
 		return
 	}
 	//已经登录！
@@ -315,12 +315,12 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		//配置私有导航条的茶话会详情页面
 		//准备页面数据PageData
 		obDetailPD.Objective.PageData.IsAuthor = true
-		util.GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "objective.detail")
+		GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "objective.detail")
 		return
 	} else {
 		//不是作者
 		//配置私有导航条的茶话会详情页面
-		util.GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "objective.detail")
+		GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "objective.detail")
 		return
 	}
 

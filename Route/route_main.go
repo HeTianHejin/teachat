@@ -3,7 +3,6 @@ package route
 import (
 	"net/http"
 	data "teachat/DAO"
-	util "teachat/Util"
 )
 
 // GET //First page
@@ -15,18 +14,18 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	num := 24
 	indexPD.ThreadList, err = data.ThreadsIndex(num)
 	if err != nil {
-		util.Report(w, r, "您好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
+		Report(w, r, "您好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
 	if len(indexPD.ThreadList) == 0 {
-		util.Report(w, r, "您好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
+		Report(w, r, "您好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 	// 迭代ThreadList，把.Body截取缩短108字符
 	for i := range indexPD.ThreadList {
-		indexPD.ThreadList[i].Body = util.Substr(indexPD.ThreadList[i].Body, 108)
+		indexPD.ThreadList[i].Body = Substr(indexPD.ThreadList[i].Body, 108)
 	}
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		//游客
 		indexPD.SessUser = data.User{
@@ -37,13 +36,13 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			indexPD.ThreadList[i].PageData.IsAuthor = false
 		}
 		//展示游客首页
-		util.GenerateHTML(w, &indexPD, "layout", "navbar.public", "index")
+		GenerateHTML(w, &indexPD, "layout", "navbar.public", "index")
 		return
 	}
 	//已登录
 	sUser, err := s.User()
 	if err != nil {
-		util.Report(w, r, "您好，茶博士摸摸头，说有眼不识泰山。")
+		Report(w, r, "您好，茶博士摸摸头，说有眼不识泰山。")
 		return
 	}
 	indexPD.SessUser = sUser
@@ -55,7 +54,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	//展示茶客的首页
-	util.GenerateHTML(w, &indexPD, "layout", "navbar.private", "index")
+	GenerateHTML(w, &indexPD, "layout", "navbar.private", "index")
 
 }
 
@@ -63,19 +62,19 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // show About page 区别是导航条不同
 func About(w http.ResponseWriter, r *http.Request) {
 	var userBPD data.UserBiographyPageData
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		userBPD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 		}
-		util.GenerateHTML(w, &userBPD, "layout", "navbar.public", "about")
+		GenerateHTML(w, &userBPD, "layout", "navbar.public", "about")
 
 	}
 
 	userBPD.SessUser, _ = s.User()
 	//展示tea客的首页
-	util.GenerateHTML(w, &userBPD, "layout", "navbar.private", "about")
+	GenerateHTML(w, &userBPD, "layout", "navbar.private", "about")
 
 }
 
@@ -91,7 +90,7 @@ func HandleSearch(w http.ResponseWriter, r *http.Request) {
 
 // Post /v1/search
 func Fetch(w http.ResponseWriter, r *http.Request) {
-	util.Report(w, r, "您好，茶博士摸摸头说，这个服务目前空缺，要不你来担当吧？")
+	Report(w, r, "您好，茶博士摸摸头说，这个服务目前空缺，要不你来担当吧？")
 }
 
 // GET /v1/Search
@@ -99,11 +98,11 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 func Search(w http.ResponseWriter, r *http.Request) {
 	var err error
 	// 是否已登陆？
-	_, err = util.Session(r)
+	_, err = Session(r)
 	if err != nil {
-		util.GenerateHTML(w, nil, "layout", "navbar.public", "search")
+		GenerateHTML(w, nil, "layout", "navbar.public", "search")
 		return
 	}
 	// 查询页面
-	util.GenerateHTML(w, nil, "layout", "navbar.private", "search")
+	GenerateHTML(w, nil, "layout", "navbar.private", "search")
 }

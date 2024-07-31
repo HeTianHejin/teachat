@@ -56,20 +56,20 @@ func HandleJoinTeam(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/team/team_member/join
 func JoinTeam(w http.ResponseWriter, r *http.Request) {
-	util.Report(w, r, "您好，茶博士正在忙碌抛砖引玉中，稍后再试。")
+	Report(w, r, "您好，茶博士正在忙碌抛砖引玉中，稍后再试。")
 
 }
 
 // GET /v1/team/team_member/join
 func JoinTeamPage(w http.ResponseWriter, r *http.Request) {
-	util.Report(w, r, "您好，茶博士正在忙碌抛砖引玉中，稍后再试。")
+	Report(w, r, "您好，茶博士正在忙碌抛砖引玉中，稍后再试。")
 
 }
 
 // POST /v1/team/team_member/invitation
 // 设置邀请函回复方法
 func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
-	sess, err := util.Session(r)
+	sess, err := Session(r)
 	if err != nil {
 		util.Danger(err, " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -79,7 +79,7 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Danger(err, " Cannot parse form")
-		util.Report(w, r, "您好，茶博士正在忙碌中，稍后再试。")
+		Report(w, r, "您好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	u, _ := sess.User()
@@ -88,19 +88,19 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 	//检查一下提交的用户和会话用户Id是否一致
 	if user_id != u.Id {
 		util.Warning(err, u.Email, " Cannot get session")
-		util.Report(w, r, "您好，请先登录，稍后再试。")
+		Report(w, r, "您好，请先登录，稍后再试。")
 		return
 	}
 	//根据用户提交的invitation_id，检查是否存在该邀请函
 	invitation, err := data.GetInvitationById(invitation_id)
 	if err != nil {
 		util.Danger(err, u.Email, " Cannot get invitation")
-		util.Report(w, r, "您好，秋阴捧出何方雪？雨渍添来隔宿痕。稍后再试。")
+		Report(w, r, "您好，秋阴捧出何方雪？雨渍添来隔宿痕。稍后再试。")
 		return
 	}
 	//检查一下邀请函是否已经被回复
 	if invitation.Status > 1 {
-		util.Report(w, r, "您好，这个邀请函已经答复或者已过期。")
+		Report(w, r, "您好，这个邀请函已经答复或者已过期。")
 		return
 	}
 	reply, _ := strconv.Atoi(r.PostFormValue("reply"))
@@ -108,12 +108,12 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 	//检查一下用户提交的string，即reply_word是否不为空，中文长度小于239字符之间
 	if reply_word == "" {
 		util.Warning(err, u.Email, " Cannot reply nil")
-		util.Report(w, r, "您好，请先登录，稍后再试。")
+		Report(w, r, "您好，请先登录，稍后再试。")
 		return
 	}
-	if util.CnStrLen(reply_word) > 239 {
+	if CnStrLen(reply_word) > 239 {
 		util.Warning(err, u.Email, " Cannot process invitation")
-		util.Report(w, r, "您好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，答复的话太长了只有外星人才能记得住，请确认再试。")
+		Report(w, r, "您好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，答复的话太长了只有外星人才能记得住，请确认再试。")
 		return
 	}
 	if reply == 1 {
@@ -129,7 +129,7 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 		err = repl.Create()
 		if err != nil {
 			util.Warning(err, u.Email, " Cannot create invitation_reply")
-			util.Report(w, r, "您好，晕头晕脑的茶博士竟然把邀请答复搞丢了，请稍后再试。")
+			Report(w, r, "您好，晕头晕脑的茶博士竟然把邀请答复搞丢了，请稍后再试。")
 			return
 		}
 		// 准备将新成员添加进茶团
@@ -146,7 +146,7 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 		if team_member.Role == "CEO" {
 			if err = team_member.UpdateDefaultCEO(u.Id); err != nil {
 				util.Warning(err, u.Email, " Cannot update team_member")
-				util.Report(w, r, "您好，幽情欲向嫦娥诉，无奈虚廊夜色昏。请稍后再试。")
+				Report(w, r, "您好，幽情欲向嫦娥诉，无奈虚廊夜色昏。请稍后再试。")
 				return
 			}
 
@@ -155,7 +155,7 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 			err = team_member.Create()
 			if err != nil {
 				util.Warning(err, u.Email, " Cannot create team_member")
-				util.Report(w, r, "您好，晕头晕脑的茶博士竟然忘记登记新成员了，请稍后再试。")
+				Report(w, r, "您好，晕头晕脑的茶博士竟然忘记登记新成员了，请稍后再试。")
 				return
 			}
 		}
@@ -164,7 +164,7 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 		team, err := data.GetTeamById(invitation.TeamId)
 		if err != nil {
 			util.Danger(err, u.Email, " Cannot get team")
-			util.Report(w, r, "您好，丢了眼镜的茶博士忙到现在，还没有找到茶团登记本，请稍后再试。")
+			Report(w, r, "您好，丢了眼镜的茶博士忙到现在，还没有找到茶团登记本，请稍后再试。")
 			return
 		}
 		http.Redirect(w, r, "/v1/team/detail?id="+(team.Uuid), http.StatusFound)
@@ -183,14 +183,14 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 		err = repl.Create()
 		if err != nil {
 			util.Warning(err, u.Email, " Cannot create invitation_reply")
-			util.Report(w, r, "您好，晕头晕脑的茶博士竟然把邀请答复搞丢了，请稍后再试。")
+			Report(w, r, "您好，晕头晕脑的茶博士竟然把邀请答复搞丢了，请稍后再试。")
 			return
 		}
 		//返回此茶团页面给用户，成员名单上没有该用户，示意已经拒绝该邀请
 		team, err := data.GetTeamById(invitation.TeamId)
 		if err != nil {
 			util.Danger(err, u.Email, " Cannot get team")
-			util.Report(w, r, "您好，粗心大意的茶博士还没有找到茶团登记本，请稍后再试。")
+			Report(w, r, "您好，粗心大意的茶博士还没有找到茶团登记本，请稍后再试。")
 			return
 		}
 		http.Redirect(w, r, "/v1/team/detail?id="+(team.Uuid), http.StatusFound)
@@ -202,7 +202,7 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 // 创建一封邀请函。邀请新成员到teamId指定的团队
 func InviteMember(w http.ResponseWriter, r *http.Request) {
 	//获取session
-	sess, err := util.Session(r)
+	sess, err := Session(r)
 	if err != nil {
 		util.Danger(err, " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -229,14 +229,14 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeamById(team_id)
 	if err != nil {
 		util.Danger(err, u.Email, " Cannot search team given id")
-		util.Report(w, r, "您好，茶博士未能找到这个团队，请确认后再试。")
+		Report(w, r, "您好，茶博士未能找到这个团队，请确认后再试。")
 		return
 	}
 	//根据用户提交的email，检查是否存在该User
 	new_member, err := data.UserByEmail(i_email)
 	if err != nil {
 		util.Danger(err, u.Email, " Cannot search user given email")
-		util.Report(w, r, "您好，满头大汗的茶博士未能茶棚里找到这个用户，请确认后再试。")
+		Report(w, r, "您好，满头大汗的茶博士未能茶棚里找到这个用户，请确认后再试。")
 		return
 	}
 	//检查受邀请的用户团队核心角色是否已经被占用
@@ -245,11 +245,11 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 		//检查teamMember.Role中是否已经存在
 		_, err = team.GetTeamMemberByRole(role)
 		if err == nil {
-			util.Report(w, r, "您好，该团队已经存在所选择的核心角色，请返回选择其他角色。")
+			Report(w, r, "您好，该团队已经存在所选择的核心角色，请返回选择其他角色。")
 			return
 		} else if err != sql.ErrNoRows {
 			util.Danger(err, u.Email, " Cannot search team member given team_id and role")
-			util.Report(w, r, "您好，茶博士在这个团队角色事情迷糊了，请确认后再试。")
+			Report(w, r, "您好，茶博士在这个团队角色事情迷糊了，请确认后再试。")
 			return
 		}
 
@@ -258,7 +258,7 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 		//品茶师
 		break
 	default:
-		util.Report(w, r, "您好，请选择正确的角色。")
+		Report(w, r, "您好，请选择正确的角色。")
 		return
 	}
 
@@ -281,7 +281,7 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 			err = invi.Create()
 			if err != nil {
 				util.Danger(err, u.Email, " Cannot create invitation")
-				util.Report(w, r, "您好，茶博士未能创建邀请函，请稍后再试。")
+				Report(w, r, "您好，茶博士未能创建邀请函，请稍后再试。")
 				return
 			}
 			// 向受邀请的用户新消息小黑板上加1
@@ -299,13 +299,13 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//如果err为nil，说明用户已经在茶团中，无需邀请
-	util.Report(w, r, "您好，该用户已经在茶团中，无需邀请。")
+	Report(w, r, "您好，该用户已经在茶团中，无需邀请。")
 }
 
 // GET /v1/team/team_member/invite_page?id=
 // 获取邀请函编写页面
 func InviteMemberPage(w http.ResponseWriter, r *http.Request) {
-	sess, err := util.Session(r)
+	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -317,7 +317,7 @@ func InviteMemberPage(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeamByUuid(teamUuid)
 	if err != nil {
 		util.Danger(err, " Cannot get team")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
 		return
 	}
 	//检查茶团状态
@@ -325,7 +325,7 @@ func InviteMemberPage(w http.ResponseWriter, r *http.Request) {
 	case 1, 2:
 		break
 	default:
-		util.Report(w, r, "您好，茶团的旗帜已经设计好了，稍等友邻评审之后，闪亮就在风雨后。")
+		Report(w, r, "您好，茶团的旗帜已经设计好了，稍等友邻评审之后，闪亮就在风雨后。")
 		return
 	}
 	var tPD data.TeamDetailPageData
@@ -341,30 +341,30 @@ func InviteMemberPage(w http.ResponseWriter, r *http.Request) {
 			//此茶团还没有指定CEO
 			//如果用户是茶团创建人，返回指定的团队邀请函创建表单页面
 			if team.FounderId == u.Id {
-				util.GenerateHTML(w, &tPD, "layout", "navbar.private", "member.invite")
+				GenerateHTML(w, &tPD, "layout", "navbar.private", "member.invite")
 				return
 			}
 			//无权发送邀请函
-			util.Report(w, r, "您好，茶团在没有CEO之前，只有茶团创建人能发送该团邀请函。")
+			Report(w, r, "您好，茶团在没有CEO之前，只有茶团创建人能发送该团邀请函。")
 			return
 		}
 		util.Danger(err, " Cannot get team CEO")
-		util.Report(w, r, "您好，茶博士在查找茶团CEO时迷失了，请稍后再试。")
+		Report(w, r, "您好，茶博士在查找茶团CEO时迷失了，请稍后再试。")
 		return
 	}
 	if team.FounderId == u.Id || ceo.UserId == u.Id {
 		//向用户返回指定的团队邀请函创建表单页面
-		util.GenerateHTML(w, &tPD, "layout", "navbar.private", "member.invite")
+		GenerateHTML(w, &tPD, "layout", "navbar.private", "member.invite")
 		return
 	}
-	util.Report(w, r, "您好，慢条斯理的茶博士竟然说，先成为茶团CEO或者找创建人，才能发送该团邀请函噢。")
+	Report(w, r, "您好，慢条斯理的茶博士竟然说，先成为茶团CEO或者找创建人，才能发送该团邀请函噢。")
 
 }
 
 // GET /v1/team/team_member/invitation?id=
 func InvitationDetail(w http.ResponseWriter, r *http.Request) {
 	//获取session
-	sess, err := util.Session(r)
+	sess, err := Session(r)
 	if err != nil {
 		util.Danger(err, " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -377,7 +377,7 @@ func InvitationDetail(w http.ResponseWriter, r *http.Request) {
 	invitation, err := data.GetInvitationByUuid(inviUuid)
 	if err != nil {
 		util.Danger(err, u.Email, " Cannot get invitation")
-		util.Report(w, r, "您好，茶博士正在努力的查找邀请函，请稍后再试。")
+		Report(w, r, "您好，茶博士正在努力的查找邀请函，请稍后再试。")
 		return
 	}
 	//填写页面资料
@@ -385,7 +385,7 @@ func InvitationDetail(w http.ResponseWriter, r *http.Request) {
 
 	//检查一下当前用户是否有权查看此邀请函
 	if invitation.InviteEmail != u.Email {
-		util.Report(w, r, "您好，该邀请函不属于您，无法查看。")
+		Report(w, r, "您好，该邀请函不属于您，无法查看。")
 		return
 	}
 	//如果邀请函目前是未读状态=0，则将邀请函的状态改为已读=1
@@ -394,7 +394,7 @@ func InvitationDetail(w http.ResponseWriter, r *http.Request) {
 		err = invitation.Update()
 		if err != nil {
 			util.Danger(err, u.Email, " Cannot update invitation")
-			util.Report(w, r, "您好，茶博士正在努力的更新邀请函状态，请稍后再试。")
+			Report(w, r, "您好，茶博士正在努力的更新邀请函状态，请稍后再试。")
 			return
 		}
 		// 减去用户1小黑板新消息数
@@ -405,11 +405,11 @@ func InvitationDetail(w http.ResponseWriter, r *http.Request) {
 
 	}
 	//向用户返回该邀请函的详细信息
-	util.GenerateHTML(w, &invitation, "layout", "navbar.private", "member.invitation_read")
+	GenerateHTML(w, &invitation, "layout", "navbar.private", "member.invitation_read")
 }
 
 // GET /v1/team/team_member/quit?id=
 // 退出某个茶团
 func HandleMemberQuit(w http.ResponseWriter, r *http.Request) {
-	util.Report(w, r, "您好，目前满头大汗的茶博士正在忙于抛砖引玉之中，欢迎加入茶棚服务。。")
+	Report(w, r, "您好，目前满头大汗的茶博士正在忙于抛砖引玉之中，欢迎加入茶棚服务。。")
 }

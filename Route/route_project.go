@@ -26,7 +26,7 @@ func HandleNewProject(w http.ResponseWriter, r *http.Request) {
 // POST /v1/project/new
 // 用户在某个指定茶话会新开一张茶台
 func CreateProject(w http.ResponseWriter, r *http.Request) {
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -34,12 +34,12 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	u, err := s.User()
 	if err != nil {
 		util.Danger(err, " Cannot get user from session")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
 	//获取用户提交的表单数据
@@ -50,14 +50,14 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	// 检测一下name是否>2中文字，desc是否在17-456中文字，
 	// 如果不是，返回错误信息
-	if util.CnStrLen(title) < 2 {
+	if CnStrLen(title) < 2 {
 		util.Info(err, "Project name is too short")
-		util.Report(w, r, "您好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
+		Report(w, r, "您好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
-	if util.CnStrLen(body) < 17 || util.CnStrLen(body) > 456 {
+	if CnStrLen(body) < 17 || CnStrLen(body) > 456 {
 		util.Info(err, " Project description is too long or too short")
-		util.Report(w, r, "您好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
+		Report(w, r, "您好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return
 	}
 
@@ -65,7 +65,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	obje, err := data.GetObjectiveByUuid(ouid)
 	if err != nil {
 		util.Info(err, " Cannot get objective")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
 	var proj data.Project
@@ -81,7 +81,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	switch obje.Class {
 	case 10, 20:
 		// 该茶话会是草围,尚未启用，不能新开茶台
-		util.Report(w, r, "您好，这个茶话会尚未启用。")
+		Report(w, r, "您好，这个茶话会尚未启用。")
 		return
 
 	case 1:
@@ -92,15 +92,15 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			proj, err = u.CreateProject(title, body, obje.Id, clas)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
-				util.Report(w, r, "您好，出浴太真冰作影，捧心西子玉为魂。")
+				Report(w, r, "您好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
 		} else if clas == 20 {
 			tIds_str := r.PostFormValue("invite-team-ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
-			if !data.VerifyTeamIdListFormat(tIds_str) {
+			if !VerifyTeamIdListFormat(tIds_str) {
 				util.Info(err, " TeamId list format is wrong")
-				util.Report(w, r, "您好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
+				Report(w, r, "您好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 				return
 			}
 			//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId
@@ -108,7 +108,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
 			if len(team_ids_str) > util.Config.MaxInviteTeams {
 				util.Info(err, " Too many team ids")
-				util.Report(w, r, "您好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
+				Report(w, r, "您好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
 				return
 			}
 			team_id_list := make([]int, 0, util.Config.MaxInviteTeams)
@@ -121,7 +121,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			proj, err = u.CreateProject(title, body, obje.Id, clas)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
-				util.Report(w, r, "您好，斜阳寒草带重门，苔翠盈铺雨后盆。")
+				Report(w, r, "您好，斜阳寒草带重门，苔翠盈铺雨后盆。")
 				return
 			}
 			// 迭代team_id_list，尝试保存新封闭式茶台邀请的茶团
@@ -132,12 +132,12 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 				}
 				if err = poInviTeams.Save(); err != nil {
 					util.Warning(err, " Cannot save invited teams")
-					util.Report(w, r, "您好，受邀请的茶团名单竟然保存失败，请确认后再试。")
+					Report(w, r, "您好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
 				}
 			}
 		} else {
-			util.Report(w, r, "您好，茶博士摸摸头，说看不懂拟开新茶台是否封闭式，请确认。")
+			Report(w, r, "您好，茶博士摸摸头，说看不懂拟开新茶台是否封闭式，请确认。")
 			return
 		}
 
@@ -148,20 +148,20 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			// 当前用户不是茶话会邀请团队成员，不能新开茶台
 			util.Warning(err, " Cannot create project")
-			util.Report(w, r, "您好，茶博士惊讶地说，不是此茶话会邀请团队成员不能开新茶台，请确认。")
+			Report(w, r, "您好，茶博士惊讶地说，不是此茶话会邀请团队成员不能开新茶台，请确认。")
 			return
 		}
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
 		if clas == 10 {
-			util.Report(w, r, "您好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
+			Report(w, r, "您好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
 			return
 		}
 		if clas == 20 {
 			tIds_str := r.PostFormValue("invite-team-ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
-			if !data.VerifyTeamIdListFormat(tIds_str) {
+			if !VerifyTeamIdListFormat(tIds_str) {
 				util.Info(err, " TeamId list format is wrong")
-				util.Report(w, r, "您好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
+				Report(w, r, "您好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 				return
 			}
 			//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId
@@ -169,7 +169,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
 			if len(team_ids_str) > util.Config.MaxInviteTeams {
 				util.Info(err, " Too many team ids")
-				util.Report(w, r, "您好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
+				Report(w, r, "您好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
 				return
 			}
 			team_id_list := make([]int, 0, util.Config.MaxInviteTeams)
@@ -182,7 +182,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			proj, err := u.CreateProject(title, body, obje.Id, clas)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
-				util.Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+				Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 				return
 			}
 			// 迭代team_id_list，尝试保存新封闭式茶台邀请的茶团
@@ -193,7 +193,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 				}
 				if err = poInviTeams.Save(); err != nil {
 					util.Warning(err, " Cannot save invited teams")
-					util.Report(w, r, "您好，受邀请的茶团名单竟然保存失败，请确认后再试。")
+					Report(w, r, "您好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
 				}
 			}
@@ -202,7 +202,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	default:
 		// 该茶话会属性不合法
 		util.Info(err, " Project class is not valid")
-		util.Report(w, r, "您好，茶博士摸摸头，竟然说这个茶话会被外星人霸占了，请确认后再试。")
+		Report(w, r, "您好，茶博士摸摸头，竟然说这个茶话会被外星人霸占了，请确认后再试。")
 		return
 	}
 	// 创建一条友邻盲评,是否接纳 新茶的记录
@@ -212,7 +212,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = aO.Create(); err != nil {
 		util.Warning(err, "Cannot create accept_object")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
 	// 发送盲评请求消息给两个在线用户
@@ -227,21 +227,21 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	err = AcceptMessageSendExceptUserId(u.Id, mess)
 	if err != nil {
 		util.Danger(err, " Cannot send message")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
 
 	// 提示用户草台保存成功
 	t := fmt.Sprintf("您好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", proj.Title)
 	// 提示用户草稿保存成功
-	util.Report(w, r, t)
+	Report(w, r, t)
 
 }
 
 // GET
 // 渲染创建新茶台表单页面
 func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -256,7 +256,7 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 	obDetailPD.Objective, err = data.GetObjectiveByUuid(uuid)
 	if err != nil {
 		util.Danger(err, " Cannot read project")
-		util.Report(w, r, "您好，茶博士失魂鱼，未能找到茶台，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，未能找到茶台，请稍后再试。")
 		return
 	}
 	// 填写页面会话用户资料
@@ -270,7 +270,7 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 	case 1:
 		// 开放式茶话会，可以在茶话会下新开茶台
 		// 向用户返回添加指定的茶台的表单页面
-		util.GenerateHTML(w, &obDetailPD.Objective, "layout", "navbar.private", "project.new")
+		GenerateHTML(w, &obDetailPD.Objective, "layout", "navbar.private", "project.new")
 		return
 	case 2:
 		// 封闭式茶话会，需要看围主指定了那些茶团成员可以开新茶台，如果围主没有指定，则不能新开茶台
@@ -279,17 +279,17 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
 		ok := isUserInvitedByObjective(obDetailPD.Objective, u)
 		if ok {
-			util.GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "project.new")
+			GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "project.new")
 			return
 		}
 
 		// 当前用户不是茶话会邀请团队成员，不能新开茶台
-		util.Report(w, r, "您好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
+		Report(w, r, "您好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
 		return
 
 		// 非法茶话会属性，不能新开茶台
 	default:
-		util.Report(w, r, "您好，茶博士失魂鱼，竟然说受邀请品茶名单被外星人霸占了，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，竟然说受邀请品茶名单被外星人霸占了，请稍后再试。")
 		return
 	}
 
@@ -362,13 +362,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	prDPD.Project, err = data.GetProjectByUuid(uuid)
 	if err != nil {
 		util.Warning(err, " Cannot read project")
-		util.Report(w, r, "您好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
 	prDPD.Master, err = prDPD.Project.User()
 	if err != nil {
 		util.Warning(err, " Cannot read project user")
-		util.Report(w, r, "您好，霁月难逢，彩云易散。请稍后再试。")
+		Report(w, r, "您好，霁月难逢，彩云易散。请稍后再试。")
 		return
 	}
 	// ���查当前用户是否可以在此��台下新开��台
@@ -390,14 +390,14 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	threadlist, err := prDPD.Project.Threads()
 	if err != nil {
 		util.Warning(err, " Cannot read threads given project")
-		util.Report(w, r, "您好，满头大汗的茶博士说，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。")
+		Report(w, r, "您好，满头大汗的茶博士说，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。")
 		return
 	}
 
 	// 截短ThreadList中thread.Body文字长度为108字符,
 	// 展示时长度接近，排列比较整齐，最小惊讶原则？效果比较nice
 	for i := range threadlist {
-		threadlist[i].Body = util.Substr(prDPD.Project.Body, 108)
+		threadlist[i].Body = Substr(prDPD.Project.Body, 108)
 	}
 	len := len(threadlist)
 	prDPD.ThreadCount = len
@@ -414,7 +414,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		user, err := thread.User()
 		if err != nil {
 			util.Warning(err, " Cannot read thread author")
-			util.Report(w, r, "您好，世人都晓神仙好，只有金银忘不了。请稍后再试。")
+			Report(w, r, "您好，世人都晓神仙好，只有金银忘不了。请稍后再试。")
 			return
 		}
 		authorlist = append(authorlist, user)
@@ -425,7 +425,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		team, err := author.GetLastDefaultTeam()
 		if err != nil {
 			util.Warning(err, " Cannot read team given author")
-			util.Report(w, r, "您好，世人都晓神仙好，只有金钱忘不了。请稍后再试。")
+			Report(w, r, "您好，世人都晓神仙好，只有金钱忘不了。请稍后再试。")
 			return
 		}
 		teamList = append(teamList, team)
@@ -441,7 +441,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	prDPD.ThreadAndAuthorList = taal
 
 	// 获取会话session
-	s, err := util.Session(r)
+	s, err := Session(r)
 	if err != nil {
 		// 未登录，游客
 		// 填写页面数据
@@ -451,7 +451,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Name: "游客",
 		}
 		// 返回给浏览者茶台详情页面
-		util.GenerateHTML(w, &prDPD, "layout", "navbar.private", "project.detail")
+		GenerateHTML(w, &prDPD, "layout", "navbar.private", "project.detail")
 		return
 	}
 	// 获取当前会话用户资料
@@ -463,5 +463,5 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		prDPD.Project.PageData.IsAuthor = true
 	}
 
-	util.GenerateHTML(w, &prDPD, "layout", "navbar.private", "project.detail")
+	GenerateHTML(w, &prDPD, "layout", "navbar.private", "project.detail")
 }

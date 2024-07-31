@@ -2,7 +2,6 @@ package data
 
 import (
 	"errors"
-
 	"time"
 )
 

@@ -1,19 +1,24 @@
 package data
 
 import (
+	"bufio"
 	"crypto/rand"
 	"crypto/sha1"
 	"database/sql"
 	"fmt"
+	"image"
+	"image/jpeg"
 	"log"
-	"math"
-
-	"regexp"
+	"os"
 	"strconv"
 	"time"
 
 	_ "github.com/lib/pq"
 )
+
+/*
+   涉及数据库存取操作的定义和一些方法
+*/
 
 // 定义数据库链接常量
 const (
@@ -27,13 +32,13 @@ const (
 	dbdriver   = "postgres"
 )
 
+var Db *sql.DB // 数据库实例
+
 // 使用常量管理文件路径和文件扩展名，增加可维护性
 const (
 	ImageDir = "./public/image/"
 	ImageExt = ".jpeg"
 )
-
-var Db *sql.DB
 
 func init() {
 	var err error
@@ -78,52 +83,6 @@ func Encrypt(plaintext string) (cryptext string) {
 	return
 }
 
-// 验证邮箱格式是否正确，正确返回true，错误返回false。
-func VerifyEmailFormat(email string) bool {
-	pattern := `^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`
-	reg := regexp.MustCompile(pattern)
-	return reg.MatchString(email)
-}
-
-// 验证team_id_list:"2,19,87..."字符串格式是否正确，正确返回true，错误返回false。
-func VerifyTeamIdListFormat(teamIdList string) bool {
-	if teamIdList == "" {
-		return false
-	}
-	pattern := `^[0-9]+(,[0-9]+)*$`
-	reg := regexp.MustCompile(pattern)
-	return reg.MatchString(teamIdList)
-}
-
-// 输入两个统计数（辩论的正方累积得分数，辩论总得分数）（整数），计算前者与后者比值，结果浮点数向上四舍五入取整,
-// 返回百分数的分子整数
-func ProgressRound(numerator, denominator int) int {
-
-	if denominator == 0 {
-		// 分母为0时，视作未有记录，即未进行表决状态，返回100
-		return 100
-	}
-	if numerator == denominator {
-		// 分子等于分母时，表示100%正方
-		return 100
-	}
-	ratio := float64(numerator) / float64(denominator) * 100
-
-	// if numerator > denominator {
-	// 	// 分子大于分母时，表示统计数据输入错误，返回一个中间值
-	// 	return 50
-	// } else if ratio < 0 {
-	// 	// 分子小于分母且比例为负数，表示统计数据输入错误，返回一个中间值
-	// 	return 50
-	// } else if ratio < 1 {
-	// 	// 比例小于1时，返回最低限度值1
-	// 	return 1
-	// }
-
-	// 其他情况，使用math.Floor确保向下取整，然后四舍五入
-	return int(math.Floor(ratio + 0.5))
-}
-
 // 时间处理格式化
 const (
 	FMT_DATE_TIME        = "2006-01-02 15:04:05"
@@ -156,4 +115,27 @@ func SaveReadedUserId(thread_id int, user_id int) (read Read, err error) {
 	defer stmt.Close()
 	err = stmt.QueryRow(thread_id, user_id, time.Now()).Scan(&read.Id, &read.ThreadId, &read.UserId, &read.ReadAt)
 	return
+}
+
+// 生成头像默认（占位）图片，jpeg格式，64*64
+func DefaultAvatar(uuid string) {
+	// 生成64*64新画布
+	bg := image.NewRGBA(image.Rect(0, 0, 64, 64))
+
+	newFilePath := ImageDir + uuid + ImageExt
+	newFile, err := os.Create(newFilePath)
+	if err != nil {
+
+		return
+	}
+	// 确保文件在函数执行完毕后关闭
+	defer newFile.Close()
+
+	// 先写内存缓存
+	buff := bufio.NewWriter(newFile)
+	//转换格式
+	jpeg.Encode(buff, bg, nil)
+
+	// 写入硬盘
+	buff.Flush()
 }
