@@ -272,7 +272,7 @@ func ThreadsVisibleToTeam(limit int) (threads []Thread, err error) {
 	return
 }
 
-// 首页展示的必须是class=1或者2状态,返回19个thread对象，按照点击数thread.hit_count从高到低排序的前20茶议
+// 首页展示的必须是class=1或者2状态,返回thread对象数组，按照点击数thread.hit_count从高到低排序的前limit个茶议
 // 如果点击数相同，则按创建时间从先到后排序
 func ThreadsIndex(limit int) (threads []Thread, err error) {
 	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, hit_count, type, post_id FROM threads WHERE class = 1 OR class = 2 ORDER BY hit_count DESC, created_at DESC LIMIT $1", limit)

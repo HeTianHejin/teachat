@@ -3,28 +3,40 @@ package route
 import (
 	"net/http"
 	data "teachat/DAO"
+	util "teachat/Util"
 )
 
 // GET //First page
 // 打开首页,展示最热门的茶议？
 func Index(w http.ResponseWriter, r *http.Request) {
-	var err error
 	var indexPD data.IndexPageData
+	var taal []data.ThreadAndAuthorBean
+
 	//读取最热的茶议2dozen?
 	num := 24
-	indexPD.ThreadList, err = data.ThreadsIndex(num)
+
+	// 读取最热的茶议
+	threadList, err := data.ThreadsIndex(num)
 	if err != nil {
 		Report(w, r, "您好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
-	if len(indexPD.ThreadList) == 0 {
+	len := len(threadList)
+
+	if len == 0 {
 		Report(w, r, "您好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
-	// 迭代ThreadList，把.Body截取缩短108字符
-	for i := range indexPD.ThreadList {
-		indexPD.ThreadList[i].Body = Substr(indexPD.ThreadList[i].Body, 108)
+
+	taal, err = GetThreadAndAuthorList(threadList)
+	if err != nil {
+		util.Warning(err, " Cannot read thread and author list")
+		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
+		return
 	}
+	indexPD.ThreadAndAuthorList = taal
+
+	//是否登录
 	s, err := Session(r)
 	if err != nil {
 		//游客
@@ -32,8 +44,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		for i := range indexPD.ThreadList {
-			indexPD.ThreadList[i].PageData.IsAuthor = false
+		for i := range threadList {
+			threadList[i].PageData.IsAuthor = false
 		}
 		//展示游客首页
 		GenerateHTML(w, &indexPD, "layout", "navbar.public", "index")
@@ -46,11 +58,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	indexPD.SessUser = sUser
-	for i := range indexPD.ThreadList {
-		if sUser.Id == indexPD.ThreadList[i].UserId {
-			indexPD.ThreadList[i].PageData.IsAuthor = true
+	for i := range threadList {
+		if sUser.Id == threadList[i].UserId {
+			threadList[i].PageData.IsAuthor = true
 		} else {
-			indexPD.ThreadList[i].PageData.IsAuthor = false
+			threadList[i].PageData.IsAuthor = false
 		}
 	}
 	//展示茶客的首页

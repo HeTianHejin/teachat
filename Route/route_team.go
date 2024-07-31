@@ -290,10 +290,10 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 准备页面数据
-	var tc data.TeamCoreMemberData
-	var tn data.TeamNormalMemberData
-	var tcL []data.TeamCoreMemberData
-	var tnL []data.TeamNormalMemberData
+	var tc data.TeamMemberBean //核心成员资料夹
+	var tn data.TeamMemberBean //普通成员资料夹
+	var tcList []data.TeamMemberBean
+	var tnList []data.TeamMemberBean
 	//据teamMembers中的UserId获取User
 	for _, member := range teamCoreMembers {
 		user, err := data.GetUserById(member.UserId)
@@ -311,7 +311,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		tc.TeamMemberRole = member.Role
-		tcL = append(tcL, tc)
+		tcList = append(tcList, tc)
 	}
 	for _, member := range teamNormalMembers {
 		user, err := data.GetUserById(member.UserId)
@@ -328,10 +328,10 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		tn.TeamMemberRole = member.Role
-		tnL = append(tnL, tn)
+		tnList = append(tnList, tn)
 	}
-	tPD.CoreMemberDataList = tcL
-	tPD.NormalMemberDataList = tnL
+	tPD.CoreMemberDataList = tcList
+	tPD.NormalMemberDataList = tnList
 
 	if tPD.Team.Class == 1 {
 		tPD.Open = true

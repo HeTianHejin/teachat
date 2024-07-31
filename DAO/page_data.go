@@ -27,10 +27,13 @@ type PublicPData struct {
 type ObjectiveDetailPageData struct {
 	SessUser    User // 当前会话用户
 	Objective   Objective
+	Master      User
+	Open        bool
+	IsEdited    bool
 	ProjectList []Project // objective下所有projects
 }
 
-// ObjectiveSquarePageGata 轮流展示19个用户茶话会页面（广场）所需数据
+// 茶话会页面（集锦）页面渲染所需数据
 type ObjectiveSquarePData struct {
 	SessUser      User        // 当前会话用户
 	ObjectiveList []Objective // 广场上所有茶话会
@@ -43,16 +46,19 @@ type ProjectDetailPageData struct {
 	Master              User
 	Open                bool
 	IsEdited            bool
-	IsInput             bool              // 需要接受茶客输入?
-	ThreadAndAuthorList []ThreadAndAuthor // project下所有Threads和作者资料夹
-	ThreadCount         int               // project下所有Threads个数
-	IsOverTwelve        bool              //是否超过12个
+	ThreadAndAuthorList []ThreadAndAuthorBean // project下所有Threads和作者资料夹
+	ThreadCount         int                   // project下所有Threads个数
+	IsOverTwelve        bool                  //是否超过12个
 }
-type ThreadAndAuthor struct {
-	Thread      Thread
-	PostCount   int
-	Author      User
-	DefaultTeam Team // 作者默认团队
+
+// 茶议对象和作者资料夹（豆荚一样有许多个单元）
+type ThreadAndAuthorBean struct {
+	Thread        Thread
+	Count         int // 附属对象计数
+	Status        string
+	CreatedAtDate string
+	Author        User // 作者
+	DefaultTeam   Team // 作者默认团队
 }
 
 // 茶议草稿页面渲染数据
@@ -91,21 +97,14 @@ type TeamDetailPageData struct {
 	Team                 Team
 	Founder              User // 茶团创建者
 	TeamMemberCount      int
-	CoreMemberDataList   []TeamCoreMemberData
-	NormalMemberDataList []TeamNormalMemberData
+	CoreMemberDataList   []TeamMemberBean
+	NormalMemberDataList []TeamMemberBean
 	IsAuthor             bool
 	Open                 bool
 }
 
-// 茶团核心成员们资料
-type TeamCoreMemberData struct {
-	User           User
-	DefaultTeam    Team
-	TeamMemberRole string
-}
-
-// 茶团普通成员们资料
-type TeamNormalMemberData struct {
+// 茶团成员资料夹
+type TeamMemberBean struct {
 	User           User
 	DefaultTeam    Team
 	TeamMemberRole string
@@ -119,8 +118,8 @@ type TeamsPageData struct {
 
 // 用于index页面渲染
 type IndexPageData struct {
-	SessUser   User     // 当前会话用户
-	ThreadList []Thread // 主页茶议队列
+	SessUser            User                  // 当前会话用户
+	ThreadAndAuthorList []ThreadAndAuthorBean // Threads和作者资料夹
 }
 
 // 用户信箱页面数据

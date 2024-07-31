@@ -295,61 +295,6 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// 检查当前用户是否是茶话会邀请团队成员
-func isUserInvitedByObjective(obje data.Objective, user data.User) bool {
-	team_ids, err := obje.InvitedTeamIds()
-	if err != nil {
-		util.Info(err, " Cannot read objective invited team ids")
-		return false
-	}
-	if len(team_ids) == 0 {
-		return false
-	}
-	// 迭代team_ids,用data.GetMemberUserIdsByTeamId()获取全部user_ids；
-	// 以UserId == u.Id？检查当前用户是否是茶话会邀请团队成员
-	for _, team_id := range team_ids {
-		user_ids, _ := data.GetMemberUserIdsByTeamId(team_id)
-		for _, user_id := range user_ids {
-			if user_id == user.Id {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// 检查当前会话用户是否茶台邀请团队成员
-func isUserInvitedByProject(proj data.Project, sU data.User) bool {
-	co, err := proj.InvitedTeamsCount()
-	if err != nil {
-		util.Warning(err, " Cannot read project invited teams count")
-		return false
-	}
-	if co == 0 {
-		util.Info(nil, "This tea-table  host has not invited any teams to drink tea.")
-		return false
-	}
-	teamIDs, err := proj.InvitedTeamIds()
-	if err != nil {
-		util.Info(err, "Cannot read project invited team ids")
-		return false
-	}
-	for _, teamID := range teamIDs {
-		userIDs, err := data.GetMemberUserIdsByTeamId(teamID)
-		if err != nil {
-			util.Info(err, "Failed to get user IDs for team %d", teamID)
-			continue
-		}
-
-		for _, userID := range userIDs {
-			if userID == sU.Id {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // GET /v1/project/detail
 // 展示指定的UUID茶台详情
 func ProjectDetail(w http.ResponseWriter, r *http.Request) {
@@ -384,8 +329,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		prDPD.IsEdited = false
 	}
 
-	var taa data.ThreadAndAuthor
-	var taal []data.ThreadAndAuthor
+	var oabList []data.ThreadAndAuthorBean
 	// 读取全部茶议资料
 	threadlist, err := prDPD.Project.Threads()
 	if err != nil {
@@ -394,11 +338,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 截短ThreadList中thread.Body文字长度为108字符,
-	// 展示时长度接近，排列比较整齐，最小惊讶原则？效果比较nice
-	for i := range threadlist {
-		threadlist[i].Body = Substr(prDPD.Project.Body, 108)
-	}
 	len := len(threadlist)
 	prDPD.ThreadCount = len
 	// 检测pageData.ThreadList数量是否超过一打dozen
@@ -408,37 +347,14 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		//测试时都设为true显示效果 🐶🐶🐶
 		prDPD.IsOverTwelve = true
 	}
-	// 根据茶议资料读取全部作者
-	authorlist := make([]data.User, 0, len)
-	for _, thread := range threadlist {
-		user, err := thread.User()
-		if err != nil {
-			util.Warning(err, " Cannot read thread author")
-			Report(w, r, "您好，世人都晓神仙好，只有金银忘不了。请稍后再试。")
-			return
-		}
-		authorlist = append(authorlist, user)
+	// 获取茶议和作者相关资料夹
+	oabList, err = GetThreadAndAuthorList(threadlist)
+	if err != nil {
+		util.Warning(err, " Cannot read thread and author list")
+		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
+		return
 	}
-	// 根据authorlist,读取每个作者的默认团队资料
-	teamList := make([]data.Team, 0, len)
-	for _, author := range authorlist {
-		team, err := author.GetLastDefaultTeam()
-		if err != nil {
-			util.Warning(err, " Cannot read team given author")
-			Report(w, r, "您好，世人都晓神仙好，只有金钱忘不了。请稍后再试。")
-			return
-		}
-		teamList = append(teamList, team)
-	}
-	// 合并拼装资料
-	for i, thread := range threadlist {
-		taa.Thread = thread
-		taa.PostCount = thread.NumReplies()
-		taa.Author = authorlist[i]
-		taa.DefaultTeam = teamList[i]
-		taal = append(taal, taa)
-	}
-	prDPD.ThreadAndAuthorList = taal
+	prDPD.ThreadAndAuthorList = oabList
 
 	// 获取会话session
 	s, err := Session(r)
@@ -451,7 +367,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Name: "游客",
 		}
 		// 返回给浏览者茶台详情页面
-		GenerateHTML(w, &prDPD, "layout", "navbar.private", "project.detail")
+		GenerateHTML(w, &prDPD, "layout", "navbar.public", "project.detail")
 		return
 	}
 	// 获取当前会话用户资料

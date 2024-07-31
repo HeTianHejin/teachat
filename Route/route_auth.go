@@ -13,8 +13,9 @@ import (
 func Login(w http.ResponseWriter, r *http.Request) {
 	_, err := Session(r)
 	if err != nil {
-		t := ParseTemplateFiles("layout", "navbar.public", "login")
-		t.Execute(w, nil)
+		// t := ParseTemplateFiles("layout", "navbar.public", "login")
+		// t.Execute(w, nil)
+		GenerateHTML(w, nil, "layout", "navbar.public", "login")
 		return
 	}
 	http.Redirect(w, r, "/v1/", http.StatusFound)

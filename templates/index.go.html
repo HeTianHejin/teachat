@@ -1,16 +1,24 @@
 {{ define "content" }}
 
-<!--这是星服务茶棚主页-->
 
 <ol class="breadcrumb">
   <li role="presentation">大堂</li>
-
+  
 </ol>
 
-<!--展示全部茶议-->
-{{ range .ThreadList }}
+<!--这是茶棚主页-->
 
-{{ if .PageData.IsAuthor }}
+<div style="margin: 20px;">
+  <ol class="nav nav-tabs">
+    <li class="active"><a href="#">热茶集锦</a></li>
+    <li><a href="/v1/show/monologue">自斟自饮</a></li>
+  </ol>
+</div>
+
+<!--展示全部茶议-->
+{{ range .ThreadAndAuthorList }}
+
+{{ if .Thread.PageData.IsAuthor }}
 <!--检测是否茶议作者，是,安排右侧头像布局-->
 <div class="media">
 
@@ -21,20 +29,24 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .User.Name }}
-           
+            {{ .Author.Name }}
+            <span style="font-size: small;">
+              <span class="label label-info">{{ .Author.GetGender }}</span>
+              @<a href="/v1/team/detail?id={{ .User.GetLastDefaultTeam.Uuid }}">{{ .Author.GetLastDefaultTeam.Abbreviation }}</a></span>
+                
+              </span>
           </div>
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: center;">
-              <span class="label label-default">{{ .Status }}
+              <span class="label label-default">{{ .Thread.Status }}
               </span>
             </span>
           
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; font-size: smaller;text-align: center;">
-              {{ .CreatedAtDate }}
+            <span style="display: block; font-size: smaller;text-align: right;">
+              {{ .Thread.CreatedAtDate }}
             </span>
           </div>
         </div>
@@ -42,38 +54,38 @@
 
       <div class="panel-body">
 
-        <h4>{{ .TypeStatus }}:
-          <a href="/v1/thread/detail?id={{ .Uuid }}">
-            {{ .Title }}
+        <h4>{{ .Thread.TypeStatus }}:
+          <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
+            {{ .Thread.Title }}
           </a>
         </h4>
 
         <p>
-          {{ .Body }} ...
+          {{ .Thread.Body }} ...
         </p>
 
       </div>
 
       <div class="panel-footer">
         <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .NumReplies }} </span>
-        {{ if .IsEdited }}
-        <a href="/v1/thread/edit?id={{ .Uuid }}">
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Thread.NumReplies }} </span>
+        {{ if .Thread.IsEdited }}
+        <a href="/v1/thread/edit?id={{ .Thread.Uuid }}">
           <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
         </a>
-        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .EditAtDate }} </span>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Thread.EditAtDate }} </span>
         {{ else }}
         <!--没有编辑过（补充内容）则没有加水时间-->
-        <a href="/v1/thread/edit?id={{ .Uuid }}">
+        <a href="/v1/thread/edit?id={{ .Thread.Uuid }}">
           <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
         </a>
         {{ end }}
 
         <span class="pull-right">
-          <a href="/v1/thread/detail?id={{.Uuid }}">
+          <a href="/v1/thread/detail?id={{.Thread.Uuid }}">
             <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
 
-          </a> {{ .NumReads }}
+          </a> {{ .Thread.NumReads }}
         </span>
       </div>
 
@@ -81,10 +93,10 @@
   </div>
   <div class="media-right">
     <span class=" badge">
-      {{ .NumReplies }} 
+      {{ .Thread.NumReplies }} 
     </span>
-    <a href="/v1/user/biography?id={{ .User.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
     </a>
   </div>
 </div>
@@ -95,10 +107,10 @@
 <div class="media">
   <div class="media-left">
     <span class=" badge">
-      {{ .NumReplies }} 
+      {{ .Thread.NumReplies }} 
     </span>
-    <a href="/v1/user/biography?id={{ .User.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
     </a>
 
   </div>
@@ -109,34 +121,37 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .User.Name }}
-           
+            <span class="label label-info" style="font-size: xx-small;">{{ .Author.GetGender }}</span>
+            {{ .Author.Name }}
+            <span style="font-weight: lighter;">
+            @<a href="/v1/team/detail?id={{ .Author.GetLastDefaultTeam.Uuid }}">{{ .Author.GetLastDefaultTeam.Abbreviation }}</a>
+          </span>
           </div>
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: center;">
-              <span class="label label-default">{{ .Status }}
+              <span class="label label-default">{{ .Thread.Status }}
               </span>
             </span>
           
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; font-size: smaller;text-align: right">
-              {{ .CreatedAtDate }}
+              {{ .Thread.CreatedAtDate }}
             </span>
           </div>
         </div>
       </div>
 
       <div class="panel-body">
-        <h4>{{ .TypeStatus }}:
-          <a href="/v1/thread/detail?id={{ .Uuid }}">
-            {{ .Title }}
+        <h4>{{ .Thread.TypeStatus }}:
+          <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
+            {{ .Thread.Title }}
           </a>
         </h4>
 
         <p>
-          {{ .Body }} ...
+          {{ .Thread.Body }} ...
         </p>
 
       </div>
@@ -144,15 +159,15 @@
       <div class="panel-footer">
 
         <span>
-          {{ .NumSupport }}
+          {{ .Thread.NumSupport }}
         </span>
         <span class="glyphicon glyphicon-hand-right" aria-hidden="true" style="margin-inline-end: 10px;"></span>
         <span class="glyphicon glyphicon-hand-left" aria-hidden="true"></span>
-        {{ .NumOppose }}
+        {{ .Thread.NumOppose }}
 
-        {{ if .IsEdited }}
+        {{ if .Thread.IsEdited }}
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .EditAtDate }} </span>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Thread.EditAtDate }} </span>
         {{ else }}
         <!--没有编辑过（补充内容）则留空白-->
         {{ end }}
