@@ -1,6 +1,6 @@
 {{ define "content" }}
 
-<!--这是全部茶话会页面-->
+{{/* 这是全部茶话会页面 */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
@@ -13,49 +13,56 @@
   <a href="/v1/objective/new">我的茶话会</a>
 </div>
 
-<!--展示全部茶话会资料-->
-{{ range .ObjectiveList }}
+{{/* 展示全部茶话会资料 */}}
+{{ range .ObjectiveBeanList }}
 
 
 <div class="panel panel-default">
   <div class="panel-body">
     <div class="media">
       <div class="media-left media-middle">
+        {{ if (gt .Count 0) }} 
+        <span class="badge">{{ .Count }}</span>
+    {{ else }}
+    {{ end }}
         <a href="#">
-          <span class="badge">{{ .NumProjects }}</span>
-          <img class="media-object" src="/v1/static/image/{{ .Cover }}.jpeg" alt="茶话会封面">
+          <img class="media-object" src="/v1/static/image/{{ .Objective.Cover }}.jpeg" alt="茶话会封面">
         </a>
       </div>
       <div class="media-body">
         <p>
           <h4 class="media-heading">
-            <a href="/v1/objective/detail?id={{ .Uuid }}">
-              {{ .Title }}
+            <a href="/v1/objective/detail?id={{ .Objective.Uuid }}">
+              {{ .Objective.Title }}
 
             </a>
           </h4>
 
-          {{ if (eq .Class 1) }}
+          {{ if .Open }}
           <span class="label label-success" style="margin-inline-end: 30px;">
-            {{ .GetProperty }}
+            {{ .Status }}
           </span>
           
           {{ else }}
           <span class="label label-default" style="margin-inline-end: 30px;">
-            {{ .GetProperty }}
+            {{ .Status }}
           </span>
           
           {{ end }}
 
           <span style="margin-inline-end: 30px;">
-            {{ .User.Name }}
+            <span style="font-size: small;">
+              <span class="label label-info">{{ .Author.GetGender }}</span>
+              {{ .Author.Name }}
+              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+              </span>
           </span>
 
           <span style="font-weight: lighter;">
             {{ .CreatedAtDate }}
           </span>
         </p>
-        {{ .Body }} ...
+        {{ .Objective.Body }} ...
       </div>
 
     </div>

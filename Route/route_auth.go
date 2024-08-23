@@ -1,10 +1,12 @@
 package route
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	data "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // GET /Login
@@ -76,11 +78,34 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 		util.Danger(err, " Cannot create user")
 		Report(w, r, "您好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
-	} else {
-		util.Info(newU.Email, "注册新账号ok")
-		Report(w, r, "新茶客你好！欢迎光临星际茶棚，祝愿你拥有一段美好时光。")
+	}
+	// 将新成员添加进默认的自由人茶团
+	team_member := data.TeamMember{
+		TeamId:    2,
+		UserId:    newU.Id,
+		Role:      "品茶师",
+		CreatedAt: time.Now(),
+		Class:     1,
+	}
+	if err = team_member.Create(); err != nil {
+		util.Danger(err, " Cannot create default_free team_member")
+		Report(w, r, "您好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
+	//设置默认团队
+	udt := data.UserDefaultTeam{
+		UserId: newU.Id,
+		TeamId: 2,
+	}
+	if err = udt.Create(); err != nil {
+		util.Danger(err, " Cannot create default team")
+		Report(w, r, "您好，满头大汗的茶博士因摸索不到近视眼镜，导致注册失败，请确认情况后重试。")
+		return
+	}
+
+	util.Info(newU.Email, "注册新账号ok")
+	t := fmt.Sprintf("%s 你好，注册成功！祝愿你拥有一段美好时光。", newU.Name)
+	Report(w, r, t)
 
 }
 
@@ -109,43 +134,43 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// 检查用户角色是否允许登录
-			if user.Role == "traveller" || user.Role == "pilot" || user.Role == "captain" || user.Role == "UFO" {
-				if user.Password == data.Encrypt(r.PostFormValue("password")) {
-					util.Info(user.Email, "密码匹配成功")
+			// if user.Role == "traveller" || user.Role == "pilot" || user.Role == "captain" || user.Role == "UFO" {
+			if user.Password == data.Encrypt(r.PostFormValue("password")) {
+				util.Info(user.Email, "密码匹配成功")
 
-					//创建新的会话
-					session, err := user.CreateSession()
-					if err != nil {
-						util.Warning(err, " Cannot create session")
-						return
-					}
-					//设置cookie
-					cookie := http.Cookie{
-						Name:     "_cookie",
-						Value:    session.Uuid,
-						HttpOnly: true,
-					}
-
-					http.SetCookie(w, &cookie)
-					http.Redirect(w, r, "/v1/", http.StatusFound)
-					return
-				} else {
-					//密码和用户名不匹配
-					util.Warning(user.Email, "试图空降茶棚失败")
-					Report(w, r, "无所事事的茶博士嘀咕说，请确认密码是否正确，键盘大小写灯是否有电。")
+				//创建新的会话
+				session, err := user.CreateSession()
+				if err != nil {
+					util.Warning(err, " Cannot create session")
 					return
 				}
+				//设置cookie
+				cookie := http.Cookie{
+					Name:     "_cookie",
+					Value:    session.Uuid,
+					HttpOnly: true,
+				}
 
+				http.SetCookie(w, &cookie)
+				http.Redirect(w, r, "/v1/", http.StatusFound)
+				return
 			} else {
-				//用户角色被阻止登录
-				util.Info(user.Email, "因为该用户没有权限登入")
-				http.Redirect(w, r, "/v1/login", http.StatusFound)
+				//密码和用户名不匹配
+				util.Warning(user.Email, "试图空降茶棚失败")
+				Report(w, r, "无所事事的茶博士嘀咕说，请确认密码是否正确，键盘大小写灯是否有电。")
 				return
 			}
+
+			// } else {
+			// 	//用户角色被阻止登录
+			// 	util.Info(user.Email, "因为该用户没有权限登入")
+			// 	http.Redirect(w, r, "/v1/login", http.StatusFound)
+			// 	return
+			// }
 		} else {
 			//输入了错误的口令
 			util.Info(watchword, "因为口令不正确导致登入失败")
-			Report(w, r, "您好，这是星际茶棚，想喝茶需要知香识味。")
+			Report(w, r, "您好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
 			return
 		}
 

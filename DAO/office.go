@@ -8,11 +8,11 @@ import (
 // AcceptObject 友邻盲评对象
 type AcceptObject struct {
 	Id         int
-	ObjectType int // 1:茶话会，2:茶台， 3:茶议，4: 品味， 5:茶团
+	ObjectType int // 1:茶话会，2:茶台， 3:茶议，4: 品味， 5:茶团, 6: 集团
 	ObjectId   int
 
 	// 页面动态数据,不存储到数据库中
-	PageData AcceptObjectPageData
+	// PageData AcceptObjectPageData
 }
 
 // 用户新消息统计

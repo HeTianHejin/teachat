@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	// 在控制台输出一些运行地址及应用版本信息
+	// 在控制台输出一些运行地址,应用版本信息
 	util.PrintStdout("teachat", util.Version(), "server at", util.Config.Address)
 
 	// handle static assets
@@ -54,6 +54,10 @@ func main() {
 	mux.HandleFunc("/v1/team/core_manage", route.CoreManage)
 	mux.HandleFunc("/v1/team/avatar", route.TeamAvatar)
 	mux.HandleFunc("/v1/team/invitations", route.ReviewInvitations)
+	// defined in route_group.go
+	mux.HandleFunc("/v1/group/new", route.NewGroup)
+	mux.HandleFunc("/v1/group/create", route.CreateGroup)
+	mux.HandleFunc("/v1/group/detail", route.GroupDetail)
 
 	//defined in route_team_member.go
 	mux.HandleFunc("/v1/team/team_member/join", route.HandleJoinTeam)
@@ -120,4 +124,5 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 	server.ListenAndServe()
+
 }

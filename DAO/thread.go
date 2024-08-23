@@ -18,7 +18,7 @@ type Thread struct {
 	EditAt    time.Time
 	ProjectId int //茶台号
 	HitCount  int //点击计数
-	Type      int //哪一种提法？0: "我觉得",1: "我认为", 3: "我提议",
+	Type      int //哪一种提法？0: "我觉得",1: "出个主意", 3: "推荐解决方案",
 	PostId    int //针对那一个品味？默认0为空
 
 	//仅用于页面渲染，不保存到数据库
@@ -43,15 +43,15 @@ type DraftThread struct {
 	Body      string //提议？话题？
 	Class     int    //分类//0：原始草稿，1:已通过（友邻盲评），2:（友邻盲评）已拒绝
 	CreatedAt time.Time
-	Type      int //哪一种提法？0: "我觉得",1: "我认为", 2: "我提议",
+	Type      int //哪一种提法？0: "我觉得",1: "出个主意", 2: "推荐解决方案",
 	PostId    int //针对那一个品味？
 }
 
 // 根据type属性的int值，返回方便阅读的自然语字符
 var TypeStatus = map[int]string{
 	0: "我觉得",
-	1: "我认为",
-	2: "我提议",
+	1: "出个主意",
+	2: "推荐解决方案",
 }
 
 var ThreadStatus = map[int]string{
@@ -318,7 +318,7 @@ func (post *Post) Thread() (thread Thread, err error) {
 
 // 获取茶台的全部茶议
 func (project *Project) Threads() (threads []Thread, err error) {
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title ,edit_at, project_id, hit_count, type, post_id FROM threads WHERE project_id = $1", project.Id)
+	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title ,edit_at, project_id, hit_count, type, post_id FROM threads WHERE post_id = 0 AND project_id = $1", project.Id)
 	if err != nil {
 		return
 	}

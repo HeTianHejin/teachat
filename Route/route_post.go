@@ -10,9 +10,7 @@ import (
 
 // 加水 ，修改回复post的处理器
 func HandleEditPost(w http.ResponseWriter, r *http.Request) {
-
 	switch r.Method {
-
 	case "GET":
 		EditPost(w, r)
 	case "POST":
@@ -25,9 +23,7 @@ func HandleEditPost(w http.ResponseWriter, r *http.Request) {
 		//未开放的窗口
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-
 	}
-
 }
 
 // get /v1/post/detail？id=
@@ -36,21 +32,28 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
-	var postPD data.PostDetailPageData
-	postPD.Post, err = data.GetPostByUuid(uuid)
+	var postPD data.PostDetail
+	post, err := data.GetPostByUuid(uuid)
 	if err != nil {
 		util.Warning(err, " Cannot get post detail")
 		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
+	post_bean, err := GetPostBean(post)
+	if err != nil {
+		util.Warning(err, " Cannot get post bean given post")
+		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		return
+	}
+	postPD.PostBean = post_bean
 	// 读取此品味引用的茶议
-	postPD.QuoteThread, err = postPD.Post.Thread()
+	postPD.QuoteThread, err = post.Thread()
 	if err != nil {
 		util.Warning(err, " Cannot get thread given post")
 		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议资料。")
 		return
 	}
-	// 截短此引用的茶议以方便展示
+	// 截短此引用的茶议内容以方便展示
 	postPD.QuoteThread.Body = Substr(postPD.QuoteThread.Body, 66)
 	// 此品味针对的茶议作者资料
 	postPD.QuoteThreadAuthor, err = postPD.QuoteThread.User()
@@ -59,17 +62,28 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
-
-	// 读取全部针对此品味的茶议
-	postPD.ThreadList, err = postPD.Post.Threads()
+	postPD.QuoteThreadAuthorTeam, err = postPD.QuoteThreadAuthor.GetLastDefaultTeam()
 	if err != nil {
-		util.Warning(err, " Cannot get thread in post list")
+		util.Warning(err, " Cannot get quote-thread-author-default-team given post")
+		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
+		return
+	}
+	// 读取全部针对此品味的茶议
+	thread_list, err := post.Threads()
+	if err != nil {
+		util.Warning(err, " Cannot get thread_list given post")
+		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		return
+	}
+	postPD.ThreadBeanList, err = GetThreadBeanList(thread_list)
+	if err != nil {
+		util.Warning(err, " Cannot get thread_bean_list given thread_list")
 		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	// 读取会话
 	// 检测pageData.ThreadList数量是否超过一打dozen
-	if len(postPD.ThreadList) > 12 {
+	if len(thread_list) > 12 {
 		postPD.IsOverTwelve = true
 	} else {
 		postPD.IsOverTwelve = false
@@ -91,7 +105,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	u, _ := sess.User()
 	postPD.SessUser = u
 	// 当前会话用户是否此品味作者？
-	if u.Id == postPD.Post.UserId {
+	if u.Id == post.UserId {
 		postPD.IsAuthor = true
 		postPD.IsInput = false
 	} else {
@@ -214,7 +228,7 @@ func NewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 提示用户草稿保存成功
-	t := fmt.Sprintf("您好，对 %s 发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", thread.Title)
+	t := fmt.Sprintf("您好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", thread.Title)
 	// 提示用户草稿保存成功
 	Report(w, r, t)
 }

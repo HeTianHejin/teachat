@@ -1,12 +1,11 @@
 {{ define "content" }}
 
-
 <ol class="breadcrumb">
   <li role="presentation">大堂</li>
-  
+
 </ol>
 
-<!--这是茶棚主页-->
+{{/* 这是茶棚主页 */}}
 
 <div style="margin: 20px;">
   <ol class="nav nav-tabs">
@@ -15,11 +14,11 @@
   </ol>
 </div>
 
-<!--展示全部茶议-->
-{{ range .ThreadAndAuthorList }}
+{{/* 展示全部茶议 */}}
+{{ range .ThreadBeanList }}
 
 {{ if .Thread.PageData.IsAuthor }}
-<!--检测是否茶议作者，是,安排右侧头像布局-->
+{{/* 检测是否茶议作者，是,安排右侧头像布局 */}}
 <div class="media">
 
   <div class="media-body">
@@ -29,24 +28,23 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .Author.Name }}
             <span style="font-size: small;">
               <span class="label label-info">{{ .Author.GetGender }}</span>
-              @<a href="/v1/team/detail?id={{ .User.GetLastDefaultTeam.Uuid }}">{{ .Author.GetLastDefaultTeam.Abbreviation }}</a></span>
-                
-              </span>
+              {{ .Author.Name }}
+              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+            </span>
           </div>
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: center;">
-              <span class="label label-default">{{ .Thread.Status }}
+              <span class="label label-default">{{ .Status }}
               </span>
             </span>
-          
+
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; font-size: smaller;text-align: right;">
-              {{ .Thread.CreatedAtDate }}
+              {{ .CreatedAtDate }}
             </span>
           </div>
         </div>
@@ -68,14 +66,14 @@
 
       <div class="panel-footer">
         <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Thread.NumReplies }} </span>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Count }} </span>
         {{ if .Thread.IsEdited }}
         <a href="/v1/thread/edit?id={{ .Thread.Uuid }}">
           <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
         </a>
-        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Thread.EditAtDate }} </span>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .CreatedAtDate }} </span>
         {{ else }}
-        <!--没有编辑过（补充内容）则没有加水时间-->
+        {{/* 没有编辑过（补充内容）则没有加水时间 */}}
         <a href="/v1/thread/edit?id={{ .Thread.Uuid }}">
           <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
         </a>
@@ -85,16 +83,16 @@
           <a href="/v1/thread/detail?id={{.Thread.Uuid }}">
             <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
 
-          </a> {{ .Thread.NumReads }}
+          </a> {{ .Count }}
         </span>
       </div>
 
     </div>
   </div>
   <div class="media-right">
-    <span class=" badge">
-      {{ .Thread.NumReplies }} 
-    </span>
+    {{ if .Count }} 
+    <span class="badge">{{ .Count }}</span>
+    {{ end }}
     <a href="/v1/user/biography?id={{ .Author.Uuid }}">
       <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
     </a>
@@ -102,13 +100,13 @@
 </div>
 
 {{ else }}
-<!--检测是否茶议作者，否,安排左侧头像布局-->
+{{/* 检测是否茶议作者，否,安排左侧头像布局 */}}
 
 <div class="media">
   <div class="media-left">
-    <span class=" badge">
-      {{ .Thread.NumReplies }} 
-    </span>
+    {{ if .Count }}
+    <span class="badge">{{ .Count }}</span>
+    {{ end }}
     <a href="/v1/user/biography?id={{ .Author.Uuid }}">
       <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
     </a>
@@ -124,27 +122,28 @@
             <span class="label label-info" style="font-size: xx-small;">{{ .Author.GetGender }}</span>
             {{ .Author.Name }}
             <span style="font-weight: lighter;">
-            @<a href="/v1/team/detail?id={{ .Author.GetLastDefaultTeam.Uuid }}">{{ .Author.GetLastDefaultTeam.Abbreviation }}</a>
-          </span>
+              @<a href="/v1/team/detail?id={{ .Author.GetLastDefaultTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+            </span>
           </div>
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: center;">
-              <span class="label label-default">{{ .Thread.Status }}
+              <span class="label label-default">{{ .Status }}
               </span>
             </span>
-          
+
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; font-size: smaller;text-align: right">
-              {{ .Thread.CreatedAtDate }}
+              {{ .CreatedAtDate }}
             </span>
           </div>
         </div>
       </div>
 
       <div class="panel-body">
-        <h4>{{ .Thread.TypeStatus }}:
+        <h4>
+        <span class="label label-primary">{{ .Thread.TypeStatus }}</span>
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
             {{ .Thread.Title }}
           </a>
@@ -156,29 +155,7 @@
 
       </div>
 
-      <div class="panel-footer">
-
-        <span>
-          {{ .Thread.NumSupport }}
-        </span>
-        <span class="glyphicon glyphicon-hand-right" aria-hidden="true" style="margin-inline-end: 10px;"></span>
-        <span class="glyphicon glyphicon-hand-left" aria-hidden="true"></span>
-        {{ .Thread.NumOppose }}
-
-        {{ if .Thread.IsEdited }}
-        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Thread.EditAtDate }} </span>
-        {{ else }}
-        <!--没有编辑过（补充内容）则留空白-->
-        {{ end }}
-
-        <span class="pull-right">
-          <a href="/v1/thread/detail?id={{.Uuid }}">
-            <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
-          </a> {{ .NumReads }}
-        </span>
-        </span>
-      </div>
+    
 
     </div>
   </div>

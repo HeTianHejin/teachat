@@ -85,7 +85,7 @@ func (project *Project) InvitedTeamsCount() (count int, err error) {
 }
 
 // 获取茶台的属性
-func (project *Project) GetProperty() string {
+func (project *Project) GetStatus() string {
 	return PrProperty[project.Class]
 }
 
@@ -153,7 +153,7 @@ func (post *Post) Project() (project Project, err error) {
 }
 
 // 获取茶台的茶议总数量
-func (project *Project) NumThreads() (count int) {
+func (project *Project) NumReplies() (count int) {
 	rows, err := Db.Query("SELECT count(*) FROM threads WHERE project_id = $1", project.Id)
 	if err != nil {
 		return

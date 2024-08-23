@@ -1,25 +1,26 @@
 {{ define "content" }}
 
-{{ if .Objective.PageData.IsAuthor }}
+{{ if .ObjectiveBean.Objective.PageData.IsAuthor }}
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li class="active">{{ .Objective.Title }}@茶话会</li>
+  <li class="active">{{ .ObjectiveBean.Objective.Title }}@茶话会</li>
 
 </ol>
 {{ else }}
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li class="active">{{ .Objective.Title }}@茶话会</li>
+  <li class="active">{{ .ObjectiveBean.Objective.Title }}@茶话会</li>
 
 </ol>
 {{ end }}
 
-<!--这是某个茶话会的详情页-->
+   {{/* 这是某个茶话会的详情页 */}}
+
 <ul class="media-list">
   <li class="media">
     <div class="media-left">
       
-        <img class="media-object" src="/v1/static/image/{{ .Objective.Cover }}.jpeg" alt="茶话会封面">
+        <img class="media-object" src="/v1/static/image/{{ .ObjectiveBean.Objective.Cover }}.jpeg" alt="茶话会封面">
       
     </div>
     <div class="media-body">
@@ -27,56 +28,55 @@
         <div class="panel-heading">
           <div class="row">
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              {{ .Objective.Title }} 
+              {{ .ObjectiveBean.Objective.Title }} 
             </div>
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
               <p class="text-center">
                 
-                  {{ if (eq .Objective.Class 1) }}
-                  <span class="label label-success">{{ .Objective.GetProperty }}
+                  {{ if .ObjectiveBean.Open }}
+                  <span class="label label-success">{{ .ObjectiveBean.Status }}
                     {{ else }}
-                    <span class="label label-default">{{ .Objective.GetProperty }}
+                    <span class="label label-default">{{ .ObjectiveBean.Status }}
                       {{ end }}
                     </span>
                   
               </p>
             </div>
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <p class="text-right">
-                <a href="/v1/user/biography?id={{ .Objective.User.Uuid }}">
-                  {{ .Objective.User.Name }}
-                </a>
-                {{ .Objective.CreatedAtDate }}
-              </p>
-             
+              <span style="display: block; text-align: right; font-size: smaller;">
+                <span class="label label-info">{{ .ObjectiveBean.Author.GetGender }}</span>
+                <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
+                @<a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}"><span style="font-weight: lighter;">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</span></a>
+                {{ .ObjectiveBean.CreatedAtDate }}
+              </span>
             </div>
           </div>
         </div>
         <div class="panel-body">
         
-          {{ .Objective.Body }}
+          {{ .ObjectiveBean.Objective.Body }}
 
         </div>
         <div class="panel-footer">
-          <!--这是面板注脚-->
-          <!--这是面板注脚中的茶台计数-->
+          {{/* 这是面板注脚 */}}
+          {{/* 这是面板注脚中的茶台计数 */}}
           <span style="font-size: smaller; margin-inline-end: 20px;">
-            {{ if (eq .Objective.Class 1) }}
-            <a href="/v1/project/new?id={{ .Objective.Uuid }}">
+            {{ if .ObjectiveBean.Open }}
+            <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">
               <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
             </a>
             {{ else }}
             <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
             {{ end }}
-            {{ .Objective.NumProjects }}
+            {{ .ObjectiveBean.Count }}
           </span>
 
-          {{ if .Objective.IsEdited }}
-          <!--编辑过（补充内容)，显示编辑时间 -->
+          {{ if .ObjectiveBean.Objective.IsEdited }}
+          {{/* 编辑过（补充内容），显示编辑时间  */}}
           <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-          <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Objective.EditAtDate }} </span>
+          <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .ObjectiveBean.Objective.EditAtDate }} </span>
           {{ else }}
-          <!--没有编辑过（补充内容）则留空白-->
+          {{/* 没有编辑过（补充内容）则留空白 */}}
           {{ end }}
           <div class="pull-right">
             <a href="#"></a>
@@ -84,46 +84,53 @@
         </div>
       </div>
 
-      <!--这个茶话会的全部茶台逐一展示-->
-      {{ range .ProjectList }}
+      {{/* 这个茶话会的全部茶台逐一展示 */}}
+      {{ range .ProjectBeanList }}
 
       <div class="panel panel-default">
         <div class="panel-body">
           <div class="media">
             <div class="media-left media-middle">
-              <span class="badge">{{ .NumThreads }}</span>
-              <a href="/v1/project/detail?id={{ .Uuid }}">
-                <img class="media-object" src="/v1/static/image/{{ .Cover }}.jpeg" alt="茶台封面">
+              {{ if (gt .Count 0) }} 
+              <span class="badge">{{ .Count }}</span>
+              {{ else }}
+              {{ end }}
+              <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+                <img class="media-object" src="/v1/static/image/{{ .Project.Cover }}.jpeg" alt="茶台封面">
               </a>
             </div>
             <div class="media-body">
               <p>
-                <a href="/v1/project/detail?id={{ .Uuid }}">
+                <a href="/v1/project/detail?id={{ .Project.Uuid }}">
                   <h5>
-                    {{ .Title }}
+                    {{ .Project.Title }}
                   </h5>
                 </a>
-                {{ if (eq .Class 1) }}
+                {{ if .Open }}
                 <span class="label label-success" style="margin-inline-end: 30px;">
-                  {{ .GetProperty }}
+                  {{ .Status }}
                 </span>
                  
                   {{ else }}
                   <span class="label label-default" style="margin-inline-end: 30px;">
-                    {{ .GetProperty }}
+                    {{ .Status }}
                   </span>
                     
                     {{ end }}
 
                   <span style="margin-inline-end: 30px;">
-                    {{ .User.Name }}
+                    <span style="font-size: small;">
+                      <span class="label label-info">{{ .Author.GetGender }}</span>
+                      {{ .Author.Name }}
+                      @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+                      </span>
                   </span>
 
                   <span style="font-weight: lighter;">
                     {{ .CreatedAtDate }}
                   </span>
               </p>
-              {{ .Body }} ...
+              {{ .Project.Body }} ...
             </div>
 
           </div>
@@ -137,9 +144,9 @@
 </ul>
 
 <div class="well">
-  {{ if (eq .Objective.Class 1) }}
+  {{ if .ObjectiveBean.Open }}
   <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-  <a href="/v1/project/new?id={{ .Objective.Uuid }}">我的茶台</a>
+  <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
   {{ else }}
   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
   茶博士：封闭式茶话会需要围主邀请才能开新台噢。

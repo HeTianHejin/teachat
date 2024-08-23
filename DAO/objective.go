@@ -25,7 +25,7 @@ type Objective struct {
 }
 
 // 把数字等级属性转换为字符串以显示
-var ObProperty = map[int]string{
+var ObStatus = map[int]string{
 	0:  "修改待评草围",
 	1:  "开放式茶话会",
 	2:  "封闭式茶话会",
@@ -114,8 +114,8 @@ func GetPublicObjectives(limit int) (objectives []Objective, err error) {
 }
 
 // 获取objective的属性是开放式还是封闭式，返回string
-func (objective *Objective) GetProperty() string {
-	return ObProperty[objective.Class]
+func (objective *Objective) GetStatus() string {
+	return ObStatus[objective.Class]
 }
 
 // create a new objective
@@ -208,7 +208,7 @@ func (objective *Objective) EditAtDate() string {
 
 // get the number of projects for this objective
 // 获取指定茶话会下的茶台数量
-func (objective *Objective) NumProjects() (count int) {
+func (objective *Objective) NumReplies() (count int) {
 	rows, err := Db.Query("SELECT count(*) FROM projects WHERE objective_id = $1", objective.Id)
 	if err != nil {
 		return
@@ -223,9 +223,9 @@ func (objective *Objective) NumProjects() (count int) {
 	return
 }
 
-// GetAllObjectives() 获取全部茶话会（愿景），返回 []Objective。
-// 测试时使用
-func GetAllObjectives() (objectives []Objective, err error) {
+// 测试时使用!
+// GetAllObjectivesForTest() 获取全部茶话会（愿景），返回 []Objective。
+func GetAllObjectivesForTest() (objectives []Objective, err error) {
 	rows, err := Db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover FROM objectives ORDER BY created_at DESC")
 	if err != nil {
 		return

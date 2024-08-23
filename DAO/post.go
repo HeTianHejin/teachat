@@ -146,6 +146,17 @@ func (t *Thread) PostsScore() (score int, err error) {
 
 // 统计某个thread的posts.attitude=true的.score总值，返回int
 func (t *Thread) PostsScoreSupport() (score int, err error) {
+	//first, check the posts table to see if there are any posts with attitude=true for this thread
+	//if there are none, return 0
+	//if there are some, sum the score for those posts
+	//return the sum
+	//check if there are any posts with attitude=true for this thread
+	var count int
+	err = Db.QueryRow("SELECT count(*) FROM posts WHERE thread_id = $1 AND attitude = true", t.Id).Scan(&count)
+	//if there are none, return 0
+	if err != nil {
+		return 0, err
+	}
 	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1 AND attitude = true", t.Id).Scan(&score)
 	if err != nil {
 		return
@@ -155,6 +166,17 @@ func (t *Thread) PostsScoreSupport() (score int, err error) {
 
 // 统计某个thread的posts.attitude=false的.score总值，返回int
 func (t *Thread) PostsScoreOppose() (score int, err error) {
+	//first, check the posts table to see if there are any posts with attitude=false for this thread
+	//if there are none, return 0
+	//if there are some, sum the score for those posts
+	//return the sum
+	//check if there are any posts with attitude=false for this thread
+	var count int
+	err = Db.QueryRow("SELECT count(*) FROM posts WHERE thread_id = $1 AND attitude = false", t.Id).Scan(&count)
+	//if there are none, return 0
+	if err != nil {
+		return 0, err
+	}
 	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1 AND attitude = false", t.Id).Scan(&score)
 	if err != nil {
 		return
@@ -164,8 +186,8 @@ func (t *Thread) PostsScoreOppose() (score int, err error) {
 
 // get posts to a thread, with pagination
 
-// NumThreads() returns the number of threads where Thread.PostId = Post.Id
-func (post *Post) NumThreads() (count int) {
+// NumReplies() returns the number of threads where Thread.PostId = Post.Id
+func (post *Post) NumReplies() (count int) {
 	err := Db.QueryRow("SELECT count(*) FROM threads WHERE post_id = $1", post.Id).Scan(&count)
 	if err != nil {
 		return

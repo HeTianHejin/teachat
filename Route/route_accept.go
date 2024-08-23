@@ -40,7 +40,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	civilizer := r.PostFormValue("civilizer")
 	care := r.PostFormValue("care")
 	id_str := r.PostFormValue("id")
-	// ���成int
+	// 转成int
 	ao_id_int, err := strconv.Atoi(id_str)
 	if err != nil {
 		util.Danger(err, " Cannot get id")
@@ -160,20 +160,6 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "您好，(摸摸头想了又想), 为什么踢足球的人都说临门一脚最麻烦呢？")
 				return
 			}
-			// 通知茶语作者友邻盲评已通过
-			//构造消息
-			// acMess.FromUserId = 1
-			// acMess.ToUserId = ob.UserId
-			// acMess.Title = "新茶语邻座评审结果通知"
-			// acMess.Content = "您好，茶博士隆重宣布：您的新茶语已经通过了友邻评审，可以昭告宇宙啦。"
-			// acMess.AcceptObjectId = ao.Id
-			// acMess.Class = 0
-
-			// //发送消息
-			// if err = PilotAcceptMessageSend(ob.UserId, acMess); err != nil {
-			// 	util.Pop_message(w, r, "您好，茶博士迷路了，未能发送盲评通过消息。")
-			// 	return
-			// }
 
 		case 2:
 			pr, err := data.GetProjectById(ao.ObjectId)
@@ -193,20 +179,6 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "您好，一畦春韭绿，十里稻花香。")
 				return
 			}
-			// 通知茶语作者友邻盲评已通过
-			//构造消息
-			// acMess.FromUserId = 1
-			// acMess.ToUserId = pr.UserId
-			// acMess.Title = "新茶语邻座评审结果通知"
-			// acMess.Content = "您好，茶博士隆重宣布：您的新茶语已经通过了友邻评审，可以昭告宇宙啦。"
-			// acMess.AcceptObjectId = ao.Id
-			// acMess.Class = 0
-
-			// //发送消息
-			// if err = PilotAcceptMessageSend(pr.UserId, acMess); err != nil {
-			// 	util.Pop_message(w, r, "您好，茶博士迷路了，未能发送盲评请求消息。")
-			// 	return
-			// }
 
 		case 3:
 			dThread := data.DraftThread{
@@ -280,21 +252,6 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// 通知茶语作者友邻盲评已通过
-			//构造消息
-			// acMess.FromUserId = 1
-			// acMess.ToUserId = pUser.Id
-			// acMess.Title = "新茶语邻座评审结果通知"
-			// acMess.Content = "您好，茶博士隆重宣布：您的新茶语已经通过了友邻评审，可以昭告宇宙啦。"
-			// acMess.AcceptObjectId = ao.Id
-			// acMess.Class = 0
-
-			// //发送消息
-			// if err = PilotAcceptMessageSend(pUser.Id, acMess); err != nil {
-			// 	util.Pop_message(w, r, "您好，茶博士迷路了，未能发送盲评请求消息。")
-			// 	return
-			// }
-
 		case 5:
 			team, err := data.GetTeamById(ao.ObjectId)
 			if err != nil {
@@ -325,21 +282,24 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "您好，花因喜洁难寻偶，人为悲秋易断魂。")
 				return
 			}
-
-			// 通知茶语作者友邻盲评已通过
-			//构造消息
-			// acMess.FromUserId = 1
-			// acMess.ToUserId = team.FounderId
-			// acMess.Title = "新茶语邻座评审结果通知"
-			// acMess.Content = "您好，茶博士隆重宣布：您的新茶语已经通过了友邻评审，可以昭告宇宙啦。"
-			// acMess.AcceptObjectId = ao.Id
-			// acMess.Class = 0
-
-			// //发送消息
-			// if err = PilotAcceptMessageSend(team.FounderId, acMess); err != nil {
-			// 	util.Pop_message(w, r, "您好，茶博士糊里糊涂，忘记通知书在大观园里了。")
-			// 	return
-			// }
+		case 6:
+			group, err := data.GetGroup(ao.ObjectId)
+			if err != nil {
+				util.Danger(err, "Cannot get group")
+				Report(w, r, "您好，������失������，��然说有时�������������比��������更有用？")
+				return
+			}
+			if group.Class == 10 {
+				group.Class = 1
+			} else if group.Class == 20 {
+				group.Class = 2
+			}
+			// 更新，友评已通过！
+			if err = group.Update(); err != nil {
+				util.Danger(err, "Cannot update group class")
+				Report(w, r, "您好，（����头）考一考你，情中情因情感������　错里错以错������是��么意思？")
+				return
+			}
 
 		default:
 			util.Danger(err, "Cannot get object")
@@ -397,7 +357,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 
 			if err = dThread.Get(); err != nil {
 				util.Danger(err, "Cannot get dfart-thread")
-				Report(w, r, "您好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
+				Report(w, r, "您好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术,而是耐心。")
 				return
 			}
 			// 更新������，友邻盲评 已退稿！
@@ -451,7 +411,10 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, _ := sess.User()
+	su, _ := sess.User()
+
+	var aopd data.AcceptObjectPageData
+
 	// 读取提交的ID参数
 	vals := r.URL.Query()
 	ob_id_str := vals.Get("id")
@@ -474,14 +437,14 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 
 	//读取友邻盲评邀请函
 	var acceptMessage data.AcceptMessage
-	if err = acceptMessage.GetAccMesByUIdAndAOId(u.Id, ao.Id); err != nil {
+	if err = acceptMessage.GetAccMesByUIdAndAOId(su.Id, ao.Id); err != nil {
 		util.Warning(err, "Cannot get accept-message invitation")
 		Report(w, r, "您好，茶博士莫名其妙，竟然说没有机票也可以登机有时候是合情合理的。")
 		return
 	}
 
 	// 检查用户是否受邀请的新茶评审官
-	if !u.CheckHasAcceptMessage(ao.Id) {
+	if !su.CheckHasAcceptMessage(ao.Id) {
 		util.Danger(err, "Cannot get accept new tea")
 		Report(w, r, "您好，莫名其妙的茶博士竟然强词夺理说，外星人不能评估新茶～")
 		return
@@ -495,10 +458,10 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "您好，有时候找不到新茶评审的资料未必是外星人闹事。")
 			return
 		}
-		//ao.PageData.Title = ob.Title
-		ao.PageData.Body = ob.Title + "." + ob.Body
+		//aopd.Title = ob.Title
+		aopd.Body = ob.Title + "." + ob.Body
 		// 更新友邻盲评邀请函class为已读
-		if err = acceptMessage.Update(u.Id, ao.Id); err != nil {
+		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(err, "Cannot update ob accept-message class")
 		}
 	case 2:
@@ -508,36 +471,39 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "您好，茶博士失魂鱼，竟然说有时找资料也是一种修心养性的过程。")
 			return
 		}
-		//ao.PageData.Title = pr.Title
-		ao.PageData.Body = pr.Title + "." + pr.Body
+		//aopd.Title = pr.Title
+		aopd.Body = pr.Title + "." + pr.Body
 		// 更新友邻盲评邀请函class为已读
-		if err = acceptMessage.Update(u.Id, ao.Id); err != nil {
+		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(err, "Cannot update pr accept-message class")
 		}
 	case 3:
-		thread, err := data.GetThreadById(ao.ObjectId)
-		if err != nil {
-			util.Danger(err, "Cannot get thread")
+		dThread := data.DraftThread{
+			Id: ao.ObjectId,
+		}
+
+		if err = dThread.Get(); err != nil {
+			util.Danger(err, "Cannot get dfart-thread")
 			Report(w, r, "您好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
 			return
 		}
-		//ao.PageData.Title = thread.Title
-		ao.PageData.Body = thread.Title + "." + thread.Body
-		if err = acceptMessage.Update(u.Id, ao.Id); err != nil {
-			util.Warning(err, "Cannot update th accept-message class")
+
+		aopd.Body = dThread.Title + "." + dThread.Body
+		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
+			util.Warning(err, "Cannot update draft-thread accept-message class")
 		}
 		// 更新友邻盲评邀请函class为已读
-		acceptMessage.Update(u.Id, thread.Id)
+		acceptMessage.Update(su.Id, dThread.Id)
 	case 4:
-		post, err := data.GetPostbyId(ao.ObjectId)
+		dPost, err := data.GetDraftPost(ao.ObjectId)
 		if err != nil {
 			util.Danger(err, "Cannot get post")
 			Report(w, r, "您好，茶博士失魂鱼，竟然说有时候找资料的人不一定是外星人？")
 			return
 		}
-		ao.PageData.Body = post.Body
-		// 更新友����评��请��class为已读
-		if err = acceptMessage.Update(u.Id, ao.Id); err != nil {
+		aopd.Body = dPost.Body
+		// 更新友邻盲评邀请函class为已读
+		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(err, "Cannot update po accept-message class")
 		}
 	case 5:
@@ -547,10 +513,10 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "您好，茶博士失魂鱼，竟然说有时候临急抱佛脚比刻苦奋斗更有用？")
 			return
 		}
-		//ao.PageData.Title = team.Name
-		ao.PageData.Body = team.Name + "." + team.Mission
-		// 更新友����评��请��class为已读
-		if err = acceptMessage.Update(u.Id, ao.Id); err != nil {
+		//aopd.Title = team.Name
+		aopd.Body = team.Name + "." + team.Mission
+		// 更新友邻盲评邀请函class为已读
+		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(err, "Cannot update team accept-message class")
 		}
 	default:
@@ -559,12 +525,13 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ao.PageData.SessUser = u
+	aopd.SessUser = su
+	aopd.Id = ao.Id
 
 	// 减少1新消息小黑板用户消息记录
-	if err = data.SubtractUserMessageCount(u.Id); err != nil {
+	if err = data.SubtractUserMessageCount(su.Id); err != nil {
 		util.Warning(err, "Cannot subtract 1 user message")
 	}
 
-	GenerateHTML(w, &ao, "layout", "navbar.private", "watch_your_language")
+	GenerateHTML(w, &aopd, "layout", "navbar.private", "watch_your_language")
 }

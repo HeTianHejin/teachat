@@ -50,7 +50,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 
 	// 检测一下name是否>2中文字，desc是否在17-456中文字，
 	// 如果不是，返回错误信息
-	if CnStrLen(title) < 2 {
+	if CnStrLen(title) < 2 || CnStrLen(title) > 36 {
 		util.Info(err, "Project name is too short")
 		Report(w, r, "您好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
@@ -251,35 +251,35 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 	// 读取提交的数据，确定是哪一个茶话会需求新开茶台
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
-	var obDetailPD data.ObjectiveDetailPageData
+	var obD data.ObjectiveDetail
 	// 获取指定的目标茶话会
-	obDetailPD.Objective, err = data.GetObjectiveByUuid(uuid)
+	ob, err := data.GetObjectiveByUuid(uuid)
 	if err != nil {
 		util.Danger(err, " Cannot read project")
 		Report(w, r, "您好，茶博士失魂鱼，未能找到茶台，请稍后再试。")
 		return
 	}
 	// 填写页面会话用户资料
-	obDetailPD.SessUser = u
+	obD.SessUser = u
 
 	// 检查当前用户是否可以在此茶话会下新开茶台
 	// 首先检查茶话会属性，class=1开放式，class=2封闭式，
 	// 如果是开放式，则可以在茶话会下新开茶台
 	// 如果是封闭式，则需要看围主指定了那些茶团成员可以开新茶台，如果围主没有指定，则不能新开茶台
-	switch obDetailPD.Objective.Class {
+	switch ob.Class {
 	case 1:
 		// 开放式茶话会，可以在茶话会下新开茶台
 		// 向用户返回添加指定的茶台的表单页面
-		GenerateHTML(w, &obDetailPD.Objective, "layout", "navbar.private", "project.new")
+		GenerateHTML(w, &obD.ObjectiveBean, "layout", "navbar.private", "project.new")
 		return
 	case 2:
 		// 封闭式茶话会，需要看围主指定了那些茶团成员可以开新茶台，如果围主没有指定，则不能新开茶台
 		//检查team_ids是否为空
 		// 围主没有指定茶团成员，不能新开茶台
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		ok := isUserInvitedByObjective(obDetailPD.Objective, u)
+		ok := isUserInvitedByObjective(ob, u)
 		if ok {
-			GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "project.new")
+			GenerateHTML(w, &obD, "layout", "navbar.private", "project.new")
 			return
 		}
 
@@ -299,39 +299,60 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 // 展示指定的UUID茶台详情
 func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var prDPD data.ProjectDetailPageData
+	var pd data.ProjectDetail
 	// 读取用户提交的查询参数
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	// 获取请求的茶台详情
-	prDPD.Project, err = data.GetProjectByUuid(uuid)
+	pd.Project, err = data.GetProjectByUuid(uuid)
 	if err != nil {
 		util.Warning(err, " Cannot read project")
 		Report(w, r, "您好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
-	prDPD.Master, err = prDPD.Project.User()
+	pd.Master, err = pd.Project.User()
 	if err != nil {
 		util.Warning(err, " Cannot read project user")
 		Report(w, r, "您好，霁月难逢，彩云易散。请稍后再试。")
 		return
 	}
-	// ���查当前用户是否可以在此��台下新开��台
-	// 写页面数据
-	if prDPD.Project.Class == 1 {
-		prDPD.Open = true
+	pd.MasterTeam, _ = pd.Master.GetLastDefaultTeam()
+	// 准备页面数据
+	if pd.Project.Class == 1 {
+		pd.Open = true
 	} else {
-		prDPD.Open = false
+		pd.Open = false
 	}
-	if prDPD.IsEdited {
-		prDPD.IsEdited = true
+	if pd.IsEdited {
+		pd.IsEdited = true
 	} else {
-		prDPD.IsEdited = false
+		pd.IsEdited = false
 	}
 
-	var oabList []data.ThreadAndAuthorBean
+	pd.QuoteObjective, err = pd.Project.Objective()
+	if err != nil {
+		util.Warning(err, " Cannot read objective")
+		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
+		return
+	}
+	// 截短此引用的茶围内容以方便展示
+	pd.QuoteObjective.Body = Substr(pd.QuoteObjective.Body, 66)
+	pd.QuoteObjectiveAuthor, err = pd.QuoteObjective.User()
+	if err != nil {
+		util.Warning(err, " Cannot read objective author")
+		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
+		return
+	}
+	pd.QuoteObjectiveAuthorTeam, err = pd.QuoteObjectiveAuthor.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read objective author team")
+		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
+		return
+	}
+
+	var oabList []data.ThreadBean
 	// 读取全部茶议资料
-	threadlist, err := prDPD.Project.Threads()
+	threadlist, err := pd.Project.Threads()
 	if err != nil {
 		util.Warning(err, " Cannot read threads given project")
 		Report(w, r, "您好，满头大汗的茶博士说，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。")
@@ -339,45 +360,45 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	len := len(threadlist)
-	prDPD.ThreadCount = len
+	pd.ThreadCount = len
 	// 检测pageData.ThreadList数量是否超过一打dozen
 	if len > 12 {
-		prDPD.IsOverTwelve = true
+		pd.IsOverTwelve = true
 	} else {
 		//测试时都设为true显示效果 🐶🐶🐶
-		prDPD.IsOverTwelve = true
+		pd.IsOverTwelve = true
 	}
 	// 获取茶议和作者相关资料夹
-	oabList, err = GetThreadAndAuthorList(threadlist)
+	oabList, err = GetThreadBeanList(threadlist)
 	if err != nil {
-		util.Warning(err, " Cannot read thread and author list")
+		util.Warning(err, " Cannot read thread-bean list")
 		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
 		return
 	}
-	prDPD.ThreadAndAuthorList = oabList
+	pd.ThreadBeanList = oabList
 
 	// 获取会话session
 	s, err := Session(r)
 	if err != nil {
 		// 未登录，游客
 		// 填写页面数据
-		prDPD.Project.PageData.IsAuthor = false
-		prDPD.SessUser = data.User{
+		pd.Project.PageData.IsAuthor = false
+		pd.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 		}
 		// 返回给浏览者茶台详情页面
-		GenerateHTML(w, &prDPD, "layout", "navbar.public", "project.detail")
+		GenerateHTML(w, &pd, "layout", "navbar.public", "project.detail")
 		return
 	}
 	// 获取当前会话用户资料
 	u, _ := s.User()
-	prDPD.SessUser = u
+	pd.SessUser = u
 	// 检查是否台主？
-	prDPD.Project.PageData.IsAuthor = false
-	if u.Id == prDPD.Project.UserId {
-		prDPD.Project.PageData.IsAuthor = true
+	pd.Project.PageData.IsAuthor = false
+	if u.Id == pd.Project.UserId {
+		pd.Project.PageData.IsAuthor = true
 	}
 
-	GenerateHTML(w, &prDPD, "layout", "navbar.private", "project.detail")
+	GenerateHTML(w, &pd, "layout", "navbar.private", "project.detail")
 }

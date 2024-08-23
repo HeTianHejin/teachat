@@ -1,0 +1,95 @@
+{{ define "teams_public" }}
+
+
+<div class="well">
+    <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+      <a href="/v1/team/new">茶团</a>
+  </div>
+
+
+{{ range . }}
+
+<div class="media">
+  <div class="media-left media-middle">
+    <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+      <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="茶团旗帜">
+    </a>
+  </div>
+  <div class="media-body">
+    <div class="panel panel-default">
+
+      <div class="panel-heading">
+        <div class="row">
+    
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+          </div>
+          
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+              <span class="label label-success">{{ .Team.TeamProperty }}
+              </span>
+              
+            </span>
+          </div>
+          
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="pull-right" style="font-size: small;">
+              <span class="label label-info">{{ .Founder.GetGender }}</span>
+              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
+              @<span><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+        
+              {{ .CreatedAtDate }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+       
+
+        {{ .Team.Mission }} ...
+      </div>
+    
+      <div class="panel-footer">
+          <span style="margin-inline-end: 20px;" title="团号">
+          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+           {{ .Team.Id }}
+          </span>
+         
+          <span style="margin-inline-end: 20px;">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+             {{ .Count }}
+            </span>
+        <div class="pull-right">
+          <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+          <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+    
+    </div>
+  </div>
+</div>
+
+
+
+{{ else }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+      <span class="lead">茶博士</span>
+  </div>
+
+  <div class="panel-body">
+      您好，没有找到相关的茶团。
+  </div>
+
+</div>
+
+{{ end }}
+
+
+
+
+
+{{ end }}

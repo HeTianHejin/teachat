@@ -44,10 +44,10 @@ func HandleInvitation(w http.ResponseWriter, r *http.Request) {
 func HandleJoinTeam(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		//返回�申请加入页面
+		//返回 申请加入 页面
 		JoinTeamPage(w, r)
 	case "POST":
-		//申请加入方法
+		//申请加入 处理方法
 		JoinTeam(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -140,7 +140,21 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: time.Now(),
 			Class:     1,
 		}
-		//检查一下是否已经有该用户了
+		//检查一下是否已经这个茶团是否已经存在该用户了
+
+		_, err := data.GetTeamMemberByTeamIdAndUserId(team_member.TeamId, team_member.UserId)
+		if err != nil {
+			switch err {
+			case sql.ErrNoRows:
+				break
+			default:
+				Report(w, r, "您好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+				return
+			}
+		} else {
+			Report(w, r, "您好，茶博士摸摸头嘀咕说，这个茶友已经在茶团中了噢。")
+			return
+		}
 
 		// 如果team_member.Role == "CEO",采取更换CEO方法
 		if team_member.Role == "CEO" {
@@ -152,8 +166,7 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			// 其它角色
-			err = team_member.Create()
-			if err != nil {
+			if err = team_member.Create(); err != nil {
 				util.Warning(err, u.Email, " Cannot create team_member")
 				Report(w, r, "您好，晕头晕脑的茶博士竟然忘记登记新成员了，请稍后再试。")
 				return
@@ -328,7 +341,7 @@ func InviteMemberPage(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶团的旗帜已经设计好了，稍等友邻评审之后，闪亮就在风雨后。")
 		return
 	}
-	var tPD data.TeamDetailPageData
+	var tPD data.TeamDetail
 	// 填写页面资料
 	tPD.SessUser = u
 	tPD.Team = team

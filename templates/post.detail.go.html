@@ -2,18 +2,18 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?id={{ .Post.Objective.Uuid }}">{{ .Post.Objective.Title }}@茶话会</a></li>
-  <li><a href="/v1/project/detail?id={{ .Post.Project.Uuid }}">{{ .Post.Project.Title }}@茶台</a></li>
-  <li><a href="/v1/thread/detail?id={{ .Post.Thread.Uuid }}">{{ .Post.Thread.Title }}@茶议</a></li>
+  <li><a href="/v1/objective/detail?id={{ .PostBean.Post.Objective.Uuid }}">{{ .PostBean.Post.Objective.Title }}@茶话会</a></li>
+  <li><a href="/v1/project/detail?id={{ .PostBean.Post.Project.Uuid }}">{{ .PostBean.Post.Project.Title }}@茶台</a></li>
+  <li><a href="/v1/thread/detail?id={{ .PostBean.Post.Thread.Uuid }}">{{ .PostBean.Post.Thread.Title }}@茶议</a></li>
   <li class="active">品味-详情</li>
 </ol>
 
-<!--这是某个 品味 的详情页-->
+{{/* 这是某个 品味 的详情页 */}}
 
 <div class="media">
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .Post.User.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Post.User.Avatar }}.jpeg" alt="个人头像">
+    <a href="/v1/user/biography?id={{ .PostBean.Post.User.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .PostBean.Post.User.Avatar }}.jpeg" alt="个人头像">
     </a>
   </div>
   <div class="media-body">
@@ -25,19 +25,23 @@
         <div class="panel-heading">
           <div class="row">
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              {{ .Post.User.Name }}
+              <span class="label label-info" style="font-size: xx-small;">{{ .PostBean.Author.GetGender }}</span>
+            {{ .PostBean.Author.Name }}
+            <span style="font-weight: lighter;">
+              @<a href="/v1/team/detail?id={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>
+            </span>
             </div>
 
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
               <span style="display: block; text-align: center;">
-                <span class="label label-default">{{ .Post.Atti }}
+                <span class="label label-default">{{ .PostBean.Attitude }}
                 </span>
               </span>
             </div>
 
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
               <span style="display: block; text-align: right;">
-                {{ .Post.CreatedAtDate }}
+                {{ .PostBean.CreatedAtDate }}
               </span>
 
             </div>
@@ -47,16 +51,15 @@
         <div class="panel-body">
 
           <p>
-            {{ .Post.Body }}
+            {{ .PostBean.Post.Body }}
           </p>
 
           <div class="panel panel-default">
             <div class="panel-body">
-              <span class="label label-default">引用</span>
-              <a href="/v1/user/biography?id={{ .QuoteThreadAuthor.Uuid }}">
-                {{ .QuoteThreadAuthor.Name }}
-              </a>
-              <span style="font-weight: lighter;">
+              <a href="/v1/thread/detail?id={{ .QuoteThread.Uuid }}"><span class="label label-default">引用</span></a>
+              <a href="/v1/user/biography?id={{ .QuoteThreadAuthor.Uuid }}">{{ .QuoteThreadAuthor.Name }}</a>
+              <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuoteThreadAuthorTeam.Uuid }}">{{ .QuoteThreadAuthorTeam.Abbreviation }}</a></span>
+              <span style="font-style: italic;">
                 {{ .QuoteThread.TypeStatus }}
                 : {{ .QuoteThread.Title }}
                 {{ .QuoteThread.Body }} ...
@@ -70,19 +73,19 @@
           <a href="#">
             <span class="glyphicon glyphicon-comment" aria-hidden="true"></span>
           </a>
-          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Post.NumThreads }}</span>
+          <span style="font-size: smaller; margin-inline-end: 30px;">{{ .PostBean.Count }}</span>
 
           <a href="#">
             <span class="glyphicon glyphicon-heart-empty" aria-hidden="true"></span>
           </a>
           <span style="margin-inline-end: 30px;"> 123 </span>
 
-          {{ if .Post.IsEdited }}
+          {{ if .PostBean.Post.IsEdited }}
 
           <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Post.EditAtDate }} </span>
+          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .PostBean.Post.EditAtDate }} </span>
           {{ else }}
-          <!--没有编辑过（补充内容）则留空白-->
+          {{/* 没有编辑过（补充内容）则留空白 */}}
           {{ end }}
           <div class="pull-right">
             <a href="#"></a>
@@ -92,7 +95,7 @@
     </div>
   </div>
 
-  <!--这是 额外增加的“新茶议+” 撰写模版-->
+  {{/* 这是 额外增加的“新茶议+” 撰写模版 */}}
   <div class="panel panel-default">
 
     <div class="panel-body">
@@ -105,10 +108,10 @@
             <label for="ifeel" style="margin-inline-end: 30px;">我觉得</label>
 
             <input type="radio" name="type" id="ithink" style="width: fit-content;" value=1 required />
-            <label for="ithink" style="margin-inline-end: 30px;">我认为</label>
+            <label for="ithink" style="margin-inline-end: 30px;">出个主意</label>
 
             <input type="radio" name="type" id="ipropose" style="width: fit-content;" value=2 required />
-            <label for="ipropose" style="margin-inline-end: 30px;">我提议</label>
+            <label for="ipropose" style="margin-inline-end: 30px;">推荐解决方案</label>
 
             <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="32" required>
           </fieldset>
@@ -120,27 +123,27 @@
             required></textarea>
         </div>
 
-        <!--这是品味post的id提交-->
-        <input type="hidden" name="uuid" id="uuid" value="{{ .Post.Uuid }}" />
+        {{/* 这是品味post的id提交 */}}
+        <input type="hidden" name="uuid" id="uuid" value="{{ .PostBean.Post.Uuid }}" />
 
         <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
-          <button type="submit" class="btn btn-default">开泡</button>
+          <button type="submit" class="btn btn-default">泡茶</button>
         </div>
 
+      </form>
     </div>
-    </form>
 
   </div>
 
 
-  <!--以下是针对这个品味的茶议展示，一页一打dozen，如果超过就显示“下一页”按钮-->
-  {{ range .ThreadList }}
+  {{/* 以下是针对这个品味的茶议展示，一页一打dozen，如果超过就显示“下一页”按钮 */}}
+  {{ range .ThreadBeanList }}
 
   <div class="media">
 
     <div class="media-left">
-      <a href="/v1/user/biography?id={{ .User.Uuid }}">
-        <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+      <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+        <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
       </a>
     </div>
 
@@ -151,7 +154,7 @@
         <div class="panel-heading">
           <div class="row">
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <a href="/v1/user/biography?id={{ .User.Uuid }}">{{ .User.Name }}</a>
+              <a href="/v1/user/biography?id={{ .Author.Uuid }}">{{ .Author.Name }}</a>
             </div>
 
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -170,31 +173,31 @@
         </div>
 
         <div class="panel-body">
-          <a href="/v1/thread/detail?id={{ .Uuid }}">
-            <h4>{{ .Title }}
+          <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
+            <h4>{{ .Thread.Title }}
             </h4>
           </a>
-          {{ .Body }}
+          {{ .Thread.Body }}
         </div>
 
         <div class="panel-footer">
 
           <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>
 
-          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .NumReplies }} </span>
+          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Count }} </span>
 
-          {{ if .IsEdited }}
+          {{ if .Thread.IsEdited }}
           <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .EditAtDate }}</span>
+          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Thread.EditAtDate }}</span>
           {{ else }}
-          <!--没有“追加”编辑过，留空白-->
+          {{/* 没有“追加”编辑过，留空白 */}}
           {{ end }}
 
           <div class="pull-right">
-            <a href="/v1/thread/detail?id={{ .Uuid }}">
+            <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
               <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
             </a>
-            {{ .NumReads }}
+            {{ .Thread.NumReads }}
           </div>
         </div>
 

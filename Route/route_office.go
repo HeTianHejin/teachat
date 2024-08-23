@@ -74,9 +74,9 @@ func AcceptMessageSendExceptUserId(u_id int, mess data.AcceptMessage) error {
 		return err
 	}
 	// 记录用户有1新消息
-	for _, id := range user_ids {
-		if err = data.AddUserMessageCount(id); err != nil {
-			util.Info(err, " Cannot add user new-message-count")
+	for _, u_id := range user_ids {
+		if err = data.AddUserMessageCount(u_id); err != nil {
+			util.Info(err, " Cannot add random user new-message-count")
 			return err
 		}
 	}

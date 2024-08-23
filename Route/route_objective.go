@@ -69,7 +69,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 
 	// 检测一下name是否>2中文字，body是否在17-456中文字，
 	// 如果不是，返回错误信息
-	if CnStrLen(title) < 2 {
+	if CnStrLen(title) < 2 || CnStrLen(title) > 36 {
 		Report(w, r, "您好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
@@ -182,37 +182,40 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 // show the random objectives
 // 根据用户是否登录显示不同导航条的茶话会广场页面
 func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
-	var err error
-	var oSpD data.ObjectiveSquarePData
+	var oSpD data.ObjectiveSquare
 
-	// 如何排序茶话会，是个问题！按照圆桌会议平等约定，应该是轮流出现在茶话会广场才合适，而且，应该是按人头出现计数，而不是按热度或者建的茶话会数量。
-
-	// 每次展示一打=12个茶话会
-	//limit := 12
-	// 用缘分（随机选中）选取12个用户的12茶话会的模式
-
-	//oSpD.ObjectiveList, err = data.GetRandomObjectives(limit)
-	// 用热度（按照评论数量排序）选取12个用户的12茶话会的模式
+	// 如何排序茶话会，是个问题！按照圆桌会议平等约定，应该是轮流出现在茶话会广场才合适，
+	// 而且，应该是按人头出现计数，而不是按热度或者建的茶话会数量。
+	// 每次展示2打=24个茶话会
+	// 用（随机选中）选取24个用户的24茶话会的模式
 
 	// test获取所有茶话会
-	oSpD.ObjectiveList, err = data.GetAllObjectives()
+	objective_list, err := data.GetAllObjectivesForTest()
 	if err != nil {
 		util.Info(err, " Cannot get objectives")
 		Report(w, r, "您好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
 		return
 	}
-	// 缩短.Body
-	for i := range oSpD.ObjectiveList {
-		oSpD.ObjectiveList[i].Body = Substr(oSpD.ObjectiveList[i].Body, 86)
+	len := len(objective_list)
+	if len == 0 {
+		Report(w, r, "您好，山穷水尽疑无路，为何没有任何茶话会资料？请稍后再试。")
+		return
 	}
 
 	// 如果茶话会状态是草围（未经邻座盲评审核的草稿）,对其名称和描述内容局部进行随机遮盖处理。
-	for i := range oSpD.ObjectiveList {
-		if oSpD.ObjectiveList[i].Class == 10 || oSpD.ObjectiveList[i].Class == 20 {
-			// 随机遮盖50%处理
-			oSpD.ObjectiveList[i].Title = MarsString(oSpD.ObjectiveList[i].Title, 50)
-			oSpD.ObjectiveList[i].Body = MarsString(oSpD.ObjectiveList[i].Body, 50)
-		}
+	// for i := range objective_list {
+	// 	if objective_list[i].Class == 10 || objective_list[i].Class == 20 {
+	// 		// 随机遮盖50%处理
+	// 		objective_list[i].Title = MarsString(objective_list[i].Title, 50)
+	// 		objective_list[i].Body = MarsString(objective_list[i].Body, 50)
+	// 	}
+	// }
+
+	oSpD.ObjectiveBeanList, err = GetObjectiveBeanList(objective_list)
+	if err != nil {
+		util.Warning(err, " Cannot read objective-bean list")
+		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
+		return
 	}
 
 	//检查用户是否已经登录
@@ -225,8 +228,8 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 			Name: "游客",
 		}
 		//迭代茶话会队列，把作者属性设置为false
-		for i := range oSpD.ObjectiveList {
-			oSpD.ObjectiveList[i].PageData.IsAuthor = false
+		for i := range oSpD.ObjectiveBeanList {
+			oSpD.ObjectiveBeanList[i].Objective.PageData.IsAuthor = false
 		}
 
 		//返回页面
@@ -245,11 +248,11 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	//准备页面数据
 	oSpD.SessUser = sUser
 	//检测u.Id == o.UserId是否这个茶话会作者
-	for i := range oSpD.ObjectiveList {
-		if oSpD.ObjectiveList[i].UserId == sUser.Id {
-			oSpD.ObjectiveList[i].PageData.IsAuthor = true
+	for i := range oSpD.ObjectiveBeanList {
+		if oSpD.ObjectiveBeanList[i].Objective.UserId == sUser.Id {
+			oSpD.ObjectiveBeanList[i].Objective.PageData.IsAuthor = true
 		} else {
-			oSpD.ObjectiveList[i].PageData.IsAuthor = false
+			oSpD.ObjectiveBeanList[i].Objective.PageData.IsAuthor = false
 		}
 	}
 	GenerateHTML(w, &oSpD, "layout", "navbar.private", "objectives.square")
@@ -261,7 +264,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 // 读取指定的uuid茶话会详情
 func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var obDetailPD data.ObjectiveDetailPageData
+	var obD data.ObjectiveDetail
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	if uuid == "" {
@@ -269,13 +272,13 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据uuid查询茶话会资料
-	obDetailPD.Objective, err = data.GetObjectiveByUuid(uuid)
+	ob, err := data.GetObjectiveByUuid(uuid)
 	if err != nil {
 		Report(w, r, "您好，茶博士摸摸满头大汗，居然自言自语说外星人把这个茶话会资料带走了。")
 		return
 	}
 
-	switch obDetailPD.Objective.Class {
+	switch ob.Class {
 	case 1, 2:
 		break
 	case 10, 20:
@@ -285,42 +288,50 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，这个茶话会主人据说因为很帅，资料似乎被外星人看中带走了。")
 		return
 	}
-
-	// 准备页面数据
-	obDetailPD.Objective.PageData.IsAuthor = false
-	obDetailPD.SessUser = data.User{
-		Id:   0,
-		Name: "游客",
+	obD.ObjectiveBean, err = GetObjectiveBean(ob)
+	if err != nil {
+		util.Warning(err, " Cannot read objective-bean list")
+		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
+		return
 	}
-	obDetailPD.ProjectList, _ = obDetailPD.Objective.Projects()
-	//截短project.Body
-	for i := range obDetailPD.ProjectList {
-		obDetailPD.ProjectList[i].Body = Substr(obDetailPD.ProjectList[i].Body, 86)
+	project_list, _ := obD.ObjectiveBean.Objective.Projects()
+	obD.ProjectBeanList, err = GetProjectBeanList(project_list)
+	if err != nil {
+		util.Warning(err, " Cannot read objective-bean list")
+		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
+		return
 	}
-
 	//检查用户是否已经登录
 	s, err := Session(r)
 	if err != nil {
 		//未登录！
+		// 准备页面数据
+		obD.ObjectiveBean.Objective.PageData.IsAuthor = false
+		obD.SessUser = data.User{
+			Id:   0,
+			Name: "游客",
+		}
 		//配置公开导航条的茶话会详情页面
-		GenerateHTML(w, &obDetailPD, "layout", "navbar.public", "objective.detail")
+		GenerateHTML(w, &obD, "layout", "navbar.public", "objective.detail")
 		return
 	}
 	//已经登录！
 	sUser, _ := s.User()
-	obDetailPD.SessUser = sUser
-	//检测u.Id == o.UserId是否这个茶话会作者
-	if sUser.Id == obDetailPD.Objective.UserId {
+	obD.SessUser = sUser
+	//检测u.Id == o.UserId是否这个茶话会主人（作者）
+	if sUser.Id == obD.ObjectiveBean.Author.Id {
 		//是作者
 		//配置私有导航条的茶话会详情页面
 		//准备页面数据PageData
-		obDetailPD.Objective.PageData.IsAuthor = true
-		GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "objective.detail")
+		obD.ObjectiveBean.Objective.PageData.IsAuthor = true
+		GenerateHTML(w, &obD, "layout", "navbar.private", "objective.detail")
 		return
 	} else {
 		//不是作者
+		obD.ObjectiveBean.Objective.PageData.IsAuthor = false
+
 		//配置私有导航条的茶话会详情页面
-		GenerateHTML(w, &obDetailPD, "layout", "navbar.private", "objective.detail")
+		GenerateHTML(w, &obD, "layout", "navbar.private", "objective.detail")
 		return
 	}
 

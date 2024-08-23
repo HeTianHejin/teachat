@@ -3,11 +3,9 @@
 <ol class="breadcrumb">
 
     <li>大堂</li>
-    <li class="active">{{ .User.Name }} 的个人主页</li>
- 
+    <li class="active">{{ .User.GetGender }} @<span style="font-style: italic;">洞天福地</span></li>
+
 </ol>
-
-
 
 <div class="media">
     <div class="media-left">
@@ -18,71 +16,58 @@
     <div class="media-body">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <span>花名</span>
+                {{ .User.Name }}
+                <span class="pull-right" style="font-style: italic;"> {{ .User.Email }}</span>
             </div>
             <div class="panel-body">
-                <span> {{ .User.Name }}</span>
-             
-                    <span class="pull-right" style="font-style: italic;"> {{ .User.Email }}</span>
-                
+
+                <span> {{ .User.Biography }}</span>
+
             </div>
         </div>
     </div>
 </div>
 
+<div class="list-group">
+    <a href="#" class="list-group-item active">
+        <h4 class="list-group-item-heading">主打茶团</h4>
+        <p class="list-group-item-text">预留位置</p>
+    </a>
+    <a href="#" class="list-group-item">
+        <h4 class="list-group-item-heading">管理茶团</h4>
+        <p class="list-group-item-text">预留位置</p>
+    </a>
+    <a href="#" class="list-group-item">
+        <h4 class="list-group-item-heading">客串茶团</h4>
+        <p class="list-group-item-text">预留位置</p>
+    </a>
+    <a href="#" class="list-group-item">
+        <h4 class="list-group-item-heading">已退茶团</h4>
+        <p class="list-group-item-text">预留位置</p>
+    </a>
+</div>
 
+<div class="btn-group" role="group" aria-label="..." style="margin-top: 0px;margin-bottom: 20px;">
+    <button type="button" class="btn btn-default">关注</button>
+    <button type="button" class="btn btn-default">搭讪</button>
+    <button type="button" class="btn btn-default">贴条</button>
+    <button type="button" class="btn btn-default">...</button>
+</div>
 
-<ul class="nav nav-tabs nav-justified">
-    <li role="presentation" class="active"><a href="#">生活</a></li>
-    <li role="presentation"><a href="#">娱乐</a></li>
-    <li role="presentation"><a href="#">做事</a></li>
-  </ul>
+<ul class="nav nav-tabs nav-justified" style="margin-top: 0px;margin-bottom: 20px;">
+    <li role="presentation" class="active"><a href="/v1/user/amuse">自泡茶</a></li>
+    <li role="presentation"><a href="/v1/user/work">功夫茶</a></li>
+    <li role="presentation"><a href="/v1/user/thread">参与茶议</a></li>
+</ul>
 
-    <div style="margin-top: 20px;margin-bottom: 20px;">
-
-        <div class="btn-group" role="group" aria-label="...">
-            <button type="button" class="btn btn-default">关注</button>
-            <button type="button" class="btn btn-default">搭讪</button>
-            <button type="button" class="btn btn-default">贴条</button>
-            <button type="button" class="btn btn-default">...</button>
-          </div>
-        
-      
-    </div>
-
-
-    <div class="panel panel-default">
-  
-        <div class="panel-body">
-            <span> {{ .User.Biography }}</span>
-        </div>
-    </div>
-
-
-
-
-
-
-
-<div class="panel panel-default">
-    <div class="panel-heading">
-              <h3 class="panel-title">独白</h3>
-    </div>
-    <div class="panel-body">
-              最新。。。
-    </div>
+<div class="list-group">
+    <a href="/v1/user/monologue/index" class="list-group-item">
+        <h4 class="list-group-item-heading">独白</h4>
+        <p class="list-group-item-text">...莫若随花飞到天尽头，天尽头，何处有香丘...</p>
+    </a>
 </div>
 
 
-
-<div class="panel panel-default">
-    <div class="panel-heading">
-        <span>魔法</span>
-    </div>
-    <div class="panel-body">
-        <span> {{ .User.Biography }}</span>
-    </div>
-</div>
 
 <div class="panel panel-default">
     <div class="panel-heading">

@@ -1,110 +1,27 @@
 {{ define "content" }}
-<!--这是用户拥有的全部茶团页面-->
+{{/* 这是用户拥有的全部茶团页面 */}}
 
 <ol class="breadcrumb">
 
   <li>大堂</li>
-  <li class="active">和我有关@茶团</li>
+  <li class="active">和我有关 @茶团</li>
  
 </ol>
+
+
 
 <div style="margin: 20px;">
 
   <ul class="nav nav-tabs nav-justified">
-    <li role="presentation" class="active"><a href="/v1/team/hold">我开建的</a></li>
+    <li role="presentation" class="active"><a href="/v1/team/hold">我建的团</a></li>
     <li role="presentation"><a href="/v1/team/joined">已经加入</a></li>
     <li role="presentation"><a href="/v1/team/employed">核心管理</a></li>
   </ul>
 
 </div>
 
-{{ range .TeamList }}
 
-<div class="media">
-  <div class="media-left media-middle">
-    <a href="/v1/team/detail?id={{ .Uuid }}">
-      <img class="media-object" src="/v1/static/image/{{ .Logo }}.jpeg" alt="茶团旗帜">
-    </a>
-  </div>
-  <div class="media-body">
-    <div class="panel panel-default">
+{{ template "teams_public" .TeamBeanList }}
 
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <a href="/v1/team/detail?id={{ .Uuid }}">
-              {{ .Abbreviation }}
-          </a>
-          </div>
-          
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; font-size: smaller;text-align: center;">
-              {{ if (eq .Class 1) }}
-              <span class="label label-success">{{ .TeamProperty }}
-                {{ else }}
-              <span class="label label-default">{{ .TeamProperty }}
-                {{ end }}
-              </span>
-              
-            </span>
-          </div>
-          
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <div class="pull-right">
-              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">
-                {{ .Founder.Name }}
-              </a>
-              {{ .CreatedAtDate }}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="panel-body">
-
-        {{ .Mission }} ...
-      </div>
-    
-      <div class="panel-footer">
-          <span style="margin-inline-end: 20px;" title="团号">
-          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
-           {{ .Id }}
-          </span>
-         
-          <span style="margin-inline-end: 20px;">
-          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-             {{ .NumMembers }}
-            </span>
-        <div class="pull-right">
-          <a href="/v1/team/detail?id={{ .Uuid }}">
-          <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
-          </a>
-        </div>
-      </div>
-    
-    </div>
-  </div>
-</div>
-
-{{ else }}
-
-<div class="panel panel-default">
-  <div class="panel-heading">
-      <span class="lead">茶博士提示</span>
-  </div>
-
-  <div class="panel-body">
-      您好，目前您还没有创建任何茶团。
-  </div>
-
-</div>
-
-
-{{ end }}
-
-<div class="well">
-  <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-    <a href="/v1/team/new">茶团</a>
-  
-</div>
 
 {{ end }}

@@ -24,10 +24,10 @@ import (
    存放各个路由文件共享的一些方法
 */
 
-// 根据给出的objectList参数，去获取对应的茶议（截短为保留前108字符），品味数量，作者资料，作者所在的默认茶团。然后按结构拼装返回
-func GetThreadAndAuthorList(thread_list []data.Thread) (ThreadAndAuthorList []data.ThreadAndAuthorBean, err error) {
-	var oab data.ThreadAndAuthorBean
-	var oablist []data.ThreadAndAuthorBean
+// 根据给出的thread_list参数，去获取对应的茶议（截短正文保留前108字符），附属品味计数，作者资料，作者所在的默认茶团。然后按结构拼装返回
+func GetThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadBean, err error) {
+	var oab data.ThreadBean
+	var oablist []data.ThreadBean
 	// 截短ThreadList中thread.Body文字长度为108字符,
 	// 展示时长度接近，排列比较整齐，最小惊讶原则？效果比较nice
 	for i := range thread_list {
@@ -55,18 +55,328 @@ func GetThreadAndAuthorList(thread_list []data.Thread) (ThreadAndAuthorList []da
 		}
 		teamList = append(teamList, team)
 	}
-	// 合并拼装资料
+	// 拼装资料
 	for i, thread := range thread_list {
 		oab.Thread = thread
 		oab.Status = thread.Status()
 		oab.Count = thread.NumReplies()
 		oab.CreatedAtDate = thread.CreatedAtDate()
 		oab.Author = authorlist[i]
-		oab.DefaultTeam = teamList[i]
+		oab.AuthorTeam = teamList[i]
 		oablist = append(oablist, oab)
 	}
-	ThreadAndAuthorList = oablist
+	ThreadBeanList = oablist
 	return
+}
+
+// 根据给出的thread参数，去获取对应的茶议，附属品味计数，作者资料，作者所在的默认茶团。然后按结构拼装返回
+func GetThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
+	var oab data.ThreadBean
+	oab.Thread = thread
+	oab.Status = thread.Status()
+	oab.Count = thread.NumReplies()
+	oab.CreatedAtDate = thread.CreatedAtDate()
+	user, err := thread.User()
+	if err != nil {
+		util.Warning(err, " Cannot read thread author")
+		return oab, err
+	}
+	oab.Author = user
+	team, err := user.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read team given author")
+		return oab, err
+	}
+	oab.AuthorTeam = team
+	return oab, nil
+}
+
+// 根据给出的objectiv_list参数，去获取对应的茶话会（objective），截短正文保留前108字符，附属茶台计数，发起人资料，发起人所在的默认茶团。然后按结构填写返回资料夹。
+func GetObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []data.ObjectiveBean, err error) {
+	var ob data.ObjectiveBean
+	var oblist []data.ObjectiveBean
+	// 截短ObjectiveList中objective.Body文字长度为108字符,
+	for i := range objectiv_list {
+		objectiv_list[i].Body = Substr(objectiv_list[i].Body, 108)
+	}
+	len := len(objectiv_list)
+	// 读取全部会主
+	authorlist := make([]data.User, 0, len)
+	for _, objective := range objectiv_list {
+		user, err := objective.User()
+		if err != nil {
+			util.Warning(err, " Cannot read objective author")
+			return nil, err
+		}
+		authorlist = append(authorlist, user)
+	}
+	// 据authorlist,读取每个发起人的默认团队资料
+	teamList := make([]data.Team, 0, len)
+	for _, author := range authorlist {
+		team, err := author.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(err, " Cannot read team given author")
+			return nil, err
+		}
+		teamList = append(teamList, team)
+	}
+	// 并装资料
+	for i, objective := range objectiv_list {
+		ob.Objective = objective
+		if objective.Class == 1 {
+			ob.Open = true
+		} else {
+			ob.Open = false
+		}
+		ob.Status = objective.GetStatus()
+		ob.Count = objective.NumReplies()
+		ob.CreatedAtDate = objective.CreatedAtDate()
+		ob.Author = authorlist[i]
+		ob.AuthorTeam = teamList[i]
+		oblist = append(oblist, ob)
+	}
+	ObjectiveBeanList = oblist
+	return
+}
+
+// 根据给出的objectiv参数，去获取对应的茶话会（objective），附属茶台计数，发起人资料，发起人所在的默认茶团。然后按结构填写返回资料夹。
+func GetObjectiveBean(objective data.Objective) (ObjectiveBean data.ObjectiveBean, err error) {
+	var ob data.ObjectiveBean
+
+	ob.Objective = objective
+	if objective.Class == 1 {
+		ob.Open = true
+	} else {
+		ob.Open = false
+	}
+	ob.Status = objective.GetStatus()
+	ob.Count = objective.NumReplies()
+	ob.CreatedAtDate = objective.CreatedAtDate()
+	user, err := objective.User()
+	if err != nil {
+		util.Warning(err, " Cannot read objective author")
+		return ob, err
+	}
+	ob.Author = user
+	team, err := user.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read team given author")
+		return ob, err
+	}
+	ob.AuthorTeam = team
+	return ob, nil
+}
+
+// 据给出的project_list参数，去获取对应的茶台（project），截短正文保留前108字符，附属茶议计数，发起人资料，发起人所在的默认团队。然后按结构填写返回资料。
+func GetProjectBeanList(project_list []data.Project) (ProjectBeanList []data.ProjectBean, err error) {
+	var pab data.ProjectBean
+	var pablist []data.ProjectBean
+	// 截短ObjectiveList中objective.Body文字长度为108字符,
+	for i := range project_list {
+		project_list[i].Body = Substr(project_list[i].Body, 108)
+	}
+	len := len(project_list)
+	// 读取全部发起人
+	authorlist := make([]data.User, 0, len)
+	for _, project := range project_list {
+		user, err := project.User()
+		if err != nil {
+			util.Warning(err, " Cannot read project author")
+			return nil, err
+		}
+		authorlist = append(authorlist, user)
+	}
+	teamList := make([]data.Team, 0, len)
+	for _, author := range authorlist {
+		team, err := author.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(err, " Cannot read team given author")
+			return nil, err
+		}
+		teamList = append(teamList, team)
+	}
+	for i, project := range project_list {
+		pab.Project = project
+		if project.Class == 1 {
+			pab.Open = true
+		} else {
+			pab.Open = false
+		}
+		pab.Status = project.GetStatus()
+		pab.Count = project.NumReplies()
+		pab.CreatedAtDate = project.CreatedAtDate()
+		pab.Author = authorlist[i]
+		pab.AuthorTeam = teamList[i]
+		pablist = append(pablist, pab)
+	}
+	ProjectBeanList = pablist
+	return
+}
+
+// 据给出的project参数，去获取对应的茶台（project），附属茶议计数，发起人资料，发起人所在的默认团队。然后按结构填写返回资料。
+func GetProjectBean(project data.Project) (ProjectBean data.ProjectBean, err error) {
+	var pb data.ProjectBean
+	pb.Project = project
+	if project.Class == 1 {
+		pb.Open = true
+	} else {
+		pb.Open = false
+	}
+	pb.Status = project.GetStatus()
+	pb.Count = project.NumReplies()
+	pb.CreatedAtDate = project.CreatedAtDate()
+	user, err := project.User()
+	if err != nil {
+		util.Warning(err, " Cannot read project author")
+		return pb, err
+	}
+	pb.Author = user
+	team, err := user.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read team given author")
+		return pb, err
+	}
+	pb.AuthorTeam = team
+	return pb, nil
+}
+
+// 据给出的post_list参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者所在的默认团队。然后按结构拼装返回。
+func GetPostBeanList(post_list []data.Post) (PostBeanList []data.PostBean, err error) {
+	var pb data.PostBean
+	var pb_list []data.PostBean
+	// for i := range post_list {
+	// 	post_list[i].Body = Substr(post_list[i].Body, 108)
+	// }
+	len := len(post_list)
+	author_list := make([]data.User, 0, len)
+	for _, post := range post_list {
+		user, err := post.User()
+		if err != nil {
+			util.Warning(err, " Cannot read post author")
+			return nil, err
+		}
+		author_list = append(author_list, user)
+	}
+	team_list := make([]data.Team, 0, len)
+	for _, author := range author_list {
+		team, err := author.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(err, " Cannot read team given author")
+			return nil, err
+		}
+		team_list = append(team_list, team)
+	}
+	for i, post := range post_list {
+		pb.Post = post
+		pb.Attitude = post.Atti()
+		pb.Count = post.NumReplies()
+		pb.CreatedAtDate = post.CreatedAtDate()
+		pb.Author = author_list[i]
+		pb.AuthorTeam = team_list[i]
+		pb_list = append(pb_list, pb)
+	}
+	PostBeanList = pb_list
+	return
+}
+
+// 据给出的post参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者所在的默认团队。然后按结构拼装返回。
+func GetPostBean(post data.Post) (PostBean data.PostBean, err error) {
+	var pb data.PostBean
+	pb.Post = post
+	pb.Attitude = post.Atti()
+	pb.Count = post.NumReplies()
+	pb.CreatedAtDate = post.CreatedAtDate()
+	user, err := post.User()
+	if err != nil {
+		util.Warning(err, " Cannot read post author")
+		return pb, err
+	}
+	pb.Author = user
+	team, err := user.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read team given author")
+		return pb, err
+	}
+	pb.AuthorTeam = team
+	return pb, nil
+}
+
+// 据给出的team参数，去获取对应的茶团资料，是否开放，成员计数，发起日期，发起人（Founder）及其默认团队，然后按结构拼装返回。
+func GetTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
+	var tb data.TeamBean
+	tb.Team = team
+	if team.Class == 1 {
+		tb.Open = true
+	} else {
+		tb.Open = false
+	}
+	tb.CreatedAtDate = team.CreatedAtDate()
+	u, _ := team.Founder()
+	tb.Founder = u
+	tb.FounderTeam, _ = u.GetLastDefaultTeam()
+	tb.Count = team.NumMembers()
+	return tb, nil
+}
+func GetTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err error) {
+	var tb data.TeamBean
+	var tb_list []data.TeamBean
+	len := len(team_list)
+	founder_list := make([]data.User, 0, len)
+	for _, team := range team_list {
+		user, err := team.Founder()
+		if err != nil {
+			util.Warning(err, " Cannot read team founder")
+			return nil, err
+		}
+		founder_list = append(founder_list, user)
+	}
+	founder_default_team_list := make([]data.Team, 0, len)
+	for _, founder := range founder_list {
+		team, err := founder.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(err, " Cannot read team given founder")
+			return nil, err
+		}
+		founder_default_team_list = append(founder_default_team_list, team)
+	}
+	// 打包/拼装资料
+	for i, team := range team_list {
+		tb.Team = team
+		if team.Class == 1 {
+			tb.Open = true
+		} else {
+			tb.Open = false
+		}
+		tb.CreatedAtDate = team.CreatedAtDate()
+		tb.Founder = founder_list[i]
+		tb.FounderTeam = founder_default_team_list[i]
+		tb.Count = team.NumMembers()
+		tb_list = append(tb_list, tb)
+	}
+
+	return tb_list, nil
+}
+
+// 据给出的 group 参数，去获取对应的 group 资料，是否开放，下属茶团计数，发起日期，发起人（Founder）及其默认团队，第一团队，然后按结构拼装返回。
+func GetGroupBean(group data.Group) (GroupBean data.GroupBean, err error) {
+	var gb data.GroupBean
+	gb.Group = group
+	if group.Class == 1 {
+		gb.Open = true
+	} else {
+		gb.Open = false
+	}
+	gb.CreatedAtDate = group.CreatedAtDate()
+	u, _ := data.GetUserById(group.FounderId)
+	gb.Founder = u
+	gb.FounderTeam, err = u.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read team given founder")
+		return gb, err
+	}
+	gb.TeamsCount = data.GetTeamsCountByGroupId(gb.Group.Id)
+	gb.Count = group.NumMembers()
+	return gb, nil
 }
 
 // 检查当前用户是否是茶话会邀请团队成员
@@ -205,7 +515,7 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 
 // 茶博士向茶客的报告信息，通常是一些错误提示
 func Report(w http.ResponseWriter, r *http.Request, msg string) {
-	var userBPD data.UserBiographyPageData
+	var userBPD data.UserBiography
 	userBPD.Message = msg
 	s, err := Session(r)
 	if err != nil {

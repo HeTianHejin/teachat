@@ -1,8 +1,6 @@
 DROP database teachatwebdb;
 CREATE database teachatwebdb;
 
-
-
 drop table users;
 drop table user_stars;
 drop table user_default_teams;
@@ -33,8 +31,142 @@ drop table communities;
 drop table administrators;
 drop table watchwords;
 drop table monologues;
+drop table goods;
+drop table groups;
+drop table handicrafts;
+drop table inaugurations;
+drop table parts;
+drop table tool_lists;
+drop table evidences;
 
+CREATE TABLE evidences (
+    id                 SERIAL PRIMARY KEY,
+    uuid               VARCHAR(64) NOT NULL UNIQUE,
+    handicraft_id      INTEGER NOT NULL,
+    recorder           INTEGER NOT NULL,
+    description        TEXT,
+    images             VARCHAR(255),
+    video              VARCHAR(255), 
+    audio              VARCHAR(255), 
+    created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
+CREATE TABLE tool_lists (
+    id               BIGSERIAL PRIMARY KEY,
+    uuid             VARCHAR(64) NOT NULL UNIQUE,
+    part_id          BIGINT NOT NULL REFERENCES parts(id),
+    goods_id         BIGINT NOT NULL REFERENCES goods(id),
+    remark           TEXT,
+    num              INTEGER NOT NULL, 
+    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE parts (
+    id               SERIAL PRIMARY KEY,
+    uuid             VARCHAR(64) NOT NULL UNIQUE,
+    handicraft_id    INTEGER NOT NULL,
+    name             VARCHAR(255) NOT NULL,
+    nickname         VARCHAR(255),
+    artist           INTEGER NOT NULL REFERENCES users(id),
+    target_goods_id  INTEGER NOT NULL,
+    tool_list_id     INTEGER NOT NULL,
+    strength         INTEGER NOT NULL,
+    intelligence     INTEGER NOT NULL,
+    difficulty_level  INTEGER NOT NULL,
+    recorder         INTEGER NOT NULL REFERENCES users(id),
+    description      TEXT,
+    evidence_id      INTEGER DEFAULT 0,
+    status           INTEGER NOT NULL,
+    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE inaugurations (
+    id                  SERIAL PRIMARY KEY,
+    uuid                VARCHAR(64) NOT NULL UNIQUE,
+    handicraft_id       INTEGER NOT NULL,
+    name                VARCHAR(255) NOT NULL,
+    nickname            VARCHAR(255),
+    artist              INTEGER NOT NULL REFERENCES users(id),
+    recorder            INTEGER NOT NULL REFERENCES users(id),
+    description         TEXT,
+    evidence_id         INTEGER DEFAULT 0,
+    status              INTEGER NOT NULL,
+    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE handicrafts (
+    id                        SERIAL PRIMARY KEY,
+    uuid                      VARCHAR(64) NOT NULL,
+    project_id                INTEGER REFERENCES projects(id),
+    name                      VARCHAR(255) NOT NULL,
+    nickname                  VARCHAR(255),
+    client                    INTEGER NOT NULL REFERENCES users(id),
+    target_goods_id           INTEGER,
+    tool_list_id              INTEGER,        
+    artist                    INTEGER NOT NULL REFERENCES users(id), 
+    strength                  INTEGER,
+    intelligence              INTEGER,
+    difficulty_level           INTEGER,
+    recorder                  INTEGER NOT NULL REFERENCES users(id),
+    description               TEXT,
+    evidence_id               INTEGER DEFAULT 0,
+    status                    INTEGER,
+    created_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE groups (
+    id                      SERIAL PRIMARY KEY,
+    uuid                    VARCHAR(64) NOT NULL,
+    name                    VARCHAR(255) NOT NULL,
+    mission                 TEXT,
+    founder_id              INTEGER NOT NULL REFERENCES users(id),
+    first_team_id            INTEGER REFERENCES teams(id),
+    created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    class                   VARCHAR(255),
+    abbreviation            VARCHAR(255),
+    logo                    VARCHAR(255),
+    updated_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ministry_id             INTEGER default 0
+);
+
+CREATE TABLE goods (
+    id                           SERIAL PRIMARY KEY,
+    uuid                         VARCHAR(64) NOT NULL,
+    user_id                      INTEGER NOT NULL REFERENCES users(id), 
+    name                         VARCHAR(255) NOT NULL,
+    nickname                     VARCHAR(255),
+    designer                     VARCHAR(255),
+    describe                     TEXT,
+    price                        NUMERIC(10,2),
+    applicability                VARCHAR(255),
+    category                     VARCHAR(255),
+    specification                 VARCHAR(255),
+    brand_name                   VARCHAR(255),
+    model                        VARCHAR(255),
+    weight                       VARCHAR(255),
+    dimensions                   VARCHAR(255),
+    material                     VARCHAR(255),
+    size                         VARCHAR(255),
+    color                        VARCHAR(255),
+    network_connection_type      VARCHAR(255),
+    features                     TEXT,
+    serial_number                VARCHAR(255),
+    production_date              DATE,
+    expiration_date              DATE,
+    state                        VARCHAR(255),
+    origin                       VARCHAR(255),
+    manufacturer                 VARCHAR(255),
+    manufacturer_link            VARCHAR(255),
+    engine_type                  VARCHAR(255),
+    purchase_link                VARCHAR(255),
+    created_time                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_time                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 create table users (
   id                 serial primary key,
@@ -62,6 +194,7 @@ CREATE TABLE follows (
     created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE friends (
     id                   SERIAL PRIMARY KEY,
     uuid                 varchar(64) NOT NULL UNIQUE,
@@ -74,6 +207,7 @@ CREATE TABLE friends (
     created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE fans (
     id                   SERIAL PRIMARY KEY,
     uuid                 varchar(64) NOT NULL UNIQUE,
@@ -177,8 +311,6 @@ create table threads (
   post_id       integer default 0
 );
 
-
-
 create table reads (
   id            serial primary key,
   user_id       integer,
@@ -230,7 +362,8 @@ create table teams (
   class           integer,
   abbreviation    integer,
   logo            varchar(255),
-  updated_at      timestamp
+  updated_at      timestamp,
+  group_id        integer default 0
 );
 
 create table team_members (
@@ -272,7 +405,6 @@ create table team_roles (
   check_team_member_id   integer references team_members(id),
   check_at               timestamp
 ); 
-
 
 create table invitations (
   id                   serial primary key,
@@ -316,7 +448,6 @@ CREATE TABLE acceptances (
   y_user_id           INTEGER references users(id),
   y_accepted_at       TIMESTAMP
 );
-
 
 create table accept_objects (
   id              SERIAL PRIMARY KEY,

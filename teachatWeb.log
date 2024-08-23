@@ -908,3 +908,78 @@ INFO 2024/07/26 21:32:15 utils.go:124: heixiongjing@god.com 密码匹配成功
 INFO 2024/07/26 21:45:43 utils.go:124: heixiongjing@god.com 密码匹配成功
 INFO 2024/07/26 21:51:18 utils.go:124: heixiongjing@god.com 密码匹配成功
 INFO 2024/07/27 21:42:48 utils.go:124: heixiongjing@god.com 密码匹配成功
+INFO 2024/08/09 15:45:56 utils.go:62: heixiongjing@god.com 密码匹配成功
+INFO 2024/08/09 16:19:28 utils.go:62: heixiongjing@god.com Session deleted
+INFO 2024/08/10 15:14:09 utils.go:62: heixiongjing@god.com 密码匹配成功
+INFO 2024/08/10 19:44:42 utils.go:62: heixiongjing@god.com Session deleted
+INFO 2024/08/10 19:50:07 utils.go:62: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/08/11 09:28:59 utils.go:62: jiatanchun@storetravels.com 密码匹配成功
+INFO 2024/08/12 11:08:36 utils.go:62: lindaiyu@storetravels.com 密码匹配成功
+INFO 2024/08/12 11:08:56 utils.go:62: lindaiyu@storetravels.com Session deleted
+INFO 2024/08/12 11:09:06 utils.go:62: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/08/17 15:48:26 utils.go:62: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/08/18 10:31:22 utils.go:62: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/08/18 21:20:34 utils.go:62: miaoyu@storetravels.com Session deleted
+INFO 2024/08/18 21:31:08 utils.go:62: miaoyu@storetravels.com 密码匹配成功
+INFO 2024/08/20 15:14:26 utils.go:62: linhongyu@storetravels.com 注册新账号ok
+INFO 2024/08/20 15:14:52 utils.go:62: linhongyu@storetravels.com 密码匹配成功
+WARNING 2024/08/20 15:15:42 utils.go:72: sql: Scan error on column index 9, name "updated_at": unsupported Scan, storing driver.Value type <nil> into type *time.Time  未能读取用户信息！
+INFO 2024/08/20 15:16:39 utils.go:62: linhongyu@storetravels.com Session deleted
+INFO 2024/08/20 15:16:44 utils.go:62: linhongyu@storetravels.com 密码匹配成功
+INFO 2024/08/20 15:32:34 utils.go:62: linhongyu@storetravels.com 密码匹配成功
+WARNING 2024/08/20 15:32:39 utils.go:72: sql: no rows in result set  未能读取用户团队信息！
+INFO 2024/08/20 15:57:16 utils.go:62: linhongyu@storetravels.com Session deleted
+INFO 2024/08/20 15:58:32 utils.go:62: jiayun@storetravels.com 注册新账号ok
+INFO 2024/08/20 16:00:49 utils.go:62: jiayun@storetravels.com 密码匹配成功
+WARNING 2024/08/20 19:09:31 utils.go:72: pq: column "body" of relation "draft_threads" does not exist  Cannot create thread draft
+INFO 2024/08/20 19:13:15 utils.go:62: pq: duplicate key value violates unique constraint "message_counts_pkey"  Cannot add user new-message-count
+INFO 2024/08/20 19:37:59 utils.go:62: jiayun@storetravels.com Session deleted
+INFO 2024/08/20 19:38:09 utils.go:62: lindaiyu@storetravels.com 密码匹配成功
+ERROR 2024/08/20 19:38:27 utils.go:67: sql: no rows in result set Cannot get thread
+ERROR 2024/08/20 20:00:18 utils.go:67: <nil> Cannot get accept new tea
+WARNING 2024/08/20 20:03:37 utils.go:72: error in the number of messages, The number of messages must not be negative Cannot subtract 1 user message
+ERROR 2024/08/20 20:07:59 utils.go:67: <nil> Cannot get accept new tea
+WARNING 2024/08/20 20:12:10 utils.go:72: error in the number of messages, The number of messages must not be negative Cannot subtract 1 user message
+INFO 2024/08/20 20:14:48 utils.go:62: lindaiyu@storetravels.com Session deleted
+INFO 2024/08/20 20:14:59 utils.go:62: jiatanchun@storetravels.com 密码匹配成功
+WARNING 2024/08/20 20:46:30 utils.go:72: sql: Scan error on column index 0, name "sum": converting NULL to int is unsupported  Cannot get posts score support
+WARNING 2024/08/20 20:46:42 utils.go:72: sql: Scan error on column index 0, name "sum": converting NULL to int is unsupported  Cannot get posts score support
+INFO 2024/08/21 11:12:47 utils.go:62: jiatanchun@storetravels.com Session deleted
+INFO 2024/08/21 11:12:59 utils.go:62: zbj@god.com 密码匹配成功
+INFO 2024/08/21 11:28:30 utils.go:62: pq: duplicate key value violates unique constraint "message_counts_pkey"  Cannot add user new-message-count
+INFO 2024/08/21 13:05:44 utils.go:62: zbj@god.com 密码匹配成功
+INFO 2024/08/21 13:08:14 utils.go:62: zbj@god.com Session deleted
+INFO 2024/08/21 13:09:03 utils.go:62: jiayingchun@storetravels.com 密码匹配成功
+INFO 2024/08/21 13:14:30 utils.go:62: jiayingchun@storetravels.com Session deleted
+INFO 2024/08/21 13:14:55 utils.go:62: xuepan@storetravels.com 密码匹配成功
+INFO 2024/08/21 15:35:16 utils.go:62: xuepan@storetravels.com Session deleted
+INFO 2024/08/21 15:35:44 utils.go:62: liulaolao@storetravels.com 密码匹配成功
+INFO 2024/08/21 15:36:53 utils.go:62: liulaolao@storetravels.com Session deleted
+INFO 2024/08/21 15:37:10 utils.go:62:  因为该用户没有权限登入
+INFO 2024/08/21 15:37:25 utils.go:62:  因为该用户没有权限登入
+INFO 2024/08/21 15:44:53 utils.go:62: liulaolao@storetravels.com 密码匹配成功
+INFO 2024/08/21 15:44:57 utils.go:62: liulaolao@storetravels.com Session deleted
+INFO 2024/08/21 15:45:47 utils.go:62: tonglingbaoyu@storetravels.com 密码匹配成功
+ERROR 2024/08/21 15:46:43 utils.go:67: <nil> Cannot get accept new tea
+INFO 2024/08/21 20:01:53 utils.go:62: tonglingbaoyu@storetravels.com Session deleted
+INFO 2024/08/21 20:02:54 utils.go:62: heixiongjing@god.com 密码匹配成功
+ERROR 2024/08/21 20:02:58 utils.go:67: sql: no rows in result set Cannot get post
+INFO 2024/08/21 20:08:17 utils.go:62: heixiongjing@god.com Session deleted
+INFO 2024/08/21 20:08:35 utils.go:62: gyps@god.com 密码匹配成功
+INFO 2024/08/21 20:11:55 utils.go:62: gyps@god.com Session deleted
+INFO 2024/08/21 20:14:08 utils.go:62: tsz@god.com 密码匹配成功
+INFO 2024/08/21 20:15:48 utils.go:62: tsz@god.com Session deleted
+INFO 2024/08/21 20:16:36 utils.go:62: jiayuanchun@storetravels.com 密码匹配成功
+INFO 2024/08/21 20:32:09 utils.go:62: jiayuanchun@storetravels.com Session deleted
+INFO 2024/08/21 20:32:23 utils.go:62: jiaxichun@storetravels.com 密码匹配成功
+INFO 2024/08/21 20:35:20 utils.go:62: jiaxichun@storetravels.com Session deleted
+INFO 2024/08/21 20:35:45 utils.go:62: jiabaoyu@storetravels.com 密码匹配成功
+INFO 2024/08/21 20:36:53 utils.go:62: jiabaoyu@storetravels.com Session deleted
+INFO 2024/08/21 20:37:20 utils.go:62: test@gmail.com 密码匹配成功
+INFO 2024/08/21 20:37:44 utils.go:62: test@gmail.com Session deleted
+INFO 2024/08/21 20:37:59 utils.go:62: xuepan@storetravels.com 密码匹配成功
+INFO 2024/08/22 11:46:48 utils.go:62: xuepan@storetravels.com 密码匹配成功
+INFO 2024/08/22 11:48:28 utils.go:62: xuepan@storetravels.com Session deleted
+INFO 2024/08/22 11:48:43 utils.go:62: xuepan@storetravels.com 密码匹配成功
+INFO 2024/08/22 11:49:59 utils.go:62: xuepan@storetravels.com Session deleted
+INFO 2024/08/22 11:50:07 utils.go:62: test@gmail.com 密码匹配成功

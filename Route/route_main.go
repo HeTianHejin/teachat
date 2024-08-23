@@ -10,31 +10,31 @@ import (
 // 打开首页,展示最热门的茶议？
 func Index(w http.ResponseWriter, r *http.Request) {
 	var indexPD data.IndexPageData
-	var taal []data.ThreadAndAuthorBean
+	var tb_list []data.ThreadBean
 
 	//读取最热的茶议2dozen?
 	num := 24
 
 	// 读取最热的茶议
-	threadList, err := data.ThreadsIndex(num)
+	thread_list, err := data.ThreadsIndex(num)
 	if err != nil {
 		Report(w, r, "您好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
-	len := len(threadList)
+	len := len(thread_list)
 
 	if len == 0 {
 		Report(w, r, "您好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 
-	taal, err = GetThreadAndAuthorList(threadList)
+	tb_list, err = GetThreadBeanList(thread_list)
 	if err != nil {
 		util.Warning(err, " Cannot read thread and author list")
 		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
 		return
 	}
-	indexPD.ThreadAndAuthorList = taal
+	indexPD.ThreadBeanList = tb_list
 
 	//是否登录
 	s, err := Session(r)
@@ -44,8 +44,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		for i := range threadList {
-			threadList[i].PageData.IsAuthor = false
+		for i := range thread_list {
+			thread_list[i].PageData.IsAuthor = false
 		}
 		//展示游客首页
 		GenerateHTML(w, &indexPD, "layout", "navbar.public", "index")
@@ -54,15 +54,16 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	//已登录
 	sUser, err := s.User()
 	if err != nil {
+		util.Warning(err, " Cannot read user info from session")
 		Report(w, r, "您好，茶博士摸摸头，说有眼不识泰山。")
 		return
 	}
 	indexPD.SessUser = sUser
-	for i := range threadList {
-		if sUser.Id == threadList[i].UserId {
-			threadList[i].PageData.IsAuthor = true
+	for i := range thread_list {
+		if sUser.Id == thread_list[i].UserId {
+			thread_list[i].PageData.IsAuthor = true
 		} else {
-			threadList[i].PageData.IsAuthor = false
+			thread_list[i].PageData.IsAuthor = false
 		}
 	}
 	//展示茶客的首页
@@ -73,7 +74,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // GET
 // show About page 区别是导航条不同
 func About(w http.ResponseWriter, r *http.Request) {
-	var userBPD data.UserBiographyPageData
+	var userBPD data.UserBiography
 	s, err := Session(r)
 	if err != nil {
 		userBPD.SessUser = data.User{
