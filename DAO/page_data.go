@@ -79,7 +79,7 @@ type ProjectDetail struct {
 	QuoteObjectiveAuthor     User      // 引用的茶围作者
 	QuoteObjectiveAuthorTeam Team      // 引用的茶围作者所在的默认茶团
 
-	ThreadBeanList []ThreadBean // project下所有Threads和作者资料夹
+	ThreadBeanList []ThreadBean // project下所有Threads和作者资料荚
 	ThreadCount    int          // project下所有Threads个数
 	IsOverTwelve   bool         //是否超过12个
 }
@@ -104,12 +104,16 @@ type ThreadDetail struct {
 	QuoteProjectAuthor     User
 	QuoteProjectAuthorTeam Team
 
+	QuotePost           Post
+	QuotePostAuthor     User
+	QuotePostAuthorTeam Team
+
 	IsInput      bool // 是否需要显示输入面板
 	ThreadBean   ThreadBean
 	PostBeanList []PostBean // 跟贴豆荚队列
 }
 
-// 茶议对象和作者资料夹（豆荚一样有许多个单元）
+// 茶议对象和作者资料荚（豆荚一样有许多个单元）
 type ThreadBean struct {
 	Thread        Thread
 	Count         int // 附属对象计数
@@ -154,7 +158,7 @@ type TeamDetail struct {
 	Open                 bool
 }
 
-// 茶团成员资料夹
+// 茶团成员资料荚
 type TeamMemberBean struct {
 	User           User
 	AuthorTeam     Team
@@ -171,7 +175,7 @@ type GroupDetail struct {
 	IsOverTwelve  bool
 }
 
-// 集团详情资料夹
+// 集团详情资料荚
 type GroupBean struct {
 	Group         Group
 	CreatedAtDate string
@@ -199,7 +203,7 @@ type TeamBean struct {
 // 用于index页面渲染
 type IndexPageData struct {
 	SessUser       User         // 当前会话用户
-	ThreadBeanList []ThreadBean // Threads和作者资料夹
+	ThreadBeanList []ThreadBean // Threads和作者资料荚
 }
 
 // 用户信箱页面数据

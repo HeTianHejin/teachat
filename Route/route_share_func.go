@@ -91,7 +91,7 @@ func GetThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
 	return oab, nil
 }
 
-// 根据给出的objectiv_list参数，去获取对应的茶话会（objective），截短正文保留前108字符，附属茶台计数，发起人资料，发起人所在的默认茶团。然后按结构填写返回资料夹。
+// 根据给出的objectiv_list参数，去获取对应的茶话会（objective），截短正文保留前108字符，附属茶台计数，发起人资料，发起人所在的默认茶团。然后按结构填写返回资料荚。
 func GetObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []data.ObjectiveBean, err error) {
 	var ob data.ObjectiveBean
 	var oblist []data.ObjectiveBean
@@ -139,7 +139,7 @@ func GetObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []d
 	return
 }
 
-// 根据给出的objectiv参数，去获取对应的茶话会（objective），附属茶台计数，发起人资料，发起人所在的默认茶团。然后按结构填写返回资料夹。
+// 根据给出的objectiv参数，去获取对应的茶话会（objective），附属茶台计数，发起人资料，发起人所在的默认茶团。然后按结构填写返回资料荚。
 func GetObjectiveBean(objective data.Objective) (ObjectiveBean data.ObjectiveBean, err error) {
 	var ob data.ObjectiveBean
 

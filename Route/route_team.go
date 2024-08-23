@@ -128,7 +128,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	mess := data.AcceptMessage{
 		FromUserId:     1,
 		Title:          "新茶语邻座评审邀请",
-		Content:        "您好，茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时处理。",
+		Content:        "茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: aO.Id,
 	}
 	//发送消息
@@ -139,10 +139,6 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	t := fmt.Sprintf("您好，新开茶团 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", team.Name)
 	// 提示用户草稿保存成功
 	Report(w, r, t)
-
-	// 跳转到team详情页
-	// url := fmt.Sprint("/v1/team/detail?id=", team.Uuid)
-	// http.Redirect(w, r, url, http.StatusFound)
 
 }
 
@@ -339,8 +335,8 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 准备页面数据
-	var tc data.TeamMemberBean //核心成员资料夹
-	var tn data.TeamMemberBean //普通成员资料夹
+	var tc data.TeamMemberBean //核心成员资料荚
+	var tn data.TeamMemberBean //普通成员资料荚
 	var tcList []data.TeamMemberBean
 	var tnList []data.TeamMemberBean
 	//据teamMembers中的UserId获取User

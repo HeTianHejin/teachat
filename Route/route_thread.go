@@ -208,9 +208,9 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 // GET /v1/thread/detail
 // 显示茶议（议题）的详细信息，包括品味（回复帖子）和记录品味的表格
 func ThreadDetail(w http.ResponseWriter, r *http.Request) {
-	var err error
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
+
 	// 准备一个空白的表
 	var tD data.ThreadDetail
 	// 读取茶议内容以填空
@@ -221,31 +221,58 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tD.QuoteProject, err = thread.Project()
-	if err != nil {
-		util.Warning(err, " Cannot read project")
-		Report(w, r, "您好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
-		return
-	}
-	// 截短body
-	tD.QuoteProject.Body = Substr(tD.QuoteProject.Body, 66)
-	tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
-	if err != nil {
-		util.Warning(err, " Cannot read project author")
-		Report(w, r, "您好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
-		return
-	}
-	tD.QuoteProjectAuthorTeam, err = tD.QuoteProjectAuthor.GetLastDefaultTeam()
-	if err != nil {
-		util.Warning(err, " Cannot read project author team")
-		Report(w, r, "您好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
-		return
+	if thread.PostId != 0 {
+		// 说明这是一个附加类型的,针对某个post发表的茶议
+		tD.QuotePost, err = data.GetPostbyId(thread.PostId)
+		if err != nil {
+			util.Warning(err, " Cannot read post given post_id")
+			Report(w, r, "您好，枕上轻寒窗外雨，眼前春色梦中人。未能读取品味资料。")
+			return
+		}
+		// 截短body
+		tD.QuotePost.Body = Substr(tD.QuotePost.Body, 66)
+		tD.QuotePostAuthor, err = tD.QuotePost.User()
+		if err != nil {
+			util.Warning(err, " Cannot read post author")
+			Report(w, r, "您好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
+			return
+		}
+		tD.QuotePostAuthorTeam, err = tD.QuotePostAuthor.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(err, " Cannot read post author team")
+			Report(w, r, "您好，花谢花飞飞满天，红消香断有谁怜？未能读取品味资料。")
+			return
+		}
+
+	} else {
+		// 是一个普通的茶议
+		tD.QuoteProject, err = thread.Project()
+		if err != nil {
+			util.Warning(err, " Cannot read project")
+			Report(w, r, "您好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
+			return
+		}
+		// 截短body
+		tD.QuoteProject.Body = Substr(tD.QuoteProject.Body, 66)
+		tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
+		if err != nil {
+			util.Warning(err, " Cannot read project author")
+			Report(w, r, "您好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
+			return
+		}
+		tD.QuoteProjectAuthorTeam, err = tD.QuoteProjectAuthor.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(err, " Cannot read project author team")
+			Report(w, r, "您好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
+			return
+		}
 	}
 
+	// 读取茶议资料荚
 	tD.ThreadBean, err = GetThreadBean(thread)
 	if err != nil {
 		util.Warning(err, " Cannot read threadBean")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议资料。")
+		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议资料荚。")
 		return
 	}
 	tD.NumSupport = thread.NumSupport()
@@ -692,7 +719,7 @@ func PlusThread(w http.ResponseWriter, r *http.Request) {
 	am := data.AcceptMessage{
 		FromUserId:     1,
 		Title:          "新茶议邻座评审邀请",
-		Content:        "茶博士隆重宣布：您被茶棚选中为新茶议评审官啦，请及时处理。",
+		Content:        "茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: ao.Id,
 	}
 	// 发送消息

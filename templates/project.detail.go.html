@@ -158,7 +158,7 @@
 
     <div class="media">
       <div class="media-left">
-        {{ if (gt .Count 0) }}
+        {{ if .Count }}
         <span class="badge">{{ .Count }}</span>
         {{ else }}
          {{ end }}
@@ -177,7 +177,7 @@
           </span>
         </p>
 
-        <h5>
+        <h4>
           <span class="label label-success">{{ .Thread.TypeStatus }}</span>
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
           <span style="font-size: small; margin-inline-start: 40px;">

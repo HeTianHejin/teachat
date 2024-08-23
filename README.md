@@ -1,8 +1,8 @@
 # teachat-readme.md
 
 ## 简介
-为讨论鸡毛蒜皮的麻烦事而编造的web应用。  
-使用go+postgresql+bootstrap3  
+为讨论鸡毛蒜皮的麻烦事而编造的，以茶论道，强调团队合作的是非论坛。  
+使用go+postgresql+bootstrap3编写
 
 ### 自定义的“是非论坛”特点
 

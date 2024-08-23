@@ -203,8 +203,7 @@ func NewPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
 		return
 	}
-	// url := fmt.Sprint("/v1/thread/detail?id=", thread.Uuid)
-	// http.Redirect(w, r, url, http.StatusFound)
+
 	// 创建一条友邻盲评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
 		ObjectId:   dPost.Id,
@@ -219,7 +218,7 @@ func NewPost(w http.ResponseWriter, r *http.Request) {
 	mess := data.AcceptMessage{
 		FromUserId:     1,
 		Title:          "新茶语邻座评审邀请",
-		Content:        "您好，茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时处理。",
+		Content:        "茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: aO.Id,
 	}
 	// 发送消息

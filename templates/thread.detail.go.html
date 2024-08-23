@@ -79,7 +79,17 @@
         <h4><span class="label label-success">{{ .ThreadBean.Thread.TypeStatus }}</span>{{ .ThreadBean.Thread.Title }}</h4>
         <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
         <hr />
-
+        
+        {{ if .ThreadBean.Thread.PostId }}
+        <blockquote>
+          <p style="font-size: small;"><a href="/v1/Post/detail?id={{ .QuotePost.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...</p>
+          <footer style="font-size: small;">
+            <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}">{{ .QuotePostAuthor.Name }}</a>
+            <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}">{{ .QuotePostAuthorTeam.Abbreviation }}</a></span>  
+          </footer>
+        </blockquote>
+        
+        {{ else }}
         <blockquote>
           <p style="font-size: small;"><a href="/v1/Project/detail?id={{ .QuoteProject.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
           <footer style="font-size: small;">
@@ -87,7 +97,8 @@
             <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a></span> <cite title="Source Title">{{ .QuoteProject.Title }}</cite>
           </footer>
         </blockquote>
-        
+        {{ end }}
+
       </div>
 
       <div class="panel-footer">
@@ -362,6 +373,16 @@
         <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
         <hr />
 
+        {{ if .ThreadBean.Thread.PostId }}
+        <blockquote>
+          <p style="font-size: small;"><a href="/v1/Post/detail?id={{ .QuotePost.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...</p>
+          <footer style="font-size: small;">
+            <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}">{{ .QuotePostAuthor.Name }}</a>
+            <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}">{{ .QuotePostAuthorTeam.Abbreviation }}</a></span>  
+          </footer>
+        </blockquote>
+        
+        {{ else }}
         <blockquote>
           <p style="font-size: small;"><a href="/v1/Project/detail?id={{ .QuoteProject.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
           <footer style="font-size: small;">
@@ -369,6 +390,7 @@
             <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a></span> <cite title="Source Title">{{ .QuoteProject.Title }}</cite>
           </footer>
         </blockquote>
+        {{ end }}
         </div>
 
         <div class="panel-footer">

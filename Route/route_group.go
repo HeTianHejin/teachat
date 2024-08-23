@@ -123,7 +123,7 @@ func CreateGroup(w http.ResponseWriter, r *http.Request) {
 	mess := data.AcceptMessage{
 		FromUserId:     1,
 		Title:          "新茶语邻座评审邀请",
-		Content:        "您好，茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时处理。",
+		Content:        "茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: aO.Id,
 	}
 	//发送消息
@@ -160,7 +160,7 @@ func GroupDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士摸摸头，居然说集团可能不存在，未能查看集团详情。")
 		return
 	}
-	// 读取集团资料夹
+	// 读取集团资料荚
 	gb, err := GetGroupBean(g)
 	if err != nil {
 		Report(w, r, "您好，茶博士摸摸头，居然说集团可能不存在，未能查看集团详情。")

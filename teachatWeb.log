@@ -983,3 +983,11 @@ INFO 2024/08/22 11:48:28 utils.go:62: xuepan@storetravels.com Session deleted
 INFO 2024/08/22 11:48:43 utils.go:62: xuepan@storetravels.com 密码匹配成功
 INFO 2024/08/22 11:49:59 utils.go:62: xuepan@storetravels.com Session deleted
 INFO 2024/08/22 11:50:07 utils.go:62: test@gmail.com 密码匹配成功
+INFO 2024/08/23 11:26:03 utils.go:62: shixiangyun@storetravels.com 密码匹配成功
+WARNING 2024/08/23 11:46:19 utils.go:72: pq: duplicate key value violates unique constraint "accept_object_pkey" Cannot create accept_object
+INFO 2024/08/23 11:55:13 utils.go:62: shixiangyun@storetravels.com Session deleted
+INFO 2024/08/23 11:55:25 utils.go:62: test@gmail.com 密码匹配成功
+INFO 2024/08/23 11:55:40 utils.go:62: test@gmail.com Session deleted
+INFO 2024/08/23 11:55:54 utils.go:62: xuepan@storetravels.com 密码匹配成功
+INFO 2024/08/23 11:56:08 utils.go:62: xuepan@storetravels.com Session deleted
+INFO 2024/08/23 11:56:25 utils.go:62: jiatanchun@storetravels.com 密码匹配成功

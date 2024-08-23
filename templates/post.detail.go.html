@@ -50,12 +50,12 @@
 
         <div class="panel-body">
 
-          <p>
+          <p style="white-space: pre-wrap;">
             {{ .PostBean.Post.Body }}
           </p>
 
           <div class="panel panel-default">
-            <div class="panel-body">
+            <div class="panel-body" style="font-size: small;">
               <a href="/v1/thread/detail?id={{ .QuoteThread.Uuid }}"><span class="label label-default">引用</span></a>
               <a href="/v1/user/biography?id={{ .QuoteThreadAuthor.Uuid }}">{{ .QuoteThreadAuthor.Name }}</a>
               <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuoteThreadAuthorTeam.Uuid }}">{{ .QuoteThreadAuthorTeam.Abbreviation }}</a></span>
@@ -140,70 +140,38 @@
   {{ range .ThreadBeanList }}
 
   <div class="media">
-
     <div class="media-left">
+      {{ if .Count }}
+      <span class="badge">{{ .Count }}</span>
+      {{ else }}
+       {{ end }}
       <a href="/v1/user/biography?id={{ .Author.Uuid }}">
         <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
       </a>
     </div>
-
     <div class="media-body">
+      <p>
+          <span class="label label-info">{{ .Author.GetGender }}</span>
+          <span>{{ .Author.Name }}</span>
+          <span style="margin-inline-end: 20px; font-size: smaller;">
+            @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+          
+          <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
+        </span>
+      </p>
 
-      <div class="panel panel-default">
-
-        <div class="panel-heading">
-          <div class="row">
-            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <a href="/v1/user/biography?id={{ .Author.Uuid }}">{{ .Author.Name }}</a>
-            </div>
-
-            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <span style="display: block; text-align: center;">
-                <span class="label label-default">{{ .Status }}</span>
-              </span>
-            </div>
-
-            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <span style="display: block; text-align: right;">
-                {{ .CreatedAtDate }}
-              </span>
-            </div>
-
-          </div>
-        </div>
-
-        <div class="panel-body">
-          <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
-            <h4>{{ .Thread.Title }}
-            </h4>
-          </a>
-          {{ .Thread.Body }}
-        </div>
-
-        <div class="panel-footer">
-
-          <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>
-
-          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Count }} </span>
-
-          {{ if .Thread.IsEdited }}
-          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-          <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Thread.EditAtDate }}</span>
-          {{ else }}
-          {{/* 没有“追加”编辑过，留空白 */}}
-          {{ end }}
-
-          <div class="pull-right">
-            <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
-              <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
-            </a>
-            {{ .Thread.NumReads }}
-          </div>
-        </div>
-
-      </div>
+      <h4>
+      <span class="label label-success">{{ .Thread.TypeStatus }}</span>
+        <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
+      </h4>
+        <span style="font-size: small; margin-inline-start: 40px;">
+          <span class="label label-default" style="margin-inline-end: 20px;">{{ .Status }}</span>
+      {{ .Thread.Body }} ...
     </div>
+
   </div>
+
+<hr />
 
   {{ end }}
 
