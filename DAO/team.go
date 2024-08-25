@@ -102,9 +102,9 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err 
 	return
 }
 
-// GetSurvivalTeamsByUserId() 获取用户当前所在的状态正常的团队
-func GetSurvivalTeamsByUserId(userId int) (teams []Team, err error) {
-	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams JOIN team_members ON teams.id = team_members.team_id WHERE team_members.user_id = $1 AND team_members.class = 1", userId)
+// SurvivalTeams() 获取用户当前所在的状态正常的全部团队
+func (user *User) SurvivalTeams() (teams []Team, err error) {
+	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams JOIN team_members ON teams.id = team_members.team_id WHERE team_members.user_id = $1 AND team_members.class = 1", user.Id)
 	if err != nil {
 		return
 	}
@@ -277,7 +277,7 @@ func (user *User) CreateTeam(name, abbreviation, mission, logo string, class, gr
 		return
 	}
 	defer stmt.Close()
-	cmd := stmt.QueryRow(CreateUUID(), name, mission, user.Id, time.Now(), class, abbreviation, logo, time.Now(), group_id)
+	cmd := stmt.QueryRow(Random_UUID(), name, mission, user.Id, time.Now(), class, abbreviation, logo, time.Now(), group_id)
 	err = cmd.Scan(
 		&team.Id,
 		&team.Uuid,
@@ -310,7 +310,7 @@ func AddTeamMember(teamId int, user_id int, role string) (teamMember TeamMember,
 		return
 	}
 	defer stmt.Close()
-	cmd := stmt.QueryRow(CreateUUID(), teamId, user_id, role, time.Now())
+	cmd := stmt.QueryRow(Random_UUID(), teamId, user_id, role, time.Now())
 	err = cmd.Scan(
 		&teamMember.Id,
 		&teamMember.Uuid,
@@ -430,11 +430,11 @@ func (teamMember *TeamMember) Create() (err error) {
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(
-		CreateUUID(),
+		Random_UUID(),
 		teamMember.TeamId,
 		teamMember.UserId,
 		teamMember.Role,
-		teamMember.CreatedAt,
+		time.Now(),
 		teamMember.Class)
 	return
 }

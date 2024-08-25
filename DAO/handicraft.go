@@ -43,7 +43,7 @@ func (handicraft *Handicraft) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), handicraft.ProjectId, handicraft.Name, handicraft.Nickname, handicraft.Client, handicraft.TargetGoodsId, handicraft.ToolListId, handicraft.Artist, handicraft.Strength, handicraft.Intelligence, handicraft.DifficultyLevel, handicraft.Recorder, handicraft.Description, handicraft.EvidenceId, handicraft.Status, time.Now(), time.Now()).Scan(&handicraft.Id)
+	err = stmt.QueryRow(Random_UUID(), handicraft.ProjectId, handicraft.Name, handicraft.Nickname, handicraft.Client, handicraft.TargetGoodsId, handicraft.ToolListId, handicraft.Artist, handicraft.Strength, handicraft.Intelligence, handicraft.DifficultyLevel, handicraft.Recorder, handicraft.Description, handicraft.EvidenceId, handicraft.Status, time.Now(), time.Now()).Scan(&handicraft.Id)
 	return
 }
 
@@ -190,7 +190,7 @@ func (inauguration *Inauguration) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), inauguration.HandicraftId, inauguration.Name, inauguration.Nickname, inauguration.Artist, inauguration.Recorder, inauguration.Description, inauguration.EvidenceId, inauguration.Status, time.Now(), time.Now()).Scan(&inauguration.Id)
+	err = stmt.QueryRow(Random_UUID(), inauguration.HandicraftId, inauguration.Name, inauguration.Nickname, inauguration.Artist, inauguration.Recorder, inauguration.Description, inauguration.EvidenceId, inauguration.Status, time.Now(), time.Now()).Scan(&inauguration.Id)
 	return
 }
 
@@ -281,7 +281,7 @@ func (toolList *ToolList) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), toolList.HandicraftId, toolList.PartId, toolList.GoodsId, toolList.Remark, toolList.Num, time.Now(), time.Now()).Scan(&toolList.Id)
+	err = stmt.QueryRow(Random_UUID(), toolList.HandicraftId, toolList.PartId, toolList.GoodsId, toolList.Remark, toolList.Num, time.Now(), time.Now()).Scan(&toolList.Id)
 	return
 }
 
@@ -358,7 +358,7 @@ func (part *Part) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), part.HandicraftId, part.Name, part.Nickname, part.Artist, part.TargetGoodsId, part.ToolListId, part.Strength, part.Intelligence, part.DifficultyLevel, part.Recorder, part.Description, part.EvidenceId, part.Status, time.Now(), time.Now()).Scan(&part.Id)
+	err = stmt.QueryRow(Random_UUID(), part.HandicraftId, part.Name, part.Nickname, part.Artist, part.TargetGoodsId, part.ToolListId, part.Strength, part.Intelligence, part.DifficultyLevel, part.Recorder, part.Description, part.EvidenceId, part.Status, time.Now(), time.Now()).Scan(&part.Id)
 	return
 }
 
@@ -439,7 +439,7 @@ func (ending *Ending) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), ending.HandicraftId, ending.Name, ending.Nickname, ending.Artist, ending.Recorder, ending.Description, ending.EvidenceId, ending.Status, time.Now(), time.Now()).Scan(&ending.Id)
+	err = stmt.QueryRow(Random_UUID(), ending.HandicraftId, ending.Name, ending.Nickname, ending.Artist, ending.Recorder, ending.Description, ending.EvidenceId, ending.Status, time.Now(), time.Now()).Scan(&ending.Id)
 	return
 }
 
@@ -505,7 +505,7 @@ func (evidence *Evidence) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), evidence.HandicraftId, evidence.Recorder, evidence.Description, evidence.Images, evidence.Video, evidence.Audio, time.Now(), time.Now()).Scan(&evidence.Id)
+	err = stmt.QueryRow(Random_UUID(), evidence.HandicraftId, evidence.Recorder, evidence.Description, evidence.Images, evidence.Video, evidence.Audio, time.Now(), time.Now()).Scan(&evidence.Id)
 	return
 }
 

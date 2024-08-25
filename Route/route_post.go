@@ -62,6 +62,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
+	// 引用的茶议作者默认所在茶团
 	postPD.QuoteThreadAuthorTeam, err = postPD.QuoteThreadAuthor.GetLastDefaultTeam()
 	if err != nil {
 		util.Warning(err, " Cannot get quote-thread-author-default-team given post")
@@ -92,7 +93,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 未登录，游客
 		postPD.IsAuthor = false
-		postPD.IsInput = true
+		postPD.IsInput = false
 		// 填写页面数据
 		postPD.SessUser = data.User{
 			Id:   0,
@@ -102,10 +103,34 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 读取已登陆用户资料
-	u, _ := sess.User()
-	postPD.SessUser = u
+	su, _ := sess.User()
+	postPD.SessUser = su
+	// 当前会话用户所在的默认团队
+	su_default_team, err := su.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot get sess-user-default-team given sess-user")
+		Report(w, r, "您好，������失������，未能读取专��资料。")
+		return
+	}
+	postPD.SessUserDefaultTeam = su_default_team
+	// 当前会话用户已经加入的状态正常的全部茶团
+	sess_teams, err := su.SurvivalTeams()
+	if err != nil {
+		util.Warning(err, " Cannot get sess-user-survival-teams given sess-user")
+		Report(w, r, "您好，������失������，未能读取专���资料。")
+		return
+	}
+
+	for i, team := range sess_teams {
+		if team.Id == su_default_team.Id {
+			// remove default_eam from sTeams,移除，删除 重复的team
+			sess_teams = append(sess_teams[:i], sess_teams[i+1:]...)
+			break
+		}
+	}
+	postPD.SessUserSurvivalTeams = sess_teams
 	// 当前会话用户是否此品味作者？
-	if u.Id == post.UserId {
+	if su.Id == post.UserId {
 		postPD.IsAuthor = true
 		postPD.IsInput = false
 	} else {

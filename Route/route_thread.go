@@ -311,6 +311,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	// 读取会话
 	sess, err := Session(r)
+
 	if err != nil {
 		// 游客
 		// 检查茶议的级别状态
@@ -318,9 +319,8 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			//记录茶议被点击数
 			tD.ThreadBean.Thread.AddHitCount()
 			// 填写页面数据
-			//tPD.IsGuest = true
 			tD.ThreadBean.Thread.PageData.IsAuthor = false
-			tD.IsInput = true
+			tD.IsInput = false
 			tD.SessUser = data.User{
 				Id:   0,
 				Name: "游客",
@@ -342,27 +342,28 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		//用户是登录状态,可以访问1和2级茶议
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
-			//从会话查获当前浏览用户资料
-			sUser, err := sess.User()
+			//从会话查获当前浏览用户资料荚
+			s_u, s_default_team, s_survival_teams, err := FetchUserData(sess)
 			if err != nil {
-				util.Warning(err, " Cannot get user from session")
+				util.Warning(err, " Cannot get user-related data from session")
 				Report(w, r, "您好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
+			tD.SessUser = s_u
+			tD.SessUserDefaultTeam = s_default_team
+			tD.SessUserSurvivalTeams = s_survival_teams
 
 			// 检测是否茶议作者
-			if sUser.Id == tD.ThreadBean.Thread.UserId {
+			if s_u.Id == tD.ThreadBean.Thread.UserId {
 				// 是茶议作者！
 				// 填写页面数据
-				tD.SessUser = sUser
-				// tPD.IsGuest = false
 				tD.ThreadBean.Thread.PageData.IsAuthor = true
 				// 提议作者不能自评品味，王婆卖瓜也不行？！
 				tD.IsInput = false
 				//点击数+1
 				tD.ThreadBean.Thread.AddHitCount()
 				//记录用户阅读该帖子一次
-				data.SaveReadedUserId(tD.ThreadBean.Thread.Id, sUser.Id)
+				data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
 				//迭代PostList，把其PageData.IsAuthor设置为false，页面渲染时检测布局用
 				for i := range tD.PostBeanList {
 					tD.PostBeanList[i].Post.PageData.IsAuthor = false
@@ -374,11 +375,11 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			} else {
 				//不是茶议作者
 				//记录用户阅读该帖子一次
-				data.SaveReadedUserId(tD.ThreadBean.Thread.Id, sUser.Id)
+				data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
 				//记录茶议被点击数
 				tD.ThreadBean.Thread.AddHitCount()
 				// 填写页面数据
-				tD.SessUser = sUser
+				tD.SessUser = s_u
 				//tPD.IsGuest = false
 				tD.ThreadBean.Thread.PageData.IsAuthor = false
 
@@ -387,7 +388,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				// 如果当前用户已经品味过了，则关闭撰写输入面板
 				// 用于页面判断是否显示品味POST（回复）撰写面板
 				for i := range tD.PostBeanList {
-					if tD.PostBeanList[i].Post.UserId == sUser.Id {
+					if tD.PostBeanList[i].Post.UserId == s_u.Id {
 						tD.IsInput = false
 						break
 					}
@@ -395,7 +396,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 				// 检测是否其中某一个Post品味作者
 				for i := range tD.PostBeanList {
-					if tD.PostBeanList[i].Post.UserId == sUser.Id {
+					if tD.PostBeanList[i].Post.UserId == s_u.Id {
 						tD.PostBeanList[i].Post.PageData.IsAuthor = true
 						break
 					} else {

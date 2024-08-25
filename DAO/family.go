@@ -30,7 +30,7 @@ func (f *Family) Save() error {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(CreateUUID(), f.Name, f.Introduction, f.HusbandUserId, f.WifeUserId, f.ChildUserIdSet, f.HusbandFromFamilyIdSet, f.WifeFromFamilyIdSet, f.Married, f.AdoptedChildUserIdSet, f.StateIndex, f.CreatedAt, f.UpdatedAt, f.Logo)
+	_, err = stmt.Exec(Random_UUID(), f.Name, f.Introduction, f.HusbandUserId, f.WifeUserId, f.ChildUserIdSet, f.HusbandFromFamilyIdSet, f.WifeFromFamilyIdSet, f.Married, f.AdoptedChildUserIdSet, f.StateIndex, f.CreatedAt, f.UpdatedAt, f.Logo)
 	if err != nil {
 		return err
 	}

@@ -23,7 +23,7 @@ func (m *Monologue) Create() (monologue Monologue, err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), m.Title, m.Content, m.UserId, m.Note, m.Category, time.Now()).Scan(&monologue.Id, &monologue.Uuid, &monologue.Title, &monologue.Content, &monologue.UserId, &monologue.Note, &monologue.Category, &monologue.CreatedAt)
+	err = stmt.QueryRow(Random_UUID(), m.Title, m.Content, m.UserId, m.Note, m.Category, time.Now()).Scan(&monologue.Id, &monologue.Uuid, &monologue.Title, &monologue.Content, &monologue.UserId, &monologue.Note, &monologue.Category, &monologue.CreatedAt)
 	return
 }
 

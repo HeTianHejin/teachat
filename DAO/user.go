@@ -140,7 +140,7 @@ func (user *User) CreateSession() (session Session, err error) {
 	defer stmt.Close()
 
 	// use QueryRow to return a row and scan the returned id into the Session struct
-	err = stmt.QueryRow(CreateUUID(), user.Email, user.Id, time.Now(), user.Gender).Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
+	err = stmt.QueryRow(Random_UUID(), user.Email, user.Id, time.Now(), user.Gender).Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
 	return
 }
 
@@ -262,7 +262,7 @@ func (user *User) Create() (err error) {
 	defer stmt.Close()
 
 	// use QueryRow to return a row and scan the returned id into the User struct
-	err = stmt.QueryRow(CreateUUID(), user.Name, user.Email, Encrypt(user.Password), time.Now(), user.Biography, user.Role, user.Gender, user.Avatar, time.Now()).Scan(&user.Id, &user.Uuid, &user.CreatedAt)
+	err = stmt.QueryRow(Random_UUID(), user.Name, user.Email, Encrypt(user.Password), time.Now(), user.Biography, user.Role, user.Gender, user.Avatar, time.Now()).Scan(&user.Id, &user.Uuid, &user.CreatedAt)
 	return
 }
 

@@ -250,7 +250,7 @@ func JoinedTeam(w http.ResponseWriter, r *http.Request) {
 
 	var ts data.TeamSquare
 	ts.SessUser = u
-	team_list, err := data.GetSurvivalTeamsByUserId(u.Id)
+	team_list, err := u.SurvivalTeams()
 	if err != nil {
 		util.Info(err, " Cannot get joined teams")
 		Report(w, r, "您好，茶博士未能帮忙查看茶团，请稍后再试。")

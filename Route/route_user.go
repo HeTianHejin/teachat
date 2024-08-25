@@ -47,7 +47,6 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "报告，大王，找不到西天取经团队资料！")
 		return
 	}
-	//teams, err := data.GetSurvivalTeamsByUserId(user.Id)
 	//检查登录者是否简介所有者本人？是则打开编辑页
 	if user.Id == s.UserId {
 		//uBP.User = data.User{}

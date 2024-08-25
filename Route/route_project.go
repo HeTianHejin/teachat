@@ -299,51 +299,51 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 // 展示指定的UUID茶台详情
 func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var pd data.ProjectDetail
+	var pD data.ProjectDetail
 	// 读取用户提交的查询参数
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	// 获取请求的茶台详情
-	pd.Project, err = data.GetProjectByUuid(uuid)
+	pD.Project, err = data.GetProjectByUuid(uuid)
 	if err != nil {
 		util.Warning(err, " Cannot read project")
 		Report(w, r, "您好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
-	pd.Master, err = pd.Project.User()
+	pD.Master, err = pD.Project.User()
 	if err != nil {
 		util.Warning(err, " Cannot read project user")
 		Report(w, r, "您好，霁月难逢，彩云易散。请稍后再试。")
 		return
 	}
-	pd.MasterTeam, _ = pd.Master.GetLastDefaultTeam()
+	pD.MasterTeam, _ = pD.Master.GetLastDefaultTeam()
 	// 准备页面数据
-	if pd.Project.Class == 1 {
-		pd.Open = true
+	if pD.Project.Class == 1 {
+		pD.Open = true
 	} else {
-		pd.Open = false
+		pD.Open = false
 	}
-	if pd.IsEdited {
-		pd.IsEdited = true
+	if pD.IsEdited {
+		pD.IsEdited = true
 	} else {
-		pd.IsEdited = false
+		pD.IsEdited = false
 	}
 
-	pd.QuoteObjective, err = pd.Project.Objective()
+	pD.QuoteObjective, err = pD.Project.Objective()
 	if err != nil {
 		util.Warning(err, " Cannot read objective")
 		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
 		return
 	}
 	// 截短此引用的茶围内容以方便展示
-	pd.QuoteObjective.Body = Substr(pd.QuoteObjective.Body, 66)
-	pd.QuoteObjectiveAuthor, err = pd.QuoteObjective.User()
+	pD.QuoteObjective.Body = Substr(pD.QuoteObjective.Body, 66)
+	pD.QuoteObjectiveAuthor, err = pD.QuoteObjective.User()
 	if err != nil {
 		util.Warning(err, " Cannot read objective author")
 		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
 		return
 	}
-	pd.QuoteObjectiveAuthorTeam, err = pd.QuoteObjectiveAuthor.GetLastDefaultTeam()
+	pD.QuoteObjectiveAuthorTeam, err = pD.QuoteObjectiveAuthor.GetLastDefaultTeam()
 	if err != nil {
 		util.Warning(err, " Cannot read objective author team")
 		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
@@ -352,7 +352,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	var oabList []data.ThreadBean
 	// 读取全部茶议资料
-	threadlist, err := pd.Project.Threads()
+	threadlist, err := pD.Project.Threads()
 	if err != nil {
 		util.Warning(err, " Cannot read threads given project")
 		Report(w, r, "您好，满头大汗的茶博士说，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。")
@@ -360,13 +360,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	len := len(threadlist)
-	pd.ThreadCount = len
+	pD.ThreadCount = len
 	// 检测pageData.ThreadList数量是否超过一打dozen
 	if len > 12 {
-		pd.IsOverTwelve = true
+		pD.IsOverTwelve = true
 	} else {
 		//测试时都设为true显示效果 🐶🐶🐶
-		pd.IsOverTwelve = true
+		pD.IsOverTwelve = true
 	}
 	// 获取茶议和作者相关资料荚
 	oabList, err = GetThreadBeanList(threadlist)
@@ -375,30 +375,41 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
 		return
 	}
-	pd.ThreadBeanList = oabList
+	pD.ThreadBeanList = oabList
 
 	// 获取会话session
-	s, err := Session(r)
+	sess, err := Session(r)
 	if err != nil {
 		// 未登录，游客
 		// 填写页面数据
-		pd.Project.PageData.IsAuthor = false
-		pd.SessUser = data.User{
+		pD.Project.PageData.IsAuthor = false
+		pD.IsInput = false
+		pD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 		}
 		// 返回给浏览者茶台详情页面
-		GenerateHTML(w, &pd, "layout", "navbar.public", "project.detail")
+		GenerateHTML(w, &pD, "layout", "navbar.public", "project.detail")
 		return
 	}
-	// 获取当前会话用户资料
-	u, _ := s.User()
-	pd.SessUser = u
+	// 已登陆用户
+	pD.IsInput = true
+	//从会话查获当前浏览用户资料荚
+	s_u, s_default_team, s_survival_teams, err := FetchUserData(sess)
+	if err != nil {
+		util.Warning(err, " Cannot get user-related data from session")
+		Report(w, r, "您好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+	pD.SessUser = s_u
+	pD.SessUserDefaultTeam = s_default_team
+	pD.SessUserSurvivalTeams = s_survival_teams
+
 	// 检查是否台主？
-	pd.Project.PageData.IsAuthor = false
-	if u.Id == pd.Project.UserId {
-		pd.Project.PageData.IsAuthor = true
+	pD.Project.PageData.IsAuthor = false
+	if s_u.Id == pD.Project.UserId {
+		pD.Project.PageData.IsAuthor = true
 	}
 
-	GenerateHTML(w, &pd, "layout", "navbar.private", "project.detail")
+	GenerateHTML(w, &pD, "layout", "navbar.private", "project.detail")
 }

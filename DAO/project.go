@@ -109,7 +109,7 @@ func (user *User) CreateProject(title, body string, objectiveId int, class int) 
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), title, body, objectiveId, user.Id, time.Now(), class, time.Now(), "default-pr-cover").
+	err = stmt.QueryRow(Random_UUID(), title, body, objectiveId, user.Id, time.Now(), class, time.Now(), "default-pr-cover").
 		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover)
 	return
 }

@@ -61,7 +61,7 @@ func init() {
 
 // create a random UUID with from RFC 4122
 // adapted from http://github.com/nu7hatch/gouuid
-func CreateUUID() (uuid string) {
+func Random_UUID() (uuid string) {
 	u := new([16]byte)
 	_, err := rand.Read(u[:])
 	if err != nil {

@@ -36,7 +36,10 @@ type PublicPData struct {
 
 // 某个茶话会详情页面渲染
 type ObjectiveDetail struct {
-	SessUser        User // 当前会话用户
+	SessUser              User // 当前会话用户
+	SessUserDefaultTeam   Team
+	SessUserSurvivalTeams []Team
+
 	ObjectiveBean   ObjectiveBean
 	ProjectBeanList []ProjectBean // objective下所有projects
 }
@@ -68,7 +71,11 @@ type ProjectBean struct {
 
 // 某个茶台详情页面渲染所需的动态数据
 type ProjectDetail struct {
-	SessUser   User // 当前会话用户
+	SessUser              User // 当前会话用户
+	SessUserDefaultTeam   Team
+	SessUserSurvivalTeams []Team
+	IsInput               bool // 是否需要显示输入面板
+
 	Project    Project
 	Master     User
 	MasterTeam Team
@@ -86,13 +93,19 @@ type ProjectDetail struct {
 
 // 茶议草稿页面渲染数据
 type DThreadDetail struct {
-	SessUser    User
+	SessUser              User
+	SessUserDefaultTeam   Team
+	SessUserSurvivalTeams []Team
+
 	DraftThread DraftThread
 }
 
 // 用于茶议详情页面渲染
 type ThreadDetail struct {
-	SessUser User // 当前会话用户
+	SessUser              User // 当前会话用户
+	SessUserDefaultTeam   Team
+	SessUserSurvivalTeams []Team
+	IsInput               bool // 是否需要显示输入面板
 
 	NumSupport int // 支持人数
 	NumOppose  int // 反对人数
@@ -108,7 +121,6 @@ type ThreadDetail struct {
 	QuotePostAuthor     User
 	QuotePostAuthorTeam Team
 
-	IsInput      bool // 是否需要显示输入面板
 	ThreadBean   ThreadBean
 	PostBeanList []PostBean // 跟贴豆荚队列
 }
@@ -126,14 +138,19 @@ type ThreadBean struct {
 // 用于跟贴详情页面渲染
 type PostDetail struct {
 	SessUser              User // 当前会话用户
-	PostBean              PostBean
-	IsAuthor              bool         // 是否为品味作者
-	QuoteThread           Thread       // 引用的茶议
-	QuoteThreadAuthor     User         // 引用茶议的作者
-	QuoteThreadAuthorTeam Team         // 引用茶议的作者所在的默认茶团
-	ThreadBeanList        []ThreadBean // 针对此品味的茶议队列
-	IsInput               bool         // 是否需要显示输入面板
-	IsOverTwelve          bool         // 是否超过12个
+	SessUserDefaultTeam   Team
+	SessUserSurvivalTeams []Team
+	IsAuthor              bool // 是否为品味作者
+
+	PostBean       PostBean
+	ThreadBeanList []ThreadBean // 针对此品味的茶议队列
+
+	QuoteThread           Thread // 引用的茶议
+	QuoteThreadAuthor     User   // 引用茶议的作者
+	QuoteThreadAuthorTeam Team   // 引用茶议的作者所在的默认茶团
+
+	IsInput      bool // 是否需要显示输入面板
+	IsOverTwelve bool // 是否超过12个
 }
 type PostBean struct {
 	Post          Post

@@ -40,10 +40,10 @@
   </div>
 
 </div>
-{{/*  右红左蓝进度条到此为止  */}}
+{{/* 右红左蓝进度条到此为止  */}}
 
 <div class="media">
-  {{/*  [是茶议作者区域] 头像显示在右侧布局 */}}
+  {{/* [是茶议作者区域] 头像显示在右侧布局 */}}
 
   <div class="media-body">
 
@@ -76,25 +76,31 @@
       </div>
       <div class="panel-body">
 
-        <h4><span class="label label-success">{{ .ThreadBean.Thread.TypeStatus }}</span>{{ .ThreadBean.Thread.Title }}</h4>
+        <h4><span class="label label-success">{{ .ThreadBean.Thread.TypeStatus }}</span>{{ .ThreadBean.Thread.Title }}
+        </h4>
         <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
         <hr />
-        
+
         {{ if .ThreadBean.Thread.PostId }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/Post/detail?id={{ .QuotePost.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...</p>
+          <p style="font-size: small;"><a href="/v1/Post/detail?id={{ .QuotePost.Uuid }}"><span
+                class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...</p>
           <footer style="font-size: small;">
             <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}">{{ .QuotePostAuthor.Name }}</a>
-            <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}">{{ .QuotePostAuthorTeam.Abbreviation }}</a></span>  
+            <span style="margin-inline-end: 20px;">@<a
+                href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}">{{ .QuotePostAuthorTeam.Abbreviation }}</a></span>
           </footer>
         </blockquote>
-        
+
         {{ else }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/Project/detail?id={{ .QuoteProject.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
+          <p style="font-size: small;"><a href="/v1/Project/detail?id={{ .QuoteProject.Uuid }}"><span
+                class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
           <footer style="font-size: small;">
             <a href="/v1/user/biography?id={{ .QuoteProjectAuthor.Uuid }}">{{ .QuoteProjectAuthor.Name }}</a>
-            <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a></span> <cite title="Source Title">{{ .QuoteProject.Title }}</cite>
+            <span style="margin-inline-end: 20px;">@<a
+                href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a></span>
+            <cite title="Source Title">{{ .QuoteProject.Title }}</cite>
           </footer>
         </blockquote>
         {{ end }}
@@ -134,16 +140,16 @@
   </div>
 </div>
 
-{{/*  [是茶议作者区域] 展示其他用户的品味 */}}
+{{/* [是茶议作者区域] 展示其他用户的品味 */}}
 {{ range .PostBeanList }}
-{{/*  [是茶议作者区域] 检查品味的立场以决定布局 */}}
+{{/* [是茶议作者区域] 检查品味的立场以决定布局 */}}
 
 {{ if .Post.Attitude }}
-{{/*  [是茶议作者区域] 品味是“颔首”表态，跟随作者，同样是右侧头像布局，寓意站位同一边 */}}
+{{/* [是茶议作者区域] 品味是“颔首”表态，跟随作者，同样是右侧头像布局，寓意站位同一边 */}}
 <div class="media">
   <div class="media-body">
     {{ if .Post.PageData.IsAuthor }}
-    {{/*  [是茶议作者区域] 特别注意⚠️以下两行是 "或者" 关系，共用一个</div>!  */}}
+    {{/* [是茶议作者区域] 特别注意⚠️以下两行是 "或者" 关系，共用一个</div>!  */}}
     <div class="panel panel-success">
       {{ else }}
       <div class="panel panel-default">
@@ -159,12 +165,12 @@
               </span>
             </div>
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-                <span style="display:block;text-align: right;">
-                  <span style="font-size: small;">
-                    <span class="label label-info">{{ .Author.GetGender }}</span>
-                    {{ .Author.Name }}
-          @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
-          </span></span>
+              <span style="display:block;text-align: right;">
+                <span style="font-size: small;">
+                  <span class="label label-info">{{ .Author.GetGender }}</span>
+                  {{ .Author.Name }}
+                  @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+              </span></span>
               </span>
             </div>
           </div>
@@ -227,7 +233,7 @@
     </div>
   </div>
   {{ else }}
-  {{/*  [是茶议作者区域] 品味是“摇头”表态，左侧头像布局，寓意站在对面  */}}
+  {{/* [是茶议作者区域] 品味是“摇头”表态，左侧头像布局，寓意站在对面  */}}
   <div class="media">
     <div class="media-left">
       <a href="/v1/user/biography?id={{ .Author.Uuid }}">
@@ -316,12 +322,12 @@
       </div>
     </div>
     {{ end }}
-    {{/*  [是茶议作者区域] 检测是否品味作者完成 */}}
+    {{/* [是茶议作者区域] 检测是否品味作者完成 */}}
     {{ end }}
-    {{/*  [是茶议作者区域] 展示品味并检查是否品味作者完成 */}}
+    {{/* [是茶议作者区域] 展示品味并检查是否品味作者完成 */}}
   </div>
 
-  {{/*   是否茶议主人分割线在此   */}}
+  {{/* 是否茶议主人分割线在此   */}}
 
   {{ else }}
   {{/* 不是茶议作者区域在这行开始 */}}
@@ -338,7 +344,7 @@
       <span class="sr-only">{{.ProgressOppose}}% 完成 (摇头)</span>
     </div>
   </div>
-  {{/*  左红右蓝进度条到此为止  */}}
+  {{/* 左红右蓝进度条到此为止  */}}
 
   {{/* [不是茶议作者区域] 茶议头像位置显示在左侧布局 */}}
   <div class="media">
@@ -355,7 +361,8 @@
               <span class="label label-info" style="font-size: xx-small;">{{ .ThreadBean.Author.GetGender }}</span>
               {{ .ThreadBean.Author.Name }}
               <span style="font-weight: lighter;">
-                @<a href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>
+                @<a
+                  href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>
               </span>
             </div>
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -369,28 +376,34 @@
           </div>
         </div>
         <div class="panel-body">
-          <h4><span class="label label-success">{{ .ThreadBean.Thread.TypeStatus }}</span>{{ .ThreadBean.Thread.Title }}</h4>
-        <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
-        <hr />
+          <h4><span class="label label-success">{{ .ThreadBean.Thread.TypeStatus }}</span>{{ .ThreadBean.Thread.Title }}
+          </h4>
+          <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
+          <hr />
 
-        {{ if .ThreadBean.Thread.PostId }}
-        <blockquote>
-          <p style="font-size: small;"><a href="/v1/Post/detail?id={{ .QuotePost.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...</p>
-          <footer style="font-size: small;">
-            <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}">{{ .QuotePostAuthor.Name }}</a>
-            <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}">{{ .QuotePostAuthorTeam.Abbreviation }}</a></span>  
-          </footer>
-        </blockquote>
-        
-        {{ else }}
-        <blockquote>
-          <p style="font-size: small;"><a href="/v1/Project/detail?id={{ .QuoteProject.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
-          <footer style="font-size: small;">
-            <a href="/v1/user/biography?id={{ .QuoteProjectAuthor.Uuid }}">{{ .QuoteProjectAuthor.Name }}</a>
-            <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a></span> <cite title="Source Title">{{ .QuoteProject.Title }}</cite>
-          </footer>
-        </blockquote>
-        {{ end }}
+          {{ if .ThreadBean.Thread.PostId }}
+          <blockquote>
+            <p style="font-size: small;"><a href="/v1/Post/detail?id={{ .QuotePost.Uuid }}"><span
+                  class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...</p>
+            <footer style="font-size: small;">
+              <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}">{{ .QuotePostAuthor.Name }}</a>
+              <span style="margin-inline-end: 20px;">@<a
+                  href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}">{{ .QuotePostAuthorTeam.Abbreviation }}</a></span>
+            </footer>
+          </blockquote>
+
+          {{ else }}
+          <blockquote>
+            <p style="font-size: small;"><a href="/v1/Project/detail?id={{ .QuoteProject.Uuid }}"><span
+                  class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
+            <footer style="font-size: small;">
+              <a href="/v1/user/biography?id={{ .QuoteProjectAuthor.Uuid }}">{{ .QuoteProjectAuthor.Name }}</a>
+              <span style="margin-inline-end: 20px;">@<a
+                  href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a></span>
+              <cite title="Source Title">{{ .QuoteProject.Title }}</cite>
+            </footer>
+          </blockquote>
+          {{ end }}
         </div>
 
         <div class="panel-footer">
@@ -442,22 +455,38 @@
           </div>
 
           <div class="form-group">
-
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <textarea class="form-control" name="body" id="body" rows="3" minlength="17" maxlength="567" required></textarea>
+              <textarea class="form-control" name="body" id="body" rows="3" minlength="17" maxlength="567"
+                required></textarea>
             </div>
           </div>
 
           <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
 
+          <div class="form-group">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <select name="team_uuid" class="form-control" id="select" required>
+                <option value="{{ .SessUserDefaultTeam.Uuid }}">{{ .SessUserDefaultTeam.Name }}
+                </option>
+                {{ range .SessUserSurvivalTeams }}
+                <option value="{{ .Uuid }}">{{ .Name }}</option>
+                {{ end }}
+              </select>
+            </div>
+          </div>
+
           <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
-            <button type="submit" class="btn btn-default">表态</button>
+            <button type="submit" class="btn btn-default">提交</button>
           </div>
 
         </form>
 
       </div>
 
+    </div>
+    {{ else }}
+    <div class="well">
+      <p class="text text-center"><a href="/v1/login">登陆</a> 以开始谈天说茶 </p>
     </div>
     {{ end }}
     {{/* [不是茶议作者区域] 品味编辑区结束 */}}
@@ -488,8 +517,8 @@
                   <span style="font-size: small;">
                     <span class="label label-info">{{ .Author.GetGender }}</span>
                     {{ .Author.Name }}
-              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
-              </span>
+                    @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+                  </span>
                 </div>
                 <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
                   <span style="display: block; text-align: center;">
@@ -580,8 +609,8 @@
                       <span style="font-size: small;">
                         <span class="label label-info">{{ .Author.GetGender }}</span>
                         {{ .Author.Name }}
-              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
-              </span></span>
+                        @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+                    </span></span>
                   </div>
                 </div>
               </div>

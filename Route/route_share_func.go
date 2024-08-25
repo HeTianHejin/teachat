@@ -24,6 +24,34 @@ import (
    存放各个路由文件共享的一些方法
 */
 
+// Fetch and process user-related data,从会话查获当前浏览用户资料荚
+func FetchUserData(sess data.Session) (s_u data.User, team data.Team, teams []data.Team, err error) {
+	// 读取已登陆用户资料
+	s_u, err = sess.User()
+	if err != nil {
+		return
+	}
+
+	defaultTeam, err := s_u.GetLastDefaultTeam()
+	if err != nil {
+		return
+	}
+
+	survivalTeams, err := s_u.SurvivalTeams()
+	if err != nil {
+		return
+	}
+
+	for i, team := range survivalTeams {
+		if team.Id == defaultTeam.Id {
+			survivalTeams = append(survivalTeams[:i], survivalTeams[i+1:]...)
+			break
+		}
+	}
+
+	return s_u, defaultTeam, survivalTeams, nil
+}
+
 // 根据给出的thread_list参数，去获取对应的茶议（截短正文保留前108字符），附属品味计数，作者资料，作者所在的默认茶团。然后按结构拼装返回
 func GetThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadBean, err error) {
 	var oab data.ThreadBean

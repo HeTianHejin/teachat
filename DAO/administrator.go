@@ -67,7 +67,7 @@ func (administrator *Administrator) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(CreateUUID(), administrator.UserId, administrator.Role, Encrypt(administrator.Password), time.Now(), true, administrator.InvalidReason, time.Now()).Scan(&administrator.Id, &administrator.Uuid, &administrator.CreatedAt, &administrator.Invalid_at)
+	err = stmt.QueryRow(Random_UUID(), administrator.UserId, administrator.Role, Encrypt(administrator.Password), time.Now(), true, administrator.InvalidReason, time.Now()).Scan(&administrator.Id, &administrator.Uuid, &administrator.CreatedAt, &administrator.Invalid_at)
 	return
 }
 

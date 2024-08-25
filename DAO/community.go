@@ -27,7 +27,7 @@ func (c *Community) Save() error {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(CreateUUID(), c.Name, c.Introduction, c.FamilyIdSet, c.InfluenceTeamId, c.EditedUserIdSet, c.StateIndex, time.Now(), time.Now(), c.Flag)
+	_, err = stmt.Exec(Random_UUID(), c.Name, c.Introduction, c.FamilyIdSet, c.InfluenceTeamId, c.EditedUserIdSet, c.StateIndex, time.Now(), time.Now(), c.Flag)
 	if err != nil {
 		return err
 	}

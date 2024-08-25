@@ -40,7 +40,7 @@ type Goods struct {
 // goods.Create()
 func (goods *Goods) Create() (err error) {
 	if err = Db.QueryRow("INSERT INTO goods(uuid, user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, production_date, expiration_date, state, origin, manufacturer, manufacturer_link, engine_type, purchase_link, created_time, updated_time) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30) RETURNING id",
-		CreateUUID(), goods.UserId, goods.Name, goods.Nickname, goods.Designer, goods.Describe, goods.Price, goods.Applicability, goods.Category, goods.Specification, goods.BrandName, goods.Model, goods.Weight, goods.Dimensions, goods.Material, goods.Size, goods.Color, goods.NetworkConnectionType, goods.Features, goods.SerialNumber, goods.ProductionDate, goods.ExpirationDate, goods.State, goods.Origin, goods.Manufacturer, goods.ManufacturerLink, goods.EngineType, goods.PurchaseLink, time.Now(), time.Now()).Scan(&goods.Id); err != nil {
+		Random_UUID(), goods.UserId, goods.Name, goods.Nickname, goods.Designer, goods.Describe, goods.Price, goods.Applicability, goods.Category, goods.Specification, goods.BrandName, goods.Model, goods.Weight, goods.Dimensions, goods.Material, goods.Size, goods.Color, goods.NetworkConnectionType, goods.Features, goods.SerialNumber, goods.ProductionDate, goods.ExpirationDate, goods.State, goods.Origin, goods.Manufacturer, goods.ManufacturerLink, goods.EngineType, goods.PurchaseLink, time.Now(), time.Now()).Scan(&goods.Id); err != nil {
 		return err
 	}
 	return err

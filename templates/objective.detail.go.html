@@ -84,6 +84,18 @@
         </div>
       </div>
 
+
+      <div class="well">
+        {{ if .ObjectiveBean.Open }}
+        <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+        <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
+        {{ else }}
+        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+        茶博士：封闭式茶话会需要围主邀请才能开新台噢。
+        {{ end }}
+      </div>
+
+
       {{/* 这个茶话会的全部茶台逐一展示 */}}
       {{ range .ProjectBeanList }}
 
@@ -143,14 +155,6 @@
   </li>
 </ul>
 
-<div class="well">
-  {{ if .ObjectiveBean.Open }}
-  <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-  <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
-  {{ else }}
-  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-  茶博士：封闭式茶话会需要围主邀请才能开新台噢。
-  {{ end }}
-</div>
+
 
 {{ end }}

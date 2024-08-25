@@ -230,7 +230,7 @@ func (t *Thread) Save() (err error) {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(CreateUUID(), t.Body, t.UserId, time.Now(), t.Class, t.Title, time.Now(), t.ProjectId, t.HitCount, t.Type, t.PostId)
+	_, err = stmt.Exec(Random_UUID(), t.Body, t.UserId, time.Now(), t.Class, t.Title, time.Now(), t.ProjectId, t.HitCount, t.Type, t.PostId)
 	if err != nil {
 		return
 	}

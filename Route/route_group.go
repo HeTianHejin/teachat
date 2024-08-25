@@ -180,7 +180,7 @@ func GroupDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//remove f_team from team_list，余下的是普通团队
+	//remove f_team from team_list，余下的是普通团队,移除，删除 重复的team
 	for i, team := range team_list {
 		if team.Id == f_team.Id {
 			team_list = append(team_list[:i], team_list[i+1:]...)
