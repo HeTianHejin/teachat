@@ -64,7 +64,6 @@
               : {{ .QuoteThread.Title }}
               {{ .QuoteThread.Body }} ...
             </span>
-
           </div>
         </div>
 
@@ -127,11 +126,11 @@
         <input type="hidden" name="uuid" id="uuid" value="{{ .PostBean.Post.Uuid }}" />
 
         <div class="form-group">
-          <select name="team_uuid" class="form-control" id="select" required>
-            <option value="{{ .SessUserDefaultTeam.Uuid }}">{{ .SessUserDefaultTeam.Name }}
+          <select name="team_id" class="form-control" id="select" required>
+            <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
             </option>
             {{ range .SessUserSurvivalTeams }}
-            <option value="{{ .Uuid }}">{{ .Name }}</option>
+            <option value="{{ .Id }}">{{ .Name }}</option>
             {{ end }}
           </select>
         </div>

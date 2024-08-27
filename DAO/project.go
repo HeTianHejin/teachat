@@ -18,7 +18,9 @@ type Project struct {
 	Class       int // 属性 0:  "追加待评草台",1:  "开放式茶台",2:  "封闭式茶台",10: "开放式草台",20: "封闭式草台",31: "已婉拒开台",32: "已婉拒封台",
 	EditAt      time.Time
 	Cover       string
-	PageData    PublicPData // 仅用于页面渲染，不保存到数据库
+	TeamId      int //作者团队id
+
+	PageData PublicPData // 仅用于页面渲染，不保存到数据库
 }
 
 // 封闭式茶台限定茶团（团队）集合
@@ -102,23 +104,23 @@ func (project *Project) EditAtDate() string {
 }
 
 // 用户在某个茶话会内创建新的茶台
-func (user *User) CreateProject(title, body string, objectiveId int, class int) (project Project, err error) {
-	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover"
+func (user *User) CreateProject(title, body string, objectiveId int, class, team_id int) (project Project, err error) {
+	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), title, body, objectiveId, user.Id, time.Now(), class, time.Now(), "default-pr-cover").
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover)
+	err = stmt.QueryRow(Random_UUID(), title, body, objectiveId, user.Id, time.Now(), class, time.Now(), "default-pr-cover", team_id).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId)
 	return
 }
 
 // 根据project的id,从projects表查询获取一个茶台对象信息
 // 返回一个茶台对象，如果查询失败，则返回err不为nil
 func GetProjectById(id int) (project Project, err error) {
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover FROM projects WHERE id = $1", id).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover)
+	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE id = $1", id).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId)
 	return
 }
 
@@ -126,16 +128,16 @@ func GetProjectById(id int) (project Project, err error) {
 // 返回一个茶台对象，如果查询失败，则返回err不为nil
 func GetProjectByUuid(uuid string) (project Project, err error) {
 	project = Project{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover FROM projects WHERE uuid = $1", uuid).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover)
+	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE uuid = $1", uuid).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId)
 	return
 }
 
 // 获取茶议所属的茶台
 func (t *Thread) Project() (project Project, err error) {
 	project = Project{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover FROM projects WHERE id = $1", t.ProjectId).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover)
+	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE id = $1", t.ProjectId).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId)
 	return
 }
 
@@ -170,13 +172,30 @@ func (project *Project) NumReplies() (count int) {
 
 // 获取某个ID的茶话会下全部茶台
 func (objective *Objective) Projects() (projects []Project, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover FROM projects WHERE objective_id = $1", objective.Id)
+	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE objective_id = $1", objective.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		project := Project{}
-		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover); err != nil {
+		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId); err != nil {
+			return
+		}
+		projects = append(projects, project)
+	}
+	rows.Close()
+	return
+}
+
+// objective.GetPublicProjects() fetch project.Class=1 or 2,return projects
+func (objective *Objective) GetPublicProjects() (projects []Project, err error) {
+	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE objective_id = $1 AND class IN (1, 2)", objective.Id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		project := Project{}
+		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId); err != nil {
 			return
 		}
 		projects = append(projects, project)
@@ -186,7 +205,7 @@ func (objective *Objective) Projects() (projects []Project, err error) {
 }
 
 // 保存封闭式茶台的邀请茶团号，返回 error
-func (project_invited_teams *ProjectInvitedTeam) Save() (err error) {
+func (project_invited_teams *ProjectInvitedTeam) Create() (err error) {
 	// 茶团号是否已存在
 	var count int
 	err = Db.QueryRow("SELECT COUNT(*) FROM project_invited_teams WHERE project_id = $1 AND team_id = $2", project_invited_teams.ProjectId, project_invited_teams.TeamId).Scan(&count)

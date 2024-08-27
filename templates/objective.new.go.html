@@ -30,22 +30,32 @@
       </div>
 
       <div class="form-group">
-        <label for="name">茶话会目标（例如：让天下没有难喝的茶）（2-24字）</label>
+        <label for="name">茶话会目标（例如：让所有的人都喝上香茶）（2-24字）</label>
         <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="42" required />
       </div>
 
       <div class="form-group">
         <label for="description">描述您的茶话会愿景（18-456字，需要友邻盲评通过）</label>
-        <textarea class="form-control" name="description" id="description" rows="3" minlength="17" maxlength="567"
+        <textarea class="form-control" name="description" id="description" rows="6" minlength="17" maxlength="567"
           required></textarea>
       </div>
 
       <div class="form-group">
-        <label for="invite-team-ids">封闭式茶话会请指定邀请的茶团号，以逗号分隔。</label>
-        <input type="text" class="form-control" name="invite-team-ids" id="invite-team-ids" />
+        
+        <input type="text" class="form-control" name="invite-team-ids" id="invite-team-ids" placeholder="封闭式茶话会,务必请指定邀请的茶团号，以逗号分隔。开放式请留空。" />
       </div>
 
-   
+      <div class="form-group">
+        
+          <select name="team_id" class="form-control" id="team_id" required>
+            <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
+            </option>
+            {{ range .SessUserSurvivalTeams }}
+            <option value="{{ .Id }}">{{ .Name }}</option>
+            {{ end }}
+          </select>
+        
+      </div>
 
     <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
       <button type="submit" class="btn btn-default">提交</button>

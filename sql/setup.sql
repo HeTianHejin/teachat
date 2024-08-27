@@ -269,7 +269,8 @@ create table objectives (
   class           integer,
   edit_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   star_count      integer default 0,
-  cover           varchar(64)
+  cover           varchar(64),
+  team_id         integer not null default 2
 );
 
 create table projects (
@@ -282,34 +283,37 @@ create table projects (
   created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   class           integer,
   edit_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  cover           varchar(64)
+  cover           varchar(64),
+  team_id         integer not null default 2
 );
 
 create table draft_threads (
-  id            serial primary key,
-  user_id       integer references users(id),
-  project_id    integer references projects(id),
-  title         varchar(64),
-  body          text,
-  class         integer default 0,
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  type          integer default 0,
-  post_id       integer default 0
+  id                     serial primary key,
+  user_id                integer references users(id),
+  project_id             integer references projects(id),
+  title                  varchar(64),
+  body                   text,
+  class                  integer default 0,
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  type                   integer default 0,
+  post_id                integer default 0,
+  team_id                integer not null default 2
 );
 
 create table threads (
-  id            serial primary key,
-  uuid          varchar(64) not null unique,
-  body          text,
-  user_id       integer references users(id),
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  class         integer default 10,
-  title         varchar(64),
-  edit_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  project_id    integer references projects(id),
-  hit_count     integer default 0,
-  type          integer default 0,
-  post_id       integer default 0
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  body                   text,
+  user_id                integer references users(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  class                  integer default 10,
+  title                  varchar(64),
+  edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  project_id             integer references projects(id),
+  hit_count              integer default 0,
+  type                   integer default 0,
+  post_id                integer default 0,
+  team_id                integer not null default 2
 );
 
 create table reads (
@@ -321,12 +325,13 @@ create table reads (
 
 create table draft_posts (
    id            serial primary key,
-  body          text,
-  user_id       integer references users(id),
-  thread_id     integer references threads(id),
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  attitude      boolean,
-  class         integer default 0
+  body           text,
+  user_id        integer references users(id),
+  thread_id      integer references threads(id),
+  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  attitude       boolean,
+  class          integer default 0,
+  team_id        integer not null default 2
 );
 
 create table posts (
@@ -338,7 +343,8 @@ create table posts (
   created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   edit_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   attitude      boolean,
-  score         integer default 60
+  score         integer default 60,
+  team_id       integer not null default 2
 );
 
 create table administrators (

@@ -19,9 +19,115 @@ type Objective struct {
 	UserId    int
 	Class     int //属性 0:  "修改待评草围",1:  "开放式茶话会",2:  "封闭式茶话会",10: "开放式草围",20: "封闭式草围",31: "友邻婉拒开围",32: "友邻婉拒闭围",
 	EditAt    time.Time
-	StarCount int         //星标（被收藏）次数
-	Cover     string      // 封面
-	PageData  PublicPData // 仅用于页面渲染，不保存到数据库
+	StarCount int    //星标（被收藏）次数
+	Cover     string // 封面
+	TeamId    int    //作者团队id
+
+	PageData PublicPData // 仅用于页面渲染，不保存到数据库
+}
+
+// objective.Create() Create a new record based on the given objective struct{},return a new objective and error
+func (objective *Objective) Create() (err error) {
+	statement := "INSERT INTO objectives (uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id,uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), objective.Title, objective.Body, objective.CreatedAt, objective.UserId, objective.Class, objective.EditAt, objective.StarCount, objective.Cover, objective.TeamId).Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover, &objective.TeamId)
+	return
+}
+
+// objective.Update() Update the given objective struct{} ,add team_id!
+func (objective *Objective) Update() (err error) {
+	statement := "UPDATE objectives SET title = $1, body = $2, edit_at = $3, star_count = $4, cover = $5, team_id = $6 WHERE id = $7"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(objective.Title, objective.Body, objective.EditAt, objective.StarCount, objective.Cover, objective.TeamId, objective.Id)
+	return
+}
+
+// objective.Delete() Delete the given objective struct{}
+func (objective *Objective) Delete() (err error) {
+	statement := "DELETE FROM objectives WHERE id = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(objective.Id)
+	return
+}
+
+// objective.GetByUuid() Get the given objective by uuid
+func (objective *Objective) GetByUuid() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives WHERE uuid = $1", objective.Uuid).
+		Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover, &objective.TeamId)
+	return
+}
+
+// objective.GetByUuid() Get the given objective by id
+func (objective *Objective) GetById() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives WHERE id = $1", objective.Id).
+		Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover, &objective.TeamId)
+	return
+}
+
+// objective.GetByUserId() Get the given objective by user_id
+func (objective *Objective) GetByUserId() (objectives []Objective, err error) {
+	rows, err := Db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives WHERE user_id = $1", objective.UserId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj Objective
+		err = rows.Scan(&obj.Id, &obj.Uuid, &obj.Title, &obj.Body, &obj.CreatedAt, &obj.UserId, &obj.Class, &obj.EditAt, &obj.StarCount, &obj.Cover, &obj.TeamId)
+		if err != nil {
+			return
+		}
+		objectives = append(objectives, obj)
+	}
+	return
+}
+
+// objective.GetByTeamId() Get the given objective by team_id
+func GetObjectiveByTeamId(team_id int) (objectives []Objective, err error) {
+	rows, err := Db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives WHERE team_id = $1", team_id)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj Objective
+		err = rows.Scan(&obj.Id, &obj.Uuid, &obj.Title, &obj.Body, &obj.CreatedAt, &obj.UserId, &obj.Class, &obj.EditAt, &obj.StarCount, &obj.Cover, &obj.TeamId)
+		if err != nil {
+			return
+		}
+		objectives = append(objectives, obj)
+	}
+	return
+}
+
+// objective.GetByTitle() Get the given objective by title
+func (objective *Objective) GetByTitle() (objectives []Objective, err error) {
+	rows, err := Db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives WHERE title = $1", objective.Title)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var obj Objective
+		err = rows.Scan(&obj.Id, &obj.Uuid, &obj.Title, &obj.Body, &obj.CreatedAt, &obj.UserId, &obj.Class, &obj.EditAt, &obj.StarCount, &obj.Cover, &obj.TeamId)
+		if err != nil {
+			return
+		}
+		objectives = append(objectives, obj)
+	}
+	return
 }
 
 // 把数字等级属性转换为字符串以显示
@@ -44,20 +150,6 @@ type ObjectiveInvitedTeam struct {
 }
 
 // 记录某个用户打开茶话会广场页面的次数，以决定展示那些19个未展示过的茶话会用户
-type ObjectiveSquareAccessCount struct {
-	Id        int
-	UserId    int
-	Count     int
-	CreatedAt time.Time
-}
-
-// 记录某个用户访问某个茶话会的次数和访问时间
-type ObjectiveAccess struct {
-	Id          int
-	ObjectiveId int
-	UserId      int
-	CreatedAt   time.Time
-}
 
 // IsEdited()通过比较Objective.CreatedAt和EditAt时间是否相差一秒钟以上，来判断是否编辑过内容为true，返回 bool
 func (objective *Objective) IsEdited() bool {
@@ -65,7 +157,7 @@ func (objective *Objective) IsEdited() bool {
 }
 
 // 创建封闭式茶话会的许可茶团号
-func (obLicenseTeam *ObjectiveInvitedTeam) Save() (err error) {
+func (obLicenseTeam *ObjectiveInvitedTeam) Create() (err error) {
 	// 茶团号是否已存在
 	var count int
 	err = Db.QueryRow("SELECT COUNT(*) FROM objective_invited_teams WHERE objective_id = $1 AND team_id = $2", obLicenseTeam.ObjectiveId, obLicenseTeam.TeamId).Scan(&count)
@@ -96,20 +188,21 @@ func (obLicenseTeam *ObjectiveInvitedTeam) Delete() (err error) {
 	return
 }
 
-// 获取属性为1或者2的茶话会limit个，返回[]Objective,
+// Get class=1 or class=2,limit ，return []Objective,add team_id
 func GetPublicObjectives(limit int) (objectives []Objective, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body created_at, user_id, class, edit_at, star_count, cover FROM objectives WHERE class = 1 OR class=2 ORDER BY created_at DESC LIMIT $1", limit)
+	rows, err := Db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives WHERE class = 1 OR class = 2 ORDER BY created_at DESC LIMIT $1", limit)
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
-		objective := Objective{}
-		if err = rows.Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover); err != nil {
+		var obj Objective
+		err = rows.Scan(&obj.Id, &obj.Uuid, &obj.Title, &obj.Body, &obj.CreatedAt, &obj.UserId, &obj.Class, &obj.EditAt, &obj.StarCount, &obj.Cover, &obj.TeamId)
+		if err != nil {
 			return
 		}
-		objectives = append(objectives, objective)
+		objectives = append(objectives, obj)
 	}
-	rows.Close()
 	return
 }
 
@@ -118,40 +211,10 @@ func (objective *Objective) GetStatus() string {
 	return ObStatus[objective.Class]
 }
 
-// create a new objective
-// 创建一个新茶话会
-func (user *User) CreateObjective(title, body, cover string, class int) (objective Objective, err error) {
-	statement := "INSERT INTO objectives (uuid, title, body, created_at, user_id, class, edit_at, star_count, cover) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	// use QueryRow to return a row and scan the returned id into the objective struct
-	err = stmt.QueryRow(Random_UUID(), title, body, time.Now(), user.Id, class, time.Now(), 0, cover).Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover)
-	return
-}
-
 // 获取现有的茶话会总数
 func GetObjectiveCount() (count int) {
 	row := Db.QueryRow("SELECT COUNT(*) FROM objectives")
 	row.Scan(&count)
-	return
-}
-
-// 通过UUID获取一个愿景（茶话会）
-func GetObjectiveByUuid(uuid string) (objective Objective, err error) {
-	objective = Objective{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover FROM objectives WHERE uuid = $1", uuid).
-		Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover)
-	return
-}
-
-// 通过id获取一个茶话会objective
-func GetObjectiveById(id int) (objective Objective, err error) {
-	objective = Objective{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover FROM objectives WHERE id = $1", id).
-		Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover)
 	return
 }
 
@@ -188,9 +251,7 @@ func (post *Post) Objective() (objective Objective, err error) {
 // 获取一个茶台的上级目录茶话会
 // 根据project的objectiveId,从objectives表查询获取一个茶话会对象信息
 func (project *Project) Objective() (objective Objective, err error) {
-	objective = Objective{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover FROM objectives WHERE id = $1", project.ObjectiveId).
-		Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover)
+	_ = Db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives WHERE id = $1", project.ObjectiveId).Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover, &objective.TeamId)
 	return
 }
 
@@ -223,26 +284,6 @@ func (objective *Objective) NumReplies() (count int) {
 	return
 }
 
-// 测试时使用!
-// GetAllObjectivesForTest() 获取全部茶话会（愿景），返回 []Objective。
-func GetAllObjectivesForTest() (objectives []Objective, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover FROM objectives ORDER BY created_at DESC")
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		objective := Objective{}
-		if err = rows.Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover); err != nil {
-			return
-		}
-		objectives = append(objectives, objective)
-	}
-	rows.Close()
-	return
-}
-
-// GetObjectiveById() 通过ObjectiveId获取一个愿景（茶话会）
-
 // GetObjectiveIdByUserId（） 通过objectives表中User_id,获取愿景Id，排序的条件先是star_count，然后是created_at
 func GetObjectiveIdByUserId(userId int) (objectiveId int) {
 	_ = Db.QueryRow("SELECT id FROM objectives WHERE user_id = $1 ORDER BY star_count DESC, created_at DESC", userId).Scan(&objectiveId)
@@ -257,13 +298,13 @@ func GetNumObjectiveAuthor() (count int) {
 
 // GetRandomObjectives() 随机获取limit个用户的objective，过滤重复的user_id，,返回 []Objective, 限量limit个
 func GetRandomObjectives(limit int) (objectives []Objective, err error) {
-	rows, err := Db.Query("SELECT DISTINCT ON(user_id) id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover FROM objectives ORDER BY user_id, random() LIMIT $1", limit)
+	rows, err := Db.Query("SELECT DISTINCT ON(user_id) id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives ORDER BY user_id, random() LIMIT $1", limit)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		objective := Objective{}
-		if err = rows.Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover); err != nil {
+		if err = rows.Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover, &objective.TeamId); err != nil {
 			return
 		}
 		objectives = append(objectives, objective)

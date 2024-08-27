@@ -15,6 +15,8 @@ type Post struct {
 	EditAt    time.Time
 	Attitude  bool
 	Score     int
+	TeamId    int //作者团队id
+
 	//仅页面渲染用
 	PageData PublicPData
 }
@@ -37,6 +39,7 @@ type DraftPost struct {
 	CreatedAt time.Time
 	Attitude  bool
 	Class     int //0：原始草稿，1:已通过（友邻盲评），2:（友邻盲评）已拒绝
+	TeamId    int //作者团队id
 }
 
 var DraftPostStatus = map[int]string{
@@ -76,31 +79,31 @@ func (post *Post) UpdateBody(body string) (err error) {
 
 // user create a new post to a thread
 // 用户初次发表跟帖（对主贴主张进行表态）
-func (user *User) CreatePost(thread_id int, attitude bool, body string) (post Post, err error) {
-	statement := "INSERT INTO posts (uuid, body, user_id, thread_id, created_at, edit_at, attitude) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score"
+func (user *User) CreatePost(thread_id, team_id int, attitude bool, body string) (post Post, err error) {
+	statement := "INSERT INTO posts (uuid, body, user_id, thread_id, created_at, edit_at, attitude, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score, team_id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 	// use QueryRow to return a row and scan the returned id into the post struct
-	err = stmt.QueryRow(Random_UUID(), body, user.Id, thread_id, time.Now(), time.Now(), attitude).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score)
+	err = stmt.QueryRow(Random_UUID(), body, user.Id, thread_id, time.Now(), time.Now(), attitude, team_id).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score, &post.TeamId)
 	return
 }
 
 // GetPostByUuid() gets a post by the UUID
 func GetPostByUuid(uuid string) (post Post, err error) {
 	post = Post{}
-	err = Db.QueryRow("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score FROM posts WHERE uuid = $1", uuid).
-		Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score)
+	err = Db.QueryRow("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score, team_id FROM posts WHERE uuid = $1", uuid).
+		Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score, &post.TeamId)
 	return
 }
 
 // GetPostbyId() gets a post by the id
 func GetPostbyId(id int) (post Post, err error) {
 	post = Post{}
-	err = Db.QueryRow("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score FROM posts WHERE id = $1", id).
-		Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score)
+	err = Db.QueryRow("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score, team_id FROM posts WHERE id = $1", id).
+		Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score, &post.TeamId)
 	return
 }
 
@@ -120,13 +123,13 @@ func (post *Post) UpdateScore(score int) (err error) {
 // 获取某个thread的全部posts,按照 .score DESC 排序
 func (t *Thread) Posts() (posts []Post, err error) {
 	posts = []Post{}
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score FROM posts WHERE thread_id = $1 ORDER BY score DESC", t.Id)
+	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score, team_id FROM posts WHERE thread_id = $1 ORDER BY score DESC", t.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		post := Post{}
-		if err = rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score); err != nil {
+		if err = rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score, &post.TeamId); err != nil {
 			return
 		}
 		posts = append(posts, post)
@@ -196,34 +199,34 @@ func (post *Post) NumReplies() (count int) {
 }
 
 // Create() 创建一个新的DraftPost草稿
-func (user *User) CreateDraftPost(thread_id int, attitude bool, body string) (post DraftPost, err error) {
-	statement := "INSERT INTO draft_posts (user_id, thread_id, body, created_at, attitude, class) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, user_id, thread_id, body, created_at, attitude, class"
+func (user *User) CreateDraftPost(thread_id, team_id int, attitude bool, body string) (post DraftPost, err error) {
+	statement := "INSERT INTO draft_posts (user_id, thread_id, body, created_at, attitude, class, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, user_id, thread_id, body, created_at, attitude, class, team_id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(user.Id, thread_id, body, time.Now(), attitude, 0).Scan(&post.Id, &post.UserId, &post.ThreadId, &post.Body, &post.CreatedAt, &post.Attitude, &post.Class)
+	err = stmt.QueryRow(user.Id, thread_id, body, time.Now(), attitude, 0, team_id).Scan(&post.Id, &post.UserId, &post.ThreadId, &post.Body, &post.CreatedAt, &post.Attitude, &post.Class, &post.TeamId)
 	return
 }
 
 // Get() 读取一个DraftPost品味（跟帖）稿
 func GetDraftPost(id int) (post DraftPost, err error) {
 	post = DraftPost{}
-	err = Db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class FROM draft_posts WHERE id = $1", id).
-		Scan(&post.Id, &post.UserId, &post.ThreadId, &post.Body, &post.CreatedAt, &post.Attitude, &post.Class)
+	err = Db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id FROM draft_posts WHERE id = $1", id).
+		Scan(&post.Id, &post.UserId, &post.ThreadId, &post.Body, &post.CreatedAt, &post.Attitude, &post.Class, &post.TeamId)
 	return
 }
 
 // GetDraftPostbyUserId() 读取��个用户的全部DraftPost品��（����）稿
 func GetDraftPostbyUserId(user_id int) (posts []DraftPost, err error) {
-	rows, err := Db.Query("SELECT id, user_id, thread_id, body, created_at, attitude, class FROM draft_posts WHERE user_id = $1", user_id)
+	rows, err := Db.Query("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id FROM draft_posts WHERE user_id = $1", user_id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		post := DraftPost{}
-		if err = rows.Scan(&post.Id, &post.UserId, &post.ThreadId, &post.Body, &post.CreatedAt, &post.Attitude, &post.Class); err != nil {
+		if err = rows.Scan(&post.Id, &post.UserId, &post.ThreadId, &post.Body, &post.CreatedAt, &post.Attitude, &post.Class, &post.TeamId); err != nil {
 			return
 		}
 		posts = append(posts, post)

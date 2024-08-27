@@ -83,8 +83,16 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	u, _ := sess.User()
-	invitation_id, _ := strconv.Atoi(r.PostFormValue("invitation_id"))
-	user_id, _ := strconv.Atoi(r.PostFormValue("user_id"))
+	invitation_id, err := strconv.Atoi(r.PostFormValue("invitation_id"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		return
+	}
+	user_id, err := strconv.Atoi(r.PostFormValue("user_id"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		return
+	}
 	//检查一下提交的用户和会话用户Id是否一致
 	if user_id != u.Id {
 		util.Warning(err, u.Email, " Cannot get session")
@@ -103,7 +111,11 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，这个邀请函已经答复或者已过期。")
 		return
 	}
-	reply, _ := strconv.Atoi(r.PostFormValue("reply"))
+	reply, err := strconv.Atoi(r.PostFormValue("reply"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		return
+	}
 	reply_word := r.PostFormValue("invitation_reply")
 	//检查一下用户提交的string，即reply_word是否不为空，中文长度小于239字符之间
 	if reply_word == "" {
@@ -232,7 +244,11 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 	i_email := r.PostFormValue("invite_email")
 	i_word := r.PostFormValue("invite_word")
 	role := r.PostFormValue("role")
-	team_id, _ := strconv.Atoi(r.PostFormValue("team_id"))
+	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		return
+	}
 	//检查用户是否自己邀请自己？也许是可以的，例如观音菩萨也可以加入自己创建的西天取经茶团喝茶？？
 	/* if u.Email == i_email {
 		util.Pop_message(w, r, "您好，请不要邀请自己加入茶团哈。")

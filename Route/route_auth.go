@@ -133,7 +133,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			// 检查用户角色是否允许登录
 			// if user.Role == "traveller" || user.Role == "pilot" || user.Role == "captain" || user.Role == "UFO" {
 			if user.Password == data.Encrypt(r.PostFormValue("password")) {
-				util.Info(user.Email, "密码匹配成功")
+				//util.Info(user.Email, "密码匹配成功")
 
 				//创建新的会话
 				session, err := user.CreateSession()
@@ -153,7 +153,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				//密码和用户名不匹配
-				util.Warning(user.Email, "试图空降茶棚失败")
+				util.Warning(user.Email, "密码和用户名不匹配。")
 				Report(w, r, "无所事事的茶博士嘀咕说，请确认密码是否正确，键盘大小写灯是否有电。")
 				return
 			}
@@ -191,12 +191,13 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 			err = sess.Delete()
 			if err != nil {
 				util.Danger(err, sess.Email, "Failed to delete session")
-			} else {
-				//会话清除后的提示信息
-				util.Info(sess.Email, "Session deleted")
 			}
+			// else {
+			//会话清除后的提示信息
+			//util.Info(sess.Email, "Session deleted")
+			//}
 		} else {
-			util.Danger(err, " 登出时会话资料查询失败")
+			util.Danger(err, sess.Email, " 登出时会话资料查询失败")
 		}
 
 	}

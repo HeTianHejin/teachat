@@ -524,7 +524,12 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 
 	//一次管理一个核心角色，根据提交的teamMember.id来确定
 	//这个用户是否在这个茶团中？角色是否正确？
-	member_id, _ := strconv.Atoi(r.FormValue("member_id"))
+	member_id, err := strconv.Atoi(r.FormValue("member_id"))
+	if err != nil {
+		util.Warning(err, " Cannot convert member_id to int")
+		Report(w, r, "茶博士失魂鱼，未能读取新泡茶议资料，请稍后再试。")
+		return
+	}
 	role := r.FormValue("role")
 	if role != "CTO" && role != "CMO" && role != "CFO" {
 		Report(w, r, "您好，请选择正确的角色。")

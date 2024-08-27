@@ -14,6 +14,9 @@
 </ol>
 {{ end }}
 
+
+
+
    {{/* 这是某个茶话会的详情页 */}}
 
 <ul class="media-list">
@@ -53,9 +56,9 @@
           </div>
         </div>
         <div class="panel-body">
-        
+        <p style="white-space: pre-wrap;">
           {{ .ObjectiveBean.Objective.Body }}
-
+        </p>
         </div>
         <div class="panel-footer">
           {{/* 这是面板注脚 */}}
@@ -91,7 +94,7 @@
         <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
         {{ else }}
         <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-        茶博士：封闭式茶话会需要围主邀请才能开新台噢。
+        茶博士：这是封闭式茶话会,需要围主邀请的茶团成员，才能开新台。
         {{ end }}
       </div>
 

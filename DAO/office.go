@@ -113,8 +113,9 @@ func (a *AcceptObject) Get() (err error) {
 func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 	switch ao.ObjectType {
 	case 1:
-		ob, err := GetObjectiveById(ao.ObjectId)
-		if err != nil {
+		ob := Objective{
+			Id: ao.ObjectId}
+		if err = ob.GetById(); err != nil {
 			return nil, err
 		}
 		return ob, err

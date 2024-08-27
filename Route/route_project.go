@@ -45,8 +45,25 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	//获取用户提交的表单数据
 	title := r.PostFormValue("name")
 	body := r.PostFormValue("description")
-	ouid := r.PostFormValue("uuid")
-	clas, _ := strconv.Atoi(r.PostFormValue("class"))
+	uuid := r.PostFormValue("uuid")
+	class, err := strconv.Atoi(r.PostFormValue("class"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		return
+	}
+	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		return
+	}
+
+	// check the given team_id is valid
+	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, u.Id)
+	if err != nil {
+		util.Info(err, " Cannot get team member")
+		Report(w, r, "您好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")
+		return
+	}
 
 	// 检测一下name是否>2中文字，desc是否在17-456中文字，
 	// 如果不是，返回错误信息
@@ -62,23 +79,19 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//获取目标茶话会
-	obje, err := data.GetObjectiveByUuid(ouid)
-	if err != nil {
+	ob := data.Objective{
+		Uuid: uuid}
+	if err = ob.GetByUuid(); err != nil {
 		util.Info(err, " Cannot get objective")
 		Report(w, r, "您好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
+
 	var proj data.Project
-	// 	//检测一下用户是否有相同名字的茶台
-	// 	if data.HasProjectName(n) {
-	// 		util.Info(err, " Project name is already used")
-	// 		util.Pop_message(w, r, "您好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
-	// 		return
-	// 	}
 
 	// 根据茶话会属性判断
 	// 检查一下该茶话会是否草围（待盲评审核状态）
-	switch obje.Class {
+	switch ob.Class {
 	case 10, 20:
 		// 该茶话会是草围,尚未启用，不能新开茶台
 		Report(w, r, "您好，这个茶话会尚未启用。")
@@ -87,15 +100,15 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	case 1:
 		// 该茶话会是开放式茶话会，可以新开茶台
 		// 检查提交的class值是否有效，必须为10或者20
-		if clas == 10 {
+		if class == 10 {
 			// 创建开放式草台
-			proj, err = u.CreateProject(title, body, obje.Id, clas)
+			proj, err = u.CreateProject(title, body, ob.Id, class, team_id)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
 				Report(w, r, "您好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
-		} else if clas == 20 {
+		} else if class == 20 {
 			tIds_str := r.PostFormValue("invite-team-ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !VerifyTeamIdListFormat(tIds_str) {
@@ -118,7 +131,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			}
 
 			//创建封闭式草台
-			proj, err = u.CreateProject(title, body, obje.Id, clas)
+			proj, err = u.CreateProject(title, body, ob.Id, class, team_id)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
 				Report(w, r, "您好，斜阳寒草带重门，苔翠盈铺雨后盆。")
@@ -130,7 +143,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 					ProjectId: proj.Id,
 					TeamId:    team_id,
 				}
-				if err = poInviTeams.Save(); err != nil {
+				if err = poInviTeams.Create(); err != nil {
 					util.Warning(err, " Cannot save invited teams")
 					Report(w, r, "您好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
@@ -144,7 +157,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	case 2:
 		// 封闭式茶话会
 		// 检查用户是否可以在此茶话会下新开茶台
-		ok := isUserInvitedByObjective(obje, u)
+		ok := isUserInvitedByObjective(ob, u)
 		if !ok {
 			// 当前用户不是茶话会邀请团队成员，不能新开茶台
 			util.Warning(err, " Cannot create project")
@@ -152,11 +165,11 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		if clas == 10 {
+		if class == 10 {
 			Report(w, r, "您好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
 			return
 		}
-		if clas == 20 {
+		if class == 20 {
 			tIds_str := r.PostFormValue("invite-team-ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !VerifyTeamIdListFormat(tIds_str) {
@@ -179,7 +192,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			}
 
 			//创建茶台
-			proj, err := u.CreateProject(title, body, obje.Id, clas)
+			proj, err := u.CreateProject(title, body, ob.Id, class, team_id)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
 				Report(w, r, "您好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
@@ -191,7 +204,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 					ProjectId: proj.Id,
 					TeamId:    team_id,
 				}
-				if err = poInviTeams.Save(); err != nil {
+				if err = poInviTeams.Create(); err != nil {
 					util.Warning(err, " Cannot save invited teams")
 					Report(w, r, "您好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
@@ -246,40 +259,53 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//获取用户资料
-	u, _ := s.User()
+
 	// 读取提交的数据，确定是哪一个茶话会需求新开茶台
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
-	var obD data.ObjectiveDetail
+	var oD data.ObjectiveDetail
 	// 获取指定的目标茶话会
-	ob, err := data.GetObjectiveByUuid(uuid)
-	if err != nil {
+	o := data.Objective{
+		Uuid: uuid}
+	if err = o.GetByUuid(); err != nil {
 		util.Danger(err, " Cannot read project")
 		Report(w, r, "您好，茶博士失魂鱼，未能找到茶台，请稍后再试。")
 		return
 	}
+	//根据会话从数据库中读取当前用户的信息
+	s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(s)
+	if err != nil {
+		Report(w, r, "您好，�����������了，��没有��水未能加载��话会页面，请稍后再试。")
+		return
+	}
+	// 填写页面数据
 	// 填写页面会话用户资料
-	obD.SessUser = u
+	oD.SessUser = s_u
+	oD.SessUserDefaultTeam = s_default_team
+	oD.SessUserSurvivalTeams = s_survival_teams
+	oD.ObjectiveBean, err = GetObjectiveBean(o)
+	if err != nil {
+		Report(w, r, "您好，������失������，未能找到��台，请稍后再试。")
+		return
+	}
 
 	// 检查当前用户是否可以在此茶话会下新开茶台
 	// 首先检查茶话会属性，class=1开放式，class=2封闭式，
 	// 如果是开放式，则可以在茶话会下新开茶台
 	// 如果是封闭式，则需要看围主指定了那些茶团成员可以开新茶台，如果围主没有指定，则不能新开茶台
-	switch ob.Class {
+	switch o.Class {
 	case 1:
 		// 开放式茶话会，可以在茶话会下新开茶台
 		// 向用户返回添加指定的茶台的表单页面
-		GenerateHTML(w, &obD.ObjectiveBean, "layout", "navbar.private", "project.new")
+		GenerateHTML(w, &oD, "layout", "navbar.private", "project.new")
 		return
 	case 2:
 		// 封闭式茶话会，需要看围主指定了那些茶团成员可以开新茶台，如果围主没有指定，则不能新开茶台
 		//检查team_ids是否为空
 		// 围主没有指定茶团成员，不能新开茶台
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		ok := isUserInvitedByObjective(ob, u)
-		if ok {
-			GenerateHTML(w, &obD, "layout", "navbar.private", "project.new")
+		if isUserInvitedByObjective(o, s_u) {
+			GenerateHTML(w, &oD, "layout", "navbar.private", "project.new")
 			return
 		}
 
@@ -310,13 +336,25 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
+	//检查project.Class=1 or 2,否则属于未经 友邻盲评 通过的草稿，不允许查看
+	if pD.Project.Class != 1 && pD.Project.Class != 2 {
+		Report(w, r, "您好，荡昏寐，饮之以茶。请稍后再试。")
+		return
+	}
+
 	pD.Master, err = pD.Project.User()
 	if err != nil {
 		util.Warning(err, " Cannot read project user")
 		Report(w, r, "您好，霁月难逢，彩云易散。请稍后再试。")
 		return
 	}
-	pD.MasterTeam, _ = pD.Master.GetLastDefaultTeam()
+	pD.MasterTeam, err = data.GetTeamById(pD.Project.TeamId)
+	if err != nil {
+		util.Warning(err, " Cannot read project team")
+		Report(w, r, "您好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
+		return
+	}
+
 	// 准备页面数据
 	if pD.Project.Class == 1 {
 		pD.Open = true
@@ -332,7 +370,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.QuoteObjective, err = pD.Project.Objective()
 	if err != nil {
 		util.Warning(err, " Cannot read objective")
-		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
+		Report(w, r, "您好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。")
 		return
 	}
 	// 截短此引用的茶围内容以方便展示
@@ -343,7 +381,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
 		return
 	}
-	pD.QuoteObjectiveAuthorTeam, err = pD.QuoteObjectiveAuthor.GetLastDefaultTeam()
+	pD.QuoteObjectiveAuthorTeam, err = data.GetTeamById(pD.QuoteObjective.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot read objective author team")
 		Report(w, r, "您好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
@@ -384,6 +422,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		// 填写页面数据
 		pD.Project.PageData.IsAuthor = false
 		pD.IsInput = false
+		pD.IsGuest = true
 		pD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
@@ -392,10 +431,11 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		GenerateHTML(w, &pD, "layout", "navbar.public", "project.detail")
 		return
 	}
+
 	// 已登陆用户
-	pD.IsInput = true
+	pD.IsGuest = false
 	//从会话查获当前浏览用户资料荚
-	s_u, s_default_team, s_survival_teams, err := FetchUserData(sess)
+	s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(sess)
 	if err != nil {
 		util.Warning(err, " Cannot get user-related data from session")
 		Report(w, r, "您好，茶博士失魂鱼，有眼不识泰山。")
@@ -404,6 +444,21 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.SessUser = s_u
 	pD.SessUserDefaultTeam = s_default_team
 	pD.SessUserSurvivalTeams = s_survival_teams
+
+	//如果这是class=2封闭式茶台，需要检查当前浏览用户是否可以创建新茶议
+	if pD.Project.Class == 2 {
+		// ���查当前用户是否是��话会��请��队成员
+		if isUserInvitedByProject(pD.Project, s_u) {
+			// 当前用户是��话会��请��队成员，可以新开茶议
+			pD.IsInput = true
+		} else {
+			// 当前用户不是��话会��请��队成员，不能新开茶议
+			pD.IsInput = false
+		}
+	} else {
+		// 开放式茶议，任何人都可以新开茶议
+		pD.IsInput = true
+	}
 
 	// 检查是否台主？
 	pD.Project.PageData.IsAuthor = false

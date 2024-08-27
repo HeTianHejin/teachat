@@ -465,11 +465,11 @@
 
           <div class="form-group">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <select name="team_uuid" class="form-control" id="select" required>
-                <option value="{{ .SessUserDefaultTeam.Uuid }}">{{ .SessUserDefaultTeam.Name }}
+              <select name="team_id" class="form-control" id="select" required>
+                <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
                 </option>
                 {{ range .SessUserSurvivalTeams }}
-                <option value="{{ .Uuid }}">{{ .Name }}</option>
+                <option value="{{ .Id }}">{{ .Name }}</option>
                 {{ end }}
               </select>
             </div>

@@ -86,7 +86,7 @@ func main() {
 	mux.HandleFunc("/v1/thread/plus", route.PlusThread)
 
 	//定义在 route_post.go
-	mux.HandleFunc("/v1/post/draft", route.NewPost)
+	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
 	mux.HandleFunc("/v1/post/accept", route.AcceptDraftPost)
 	mux.HandleFunc("/v1/post/edit", route.HandleEditPost)
 	mux.HandleFunc("/v1/post/detail", route.PostDetail)

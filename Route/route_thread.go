@@ -105,7 +105,12 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取表单数据
-	ty, _ := strconv.Atoi(r.PostFormValue("type"))
+	ty, err := strconv.Atoi(r.PostFormValue("type"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		Report(w, r, "您好，此地无银三百两，请确认后再试。")
+		return
+	}
 	// 检查ty值是否 0、1、2
 	switch ty {
 	case 0, 1, 2:
@@ -117,7 +122,25 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	}
 	body := r.PostFormValue("topic")
 	title := r.PostFormValue("title")
-	project_id, _ := strconv.Atoi(r.PostFormValue("project_id"))
+	project_id, err := strconv.Atoi(r.PostFormValue("project_id"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		Report(w, r, "您好，此地无银三百两，请确认后再试。")
+		return
+	}
+	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		Report(w, r, "您好，此地无银三百两，请确认后再试。")
+		return
+	}
+	// check submit team_id is valid
+	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, sUser.Id)
+	if err != nil {
+		util.Warning(err, " Cannot get team member by team id and user id")
+		Report(w, r, "您好，此地无银三百两，请确认后再试。")
+		return
+	}
 
 	//检查该茶台是否存在，而且状态不是草台状态
 	proj, err := data.GetProjectById(project_id)
@@ -164,6 +187,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 			Body:      body,
 			Class:     proj.Class,
 			Type:      ty,
+			TeamId:    team_id,
 		}
 		if err = draft_thread.Create(); err != nil {
 			util.Warning(err, " Cannot create thread draft")
@@ -237,7 +261,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "您好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
 			return
 		}
-		tD.QuotePostAuthorTeam, err = tD.QuotePostAuthor.GetLastDefaultTeam()
+		tD.QuotePostAuthorTeam, err = data.GetTeamById(tD.QuotePost.TeamId)
 		if err != nil {
 			util.Warning(err, " Cannot read post author team")
 			Report(w, r, "您好，花谢花飞飞满天，红消香断有谁怜？未能读取品味资料。")
@@ -260,7 +284,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "您好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
 			return
 		}
-		tD.QuoteProjectAuthorTeam, err = tD.QuoteProjectAuthor.GetLastDefaultTeam()
+		tD.QuoteProjectAuthorTeam, err = data.GetTeamById(tD.QuoteProject.TeamId)
 		if err != nil {
 			util.Warning(err, " Cannot read project author team")
 			Report(w, r, "您好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
@@ -343,7 +367,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		//用户是登录状态,可以访问1和2级茶议
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//从会话查获当前浏览用户资料荚
-			s_u, s_default_team, s_survival_teams, err := FetchUserData(sess)
+			s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(sess)
 			if err != nil {
 				util.Warning(err, " Cannot get user-related data from session")
 				Report(w, r, "您好，茶博士失魂鱼，有眼不识泰山。")
@@ -608,7 +632,12 @@ func PlusThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 读取表单数据
-	ty, _ := strconv.Atoi(r.PostFormValue("type"))
+	ty, err := strconv.Atoi(r.PostFormValue("type"))
+	if err != nil {
+		util.Warning(err, " Cannot convert ty to int")
+		Report(w, r, "茶博士失魂鱼，未能读取新泡茶议资料，请稍后再试。")
+		return
+	}
 	// 检查ty值是否 0、1、2
 	if ty != 0 && ty != 1 && ty != 2 {
 		Report(w, r, "您好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")

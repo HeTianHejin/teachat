@@ -75,16 +75,17 @@ type ProjectDetail struct {
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
 	IsInput               bool // 是否需要显示输入面板
+	IsGuest               bool // 是否为游客
 
-	Project    Project
-	Master     User
-	MasterTeam Team
+	Project    Project //当前浏览茶台
+	Master     User    //台主
+	MasterTeam Team    //台主开台时选择的成员身份，所属团队
 	Open       bool
 	IsEdited   bool
 
 	QuoteObjective           Objective // 引用的茶围
 	QuoteObjectiveAuthor     User      // 引用的茶围作者
-	QuoteObjectiveAuthorTeam Team      // 引用的茶围作者所在的默认茶团
+	QuoteObjectiveAuthorTeam Team      // 引用的茶围作者创建时所选择的成员身份，所属团队
 
 	ThreadBeanList []ThreadBean // project下所有Threads和作者资料荚
 	ThreadCount    int          // project下所有Threads个数

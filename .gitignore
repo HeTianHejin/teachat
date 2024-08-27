@@ -11,6 +11,9 @@
 # Test binary, built with `go test -c`
 *.test
 
+# 鹤田河津- debug 
+__debug_bin??????????
+
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
@@ -28,3 +31,5 @@ go.work.sum
 .DS_Store
 */.DS_Store
 
+__debug_bin2671563401
+__debug_bin3196909667

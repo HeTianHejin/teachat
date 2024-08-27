@@ -62,8 +62,8 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
-	// 引用的茶议作者默认所在茶团
-	postPD.QuoteThreadAuthorTeam, err = postPD.QuoteThreadAuthor.GetLastDefaultTeam()
+	// 引用的茶议作者发帖时候选择的茶团
+	postPD.QuoteThreadAuthorTeam, err = data.GetTeamById(postPD.QuoteThread.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot get quote-thread-author-default-team given post")
 		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
@@ -109,7 +109,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	su_default_team, err := su.GetLastDefaultTeam()
 	if err != nil {
 		util.Warning(err, " Cannot get sess-user-default-team given sess-user")
-		Report(w, r, "您好，������失������，未能读取专��资料。")
+		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
 		return
 	}
 	postPD.SessUserDefaultTeam = su_default_team
@@ -117,7 +117,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	sess_teams, err := su.SurvivalTeams()
 	if err != nil {
 		util.Warning(err, " Cannot get sess-user-survival-teams given sess-user")
-		Report(w, r, "您好，������失������，未能读取专���资料。")
+		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
 		return
 	}
 
@@ -144,7 +144,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/post/draft
 // Create the post 创建品味（跟帖/回复）草稿
-func NewPost(w http.ResponseWriter, r *http.Request) {
+func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -193,6 +193,19 @@ func NewPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能读取专属茶议。")
 		return
 	}
+	tid := r.PostFormValue("team_id")
+	//change team_id to int
+	team_id, err := strconv.Atoi(tid)
+	if err != nil {
+		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
+		return
+	}
+	//检查team_id是否有效
+	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, sUser.Id)
+	if err != nil {
+		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
+		return
+	}
 
 	//  检查茶议所在的茶台属性，
 	proj, err := thread.Project()
@@ -204,7 +217,7 @@ func NewPost(w http.ResponseWriter, r *http.Request) {
 	switch proj.Class {
 	case 1:
 		// class=1可以品茶，
-		if dPost, err = sUser.CreateDraftPost(thread.Id, attitude, body); err != nil {
+		if dPost, err = sUser.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
 			Report(w, r, "您好，茶博士摸摸头，记录品味失败。")
 			return
 		}
@@ -218,7 +231,7 @@ func NewPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Can have tea
-		if dPost, err = sUser.CreateDraftPost(thread.Id, attitude, body); err != nil {
+		if dPost, err = sUser.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
 			Report(w, r, "您好，茶博士摸摸头，竟然说没有墨水，记录品味失败。")
 			return
 		}

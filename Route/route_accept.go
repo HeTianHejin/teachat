@@ -143,8 +143,9 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		// 根据对象类型处理
 		switch ao.ObjectType {
 		case 1:
-			ob, err := data.GetObjectiveById(ao.ObjectId)
-			if err != nil {
+			ob := data.Objective{
+				Id: ao.ObjectId}
+			if err = ob.GetById(); err != nil {
 				util.Danger(err, "Cannot get objective")
 				Report(w, r, "您好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
 				return
@@ -207,7 +208,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Type:      dThread.Type,
 				PostId:    dThread.PostId,
 			}
-			if err = thread.Save(); err != nil {
+			if err = thread.Create(); err != nil {
 				util.Danger(err, "Cannot save thread")
 				Report(w, r, "您好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 				return
@@ -246,7 +247,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "您好，绕堤柳借三篙翠。")
 				return
 			}
-			if _, err = pUser.CreatePost(dPost.ThreadId, dPost.Attitude, dPost.Body); err != nil {
+			if _, err = pUser.CreatePost(dPost.ThreadId, dPost.TeamId, dPost.Attitude, dPost.Body); err != nil {
 				util.Danger(err, "Cannot create post")
 				Report(w, r, "您好，品茶是一种艺术，一杯为品，二杯为解渴。")
 				return
@@ -315,8 +316,9 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		// 根据对象类型处理
 		switch ao.ObjectType {
 		case 1:
-			ob, err := data.GetObjectiveById(ao.ObjectId)
-			if err != nil {
+			ob := data.Objective{
+				Id: ao.ObjectId}
+			if err = ob.GetById(); err != nil {
 				util.Danger(err, "Cannot get objective")
 				Report(w, r, "您好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
 				return
@@ -452,8 +454,9 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	// 根据对象类型处理
 	switch ao.ObjectType {
 	case 1:
-		ob, err := data.GetObjectiveById(ao.ObjectId)
-		if err != nil {
+		ob := data.Objective{
+			Id: ao.ObjectId}
+		if err = ob.GetById(); err != nil {
 			util.Danger(err, "Cannot get objective")
 			Report(w, r, "您好，有时候找不到新茶评审的资料未必是外星人闹事。")
 			return

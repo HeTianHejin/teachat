@@ -3,20 +3,34 @@
 <ol class="breadcrumb">
    
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?id={{ .Uuid }}">{{ .Title }}@茶话会</a></li>
+  <li><a href="/v1/objective/detail?id={{ .ObjectiveBean.Objective.Uuid }}">{{ .ObjectiveBean.Objective.Title }}@茶话会</a></li>
   <li class="active">新开茶台</li>
 
 </ol>
 
 <div class="panel panel-default">
+  <div class="panel-body" style="font-size: small;">
+    <a href="/v1/thread/detail?id={{ .ObjectiveBean.Objective.Uuid }}"><span class="label label-default">引用</span></a>
+    <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
+    <span style="margin-inline-end: 20px;">@<a
+        href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a></span>
+    <span>
+      {{ .ObjectiveBean.Status }}
+      : {{ .ObjectiveBean.Objective.Title }}
+      {{ .ObjectiveBean.Objective.Body }}
+    </span>
+  </div>
+</div>
+
+<div class="panel panel-default">
 
   <div class="panel-heading">
-    新茶台
+    在“{{ .ObjectiveBean.Objective.Title }}”茶围里加开新茶台
   </div>
 
-  <form role="form" action="/v1/project/new" method="post">
-
-    <div class="panel-body">
+  <div class="panel-body">
+  
+      <form role="form" action="/v1/project/new" method="post">
 
       <div class="form-group">
         <fieldset>
@@ -32,30 +46,38 @@
 
       <div class="form-group">
         <label for="name">请命名您的茶台（2-24字）</label>
-        <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="42" required autofocus>
+        <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="42" required />
       </div>
 
       <div class="form-group">
         <label for="description">请介绍你的茶台（17-456字，需要友邻盲评通过）</label>
-        <textarea class="form-control" name="description" id="description" rows="3" minlength="17" maxlength="567"
+        <textarea class="form-control" name="description" id="description" rows="6" minlength="17" maxlength="567"
           required></textarea>
       </div>
 
       <div class="form-group">
-        <label for="invite-team-ids">封闭式茶台请指定邀请的茶团号，以逗号分隔。</label>
-        <input type="text" class="form-control" name="invite-team-ids" id="invite-team-ids" required />
+        <input type="text" class="form-control" name="invite-team-ids" id="invite-team-ids" placeholder="如果是封闭式茶台，务必指定拟邀请的茶团号，以逗号分隔。" required />
       </div>
 
-      <input type="hidden" name="uuid" id="uuid" value="{{ .Uuid }}">
+      <input type="hidden" name="uuid" id="uuid" value="{{ .ObjectiveBean.Objective.Uuid }}">
       
-   
+      <div class="form-group">
+          <select name="team_id" class="form-control" id="team_id" required>
+            <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
+            </option>
+            {{ range .SessUserSurvivalTeams }}
+            <option value="{{ .Id }}">{{ .Name }}</option>
+            {{ end }}
+          </select>
+      </div>
+
         <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
           <button type="submit" class="btn btn-default">开台</button>
         </div>
       
+      </form>
 
     </div>
-  </form>
 
   <div class="panel-footer">
     自斟自饮的茶博士：您知道吗？船长非常迷信月光之神，说月圆月缺一轮回才能拓摆一围茶，月升月落一圈才能开新茶台。

@@ -33,13 +33,19 @@ func CreateObjectivePage(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
+	var oD data.ObjectiveDetail
 	//根据会话从数据库中读取当前用户的信息
-	u, _ := s.User()
-
+	s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(s)
+	if err != nil {
+		Report(w, r, "您好，�����������了，��没有��水未能加载��话会页面，请稍后再试。")
+		return
+	}
 	// 填写页面数据
-	SessUser := u
+	oD.SessUser = s_u
+	oD.SessUserDefaultTeam = s_default_team
+	oD.SessUserSurvivalTeams = s_survival_teams
 	// 给请求用户返回新建茶话会页面
-	GenerateHTML(w, &SessUser, "layout", "navbar.private", "objective.new")
+	GenerateHTML(w, &oD, "layout", "navbar.private", "objective.new")
 }
 
 // POST /objective/create
@@ -62,10 +68,33 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 	// 读取http请求中form的数据
 	title := r.PostFormValue("name")
 	body := r.PostFormValue("description")
-	class, _ := strconv.Atoi(r.PostFormValue("class"))
+	class, err := strconv.Atoi(r.PostFormValue("class"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		return
+	}
+	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		return
+	}
+	// check the given team_id is valid
+	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, u.Id)
+	if err != nil {
+		Report(w, r, "您好，眼前无路想回头，什么团什么茶话会，请稍后再试。")
+		return
+	}
 
 	// 检查用户是否已经创建过相同名字的茶话会
-	//objective, err := u.ObjectiveByName(name)
+	obj := data.Objective{
+		Title: title,
+	}
+	_, err = obj.GetByTitle()
+	// 如果已经创建过相同名字的��话会
+	if err == nil {
+		Report(w, r, "您好，�����������了，��然说名字重复浪费纸张，请确认后再试。")
+		return
+	}
 
 	// 检测一下name是否>2中文字，body是否在17-456中文字，
 	// 如果不是，返回错误信息
@@ -78,14 +107,20 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var ob data.Objective
+	ob := data.Objective{
+		Title:  title,
+		Body:   body,
+		Cover:  cover,
+		Class:  class,
+		UserId: u.Id,
+		TeamId: team_id,
+	}
 
 	switch class {
 	case 10:
 		//如果class=10开放式茶话会草围
 		//尝试保存新茶话会
-		ob, err = u.CreateObjective(title, body, cover, class)
-		if err != nil {
+		if err = ob.Create(); err != nil {
 			// 撤回（删除）发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
 			// 记录错误，提示用户新开茶话会未成功
@@ -119,8 +154,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 			team_id_list = append(team_id_list, te_id_int)
 		}
 		//尝试保存新茶话会草稿
-		ob, err = u.CreateObjective(title, body, cover, class)
-		if err != nil {
+		if err = ob.Create(); err != nil {
 			// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
 			util.Warning(err, " Cannot create objective")
@@ -134,7 +168,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 				ObjectiveId: ob.Id,
 				TeamId:      team_id,
 			}
-			if err = obInviTeams.Save(); err != nil {
+			if err = obInviTeams.Create(); err != nil {
 				// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
 				util.Warning(err, " Cannot create objectiveLicenseTeam")
@@ -190,7 +224,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	// 用（随机选中）选取24个用户的24茶话会的模式
 
 	// test获取所有茶话会
-	objective_list, err := data.GetAllObjectivesForTest()
+	objective_list, err := data.GetPublicObjectives(24)
 	if err != nil {
 		util.Info(err, " Cannot get objectives")
 		Report(w, r, "您好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
@@ -272,8 +306,9 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据uuid查询茶话会资料
-	ob, err := data.GetObjectiveByUuid(uuid)
-	if err != nil {
+	ob := data.Objective{
+		Uuid: uuid}
+	if err = ob.GetByUuid(); err != nil {
 		Report(w, r, "您好，茶博士摸摸满头大汗，居然自言自语说外星人把这个茶话会资料带走了。")
 		return
 	}
@@ -285,7 +320,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，这个茶话会需要等待友邻盲评通过之后才能启用呢。")
 		return
 	default:
-		Report(w, r, "您好，这个茶话会主人据说因为很帅，资料似乎被外星人看中带走了。")
+		Report(w, r, "您好，这个茶话会主人据说因为很cool，资料似乎被外星人看中带走了。")
 		return
 	}
 	obD.ObjectiveBean, err = GetObjectiveBean(ob)
@@ -294,7 +329,8 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
-	project_list, _ := obD.ObjectiveBean.Objective.Projects()
+	//fetch public projects
+	project_list, _ := obD.ObjectiveBean.Objective.GetPublicProjects()
 	obD.ProjectBeanList, err = GetProjectBeanList(project_list)
 	if err != nil {
 		util.Warning(err, " Cannot read objective-bean list")
