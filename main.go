@@ -77,7 +77,6 @@ func main() {
 	mux.HandleFunc("/v1/project/detail", route.ProjectDetail)
 
 	// defined in route_thread.go
-	mux.HandleFunc("/v1/thread/new", route.NewThread)
 	mux.HandleFunc("/v1/thread/draft", route.DraftThread)
 	mux.HandleFunc("/v1/thread/accept", route.AcceptDraftThread)
 	mux.HandleFunc("/v1/thread/detail", route.ThreadDetail)
