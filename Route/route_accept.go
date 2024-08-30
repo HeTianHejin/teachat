@@ -100,7 +100,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// 首次记录完成
-			Report(w, r, "您好，谨代表茶棚礼仪委员会感谢你！出手维护茶棚的文明秩序。")
+			Report(w, r, "您好，好茶香护有缘人，感谢你出手维护了茶棚的文明秩序！")
 			return
 		} else {
 			util.Danger(err, " Cannot check acceptance by ao_id")
@@ -193,7 +193,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新������，友����评已通过！
 			if err = dThread.UpdateClass(1); err != nil {
-				util.Warning(err, "Cannot update thread class")
+				util.Warning(err, "Cannot update draft-thread class")
 				Report(w, r, "您好，睿藻仙才盈彩笔，自惭何敢再为辞。")
 				return
 			}
@@ -207,6 +207,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				HitCount:  0,
 				Type:      dThread.Type,
 				PostId:    dThread.PostId,
+				TeamId:    dThread.TeamId,
 			}
 			if err = thread.Create(); err != nil {
 				util.Danger(err, "Cannot save thread")

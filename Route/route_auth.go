@@ -82,7 +82,8 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	team_member := data.TeamMember{
 		TeamId: 2,
 		UserId: newU.Id,
-		Role:   "品茶师",
+		Role:   "taster",
+		Class:  1,
 	}
 	if err = team_member.Create(); err != nil {
 		util.Danger(err, " Cannot create default_free team_member")

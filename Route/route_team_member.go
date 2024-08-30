@@ -170,7 +170,7 @@ func HandleInvitationReply(w http.ResponseWriter, r *http.Request) {
 
 		// 如果team_member.Role == "CEO",采取更换CEO方法
 		if team_member.Role == "CEO" {
-			if err = team_member.UpdateDefaultCEO(u.Id); err != nil {
+			if err = team_member.UpdateFirstCEO(u.Id); err != nil {
 				util.Warning(err, u.Email, " Cannot update team_member")
 				Report(w, r, "您好，幽情欲向嫦娥诉，无奈虚廊夜色昏。请稍后再试。")
 				return
@@ -282,9 +282,9 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case "CEO", "品茶师":
+	case "CEO", "taster":
 		//CEO是默认创建人担任首个CEO
-		//品茶师
+		//taster
 		break
 	default:
 		Report(w, r, "您好，请选择正确的角色。")

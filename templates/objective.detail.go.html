@@ -93,9 +93,12 @@
         <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
         <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
         {{ else }}
-        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-        茶博士：这是封闭式茶话会,需要围主邀请的茶团成员，才能开新台。
+        <p class="text-center">
+        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
+          茶博士：这是封闭式茶话会,必须是围主邀请的茶团成员，才能开新台呢。
+        </p>
         {{ end }}
+
       </div>
 
 

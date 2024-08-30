@@ -153,42 +153,6 @@ func GetOpenTeams() (teams []Team, err error) {
 	return
 }
 
-// 获取开放式团队的数量
-func OpenTeamCount() (count int) {
-	rows, err := Db.Query("SELECT count(*) FROM teams WHERE class = 1")
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		if err = rows.Scan(&count); err != nil {
-			return
-		}
-	}
-	rows.Close()
-	return
-}
-
-// 获取封闭式团队数量
-func ClosedTeamCount() (count int) {
-	rows, err := Db.Query("SELECT count(*) FROM teams WHERE class = 2")
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		if err = rows.Scan(&count); err != nil {
-			return
-		}
-	}
-	rows.Close()
-	return
-}
-
-// 获取团队的属性
-// AWS CodeWhisperer assist in writing
-func (team *Team) TeamProperty() string {
-	return TeamProperty[team.Class]
-}
-
 // 根据用户的id获取全部加入的团队
 // AWS CodeWhisperer assist in writing
 // func (user *User) JoinedTeams() (teams []Team, err error) {
@@ -261,6 +225,24 @@ func (user *User) CoreExecTeams() (teams []Team, err error) {
 	return
 }
 
+// 用户作为普通成员的全部茶团，team_member.role = "taster"
+// AWS CodeWhisperer assist in writing
+func (user *User) NormalExecTeams() (teams []Team, err error) {
+	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'taster'", user.Id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		team := Team{}
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId); err != nil {
+			return
+		}
+		teams = append(teams, team)
+	}
+	rows.Close()
+	return
+}
+
 // format the created time to display nicely on the screen
 func (team *Team) CreatedAtDate() string {
 	return team.CreatedAt.Format(FMT_DATE_CN)
@@ -271,7 +253,7 @@ func (team *Team) CreatedAtDate() string {
 func (user *User) CreateTeam(name, abbreviation, mission, logo string, class, group_id int) (team Team, err error) {
 
 	statement := `INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id) 
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id`
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -378,7 +360,7 @@ func GetTeamById(id int) (team Team, err error) {
 // 获取团队全部普通成员role=“品茶师”的方法
 // AWS CodeWhisperer assist in writing
 func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "品茶师")
+	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "taster")
 	if err != nil {
 		return
 	}
@@ -473,7 +455,7 @@ func (teamMember *TeamMember) Update() (err error) {
 }
 
 // 更换茶团默认CEO的方法，Update team_members记录中role=CEO的行 user_id 为当前user_id
-func (teamMember *TeamMember) UpdateDefaultCEO(user_id int) (err error) {
+func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
 	statement := `UPDATE team_members SET user_id = $1 WHERE team_id = $2 AND role = $3`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
@@ -519,6 +501,91 @@ func (project *Project) InvitedTeams() (teams []Team, err error) {
 	}
 	rows.Close()
 	return
+}
+
+// GetTeamsByGroupId()
+func GetTeamsByGroupId(group_id int) (teams []Team, err error) {
+	rows, err := Db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE group_id = $1", group_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		team := Team{}
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId); err != nil {
+			return
+		}
+		teams = append(teams, team)
+	}
+	rows.Close()
+	return
+}
+
+// GetTeamByAbbreviationAndGroupId()
+func GetTeamByAbbreviationAndGroupId(abbreviation string, group_id int) (team Team, err error) {
+	team = Team{}
+	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE abbreviation = $1 AND group_id = $2", abbreviation, group_id).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
+	return
+}
+
+// GetTeamByAbbreviationAndFounderId()
+func GetTeamByAbbreviationAndFounderId(abbreviation string, founder_id int) (team Team, err error) {
+	team = Team{}
+	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE abbreviation = $1 AND founder_id = $2", abbreviation, founder_id).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
+	return
+}
+
+// GetTeamByAbbreviation()
+func GetTeamByAbbreviation(abbreviation string) (team Team, err error) {
+	team = Team{}
+	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE abbreviation = $1", abbreviation).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
+	return
+}
+
+// GetGroupFirstTeam() 根据group.first_team_id获取team
+func GetGroupFirstTeam(group_id int) (team Team, err error) {
+	team = Team{}
+	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE id = (SELECT first_team_id FROM groups WHERE id = $1)", group_id).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
+	return
+}
+
+// 获取开放式团队的数量
+func OpenTeamCount() (count int) {
+	rows, err := Db.Query("SELECT count(*) FROM teams WHERE class = 1")
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		if err = rows.Scan(&count); err != nil {
+			return
+		}
+	}
+	rows.Close()
+	return
+}
+
+// 获取封闭式团队数量
+func ClosedTeamCount() (count int) {
+	rows, err := Db.Query("SELECT count(*) FROM teams WHERE class = 2")
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		if err = rows.Scan(&count); err != nil {
+			return
+		}
+	}
+	rows.Close()
+	return
+}
+
+// 获取团队的属性
+// AWS CodeWhisperer assist in writing
+func (team *Team) TeamProperty() string {
+	return TeamProperty[team.Class]
 }
 
 // UpdateClass()
@@ -578,54 +645,5 @@ func (team *Team) UpdateMission() (err error) {
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(team.Mission, team.Id)
-	return
-}
-
-// GetTeamsByGroupId()
-func GetTeamsByGroupId(group_id int) (teams []Team, err error) {
-	rows, err := Db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE group_id = $1", group_id)
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId); err != nil {
-			return
-		}
-		teams = append(teams, team)
-	}
-	rows.Close()
-	return
-}
-
-// GetTeamByAbbreviationAndGroupId()
-func GetTeamByAbbreviationAndGroupId(abbreviation string, group_id int) (team Team, err error) {
-	team = Team{}
-	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE abbreviation = $1 AND group_id = $2", abbreviation, group_id).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
-	return
-}
-
-// GetTeamByAbbreviationAndFounderId()
-func GetTeamByAbbreviationAndFounderId(abbreviation string, founder_id int) (team Team, err error) {
-	team = Team{}
-	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE abbreviation = $1 AND founder_id = $2", abbreviation, founder_id).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
-	return
-}
-
-// GetTeamByAbbreviation()
-func GetTeamByAbbreviation(abbreviation string) (team Team, err error) {
-	team = Team{}
-	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE abbreviation = $1", abbreviation).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
-	return
-}
-
-// GetGroupFirstTeam() 根据group.first_team_id获取team
-func GetGroupFirstTeam(group_id int) (team Team, err error) {
-	team = Team{}
-	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE id = (SELECT first_team_id FROM groups WHERE id = $1)", group_id).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
 	return
 }

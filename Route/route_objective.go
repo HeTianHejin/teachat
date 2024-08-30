@@ -81,18 +81,28 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 	// check the given team_id is valid
 	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, u.Id)
 	if err != nil {
-		Report(w, r, "您好，眼前无路想回头，什么团什么茶话会，请稍后再试。")
+		Report(w, r, "您好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
 		return
 	}
 
-	// 检查用户是否已经创建过相同名字的茶话会
+	// 检查是否已经存在相同名字的茶话会
 	obj := data.Objective{
 		Title: title,
 	}
-	_, err = obj.GetByTitle()
-	// 如果已经创建过相同名字的��话会
+	err = obj.GetByTitleClass()
 	if err == nil {
-		Report(w, r, "您好，�����������了，��然说名字重复浪费纸张，请确认后再试。")
+		// 已经存在相同名字且状态正常的茶话会
+		Report(w, r, "您好，编新不如述旧，刻古终胜雕今。茶话会名字重复无法辨雌雄哦，请确认后再试。")
+		return
+	}
+
+	count := obj.CountByTitle()
+	if count >= 3 {
+		Report(w, r, "您好，编新不如述旧，刻古终胜雕今。茶话会相同名称仅能使用3次，请确认后再试。")
+		return
+	} else if obj.TeamId != team_id {
+		// 已经存在相同名字的茶话会,检查是否同一团队
+		Report(w, r, "您好，这个茶话会名称已经被其它团队使用了，请确认后再试。")
 		return
 	}
 
@@ -107,7 +117,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ob := data.Objective{
+	new_ob := data.Objective{
 		Title:  title,
 		Body:   body,
 		Cover:  cover,
@@ -120,7 +130,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 	case 10:
 		//如果class=10开放式茶话会草围
 		//尝试保存新茶话会
-		if err = ob.Create(); err != nil {
+		if err = new_ob.Create(); err != nil {
 			// 撤回（删除）发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
 			// 记录错误，提示用户新开茶话会未成功
@@ -154,7 +164,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 			team_id_list = append(team_id_list, te_id_int)
 		}
 		//尝试保存新茶话会草稿
-		if err = ob.Create(); err != nil {
+		if err = new_ob.Create(); err != nil {
 			// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
 			util.Warning(err, " Cannot create objective")
@@ -165,7 +175,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		// 迭代team_id_list，尝试保存新封闭式茶话会草围邀请的茶团
 		for _, team_id := range team_id_list {
 			obInviTeams := data.ObjectiveInvitedTeam{
-				ObjectiveId: ob.Id,
+				ObjectiveId: new_ob.Id,
 				TeamId:      team_id,
 			}
 			if err = obInviTeams.Create(); err != nil {
@@ -183,7 +193,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 
 	// 创建一条友邻盲评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
-		ObjectId:   ob.Id,
+		ObjectId:   new_ob.Id,
 		ObjectType: 1,
 	}
 	if err = aO.Create(); err != nil {
@@ -206,7 +216,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t := fmt.Sprintf("您好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", ob.Title)
+	t := fmt.Sprintf("您好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", new_ob.Title)
 	// 提示用户草稿保存成功
 	Report(w, r, t)
 

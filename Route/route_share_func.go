@@ -536,7 +536,10 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	return nil
 }
 
-// 茶博士向茶客的报告信息，通常是一些错误提示
+// 茶博士向茶客报告信息的方法，包括但不限于意外事件和通知、感谢等等提示。
+// 茶博士——古时专指陆羽。陆羽著《茶经》，唐德宗李适曾当面称陆羽为“茶博士”。
+// 茶博士-teaOffice，是古代中华传统文化对茶馆工作人员的昵称，如：富家宴会，犹有专供茶事之人，谓之茶博士。——唐代《西湖志馀》
+// 现在多指精通茶艺的师傅，尤其是四川的长嘴壶茶艺，茶博士个个都是身怀绝技的“高手”。
 func Report(w http.ResponseWriter, r *http.Request, msg string) {
 	var userBPD data.UserBiography
 	userBPD.Message = msg

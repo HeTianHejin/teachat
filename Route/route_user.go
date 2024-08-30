@@ -23,7 +23,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
-	var uBP data.UserBiography
+	var uB data.UserBiography
 
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
@@ -34,30 +34,57 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 准备页面数据
-	uBP.SessUser = su
+	uB.SessUser = su
 	team, err := user.GetLastDefaultTeam()
 	if err != nil {
 		util.Warning(err, " 未能读取用户团队信息！")
 		Report(w, r, "报告，大王，找不到西天取经团队资料！")
 		return
 	}
-	uBP.DefaultTeam, err = GetTeamBean(team)
+	uB.DefaultTeamBean, err = GetTeamBean(team)
 	if err != nil {
 		util.Warning(err, " 根据team未能读取用户团队信息")
 		Report(w, r, "报告，大王，找不到西天取经团队资料！")
 		return
 	}
+
+	team_list_core, err := user.CoreExecTeams()
+	if err != nil {
+		util.Info(err, " Cannot get core teams")
+		Report(w, r, "您好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
+		return
+	}
+	uB.ManageTeamBeanList, err = GetTeamBeanList(team_list_core)
+	if err != nil {
+		util.Info(err, " Cannot get team bean list")
+		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。")
+		return
+	}
+
+	team_list, err := user.NormalExecTeams()
+	if err != nil {
+		util.Info(err, " Cannot get joined teams")
+		Report(w, r, "您好，茶博士未能帮忙查看茶团，请稍后再试。")
+		return
+	}
+	uB.JoinTeamBeanList, err = GetTeamBeanList(team_list)
+	if err != nil {
+		util.Info(err, " Cannot get team bean list")
+		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+		return
+	}
+
 	//检查登录者是否简介所有者本人？是则打开编辑页
-	if user.Id == s.UserId {
+	if user.Id == su.Id {
 		//uBP.User = data.User{}
-		uBP.IsAuthor = true
-		GenerateHTML(w, &uBP, "layout", "navbar.private", "biography.private")
+		uB.IsAuthor = true
+		GenerateHTML(w, &uB, "layout", "navbar.private", "biography.private")
 		return
 	} else {
-		uBP.User = user
-		uBP.IsAuthor = false
+		uB.User = user
+		uB.IsAuthor = false
 		//登录者不是简介主人,打开公开介绍页
-		GenerateHTML(w, &uBP, "layout", "navbar.private", "biography.public")
+		GenerateHTML(w, &uB, "layout", "navbar.private", "biography.public")
 	}
 
 }

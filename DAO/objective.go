@@ -130,6 +130,21 @@ func (objective *Objective) GetByTitle() (objectives []Objective, err error) {
 	return
 }
 
+// objective.countByTitle(),return count int,err!=nil return 0
+func (objective *Objective) CountByTitle() (count int) {
+	err := Db.QueryRow("SELECT COUNT(*) FROM objectives WHERE title = $1", objective.Title).Scan(&count)
+	if err != nil {
+		return 0
+	}
+	return count
+}
+
+// objective.GetByTitle() Get the given objective by title ,where class=1 or 2,return 1 objective
+func (objective *Objective) GetByTitleClass() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, star_count, cover, team_id FROM objectives WHERE title = $1 AND class = $2", objective.Title, objective.Class).Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.StarCount, &objective.Cover, &objective.TeamId)
+	return
+}
+
 // 把数字等级属性转换为字符串以显示
 var ObStatus = map[int]string{
 	0:  "修改待评草围",

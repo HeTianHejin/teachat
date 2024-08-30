@@ -13,6 +13,10 @@
 
 # 鹤田河津- debug 
 __debug_bin??????????
+__debug_bin?????????
+__debug_bin*
+*.log
+*.jpeg
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
@@ -31,5 +35,4 @@ go.work.sum
 .DS_Store
 */.DS_Store
 
-__debug_bin2671563401
-__debug_bin3196909667
+

@@ -12,8 +12,8 @@
 <div style="margin: 20px;">
   <ol class="nav nav-tabs nav-justified">
     <li><a href="/v1/message/letterbox">茶团邀请
-      {{ if .SessUser.HasUnreadMessage }}
-      <span class="badge">{{ .SessUser.GetNewMessageCount }}</span>
+      {{ if .SessUser.InvitationUnviewedCount }}
+      <span class="badge">{{ .SessUser.InvitationUnviewedCount }}</span>
       {{ else }}
       {{ end }}
     </a></li>

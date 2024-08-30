@@ -410,7 +410,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	oabList, err = GetThreadBeanList(threadlist)
 	if err != nil {
 		util.Warning(err, " Cannot read thread-bean list")
-		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
+		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中...")
 		return
 	}
 	pD.ThreadBeanList = oabList

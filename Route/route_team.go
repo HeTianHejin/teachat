@@ -75,12 +75,12 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
-	group_id, err := strconv.Atoi(r.PostFormValue("group_id"))
-	if err != nil {
-		util.Info(err, " Cannot convert group_id to int")
-		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
-		return
-	}
+	// group_id, err := strconv.Atoi(r.PostFormValue("group_id"))
+	// if err != nil {
+	// 	util.Info(err, " Cannot convert group_id to int")
+	// 	Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+	// 	return
+	// }
 
 	//检测class是否合规
 	switch class {
@@ -106,7 +106,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	// 将NewTeam草稿存入数据库，class=10/20
 	logo := "teamLogo"
-	team, err := sUser.CreateTeam(name, abbr, mission, logo, class, group_id)
+	team, err := sUser.CreateTeam(name, abbr, mission, logo, class, 1)
 	if err != nil {
 		util.Info(err, " At create team")
 		Report(w, r, "您好，茶博士失魂鱼，未能创建你的天团，请稍后再试。")
@@ -146,7 +146,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 // 显示茶棚全部开放式茶团详细信息
 func OpenTeams(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var ts data.TeamSquare
+	var tS data.TeamSquare
 
 	team_list, err := data.GetOpenTeams()
 	if err != nil {
@@ -154,7 +154,7 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
-	ts.TeamBeanList, err = GetTeamBeanList(team_list)
+	tS.TeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
 		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
@@ -163,16 +163,16 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 	// 用户是否已经登录?
 	s, err := Session(r)
 	if err != nil {
-		ts.SessUser = data.User{
+		tS.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 		}
-		GenerateHTML(w, &ts, "layout", "navbar.public", "teams.open", "teams.public")
+		GenerateHTML(w, &tS, "layout", "navbar.public", "teams.open", "teams.public")
 		return
 	}
 	sUser, _ := s.User()
-	ts.SessUser = sUser
-	GenerateHTML(w, &ts, "layout", "navbar.private", "teams.open", "teams.public")
+	tS.SessUser = sUser
+	GenerateHTML(w, &tS, "layout", "navbar.private", "teams.open", "teams.public")
 
 }
 
@@ -210,7 +210,7 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/team/hold
-// 显示当前用户拥有或者加入的全部茶团
+// 显示当前用户创建的全部茶团
 func HoldTeams(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
@@ -246,11 +246,11 @@ func JoinedTeam(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, _ := sess.User()
+	su, _ := sess.User()
 
 	var ts data.TeamSquare
-	ts.SessUser = u
-	team_list, err := u.SurvivalTeams()
+	ts.SessUser = su
+	team_list, err := su.SurvivalTeams()
 	if err != nil {
 		util.Info(err, " Cannot get joined teams")
 		Report(w, r, "您好，茶博士未能帮忙查看茶团，请稍后再试。")

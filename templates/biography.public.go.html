@@ -28,31 +28,60 @@
     </div>
 </div>
 
-<div class="list-group">
-    <a href="#" class="list-group-item active">
-        <h4 class="list-group-item-heading">主打茶团</h4>
-        <p class="list-group-item-text">预留位置</p>
-    </a>
-    <a href="#" class="list-group-item">
-        <h4 class="list-group-item-heading">管理茶团</h4>
-        <p class="list-group-item-text">预留位置</p>
-    </a>
-    <a href="#" class="list-group-item">
-        <h4 class="list-group-item-heading">客串茶团</h4>
-        <p class="list-group-item-text">预留位置</p>
-    </a>
-    <a href="#" class="list-group-item">
-        <h4 class="list-group-item-heading">已退茶团</h4>
-        <p class="list-group-item-text">预留位置</p>
-    </a>
-</div>
+<div class="panel panel-default">
+    <div class="panel-heading">主力茶团</div>
+    <div class="panel-body">
+        {{ with .DefaultTeamBean }}
+        @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        {{ else }}
+        无茶团纪录
+        {{ end }}
+    </div>
 
-<div class="btn-group" role="group" aria-label="..." style="margin-top: 0px;margin-bottom: 20px;">
-    <button type="button" class="btn btn-default">关注</button>
-    <button type="button" class="btn btn-default">搭讪</button>
-    <button type="button" class="btn btn-default">贴条</button>
-    <button type="button" class="btn btn-default">...</button>
+
+
+    <div class="panel-heading">管理茶团</div>
+    <div class="panel-body">
+        {{ range .ManageTeamBeanList }}
+        @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        {{ else }}
+        无茶团纪录
+        {{ end }}
+    </div>
+
+
+
+    <div class="panel-heading">普通茶团</div>
+    <div class="panel-body">
+        {{ range .JoinTeamBeanList }}
+        @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        {{ else }}
+        无茶团纪录
+        {{ end }}
+    </div>
+
+
+
+    <div class="panel-heading">离开茶团</div>
+    <div class="panel-body">
+        预留位置
+    </div>
 </div>
+  
+   
+   
+
+
+
+<ul class="nav nav-pills" style="margin-bottom: 20px;">
+    <li role="presentation" class="active"><a href="#">关注</a></li>
+    <li role="presentation"><a href="#">搭讪</a></li>
+    <li role="presentation"><a href="#">标识</a></li>
+    <li role="presentation"><a href="#">邀请</a></li>
+  </ul>
+
+
+
 
 <ul class="nav nav-tabs nav-justified" style="margin-top: 0px;margin-bottom: 20px;">
     <li role="presentation" class="active"><a href="/v1/user/amuse">自泡茶</a></li>

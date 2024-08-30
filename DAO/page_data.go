@@ -6,7 +6,7 @@ import "time"
 type UserBiography struct {
 	SessUser           User
 	User               User // 作者资料
-	DefaultTeam        TeamBean
+	DefaultTeamBean    TeamBean
 	ManageTeamBeanList []TeamBean
 	JoinTeamBeanList   []TeamBean
 	QuitTeamBeanList   []TeamBean

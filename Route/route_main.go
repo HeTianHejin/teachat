@@ -12,8 +12,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	var indexPD data.IndexPageData
 	var tb_list []data.ThreadBean
 
-	//读取最热的茶议2dozen?
-	num := 24
+	//读取最热的茶议dozen?
+	num := 12
 
 	// 读取最热的茶议
 	thread_list, err := data.ThreadsIndex(num)
