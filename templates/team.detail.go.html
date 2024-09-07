@@ -10,22 +10,22 @@
 </ol>
 
 
-<div class="well">
 
   {{ if .Open }}
   <span style="margin-inline-end: 30px;">
     <a href="/v1/team/team_member/join?id={{ .Team.Uuid }}">申请加入该团</a>
   </span>
-  <a href="/v1/team/team_member/invite_page?id={{ .Team.Uuid }}">邀请新成员加入</a>
+  
   {{ else }}
-  <a href="/v1/team/team_member/invite_page?id={{ .Team.Uuid }}">邀请新成员加入</a>
+  <p class="text-center">
+    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
+    茶博士提示：封闭式茶团不接受加盟申请
+  </p>
   {{ end }}
 
-  <div class="pull-right">
-    <a href="/v1/team/invitations?id={{ .Team.Uuid }}">查看已发出邀请</a>
-  </div>
+  
 
-</div>
+
 
 {{/*  这是指定茶团详情展示页面  */}}
 
@@ -69,8 +69,9 @@
         </div>
       </div>
       <div class="panel-body">
-
-        {{ .Team.Mission }}
+        <span style="white-space: pre-wrap;">
+          {{ .Team.Mission }}
+        </span>
 
       </div>
       <div class="panel-footer">

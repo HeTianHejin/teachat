@@ -12,7 +12,7 @@ type Team struct {
 	Mission      string
 	FounderId    int
 	CreatedAt    time.Time
-	Class        int    // 1: "开放式茶团",2: "封闭式茶团",10: "开放式草团",20: "封闭式草团"
+	Class        int    //0:"系统茶团", 1: "开放式茶团",2: "封闭式茶团",10: "开放式草团",20: "封闭式草团"
 	Abbreviation string // 队名简称
 	Logo         string // 团队标志
 	UpdatedAt    time.Time
@@ -63,6 +63,7 @@ type TeamRole struct {
 }
 
 var TeamProperty = map[int]string{
+	0:  "系统茶团",
 	1:  "开放式茶团",
 	2:  "封闭式茶团",
 	10: "开放式草团",
@@ -102,21 +103,36 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err 
 	return
 }
 
-// SurvivalTeams() 获取用户当前所在的状态正常的全部团队
-func (user *User) SurvivalTeams() (teams []Team, err error) {
-	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams JOIN team_members ON teams.id = team_members.team_id WHERE team_members.user_id = $1 AND team_members.class = 1", user.Id)
+// SurvivalTeams() 获取用户当前所在的状态正常的全部团队,team.class = 1 or 2, team_members.class = 1
+func (user *User) SurvivalTeams() ([]Team, error) {
+	query := `
+        SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id
+        FROM teams
+        JOIN team_members ON teams.id = team_members.team_id
+        WHERE teams.class IN (1, 2) AND team_members.user_id = $1 AND team_members.class = 1`
+
+	estimatedCapacity := 6 //设定用户最多创建3茶团+担任3ceo
+	teams := make([]Team, 0, estimatedCapacity)
+
+	rows, err := Db.Query(query, user.Id)
 	if err != nil {
-		return
+		return nil, err
 	}
+	defer rows.Close()
+
 	for rows.Next() {
 		team := Team{}
 		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId); err != nil {
-			return
+			return nil, err
 		}
 		teams = append(teams, team)
 	}
-	rows.Close()
-	return
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return teams, nil
 }
 
 // 获取全部封闭式团队的信息
@@ -205,6 +221,24 @@ func (user *User) CeoTeams() (teams []Team, err error) {
 	}
 	rows.Close()
 	return
+}
+
+// user.FounderTeams() 用户创建的全部团队，team.FounderId = user.Id, return teams []team
+func (usre *User) FounderTeams() (teams []Team, err error) {
+	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams WHERE teams.founder_id = $1", usre.Id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		team := Team{}
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId); err != nil {
+			return
+		}
+		teams = append(teams, team)
+	}
+	rows.Close()
+	return
+
 }
 
 // 用户担任核心高管成员的全部茶团，team_member.role = "CEO", "CTO", "CMO", "CFO"
@@ -339,9 +373,24 @@ func (team *Team) NumMembers() (count int) {
 	return
 }
 
+// user.CountTeamsByFounderId() 获取用户创建的团队数量值
+func (user *User) CountTeamsByFounderId() (count int, err error) {
+	rows, err := Db.Query("SELECT COUNT(*) FROM teams WHERE founder_id = $1", user.Id)
+	if err != nil {
+		return 0, err
+	}
+	for rows.Next() {
+		if err = rows.Scan(&count); err != nil {
+			return
+		}
+	}
+	rows.Close()
+	return
+}
+
 // 根据用户提交的当前Uuid获取一个团队详情
 // AWS CodeWhisperer assist in writing
-func GetTeamByUuid(uuid string) (team Team, err error) {
+func TeamByUuid(uuid string) (team Team, err error) {
 	team = Team{}
 	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE uuid = $1", uuid).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)

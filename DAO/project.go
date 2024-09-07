@@ -1,6 +1,9 @@
 package data
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 // 茶台 teaTable，寓意为某个活动愿景下的分类项目，节点，关卡
 // 规则1：如果class=1, 是普通的开放式茶台，全部登录用户可以入座品茶聆听，而且可以提出新茶议（主张/议题），属于全员可参与的自由开放式圆桌茶话会。游客可以查看主题和品味跟帖，但是不能品味（跟帖）。
@@ -239,5 +242,33 @@ func (project_invited_teams *ProjectInvitedTeam) Delete() (err error) {
 // UpdateClass() 通过project的id,更新��台的class
 func (project *Project) UpdateClass() (err error) {
 	_, err = Db.Exec("UPDATE projects SET class = $1 WHERE id = $2", project.Class, project.Id)
+	return
+}
+
+// 检查当前会话用户是否茶台邀请团队成员
+func (proj *Project) IsInvitedMember(user_id int) (ok bool, err error) {
+	count, err := proj.InvitedTeamsCount()
+	if err != nil {
+		return false, err
+	}
+	if count == 0 {
+		return false, errors.New("this tea-table  host has not invited any teams to drink tea")
+	}
+	teamIDs, err := proj.InvitedTeamIds()
+	if err != nil {
+		return false, errors.New("cannot read project invited team ids")
+	}
+	for _, teamID := range teamIDs {
+		userIDs, err := GetMemberUserIdsByTeamId(teamID)
+		if err != nil {
+			return false, err
+		}
+
+		for _, userID := range userIDs {
+			if userID == user_id {
+				return true, nil
+			}
+		}
+	}
 	return
 }

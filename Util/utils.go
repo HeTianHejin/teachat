@@ -20,7 +20,9 @@ type Configuration struct {
 	SysMail_Password string
 	SysMail_Host     string
 	SysMail_Port     string
-	MaxInviteTeams   int // 茶团最大可邀请团队数
+	MaxInviteTeams   int // 茶围、茶台最大可邀请团队数
+	MaxTeamMembers   int // 团队最大成员数
+	MaxTeamCount     int // ����创建的��队数上限
 }
 
 var Config Configuration

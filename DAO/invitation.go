@@ -12,8 +12,6 @@ type Invitation struct {
 	InviteWord  string
 	CreatedAt   time.Time
 	Status      int //0: "待处理",1: "已查看",2: "已接受",3: "已拒绝",4: "已过期",
-	//页面渲染数据,不入库保存
-	PageData InvitationDetail
 }
 
 // 茶团邀请函答复

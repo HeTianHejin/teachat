@@ -42,11 +42,23 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
 		return
 	}
-	sUser, err := s.User()
+	su, err := s.User()
 	if err != nil {
 		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
+
+	count, err := su.CountTeamsByFounderId()
+	if err != nil {
+		util.Danger(err, "connot count teams given founder_id")
+		Report(w, r, "您好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		return
+	}
+	if count >= util.Config.MaxTeamCount {
+		Report(w, r, "您好，三月香巢已垒成，梁间燕子太无情。开团数量太多了，未能创建新茶团。")
+		return
+	}
+
 	name := r.PostFormValue("name")
 	// 茶团名称是否在4-24中文字符
 	le := CnStrLen(name)
@@ -106,7 +118,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	// 将NewTeam草稿存入数据库，class=10/20
 	logo := "teamLogo"
-	team, err := sUser.CreateTeam(name, abbr, mission, logo, class, 1)
+	team, err := su.CreateTeam(name, abbr, mission, logo, class, 1)
 	if err != nil {
 		util.Info(err, " At create team")
 		Report(w, r, "您好，茶博士失魂鱼，未能创建你的天团，请稍后再试。")
@@ -132,7 +144,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: aO.Id,
 	}
 	//发送消息
-	if err = AcceptMessageSendExceptUserId(sUser.Id, mess); err != nil {
+	if err = AcceptMessageSendExceptUserId(su.Id, mess); err != nil {
 		Report(w, r, "您好，茶博士迷路了，未能发送盲评请求消息。")
 		return
 	}
@@ -301,7 +313,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	//获取茶团资料
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
-	te, err := data.GetTeamByUuid(uuid)
+	te, err := data.TeamByUuid(uuid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
 		Report(w, r, "您好，茶博士未能帮忙查看茶团，请稍后再试。")
@@ -433,7 +445,7 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	u, _ := sess.User()
 	//一次管理一个茶团，根据提交的team.Uuid来确定
 	//这个茶团是否存在？
-	team, err := data.GetTeamByUuid(r.FormValue("id"))
+	team, err := data.TeamByUuid(r.FormValue("id"))
 	if err != nil {
 		util.Info(err, " Cannot get this team")
 		Report(w, r, "您好，茶博士未能找到此茶团资料，请确认后再试。")
@@ -582,7 +594,7 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 	}
 	u, _ := s.User()
 	uuid := r.FormValue("team_uuid")
-	team, err := data.GetTeamByUuid(uuid)
+	team, err := data.TeamByUuid(uuid)
 	if err != nil {
 		Report(w, r, "您好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
@@ -607,7 +619,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 	}
 	u, _ := s.User()
 	uuid := r.URL.Query().Get("id")
-	team, err := data.GetTeamByUuid(uuid)
+	team, err := data.TeamByUuid(uuid)
 	if err != nil {
 		Report(w, r, "您好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
@@ -637,7 +649,7 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 	//根据用户提交的Uuid，查询获取团队信息
 	v := r.URL.Query()
 	tUid := v.Get("id")
-	team, err := data.GetTeamByUuid(tUid)
+	team, err := data.TeamByUuid(tUid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
 		Report(w, r, "您好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")

@@ -224,7 +224,12 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	case 2:
 		// 当前会话用户是否可以入席品茶？需要看台主指定了那些茶团成员可以品茶
-		if ok := isUserInvitedByProject(proj, sUser); !ok {
+		ok, err := proj.IsInvitedMember(sUser.Id)
+		if err != nil {
+			Report(w, r, "您好，������失������，未能读取专����台资料。")
+			return
+		}
+		if !ok {
 			// Cannot have tea
 			Report(w, r, "您好，你的大名竟然不在邀请品茶名单上。")
 			return

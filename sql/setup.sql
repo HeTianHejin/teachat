@@ -464,7 +464,7 @@ create table accept_objects (
 
 CREATE TABLE new_message_counts (
   id              SERIAL PRIMARY KEY,
-  user_id         INTEGER references users(id),
+  user_id         INTEGER,
   count           INTEGER default 0
 );
 

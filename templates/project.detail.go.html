@@ -1,13 +1,10 @@
 {{ define "content" }}
 
-
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/objective/detail?id={{ .Project.Objective.Uuid }}">{{ .Project.Objective.Title }}</a>@茶话会</li>
   <li class="active">{{ .Project.Title }}@茶台</li>
 </ol>
-
-
 
 {{/* 这是某个茶台的详情页 */}}
 <div class="media">
@@ -42,7 +39,8 @@
             <span style="display: block; text-align: right; font-size: smaller;">
               <span class="label label-info">{{ .Master.GetGender }}</span>
               <a href="/v1/user/biography?id={{ .Master.Uuid }}">{{ .Master.Name }}</a>
-              @<a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}"><span style="font-weight: lighter;">{{ .MasterTeam.Abbreviation }}</span></a>
+              @<a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}"><span
+                  style="font-weight: lighter;">{{ .MasterTeam.Abbreviation }}</span></a>
 
               {{ .Project.CreatedAtDate }}
             </span>
@@ -59,19 +57,20 @@
         <hr />
 
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/thread/detail?id={{ .QuoteObjective.Uuid }}"><span class="label label-default">引用</span></a>{{ .QuoteObjective.Body }} ...</p>
+          <p style="font-size: small;"><a href="/v1/thread/detail?id={{ .QuoteObjective.Uuid }}"><span
+                class="label label-default">引用</span></a>{{ .QuoteObjective.Body }} ...</p>
           <footer style="font-size: small;">
             <a href="/v1/user/biography?id={{ .QuoteObjectiveAuthor.Uuid }}">{{ .QuoteObjectiveAuthor.Name }}</a>
-            <span style="margin-inline-end: 20px;">@<a href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a></span> <cite title="Source Title">{{ .QuoteObjective.Title }}</cite>
+            <span style="margin-inline-end: 20px;">@<a
+                href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a></span>
+            <cite title="Source Title">{{ .QuoteObjective.Title }}</cite>
           </footer>
         </blockquote>
-
-
 
       </div>
       <div class="panel-footer">
         <!-- a href="/v1/thread/new?id={{ .Project.Uuid }}" -->
-          <span class="glyphicon glyphicon-glass" aria-hidden="true" title="品味"></span>
+        <span class="glyphicon glyphicon-glass" aria-hidden="true" title="品味"></span>
         <!-- /a -->
         <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .ThreadCount }}</span>
 
@@ -93,54 +92,57 @@
       </div>
     </div>
 
-   {{ if .IsInput }}
+    {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
+    {{ if .IsInput }}
     {{/* 这是新茶议撰写模版 */}}
     <div class="panel panel-default">
-
+      
       <div class="panel-body">
-
+        
         <form class=" form-horizontal" role="form" action="/v1/thread/draft" method="post">
-
+          
           <div class="form-group">
             <fieldset>
               <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
                 <label>+茶议 标题前缀:</label>
               </div>
-
+              
               <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
                 <input type="radio" name="type" id="ifeel" style="width: fit-content;" value=0 required />
                 <label for="ifeel" style="margin-inline-end: 30px;">我觉得</label>
               </div>
-
+              
               <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
                 <input type="radio" name="type" id="ithink" style="width: fit-content;" value=1 required />
                 <label for="ithink" style="margin-inline-end: 30px;">出个主意</label>
               </div>
-
+              
               <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
                 <input type="radio" name="type" id="ipropose" style="width: fit-content;" value=2 required />
                 <label for="ipropose" style="margin-inline-end: 30px;">推荐解决方案</label>
               </div>
-
+              
             </fieldset>
           </div>
-
+          
           <div class="form-group">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="42" placeholder="标题（2～36字）" required />
+              <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="42"
+              placeholder="标题（2～36字）" required />
             </div>
           </div>
-
+          
           <div class="form-group">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-           
-              <textarea class="form-control" name="topic" id="topic" rows="3" minlength="17" maxlength="567" placeholder="内容（17～456字）" required></textarea>
+              
+              <textarea class="form-control" name="topic" id="topic" rows="3" minlength="17" maxlength="567"
+              placeholder="内容（17～456字）" required></textarea>
             </div>
           </div>
-
+          
           {{/* 这是project的id提交 */}}
           <input type="hidden" name="project_id" value="{{ .Project.Id }}" />
-
+          
           <div class="form-group">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
               <select name="team_id" class="form-control" id="team_id" required>
@@ -152,51 +154,49 @@
               </select>
             </div>
           </div>
-
+          
           <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
             <button type="submit" class="btn btn-default">提交</button>
           </div>
-
+          
         </form>
-
+        
       </div>
     </div>
     {{ else }}
     {{ if .IsGuest }}
-    <div class="well">
-      <p class="text text-center"><a href="/v1/login">登陆</a> 以开始谈天说茶 </p>
-    </div>
-    {{ else }} 
+    {{/* 不是游客 */}}
+    <p class="text text-center"><a href="/v1/login">登陆</a> 以开始聊天品茶 </p>
+    {{ else }}
     <div class="well">
       <p class="text-center"> <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
         茶博士：这是封闭式茶台,只有台主邀请的茶团成员，才能入座品茶呢。</p>
-    </div>
-    {{ end }}
-    {{ end }}
-    
-
+      </div>
+      {{ end }}
+      {{ end }}
+      {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-结束 */}}
+      
 
     {{/* 以下是此茶台的全部茶议展示 */}}
     {{ range .ThreadBeanList }}
-
     <div class="media">
       <div class="media-left">
         {{ if .Count }}
         <span class="badge">{{ .Count }}</span>
         {{ else }}
-         {{ end }}
+        {{ end }}
         <a href="/v1/user/biography?id={{ .Author.Uuid }}">
           <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
         </a>
       </div>
       <div class="media-body">
         <p>
-            <span class="label label-info">{{ .Author.GetGender }}</span>
-            <span>{{ .Author.Name }}</span>
-            <span style="margin-inline-end: 20px; font-size: smaller;">
-              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
-            
-            <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
+          <span class="label label-info">{{ .Author.GetGender }}</span>
+          <span>{{ .Author.Name }}</span>
+          <span style="margin-inline-end: 20px; font-size: smaller;">
+            @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+
+          <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
           </span>
         </p>
 
@@ -205,13 +205,13 @@
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
           <span style="font-size: small; margin-inline-start: 40px;">
             <span class="label label-default" style="margin-inline-end: 20px;">{{ .Status }}</span>
-        </h5>
-        {{ .Thread.Body }} ...
+            </h5>
+            {{ .Thread.Body }} ...
       </div>
 
     </div>
 
-<hr />
+    <hr />
 
     {{ end }}
 
@@ -221,15 +221,13 @@
 {{ if .IsOverTwelve }}
 
 <div style="margin-top: 66px;">
-<nav aria-label="next pager">
-  <ul class="pager">
-    <li><a href="#">上一页</a></li>
-    <li><a href="#">下一页 </a></li>
-  </ul>
-</nav>
+  <nav aria-label="next pager">
+    <ul class="pager">
+      <li><a href="#">上一页</a></li>
+      <li><a href="#">下一页 </a></li>
+    </ul>
+  </nav>
 </div>
 {{ end }}
-
-
 
 {{ end }}

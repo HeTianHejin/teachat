@@ -633,7 +633,13 @@ func PlusThread(w http.ResponseWriter, r *http.Request) {
 	case 2:
 		//Is the current session user allowed to join the tea tasting?
 		//It depends on the tea group members invited by the host.
-		ok := isUserInvitedByProject(proj, sUser)
+		ok, err := proj.IsInvitedMember(sUser.Id)
+		// ���查用户是否����请到��台
+		if err != nil {
+			util.Warning(err, " Cannot check if user is invited")
+			Report(w, r, "您好，������的��没有��水了，未能确认你是否����请到这个��台。")
+			return
+		}
 		if ok {
 			draft_thread = data.DraftThread{
 				UserId:    sUser.Id,

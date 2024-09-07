@@ -16,7 +16,7 @@ import (
 func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		CreateObjectivePage(w, r)
+		NewObjectivePage(w, r)
 	case "POST":
 		CreateObjective(w, r)
 	default:
@@ -26,7 +26,7 @@ func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 
 // GET /objective/create
 // 返回objective.new页面
-func CreateObjectivePage(w http.ResponseWriter, r *http.Request) {
+func NewObjectivePage(w http.ResponseWriter, r *http.Request) {
 	//尝试从http请求中读取用户会话信息
 	s, err := Session(r)
 	if err != nil {
@@ -34,10 +34,11 @@ func CreateObjectivePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var oD data.ObjectiveDetail
-	//根据会话从数据库中读取当前用户的信息
+	//根据会话读取当前用户的信息
 	s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(s)
 	if err != nil {
-		Report(w, r, "您好，�����������了，��没有��水未能加载��话会页面，请稍后再试。")
+		util.Danger(err, "cannot fetch s_u s_teams given session")
+		Report(w, r, "您好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	// 填写页面数据
@@ -96,13 +97,30 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count := obj.CountByTitle()
+	count, err := obj.CountByTitle()
+	if err != nil {
+		util.Danger(err, " cannot get count given objective title")
+		Report(w, r, "您好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
+		return
+	}
+	// 最大可创建 相同名称 茶话会数量
 	if count >= 3 {
 		Report(w, r, "您好，编新不如述旧，刻古终胜雕今。茶话会相同名称仅能使用3次，请确认后再试。")
 		return
 	} else if obj.TeamId != team_id {
 		// 已经存在相同名字的茶话会,检查是否同一团队
 		Report(w, r, "您好，这个茶话会名称已经被其它团队使用了，请确认后再试。")
+		return
+	}
+	count, err = obj.CountByTeamId()
+	if err != nil {
+		util.Danger(err, " cannot get count given objective team_id")
+		Report(w, r, "您好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
+		return
+	}
+	// 最大团队可以创建 茶话会 数量
+	if count >= util.Config.MaxInviteTeams {
+		Report(w, r, "您好，编新不如述旧，刻古终胜雕今!一个茶团最多可以开12个茶话会呢，请确认后再试。")
 		return
 	}
 
@@ -357,6 +375,9 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
+		obD.IsGuest = true
+		// 是否受邀请团队成员？
+		obD.IsInvited = false
 		//配置公开导航条的茶话会详情页面
 		GenerateHTML(w, &obD, "layout", "navbar.public", "objective.detail")
 		return
@@ -364,11 +385,21 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	//已经登录！
 	sUser, _ := s.User()
 	obD.SessUser = sUser
+	obD.IsGuest = false
+	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
+	if ob.Class == 2 {
+		ok, err := obD.ObjectiveBean.Objective.IsInvitedMember(sUser.Id)
+		if err != nil {
+			util.Warning(err, " Cannot read objective-bean list")
+			Report(w, r, "您好，���是��条��是��，��������女����华。��电考拉为你时������������。")
+			return
+		}
+		obD.IsInvited = ok
+	}
 	//检测u.Id == o.UserId是否这个茶话会主人（作者）
 	if sUser.Id == obD.ObjectiveBean.Author.Id {
 		//是作者
-		//配置私有导航条的茶话会详情页面
-		//准备页面数据PageData
+		//准备页面数据
 		obD.ObjectiveBean.Objective.PageData.IsAuthor = true
 		GenerateHTML(w, &obD, "layout", "navbar.private", "objective.detail")
 		return

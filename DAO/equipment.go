@@ -26,7 +26,7 @@ const (
 	dbport     = 5432
 	dbuser     = "postgres"
 	dbpassword = "mima"
-	dbname     = "teachatwebdb"
+	dbname     = "teachat"
 	dbsslmode  = "disable"
 	dbTimeZone = "Asia/Shanghai"
 	dbdriver   = "postgres"

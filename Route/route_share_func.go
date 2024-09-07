@@ -402,61 +402,6 @@ func GetGroupBean(group data.Group) (GroupBean data.GroupBean, err error) {
 	return gb, nil
 }
 
-// 检查当前用户是否是茶话会邀请团队成员, 是成员 = true
-func isUserInvitedByObjective(obje data.Objective, user data.User) bool {
-	team_ids, err := obje.InvitedTeamIds()
-	if err != nil {
-		util.Info(err, " Cannot read objective invited team ids")
-		return false
-	}
-	if len(team_ids) == 0 {
-		return false
-	}
-	// 迭代team_ids,用data.GetMemberUserIdsByTeamId()获取全部user_ids；
-	// 以UserId == u.Id？检查当前用户是否是茶话会邀请团队成员
-	for _, team_id := range team_ids {
-		user_ids, _ := data.GetMemberUserIdsByTeamId(team_id)
-		for _, user_id := range user_ids {
-			if user_id == user.Id {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// 检查当前会话用户是否茶台邀请团队成员
-func isUserInvitedByProject(proj data.Project, sU data.User) bool {
-	count, err := proj.InvitedTeamsCount()
-	if err != nil {
-		util.Warning(err, " Cannot read project invited teams count")
-		return false
-	}
-	if count == 0 {
-		util.Info(nil, "This tea-table  host has not invited any teams to drink tea.")
-		return false
-	}
-	teamIDs, err := proj.InvitedTeamIds()
-	if err != nil {
-		util.Info(err, "Cannot read project invited team ids")
-		return false
-	}
-	for _, teamID := range teamIDs {
-		userIDs, err := data.GetMemberUserIdsByTeamId(teamID)
-		if err != nil {
-			util.Info(err, "Failed to get user IDs for team %d", teamID)
-			continue
-		}
-
-		for _, userID := range userIDs {
-			if userID == sU.Id {
-				return true
-			}
-		}
-	}
-	return false
-}
-
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
 func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) error {
 	// 从请求中解包出单个上传文件

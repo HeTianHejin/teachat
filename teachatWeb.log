@@ -1,3 +1,11 @@
 
 INFO 2024/08/26 16:04:26 utils.go:62: monkeyking@god.com 密码匹配成功
 
+ERROR 2024/08/31 20:10:39 utils.go:69: pq: syntax error at or near "JOIN" cannot fetch s_u s_teams given session
+INFO 2024/09/02 16:30:32 utils.go:64: invalid session  Cannot get session
+WARNING 2024/09/02 16:46:07 utils.go:74:  密码和用户名不匹配。
+ERROR 2024/09/02 17:32:21 utils.go:69: sql: no rows in result set  Cannot get user given uuid
+ERROR 2024/09/02 17:33:24 utils.go:69: sql: no rows in result set  Cannot get user given uuid
+ERROR 2024/09/02 21:04:07 utils.go:69: sql: no rows in result set  Cannot get user given uuid
+ERROR 2024/09/02 21:29:48 utils.go:69: pq: insert or update on table "new_message_counts" violates foreign key constraint "new_message_counts_user_id_fkey"  Cannot add user message count
+WARNING 2024/09/07 12:02:15 utils.go:74: sql: Scan error on column index 0, name "team_id": unsupported Scan, storing driver.Value type int64 into type *[]int  Cannot read objective-bean list

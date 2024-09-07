@@ -328,7 +328,7 @@ func UserExistByEmail(email string) (exist bool, err error) {
 }
 
 // Get a single user given the UUID
-func UserByUUID(uuid string) (user User, err error) {
+func UserByUuid(uuid string) (user User, err error) {
 	user = User{}
 	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE uuid = $1", uuid).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)

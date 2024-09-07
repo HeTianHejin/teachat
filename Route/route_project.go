@@ -157,7 +157,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	case 2:
 		// 封闭式茶话会
 		// 检查用户是否可以在此茶话会下新开茶台
-		ok := isUserInvitedByObjective(ob, u)
+		ok, err := ob.IsInvitedMember(u.Id)
 		if !ok {
 			// 当前用户不是茶话会邀请团队成员，不能新开茶台
 			util.Warning(err, " Cannot create project")
@@ -304,14 +304,20 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 		//检查team_ids是否为空
 		// 围主没有指定茶团成员，不能新开茶台
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		if isUserInvitedByObjective(o, s_u) {
-			GenerateHTML(w, &oD, "layout", "navbar.private", "project.new")
+		ok, err := o.IsInvitedMember(s_u.Id)
+		if err != nil {
+			util.Warning(err, " Cannot read project")
+			Report(w, r, "您好，������失������，未能找到��台，请稍后再试。")
 			return
 		}
-
-		// 当前用户不是茶话会邀请团队成员，不能新开茶台
-		Report(w, r, "您好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
-		return
+		if ok {
+			GenerateHTML(w, &oD, "layout", "navbar.private", "project.new")
+			return
+		} else {
+			// 当前用户不是茶话会邀请团队成员，不能新开茶台
+			Report(w, r, "您好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
+			return
+		}
 
 		// 非法茶话会属性，不能新开茶台
 	default:
@@ -448,7 +454,12 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	//如果这是class=2封闭式茶台，需要检查当前浏览用户是否可以创建新茶议
 	if pD.Project.Class == 2 {
 		// ���查当前用户是否是��话会��请��队成员
-		if isUserInvitedByProject(pD.Project, s_u) {
+		ok, err := pD.Project.IsInvitedMember(s_u.Id)
+		if err != nil {
+			Report(w, r, "您好，������失������，未能读取专����台资料。")
+			return
+		}
+		if ok {
 			// 当前用户是��话会��请��队成员，可以新开茶议
 			pD.IsInput = true
 		} else {

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"errors"
 	"time"
 )
 
@@ -131,12 +132,21 @@ func (objective *Objective) GetByTitle() (objectives []Objective, err error) {
 }
 
 // objective.countByTitle(),return count int,err!=nil return 0
-func (objective *Objective) CountByTitle() (count int) {
-	err := Db.QueryRow("SELECT COUNT(*) FROM objectives WHERE title = $1", objective.Title).Scan(&count)
+func (objective *Objective) CountByTitle() (count int, err error) {
+	err = Db.QueryRow("SELECT COUNT(*) FROM objectives WHERE title = $1", objective.Title).Scan(&count)
 	if err != nil {
-		return 0
+		return 0, err
 	}
-	return count
+	return count, nil
+}
+
+// objective.countByTeamId(),return count int,err!=nil return 0
+func (objective *Objective) CountByTeamId() (count int, err error) {
+	err = Db.QueryRow("SELECT COUNT(*) FROM objectives WHERE team_id = $1", objective.TeamId).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 // objective.GetByTitle() Get the given objective by title ,where class=1 or 2,return 1 objective
@@ -335,11 +345,11 @@ func (objective *Objective) InvitedTeamIds() (teamIdList []int, err error) {
 		return
 	}
 	for rows.Next() {
-		var teamId []int
-		if err = rows.Scan(&teamId); err != nil {
+		var team_id int
+		if err = rows.Scan(&team_id); err != nil {
 			return
 		}
-		teamIdList = append(teamIdList, teamId...)
+		teamIdList = append(teamIdList, team_id)
 	}
 	rows.Close()
 	return
@@ -349,5 +359,40 @@ func (objective *Objective) InvitedTeamIds() (teamIdList []int, err error) {
 func (ob *Objective) UpdateClass() (err error) {
 	statement := "UPDATE objectives SET class = $1 WHERE id = $2"
 	_, err = Db.Exec(statement, ob.Class, ob.Id)
+	return
+}
+
+// InvitedTeamsCount() 通过ObjectiveId获取��闭式��话会的��请����号数量
+func (objective *Objective) InvitedTeamsCount() (count int, err error) {
+	err = Db.QueryRow("SELECT COUNT(*) FROM objective_invited_teams WHERE objective_id = $1", objective.Id).Scan(&count)
+	return
+}
+
+// 检查当前用户是否是茶话会邀请团队成员, 是成员 = true
+func (ob *Objective) IsInvitedMember(user_id int) (ok bool, err error) {
+	count, err := ob.InvitedTeamsCount()
+	if err != nil {
+		return false, err
+	}
+	// ���有��请任何��队
+	if count == 0 {
+		return false, errors.New("this objective host has not invited any teams to drink tea")
+	}
+
+	team_ids, err := ob.InvitedTeamIds()
+	if err != nil {
+		return false, err
+	}
+
+	// 迭代team_ids,用data.GetMemberUserIdsByTeamId()获取全部user_ids；
+	// 以UserId == u.Id？检查当前用户是否是茶话会邀请团队成员
+	for _, team_id := range team_ids {
+		user_ids, _ := GetMemberUserIdsByTeamId(team_id)
+		for _, u_id := range user_ids {
+			if u_id == user_id {
+				return true, nil
+			}
+		}
+	}
 	return
 }

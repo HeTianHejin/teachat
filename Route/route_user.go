@@ -28,7 +28,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	//有id参数，读取指定用户资料
-	user, err := data.UserByUUID(uuid)
+	user, err := data.UserByUuid(uuid)
 	if err != nil {
 		Report(w, r, "报告，大王，未能找到大唐和尚的资料！")
 		return

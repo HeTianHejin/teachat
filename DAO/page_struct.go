@@ -39,6 +39,8 @@ type ObjectiveDetail struct {
 	SessUser              User // 当前会话用户
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
+	IsGuest               bool // 是否为游客
+	IsInvited             bool // 是否受邀请
 
 	ObjectiveBean   ObjectiveBean
 	ProjectBeanList []ProjectBean // objective下所有projects
@@ -231,7 +233,14 @@ type LetterboxPageData struct {
 }
 
 type InvitationDetail struct {
-	SessUser User
+	SessUser              User
+	SessUserDefaultTeam   Team
+	SessUserSurvivalTeams []Team
+
+	Invitation Invitation
+	Team       Team // 发出邀请的茶团队
+
+	InviteUser User // 受邀请人
 }
 
 // 某个茶团的全部邀请函页面数据

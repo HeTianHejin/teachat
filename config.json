@@ -7,5 +7,7 @@
 "SysMail_Password"    : "your password",
 "SysMail_Host"        : "smtp.exmail.qq.com",
 "SysMail_Port"        : "465",
-"MaxInviteTeams"      : 9         
+"MaxInviteTeams"      : 12,
+"MaxTeamMembers"      : 12,
+"MaxTeamsCount"      : 9         
 }
