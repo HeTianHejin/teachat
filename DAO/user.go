@@ -125,11 +125,6 @@ var UserGender = map[int]string{
 	1: "山大王",
 }
 
-// 显示用户的gender
-func (user *User) GetGender() string {
-	return UserGender[user.Gender]
-}
-
 // Create a new session for an existing user
 func (user *User) CreateSession() (session Session, err error) {
 	statement := "INSERT INTO sessions (uuid, email, user_id, created_at, gender) VALUES ($1, $2, $3, $4 ,$5) RETURNING id, uuid, email, user_id, created_at, gender"
@@ -325,6 +320,14 @@ func UserExistByEmail(email string) (exist bool, err error) {
 		return
 	}
 	return false, err
+}
+
+// Get a single user given the ID
+func UserById(id int) (user User, err error) {
+	user = User{}
+	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", id).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	return
 }
 
 // Get a single user given the UUID

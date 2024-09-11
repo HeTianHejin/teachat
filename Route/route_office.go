@@ -34,36 +34,37 @@ func InvitePage(w http.ResponseWriter, r *http.Request) {
 func AcceptMessageSendExceptUserId(u_id int, mess data.AcceptMessage) error {
 	var user_ids []int
 	var err error
-	if data.UserCount() < 50 {
-		//test
-		if user_ids, err = data.Get2RandomUserId(); err != nil {
-			util.Info(err, " Cannot get 2 random user id")
-			return err
-		}
-	} else {
-		if data.SessionCount() > 12 && data.SessionCount() < 250 {
-			// 在线不同性别随机
-			user_ids, err = data.Get2GenderRandomSUserIdExceptId(u_id)
-			if err != nil {
-				util.Info(err, " Cannot get 2 gender random sess_user id")
-				user_ids, err = data.Get2GenderRandomUserIdExceptId(u_id)
-				if err != nil {
-					util.Info(err, " Cannot get 2 gender random user id")
-					// 在线不分性别随机
-					user_ids, err = data.Get2RandomSUserIdExceptId(u_id)
-					if err != nil {
-						util.Info(err, " Cannot get 2 random sess_user id")
-						return err
-					}
-				}
-			}
-		} else {
-			if user_ids, err = data.Get2RandomUserId(); err != nil {
-				util.Info(err, " Cannot get 2 random user id")
-				return err
-			}
-		}
+	// if data.UserCount() < 50 {
+
+	// 	if user_ids, err = data.Get2RandomUserId(); err != nil {
+	// 		util.Info(err, " Cannot get 2 random user id")
+	// 		return err
+	// 	}
+	// } else {
+	// 	if data.SessionCount() > 12 && data.SessionCount() < 250 {
+	// 		// 在线不同性别随机
+	// 		user_ids, err = data.Get2GenderRandomSUserIdExceptId(u_id)
+	// 		if err != nil {
+	// 			util.Info(err, " Cannot get 2 gender random sess_user id")
+	// 			user_ids, err = data.Get2GenderRandomUserIdExceptId(u_id)
+	// 			if err != nil {
+	// 				util.Info(err, " Cannot get 2 gender random user id")
+	// 				// 在线不分性别随机
+	// 				user_ids, err = data.Get2RandomSUserIdExceptId(u_id)
+	// 				if err != nil {
+	// 					util.Info(err, " Cannot get 2 random sess_user id")
+	// 					return err
+	// 				}
+	// 			}
+	// 		}
+	// 	} else {
+	if user_ids, err = data.Get2RandomUserId(); err != nil {
+		//test status
+		util.Info(err, " Cannot get 2 random user id")
+		return err
 	}
+	// 	}
+	// }
 	if len(user_ids) != 2 {
 		util.Info(err, " Cannot get 2 random-user-ids")
 		return err

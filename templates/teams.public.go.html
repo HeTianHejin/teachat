@@ -12,7 +12,11 @@
 <div class="media">
   <div class="media-left media-middle">
     <a href="/v1/team/detail?id={{ .Team.Uuid }}">
-      <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="茶团旗帜">
+      {{ if .Open }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/people.svg" alt="茶团旗帜" height="32" width="32">
+      {{ else }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/people-fill.svg" alt="茶团旗帜" height="32" width="32">
+      {{ end }}
     </a>
   </div>
   <div class="media-body">
@@ -27,7 +31,14 @@
           
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: center;">
+
+              {{ if .Open }}
+              
               <span class="label label-success">{{ .Team.TeamProperty }}
+                {{ else }}
+                <span class="label label-default">{{ .Team.TeamProperty }}
+                  {{ end }}
+                </span>
               </span>
               
             </span>
@@ -35,7 +46,11 @@
           
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <div class="pull-right" style="font-size: small;">
-              <span class="label label-info">{{ .Founder.GetGender }}</span>
+              {{if .Founder.Gender }}
+              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+              {{ end }}
               <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
               @<span><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
         

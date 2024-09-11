@@ -5,7 +5,7 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li class="active">集锦@茶话会</li>
- 
+
 </ol>
 
 <div class="well">
@@ -16,18 +16,22 @@
 {{/* 展示全部茶话会资料 */}}
 {{ range .ObjectiveBeanList }}
 
-
 <div class="panel panel-default">
   <div class="panel-body">
     <div class="media">
       <div class="media-left media-middle">
-        {{ if .Count }} 
+        {{ if .Count }}
         <span class="badge">{{ .Count }}</span>
-    {{ else }}
-    {{ end }}
-        <a href="#">
-          <img class="media-object" src="/v1/static/image/{{ .Objective.Cover }}.jpeg" alt="茶话会封面">
-        </a>
+        {{ else }}
+        {{ end }}
+
+        {{ if .Open }}
+        <img class="media-object" src="/v1/static/bootstrap-icons/buildings.svg" alt="茶话会封面" width="32" height="32">
+        {{ else }}
+        <img class="media-object" src="/v1/static/bootstrap-icons/buildings-fill.svg" alt="茶话会封面" width="32"
+          height="32">
+        {{ end }}
+
       </div>
       <div class="media-body">
         <p>
@@ -42,20 +46,24 @@
           <span class="label label-success" style="margin-inline-end: 30px;">
             {{ .Status }}
           </span>
-          
+
           {{ else }}
           <span class="label label-default" style="margin-inline-end: 30px;">
             {{ .Status }}
           </span>
-          
+
           {{ end }}
 
           <span style="margin-inline-end: 30px;">
             <span style="font-size: small;">
-              <span class="label label-info">{{ .Author.GetGender }}</span>
+              {{if .Author.Gender }}
+              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+              {{ end }}
               {{ .Author.Name }}
               @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
-              </span>
+          </span>
           </span>
 
           <span style="font-weight: lighter;">
@@ -69,10 +77,6 @@
   </div>
 </div>
 
-
-
-  {{ end }}
-
-
+{{ end }}
 
 {{ end }}

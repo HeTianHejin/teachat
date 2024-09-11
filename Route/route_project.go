@@ -233,7 +233,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	mess := data.AcceptMessage{
 		FromUserId:     1,
 		Title:          "新茶语邻座评审邀请",
-		Content:        "茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
+		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: aO.Id,
 	}
 	// 发送消息给两个在线用户

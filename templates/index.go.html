@@ -27,22 +27,20 @@
 
       <div class="panel-heading">
         <div class="row">
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             <span style="font-size: small;">
-              <span class="label label-info">{{ .Author.GetGender }}</span>
+              {{if .Author.Gender }}
+            <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+            {{ end }}
               {{ .Author.Name }}
               @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
             </span>
           </div>
 
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: center;">
-              <span class="label label-default">{{ .Status }}
-              </span>
-            </span>
-
-          </div>
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+         
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             <span style="display: block; font-size: smaller;text-align: right;">
               {{ .CreatedAtDate }}
             </span>
@@ -52,7 +50,7 @@
 
       <div class="panel-body">
 
-        <h4>{{ .Thread.TypeStatus }}:
+        <h4><mark>{{ .Thread.TypeStatus }}</mark>:
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
             {{ .Thread.Title }}
           </a>
@@ -118,22 +116,20 @@
 
       <div class="panel-heading">
         <div class="row">
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span class="label label-info" style="font-size: xx-small;">{{ .Author.GetGender }}</span>
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+            {{if .Author.Gender }}
+            <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+            {{ end }}
             {{ .Author.Name }}
             <span style="font-weight: lighter;">
               @<a href="/v1/team/detail?id={{ .Author.GetLastDefaultTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
             </span>
           </div>
 
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: center;">
-              <span class="label label-default">{{ .Status }}
-              </span>
-            </span>
-
-          </div>
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+         
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             <span style="display: block; font-size: smaller;text-align: right">
               {{ .CreatedAtDate }}
             </span>
@@ -143,7 +139,7 @@
 
       <div class="panel-body">
         <h4>
-        <span class="label label-primary">{{ .Thread.TypeStatus }}</span>
+        <mark>{{ .Thread.TypeStatus }}</mark>
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
             {{ .Thread.Title }}
           </a>

@@ -211,10 +211,9 @@ func (user *User) CreateDraftPost(thread_id, team_id int, attitude bool, body st
 }
 
 // Get() 读取一个DraftPost品味（跟帖）稿
-func GetDraftPost(id int) (post DraftPost, err error) {
-	post = DraftPost{}
-	err = Db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id FROM draft_posts WHERE id = $1", id).
-		Scan(&post.Id, &post.UserId, &post.ThreadId, &post.Body, &post.CreatedAt, &post.Attitude, &post.Class, &post.TeamId)
+func (draft_post *DraftPost) GetById() (err error) {
+	err = Db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id FROM draft_posts WHERE id = $1", draft_post.Id).
+		Scan(&draft_post.Id, &draft_post.UserId, &draft_post.ThreadId, &draft_post.Body, &draft_post.CreatedAt, &draft_post.Attitude, &draft_post.Class, &draft_post.TeamId)
 	return
 }
 

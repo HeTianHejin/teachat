@@ -1,6 +1,9 @@
 package data
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 // 友邻盲评消息
 type AcceptMessage struct {
@@ -214,38 +217,30 @@ func (user *User) HasNewAcceptMessage() bool {
 
 // 检查当前用户sUserId是否受邀请审茶，class = 0
 func (user *User) CheckHasAcceptMessage(accept_object_id int) bool {
-	rows, err := Db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1 and accept_object_id = $2 and class = 0", user.Id, accept_object_id)
-	if err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := "SELECT count(*) FROM accept_messages WHERE (to_user_id = $1 AND accept_object_id = $2) AND class = 0"
+	row := Db.QueryRowContext(ctx, query, user.Id, accept_object_id)
+	var count int
+	if err := row.Scan(&count); err != nil {
+		// Handle error
 		return false
 	}
-	for rows.Next() {
-		var count int
-		if err = rows.Scan(&count); err != nil {
-			return false
-		}
-		if count > 0 {
-			return true
-		}
-	}
-	rows.Close()
-	return false
+	return count > 0
 }
 
 // 检查当前用户sUserId是否曾经受邀请审茶，class = 1
 func (user *User) CheckHasReadAcceptMessage(accept_object_id int) bool {
-	rows, err := Db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1 and accept_object_id = $2 and class = 1", user.Id, accept_object_id)
-	if err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := "SELECT COUNT(*) > 0 FROM accept_messages WHERE to_user_id = $1 AND accept_object_id = $2 AND class = 1"
+	row := Db.QueryRowContext(ctx, query, user.Id, accept_object_id)
+	var exists bool
+	if err := row.Scan(&exists); err != nil {
+		// Handle error
 		return false
 	}
-	for rows.Next() {
-		var count int
-		if err = rows.Scan(&count); err != nil {
-			return false
-		}
-		if count > 0 {
-			return true
-		}
-	}
-	rows.Close()
-	return false
+	return exists
 }

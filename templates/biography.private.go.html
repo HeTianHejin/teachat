@@ -3,7 +3,7 @@
 <ol class="breadcrumb">
 
       <li>大堂</li>
-      <li class="active">{{ .User.GetGender }} @<span style="font-style: italic;">洞天福地</span></li>
+      <li class="active"><span style="font-style: italic;">我的洞天福地</span></li>
       
 </ol>
 
@@ -22,7 +22,10 @@
                       <span class="lead">{{ .SessUser.Name }}</span>
                   </div>
                   <div class="panel-body">
-                      <span class="lead">{{ .SessUser.Email }}</span>
+                        <span style="font-style: italic;">茶客号：{{ .SessUser.Id }}
+                        <br />
+                      邮箱：{{ .SessUser.Email }}
+                  </span>
                       <div class="pull-right">
                           <a href="/v1/user/forgot">修改密码</a>
                       </div>

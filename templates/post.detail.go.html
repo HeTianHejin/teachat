@@ -24,7 +24,11 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span class="label label-info" style="font-size: xx-small;">{{ .PostBean.Author.GetGender }}</span>
+            {{if .PostBean.Author.Gender }}
+            <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+            {{ end }}
             {{ .PostBean.Author.Name }}
             <span style="font-weight: lighter;">
               @<a href="/v1/team/detail?id={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>
@@ -163,7 +167,11 @@
   </div>
   <div class="media-body">
     <p>
-      <span class="label label-info">{{ .Author.GetGender }}</span>
+      {{if .Author.Gender }}
+      <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+      {{ end }}
       <span>{{ .Author.Name }}</span>
       <span style="margin-inline-end: 20px; font-size: smaller;">
         @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
@@ -173,7 +181,7 @@
     </p>
 
     <h4>
-      <span class="label label-success">{{ .Thread.TypeStatus }}</span>
+      <mark>{{ .Thread.TypeStatus }}</mark>
       <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
     </h4>
     <span style="font-size: small; margin-inline-start: 40px;">

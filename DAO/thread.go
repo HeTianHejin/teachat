@@ -100,7 +100,7 @@ func (d *DraftThread) Create() (err error) {
 }
 
 // 读取茶议草稿
-func (d *DraftThread) Get() (err error) {
+func (d *DraftThread) GetById() (err error) {
 	err = Db.QueryRow("SELECT id, user_id, project_id, title, body, class, created_at, type, post_id, team_id FROM draft_threads WHERE id = $1", d.Id).
 		Scan(&d.Id, &d.UserId, &d.ProjectId, &d.Title, &d.Body, &d.Class, &d.CreatedAt, &d.Type, &d.PostId, &d.TeamId)
 	return

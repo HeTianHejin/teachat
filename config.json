@@ -1,5 +1,5 @@
 {
-"Address"             : "0.0.0.0:8000",
+"Address"             : "192.168.50.113:8000",
 "ReadTimeout"         : 10,
 "WriteTimeout"        : 600,
 "Static"              : "public",

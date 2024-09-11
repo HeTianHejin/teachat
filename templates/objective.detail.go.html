@@ -16,165 +16,175 @@
 
 {{/* 这是某个茶话会的详情页 */}}
 
-<ul class="media-list">
-  <li class="media">
-    <div class="media-left">
 
-      <img class="media-object" src="/v1/static/image/{{ .ObjectiveBean.Objective.Cover }}.jpeg" alt="茶话会封面">
 
-    </div>
-    <div class="media-body">
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          <div class="row">
-            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              {{ .ObjectiveBean.Objective.Title }}
-            </div>
-            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <p class="text-center">
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div class="row">
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        {{ .ObjectiveBean.Objective.Title }}
+      </div>
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <p class="text-center">
 
-                {{ if .ObjectiveBean.Open }}
-                <span class="label label-success">{{ .ObjectiveBean.Status }}
-                  {{ else }}
-                  <span class="label label-default">{{ .ObjectiveBean.Status }}
-                    {{ end }}
-                  </span>
-
-              </p>
-            </div>
-            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <span style="display: block; text-align: right; font-size: smaller;">
-                <span class="label label-info">{{ .ObjectiveBean.Author.GetGender }}</span>
-                <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
-                @<a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}"><span
-                    style="font-weight: lighter;">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</span></a>
-                {{ .ObjectiveBean.CreatedAtDate }}
-              </span>
-            </div>
-          </div>
-        </div>
-        <div class="panel-body">
-          <p style="white-space: pre-wrap;">
-            {{ .ObjectiveBean.Objective.Body }}
-          </p>
-        </div>
-        <div class="panel-footer">
-          {{/* 这是面板注脚 */}}
-          {{/* 这是面板注脚中的茶台计数 */}}
-          <span style="font-size: smaller; margin-inline-end: 20px;">
-            {{ if .ObjectiveBean.Open }}
-            <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">
-              <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
-            </a>
+          {{ if .ObjectiveBean.Open }}
+          <i class="bi-buildings" style="font-size: 2rem; color:white;"></i>
+         
+          <span class="label label-success">开放式茶话会
             {{ else }}
-            <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
-            {{ end }}
-            {{ .ObjectiveBean.Count }}
+            <i class="bi-buildings-fill" style="font-size: 2rem; color:black;"></i>
+
+            <span class="label label-default">封闭式茶话会
+              {{ end }}
+            </span>
+
+        </p>
+      </div>
+      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <span style="display: block; text-align: right; font-size: smaller;">
+          {{if .ObjectiveBean.Author.Gender }}
+          <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+          {{ else }}
+          <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+          {{ end }}
+          {{ .ObjectiveBean.Author.Name }}
+          <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
+          @<a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}"><span
+              style="font-weight: lighter;">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</span></a>
+          {{ .ObjectiveBean.CreatedAtDate }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-body">
+    <p style="white-space: pre-wrap;">
+      {{ .ObjectiveBean.Objective.Body }}
+    </p>
+  </div>
+  <div class="panel-footer">
+    {{/* 这是面板注脚 */}}
+    {{/* 这是面板注脚中的茶台计数 */}}
+    <span style="font-size: smaller; margin-inline-end: 20px;">
+      {{ if .ObjectiveBean.Open }}
+      <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">
+        <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
+      </a>
+      {{ else }}
+      <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
+      {{ end }}
+      {{ .ObjectiveBean.Count }}
+    </span>
+
+    {{ if .ObjectiveBean.Objective.IsEdited }}
+    {{/* 编辑过（补充内容），显示编辑时间  */}}
+    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+    <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .ObjectiveBean.Objective.EditAtDate }} </span>
+    {{ else }}
+    {{/* 没有编辑过（补充内容）则留空白 */}}
+    {{ end }}
+    <div class="pull-right">
+      <a href="#"></a>
+    </div>
+  </div>
+</div>
+
+
+
+<hr />
+{{/* 检查当前浏览用户是否可以创建新茶台-开始 */}}
+{{ if .IsGuest }}
+<p class="text text-center"><a href="/v1/login">登陆</a> 以开始聊天品茶 </p>
+{{ else }}
+
+{{ if .ObjectiveBean.Open }}
+{{/* 如果是开放式茶围 */}}
+<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+<a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
+{{ else }}
+{{ if .IsInvited }}
+{{/* 是封闭式茶围的受邀请团队成员 */}}
+<p class="text-center">
+  <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+  <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
+</p>
+{{ else }}
+<p class="text-center">
+  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
+  茶博士：这是封闭式茶话会,必须是围主邀请的茶团成员，才能入围聊天品茶噢。
+</p>
+{{ end }}
+{{ end }}
+{{ end }}
+{{/* 检查当前浏览用户是否可以创建新茶台-结束 */}}
+<hr />
+
+
+
+
+{{/* 这个茶话会的全部茶台逐一展示 */}}
+{{ range .ProjectBeanList }}
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left media-middle">
+        {{ if .Count }}
+        <span class="badge">{{ .Count }}</span>
+        {{ else }}
+        {{ end }}
+
+        {{ if .Open }}
+        <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+          <img class="media-object" src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="32" height="32">
+        </a>
+        {{ else }}
+        <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+          <img class="media-object" src="/v1/static/image/teachat-table-fill.svg" alt="茶台封面" width="32" height="32">
+        </a>
+       {{ end }}
+      </div>
+      <div class="media-body">
+        <p>
+          <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+            <h4>
+              {{ .Project.Title }}
+              </h5>
+          </a>
+          {{ if .Open }}
+          <span class="label label-success" style="margin-inline-end: 30px;">
+            {{ .Status }}
           </span>
 
-          {{ if .ObjectiveBean.Objective.IsEdited }}
-          {{/* 编辑过（补充内容），显示编辑时间  */}}
-          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-          <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .ObjectiveBean.Objective.EditAtDate }} </span>
           {{ else }}
-          {{/* 没有编辑过（补充内容）则留空白 */}}
+          <span class="label label-default" style="margin-inline-end: 30px;">
+            {{ .Status }}
+          </span>
+
           {{ end }}
-          <div class="pull-right">
-            <a href="#"></a>
-          </div>
-        </div>
-      </div>
 
-
-      
-      <hr />
-      {{/* 检查当前浏览用户是否可以创建新茶台-开始 */}}
-      {{ if .IsGuest }}
-      <p class="text text-center"><a href="/v1/login">登陆</a> 以开始聊天品茶 </p>
-      {{ else }}
-      
-      {{ if .ObjectiveBean.Open }}
-      {{/* 如果是开放式茶围 */}}
-      <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-      <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
-      {{ else }}
-      {{ if .IsInvited }}
-      {{/* 是封闭式茶围的受邀请团队成员 */}}
-      <p class="text-center">
-        <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-        <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
-      </p>
-      {{ else }}
-      <p class="text-center">
-        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
-        茶博士：这是封闭式茶话会,必须是围主邀请的茶团成员，才能开新台呢。
-      </p>
-      {{ end }}
-      {{ end }}
-      {{ end }}
-      {{/* 检查当前浏览用户是否可以创建新茶台-结束 */}}
-      <hr />
-
-
-     
-
-      {{/* 这个茶话会的全部茶台逐一展示 */}}
-      {{ range .ProjectBeanList }}
-
-      <div class="panel panel-default">
-        <div class="panel-body">
-          <div class="media">
-            <div class="media-left media-middle">
-              {{ if .Count }}
-              <span class="badge">{{ .Count }}</span>
+          <span style="margin-inline-end: 30px;">
+            <span style="font-size: small;">
+              {{if .Author.Gender }}
+              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
               {{ else }}
+              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
               {{ end }}
-              <a href="/v1/project/detail?id={{ .Project.Uuid }}">
-                <img class="media-object" src="/v1/static/image/{{ .Project.Cover }}.jpeg" alt="茶台封面">
-              </a>
-            </div>
-            <div class="media-body">
-              <p>
-                <a href="/v1/project/detail?id={{ .Project.Uuid }}">
-                  <h4>
-                    {{ .Project.Title }}
-                    </h5>
-                </a>
-                {{ if .Open }}
-                <span class="label label-success" style="margin-inline-end: 30px;">
-                  {{ .Status }}
-                </span>
+              {{ .Author.Name }}
+              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+            </span>
+          </span>
 
-                {{ else }}
-                <span class="label label-default" style="margin-inline-end: 30px;">
-                  {{ .Status }}
-                </span>
-
-                {{ end }}
-
-                <span style="margin-inline-end: 30px;">
-                  <span style="font-size: small;">
-                    <span class="label label-info">{{ .Author.GetGender }}</span>
-                    {{ .Author.Name }}
-                    @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
-                  </span>
-                </span>
-
-                <span style="font-weight: lighter;">
-                  {{ .CreatedAtDate }}
-                </span>
-              </p>
-              {{ .Project.Body }} ...
-            </div>
-
-          </div>
-        </div>
+          <span style="font-weight: lighter;">
+            {{ .CreatedAtDate }}
+          </span>
+        </p>
+        {{ .Project.Body }} ...
       </div>
 
-      {{ end }}
     </div>
+  </div>
+</div>
 
-  </li>
-</ul>
+{{ end }}
 
 {{ end }}

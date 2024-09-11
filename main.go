@@ -78,7 +78,6 @@ func main() {
 
 	// defined in route_thread.go
 	mux.HandleFunc("/v1/thread/draft", route.DraftThread)
-	mux.HandleFunc("/v1/thread/accept", route.AcceptDraftThread)
 	mux.HandleFunc("/v1/thread/detail", route.ThreadDetail)
 	mux.HandleFunc("/v1/thread/edit", route.EditThread)
 	mux.HandleFunc("/v1/thread/update", route.UpdateThread)
@@ -86,7 +85,6 @@ func main() {
 
 	//定义在 route_post.go
 	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
-	mux.HandleFunc("/v1/post/accept", route.AcceptDraftPost)
 	mux.HandleFunc("/v1/post/edit", route.HandleEditPost)
 	mux.HandleFunc("/v1/post/detail", route.PostDetail)
 

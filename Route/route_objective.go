@@ -391,7 +391,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		ok, err := obD.ObjectiveBean.Objective.IsInvitedMember(sUser.Id)
 		if err != nil {
 			util.Warning(err, " Cannot read objective-bean list")
-			Report(w, r, "您好，���是��条��是��，��������女����华。��电考拉为你时������������。")
+			Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌着。")
 			return
 		}
 		obD.IsInvited = ok

@@ -10,18 +10,19 @@
 </ol>
 
 
+<hr />
+{{ if .Open }}
+<span style="margin-inline-end: 30px;">
+  <a href="/v1/team/team_member/join?id={{ .Team.Uuid }}">申请加入该团</a>
+</span>
 
-  {{ if .Open }}
-  <span style="margin-inline-end: 30px;">
-    <a href="/v1/team/team_member/join?id={{ .Team.Uuid }}">申请加入该团</a>
-  </span>
-  
-  {{ else }}
-  <p class="text-center">
-    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
-    茶博士提示：封闭式茶团不接受加盟申请
-  </p>
-  {{ end }}
+{{ else }}
+<p class="text-center">
+  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
+  茶博士提示：封闭式茶团不接受加盟申请
+</p>
+{{ end }}
+<hr />
 
   
 
@@ -30,11 +31,7 @@
 {{/*  这是指定茶团详情展示页面  */}}
 
 <div class="media">
-  <div class="media-left">
-
-    <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="茶团旗帜">
-
-  </div>
+  
   <div class="media-body">
     <div class="panel panel-default">
       <div class="panel-heading">
@@ -49,8 +46,11 @@
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block;text-align: center;">
               {{ if .Open }}
+              <i class="bi-people" style="font-size: 2rem;"></i>
+              
               <span class="label label-success">{{ .Team.TeamProperty }}
                 {{ else }}
+                <i class="bi-people-fill" style="font-size: 2rem;"></i>
                 <span class="label label-default">{{ .Team.TeamProperty }}
                   {{ end }}
                 </span>
@@ -59,7 +59,11 @@
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: right; font-size: smaller;">
-              <span class="label label-info">{{ .Founder.GetGender }}</span>
+              {{if .Founder.Gender }}
+              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+              {{ end }}
               <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
               @<span style="font-style: italic;"><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
 
@@ -109,7 +113,11 @@
       <div class="media-body">
 
         <span  style="font-size: small;">
-          <span class="label label-info">{{ .User.GetGender }}</span>
+          {{if .User.Gender }}
+            <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+            {{ end }}
         </span>
         
         {{ .User.Name }}
@@ -136,7 +144,11 @@
       </div>
       <div class="media-body">
         <span  style="font-size: small;">
-          <span class="label label-info">{{ .User.GetGender }}</span>
+          {{if .User.Gender }}
+          <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+          {{ else }}
+          <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+          {{ end }}
           </span>
 
         {{ .User.Name }}

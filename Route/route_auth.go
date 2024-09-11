@@ -119,25 +119,34 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	watchword := r.PostFormValue("watchword")
 	wordValid, err := data.CheckWatchword(watchword)
 	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		Report(w, r, "茶博士嘀咕说，今天吃鸡？不是来喝茶吗？")
 		return
 	} else {
 		if wordValid {
 			// 口令正确
-			user, err := data.UserByEmail(r.PostFormValue("email"))
-			//util.Info(watchword, "用户口令核对正确")
-			if err != nil {
-				util.Info(err, " Cannot find user")
-				http.Redirect(w, r, "/v1/login", http.StatusFound)
-				return
+			var s_u data.User
+			//检测用户提交的email参数，是不是提交了int格式的s_u_id
+			s_u_id, err := strconv.Atoi(r.PostFormValue("email"))
+			if err == nil {
+				// 提交了int格式的user_id
+				s_u, err = data.UserById(s_u_id)
+				if err != nil {
+					s_u, err = data.UserByEmail(r.PostFormValue("email"))
+					if err != nil {
+						util.Info(err, " Cannot find user")
+						Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
+						return
+					}
+				}
 			}
+
 			// 检查用户角色是否允许登录
 			// if user.Role == "traveller" || user.Role == "pilot" || user.Role == "captain" || user.Role == "UFO" {
-			if user.Password == data.Encrypt(r.PostFormValue("password")) {
+			if s_u.Password == data.Encrypt(r.PostFormValue("password")) {
 				//util.Info(user.Email, "密码匹配成功")
 
 				//创建新的会话
-				session, err := user.CreateSession()
+				session, err := s_u.CreateSession()
 				if err != nil {
 					util.Warning(err, " Cannot create session")
 					return
@@ -154,8 +163,8 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				//密码和用户名不匹配
-				util.Warning(user.Email, "密码和用户名不匹配。")
-				Report(w, r, "无所事事的茶博士嘀咕说，请确认密码是否正确，键盘大小写灯是否有电。")
+				util.Warning(s_u.Email, "密码和用户名不匹配。")
+				Report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 				return
 			}
 

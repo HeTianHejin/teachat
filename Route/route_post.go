@@ -261,7 +261,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	mess := data.AcceptMessage{
 		FromUserId:     1,
 		Title:          "新茶语邻座评审邀请",
-		Content:        "茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
+		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: aO.Id,
 	}
 	// 发送消息
@@ -273,49 +273,6 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	t := fmt.Sprintf("您好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", thread.Title)
 	// 提示用户草稿保存成功
 	Report(w, r, t)
-}
-
-// GET /v1/post/accept
-// AcceptDraftPost() 友邻盲评审查新品味draftPost是否符合文明发言
-func AcceptDraftPost(w http.ResponseWriter, r *http.Request) {
-	sess, err := Session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	err = r.ParseForm()
-	if err != nil {
-		util.Danger(err, " Cannot parse form")
-	}
-	//从会话中读取用户资料
-	sUser, err := sess.User()
-	if err != nil {
-		util.Danger(err, " Cannot get user from session")
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	// 读取拟评审的品味草稿
-	vals := r.URL.Query()
-	id, err := strconv.Atoi(vals.Get("id"))
-	if err != nil {
-		util.Warning(err, " Cannot convert id to int")
-		Report(w, r, "茶博士失魂鱼，未能读取新品味草稿资料，请稍后再试。")
-		return
-	}
-	post, err := data.GetDraftPost(id)
-	if err != nil {
-		util.Warning(err, " Cannot get draft post")
-		Report(w, r, "茶博士失魂鱼，未能读取新品味草稿资料，请稍后再试。")
-		return
-	}
-	// 检查用户是否受邀请有效状态的审茶官
-	if !sUser.CheckHasAcceptMessage(sUser.Id) {
-		Report(w, r, "您好，友邻盲评邀请已经过期失效啦，感谢你对维护茶棚文明秩序的支持。")
-		return
-	}
-	// 返回品味友邻盲评页面
-	GenerateHTML(w, &post, "layout", "navbar.private", "post.accept")
-
 }
 
 // POST /post/edit

@@ -1,9 +1,20 @@
 package data
 
 import (
+	"context"
 	"errors"
 	"time"
 )
+
+// 记录当前用户最后浏览页面，用于便利“返回”链接 功能
+type LastPage struct {
+	Id         int
+	UserId     int
+	LastPage   string
+	LastPageAt time.Time
+}
+
+// Create() 新建一条 LastPage记录
 
 // AcceptObject 友邻盲评对象
 type AcceptObject struct {
@@ -75,15 +86,22 @@ func (a *Acceptance) Get() (err error) {
 }
 
 // Acceptance.GetByAcceptObjectId() 根据友邻盲评对象id获取友邻盲评 1记录
-func (a *Acceptance) GetByAcceptObjectId() (acceptance Acceptance, err error) {
-	err = Db.QueryRow(`SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at FROM acceptances WHERE accept_object_id = $1`, a.AcceptObjectId).Scan(&acceptance.Id, &acceptance.AcceptObjectId, &acceptance.XAccept, &acceptance.XUserId, &acceptance.XAcceptedAt, &acceptance.YAccept, &acceptance.YUserId, &acceptance.YAcceptedAt)
+func (a *Acceptance) GetByAcceptObjectId() (Acceptance, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	query := `SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at 
+              FROM acceptances 
+              WHERE accept_object_id = $1`
+
+	row := Db.QueryRowContext(ctx, query, a.AcceptObjectId)
+	var acceptance Acceptance
+	err := row.Scan(&acceptance.Id, &acceptance.AcceptObjectId, &acceptance.XAccept, &acceptance.XUserId, &acceptance.XAcceptedAt, &acceptance.YAccept, &acceptance.YUserId, &acceptance.YAcceptedAt)
 	if err != nil {
-		return acceptance, err
+		return Acceptance{}, err
 	}
 	return acceptance, nil
 }
-
-// Get() ���id获取��评记录
 
 // Create（） AcceptObject新建一条盲评接纳对象的记录
 func (a *AcceptObject) Create() (err error) {
@@ -120,8 +138,10 @@ func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 		}
 		return ob, err
 	case 2:
-		pr, err := GetProjectById(ao.ObjectId)
-		if err != nil {
+		pr := Project{
+			Id: ao.ObjectId,
+		}
+		if err = pr.GetById(); err != nil {
 			return nil, err
 		}
 		return pr, err
@@ -129,7 +149,7 @@ func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 		dThread := DraftThread{
 			Id: ao.ObjectId,
 		}
-		if err = dThread.Get(); err != nil {
+		if err = dThread.GetById(); err != nil {
 			return nil, err
 		}
 		return dThread, err

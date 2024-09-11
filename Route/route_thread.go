@@ -67,8 +67,10 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查该茶台是否存在，而且状态不是草台状态
-	proj, err := data.GetProjectById(project_id)
-	if err != nil {
+	proj := data.Project{
+		Id: project_id,
+	}
+	if err = proj.GetById(); err != nil {
 		util.Warning(err, " Cannot get project")
 		Report(w, r, "您好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
 		return
@@ -133,7 +135,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		mess := data.AcceptMessage{
 			FromUserId:     1,
 			Title:          "新茶语邻座评审邀请",
-			Content:        "茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
+			Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 			AcceptObjectId: aO.Id,
 		}
 		//发送消息
@@ -483,58 +485,6 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /v1/thread/accept
-// 展示邻桌盲评页面
-func AcceptDraftThread(w http.ResponseWriter, r *http.Request) {
-	sess, err := Session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	// 读取当前访问用户资料
-	sUser, err := sess.User()
-	if err != nil {
-		util.Warning(err, " Cannot get user from session")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取会话用户资料。")
-		return
-	}
-	//检查一下用户是否普通用户
-	if sUser.Role != "traveller" {
-		util.Danger("Cannot accept thread")
-		Report(w, r, "茶博士提示，粗鲁的茶博士竟然强词夺理说，仅普通旅客可以查看新泡茶内容！")
-		return
-	}
-	vals := r.URL.Query()
-	id, err := strconv.Atoi(vals.Get("id"))
-	if err != nil {
-		util.Warning(err, " Cannot convert id to int")
-		Report(w, r, "茶博士失魂鱼，未能读取新泡茶议资料，请稍后再试。")
-		return
-	}
-	var dThread data.DThreadDetail
-	dThread.DraftThread = data.DraftThread{
-		Id: id,
-	}
-	err = dThread.DraftThread.Get()
-	if err != nil {
-		util.Warning("Cannot not read thread draft")
-		Report(w, r, "茶博士失魂鱼，未能找到新泡茶议资料，请稍后再试。")
-		return
-	}
-	//如果是普通用户，并且是未评估的茶议草稿，就进入盲评页面
-	if dThread.DraftThread.Class == 1 || dThread.DraftThread.Class == 2 {
-		dThread.SessUser = sUser
-		GenerateHTML(w, &dThread, "layout", "navbar.private", "thread.accept")
-		return
-	} else {
-		//拒绝打开详情页面
-		util.Danger("Cannot accept thread draft")
-		Report(w, r, "茶博士提示，粗鲁的茶博士竟然强词夺理说，新泡茶内容已经被外星人拿走了。")
-		return
-	}
-
-}
-
 // POST /v1/thread/plus
 // 附加型茶议，是针对某个品味（跟帖）发起的茶议草稿
 func PlusThread(w http.ResponseWriter, r *http.Request) {
@@ -679,7 +629,7 @@ func PlusThread(w http.ResponseWriter, r *http.Request) {
 	am := data.AcceptMessage{
 		FromUserId:     1,
 		Title:          "新茶议邻座评审邀请",
-		Content:        "茶博士隆重宣布：您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
+		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: ao.Id,
 	}
 	// 发送消息
@@ -688,8 +638,8 @@ func PlusThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 提示用户草稿保存成功
-	t := fmt.Sprintf("你好，你在“ %s ”茶台发布的茶议已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", proj.Title)
+	tips := fmt.Sprintf("你好，你在“ %s ”茶台发布的茶议已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", proj.Title)
 	// 提示用户草稿保存成功
-	Report(w, r, t)
+	Report(w, r, tips)
 
 }
