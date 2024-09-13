@@ -97,12 +97,11 @@
     </div>
   </div>
 
+
   {{/* 这是 针对某个post的“新茶议+” 撰写模版 */}}
   {{ if .IsInput }}
   <div class="panel panel-default">
-
     <div class="panel-body">
-
       <form role="form" action="/v1/thread/plus" method="post">
         <div class="form-group">
           <fieldset>
@@ -147,9 +146,9 @@
   </div>
 </div>
 {{ else }}
-<div class="well">
-  <p class="text text-center"><a href="/v1/login">登陆</a> 以开始聊天品茶 </p>
-</div>
+<hr />
+<p class="text text-center"><a href="/v1/login">登陆</a> 以开始聊天品茶 </p>
+<hr />
 {{ end }}
 
 {{/* 以下是针对这个品味的茶议展示，一页一打dozen，如果超过就显示“下一页”按钮 */}}
@@ -180,10 +179,10 @@
       </span>
     </p>
 
-    <h4>
+    <h5>
       <mark>{{ .Thread.TypeStatus }}</mark>
       <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
-    </h4>
+    </h5>
     <span style="font-size: small; margin-inline-start: 40px;">
       <span class="label label-default" style="margin-inline-end: 20px;">{{ .Status }}</span>
       {{ .Thread.Body }} ...

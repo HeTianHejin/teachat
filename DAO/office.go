@@ -7,14 +7,43 @@ import (
 )
 
 // 记录当前用户最后浏览页面，用于便利“返回”链接 功能
-type LastPage struct {
-	Id         int
-	UserId     int
-	LastPage   string
-	LastPageAt time.Time
+type LastQuery struct {
+	Id      int
+	UserId  int
+	Path    string
+	Query   string
+	QueryAt time.Time
 }
 
-// Create() 新建一条 LastPage记录
+// Create() 新建一条 LastQuery记录
+func (lq *LastQuery) Create() (err error) {
+	statement := `INSERT INTO last_queries (user_id, path, query, query_at) VALUES ($1, $2, $3, $4) RETURNING id`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(lq.UserId, lq.Path, lq.Query, lq.QueryAt).Scan(&lq.Id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Get() 读取一条 LastQuery记录
+func (lq *LastQuery) Get() (err error) {
+	statement := `SELECT id, user_id, path, query, query_at FROM last_queries WHERE user_id = $1 ORDER BY query_at DESC LIMIT 1`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(lq.UserId).Scan(&lq.Id, &lq.UserId, &lq.Path, &lq.Query, &lq.QueryAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 // AcceptObject 友邻盲评对象
 type AcceptObject struct {

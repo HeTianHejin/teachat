@@ -172,7 +172,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if thread.PostId != 0 {
-		// 说明这是一个附加类型的,针对某个post发表的茶议
+		// 说明这是一个附加类型的,针对某个post发表的茶议(chat-in-chat，讲开又讲，延伸话题)
 		tD.QuotePost, err = data.GetPostbyId(thread.PostId)
 		if err != nil {
 			util.Warning(err, " Cannot read post given post_id")

@@ -1,9 +1,12 @@
 {{ define "content" }}
 
-<ol class="breadcrumb">
-  <li role="presentation">大堂</li>
+<p class="text-center">
+  <a href="/v1/">大堂 </a>|
+  <a href="/v1/objective/square">茶话会 </a>|
+  <a href="/v1/team/open">茶团</a>
+</p>
 
-</ol>
+
 
 {{/* 这是茶棚主页 */}}
 
@@ -50,11 +53,11 @@
 
       <div class="panel-body">
 
-        <h4><mark>{{ .Thread.TypeStatus }}</mark>:
+        <h5><mark>{{ .Thread.TypeStatus }}</mark>:
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
             {{ .Thread.Title }}
           </a>
-        </h4>
+        </h5>
 
         <p>
           {{ .Thread.Body }} ...
@@ -138,12 +141,12 @@
       </div>
 
       <div class="panel-body">
-        <h4>
+        <h5>
         <mark>{{ .Thread.TypeStatus }}</mark>
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
             {{ .Thread.Title }}
           </a>
-        </h4>
+        </h5>
 
         <p>
           {{ .Thread.Body }} ...

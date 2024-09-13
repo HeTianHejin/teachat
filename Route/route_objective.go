@@ -383,12 +383,12 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//已经登录！
-	sUser, _ := s.User()
-	obD.SessUser = sUser
+	s_u, _ := s.User()
+	obD.SessUser = s_u
 	obD.IsGuest = false
 	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
 	if ob.Class == 2 {
-		ok, err := obD.ObjectiveBean.Objective.IsInvitedMember(sUser.Id)
+		ok, err := obD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Warning(err, " Cannot read objective-bean list")
 			Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌着。")
@@ -396,8 +396,14 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		}
 		obD.IsInvited = ok
 	}
+
+	// 记录用户最后查询的资讯
+	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
+		util.Warning(err, s_u.Email, " Cannot record last query path")
+	}
+
 	//检测u.Id == o.UserId是否这个茶话会主人（作者）
-	if sUser.Id == obD.ObjectiveBean.Author.Id {
+	if s_u.Id == obD.ObjectiveBean.Author.Id {
 		//是作者
 		//准备页面数据
 		obD.ObjectiveBean.Objective.PageData.IsAuthor = true

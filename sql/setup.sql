@@ -38,6 +38,17 @@ drop table inaugurations;
 drop table parts;
 drop table tool_lists;
 drop table evidences;
+drop table last_queries;
+
+
+CREATE TABLE last_queries (
+    id                 SERIAL PRIMARY KEY,
+    user_id            INTEGER REFERENCES users(id),
+    path               VARCHAR(255),
+    query              VARCHAR(255),
+    query_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 
 CREATE TABLE evidences (
     id                 SERIAL PRIMARY KEY,

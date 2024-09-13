@@ -24,6 +24,20 @@ import (
    存放各个路由文件共享的一些方法
 */
 
+// 记录用户最后的查询路径和参数
+func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
+	lq := data.LastQuery{
+		UserId:  sess_user_id,
+		Path:    path,
+		Query:   raw_query,
+		QueryAt: time.Now(),
+	}
+	if err = lq.Create(); err != nil {
+		return err
+	}
+	return
+}
+
 // Fetch and process user-related data,从会话查获当前浏览用户资料荚
 func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, teams []data.Team, err error) {
 	// 读取已登陆用户资料
@@ -497,7 +511,13 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 		GenerateHTML(w, &userBPD, "layout", "navbar.public", "feedback")
 		return
 	}
-	userBPD.SessUser, _ = s.User()
+	s_u, _ := s.User()
+	userBPD.SessUser = s_u
+
+	// 记录用户最后查询的资讯
+	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
+		util.Warning(err, s_u.Id, " Cannot record last query path")
+	}
 	GenerateHTML(w, &userBPD, "layout", "navbar.private", "feedback")
 }
 
@@ -541,6 +561,16 @@ func VerifyEmailFormat(email string) bool {
 	pattern := `^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(email)
+}
+
+// 验证提交的string是否 1 正整数？
+func VerifyPositiveIntegerFormat(str string) bool {
+	if str == "" {
+		return false
+	}
+	pattern := `^[1-9]\d*$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(str)
 }
 
 // 验证team_id_list:"2,19,87..."字符串格式是否正确，正确返回true，错误返回false。

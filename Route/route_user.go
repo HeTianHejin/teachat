@@ -6,7 +6,7 @@ import (
 	util "teachat/Util"
 )
 
-// GET /user/Biography
+// GET /user/Biography?id=
 // 展示用户个人主页
 func Biography(w http.ResponseWriter, r *http.Request) {
 	//检查是否已经登录

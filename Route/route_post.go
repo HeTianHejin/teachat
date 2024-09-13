@@ -26,7 +26,7 @@ func HandleEditPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// get /v1/post/detail？id=
+// get /v1/post/detail?id=
 // 品味的详情
 func PostDetail(w http.ResponseWriter, r *http.Request) {
 	var err error

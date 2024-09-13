@@ -327,7 +327,7 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/project/detail
+// GET /v1/project/detail?id=
 // 展示指定的UUID茶台详情
 func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	var err error

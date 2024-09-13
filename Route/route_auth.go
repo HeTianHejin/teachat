@@ -117,6 +117,8 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	}
 	// 增加口令检查，提示用户这是茶话会
 	watchword := r.PostFormValue("watchword")
+	pw := r.PostFormValue("password")
+
 	wordValid, err := data.CheckWatchword(watchword)
 	if err != nil {
 		Report(w, r, "茶博士嘀咕说，今天吃鸡？不是来喝茶吗？")
@@ -125,24 +127,29 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		if wordValid {
 			// 口令正确
 			var s_u data.User
-			//检测用户提交的email参数，是不是提交了int格式的s_u_id
-			s_u_id, err := strconv.Atoi(r.PostFormValue("email"))
-			if err == nil {
-				// 提交了int格式的user_id
+			email := r.PostFormValue("email")
+			// Check if the email parameter is a positive integer (user ID)
+			if s_u_id, err := strconv.Atoi(email); err == nil && s_u_id > 0 {
+				// Retrieve user by ID
 				s_u, err = data.UserById(s_u_id)
 				if err != nil {
-					s_u, err = data.UserByEmail(r.PostFormValue("email"))
-					if err != nil {
-						util.Info(err, " Cannot find user")
-						Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
-						return
-					}
+					Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
+					return
 				}
+			} else if VerifyEmailFormat(email) {
+				// Retrieve user by email
+				s_u, err = data.UserByEmail(email)
+				if err != nil {
+					Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美?")
+					return
+				}
+			} else {
+				// Invalid email format
+				Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确,而且身形健美")
+				return
 			}
 
-			// 检查用户角色是否允许登录
-			// if user.Role == "traveller" || user.Role == "pilot" || user.Role == "captain" || user.Role == "UFO" {
-			if s_u.Password == data.Encrypt(r.PostFormValue("password")) {
+			if s_u.Password == data.Encrypt(pw) {
 				//util.Info(user.Email, "密码匹配成功")
 
 				//创建新的会话
@@ -159,7 +166,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				}
 
 				http.SetCookie(w, &cookie)
-				http.Redirect(w, r, "/v1/", http.StatusFound)
+				http.Redirect(w, r, "/v1/objective/square/", http.StatusFound)
 				return
 			} else {
 				//密码和用户名不匹配
@@ -168,15 +175,8 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// } else {
-			// 	//用户角色被阻止登录
-			// 	util.Info(user.Email, "因为该用户没有权限登入")
-			// 	http.Redirect(w, r, "/v1/login", http.StatusFound)
-			// 	return
-			// }
 		} else {
 			//输入了错误的口令
-			util.Info(watchword, "因为口令不正确导致登入失败")
 			Report(w, r, "您好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
 			return
 		}
