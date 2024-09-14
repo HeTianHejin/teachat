@@ -33,23 +33,36 @@
   <div class="container">
     
     {{ template "navbar" .SessUser }}
-
+    
     {{ template "content" . }}
-
+    
   </div> {{/*  /container  */}}
-
-  <footer class="footer">
-    <div class="well">
-      <span style="display: block; text-align: center;">
-        <a href="/v1/about" style="color: #000000; margin-inline-end: 20px;">关于</a>
-        感谢 <a href="https://www.glyphicons.com/">Glyphicons</a> & <a
-          href="https://icons.bootcss.com/"  style="margin-inline-end: 20px;">Bootstrap-icons</a>
-        联系: <a href="mailto:hejinluo@gmail.com" style="color: #000000">hejinluo@gmail.com</a>
-      </span>
-    </div>
+    
+    
+    
+    
+    
+    
+    
+    <hr />
+      <p class="text-center">
+        感谢:
+        <a href="https://golang.google.cn">Golang</a> 
+        <a href="https://www.postgresql.org/">PostgreSQL</a> 
+        <a href="https://code.visualstudio.com/">VisualStudioCode</a> 
+        <a href="https://aws.amazon.com/q/">Amazon Q</a> 
+        <a href="https://github.com/twbs/bootstrap">Bootstrap</a> 
+        <a href="https://www.glyphicons.com/">Glyphicons</a> 
+        <a href="https://icons.bootcss.com/">Bootstrap-icons</a> 
+      </p>
+      <p class="text-center">
+      <a href="/v1/about"  style="color: #000000">关于</a> 
+      联系: <a href="mailto:hejinluo@gmail.com" style="color: #000000">hejinluo@gmail.com</a>
+      </p>
+    
+    
     
  
-  </footer>
 
   <script src="/v1/static/js/jquery.min.js"></script>
   <script src="/v1/static/js/bootstrap.min.js"></script>

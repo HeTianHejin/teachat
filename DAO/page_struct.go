@@ -106,6 +106,7 @@ type DThreadDetail struct {
 // 用于茶议详情页面渲染
 type ThreadDetail struct {
 	SessUser              User // 当前会话用户
+	IsGuest               bool // 是否为游客
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
 	IsInput               bool // 是否需要显示输入面板

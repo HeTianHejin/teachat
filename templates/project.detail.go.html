@@ -168,7 +168,7 @@
 <hr />
 {{ if .IsGuest }}
 {{/* 不是游客 */}}
-<p class="text text-center"><a href="/v1/login">登陆</a> 以开始聊天品茶 </p>
+<p class="text text-center"><a href="/v1/login">登机</a> 以开始聊天品茶 </p>
 {{ else }}
 <hr />
 <p class="text-center"> <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
@@ -178,6 +178,8 @@
 <hr />
 {{ end }}
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-结束 */}}
+
+
 
 {{/* 以下是此茶台的全部茶议展示 */}}
 {{ range .ThreadBeanList }}

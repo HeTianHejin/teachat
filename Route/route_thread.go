@@ -270,6 +270,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.ThreadBean.Thread.AddHitCount()
 			// 填写页面数据
 			tD.ThreadBean.Thread.PageData.IsAuthor = false
+			tD.IsGuest = true
 			tD.IsInput = false
 			tD.SessUser = data.User{
 				Id:   0,
@@ -300,6 +301,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			tD.SessUser = s_u
+			tD.IsGuest = false
 			tD.SessUserDefaultTeam = s_default_team
 			tD.SessUserSurvivalTeams = s_survival_teams
 
@@ -330,7 +332,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				tD.ThreadBean.Thread.AddHitCount()
 				// 填写页面数据
 				tD.SessUser = s_u
-				//tPD.IsGuest = false
+				tD.IsGuest = false
 				tD.ThreadBean.Thread.PageData.IsAuthor = false
 
 				//检查是否封闭式茶台
