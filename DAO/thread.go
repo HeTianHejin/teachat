@@ -44,7 +44,7 @@ type DraftThread struct {
 	Body      string //提议？话题？
 	Class     int    //分类//0：原始草稿，1:已通过（友邻盲评），2:（友邻盲评）已拒绝
 	CreatedAt time.Time
-	Type      int //哪一种提法？0: "我觉得",1: "出个主意", 2: "推荐解决方案",
+	Type      int //哪一种提法？0: "我觉得",1: "出主意",
 	PostId    int //针对那一个品味？
 	TeamId    int //作者团队id
 
@@ -53,8 +53,7 @@ type DraftThread struct {
 // 根据type属性的int值，返回方便阅读的自然语字符
 var TypeStatus = map[int]string{
 	0: "我觉得",
-	1: "出个主意",
-	2: "推荐解决方案",
+	1: "出主意",
 }
 
 var ThreadStatus = map[int]string{
