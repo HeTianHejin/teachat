@@ -35,13 +35,13 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，此地无银三百两，请确认后再试。")
 		return
 	}
-	// 检查ty值是否 0、1、2
+	// 检查ty值是否 0、1
 	switch ty {
-	case 0, 1, 2:
+	case 0, 1:
 		break
 	default:
 		util.Warning("Invalid thread type value")
-		Report(w, r, "您好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
+		Report(w, r, "您好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
 	body := r.PostFormValue("topic")
@@ -333,9 +333,27 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				//tPD.IsGuest = false
 				tD.ThreadBean.Thread.PageData.IsAuthor = false
 
-				// 打开品味撰写
-				tD.IsInput = true
-				// 如果当前用户已经品味过了，则关闭撰写输入面板
+				//检查是否封闭式茶台
+				if tD.QuoteProject.Class == 2 {
+					//是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
+					ok, err := tD.QuoteProject.IsInvitedMember(s_u.Id)
+					if err != nil {
+						Report(w, r, "您好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
+						return
+					}
+					if ok {
+						// 当前用户是��话会��请��队成员，可以新开茶议
+						tD.IsInput = true
+					} else {
+						// 当前用户不是��话会��请��队成员，不能新开茶议
+						tD.IsInput = false
+					}
+				} else {
+					// 是开放式茶台，任何人都可以发布品味
+					tD.IsInput = true
+				}
+
+				// 如果当前用户已经品味过了，则关闭撰写输入面板(每人仅可表态一次)
 				// 用于页面判断是否显示品味POST（回复）撰写面板
 				for i := range tD.PostBeanList {
 					if tD.PostBeanList[i].Post.UserId == s_u.Id {

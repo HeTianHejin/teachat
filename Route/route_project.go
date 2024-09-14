@@ -453,10 +453,10 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	//如果这是class=2封闭式茶台，需要检查当前浏览用户是否可以创建新茶议
 	if pD.Project.Class == 2 {
-		// ���查当前用户是否是��话会��请��队成员
+		// 是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
 		ok, err := pD.Project.IsInvitedMember(s_u.Id)
 		if err != nil {
-			Report(w, r, "您好，������失������，未能读取专����台资料。")
+			Report(w, r, "您好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 			return
 		}
 		if ok {
