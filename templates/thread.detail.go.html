@@ -447,7 +447,7 @@
     {{/* [不是茶议作者区域] 决定是否显示品味编辑区 */}}
     {{ if .IsInput }}
 
-    {{/* [不是茶议作者区域] 这是品味编辑区开始 */}}
+    {{/* [不是茶议作者区域] 这是品味编辑区-撰写模版 开始 */}}
     <div class="panel panel-default">
 
       <div class="panel-body">
@@ -455,16 +455,16 @@
 
           <div class="form-group">
             <fieldset>
-              <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-                <label>请您品味（17~456字）：</label>
+              <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+                <i class="bi bi-plus-square-dotted"></i>
               </div>
 
-              <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
                 <input type="radio" name="attitude" id="support" style="width: fit-content;" value="true" required />
                 <label for="support">颔首</label>
               </div>
 
-              <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
                 <input type="radio" name="attitude" id="oppose" value="false" style="width: fit-content;" required />
                 <label for="oppose">摇头</label>
               </div>
@@ -473,7 +473,7 @@
 
           <div class="form-group">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <textarea class="form-control" name="body" id="body" rows="3" minlength="17" maxlength="567"
+              <textarea class="form-control" name="body" id="body" rows="3" minlength="17" maxlength="567" placeholder="请您品味（17~456字）"
                 required></textarea>
             </div>
           </div>
@@ -507,6 +507,8 @@
     </div>
     {{ end }}
     {{/* [不是茶议作者区域] 品味编辑区结束 */}}
+
+    
 
     {{/* 展示其他用户的品味 */}}
     {{ range .PostBeanList }}
