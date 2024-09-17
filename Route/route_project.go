@@ -430,8 +430,10 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsInput = false
 		pD.IsGuest = true
 		pD.SessUser = data.User{
-			Id:   0,
-			Name: "游客",
+			Id:        0,
+			Name:      "游客",
+			Footprint: r.URL.Path,
+			Query:     r.URL.RawQuery,
 		}
 		// 返回给浏览者茶台详情页面
 		GenerateHTML(w, &pD, "layout", "navbar.public", "project.detail")
@@ -476,6 +478,8 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	if s_u.Id == pD.Project.UserId {
 		pD.Project.PageData.IsAuthor = true
 	}
-
+	// 用户足迹
+	pD.SessUser.Footprint = r.URL.Path
+	pD.SessUser.Query = r.URL.RawQuery
 	GenerateHTML(w, &pD, "layout", "navbar.private", "project.detail")
 }

@@ -38,7 +38,7 @@ func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 	return
 }
 
-// Fetch and process user-related data,从会话查获当前浏览用户资料荚
+// Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队
 func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, teams []data.Team, err error) {
 	// 读取已登陆用户资料
 	s_u, err = sess.User()
@@ -515,9 +515,9 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 	userBPD.SessUser = s_u
 
 	// 记录用户最后查询的资讯
-	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
-		util.Warning(err, s_u.Id, " Cannot record last query path")
-	}
+	// if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
+	// 	util.Warning(err, s_u.Id, " Cannot record last query path")
+	// }
 	GenerateHTML(w, &userBPD, "layout", "navbar.private", "feedback")
 }
 

@@ -110,6 +110,7 @@ type ThreadDetail struct {
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
 	IsInput               bool // 是否需要显示输入面板
+	IsPostExist           bool // 是否已经回复过了
 
 	NumSupport int // 支持人数
 	NumOppose  int // 反对人数
@@ -142,6 +143,7 @@ type ThreadBean struct {
 // 用于跟贴详情页面渲染
 type PostDetail struct {
 	SessUser              User // 当前会话用户
+	IsGuest               bool // 是否为游客
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
 	IsAuthor              bool // 是否为品味作者

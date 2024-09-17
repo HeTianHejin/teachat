@@ -374,22 +374,31 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
+			// 用户足迹
+			Footprint: r.URL.Path,
+			Query:     r.URL.RawQuery,
 		}
+
 		oD.IsGuest = true
 		// 是否受邀请团队成员？
 		oD.IsInvited = false
 
-		// 用户足迹
-		oD.SessUser.Footprint = r.URL.Path
-		oD.SessUser.Query = r.URL.RawQuery
 		//配置公开导航条的茶话会详情页面
 		GenerateHTML(w, &oD, "layout", "navbar.public", "objective.detail")
 		return
 	}
 	//已经登录！
 	s_u, _ := s.User()
-	oD.SessUser = s_u
 	oD.IsGuest = false
+	// 记录用户查询的资讯
+	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
+		util.Warning(err, s_u.Email, " Cannot record last query path")
+	}
+	// 用户足迹
+	s_u.Footprint = r.URL.Path
+	s_u.Query = r.URL.RawQuery
+	oD.SessUser = s_u
+
 	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
 	if ob.Class == 2 {
 		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
@@ -401,31 +410,18 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsInvited = ok
 	}
 
-	// 记录用户查询的资讯
-	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
-		util.Warning(err, s_u.Email, " Cannot record last query path")
-	}
-
 	//检测u.Id == o.UserId是否这个茶话会主人（作者）
 	if s_u.Id == oD.ObjectiveBean.Author.Id {
 		//是作者
 		//准备页面数据
 		oD.ObjectiveBean.Objective.PageData.IsAuthor = true
-		// 用户足迹
-		oD.SessUser.Footprint = r.URL.Path
-		oD.SessUser.Query = r.URL.RawQuery
+		//配置私有导航条的茶话会详情页面
 		GenerateHTML(w, &oD, "layout", "navbar.private", "objective.detail")
 		return
 	} else {
 		//不是作者
 		oD.ObjectiveBean.Objective.PageData.IsAuthor = false
-		// 记录用户查询的资讯
-		if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
-			util.Warning(err, s_u.Email, " Cannot record last query path")
-		}
-		// 用户足迹
-		oD.SessUser.Footprint = r.URL.Path
-		oD.SessUser.Query = r.URL.RawQuery
+
 		//配置私有导航条的茶话会详情页面
 		GenerateHTML(w, &oD, "layout", "navbar.private", "objective.detail")
 		return

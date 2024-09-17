@@ -189,7 +189,12 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				http.SetCookie(w, &cookie)
 
 				//读取足迹，以决定返回那一个页面
-				footprint := footprint + "?" + query
+				if footprint == "" {
+					footprint = "/v1/"
+				} else {
+
+					footprint = footprint + "?" + query
+				}
 				http.Redirect(w, r, footprint, http.StatusFound)
 				return
 			} else {

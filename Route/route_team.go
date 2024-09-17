@@ -307,7 +307,7 @@ func EmployedTeam(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/team/quit
 
-// GET /v1/team/detail
+// GET /v1/team/detail?id=
 // 显示茶团详细信息
 func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	//获取茶团资料
@@ -403,17 +403,22 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		tPD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
+			// 用户足迹
+			Footprint: r.URL.Path,
+			Query:     r.URL.RawQuery,
 		}
 		GenerateHTML(w, &tPD, "layout", "navbar.public", "team.detail")
 		return
 	}
-	su, err := s.User()
+	s_u, err := s.User()
 	if err != nil {
 		Report(w, r, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
-
-	tPD.SessUser = su
+	// 用户足迹
+	s_u.Footprint = r.URL.Path
+	s_u.Query = r.URL.RawQuery
+	tPD.SessUser = s_u
 	GenerateHTML(w, &tPD, "layout", "navbar.private", "team.detail")
 
 }

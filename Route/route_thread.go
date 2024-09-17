@@ -155,7 +155,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/thread/detail
+// GET /v1/thread/detail?uuid=
 // 显示茶议（议题）的详细信息，包括品味（回复帖子）和记录品味的表格
 func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
@@ -275,6 +275,9 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.SessUser = data.User{
 				Id:   0,
 				Name: "游客",
+				// 用户足迹
+				Footprint: r.URL.Path,
+				Query:     r.URL.RawQuery,
 			}
 			//迭代postList,标记非品味作者
 			for i := range tD.PostBeanList {
@@ -300,6 +303,10 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "您好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
+			// 用户足迹
+			s_u.Footprint = r.URL.Path
+			s_u.Query = r.URL.RawQuery
+
 			tD.SessUser = s_u
 			tD.IsGuest = false
 			tD.SessUserDefaultTeam = s_default_team
@@ -331,8 +338,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				//记录茶议被点击数
 				tD.ThreadBean.Thread.AddHitCount()
 				// 填写页面数据
-				tD.SessUser = s_u
-				tD.IsGuest = false
+
 				tD.ThreadBean.Thread.PageData.IsAuthor = false
 
 				//检查是否封闭式茶台
@@ -360,6 +366,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				for i := range tD.PostBeanList {
 					if tD.PostBeanList[i].Post.UserId == s_u.Id {
 						tD.IsInput = false
+						tD.IsPostExist = true
 						break
 					}
 				}

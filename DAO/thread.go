@@ -320,7 +320,7 @@ func (post *Post) Thread() (thread Thread, err error) {
 
 // 获取茶台的全部茶议
 func (project *Project) Threads() (threads []Thread, err error) {
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title ,edit_at, project_id, hit_count, type, post_id, team_id FROM threads WHERE post_id = 0 AND project_id = $1", project.Id)
+	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title ,edit_at, project_id, hit_count, type, post_id, team_id FROM threads WHERE post_id = 0 AND project_id = $1 order by edit_at ASC", project.Id)
 	if err != nil {
 		return
 	}

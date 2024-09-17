@@ -32,7 +32,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
-	var postPD data.PostDetail
+	var pD data.PostDetail
 	post, err := data.GetPostByUuid(uuid)
 	if err != nil {
 		util.Warning(err, " Cannot get post detail")
@@ -45,25 +45,25 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	postPD.PostBean = post_bean
+	pD.PostBean = post_bean
 	// 读取此品味引用的茶议
-	postPD.QuoteThread, err = post.Thread()
+	pD.QuoteThread, err = post.Thread()
 	if err != nil {
 		util.Warning(err, " Cannot get thread given post")
 		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议资料。")
 		return
 	}
 	// 截短此引用的茶议内容以方便展示
-	postPD.QuoteThread.Body = Substr(postPD.QuoteThread.Body, 66)
+	pD.QuoteThread.Body = Substr(pD.QuoteThread.Body, 66)
 	// 此品味针对的茶议作者资料
-	postPD.QuoteThreadAuthor, err = postPD.QuoteThread.User()
+	pD.QuoteThreadAuthor, err = pD.QuoteThread.User()
 	if err != nil {
 		util.Warning(err, " Cannot get thread author given post")
 		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
 	// 引用的茶议作者发帖时候选择的茶团
-	postPD.QuoteThreadAuthorTeam, err = data.GetTeamById(postPD.QuoteThread.TeamId)
+	pD.QuoteThreadAuthorTeam, err = data.GetTeamById(pD.QuoteThread.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot get quote-thread-author-default-team given post")
 		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
@@ -76,7 +76,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	postPD.ThreadBeanList, err = GetThreadBeanList(thread_list)
+	pD.ThreadBeanList, err = GetThreadBeanList(thread_list)
 	if err != nil {
 		util.Warning(err, " Cannot get thread_bean_list given thread_list")
 		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
@@ -85,60 +85,54 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取会话
 	// 检测pageData.ThreadList数量是否超过一打dozen
 	if len(thread_list) > 12 {
-		postPD.IsOverTwelve = true
+		pD.IsOverTwelve = true
 	} else {
-		postPD.IsOverTwelve = false
+		pD.IsOverTwelve = false
 	}
 	sess, err := Session(r)
 	if err != nil {
 		// 未登录，游客
-		postPD.IsAuthor = false
-		postPD.IsInput = false
+		pD.IsAuthor = false
+		pD.IsInput = false
 		// 填写页面数据
-		postPD.SessUser = data.User{
+		pD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
+			// 用户足迹
+			Footprint: r.URL.Path,
+			Query:     r.URL.RawQuery,
 		}
-		GenerateHTML(w, &postPD, "layout", "navbar.public", "post.detail")
+		GenerateHTML(w, &pD, "layout", "navbar.public", "post.detail")
 		return
 	}
 	// 读取已登陆用户资料
-	su, _ := sess.User()
-	postPD.SessUser = su
-	// 当前会话用户所在的默认团队
-	su_default_team, err := su.GetLastDefaultTeam()
+	s_u, _ := sess.User()
+	pD.SessUser = s_u
+	// 从会话查获当前浏览用户资料荚
+	s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(sess)
 	if err != nil {
-		util.Warning(err, " Cannot get sess-user-default-team given sess-user")
-		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
+		util.Warning(err, " Cannot get user-related data from session")
+		Report(w, r, "您好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
-	postPD.SessUserDefaultTeam = su_default_team
-	// 当前会话用户已经加入的状态正常的全部茶团
-	sess_teams, err := su.SurvivalTeams()
-	if err != nil {
-		util.Warning(err, " Cannot get sess-user-survival-teams given sess-user")
-		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
-		return
-	}
+	// 用户足迹
+	s_u.Footprint = r.URL.Path
+	s_u.Query = r.URL.RawQuery
 
-	for i, team := range sess_teams {
-		if team.Id == su_default_team.Id {
-			// remove default_eam from sTeams,移除，删除 重复的team
-			sess_teams = append(sess_teams[:i], sess_teams[i+1:]...)
-			break
-		}
-	}
-	postPD.SessUserSurvivalTeams = sess_teams
+	pD.SessUser = s_u
+	pD.IsGuest = false
+	pD.IsInput = true
+	pD.SessUserDefaultTeam = s_default_team
+	pD.SessUserSurvivalTeams = s_survival_teams
+
 	// 当前会话用户是否此品味作者？
-	if su.Id == post.UserId {
-		postPD.IsAuthor = true
-		postPD.IsInput = false
+	if s_u.Id == post.UserId {
+		pD.IsAuthor = true
 	} else {
-		postPD.IsAuthor = false
-		postPD.IsInput = true
+		pD.IsAuthor = false
 	}
 
-	GenerateHTML(w, &postPD, "layout", "navbar.private", "post.detail")
+	GenerateHTML(w, &pD, "layout", "navbar.private", "post.detail")
 
 }
 
