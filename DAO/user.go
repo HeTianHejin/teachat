@@ -18,6 +18,10 @@ type User struct {
 	Gender    int // 0: "女",1: "男",
 	Avatar    string
 	UpdatedAt time.Time
+	//Footprint 浏览页面足迹，不保存到数据库，
+	//用于临时记录点击‘登录’按钮时页面，以便登机成功后返回同一页面，提升用户体验
+	Footprint string
+	Query     string
 }
 
 // 未激活账号用户

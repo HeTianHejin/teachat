@@ -2,16 +2,25 @@
 
 <div class="panel panel-default">
   <div class="panel-heading">
-    <span class="lead">登录茶棚</span>
+    <span class="lead">刷卡</span>
   </div>
 
   <div class="panel-body">
     <form class="form-signin" role="form" action="/v1/authenticate" method="post">
 
       <input type="text" name="email" class="form-control" placeholder="电子邮箱或者茶客号" required autofocus>
+
       <input type="password" name="password" minlength="6" class="form-control" placeholder="密码" required>
+
       <input type="text" name="watchword" class="form-control" placeholder="口令" required>
-      <button class="btn btn-lg btn-primary btn-block" type="submit">刷卡登机</button>
+
+      {{/* 这是Footprint提交 */}}
+      <input type="hidden" name="footprint" value="{{ .SessUser.Footprint }}" />
+      <input type="hidden" name="query" value="{{ .SessUser.Query }}" />
+
+      <button class="btn btn-lg btn-primary btn-block" type="submit">
+        <i class="bi-airplane" style="font-size: 2rem;"></i>
+        登机</button>
 
     </form>
   </div>

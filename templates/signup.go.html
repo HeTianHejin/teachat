@@ -14,8 +14,8 @@
     <form class="form-signin" role="form" action="/v1/signup_account" method="post">
 
       <input id="name" type="text" name="name" class="form-control" placeholder="花名" required autofocus>
-      <input id="email" type="email" name="email" class="form-control" placeholder="电子邮箱" required>
-      <label for="biography">也许8个字母、数字和英文标点组合容易记住</label>
+      <input id="email" type="email" name="email" class="form-control" placeholder="电子邮箱" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
+      <label for="password">至少6个字符，建议8个字母、数字和英文标点组合</label>
       <input id="password" type="password" name="password" class="form-control" placeholder="密码" minlength="6"
         maxlength="42" required>
       <label for="biography">个人简介</label>

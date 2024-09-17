@@ -8,15 +8,31 @@ import (
 	util "teachat/Util"
 )
 
-// GET /Login
+// GET /Login?footprint=xxx&query=xxx
 // Show the Login page
 // 打开登录页面
 func Login(w http.ResponseWriter, r *http.Request) {
-	_, err := Session(r)
+	err := r.ParseForm()
+	if err != nil {
+		util.Warning(err, " Cannot parse form")
+		Report(w, r, "你好，闪电考拉正在为你服务的路上极速行动，请稍安勿躁。")
+		return
+	}
+	// 读取用户提交的，点击‘登机’时所在页面资料，以便checkin成功时回到原页面，改善体验
+	footprint := r.FormValue("footprint")
+	query := r.FormValue("query")
+	var aopD data.AcceptObjectPageData
+	aopD.SessUser.Footprint = footprint
+	aopD.SessUser.Query = query
+	// aopD.SessUser = data.User{
+	// 	Id:   0,
+	// 	Name: "游客",
+	// }
+	_, err = Session(r)
 	if err != nil {
 		// t := ParseTemplateFiles("layout", "navbar.public", "login")
 		// t.Execute(w, nil)
-		GenerateHTML(w, nil, "layout", "navbar.public", "login")
+		GenerateHTML(w, &aopD, "layout", "navbar.public", "login")
 		return
 	}
 	http.Redirect(w, r, "/v1/", http.StatusFound)
@@ -113,8 +129,13 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 func Authenticate(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.Warning(err, " Cannot ParseForm")
+		util.Warning(err, " Cannot parse form")
+		Report(w, r, "你好，闪电考拉正在为你服务的路上极速行动，请稍安勿躁。")
+		return
 	}
+	// 读取用户提交的资料
+	footprint := r.FormValue("footprint")
+	query := r.FormValue("query")
 	// 增加口令检查，提示用户这是茶话会
 	watchword := r.PostFormValue("watchword")
 	pw := r.PostFormValue("password")
@@ -166,10 +187,14 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				}
 
 				http.SetCookie(w, &cookie)
-				http.Redirect(w, r, "/v1/objective/square/", http.StatusFound)
+
+				//读取足迹，以决定返回那一个页面
+				footprint := footprint + "?" + query
+				http.Redirect(w, r, footprint, http.StatusFound)
 				return
 			} else {
-				//密码和用户名不匹配
+				//密码和用户名不匹配?
+				//如果连续输错密码，需要采取一些防暴力冲击措施！！！
 				util.Warning(s_u.Email, "密码和用户名不匹配。")
 				Report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 				return

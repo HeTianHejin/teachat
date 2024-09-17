@@ -93,7 +93,10 @@
 <hr />
 {{/* 检查当前浏览用户是否可以创建新茶台-开始 */}}
 {{ if .IsGuest }}
-<p class="text text-center"><a href="/v1/login">登机</a> 以开始聊天品茶 </p>
+<p class="text text-center">
+  <a href="/v1/login?footprint={{ .SessUser.Footprint }}&query={{ .SessUser.Query }}">
+  <i class="bi-airplane" style="font-size: 2rem; color: black;""></i>
+    登机</a> 以开始聊天品茶 </p>
 {{ else }}
 
 {{ if .ObjectiveBean.Open }}

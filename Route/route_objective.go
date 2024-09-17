@@ -321,14 +321,14 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /objective/detail?id=
+// GET /v1/objective/detail?uuid=
 // show the details of the objective
 // 读取指定的uuid茶话会详情
 func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var obD data.ObjectiveDetail
+	var oD data.ObjectiveDetail
 	vals := r.URL.Query()
-	uuid := vals.Get("id")
+	uuid := vals.Get("uuid")
 	if uuid == "" {
 		Report(w, r, "您好，茶博士迷糊了，请稍后再试。")
 		return
@@ -351,15 +351,15 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，这个茶话会主人据说因为很cool，资料似乎被外星人看中带走了。")
 		return
 	}
-	obD.ObjectiveBean, err = GetObjectiveBean(ob)
+	oD.ObjectiveBean, err = GetObjectiveBean(ob)
 	if err != nil {
 		util.Warning(err, " Cannot read objective-bean list")
 		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
 	//fetch public projects
-	project_list, _ := obD.ObjectiveBean.Objective.GetPublicProjects()
-	obD.ProjectBeanList, err = GetProjectBeanList(project_list)
+	project_list, _ := oD.ObjectiveBean.Objective.GetPublicProjects()
+	oD.ProjectBeanList, err = GetProjectBeanList(project_list)
 	if err != nil {
 		util.Warning(err, " Cannot read objective-bean list")
 		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
@@ -370,51 +370,64 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//未登录！
 		// 准备页面数据
-		obD.ObjectiveBean.Objective.PageData.IsAuthor = false
-		obD.SessUser = data.User{
+		oD.ObjectiveBean.Objective.PageData.IsAuthor = false
+		oD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 		}
-		obD.IsGuest = true
+		oD.IsGuest = true
 		// 是否受邀请团队成员？
-		obD.IsInvited = false
+		oD.IsInvited = false
+
+		// 用户足迹
+		oD.SessUser.Footprint = r.URL.Path
+		oD.SessUser.Query = r.URL.RawQuery
 		//配置公开导航条的茶话会详情页面
-		GenerateHTML(w, &obD, "layout", "navbar.public", "objective.detail")
+		GenerateHTML(w, &oD, "layout", "navbar.public", "objective.detail")
 		return
 	}
 	//已经登录！
 	s_u, _ := s.User()
-	obD.SessUser = s_u
-	obD.IsGuest = false
+	oD.SessUser = s_u
+	oD.IsGuest = false
 	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
 	if ob.Class == 2 {
-		ok, err := obD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
+		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Warning(err, " Cannot read objective-bean list")
 			Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌着。")
 			return
 		}
-		obD.IsInvited = ok
+		oD.IsInvited = ok
 	}
 
-	// 记录用户最后查询的资讯
+	// 记录用户查询的资讯
 	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
 		util.Warning(err, s_u.Email, " Cannot record last query path")
 	}
 
 	//检测u.Id == o.UserId是否这个茶话会主人（作者）
-	if s_u.Id == obD.ObjectiveBean.Author.Id {
+	if s_u.Id == oD.ObjectiveBean.Author.Id {
 		//是作者
 		//准备页面数据
-		obD.ObjectiveBean.Objective.PageData.IsAuthor = true
-		GenerateHTML(w, &obD, "layout", "navbar.private", "objective.detail")
+		oD.ObjectiveBean.Objective.PageData.IsAuthor = true
+		// 用户足迹
+		oD.SessUser.Footprint = r.URL.Path
+		oD.SessUser.Query = r.URL.RawQuery
+		GenerateHTML(w, &oD, "layout", "navbar.private", "objective.detail")
 		return
 	} else {
 		//不是作者
-		obD.ObjectiveBean.Objective.PageData.IsAuthor = false
-
+		oD.ObjectiveBean.Objective.PageData.IsAuthor = false
+		// 记录用户查询的资讯
+		if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
+			util.Warning(err, s_u.Email, " Cannot record last query path")
+		}
+		// 用户足迹
+		oD.SessUser.Footprint = r.URL.Path
+		oD.SessUser.Query = r.URL.RawQuery
 		//配置私有导航条的茶话会详情页面
-		GenerateHTML(w, &obD, "layout", "navbar.private", "objective.detail")
+		GenerateHTML(w, &oD, "layout", "navbar.private", "objective.detail")
 		return
 	}
 
