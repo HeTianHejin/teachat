@@ -251,7 +251,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET
+// GET /v1/project/new?uuid=xxx
 // 渲染创建新茶台表单页面
 func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
@@ -262,7 +262,7 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 
 	// 读取提交的数据，确定是哪一个茶话会需求新开茶台
 	vals := r.URL.Query()
-	uuid := vals.Get("id")
+	uuid := vals.Get("uuid")
 	var oD data.ObjectiveDetail
 	// 获取指定的目标茶话会
 	o := data.Objective{
@@ -272,12 +272,14 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "您好，茶博士失魂鱼，未能找到茶台，请稍后再试。")
 		return
 	}
-	//根据会话从数据库中读取当前用户的信息
+	//根据会话从数据库中读取当前用户的团队信息，默认和常用地点？
 	s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(s)
 	if err != nil {
-		Report(w, r, "您好，�����������了，��没有��水未能加载��话会页面，请稍后再试。")
+		Report(w, r, "您好，三人行，必有大佬焉，请稍后再试。")
 		return
 	}
+	//
+
 	// 填写页面数据
 	// 填写页面会话用户资料
 	oD.SessUser = s_u

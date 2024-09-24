@@ -1,7 +1,5 @@
 package data
 
-import "time"
-
 // UserBiographyPagedata 个人页面数据
 type UserBiography struct {
 	SessUser           User
@@ -267,17 +265,4 @@ type AcceptObjectPageData struct {
 
 type ConnectionFriendPageData struct {
 	SessUser User
-}
-
-// 动态定位数据
-type Location struct {
-	Time      time.Time
-	Longitude float64 // 经度
-	Latitude  float64 // 纬度
-	Altitude  float64 // 高度
-	Direction float64 // 方向
-	Speed     float64 // 速度
-	Accuracy  float64 // 精度
-	Provider  string  // 供应商
-	Address   string  // 邮政地址？航班航线名称？
 }

@@ -1,0 +1,71 @@
+{{ define "content" }}
+<ol class="breadcrumb">
+
+    <li><a href="/v1/">大堂</a></li>
+    <li class="active">新地址</li>
+
+</ol>
+
+{{/* 这是新创建一个地址页面 */}}
+
+<form role="form" action="/v1/address/new" method="post">
+
+    <div class="form-group">
+        <label for="nation">国家</label>
+        <input type="text" class="form-control" name="nation" id="nation" minlength="2" maxlength="24" value="中国"
+            required />
+    </div>
+
+    <div class="form-group">
+        <label for="province">省（州）</label>
+        <input type="text" class="form-control" name="province" id="province" minlength="2" maxlength="24" required />
+    </div>
+
+    <div class="form-group">
+        <label for="city">市</label>
+        <input type="text" class="form-control" name="city" id="city" minlength="2" maxlength="24" required />
+    </div>
+
+    <div class="form-group">
+        <label for="district">区</label>
+        <input type="text" class="form-control" name="district" id="district" minlength="2" maxlength="24" required />
+    </div>
+
+    <div class="form-group">
+        <label for="town">街道/镇</label>
+        <input type="text" class="form-control" name="town" id="town" minlength="2" maxlength="24" required />
+    </div>
+
+    <div class="form-group">
+        <label for="village">园区/村</label>
+        <input type="text" class="form-control" name="village" id="village" minlength="2" maxlength="24" />
+    </div>
+
+    <div class="form-group">
+        <label for="street">道路</label>
+        <input type="text" class="form-control" name="street" id="street" minlength="2" maxlength="24" required />
+    </div>
+
+    <div class="form-group">
+        <label for="building">楼栋</label>
+        <input type="text" class="form-control" name="building" id="building" minlength="2" maxlength="24" required />
+    </div>
+
+    <div class="form-group">
+        <label for="unit">单元（可选）</label>
+        <input type="text" class="form-control" name="unit" id="unit" minlength="2" maxlength="24" />
+    </div>
+
+    <div class="form-group">
+        <label for="portal_number">门牌号</label>
+        <input type="text" class="form-control" name="portal_number" id="portal_number" minlength="2" maxlength="24"
+            required />
+    </div>
+
+    <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+        <button type="submit" class="btn btn-default">确定</button>
+    </div>
+
+</form>
+
+{{ end }}

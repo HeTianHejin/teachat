@@ -1,21 +1,13 @@
 {{ define "content" }}
 
-{{ if .ObjectiveBean.Objective.PageData.IsAuthor }}
+
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li class="active">{{ .ObjectiveBean.Objective.Title }}@茶话会</li>
-
 </ol>
-{{ else }}
-<ol class="breadcrumb">
-  <li><a href="/v1/">大堂</a></li>
-  <li class="active">{{ .ObjectiveBean.Objective.Title }}@茶话会</li>
 
-</ol>
-{{ end }}
 
 {{/* 这是某个茶话会的详情页 */}}
-
 
 
 <div class="panel panel-default">
@@ -101,14 +93,17 @@
 
 {{ if .ObjectiveBean.Open }}
 {{/* 如果是开放式茶围 */}}
-<span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-<a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
+<a href="/v1/project/new?uuid={{ .ObjectiveBean.Objective.Uuid }}">
+  <i class="bi-patch-plus" style="font-size: 2rem; color: black;""></i>
+  我的茶台</a>
 {{ else }}
 {{ if .IsInvited }}
 {{/* 是封闭式茶围的受邀请团队成员 */}}
 <p class="text-center">
-  <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-  <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">我的茶台</a>
+  
+  <a href="/v1/project/new?uuid={{ .ObjectiveBean.Objective.Uuid }}">
+    <i class="bi-patch-plus" style="font-size: 2rem; color: black;""></i>
+    我的茶台</a>
 </p>
 {{ else }}
 <p class="text-center">
@@ -138,14 +133,21 @@
 
         {{ if .Open }}
         <a href="/v1/project/detail?id={{ .Project.Uuid }}">
-          <img class="media-object" src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="32" height="32">
+          <img class="media-object" src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="48" height="48">
         </a>
         {{ else }}
         <a href="/v1/project/detail?id={{ .Project.Uuid }}">
-          <img class="media-object" src="/v1/static/image/teachat-table-fill.svg" alt="茶台封面" width="32" height="32">
+          <img class="media-object" src="/v1/static/image/teachat-table-fill.svg" alt="茶台封面" width="48" height="48">
         </a>
        {{ end }}
+
+       {{/* 这是某个茶台（项目）的地址显示 */}}
+              
+                <i class="bi-geo" style="font-size: 1rem; color: black;"></i><span style="font-size: smaller;">金陵</span>
+              
       </div>
+
+
       <div class="media-body">
         <p>
           <a href="/v1/project/detail?id={{ .Project.Uuid }}">

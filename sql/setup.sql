@@ -1,44 +1,107 @@
-DROP database teachatwebdb;
-CREATE database teachatwebdb;
+DROP database teachat;
+CREATE database teachat;
 
-drop table users;
-drop table user_stars;
-drop table user_default_teams;
-drop table follows;
-drop table friends;
-drop table fans;
-drop table sessions;
-drop table objectives;
-drop table objective_invited_teams;
-drop table projects;
-drop table project_invited_teams;
-drop table draft_threads;
-drop table threads;
-drop table reads;
-drop table draft_posts;
-drop table posts;
-drop table accept_messages;
-drop table accept_objects;
-drop table new_message_counts;
-drop table acceptance;
-drop table teams;
-drop table team_members;
-drop table team_roles;
-drop table invitations;
-drop table invitation_replies;
-drop table families;
-drop table communities;
-drop table administrators;
-drop table watchwords;
-drop table monologues;
-drop table goods;
-drop table groups;
-drop table handicrafts;
-drop table inaugurations;
-drop table parts;
-drop table tool_lists;
-drop table evidences;
-drop table last_queries;
+drop table if exists users;
+drop table if exists user_stars;
+drop table if exists user_default_teams;
+drop table if exists follows;
+drop table if exists friends;
+drop table if exists fans;
+drop table if exists sessions;
+drop table if exists objectives;
+drop table if exists objective_invited_teams;
+drop table if exists projects;
+drop table if exists project_invited_teams;
+drop table if exists draft_threads;
+drop table if exists threads;
+drop table if exists reads;
+drop table if exists draft_posts;
+drop table if exists posts;
+drop table if exists accept_messages;
+drop table if exists accept_objects;
+drop table if exists new_message_counts;
+drop table if exists acceptance;
+drop table if exists teams;
+drop table if exists team_members;
+drop table if exists team_roles;
+drop table if exists invitations;
+drop table if exists invitation_replies;
+drop table if exists families;
+drop table if exists communities;
+drop table if exists administrators;
+drop table if exists watchwords;
+drop table if exists monologues;
+drop table if exists goods;
+drop table if exists groups;
+drop table if exists handicrafts;
+drop table if exists inaugurations;
+drop table if exists parts;
+drop table if exists tool_lists;
+drop table if exists evidences;
+drop table if exists last_queries;
+drop table if exists place_addresses;
+drop table if exists addresses;
+drop table if exists places;
+drop table if exists location_history;
+
+CREATE TABLE location_history (
+    id                   SERIAL PRIMARY KEY,
+    uuid                 VARCHAR(36),
+    user_id              INTEGER,
+    place_id             INTEGER,
+    time                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    longitude            DOUBLE PRECISION NOT NULL,
+    latitude             DOUBLE PRECISION NOT NULL,
+    altitude             DOUBLE PRECISION,
+    direction            DOUBLE PRECISION,
+    speed                DOUBLE PRECISION,
+    accuracy             DOUBLE PRECISION,
+    adcode               INTEGER,
+    provider             VARCHAR(255),
+    addr                 VARCHAR(255)  
+);
+
+
+CREATE TABLE places (
+    id                   SERIAL PRIMARY KEY,
+    uuid                 VARCHAR(36) NOT NULL,
+    name                 VARCHAR(255) NOT NULL,
+    nickname             VARCHAR(255),
+    description          TEXT,
+    icon                 VARCHAR(255) DEFAULT 'house-door.svg',
+    occupant_user_id     INTEGER,
+    owner_user_id        INTEGER,
+    level                INTEGER DEFAULT 0,
+    category             INTEGER DEFAULT 0,
+    is_public            BOOLEAN DEFAULT false,
+    is_government        BOOLEAN DEFAULT false,
+    user_id              INTEGER,
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE addresses (
+    id                   SERIAL PRIMARY KEY,
+    uuid                 VARCHAR(36) NOT NULL,
+    nation               VARCHAR(255),
+    province             VARCHAR(255),
+    city                 VARCHAR(255),
+    district             VARCHAR(255),
+    town                 VARCHAR(255),
+    village              VARCHAR(255),
+    street               VARCHAR(255),
+    building             VARCHAR(255),
+    unit                 VARCHAR(255),
+    portal_number        VARCHAR(255),
+    postal_code          VARCHAR(20) DEFAULT 0,
+    category             INTEGER DEFAULT 0,
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE place_addresses (
+    place_id             INTEGER REFERENCES places(id),
+    address_id           INTEGER REFERENCES addresses(id),
+                         PRIMARY KEY (place_id, address_id)
+);
 
 
 CREATE TABLE last_queries (

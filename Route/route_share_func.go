@@ -66,14 +66,14 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, tea
 	return s_u, defaultTeam, survivalTeams, nil
 }
 
-// 根据给出的thread_list参数，去获取对应的茶议（截短正文保留前108字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
+// 根据给出的thread_list参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
 func GetThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadBean, err error) {
 	var oab data.ThreadBean
 	var oablist []data.ThreadBean
-	// 截短ThreadList中thread.Body文字长度为108字符,
+	// 截短ThreadList中thread.Body文字长度为168字符,
 	// 展示时长度接近，排列比较整齐，最小惊讶原则？效果比较nice
 	for i := range thread_list {
-		thread_list[i].Body = Substr(thread_list[i].Body, 108)
+		thread_list[i].Body = Substr(thread_list[i].Body, 168)
 	}
 	len := len(thread_list)
 	// 根据茶议资料读取全部作者
@@ -131,13 +131,13 @@ func GetThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
 	return oab, nil
 }
 
-// 根据给出的objectiv_list参数，去获取对应的茶话会（objective），截短正文保留前108字符，附属茶台计数，发起人资料，发帖时候选择的茶团。然后按结构填写返回资料荚。
+// 根据给出的objectiv_list参数，去获取对应的茶话会（objective），截短正文保留前168字符，附属茶台计数，发起人资料，发帖时候选择的茶团。然后按结构填写返回资料荚。
 func GetObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []data.ObjectiveBean, err error) {
 	var ob data.ObjectiveBean
 	var oblist []data.ObjectiveBean
-	// 截短ObjectiveList中objective.Body文字长度为108字符,
+	// 截短ObjectiveList中objective.Body文字长度为168字符,
 	for i := range objectiv_list {
-		objectiv_list[i].Body = Substr(objectiv_list[i].Body, 108)
+		objectiv_list[i].Body = Substr(objectiv_list[i].Body, 168)
 	}
 	len := len(objectiv_list)
 	// 读取全部会主
@@ -206,13 +206,13 @@ func GetObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err e
 	return oB, nil
 }
 
-// 据给出的project_list参数，去获取对应的茶台（project），截短正文保留前108字符，附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
+// 据给出的project_list参数，去获取对应的茶台（project），截短正文保留前168字符，附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
 func GetProjectBeanList(project_list []data.Project) (ProjectBeanList []data.ProjectBean, err error) {
 	var pab data.ProjectBean
 	var pablist []data.ProjectBean
-	// 截短ObjectiveList中objective.Body文字长度为108字符,
+	// 截短ObjectiveList中objective.Body文字长度为168字符,
 	for i := range project_list {
-		project_list[i].Body = Substr(project_list[i].Body, 108)
+		project_list[i].Body = Substr(project_list[i].Body, 168)
 	}
 	len := len(project_list)
 	// 读取全部发起人资料荚
@@ -283,7 +283,7 @@ func GetPostBeanList(post_list []data.Post) (PostBeanList []data.PostBean, err e
 	var pb data.PostBean
 	var pb_list []data.PostBean
 	// for i := range post_list {
-	// 	post_list[i].Body = Substr(post_list[i].Body, 108)
+	// 	post_list[i].Body = Substr(post_list[i].Body, 168)
 	// }
 	len := len(post_list)
 	author_list := make([]data.User, 0, len)

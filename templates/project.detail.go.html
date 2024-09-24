@@ -6,24 +6,32 @@
   <li class="active">{{ .Project.Title }}@茶台</li>
 </ol>
 
-{{/* 这是某个茶台的详情页 */}}
+{{/* 这是某个茶台（项目）的详情页 */}}
+
+{{/* 这是某个茶台（项目）的地址显示 */}}
+              <div style="border:0.5rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;">
+                <i class="bi-geo" style="font-size: 2rem; color: black;"></i>
+                大清帝国 京都 金陵 大观园
+              </div>
+
 <div class="media">
-
+  
   <div class="media-body">
-
+    
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             {{ .Project.Title }}
-
+            
           </div>
-
+          
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block;text-align: center;">
+              
               {{ if .Open }}
               <img src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="32" height="32">
-
+              
               <span class="label label-info">开放式茶台
                 {{ else }}
                 <img src="/v1/static/image/teachat-table-fill.svg" alt="茶台封面" width="32" height="32">
@@ -31,75 +39,78 @@
                   {{ end }}
                 </span>
               </span>
-          </div>
-
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: right; font-size: smaller;">
-              {{if .Master.Gender }}
-              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
-              {{ end }}
-              <a href="/v1/user/biography?id={{ .Master.Uuid }}">{{ .Master.Name }}</a>
-              @<a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}"><span
+            </div>
+            
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <span style="display: block; text-align: right; font-size: smaller;">
+                {{if .Master.Gender }}
+                <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+                {{ else }}
+                <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+                {{ end }}
+                <a href="/v1/user/biography?id={{ .Master.Uuid }}">{{ .Master.Name }}</a>
+                @<a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}"><span
                   style="font-weight: lighter;">{{ .MasterTeam.Abbreviation }}</span></a>
-
-              {{ .Project.CreatedAtDate }}
-            </span>
-            </span>
-
+                  
+                  {{ .Project.CreatedAtDate }}
+                </span>
+              </span>
+              
+            </div>
           </div>
         </div>
-      </div>
-
-      <div class="panel-body">
-
-        <p style="white-space: pre-wrap;">{{ .Project.Body }}</p>
-
-        <hr />
-
-        <blockquote>
-          <p style="font-size: small;"><a href="/v1/thread/detail?id={{ .QuoteObjective.Uuid }}"><span
-                class="label label-default">引用</span></a>{{ .QuoteObjective.Body }} ...</p>
-          <footer style="font-size: small;">
-            <a href="/v1/user/biography?id={{ .QuoteObjectiveAuthor.Uuid }}">{{ .QuoteObjectiveAuthor.Name }}</a>
-            <span style="margin-inline-end: 20px;">@<a
-                href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a></span>
-            <cite title="Source Title">{{ .QuoteObjective.Title }}</cite>
-          </footer>
-        </blockquote>
-
-      </div>
-      <div class="panel-footer">
-        <!-- a href="/v1/thread/new?id={{ .Project.Uuid }}" -->
-        <span class="glyphicon glyphicon-glass" aria-hidden="true" title="品味"></span>
-        <!-- /a -->
-        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .ThreadCount }}</span>
-
-        <a href="#">
-          <span class="glyphicon glyphicon-heart-empty" aria-hidden="true"></span>
-        </a>
-        <span style="margin-inline-end: 30px;"> 1516 </span>
-
-        {{ if .IsEdited }}
-
-        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Project.EditAtDate }} </span>
-        {{ else }}
-        {{/* 没有编辑过（补充内容）则留空白 */}}
-        {{ end }}
-        <div class="pull-right">
-          <a href="#"></a>
+        
+        <div class="panel-body">
+          
+          <p style="white-space: pre-wrap;">{{ .Project.Body }}</p>
+          
+          <hr />
+          
+          <blockquote>
+            <p style="font-size: small;"><a href="/v1/thread/detail?id={{ .QuoteObjective.Uuid }}"><span
+              class="label label-default">引用</span></a>{{ .QuoteObjective.Body }} ...</p>
+              <footer style="font-size: small;">
+                <a href="/v1/user/biography?id={{ .QuoteObjectiveAuthor.Uuid }}">{{ .QuoteObjectiveAuthor.Name }}</a>
+                <span style="margin-inline-end: 20px;">@<a
+                  href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a></span>
+                  <cite title="Source Title">{{ .QuoteObjective.Title }}</cite>
+                </footer>
+              </blockquote>
+              
+            </div>
+            <div class="panel-footer">
+              <!-- a href="/v1/thread/new?id={{ .Project.Uuid }}" -->
+              <span class="glyphicon glyphicon-glass" aria-hidden="true" title="品味"></span>
+              <!-- /a -->
+              <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .ThreadCount }}</span>
+              
+              <a href="#">
+                <span class="glyphicon glyphicon-heart-empty" aria-hidden="true"></span>
+              </a>
+              <span style="margin-inline-end: 30px;"> 1516 </span>
+              
+              {{ if .IsEdited }}
+              
+              <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+              <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Project.EditAtDate }} </span>
+              {{ else }}
+              {{/* 没有编辑过（补充内容）则留空白 */}}
+              {{ end }}
+              <div class="pull-right">
+                <a href="#"></a>
+              </div>
+            </div>
+          </div>
+          
         </div>
       </div>
-    </div>
-
-  </div>
-</div>
-
-{{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
-{{ if .IsInput }}
-{{/* 这是新茶议撰写模版 */}}
+     
+      
+      
+      
+      {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
+      {{ if .IsInput }}
+      {{/* 这是新茶议撰写模版 */}}
 <div class="panel panel-default">
 
   <div class="panel-body">
@@ -113,8 +124,8 @@
             <i class="bi bi-paint-bucket" style="font-size: large;"></i>
           </div>
           <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-            <input type="radio" name="type" id="ifeel" style="width: fit-content;" value="0" required />
-            <label for="ifeel">我觉得</label>
+            <input type="radio" name="type" id="ithink" style="width: fit-content;" value="0" required />
+            <label for="ithink">我觉得</label>
           </div>
 
           <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
@@ -174,7 +185,8 @@
     登机</a> 以开始聊天品茶 </p>
 {{ else }}
 <hr />
-<p class="text-center"> <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+<p class="text-center">
+   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
   茶博士：这是封闭式茶台,只有台主邀请的茶团成员，才能入座品茶呢。</p>
 
 {{ end }}
