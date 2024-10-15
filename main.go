@@ -81,7 +81,8 @@ func main() {
 	mux.HandleFunc("/v1/thread/detail", route.ThreadDetail)
 	mux.HandleFunc("/v1/thread/edit", route.EditThread)
 	mux.HandleFunc("/v1/thread/update", route.UpdateThread)
-	mux.HandleFunc("/v1/thread/plus", route.PlusThread)
+	mux.HandleFunc("/v1/thread/approve", route.ThreadApprove)
+	//mux.HandleFunc("/v1/thread/plus", route.PlusThread)
 
 	//定义在 route_post.go
 	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
@@ -102,6 +103,12 @@ func main() {
 	//defined in route_message.go
 	mux.HandleFunc("/v1/message/letterbox", route.Letterbox)
 	mux.HandleFunc("/v1/message/accept", route.AcceptMessages)
+
+	//defined in route_place.go
+	mux.HandleFunc("/v1/place/new", route.NewPlace)
+	mux.HandleFunc("/v1/place/create", route.CreatePlace)
+	mux.HandleFunc("/v1/place/detail", route.PlaceDetail)
+	mux.HandleFunc("/v1/place/my", route.MyPlace)
 
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)

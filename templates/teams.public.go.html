@@ -47,9 +47,9 @@
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <div class="pull-right" style="font-size: small;">
               {{if .Founder.Gender }}
-              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
               {{ else }}
-              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
               <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
               @<span><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
@@ -96,7 +96,7 @@
   </div>
 
   <div class="panel-body">
-      您好，没有找到相关的茶团。
+      你好，没有找到相关的茶团。
   </div>
 
 </div>

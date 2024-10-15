@@ -6,7 +6,6 @@
   <li><a href="/v1/">大堂</a></li>
   <li>{{ .Team.Abbreviation }}@茶团</li>
   <li class="=active">详情</li>
-
 </ol>
 
 
@@ -60,9 +59,9 @@
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: right; font-size: smaller;">
               {{if .Founder.Gender }}
-              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
               {{ else }}
-              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
               <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
               @<span style="font-style: italic;"><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
@@ -114,9 +113,9 @@
 
         <span  style="font-size: small;">
           {{if .User.Gender }}
-            <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+            <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
             {{ else }}
-            <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+            <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
             {{ end }}
         </span>
         
@@ -145,9 +144,9 @@
       <div class="media-body">
         <span  style="font-size: small;">
           {{if .User.Gender }}
-          <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
           {{ else }}
-          <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
           {{ end }}
           </span>
 

@@ -183,7 +183,7 @@ func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 		}
 		return dThread, err
 	case 4:
-		dPost, err := GetPostbyId(ao.ObjectId)
+		dPost, err := GetPostById(ao.ObjectId)
 		if err != nil {
 			return nil, err
 		}

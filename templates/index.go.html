@@ -6,8 +6,6 @@
   <a href="/v1/team/open">茶团</a>
 </p>
 
-
-
 {{/* 这是茶棚主页 */}}
 
 <div style="margin: 20px;">
@@ -32,17 +30,16 @@
         <div class="row">
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             <span style="font-size: small;">
-              {{if .Author.Gender }}
-            <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
-            {{ else }}
-            <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
-            {{ end }}
               {{ .Author.Name }}
+              {{if .Author.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+              {{ end }}
               @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
             </span>
           </div>
 
-         
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             <span style="display: block; font-size: smaller;text-align: right;">
               {{ .CreatedAtDate }}
@@ -53,9 +50,13 @@
 
       <div class="panel-body">
 
-        <h5><mark>{{ .Thread.TypeStatus }}</mark>:
+        <h5><mark>{{ .Thread.TypeStatus }}</mark>
+          {{if .IsApproved }}
+          {{/* 这个主意已被台主采纳 */}}
+          <i class="bi-check" style="font-size: 2rem; color: red;"></i>
+          {{ end }}
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
-            {{ .Thread.Title }}
+            <span style="margin-inline-start: 1rem;">{{ .Thread.Title }}</span>
           </a>
         </h5>
 
@@ -66,19 +67,6 @@
       </div>
 
       <div class="panel-footer">
-        <span class="glyphicon glyphicon-glass" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .Count }} </span>
-        {{ if .Thread.IsEdited }}
-        <a href="/v1/thread/edit?id={{ .Thread.Uuid }}">
-          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-        </a>
-        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .CreatedAtDate }} </span>
-        {{ else }}
-        {{/* 没有编辑过（补充内容）则没有加水时间 */}}
-        <a href="/v1/thread/edit?id={{ .Thread.Uuid }}">
-          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-        </a>
-        {{ end }}
 
         <span class="pull-right">
           <a href="/v1/thread/detail?id={{.Thread.Uuid }}">
@@ -91,7 +79,7 @@
     </div>
   </div>
   <div class="media-right">
-    {{ if .Count }} 
+    {{ if .Count }}
     <span class="badge">{{ .Count }}</span>
     {{ end }}
     <a href="/v1/user/biography?id={{ .Author.Uuid }}">
@@ -101,7 +89,7 @@
 </div>
 
 {{ else }}
-{{/* 检测是否茶议作者，否,安排左侧头像布局 */}}
+{{/* 非茶议作者，安排左侧头像布局 */}}
 
 <div class="media">
   <div class="media-left">
@@ -120,18 +108,17 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-            {{if .Author.Gender }}
-            <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
-            {{ else }}
-            <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
-            {{ end }}
             {{ .Author.Name }}
+            {{if .Author.Gender }}
+            <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+            {{ end }}
             <span style="font-weight: lighter;">
-              @<a href="/v1/team/detail?id={{ .Author.GetLastDefaultTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+              <a href="/v1/team/detail?id={{ .Author.GetLastDefaultTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
             </span>
           </div>
 
-         
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             <span style="display: block; font-size: smaller;text-align: right">
               {{ .CreatedAtDate }}
@@ -142,9 +129,13 @@
 
       <div class="panel-body">
         <h5>
-        <mark>{{ .Thread.TypeStatus }}</mark>
+          <mark>{{ .Thread.TypeStatus }}</mark>
+          {{if .IsApproved }}
+          {{/* 这个主意已被台主采纳 */}}
+          <i class="bi-check" style="font-size: 2rem; color: red;"></i>
+          {{ end }}
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
-            {{ .Thread.Title }}
+            <span style="margin-inline-start: 1rem;">{{ .Thread.Title }}</span>
           </a>
         </h5>
 
@@ -154,7 +145,17 @@
 
       </div>
 
-    
+      <div class="panel-footer">
+        <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;"> {{ .Cost }}</i>
+        <i class="bi-stopwatch" style="font-size: 1.5rem; color: black; margin-inline-end: 2rem;"> {{ .TimeSlot }}</i>
+
+        <span class="pull-right">
+          <a href="/v1/thread/detail?id={{.Thread.Uuid }}">
+            <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+
+          </a> {{ .Count }}
+        </span>
+      </div>
 
     </div>
   </div>

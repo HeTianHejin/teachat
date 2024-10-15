@@ -1,0 +1,85 @@
+{{ define "content" }}
+
+{{/*  这是某个地点详情展示页面  */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li>{{ .Place.Name }}@地点</li>
+  <li class="=active">详情</li>
+</ol>
+
+
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>条目</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>名称</td>
+                <td>{{ .Place.Name }}</td>
+            </tr>
+            <tr>
+                <td>别名</td>
+                <td>{{ .Place.Nickname }}</td>
+            </tr>
+            <tr>
+                <td>描述</td>
+                <td>{{ .Place.Description }}</td>
+            </tr>
+            <tr>
+                <td>使用者</td>
+                <td>{{ .Place.OccupantUserId }}</td>
+            </tr>
+            <tr>
+                <td>业主</td>
+                <td>{{ .Place.OwnerUserId }}</td>
+            </tr>
+            <tr>
+                <td>等级</td>
+                <td>{{ .Place.Level }}</td>
+            </tr>
+            <tr>
+                <td>类型</td>
+                <td>{{ .Place.Category }}</td>
+            </tr>
+            <tr>
+                <td>公共场所</td>
+                <td>{{ .Place.IsPublic }}</td>
+            </tr>
+            <tr>
+                <td>行政机关</td>
+                <td>{{ .Place.IsGovernment }}</td>
+            </tr>
+            <tr>
+                <td>登记者</td>
+                <td>{{ .Place.UserId }}</td>
+            </tr>
+            <tr>
+                <td>登记日期</td>
+                <td>{{ .Place.CreatedAt }}</td>
+            </tr>
+            <tr>
+                <td>更新日期</td>
+                <td>{{ .Place.UpdatedAt }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<div class="media">
+    <div class="media-body">
+        <h4 class="media-heading">物流地址</h4>
+        <hr />
+        <p>大清帝国 金陵市 侯梦区 大观园路</p>
+    </div>
+</div>
+
+<hr />
+<p>GPS地位</p>
+
+{{ end }}

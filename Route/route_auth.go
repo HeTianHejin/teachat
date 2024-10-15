@@ -58,11 +58,11 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	biography := r.PostFormValue("biography")
 	gender, err := strconv.Atoi(r.PostFormValue("gender"))
 	if err != nil {
-		Report(w, r, "您好，请确认您的洗手间服务选择是否正确。")
+		Report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
 	if gender != 0 && gender != 1 {
-		Report(w, r, "您好，请确认您的洗手间服务选择是否正确。")
+		Report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
 
@@ -78,7 +78,7 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	// 用正则表达式匹配一下提交的邮箱格式是否正确
 	if ok := VerifyEmailFormat(newU.Email); !ok {
-		Report(w, r, "您好，请确认邮箱拼写是否正确。")
+		Report(w, r, "你好，请确认邮箱拼写是否正确。")
 		return
 	}
 	// 检查提交的邮箱是否已经注册过了
@@ -91,7 +91,7 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	// 存储新用户（测试时不作邮箱有效性检查，直接激活账户）
 	if err := newU.Create(); err != nil {
 		util.Danger(err, " Cannot create user")
-		Report(w, r, "您好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
+		Report(w, r, "你好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
 	// 将新成员添加进默认的自由人茶团
@@ -103,7 +103,7 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = team_member.Create(); err != nil {
 		util.Danger(err, " Cannot create default_free team_member")
-		Report(w, r, "您好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
+		Report(w, r, "你好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
 	//设置默认团队
@@ -113,7 +113,7 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = udt.Create(); err != nil {
 		util.Danger(err, " Cannot create default team")
-		Report(w, r, "您好，满头大汗的茶博士因摸索不到近视眼镜，导致注册失败，请确认情况后重试。")
+		Report(w, r, "你好，满头大汗的茶博士因摸索不到近视眼镜，导致注册失败，请确认情况后重试。")
 		return
 	}
 
@@ -161,12 +161,13 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				// Retrieve user by email
 				s_u, err = data.UserByEmail(email)
 				if err != nil {
-					Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美?")
+					util.Warning(err, email, "cannot get user given email")
+					Report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
 					return
 				}
 			} else {
 				// Invalid email format
-				Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确,而且身形健美")
+				Report(w, r, "茶博士嘀咕说，请确认握笔姿势正确,而且身形健美")
 				return
 			}
 
@@ -207,7 +208,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			//输入了错误的口令
-			Report(w, r, "您好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
+			Report(w, r, "你好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
 			return
 		}
 

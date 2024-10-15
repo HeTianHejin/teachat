@@ -99,8 +99,8 @@ func GetPostByUuid(uuid string) (post Post, err error) {
 	return
 }
 
-// GetPostbyId() gets a post by the id
-func GetPostbyId(id int) (post Post, err error) {
+// GetPostById() gets a post by the id
+func GetPostById(id int) (post Post, err error) {
 	post = Post{}
 	err = Db.QueryRow("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score, team_id FROM posts WHERE id = $1", id).
 		Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score, &post.TeamId)
@@ -186,8 +186,6 @@ func (t *Thread) PostsScoreOppose() (score int, err error) {
 	}
 	return
 }
-
-// get posts to a thread, with pagination
 
 // NumReplies() returns the number of threads where Thread.PostId = Post.Id
 func (post *Post) NumReplies() (count int) {

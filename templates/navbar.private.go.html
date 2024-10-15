@@ -26,8 +26,9 @@
                         aria-expanded="false">我的<span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li><a href="/v1/users/connection_friend">人缘</a></li>
-                        <li><a href="/v1/team/hold">团队</a></li>
+                        <li><a href="/v1/team/joined">团队</a></li>
                         <li><a href="/v1/thread/mime">茶议</a></li>
+                        <li><a href="/v1/place/my">地盘</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a href="/v1/message/letterbox">信箱</a></li>
                         <li><a href="/v1/user/biography?id={{ .Uuid }}">资料</a></li>
@@ -37,7 +38,13 @@
                 </li>
                 <li><a href="/v1/user/biography?id={{ .Uuid }}">
                     <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-                    {{ .Name }}</a></li>
+                    {{ .Name }}
+                    {{if .Gender }}
+                    <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+                    {{ else }}
+                    <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+                    {{ end }}
+                </a></li>
                 {{ if .HasUnreadMessage }}
                 <li role="presentation"><a href="/v1/message/letterbox">
                     <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>

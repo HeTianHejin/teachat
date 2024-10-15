@@ -1,0 +1,10 @@
+/* Show hidden content when the radio is checked */
+
+/* for new project */
+#invite_team_ids {
+    display: none;
+}
+#close_project:checked ~ #invite_team_ids {
+    display: block;
+  }
+  

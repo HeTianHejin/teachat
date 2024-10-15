@@ -18,22 +18,23 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	// 读取最热的茶议
 	thread_list, err := data.ThreadsIndex(num)
 	if err != nil {
-		Report(w, r, "您好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
+		Report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
 	len := len(thread_list)
 
 	if len == 0 {
-		Report(w, r, "您好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
+		Report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 
 	tb_list, err = GetThreadBeanList(thread_list)
 	if err != nil {
 		util.Warning(err, " Cannot read thread and author list")
-		Report(w, r, "您好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
 		return
 	}
+
 	indexPD.ThreadBeanList = tb_list
 
 	//是否登录
@@ -55,7 +56,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	sUser, err := s.User()
 	if err != nil {
 		util.Warning(err, " Cannot read user info from session")
-		Report(w, r, "您好，茶博士摸摸头，说有眼不识泰山。")
+		Report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
 		return
 	}
 	indexPD.SessUser = sUser
@@ -103,7 +104,7 @@ func HandleSearch(w http.ResponseWriter, r *http.Request) {
 
 // Post /v1/search
 func Fetch(w http.ResponseWriter, r *http.Request) {
-	Report(w, r, "您好，茶博士摸摸头说，这个服务目前空缺，要不你来担当吧？")
+	Report(w, r, "你好，茶博士摸摸头说，这个服务目前空缺，要不你来担当吧？")
 }
 
 // GET /v1/Search

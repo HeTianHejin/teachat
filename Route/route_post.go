@@ -36,13 +36,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	post, err := data.GetPostByUuid(uuid)
 	if err != nil {
 		util.Warning(err, " Cannot get post detail")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	post_bean, err := GetPostBean(post)
 	if err != nil {
 		util.Warning(err, " Cannot get post bean given post")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	pD.PostBean = post_bean
@@ -50,7 +50,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	pD.QuoteThread, err = post.Thread()
 	if err != nil {
 		util.Warning(err, " Cannot get thread given post")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
 		return
 	}
 	// 截短此引用的茶议内容以方便展示
@@ -59,27 +59,27 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	pD.QuoteThreadAuthor, err = pD.QuoteThread.User()
 	if err != nil {
 		util.Warning(err, " Cannot get thread author given post")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
 	// 引用的茶议作者发帖时候选择的茶团
 	pD.QuoteThreadAuthorTeam, err = data.GetTeamById(pD.QuoteThread.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot get quote-thread-author-default-team given post")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议主人资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
 	// 读取全部针对此品味的茶议
 	thread_list, err := post.Threads()
 	if err != nil {
 		util.Warning(err, " Cannot get thread_list given post")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	pD.ThreadBeanList, err = GetThreadBeanList(thread_list)
 	if err != nil {
 		util.Warning(err, " Cannot get thread_bean_list given thread_list")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	// 读取会话
@@ -109,10 +109,10 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	s_u, _ := sess.User()
 	pD.SessUser = s_u
 	// 从会话查获当前浏览用户资料荚
-	s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(sess)
+	s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(sess)
 	if err != nil {
 		util.Warning(err, " Cannot get user-related data from session")
-		Report(w, r, "您好，茶博士失魂鱼，有眼不识泰山。")
+		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 	// 用户足迹
@@ -124,6 +124,10 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	pD.IsInput = true
 	pD.SessUserDefaultTeam = s_default_team
 	pD.SessUserSurvivalTeams = s_survival_teams
+	// ���������
+	pD.SessUserDefaultPlace = s_default_place
+	// �����б�
+	pD.SessUserBindPlaces = s_places
 
 	// 当前会话用户是否此品味作者？
 	if s_u.Id == post.UserId {
@@ -147,14 +151,14 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Warning(err, " Cannot parse form")
-		Report(w, r, "您好，茶博士摸摸头，竟然说今天电脑去热带海岛潜水了。")
+		Report(w, r, "你好，茶博士摸摸头，竟然说今天电脑去热带海岛潜水了。")
 		return
 	}
 
 	sUser, err := sess.User()
 	if err != nil {
 		util.Warning(err, " Cannot get user from session")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 
@@ -167,24 +171,24 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	case "false":
 		attitude = false
 	default:
-		Report(w, r, "您好，茶博士失魂鱼，未能读懂您的表态内容。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读懂您的表态内容。")
 		return
 	}
 
 	body := r.PostFormValue("body")
 	//检查body的长度，规则是不能少于刘姥姥评价老君眉的品味字数
 	if CnStrLen(body) <= 17 {
-		Report(w, r, "您好，戴着厚厚眼镜片的茶博士居然说，请不要用隐形墨水来写品味内容。")
+		Report(w, r, "你好，戴着厚厚眼镜片的茶博士居然说，请不要用隐形墨水来写品味内容。")
 		return
 	} else if CnStrLen(body) > 456 {
-		Report(w, r, "您好，彬彬有礼戴着厚厚眼镜片的茶博士居然说，内容太多，茶叶蛋壳都用光了也写不完呀。")
+		Report(w, r, "你好，彬彬有礼戴着厚厚眼镜片的茶博士居然说，内容太多，茶叶蛋壳都用光了也写不完呀。")
 		return
 	}
 	uuid := r.PostFormValue("uuid")
 	//检查uuid是否有效
 	thread, err := data.ThreadByUUID(uuid)
 	if err != nil {
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属茶议。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 		return
 	}
 	tid := r.PostFormValue("team_id")
@@ -204,7 +208,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	//  检查茶议所在的茶台属性，
 	proj, err := thread.Project()
 	if err != nil {
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属茶台资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 		return
 	}
 	var dPost data.DraftPost
@@ -212,7 +216,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	case 1:
 		// class=1可以品茶，
 		if dPost, err = sUser.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
-			Report(w, r, "您好，茶博士摸摸头，记录品味失败。")
+			Report(w, r, "你好，茶博士摸摸头，记录品味失败。")
 			return
 		}
 
@@ -220,24 +224,24 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		// 当前会话用户是否可以入席品茶？需要看台主指定了那些茶团成员可以品茶
 		ok, err := proj.IsInvitedMember(sUser.Id)
 		if err != nil {
-			Report(w, r, "您好，������失������，未能读取专����台资料。")
+			Report(w, r, "你好，������失������，未能读取专����台资料。")
 			return
 		}
 		if !ok {
 			// Cannot have tea
-			Report(w, r, "您好，你的大名竟然不在邀请品茶名单上。")
+			Report(w, r, "你好，你的大名竟然不在邀请品茶名单上。")
 			return
 		}
 
 		// Can have tea
 		if dPost, err = sUser.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
-			Report(w, r, "您好，茶博士摸摸头，竟然说没有墨水，记录品味失败。")
+			Report(w, r, "你好，茶博士摸摸头，竟然说没有墨水，记录品味失败。")
 			return
 		}
 
 	default:
 		// 异常状态的茶台
-		Report(w, r, "您好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
+		Report(w, r, "你好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
 		return
 	}
 
@@ -248,7 +252,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = aO.Create(); err != nil {
 		util.Warning(err, "Cannot create accept_object")
-		Report(w, r, "您好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+		Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 		return
 	}
 	// 发送邻座盲评消息
@@ -260,11 +264,11 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	// 发送消息
 	if err = AcceptMessageSendExceptUserId(sUser.Id, mess); err != nil {
-		Report(w, r, "您好，茶博士迷路了，未能发送盲评请求消息。")
+		Report(w, r, "你好，茶博士迷路了，未能发送盲评请求消息。")
 		return
 	}
 	// 提示用户草稿保存成功
-	t := fmt.Sprintf("您好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", thread.Title)
+	t := fmt.Sprintf("你好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", thread.Title)
 	// 提示用户草稿保存成功
 	Report(w, r, t)
 }
@@ -310,7 +314,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 				post.Body += body
 			} else {
 				//提示用户总字数或者本次提交补充内容超出字数限制
-				Report(w, r, "您好， 粗鲁的茶博士竟然说字数满了，纸条写不下您的品味。")
+				Report(w, r, "你好， 粗鲁的茶博士竟然说字数满了，纸条写不下您的品味。")
 				return
 			}
 			err = post.UpdateBody(body)
@@ -328,7 +332,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, url, http.StatusFound)
 		} else {
 			//空白或者一个字被认为是无意义追加内容
-			Report(w, r, "您好，请勿提供小于17个字的品味补充")
+			Report(w, r, "你好，请勿提供小于17个字的品味补充")
 			return
 		}
 
@@ -356,7 +360,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 		post, err := data.GetPostByUuid(uuid)
 		if err != nil {
 			util.Danger(err, " Cannot read post")
-			Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料，请稍后再试。")
+			Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料，请稍后再试。")
 			return
 		}
 		if post.UserId == user.Id {

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// 茶台 teaTable，寓意为某个活动愿景下的分类项目，节点，关卡
+// 茶台 teaTable，寓意为某个愿景下的分类项目，具体事件，活动节点，关卡。
 // 规则1：如果class=1, 是普通的开放式茶台，全部登录用户可以入座品茶聆听，而且可以提出新茶议（主张/议题），属于全员可参与的自由开放式圆桌茶话会。游客可以查看主题和品味跟帖，但是不能品味（跟帖）。
 // 规则2：如果class=2，是封闭式茶台，则需要检查访问用户是否台主（创建人）指定团体成员，非成员只能旁观但是不能参与品茶活动（不可以提议新主张/跟帖/表态）。
 // 类似于某个公开但不是人人均可投票的议程，如奥运会高台跳水比赛，仅有评委成员可以评议，而观众只能观看不能表决；
@@ -21,9 +21,9 @@ type Project struct {
 	Class       int // 属性 0:  "追加待评草台",1:  "开放式茶台",2:  "封闭式茶台",10: "开放式草台",20: "封闭式草台",31: "已婉拒开台",32: "已婉拒封台",
 	EditAt      time.Time
 	Cover       string
-	TeamId      int //作者团队id
-
-	PageData PublicPData // 仅用于页面渲染，不保存到数据库
+	TeamId      int //作者支持团队id
+	// 仅用于页面渲染，不保存到数据库
+	PageData PublicPData
 }
 
 // 封闭式茶台限定茶团（团队）集合
@@ -32,6 +32,45 @@ type ProjectInvitedTeam struct {
 	ProjectId int
 	TeamId    int
 	CreatedAt time.Time
+}
+
+// 茶台（事件）地点
+type ProjectPlace struct {
+	Id        int
+	ProjectId int
+	PlaceId   int
+	CreatedAt time.Time
+}
+
+// project_place.Create()
+func (projectPlace *ProjectPlace) Create() (err error) {
+	statement := "INSERT INTO project_place (project_id, place_id) VALUES ($1, $2) RETURNING id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(projectPlace.ProjectId, projectPlace.PlaceId).Scan(&projectPlace.Id)
+	return
+}
+
+// project_place.GetByProjectId()
+func (projectPlace *ProjectPlace) GetByProjectId() (err error) {
+	err = Db.QueryRow("SELECT id, project_id, place_id, created_at FROM project_place WHERE project_id = $1", projectPlace.ProjectId).Scan(&projectPlace.Id, &projectPlace.ProjectId, &projectPlace.PlaceId, &projectPlace.CreatedAt)
+	return
+}
+
+// project.Place() 根据project_id，从project_place表中获取place_id,然后根据place_id,从places表中获取place对象
+func (project *Project) Place() (place Place, err error) {
+	projectPlace := ProjectPlace{ProjectId: project.Id}
+	if err = projectPlace.GetByProjectId(); err != nil {
+		return
+	}
+	place = Place{Id: projectPlace.PlaceId}
+	if err = place.Get(); err != nil {
+		return
+	}
+	return
 }
 
 var PrProperty = map[int]string{

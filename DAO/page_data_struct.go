@@ -37,6 +37,8 @@ type ObjectiveDetail struct {
 	SessUser              User // 当前会话用户
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
+	SessUserDefaultPlace  Place
+	SessUserBindPlaces    []Place
 	IsGuest               bool // 是否为游客
 	IsInvited             bool // 是否受邀请
 
@@ -66,7 +68,8 @@ type ProjectBean struct {
 	Status        string
 	Count         int // 附属对象计数
 	Author        User
-	AuthorTeam    Team // 作者默认团队
+	AuthorTeam    Team  // 作者默认团队
+	Place         Place //项目地点
 }
 
 // 某个茶台详情页面渲染所需的动态数据
@@ -74,14 +77,18 @@ type ProjectDetail struct {
 	SessUser              User // 当前会话用户
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
+	SessUserDefaultPlace  Place
+	SessUserBindPlaces    []Place
 	IsInput               bool // 是否需要显示输入面板
 	IsGuest               bool // 是否为游客
 
 	Project    Project //当前浏览茶台
 	Master     User    //台主
 	MasterTeam Team    //台主开台时选择的成员身份，所属团队
-	Open       bool
-	IsEdited   bool
+
+	Place    Place //茶台(项目)活动地点
+	Open     bool
+	IsEdited bool
 
 	QuoteObjective           Objective // 引用的茶围
 	QuoteObjectiveAuthor     User      // 引用的茶围作者
@@ -90,6 +97,7 @@ type ProjectDetail struct {
 	ThreadBeanList []ThreadBean // project下所有Threads和作者资料荚
 	ThreadCount    int          // project下所有Threads个数
 	IsOverTwelve   bool         //是否超过12个
+
 }
 
 // 茶议草稿页面渲染数据
@@ -107,6 +115,8 @@ type ThreadDetail struct {
 	IsGuest               bool // 是否为游客
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
+	SessUserDefaultPlace  Place
+	SessUserBindPlaces    []Place
 	IsInput               bool // 是否需要显示输入面板
 	IsPostExist           bool // 是否已经回复过了
 
@@ -136,6 +146,12 @@ type ThreadBean struct {
 	CreatedAtDate string
 	Author        User // 作者
 	AuthorTeam    Team // 作者默认团队
+	IsApproved    bool // 主张方案是否被采纳
+	IsMaster      bool // 是否为台主
+	IsAdmin       bool // 是否为管理员
+
+	Cost     int // 花费
+	TimeSlot int // 耗费时间段
 }
 
 // 用于跟贴详情页面渲染
@@ -144,6 +160,8 @@ type PostDetail struct {
 	IsGuest               bool // 是否为游客
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
+	SessUserDefaultPlace  Place
+	SessUserBindPlaces    []Place
 	IsAuthor              bool // 是否为品味作者
 
 	PostBean       PostBean
@@ -221,6 +239,17 @@ type TeamBean struct {
 	Count         int  //成员计数
 }
 
+// 我的地盘我做主
+type PlaceList struct {
+	SessUser  User
+	PlaceList []Place
+}
+type PlaceDetail struct {
+	SessUser User
+	Place    Place
+	IsAuthor bool
+}
+
 // 用于index页面渲染
 type IndexPageData struct {
 	SessUser       User         // 当前会话用户
@@ -237,6 +266,8 @@ type InvitationDetail struct {
 	SessUser              User
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
+	SessUserDefaultPlace  Place
+	SessUserBindPlaces    []Place
 
 	Invitation Invitation
 	Team       Team // 发出邀请的茶团队

@@ -4,7 +4,8 @@ import (
 	"time"
 )
 
-// 茶团=团队,一桌喝茶的人，team的人数上限是12人，1 dozen。
+// 茶团=团队,同一桌喝茶的人，
+// 原则上来说team的人数上限是12人，1 dozen。
 type Team struct {
 	Id           int
 	Uuid         string
@@ -16,7 +17,7 @@ type Team struct {
 	Abbreviation string // 队名简称
 	Logo         string // 团队标志
 	UpdatedAt    time.Time
-	GroupId      int // 上级单位(集团)id
+	GroupId      int // 上级集合单位(集团)id
 }
 
 // 团队成员=当前茶团加入成员记录

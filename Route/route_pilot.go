@@ -32,7 +32,7 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 		GenerateHTML(w, &pilots, "layout", "navbar.private", "pilot.office")
 	}
 	//如果不是，则显示错误信息
-	Report(w, r, "您好，欢迎光临茶博士服务室！")
+	Report(w, r, "你好，欢迎光临茶博士服务室！")
 }
 
 // GET /pilot/new

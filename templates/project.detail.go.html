@@ -3,35 +3,35 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/objective/detail?uuid={{ .Project.Objective.Uuid }}">{{ .Project.Objective.Title }}</a>@茶话会</li>
-  <li class="active">{{ .Project.Title }}@茶台</li>
+  <li class="active"> #{{ .Project.Id }} @茶台</li>
 </ol>
 
 {{/* 这是某个茶台（项目）的详情页 */}}
 
 {{/* 这是某个茶台（项目）的地址显示 */}}
-              <div style="border:0.5rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;">
-                <i class="bi-geo" style="font-size: 2rem; color: black;"></i>
-                大清帝国 京都 金陵 大观园
-              </div>
+<div style="border:0.2rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;">
+  <i class="bi-geo" style="font-size: 2rem; color: black;"></i>
+  <a href="/v1/place/detail?uuid={{ .Place.Uuid }}">{{ .Place.Name }}</a>
+</div>
 
 <div class="media">
-  
+
   <div class="media-body">
-    
+
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             {{ .Project.Title }}
-            
+
           </div>
-          
+
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block;text-align: center;">
-              
+
               {{ if .Open }}
               <img src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="32" height="32">
-              
+
               <span class="label label-info">开放式茶台
                 {{ else }}
                 <img src="/v1/static/image/teachat-table-fill.svg" alt="茶台封面" width="32" height="32">
@@ -39,125 +39,142 @@
                   {{ end }}
                 </span>
               </span>
-            </div>
-            
-            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <span style="display: block; text-align: right; font-size: smaller;">
-                {{if .Master.Gender }}
-                <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
-                {{ else }}
-                <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
-                {{ end }}
-                <a href="/v1/user/biography?id={{ .Master.Uuid }}">{{ .Master.Name }}</a>
-                @<a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}"><span
-                  style="font-weight: lighter;">{{ .MasterTeam.Abbreviation }}</span></a>
-                  
-                  {{ .Project.CreatedAtDate }}
-                </span>
-              </span>
-              
-            </div>
           </div>
-        </div>
-        
-        <div class="panel-body">
-          
-          <p style="white-space: pre-wrap;">{{ .Project.Body }}</p>
-          
-          <hr />
-          
-          <blockquote>
-            <p style="font-size: small;"><a href="/v1/thread/detail?id={{ .QuoteObjective.Uuid }}"><span
-              class="label label-default">引用</span></a>{{ .QuoteObjective.Body }} ...</p>
-              <footer style="font-size: small;">
-                <a href="/v1/user/biography?id={{ .QuoteObjectiveAuthor.Uuid }}">{{ .QuoteObjectiveAuthor.Name }}</a>
-                <span style="margin-inline-end: 20px;">@<a
-                  href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a></span>
-                  <cite title="Source Title">{{ .QuoteObjective.Title }}</cite>
-                </footer>
-              </blockquote>
-              
-            </div>
-            <div class="panel-footer">
-              <!-- a href="/v1/thread/new?id={{ .Project.Uuid }}" -->
-              <span class="glyphicon glyphicon-glass" aria-hidden="true" title="品味"></span>
-              <!-- /a -->
-              <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .ThreadCount }}</span>
-              
-              <a href="#">
-                <span class="glyphicon glyphicon-heart-empty" aria-hidden="true"></span>
-              </a>
-              <span style="margin-inline-end: 30px;"> 1516 </span>
-              
-              {{ if .IsEdited }}
-              
-              <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-              <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Project.EditAtDate }} </span>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: right; font-size: smaller;">
+              <a href="/v1/user/biography?id={{ .Master.Uuid }}">{{ .Master.Name }}</a>
+              {{if .Master.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
               {{ else }}
-              {{/* 没有编辑过（补充内容）则留空白 */}}
+              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
-              <div class="pull-right">
-                <a href="#"></a>
-              </div>
-            </div>
+              <a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}" style="color: black;">{{ .MasterTeam.Abbreviation }}</a>
+
+              {{ .Project.CreatedAtDate }}
+            </span>
+            </span>
+
           </div>
-          
         </div>
       </div>
-     
-      
-      
-      
-      {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
-      {{ if .IsInput }}
-      {{/* 这是新茶议撰写模版 */}}
-<div class="panel panel-default">
 
+      <div class="panel-body">
+
+        <p style="white-space: pre-wrap;">{{ .Project.Body }}</p>
+
+        
+
+        <blockquote>
+          <p style="font-size: small;"><a href="/v1/thread/detail?id={{ .QuoteObjective.Uuid }}"><span
+                class="label label-default">引用 </span></a> {{ .QuoteObjective.Body }} ...</p>
+          <footer style="font-size: small;">
+            <cite>
+            <a href="/v1/user/biography?id={{ .QuoteObjectiveAuthor.Uuid }}" style="color: black;">{{ .QuoteObjectiveAuthor.Name }}</a>
+            <span style="margin-inline-end: 20px;">@<a
+                href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}" style="color: black;">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a></span>
+              </cite>
+          </footer>
+        </blockquote>
+
+      </div>
+      <div class="panel-footer">
+        {{/* 展示茶台的总花费（克茶叶） */}}
+        <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;"> {{ .Project.CountThreadCostByProjectId }}</i>
+        {{/* 展示茶台的总费时（分钟） */}}
+        <i class="bi-stopwatch" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;"> {{ .Project.CountThreadTimeSlotByProjectId }}</i>
+         
+
+        <span class="glyphicon glyphicon-glass" aria-hidden="true" title="品味"></span>
+        
+        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .ThreadCount }}</span>
+
+        <a href="#">
+          <span class="glyphicon glyphicon-heart-empty" aria-hidden="true"></span>
+        </a>
+        <span style="margin-inline-end: 30px;"> 1516 </span>
+
+        {{ if .IsEdited }}
+
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Project.EditAtDate }} </span>
+        {{ else }}
+        {{/* 没有编辑过（补充内容）则留空白 */}}
+        {{ end }}
+        <div class="pull-right">
+          <a href="#"></a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
+{{ if .IsInput }}
+{{/* 这是新茶议撰写模版 */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <i class="bi bi-paint-bucket" style="font-size: large;"></i>新茶议
+  </div>
   <div class="panel-body">
 
-    <form class=" form-horizontal" role="form" action="/v1/thread/draft" method="post">
-
-      <div class="form-group">
-        <fieldset>
-         
-          <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-            <i class="bi bi-paint-bucket" style="font-size: large;"></i>
-          </div>
-          <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-            <input type="radio" name="type" id="ithink" style="width: fit-content;" value="0" required />
-            <label for="ithink">我觉得</label>
-          </div>
-
-          <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-            <input type="radio" name="type" id="idea" style="width: fit-content;" value="1" required />
-            <label for="idea"">出主意</label>
-          </div>
-
-         
-
-        </fieldset>
-      </div>
+    <form class="form-horizontal" role="form" action="/v1/thread/draft" method="post">
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="42"
-            placeholder="标题（2～36字）" required />
+          <div class="radio">
+            <label>
+              <input type="radio" name="type" id="ithink" value="0" required />
+              我觉得
+            </label>
+          </div>
+          <div class="radio">
+            <label>
+              <input type="radio" name="type" id="idea" value="1" required />
+              出主意
+            </label>
+          </div>
         </div>
       </div>
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="title">标题（2～36字）</label>
+          <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="42" required />
+        </div>
+      </div>
 
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="topic">内容（17～456字）</label>
           <textarea class="form-control" name="topic" id="topic" rows="3" minlength="17" maxlength="567"
-            placeholder="内容（17～456字）" required></textarea>
+            required></textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="cost">预算花费（克茶叶）</label>
+          <input type="number" class="form-control" name="cost" id="cost" value="2" required />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="time_slot">预估耗时（分钟）</label>
+          <input type="number" class="form-control" name="time_slot" id="time_slot" value="3" required />
         </div>
       </div>
 
       {{/* 这是project的id提交 */}}
       <input type="hidden" name="project_id" value="{{ .Project.Id }}" />
+      {{/* 这是post的id提交 */}}
+      <input type="hidden" name="post_id" value="0" />
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="team_id">支持团队</label>
           <select name="team_id" class="form-control" id="team_id" required>
             <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
             </option>
@@ -181,20 +198,18 @@
 {{/* 不是游客 */}}
 <p class="text text-center">
   <a href="/v1/login?footprint={{ .SessUser.Footprint }}&query={{ .SessUser.Query }}">
-  <i class="bi-airplane" style="font-size: 2rem; color: black;""></i>
+    <i class="bi-airplane" style="font-size: 2rem; color: black;""></i>
     登机</a> 以开始聊天品茶 </p>
 {{ else }}
 <hr />
-<p class="text-center">
-   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-  茶博士：这是封闭式茶台,只有台主邀请的茶团成员，才能入座品茶呢。</p>
+<p class=" text-center">
+      <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+      茶博士：这是封闭式茶台,只有台主邀请的茶团成员，才能入座品茶呢。</p>
 
 {{ end }}
 <hr />
 {{ end }}
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-结束 */}}
-
-
 
 {{/* 以下是此茶台的全部茶议展示 */}}
 {{ range .ThreadBeanList }}
@@ -210,26 +225,54 @@
   </div>
   <div class="media-body">
     <p>
+      {{ .Author.Name }}
       {{if .Author.Gender }}
-      <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
       {{ else }}
-      <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
       {{ end }}
-      <span>{{ .Author.Name }}</span>
       <span style="margin-inline-end: 20px; font-size: smaller;">
-        @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}" style="color: black;">{{ .AuthorTeam.Abbreviation }}</a></span>
 
       <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
       </span>
     </p>
 
-    <h5>
+    <p>
       <mark>{{ .Thread.TypeStatus }}</mark>
-      <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
-      <span style="font-size: small; margin-inline-start: 40px;">
+      {{/* 检查是否被采纳1 */}}{{if .IsApproved }}
+      {{/* 这个主意已被台主或者管理员采纳 */}}
+      <i class="bi-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
+      {{/* 检查是否被采纳1 */}}{{ end }}
 
-        </h5>
-        {{ .Thread.Body }} ...
+      <span style="margin-inline-start: 1rem;margin-inline-end: 1rem;">
+        <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
+      </span>
+    </p>
+    <p>{{ .Thread.Body }} ...</p>
+    {{/* 检查是否未被采纳 */}}{{if not .IsApproved }}
+    {{/* 检查是出主意1 */}}{{ if .Thread.TypeStatus }}
+  
+    {{/* 检查是否台主1 */}}{{ if .IsMaster }}
+    <form class="form" role="form" action="/v1/thread/approve" method="post">
+      <input type="hidden" name="id" value="{{ .Thread.Uuid }}" />
+      <button type="submit" class="btn btn-default btn-sm">采纳</button>
+    </form>
+    {{/* 检查是否台主2 */}}{{ else }}
+    {{/* 检查是否管理员1，如果是，显示采纳图标 */}}{{ if .IsAdmin }}
+    <form class="form" role="form" action="/v1/thread/approve" method="post">
+      <input type="hidden" name="id" value="{{ .Thread.Uuid }}" />
+      <button type="submit" class="btn btn-default btn-sm">采纳</button>
+    </form>
+    {{/* 检查是否管理员2 */}}{{ end }}
+    {{/* 检查是否台主3 */}}{{ end }}
+    {{/* 检查是出主意1 */}}{{ end }}
+      {{/* 检查是否未被采纳 */}}{{ end }}
+      <br />
+      <p>
+      <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;"> {{ .Cost }}</i>
+      <i class="bi-stopwatch" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;"> {{ .TimeSlot }}</i>
+    </p>
   </div>
 
 </div>

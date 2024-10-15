@@ -19,12 +19,12 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Warning(err, " Cannot parse form")
-		Report(w, r, "您好，茶博士迷路了，未能找到你想要的茶台。")
+		Report(w, r, "你好，闪电考拉为你极速服务但是迷路了，未能找到你想要的资料。")
 		return
 	}
-	sUser, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
-		util.Warning(err, " Cannot get user from session")
+		util.Warning(err, sess.Id, " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -32,7 +32,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	ty, err := strconv.Atoi(r.PostFormValue("type"))
 	if err != nil {
 		util.Warning(err, "Failed to convert class to int")
-		Report(w, r, "您好，此地无银三百两，请确认后再试。")
+		Report(w, r, "你好，此地无银三百两，请确认后再试。")
 		return
 	}
 	// 检查ty值是否 0、1
@@ -41,7 +41,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		break
 	default:
 		util.Warning("Invalid thread type value")
-		Report(w, r, "您好，闺中女儿惜春暮，愁绪满怀无释处。")
+		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
 	body := r.PostFormValue("topic")
@@ -49,20 +49,61 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	project_id, err := strconv.Atoi(r.PostFormValue("project_id"))
 	if err != nil {
 		util.Warning(err, "Failed to convert class to int")
-		Report(w, r, "您好，此地无银三百两，请确认后再试。")
+		Report(w, r, "你好，闪电考拉极速查找茶台中，请确认后再试。")
 		return
 	}
+	post_id, err := strconv.Atoi(r.PostFormValue("post_id"))
+	if err != nil {
+		util.Warning(err, "Failed to convert class to int")
+		Report(w, r, "你好，闪电考拉极速服务，任然无法识别提交的品味资料，请确认后再试。")
+		return
+	}
+	/// check submit post_id is valid, if not 0 表示属于“议中议”
+	if post_id > 0 {
+		_, err := data.GetPostById(post_id)
+		// 查post是否存在
+		if err != nil {
+			util.Warning(err, " Cannot get post given id")
+			Report(w, r, "你好，��电考拉��速服务，任然无法找到提及的品��资料，请确认后再试。")
+			return
+		}
+		// 检查提及的post和project是否匹配
+		// proje, err := post.Project()
+		// if err != nil {
+		// 	util.Warning(err, " Cannot get project given post_id")
+		// 	Report(w, r, "你好，������的��������然声称这个��台��火星人拿走了。")
+		// 	return
+		// }
+		// if proje.Id != project_id {
+		// 	util.Warning(project_id, "post_id and project_id do not match")
+		// 	Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有问题，请确认后再试一次。")
+		// 	return
+		// }
+	}
+
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
 		util.Warning(err, "Failed to convert class to int")
-		Report(w, r, "您好，此地无银三百两，请确认后再试。")
+		Report(w, r, "你好，此地无这个茶团，请确认后再试。")
 		return
 	}
 	// check submit team_id is valid
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, sUser.Id)
+	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, s_u.Id)
 	if err != nil {
 		util.Warning(err, " Cannot get team member by team id and user id")
-		Report(w, r, "您好，此地无银三百两，请确认后再试。")
+		Report(w, r, "你好，此地无茶团三百两，请确认后再试。")
+		return
+	}
+	cost, err := strconv.Atoi(r.PostFormValue("cost"))
+	if err != nil {
+		util.Warning(err, "Failed to convert cost to int")
+		Report(w, r, "你好，泡茶不可无茶叶哦，请确认后再试。")
+		return
+	}
+	time_slot, err := strconv.Atoi(r.PostFormValue("time_slot"))
+	if err != nil {
+		util.Warning(err, "Failed to convert time_slot to int")
+		Report(w, r, "你好，泡一壶香茶需要一点点时间吧？请确认后再试。")
 		return
 	}
 
@@ -72,12 +113,12 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = proj.GetById(); err != nil {
 		util.Warning(err, " Cannot get project")
-		Report(w, r, "您好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
+		Report(w, r, "你好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
 		return
 	}
 	if proj.Class == 10 || proj.Class == 20 {
-		util.Warning(sUser.Email, "试图访问未盲评审核的茶台被阻止。")
-		Report(w, r, "您好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
+		util.Warning(s_u.Email, "试图访问未盲评审核的茶台被阻止。")
+		Report(w, r, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
 		return
 	}
 
@@ -86,38 +127,41 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	if proj.Class == 1 || proj.Class == 2 {
 		//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<456
 		if CnStrLen(title) < 1 {
-			Report(w, r, "您好，茶博士竟然说该茶议标题为空，请确认后再试一次。")
+			Report(w, r, "你好，茶博士竟然说该茶议标题为空，请确认后再试一次。")
 			return
 		}
 		if CnStrLen(title) > 36 {
-			Report(w, r, "您好，茶博士竟然说该茶议标题过长，请确认后再试一次。")
+			Report(w, r, "你好，茶博士竟然说该茶议标题过长，请确认后再试一次。")
 			return
 		}
 		if CnStrLen(body) < 1 {
-			Report(w, r, "您好，茶博士竟然说该茶议内容为空，请确认后再试一次。")
+			Report(w, r, "你好，茶博士竟然说该茶议内容为空，请确认后再试一次。")
 			return
 		} else if CnStrLen(body) < 17 {
-			Report(w, r, "您好，茶博士竟然说该茶议内容太短，请确认后再试一次。")
+			Report(w, r, "你好，茶博士竟然说该茶议内容太短，请确认后再试一次。")
 			return
 		}
 		if CnStrLen(body) > 456 {
-			Report(w, r, "您好，茶博士小声说茶棚的小纸条只能写456字，请确认后再试一次。")
+			Report(w, r, "你好，茶博士小声说茶棚的小纸条只能写456字，请确认后再试一次。")
 			return
 		}
 
 		//保存新茶议草稿
 		draft_thread := data.DraftThread{
-			UserId:    sUser.Id,
+			UserId:    s_u.Id,
 			ProjectId: project_id,
 			Title:     title,
 			Body:      body,
 			Class:     proj.Class,
 			Type:      ty,
+			PostId:    post_id,
 			TeamId:    team_id,
+			Cost:      cost,
+			TimeSlot:  time_slot,
 		}
 		if err = draft_thread.Create(); err != nil {
 			util.Warning(err, " Cannot create thread draft")
-			Report(w, r, "您好，茶博士没有墨水了，未能保存新茶议草稿。")
+			Report(w, r, "你好，茶博士没有墨水了，未能保存新茶议草稿。")
 			return
 		}
 		// 创建一条友邻盲评,是否接纳 新茶的记录
@@ -127,7 +171,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = aO.Create(); err != nil {
 			util.Warning(err, "Cannot create accept_object")
-			Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+			Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 			return
 		}
 		// 发送盲评请求消息给两个在线用户
@@ -139,8 +183,8 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 			AcceptObjectId: aO.Id,
 		}
 		//发送消息
-		if err = AcceptMessageSendExceptUserId(sUser.Id, mess); err != nil {
-			Report(w, r, "您好，早知日后闲争气，岂肯今朝错读书！未能发送盲评请求消息。")
+		if err = AcceptMessageSendExceptUserId(s_u.Id, mess); err != nil {
+			Report(w, r, "你好，早知日后闲争气，岂肯今朝错读书！未能发送盲评请求消息。")
 			return
 		}
 
@@ -151,11 +195,11 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//出现非法的class值
-	Report(w, r, "您好，糊里糊涂的茶博士竟然说该茶台坐满了外星人，请确认后再试一次。")
+	Report(w, r, "你好，糊里糊涂的茶博士竟然说该茶台坐满了外星人，请确认后再试一次。")
 
 }
 
-// GET /v1/thread/detail?uuid=
+// GET /v1/thread/detail?id=
 // 显示茶议（议题）的详细信息，包括品味（回复帖子）和记录品味的表格
 func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
@@ -167,16 +211,16 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	thread, err := data.ThreadByUUID(uuid)
 	if err != nil {
 		util.Warning(err, " Cannot read thread")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
 		return
 	}
 
 	if thread.PostId != 0 {
 		// 说明这是一个附加类型的,针对某个post发表的茶议(chat-in-chat，讲开又讲，延伸话题)
-		tD.QuotePost, err = data.GetPostbyId(thread.PostId)
+		tD.QuotePost, err = data.GetPostById(thread.PostId)
 		if err != nil {
 			util.Warning(err, " Cannot read post given post_id")
-			Report(w, r, "您好，枕上轻寒窗外雨，眼前春色梦中人。未能读取品味资料。")
+			Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取品味资料。")
 			return
 		}
 		// 截短body
@@ -184,13 +228,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		tD.QuotePostAuthor, err = tD.QuotePost.User()
 		if err != nil {
 			util.Warning(err, " Cannot read post author")
-			Report(w, r, "您好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
+			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
 			return
 		}
 		tD.QuotePostAuthorTeam, err = data.GetTeamById(tD.QuotePost.TeamId)
 		if err != nil {
 			util.Warning(err, " Cannot read post author team")
-			Report(w, r, "您好，花谢花飞飞满天，红消香断有谁怜？未能读取品味资料。")
+			Report(w, r, "你好，花谢花飞飞满天，红消香断有谁怜？未能读取品味资料。")
 			return
 		}
 
@@ -199,7 +243,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		tD.QuoteProject, err = thread.Project()
 		if err != nil {
 			util.Warning(err, " Cannot read project")
-			Report(w, r, "您好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
+			Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
 			return
 		}
 		// 截短body
@@ -207,13 +251,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
 		if err != nil {
 			util.Warning(err, " Cannot read project author")
-			Report(w, r, "您好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
+			Report(w, r, "你好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
 			return
 		}
 		tD.QuoteProjectAuthorTeam, err = data.GetTeamById(tD.QuoteProject.TeamId)
 		if err != nil {
 			util.Warning(err, " Cannot read project author team")
-			Report(w, r, "您好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
+			Report(w, r, "你好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
 			return
 		}
 	}
@@ -222,7 +266,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	tD.ThreadBean, err = GetThreadBean(thread)
 	if err != nil {
 		util.Warning(err, " Cannot read threadBean")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取茶议资料荚。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料荚。")
 		return
 	}
 	tD.NumSupport = thread.NumSupport()
@@ -232,7 +276,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	if n1 != 0 && err != nil {
 
 		util.Warning(err, " Cannot get posts score support")
-		Report(w, r, "您好，莫失莫忘，仙寿永昌，有些资料被黑风怪瓜州了。")
+		Report(w, r, "你好，莫失莫忘，仙寿永昌，有些资料被黑风怪瓜州了。")
 		return
 
 	}
@@ -240,7 +284,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	if n2 != 0 && err != nil {
 
 		util.Warning(err, " Cannot get posts score oppose")
-		Report(w, r, "您好，莫失莫忘，仙寿永昌，有些资料,被黑风怪瓜州了。")
+		Report(w, r, "你好，莫失莫忘，仙寿永昌，有些资料,被黑风怪瓜州了。")
 		return
 
 	}
@@ -250,13 +294,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	post_list, err := tD.ThreadBean.Thread.Posts()
 	if err != nil {
 		util.Warning(err, " Cannot read posts")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	tD.PostBeanList, err = GetPostBeanList(post_list)
 	if err != nil {
 		util.Warning(err, " Cannot read posts")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	// 读取会话
@@ -297,10 +341,10 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		//用户是登录状态,可以访问1和2级茶议
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//从会话查获当前浏览用户资料荚
-			s_u, s_default_team, s_survival_teams, err := FetchUserRelatedData(sess)
+			s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(sess)
 			if err != nil {
 				util.Warning(err, " Cannot get user-related data from session")
-				Report(w, r, "您好，茶博士失魂鱼，有眼不识泰山。")
+				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
 			// 用户足迹
@@ -311,6 +355,8 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.IsGuest = false
 			tD.SessUserDefaultTeam = s_default_team
 			tD.SessUserSurvivalTeams = s_survival_teams
+			tD.SessUserDefaultPlace = s_default_place
+			tD.SessUserBindPlaces = s_places
 
 			// 检测是否茶议作者
 			if s_u.Id == tD.ThreadBean.Thread.UserId {
@@ -346,7 +392,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 					//是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
 					ok, err := tD.QuoteProject.IsInvitedMember(s_u.Id)
 					if err != nil {
-						Report(w, r, "您好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
+						Report(w, r, "你好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 						return
 					}
 					if ok {
@@ -387,13 +433,133 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			}
 		} else if tD.ThreadBean.Thread.Class == 0 {
 			//茶议的等级发生了变化，需要重新进行邻桌评估
-			Report(w, r, "您好，茶议加水后出现了神迹！请耐心等待邻桌来推荐。")
+			Report(w, r, "你好，茶议加水后出现了神迹！请耐心等待邻桌来推荐。")
 			return
 		} else {
 			//访问未开放等级的话题？
-			Report(w, r, "您好，外星人出没注意！请确认或者联系管理员确认稍后再试。")
+			Report(w, r, "你好，外星人出没注意！请确认或者联系管理员确认稍后再试。")
 			return
 		}
+	}
+
+}
+
+// POST /v1/thread/approve
+// 茶台管理，决定采纳（认可）某个goodidea（thread），被采纳的thread其花费茶叶和耗时会纳入统计
+func ThreadApprove(w http.ResponseWriter, r *http.Request) {
+	sess, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Warning(err, " Cannot parse form")
+		Report(w, r, "你好，闪电考拉为了提高服务速度而迷路了，未能找到你想要的茶台。")
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Warning(err, " Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	//读取表单数据
+	uuid := r.PostFormValue("id")
+
+	//读取提及的茶议资料
+	thread, err := data.ThreadByUUID(uuid)
+	if err != nil {
+		util.Warning(err, uuid, " Cannot read thread given uuid")
+		Report(w, r, "你好，闪电考拉极速服务中，未能读取茶议资料，请稍后再试。")
+		return
+	}
+	proj, err := thread.Project()
+	if err != nil {
+		util.Warning(err, thread.Id, " Cannot read project given thread_id")
+		Report(w, r, "你好，��电考拉��速服务中，未能读取��台资料，请稍后再试。")
+		return
+	}
+
+	//检查用户是否有权限处理这个请求
+	team, err := data.GetTeamById(proj.TeamId)
+	if err != nil {
+		util.Warning(err, proj.TeamId, " Cannot get team given id")
+		Report(w, r, "你好，��电考拉��速服务中，未能读取��队资料，请稍后再试。")
+		return
+	}
+	//读取支持team核心成员资料
+	team_members, err := team.CoreMembers()
+	if err != nil {
+		util.Warning(err, team.Id, " Cannot get team core members given team")
+		Report(w, r, "你好，���电考拉���速服务中，未能读取���队资料，请稍后再试。")
+		return
+	}
+
+	ok := false
+	//检查s_u 是否是茶台作者
+	if proj.UserId == s_u.Id {
+		//是台主，可以处理请求
+		ok = true
+	} else {
+		//不是台主，检查是否是支持team核心成员
+		for _, tm := range team_members {
+			if tm.UserId == s_u.Id {
+				//是team核心成员，可以处理请求
+				ok = true
+				break
+			}
+		}
+	}
+	if ok {
+		//处理采纳茶议请求
+		thread_approved := data.ThreadApproved{
+			ThreadId:  thread.Id,
+			ProjectId: proj.Id,
+			UserId:    s_u.Id,
+		}
+		if err = thread_approved.Create(); err != nil {
+			util.Warning(err, thread.Id, " Cannot create thread approved")
+			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
+			return
+		}
+		// 更新thread的花费状态
+		tc := data.ThreadCost{
+			ThreadId: thread.Id,
+		}
+		if err = tc.GetbyThreadId(); err != nil {
+			util.Warning(err, thread.Id, " Cannot get thread cost")
+			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
+			return
+		}
+		tc.Type = 1
+		if err = tc.UpdateType(); err != nil {
+			util.Warning(err, thread.Id, " Cannot update thread cost")
+			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
+			return
+		}
+		//更新预算费时
+		tts := data.ThreadTimeSlot{
+			ThreadId: thread.Id,
+		}
+		if err = tts.GetbyThreadId(); err != nil {
+			util.Warning(err, thread.Id, " Cannot get thread time slot")
+			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
+			return
+		}
+		tts.IsConfirm = 1
+		if err = tts.UpdateIsConfirm(); err != nil {
+			util.Warning(err, thread.Id, " Cannot update thread time slot")
+			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
+			return
+		}
+		//采纳（认可好主意）成功
+		Report(w, r, "你好，闪电考拉极速服务，采纳该主意操作成功，请返回，刷新页面查看。")
+		return
+	} else {
+		//没有权限处理请求
+		Report(w, r, "你好，闪电考拉极速服务，火星保安竟然说你没有权限处理该请求。")
+		return
 	}
 
 }
@@ -424,7 +590,7 @@ func EditThread(w http.ResponseWriter, r *http.Request) {
 		sUser, err := sess.User()
 		if err != nil {
 			util.Warning(err, " Cannot get user from session")
-			Report(w, r, "您好，茶博士失魂鱼，未能读取会话用户资料。")
+			Report(w, r, "你好，茶博士失魂鱼，未能读取会话用户资料。")
 			return
 		}
 		vals := r.URL.Query()
@@ -469,7 +635,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 		user, err := sess.User()
 		if err != nil {
 			util.Danger(err, " Cannot get user from session")
-			Report(w, r, "您好，茶博士失魂鱼，未能读取专属茶议。")
+			Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 			return
 		}
 		uuid := r.PostFormValue("uuid")
@@ -489,7 +655,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 				thread.Body += topi
 			} else {
 				util.Info("Cannot update thread")
-				Report(w, r, "猫是彬彬有礼的茶博士竟然声称纸太贵，字太少或者超过456字的茶议不收录！请确认后再试。")
+				Report(w, r, "闪电考拉居然说字太少或者超过456字的茶议，无法记录，请确认后再试。")
 				return
 			}
 			// 修改过的茶议,重置class=0,表示草稿状态，
@@ -510,163 +676,4 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-}
-
-// POST /v1/thread/plus
-// 附加型茶议，是针对某个品味（跟帖）发起的茶议草稿
-func PlusThread(w http.ResponseWriter, r *http.Request) {
-	sess, err := Session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	err = r.ParseForm()
-	if err != nil {
-		Report(w, r, "您好，未能找到你想要的茶台。")
-		return
-	}
-	//根据会话读取当前浏览用户信息
-	sUser, err := sess.User()
-	if err != nil {
-		util.Warning(err, " Cannot get user from session")
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	// 读取表单数据
-	ty, err := strconv.Atoi(r.PostFormValue("type"))
-	if err != nil {
-		util.Warning(err, " Cannot convert ty to int")
-		Report(w, r, "茶博士失魂鱼，未能读取新泡茶议资料，请稍后再试。")
-		return
-	}
-	// 检查ty值是否 0、1、2
-	if ty != 0 && ty != 1 && ty != 2 {
-		Report(w, r, "您好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
-		return
-	}
-	body := r.PostFormValue("topic")
-	title := r.PostFormValue("title")
-	post_uuid := r.PostFormValue("uuid")
-
-	// 检查提交的参数是否合规
-	//检测一下title是否不为空，而且中文字数<19,topic不为空，而且中文字数<456
-	if CnStrLen(title) < 1 {
-		Report(w, r, "您好，茶博士竟然说该茶议标题为空，请确认后再试一次。")
-		return
-	}
-	if CnStrLen(title) > 36 {
-		Report(w, r, "您好，茶博士竟然说该茶议标题过长，请确认后再试一次。")
-		return
-	}
-	if CnStrLen(body) < 1 {
-		Report(w, r, "您好，茶博士竟然说该茶议内容为空，请确认后再试一次。")
-		return
-	} else if CnStrLen(body) < 17 {
-		Report(w, r, "您好，茶博士竟然说该茶议内容太短，请确认后再试一次。")
-		return
-	}
-	if CnStrLen(body) > 456 {
-		Report(w, r, "您好，茶博士小声说茶棚的小纸条只能写456字，请确认后再试一次。")
-		return
-	}
-	// 检查是那一张茶台发生的事
-	post, err := data.GetPostByUuid(post_uuid)
-	// ���查post是否存在
-	if err != nil {
-		util.Warning(err, " Cannot get post")
-		Report(w, r, "您好，������的��������然声称这个��台��火星人����了。")
-		return
-	}
-	proj, err := post.Project()
-	if err != nil {
-		util.Warning(err, " Cannot get project")
-		Report(w, r, "您好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
-		return
-	}
-
-	var draft_thread data.DraftThread
-
-	switch proj.Class {
-	case 10, 20:
-		Report(w, r, "您好，该茶台尚未启用，请确认后再试。")
-		return
-	case 1:
-		// Open teaTable, Can have tea :)
-		// 保存新茶议草稿
-		draft_thread = data.DraftThread{
-			UserId:    sUser.Id,
-			ProjectId: proj.Id,
-			Title:     title,
-			Body:      body,
-			Class:     proj.Class,
-			Type:      ty,
-			PostId:    post.Id,
-		}
-		if err = draft_thread.Create(); err != nil {
-			util.Warning(err, " Cannot create thread draft")
-			Report(w, r, "您好，茶博士的笔没有墨水了，未能保存新茶议草稿。")
-			return
-		}
-	case 2:
-		//Is the current session user allowed to join the tea tasting?
-		//It depends on the tea group members invited by the host.
-		ok, err := proj.IsInvitedMember(sUser.Id)
-		// ���查用户是否����请到��台
-		if err != nil {
-			util.Warning(err, " Cannot check if user is invited")
-			Report(w, r, "您好，������的��没有��水了，未能确认你是否����请到这个��台。")
-			return
-		}
-		if ok {
-			draft_thread = data.DraftThread{
-				UserId:    sUser.Id,
-				ProjectId: proj.Id,
-				Title:     title,
-				Body:      body,
-				Class:     proj.Class,
-				Type:      ty,
-				PostId:    post.Id,
-			}
-			if err = draft_thread.Create(); err != nil {
-				util.Warning(err, " Cannot create thread draft")
-				Report(w, r, "您好，茶博士的笔没有墨水了，未能保存新茶议草稿。")
-				return
-			}
-		} else {
-			Report(w, r, "您好，茶博士彬彬有礼的说，你的大名竟然不在邀请品茶名单上。")
-			return
-		}
-		// 异常状态的茶台
-	default:
-		Report(w, r, "您好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
-		return
-	}
-
-	// 创建一条友邻盲评,是否接纳 新茶的记录
-	ao := data.AcceptObject{
-		ObjectId:   draft_thread.Id,
-		ObjectType: 3,
-	}
-	if err = ao.Create(); err != nil {
-		util.Warning(err, "Cannot create accept_object")
-		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
-		return
-	}
-	// 发送邻座盲评消息
-	am := data.AcceptMessage{
-		FromUserId:     1,
-		Title:          "新茶议邻座评审邀请",
-		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
-		AcceptObjectId: ao.Id,
-	}
-	// 发送消息
-	if err = AcceptMessageSendExceptUserId(sUser.Id, am); err != nil {
-		Report(w, r, "您好，茶博士迷路了，未能发送盲评请求消息。")
-		return
-	}
-	// 提示用户草稿保存成功
-	tips := fmt.Sprintf("你好，你在“ %s ”茶台发布的茶议已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", proj.Title)
-	// 提示用户草稿保存成功
-	Report(w, r, tips)
-
 }

@@ -2,6 +2,7 @@ package route
 
 import (
 	"bufio"
+	"database/sql"
 	"errors"
 	"fmt"
 	"io"
@@ -39,7 +40,7 @@ func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 }
 
 // Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队
-func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, teams []data.Team, err error) {
+func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
 	// 读取已登陆用户资料
 	s_u, err = sess.User()
 	if err != nil {
@@ -63,118 +64,86 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, tea
 		}
 	}
 
-	return s_u, defaultTeam, survivalTeams, nil
+	default_place, err := s_u.GetLastDefaultPlace()
+	if err != nil && err != sql.ErrNoRows {
+		return
+	}
+
+	places, err = s_u.GetAllBindPlaces()
+	if err != nil {
+		return
+	}
+	if len(places) > 0 {
+		//移除默认地点
+		for i, place := range places {
+			if place.Id == default_place.Id {
+				places = append(places[:i], places[i+1:]...)
+				break
+			}
+		}
+	}
+
+	return s_u, defaultTeam, survivalTeams, default_place, places, nil
 }
 
 // 根据给出的thread_list参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
 func GetThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadBean, err error) {
-	var oab data.ThreadBean
 	var oablist []data.ThreadBean
 	// 截短ThreadList中thread.Body文字长度为168字符,
 	// 展示时长度接近，排列比较整齐，最小惊讶原则？效果比较nice
 	for i := range thread_list {
 		thread_list[i].Body = Substr(thread_list[i].Body, 168)
 	}
-	len := len(thread_list)
-	// 根据茶议资料读取全部作者
-	authorlist := make([]data.User, 0, len)
-	// 读取每个作者发帖时候选择的茶团资料
-	teamList := make([]data.Team, 0, len)
 	for _, thread := range thread_list {
-		user, err := thread.User()
+		ThreadBean, err := GetThreadBean(thread)
 		if err != nil {
-			util.Warning(err, " Cannot read thread author")
 			return nil, err
 		}
-		team, err := data.GetTeamById(thread.TeamId)
-		if err != nil {
-			util.Warning(err, " Cannot read team given author")
-			return nil, err
-		}
-		authorlist = append(authorlist, user)
-		teamList = append(teamList, team)
-	}
-
-	// 拼装资料
-	for i, thread := range thread_list {
-		oab.Thread = thread
-		oab.Status = thread.Status()
-		oab.Count = thread.NumReplies()
-		oab.CreatedAtDate = thread.CreatedAtDate()
-		oab.Author = authorlist[i]
-		oab.AuthorTeam = teamList[i]
-		oablist = append(oablist, oab)
+		oablist = append(oablist, ThreadBean)
 	}
 	ThreadBeanList = oablist
 	return
 }
 
-// 根据给出的thread参数，去获取对应的茶议，附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
+// 根据给出的thread参数，去获取对应的茶议，附属品味计数，作者资料，作者发帖时候选择的茶团，费用和费时。
 func GetThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
-	var oab data.ThreadBean
-	oab.Thread = thread
-	oab.Status = thread.Status()
-	oab.Count = thread.NumReplies()
-	oab.CreatedAtDate = thread.CreatedAtDate()
+	var tB data.ThreadBean
+	tB.Thread = thread
+	tB.Status = thread.Status()
+	tB.Count = thread.NumReplies()
+	tB.CreatedAtDate = thread.CreatedAtDate()
 	user, err := thread.User()
 	if err != nil {
 		util.Warning(err, " Cannot read thread author")
-		return oab, err
+		return tB, err
 	}
-	oab.Author = user
+	tB.Author = user
 	team, err := data.GetTeamById(thread.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot read team given author")
-		return oab, err
+		return tB, err
 	}
-	oab.AuthorTeam = team
-	return oab, nil
+	tB.AuthorTeam = team
+	tB.IsApproved = thread.IsApproved()
+	//费用和费时
+	tB.Cost, _ = thread.Cost()
+	tB.TimeSlot, _ = thread.TimeSlot()
+	return tB, nil
 }
 
 // 根据给出的objectiv_list参数，去获取对应的茶话会（objective），截短正文保留前168字符，附属茶台计数，发起人资料，发帖时候选择的茶团。然后按结构填写返回资料荚。
 func GetObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []data.ObjectiveBean, err error) {
-	var ob data.ObjectiveBean
-	var oblist []data.ObjectiveBean
 	// 截短ObjectiveList中objective.Body文字长度为168字符,
 	for i := range objectiv_list {
 		objectiv_list[i].Body = Substr(objectiv_list[i].Body, 168)
 	}
-	len := len(objectiv_list)
-	// 读取全部会主
-	authorlist := make([]data.User, 0, len)
-	// 据authorlist,读取每个作者发贴时选择的团队资料
-	teamList := make([]data.Team, 0, len)
-	for _, objective := range objectiv_list {
-		user, err := objective.User()
+	for _, obj := range objectiv_list {
+		ob, err := GetObjectiveBean(obj)
 		if err != nil {
-			util.Warning(err, " Cannot read objective author")
 			return nil, err
 		}
-		authorlist = append(authorlist, user)
-		team, err := data.GetTeamById(objective.TeamId)
-		if err != nil {
-			util.Warning(err, " Cannot read team given author")
-			return nil, err
-		}
-		teamList = append(teamList, team)
+		ObjectiveBeanList = append(ObjectiveBeanList, ob)
 	}
-
-	// 并装资料
-	for i, objective := range objectiv_list {
-		ob.Objective = objective
-		if objective.Class == 1 {
-			ob.Open = true
-		} else {
-			ob.Open = false
-		}
-		ob.Status = objective.GetStatus()
-		ob.Count = objective.NumReplies()
-		ob.CreatedAtDate = objective.CreatedAtDate()
-		ob.Author = authorlist[i]
-		ob.AuthorTeam = teamList[i]
-		oblist = append(oblist, ob)
-	}
-	ObjectiveBeanList = oblist
 	return
 }
 
@@ -208,46 +177,17 @@ func GetObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err e
 
 // 据给出的project_list参数，去获取对应的茶台（project），截短正文保留前168字符，附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
 func GetProjectBeanList(project_list []data.Project) (ProjectBeanList []data.ProjectBean, err error) {
-	var pab data.ProjectBean
-	var pablist []data.ProjectBean
 	// 截短ObjectiveList中objective.Body文字长度为168字符,
 	for i := range project_list {
 		project_list[i].Body = Substr(project_list[i].Body, 168)
 	}
-	len := len(project_list)
-	// 读取全部发起人资料荚
-	authorlist := make([]data.User, 0, len)
-	teamList := make([]data.Team, 0, len)
-	for _, project := range project_list {
-		user, err := project.User()
+	for _, pro := range project_list {
+		pb, err := GetProjectBean(pro)
 		if err != nil {
-			util.Warning(err, " Cannot read project author")
 			return nil, err
 		}
-		authorlist = append(authorlist, user)
-		team, err := data.GetTeamById(project.TeamId)
-		if err != nil {
-			util.Warning(err, " Cannot read team given author")
-			return nil, err
-		}
-		teamList = append(teamList, team)
+		ProjectBeanList = append(ProjectBeanList, pb)
 	}
-
-	for i, project := range project_list {
-		pab.Project = project
-		if project.Class == 1 {
-			pab.Open = true
-		} else {
-			pab.Open = false
-		}
-		pab.Status = project.GetStatus()
-		pab.Count = project.NumReplies()
-		pab.CreatedAtDate = project.CreatedAtDate()
-		pab.Author = authorlist[i]
-		pab.AuthorTeam = teamList[i]
-		pablist = append(pablist, pab)
-	}
-	ProjectBeanList = pablist
 	return
 }
 
@@ -275,44 +215,23 @@ func GetProjectBean(project data.Project) (ProjectBean data.ProjectBean, err err
 		return pb, err
 	}
 	pb.AuthorTeam = team
+	pb.Place, err = project.Place()
+	if err != nil {
+		util.Warning(err, "cannot read project place")
+		return pb, err
+	}
 	return pb, nil
 }
 
 // 据给出的post_list参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回。
 func GetPostBeanList(post_list []data.Post) (PostBeanList []data.PostBean, err error) {
-	var pb data.PostBean
-	var pb_list []data.PostBean
-	// for i := range post_list {
-	// 	post_list[i].Body = Substr(post_list[i].Body, 168)
-	// }
-	len := len(post_list)
-	author_list := make([]data.User, 0, len)
-	team_list := make([]data.Team, 0, len)
-	for _, post := range post_list {
-		user, err := post.User()
+	for _, pos := range post_list {
+		postBean, err := GetPostBean(pos)
 		if err != nil {
-			util.Warning(err, " Cannot read post author")
 			return nil, err
 		}
-		team, err := data.GetTeamById(post.TeamId)
-		if err != nil {
-			util.Warning(err, " Cannot read team given author")
-			return nil, err
-		}
-		author_list = append(author_list, user)
-		team_list = append(team_list, team)
+		PostBeanList = append(PostBeanList, postBean)
 	}
-
-	for i, post := range post_list {
-		pb.Post = post
-		pb.Attitude = post.Atti()
-		pb.Count = post.NumReplies()
-		pb.CreatedAtDate = post.CreatedAtDate()
-		pb.Author = author_list[i]
-		pb.AuthorTeam = team_list[i]
-		pb_list = append(pb_list, pb)
-	}
-	PostBeanList = pb_list
 	return
 }
 
@@ -355,43 +274,14 @@ func GetTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 	return tb, nil
 }
 func GetTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err error) {
-	var tb data.TeamBean
-	var tb_list []data.TeamBean
-	len := len(team_list)
-	founder_list := make([]data.User, 0, len)
-	for _, team := range team_list {
-		user, err := team.Founder()
+	for _, tea := range team_list {
+		teamBean, err := GetTeamBean(tea)
 		if err != nil {
-			util.Warning(err, " Cannot read team founder")
 			return nil, err
 		}
-		founder_list = append(founder_list, user)
+		TeamBeanList = append(TeamBeanList, teamBean)
 	}
-	founder_default_team_list := make([]data.Team, 0, len)
-	for _, founder := range founder_list {
-		team, err := founder.GetLastDefaultTeam()
-		if err != nil {
-			util.Warning(err, " Cannot read team given founder")
-			return nil, err
-		}
-		founder_default_team_list = append(founder_default_team_list, team)
-	}
-	// 打包/拼装资料
-	for i, team := range team_list {
-		tb.Team = team
-		if team.Class == 1 {
-			tb.Open = true
-		} else {
-			tb.Open = false
-		}
-		tb.CreatedAtDate = team.CreatedAtDate()
-		tb.Founder = founder_list[i]
-		tb.FounderTeam = founder_default_team_list[i]
-		tb.Count = team.NumMembers()
-		tb_list = append(tb_list, tb)
-	}
-
-	return tb_list, nil
+	return
 }
 
 // 据给出的 group 参数，去获取对应的 group 资料，是否开放，下属茶团计数，发起日期，发起人（Founder）及其默认团队，第一团队，然后按结构拼装返回。
@@ -487,7 +377,7 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	err = buff.Flush()
 	if err != nil {
 		util.Warning(err, "fail to write avatar image")
-		Report(w, r, "您好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
+		Report(w, r, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
 		return err
 	}
 

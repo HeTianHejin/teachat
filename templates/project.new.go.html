@@ -10,12 +10,6 @@
 
 </ol>
 
-{{/* 这是某个茶台（项目）的地址显示 */}}
-<div style="border:0.5rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin: 1rem;">
-  <i class="bi-geo" style="font-size: 2rem; color: black;"></i>
-  大清帝国 京都 金陵 大观园
-</div>
-
 <div class="panel panel-default">
   <div class="panel-body" style="font-size: small;">
     <a href="/v1/thread/detail?id={{ .ObjectiveBean.Objective.Uuid }}"><span class="label label-default">引用</span></a>
@@ -31,48 +25,52 @@
 </div>
 
 <div class="panel panel-default">
-
+<div class="panel-heading">
+  <img src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="24" height="24">
+  新开茶台
+</div>
   <div class="panel-body">
 
     <form role="form" action="/v1/project/new" method="post">
 
       <div class="form-group">
-        <fieldset>
-          <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-            <img src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="32" height="32">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <input type="radio" name="class" id="open" style="width: fit-content;" value=10 required />
+            <label for="open">开放式-所有人都可以品茶</label>
           </div>
 
-          <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-            <input type="radio" name="class" id="public" style="width: fit-content;" value=10 required checked />
-            <label for="public" style="margin-inline-end: 20px;">开放式-所有茶团都可以品茶</label>
-          </div>
-
-          <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-            <input type="radio" name="class" id="private" style="width: fit-content;" value=20 required />
-            <label for="private" style="margin-inline-end: 20px;">封闭式-仅受邀团队可以品茶</label>
-          </div>
-        </fieldset>
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <input type="radio" name="class" id="close_project" style="width: fit-content;" value=20 required />
+            <label for="close_project">封闭式-仅受邀团队可以品茶</label>
+            <input type="text" class="form-control" name="invite_team_ids" id="invite_team_ids" placeholder="拟邀请的茶团号，以逗号分隔" required />
+          </div> 
       </div>
 
       <div class="form-group">
         <label for="name">茶台名称（2-24字）</label>
         <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="42" required />
       </div>
-
+      
       <div class="form-group">
-        <label for="description">请介绍你的茶台（17-456字）</label>
+        <label for="description">茶台介绍（17-456字）</label>
         <textarea class="form-control" name="description" id="description" rows="6" minlength="17" maxlength="567"
           required></textarea>
       </div>
 
       <div class="form-group">
-        <input type="text" class="form-control" name="invite-team-ids" id="invite-team-ids"
-          placeholder="如果是封闭式茶台，务必指定拟邀请的茶团号，以逗号分隔。" required />
+        <label for="place_uuid">活动地点</label>
+        <select name="place_uuid" class="form-control" id="place_uuid" required>
+          <option value="{{ .SessUserDefaultPlace.Uuid }}">{{ .SessUserDefaultPlace.Name }}
+          </option>
+          {{ range .SessUserBindPlaces }}
+          <option value="{{ .Uuid }}">{{ .Name }}</option>
+          {{ end }}
+        </select>
       </div>
 
-      <input type="hidden" name="uuid" id="uuid" value="{{ .ObjectiveBean.Objective.Uuid }}">
 
       <div class="form-group">
+        <label for="team_id">支持团队</label>
         <select name="team_id" class="form-control" id="team_id" required>
           <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
           </option>
@@ -81,20 +79,13 @@
           {{ end }}
         </select>
       </div>
+      
 
-      <div class="form-group">
-        <select name="Place_uuid" class="form-control" id="Place_uuid" required>
-          <option value="{{ .SessUserDefaultPlace.Uuid }}">{{ .SessUserDefaultPlace.Name }}
-          </option>
-          {{ range .SessUserSurvivalPlaces }}
-          <option value="{{ .Uuid }}">{{ .Name }}</option>
-          {{ end }}
-        </select>
-      </div>
-
-      <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+      <div class="form-group; col-xs-offset-6 col-sm-offset-6 col-md-offset-6 col-lg-offset-6">
         <button type="submit" class="btn btn-default">开台</button>
       </div>
+      
+      <input type="hidden" name="ob_uuid" id="ob_uuid" value="{{ .ObjectiveBean.Objective.Uuid }}">
 
     </form>
 
@@ -108,3 +99,4 @@
 </div>
 
 {{ end }}
+

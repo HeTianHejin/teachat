@@ -8,31 +8,58 @@
 
 {{/* 这是新创建一个地点页面 */}}
 
-<form role="form" action="/v1/place/new" method="post">
+<div class="panel panel-default">
 
-    <div class="form-group">
-        <label for="name">名称</label>
-        <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="24" placeholder="（例如：家）"
-            required />
+    <div class="panel-heading">
+        登记一个新地点
     </div>
+    <div class="panel-body">
 
-    <div class="form-group">
-        <label for="nickname">昵称</label>
-        <input type="text" class="form-control" name="nickname" id="nickname" minlength="2" maxlength="24" placeholder="（例如：寒舍）" required />
+        <form role="form" action="/v1/place/create" method="post">
+
+            <div class=" form-group">
+                <p><label for="category">选择地点类型：</label></p>
+                <label class="radio-inline">
+                    <input type="radio" name="category" id="real" value="1" required> 烟火人间
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="category" id="virtual" value="0" required> 虚拟幻境
+                </label>
+            </div>
+            <div class=" form-group">
+                <p><label for="is_public">选择地点属性：</label></p>
+                <label class="radio-inline">
+                    <input type="radio" name="is_public" id="public" value="0" required> 公共场所
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="is_public" id="private" value="1" checked required> 私有空间
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="name">名称：</label>
+                <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="24"
+                    placeholder="（例如：家/盗梦空间）" required />
+            </div>
+
+            <div class="form-group">
+                <label for="nickname">昵称：</label>
+                <input type="text" class="form-control" name="nickname" id="nickname" minlength="2" maxlength="24"
+                    placeholder="（例如：狗窝/太虚幻境）" required />
+            </div>
+
+            <div class="form-group">
+                <label for="description">地点描述：</label>
+                <textarea class="form-control" name="description" id="description" rows="6" minlength="17"
+                    maxlength="567" placeholder="（例如：一个温暖的地方/千红一窟万艳同悲）" required></textarea>
+            </div>
+
+            <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+                <button type="submit" class="btn btn-default">确定</button>
+            </div>
+
+        </form>
     </div>
-
-
-    <div class="form-group">
-        <label for="description">地点描述</label>
-        <textarea class="form-control" name="description" id="description" rows="6" minlength="17" maxlength="567" placeholder="（例如：一个温暖的地方）" required></textarea>
-      </div>
-
-    
-
-    <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
-        <button type="submit" class="btn btn-default">确定</button>
-    </div>
-
-</form>
+</div>
 
 {{ end }}

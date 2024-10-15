@@ -1,0 +1,24 @@
+
+
+
+
+/* Custom page CSS
+* Not required for template or sticky footer method.
+* -------------------------------------------------- */
+
+body > .container {
+  padding-top: 70px; /* for navbar */
+  padding-bottom: 0%;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+
+body > .footer {
+  margin-top: 60px;
+  background-color: gainsboro;
+  padding: 48px;
+}
+
+
+

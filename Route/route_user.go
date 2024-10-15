@@ -20,7 +20,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	su, err := s.User()
 	if err != nil {
 		util.Warning(err, " 未能读取用户信息！")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取用户信息.")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
 	var uB data.UserBiography
@@ -51,26 +51,26 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	team_list_core, err := user.CoreExecTeams()
 	if err != nil {
 		util.Info(err, " Cannot get core teams")
-		Report(w, r, "您好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
+		Report(w, r, "你好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
 		return
 	}
 	uB.ManageTeamBeanList, err = GetTeamBeanList(team_list_core)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。")
+		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。")
 		return
 	}
 
 	team_list, err := user.NormalExecTeams()
 	if err != nil {
 		util.Info(err, " Cannot get joined teams")
-		Report(w, r, "您好，茶博士未能帮忙查看茶团，请稍后再试。")
+		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
 	uB.JoinTeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
 
@@ -124,7 +124,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		//http.Redirect(w, r, "/v1/user/biography?id="+user.Uuid, http.StatusFound)
-		Report(w, r, "您好，茶博士低声说，花名或者简介更新成功啦。")
+		Report(w, r, "你好，茶博士低声说，花名或者简介更新成功啦。")
 
 	}
 
@@ -151,7 +151,7 @@ func ProcessAvatar(w http.ResponseWriter, r *http.Request) {
 	u, err := s.User()
 	if err != nil {
 		util.Warning(err, " 获取用户信息错误！")
-		Report(w, r, "您好，茶博士失魂鱼，未能读取用户信息！")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
 	// 处理上传到图片

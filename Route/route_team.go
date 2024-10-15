@@ -17,14 +17,14 @@ func NewTeam(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, err := s.User()
+	s_u, err := s.User()
 	if err != nil {
 		util.Info(err, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	var tpd data.TeamSquare
-	tpd.SessUser = u
+	tpd.SessUser = s_u
 	GenerateHTML(w, &tpd, "layout", "navbar.private", "team.new")
 }
 
@@ -39,23 +39,23 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Warning(err, " Cannot parse form")
-		Report(w, r, "您好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
 		return
 	}
 	su, err := s.User()
 	if err != nil {
-		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
 
 	count, err := su.CountTeamsByFounderId()
 	if err != nil {
 		util.Danger(err, "connot count teams given founder_id")
-		Report(w, r, "您好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	if count >= util.Config.MaxTeamCount {
-		Report(w, r, "您好，三月香巢已垒成，梁间燕子太无情。开团数量太多了，未能创建新茶团。")
+		Report(w, r, "你好，三月香巢已垒成，梁间燕子太无情。开团数量太多了，未能创建新茶团。")
 		return
 	}
 
@@ -63,14 +63,14 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	// 茶团名称是否在4-24中文字符
 	le := CnStrLen(name)
 	if le < 4 || le > 24 {
-		Report(w, r, "您好，茶博士摸摸头，竟然说茶团名字字数太多或者太少，未能创建新茶团。")
+		Report(w, r, "你好，茶博士摸摸头，竟然说茶团名字字数太多或者太少，未能创建新茶团。")
 		return
 	}
 	abbr := r.PostFormValue("abbreviation")
 	// 队名简称是否在4-6中文字符
 	lenA := CnStrLen(abbr)
 	if lenA < 4 || lenA > 6 {
-		Report(w, r, "您好，茶博士摸摸头，竟然说队名简称字数太多或者太少，未能创建新茶团。")
+		Report(w, r, "你好，茶博士摸摸头，竟然说队名简称字数太多或者太少，未能创建新茶团。")
 		return
 	}
 
@@ -78,19 +78,19 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	// 检测mission是否在17-456中文字符
 	lenM := CnStrLen(mission)
 	if lenM < 17 || lenM > 456 {
-		Report(w, r, "您好，茶博士摸摸头，竟然说愿景字数太多或者太少，未能创建新茶团。")
+		Report(w, r, "你好，茶博士摸摸头，竟然说愿景字数太多或者太少，未能创建新茶团。")
 		return
 	}
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
 		util.Info(err, " Cannot convert class to int")
-		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
 	// group_id, err := strconv.Atoi(r.PostFormValue("group_id"))
 	// if err != nil {
 	// 	util.Info(err, " Cannot convert group_id to int")
-	// 	Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+	// 	Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 	// 	return
 	// }
 
@@ -99,20 +99,20 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	case 10, 20:
 		break
 	default:
-		Report(w, r, "您好，茶博士摸摸头，竟然说茶团类别太多或者太少，未能创建新茶团。")
+		Report(w, r, "你好，茶博士摸摸头，竟然说茶团类别太多或者太少，未能创建新茶团。")
 		return
 	}
 	//检测同名的team是否已经存在，团队不允许同名
 	_, err = data.GetTeamByName(name)
 	if err == nil {
-		Report(w, r, "您好，茶博士摸摸头，竟然说这个茶团名称已经被占用，请换一个更响亮的团名，再试一次。")
+		Report(w, r, "你好，茶博士摸摸头，竟然说这个茶团名称已经被占用，请换一个更响亮的团名，再试一次。")
 		return
 	}
 
 	_, err = data.GetTeamByAbbreviation(abbr)
 	if err == nil {
 		// 重复的简称
-		Report(w, r, "您好，茶博士摸摸头，竟然说这个茶团简称已经被占用，请换一个更响亮的团名，再试一次。")
+		Report(w, r, "你好，茶博士摸摸头，竟然说这个茶团简称已经被占用，请换一个更响亮的团名，再试一次。")
 		return
 	}
 
@@ -121,7 +121,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	team, err := su.CreateTeam(name, abbr, mission, logo, class, 1)
 	if err != nil {
 		util.Info(err, " At create team")
-		Report(w, r, "您好，茶博士失魂鱼，未能创建你的天团，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能创建你的天团，请稍后再试。")
 		return
 	}
 
@@ -132,7 +132,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = aO.Create(); err != nil {
 		util.Warning(err, "Cannot create accept_object")
-		Report(w, r, "您好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 	}
 
 	// 发送盲评请求消息给两个在线用户
@@ -145,10 +145,10 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	//发送消息
 	if err = AcceptMessageSendExceptUserId(su.Id, mess); err != nil {
-		Report(w, r, "您好，茶博士迷路了，未能发送盲评请求消息。")
+		Report(w, r, "你好，茶博士迷路了，未能发送盲评请求消息。")
 		return
 	}
-	t := fmt.Sprintf("您好，新开茶团 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", team.Name)
+	t := fmt.Sprintf("你好，新开茶团 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", team.Name)
 	// 提示用户草稿保存成功
 	Report(w, r, t)
 
@@ -163,13 +163,13 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 	team_list, err := data.GetOpenTeams()
 	if err != nil {
 		util.Info(err, " Cannot get open teams")
-		Report(w, r, "您好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
 	tS.TeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
 	// 用户是否已经登录?
@@ -197,13 +197,13 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 	team_list, err := data.GetClosedTeams()
 	if err != nil {
 		util.Info(err, " Cannot get closed teams")
-		Report(w, r, "您好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
 	ts.TeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
 	s, _ := Session(r)
@@ -229,13 +229,15 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	sUser, err := s.User()
+	s_u, err := s.User()
 	if err != nil {
 		util.Info(err, " Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+
 		return
 	}
 	var ts data.TeamSquare
-	team_list, err := sUser.HoldTeams()
+	team_list, err := s_u.HoldTeams()
 	if err != nil {
 		util.Info(err, " Cannot get hold teams")
 		return
@@ -243,10 +245,10 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 	ts.TeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
-	ts.SessUser = sUser
+	ts.SessUser = s_u
 	GenerateHTML(w, &ts, "layout", "navbar.private", "teams.hold", "teams.public")
 }
 
@@ -265,13 +267,13 @@ func JoinedTeam(w http.ResponseWriter, r *http.Request) {
 	team_list, err := su.SurvivalTeams()
 	if err != nil {
 		util.Info(err, " Cannot get joined teams")
-		Report(w, r, "您好，茶博士未能帮忙查看茶团，请稍后再试。")
+		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
 	ts.TeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
 
@@ -293,13 +295,13 @@ func EmployedTeam(w http.ResponseWriter, r *http.Request) {
 	team_list, err := u.CoreExecTeams()
 	if err != nil {
 		util.Info(err, " Cannot get employed teams")
-		Report(w, r, "您好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
+		Report(w, r, "你好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
 		return
 	}
 	ts.TeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "您好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
 	GenerateHTML(w, &ts, "layout", "navbar.private", "teams.employed", "teams.public")
@@ -316,7 +318,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	te, err := data.TeamByUuid(uuid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
-		Report(w, r, "您好，茶博士未能帮忙查看茶团，请稍后再试。")
+		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
 
@@ -326,7 +328,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	fu, err := te.Founder()
 	if err != nil {
 		util.Info(err, " Cannot get team founder")
-		Report(w, r, "您好，闪电考拉为你极速效劳中，请稍后再试。")
+		Report(w, r, "你好，闪电考拉为你极速效劳中，请稍后再试。")
 		return
 	}
 	tPD.Founder = fu
@@ -337,13 +339,13 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	teamCoreMembers, err := te.CoreMembers()
 	if err != nil {
 		util.Info(err, " Cannot get team core member")
-		Report(w, r, "您好，闪电考拉为你效劳中，请稍后再试。")
+		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
 	teamNormalMembers, err := te.NormalMembers()
 	if err != nil {
 		util.Info(err, " Cannot get team normal member")
-		Report(w, r, "您好，闪电考拉为你效劳中，请稍后再试。")
+		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
 	// 准备页面数据
@@ -356,7 +358,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		user, err := data.GetUserById(member.UserId)
 		if err != nil {
 			util.Info(err, " Cannot get user")
-			Report(w, r, "您好，闪电考拉为你效劳中，请稍后再试。")
+			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 			return
 		}
 
@@ -364,7 +366,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		tc.AuthorTeam, err = user.GetLastDefaultTeam()
 		if err != nil {
 			util.Info(err, " Cannot get user's default team")
-			Report(w, r, "您好，闪电考拉为你效劳中，请稍后再试。")
+			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 			return
 		}
 		tc.TeamMemberRole = member.Role
@@ -375,14 +377,14 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		user, err := data.GetUserById(member.UserId)
 		if err != nil {
 			util.Info(err, " Cannot get user")
-			Report(w, r, "您好，疯狂的闪电考拉为你效劳中，请稍后再试。")
+			Report(w, r, "你好，疯狂的闪电考拉为你效劳中，请稍后再试。")
 			return
 		}
 		tn.User = user
 		tn.AuthorTeam, err = user.GetLastDefaultTeam()
 		if err != nil {
 			util.Info(err, " Cannot get user's default team")
-			Report(w, r, "您好，闪电考拉为你效劳中，请稍后再试。")
+			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 			return
 		}
 		tn.TeamMemberRole = member.Role
@@ -436,7 +438,7 @@ func HandleManageTeam(w http.ResponseWriter, r *http.Request) {
 // POST /v1/team/manage
 // 处理用户管理团队事务
 func HandleManageTeamPost(w http.ResponseWriter, r *http.Request) {
-	Report(w, r, "您好，茶博士未能帮忙查看茶团，请稍后再试。")
+	Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 }
 
 // GET /v1/team/manage
@@ -453,7 +455,7 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	team, err := data.TeamByUuid(r.FormValue("id"))
 	if err != nil {
 		util.Info(err, " Cannot get this team")
-		Report(w, r, "您好，茶博士未能找到此茶团资料，请确认后再试。")
+		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
 	var tPD data.TeamDetail
@@ -461,7 +463,7 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	//如果是创建人，那么就可以管理这个茶团
 	fund, err := team.Founder()
 	if err != nil {
-		Report(w, r, "您好，茶博士未能找到此茶团发起人资料，请确认后再试。")
+		Report(w, r, "你好，茶博士未能找到此茶团发起人资料，请确认后再试。")
 		return
 	}
 	if fund.Id == u.Id {
@@ -478,17 +480,17 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 		//如果是，那么就说明当前用户无权管理这个茶团
 		//这是特殊情况？CEO空缺？例如唐僧被妖怪抓走了？
 		if err == sql.ErrNoRows {
-			Report(w, r, "您好，您无权管理此茶团。")
+			Report(w, r, "你好，您无权管理此茶团。")
 			return
 		} else {
 			//茶团已经设定了ceo，但是出现了其他错误
 			util.Info(err, " Cannot get ceo of this team")
-			Report(w, r, "您好，茶博士未能找到此茶团资料，请确认后再试。")
+			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 			return
 		}
 	}
 	if manager.UserId != u.Id {
-		Report(w, r, "您好，您无权管理此茶团。")
+		Report(w, r, "你好，您无权管理此茶团。")
 		return
 	}
 	//是茶团的ceo，可以管理这个茶团
@@ -509,14 +511,14 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 	team_id, err := strconv.Atoi(r.FormValue("team_id"))
 	if err != nil {
 		util.Warning(err, " Cannot strconv this team_id")
-		Report(w, r, "您好，茶博士未能找到此茶团资料，请确认后再试。")
+		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
 	//这个茶团是否存在？
 	team, err := data.GetTeamById(team_id)
 	if err != nil {
 		util.Info(err, " Cannot get ceo of this team")
-		Report(w, r, "您好，茶博士未能找到此茶团资料，请确认后再试。")
+		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
 	ceo, err := team.CEO()
@@ -525,17 +527,17 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 		//如果是，那么就说明当前用户无权管理这个茶团
 		//这是特殊情况？CEO空缺？例如唐僧被妖怪抓走了？
 		if err == sql.ErrNoRows {
-			Report(w, r, "您好，您无权管理此茶团。")
+			Report(w, r, "你好，您无权管理此茶团。")
 			return
 		} else {
 			//茶团已经设定了ceo，但是出现了其他错误
 			util.Info(err, " Cannot get ceo of this team")
-			Report(w, r, "您好，茶博士未能找到此茶团资料，请确认后再试。")
+			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 			return
 		}
 	}
 	if u.Id != ceo.UserId {
-		Report(w, r, "您好，您无权管理此茶团。")
+		Report(w, r, "你好，您无权管理此茶团。")
 		return
 	}
 
@@ -549,17 +551,17 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 	}
 	role := r.FormValue("role")
 	if role != "CTO" && role != "CMO" && role != "CFO" {
-		Report(w, r, "您好，请选择正确的角色。")
+		Report(w, r, "你好，请选择正确的角色。")
 		return
 	}
 	member, err := team.GetTeamMemberByRole(role)
 	if err != nil {
 		util.Info(err, " Cannot get this team member")
-		Report(w, r, "您好，茶博士未能找到此茶团成员资料，请确认后再试。")
+		Report(w, r, "你好，茶博士未能找到此茶团成员资料，请确认后再试。")
 		return
 	}
 	if member.Id != member_id {
-		Report(w, r, "您好，请选择正确的角色。")
+		Report(w, r, "你好，请选择正确的角色。")
 		return
 	}
 	//如果是，那么就可以管理核心角色
@@ -570,11 +572,11 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 		member.Role = role
 		err := member.Update()
 		if err != nil {
-			Report(w, r, "您好，保存角色管理操作失败，请稍后再试。")
+			Report(w, r, "你好，保存角色管理操作失败，请稍后再试。")
 			return
 		}
 	default:
-		Report(w, r, "您好，请选择正确的管理动作。")
+		Report(w, r, "你好，请选择正确的管理动作。")
 		return
 	}
 
@@ -601,7 +603,7 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 	uuid := r.FormValue("team_uuid")
 	team, err := data.TeamByUuid(uuid)
 	if err != nil {
-		Report(w, r, "您好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
+		Report(w, r, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
 	}
 
@@ -611,7 +613,7 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 		//读取上传的图标
 		ProcessUploadAvatar(w, r, team.Uuid)
 	}
-	Report(w, r, "您好，上传茶团图标出现未知问题。")
+	Report(w, r, "你好，上传茶团图标出现未知问题。")
 
 }
 
@@ -626,7 +628,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 	uuid := r.URL.Query().Get("id")
 	team, err := data.TeamByUuid(uuid)
 	if err != nil {
-		Report(w, r, "您好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
+		Report(w, r, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
 	}
 
@@ -637,7 +639,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 		GenerateHTML(w, &uuid, "layout", "navbar.private", "team_avatar.upload")
 		return
 	}
-	Report(w, r, "您好，茶博士摸摸头，居然说只有团建人可以修改这个茶团相关资料。")
+	Report(w, r, "你好，茶博士摸摸头，居然说只有团建人可以修改这个茶团相关资料。")
 }
 
 // GET /v1/team//Invitations?id=
@@ -657,7 +659,7 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 	team, err := data.TeamByUuid(tUid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
-		Report(w, r, "您好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
 		return
 	}
 
@@ -670,12 +672,12 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 	is, err := team.Invitations()
 	if err != nil {
 		util.Info(err, u.Email, " Cannot get invitations")
-		Report(w, r, "您好，茶博士正在努力的查找茶团发送的邀请函，请稍后再试。")
+		Report(w, r, "你好，茶博士正在努力的查找茶团发送的邀请函，请稍后再试。")
 		return
 	}
 	//检查查询结果集是否为空
 	if len(is) == 0 {
-		Report(w, r, "您好，该茶团还没有发送过任何邀请函。")
+		Report(w, r, "你好，该茶团还没有发送过任何邀请函。")
 		return
 	}
 	//填写页面资料
@@ -686,7 +688,7 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 	// ���查err内容
 	if err != nil {
 		util.Info(err, " Cannot get core members")
-		Report(w, r, "您好，茶博士失魂鱼，居然说这个茶团是由外星人组织的，请确认后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，居然说这个茶团是由外星人组织的，请确认后再试。")
 		return
 	}
 	// ���查用户是否在����中
@@ -698,5 +700,5 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	Report(w, r, "您好，蛮不讲理的茶博士竟然说，只有茶团核心成员才能查看邀请函发送记录。")
+	Report(w, r, "你好，蛮不讲理的茶博士竟然说，只有茶团核心成员才能查看邀请函发送记录。")
 }

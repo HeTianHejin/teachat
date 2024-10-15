@@ -63,9 +63,9 @@
           <span style="margin-inline-end: 30px;">
             <span style="font-size: small;">
               {{if .Author.Gender }}
-              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
               {{ else }}
-              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
               {{ .Author.Name }}
               @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>

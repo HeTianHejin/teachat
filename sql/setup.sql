@@ -43,6 +43,53 @@ drop table if exists place_addresses;
 drop table if exists addresses;
 drop table if exists places;
 drop table if exists location_history;
+drop table if exists user_place;
+drop table if exists user_default_place;
+drop table if exists user_address;
+drop table if exists user_default_address;
+drop table if exists project_place;
+drop table if exists thread_approved;
+drop table if exists thread_costs;
+drop table if exists thread_time_slots;
+
+CREATE TABLE thread_time_slots (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INTEGER NOT NULL,
+    thread_id             INTEGER NOT NULL,
+    time_slot             INTEGER NOT NULL,
+    is_confirm             SMALLINT NOT NULL,
+    created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    project_id            INTEGER NOT NULL
+);
+COMMENT ON COLUMN thread_time_slots.time_slot IS 'Duration in minutes';
+
+CREATE TABLE thread_costs (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INTEGER NOT NULL,
+    thread_id             INTEGER NOT NULL,
+    cost                  INTEGER NOT NULL,
+    type                  SMALLINT NOT NULL,
+    created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    project_id            INTEGER NOT NULL
+);
+
+
+CREATE TABLE thread_approved (
+    id                    SERIAL PRIMARY KEY,
+    project_id            INTEGER NOT NULL REFERENCES projects(id),
+    thread_id             INTEGER NOT NULL REFERENCES threads(id),
+    user_id               INTEGER NOT NULL REFERENCES users(id), 
+    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE project_place (
+    id                   SERIAL PRIMARY KEY,
+    project_id           INTEGER,
+    place_id             INTEGER,
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 
 CREATE TABLE location_history (
     id                   SERIAL PRIMARY KEY,
@@ -68,12 +115,12 @@ CREATE TABLE places (
     name                 VARCHAR(255) NOT NULL,
     nickname             VARCHAR(255),
     description          TEXT,
-    icon                 VARCHAR(255) DEFAULT 'house-door.svg',
+    icon                 VARCHAR(255) DEFAULT 'bootstrap-icons/bank.svg',
     occupant_user_id     INTEGER,
     owner_user_id        INTEGER,
     level                INTEGER DEFAULT 0,
     category             INTEGER DEFAULT 0,
-    is_public            BOOLEAN DEFAULT false,
+    is_public            BOOLEAN DEFAULT true,
     is_government        BOOLEAN DEFAULT false,
     user_id              INTEGER,
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -97,6 +144,36 @@ CREATE TABLE addresses (
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+CREATE TABLE user_place (
+    id                   SERIAL PRIMARY KEY,
+    user_id              INTEGER REFERENCES users(id),
+    place_id             INTEGER REFERENCES places(id),
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE user_default_place (
+    id                   SERIAL PRIMARY KEY,
+    user_id              INTEGER REFERENCES users(id),
+    place_id             INTEGER REFERENCES places(id),
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE user_address (
+    id                   SERIAL PRIMARY KEY,
+    user_id              INTEGER REFERENCES users(id),
+    address_id           INTEGER REFERENCES addresses(id),
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE user_default_address (
+    id                   SERIAL PRIMARY KEY,
+    user_id              INTEGER REFERENCES users(id),
+    address_id           INTEGER REFERENCES addresses(id),
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
+
+
+
 CREATE TABLE place_addresses (
     place_id             INTEGER REFERENCES places(id),
     address_id           INTEGER REFERENCES addresses(id),
@@ -574,7 +651,7 @@ CREATE TABLE communities (
     flag                                   VARCHAR(255)
 );
 
-CREATE TABLE monologues {
+CREATE TABLE monologues (
     id                                    SERIAL PRIMARY KEY,
     uuid                                  VARCHAR(255),
     title                                 VARCHAR(255),
@@ -583,7 +660,7 @@ CREATE TABLE monologues {
     note                                  VARCHAR(255)
     category                              INTEGER default 0,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-};
+);
 
 
 

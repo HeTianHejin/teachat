@@ -34,14 +34,15 @@
       </div>
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
         <span style="display: block; text-align: right; font-size: smaller;">
-          {{if .ObjectiveBean.Author.Gender }}
-          <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
-          {{ else }}
-          <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
-          {{ end }}
-          {{ .ObjectiveBean.Author.Name }}
+         
+         
           <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
-          @<a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}"><span
+          {{if .ObjectiveBean.Author.Gender }}
+          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+          {{ else }}
+          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+          {{ end }}
+          <a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}"><span
               style="font-weight: lighter;">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</span></a>
           {{ .ObjectiveBean.CreatedAtDate }}
         </span>
@@ -93,14 +94,15 @@
 
 {{ if .ObjectiveBean.Open }}
 {{/* 如果是开放式茶围 */}}
-<a href="/v1/project/new?uuid={{ .ObjectiveBean.Objective.Uuid }}">
-  <i class="bi-patch-plus" style="font-size: 2rem; color: black;""></i>
-  我的茶台</a>
+<p class="text-center">
+  <a href="/v1/project/new?uuid={{ .ObjectiveBean.Objective.Uuid }}">
+    <i class="bi-patch-plus" style="font-size: 2rem; color: black;""></i>
+    我的茶台</a>
+</p>
 {{ else }}
 {{ if .IsInvited }}
 {{/* 是封闭式茶围的受邀请团队成员 */}}
 <p class="text-center">
-  
   <a href="/v1/project/new?uuid={{ .ObjectiveBean.Objective.Uuid }}">
     <i class="bi-patch-plus" style="font-size: 2rem; color: black;""></i>
     我的茶台</a>
@@ -143,7 +145,7 @@
 
        {{/* 这是某个茶台（项目）的地址显示 */}}
               
-                <i class="bi-geo" style="font-size: 1rem; color: black;"></i><span style="font-size: smaller;">金陵</span>
+                <i class="bi-geo" style="font-size: 1rem; color: black;"></i><span style="font-size: smaller;">{{ .Place.Name }}</span>
               
       </div>
 
@@ -169,13 +171,13 @@
 
           <span style="margin-inline-end: 30px;">
             <span style="font-size: small;">
-              {{if .Author.Gender }}
-              <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
-              {{ end }}
               {{ .Author.Name }}
-              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+              {{if .Author.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+              {{ end }}
+              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
             </span>
           </span>
 

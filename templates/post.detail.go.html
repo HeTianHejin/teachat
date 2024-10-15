@@ -26,9 +26,9 @@
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             {{if .PostBean.Author.Gender }}
-            <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+            <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
             {{ else }}
-            <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+            <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
             {{ end }}
             {{ .PostBean.Author.Name }}
             <span style="font-weight: lighter;">
@@ -100,33 +100,29 @@
   </div>
 </div>
 
-{{/* 这是 针对某个post的“话中话” 撰写模版 */}}
+{{/* 这是 针对某个post的“茶议中茶议” 撰写模版 */}}
 {{ if .IsInput }}
 <div class="panel panel-default">
 
   <div class="panel-body">
 
-    <form class=" form-horizontal" role="form" action="/v1/thread/draft" method="post">
+    <form class="form-horizontal" role="form" action="/v1/thread/draft" method="post">
 
       <div class="form-group">
-        <fieldset>
-
-          <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-            <i class="bi bi-paint-bucket" style="font-size: large;"></i>
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <div class="radio">
+            <label>
+              <input type="radio" name="type" id="ithink" value="0" required />
+              我觉得
+            </label>
           </div>
-          <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-            <input type="radio" name="type" id="ithink" style="width: fit-content;" value="0" required />
-            <label for="ithink">我觉得</label>
+          <div class="radio">
+            <label>
+              <input type="radio" name="type" id="idea" value="1" required />
+              出主意
+            </label>
           </div>
-
-          <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-            <input type="radio" name="type" id="idea" style="width: fit-content;" value="1" required />
-            <label for="idea"">出主意</label>
-          </div>
-
-         
-
-        </fieldset>
+        </div>
       </div>
 
       <div class=" form-group">
@@ -144,9 +140,25 @@
             </div>
           </div>
 
-          {{/* 这是对应的post的uuid提交 */}}
-          <input type="hidden" name="uuid" id="uuid" value="{{ .PostBean.Post.Uuid }}" />
+          <div class="form-group">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <label for="cost">预算花费（克茶叶）</label>
+              <input type="number" class="form-control" name="cost" id="cost" value="2" required />
+            </div>
+          </div>
+    
+          <div class="form-group">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <label for="time_slot">预估耗时（分钟）</label>
+              <input type="number" class="form-control" name="time_slot" id="time_slot" value="3" required />
+            </div>
+          </div>
 
+          {{/* 这是对应的post的uuid提交 */}}
+          <input type="hidden" name="post_id" value="{{ .PostBean.Post.Id }}" />
+          {{/* 这是project的id提交 */}}
+          <input type="hidden" name="project_id" value="{{ .PostBean.Post.Project.Id }}" />
+           
           <div class="form-group">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
               <select name="team_id" class="form-control" id="team_id" required>
@@ -196,9 +208,9 @@
   <div class="media-body">
     <p>
       {{if .Author.Gender }}
-      <i class="bi-gender-male" style="font-size: 2rem; color: cornflowerblue;"></i>
+      <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
       {{ else }}
-      <i class="bi-gender-female" style="font-size: 2rem; color:hotpink;"></i>
+      <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
       {{ end }}
       <span>{{ .Author.Name }}</span>
       <span style="margin-inline-end: 20px; font-size: smaller;">
