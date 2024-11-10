@@ -3,11 +3,11 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a
-      href="/v1/objective/detail?uuid={{ .PostBean.Post.Objective.Uuid }}">{{ .PostBean.Post.Objective.Title }}@茶话会</a>
+      href="/v1/objective/detail?uuid={{ .QuoteObjective.Uuid }}">{{ .QuoteObjective.Title }} </a>@茶话会
   </li>
-  <li><a href="/v1/project/detail?id={{ .PostBean.Post.Project.Uuid }}">{{ .PostBean.Post.Project.Title }}@茶台</a></li>
-  <li><a href="/v1/thread/detail?id={{ .PostBean.Post.Thread.Uuid }}">{{ .PostBean.Post.Thread.Title }}@茶议</a></li>
-  <li class="active">品味-详情</li>
+  <li><a href="/v1/project/detail?id={{ .QuoteProject.Uuid }}">{{ .QuoteProject.Title }} </a>@茶台</li>
+  <li><a href="/v1/thread/detail?id={{ .QuoteThread.Uuid }}">{{ .QuoteThread.Title }} </a>@茶议</li>
+  <li class="active">#{{ .PostBean.Post.Id }} @品味</li>
 </ol>
 
 {{/* 这是某个 品味 的详情页 */}}
@@ -103,7 +103,11 @@
 {{/* 这是 针对某个post的“茶议中茶议” 撰写模版 */}}
 {{ if .IsInput }}
 <div class="panel panel-default">
-
+  <div class="panel-heading">
+    <i class="bi bi-paint-bucket" style="font-size: 1.5rem;"> 新茶议 </i>
+    快速撰写
+    <span class="pull-right"><a href="/v1/thread/new?postid={{ .PostBean.Post.Uuid }}">完整撰写</a></span>
+  </div>
   <div class="panel-body">
 
     <form class="form-horizontal" role="form" action="/v1/thread/draft" method="post">
@@ -157,7 +161,7 @@
           {{/* 这是对应的post的uuid提交 */}}
           <input type="hidden" name="post_id" value="{{ .PostBean.Post.Id }}" />
           {{/* 这是project的id提交 */}}
-          <input type="hidden" name="project_id" value="{{ .PostBean.Post.Project.Id }}" />
+          <input type="hidden" name="project_id" value="{{ .QuoteProject.Id }}" />
            
           <div class="form-group">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">

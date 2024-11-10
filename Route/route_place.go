@@ -8,7 +8,7 @@ import (
 )
 
 // GET /v1/place/new
-// 向用户返回创建新地点表单页面
+// 向用户返回创建新地方表单页面
 func NewPlace(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
@@ -17,18 +17,18 @@ func NewPlace(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Info(err, s.Email, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var mp data.PlaceList
-	mp.SessUser = s_u
-	GenerateHTML(w, &mp, "layout", "navbar.private", "place.new")
+	var pL data.PlaceList
+	pL.SessUser = s_u
+	GenerateHTML(w, &pL, "layout", "navbar.private", "place.new")
 
 }
 
 // POST /v1/place/new
-// 处理用户创建新地点的请求
+// 处理用户创建新地方的请求
 func CreatePlace(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
@@ -41,10 +41,10 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//限制用户登记的地点最大数量为99,防止机器人暴力填表
-	if count_place, err := s_u.CountPlace(); err != nil || count_place >= 99 {
+	//限制用户登记的地方最大数量为99,防止机器人暴力填表
+	if count_place, err := data.CountPlaceByUserId(s_u.Id); err != nil || count_place >= 99 {
 		util.Warning(err, "Cannot get user place count")
-		Report(w, r, "你好，闪电考拉表示您已经提交了多得数不过来，就要爆表的地点，请确定后再试。")
+		Report(w, r, "你好，闪电考拉表示您已经提交了多得数不过来，就要爆表的地方，请确定后再试。")
 		return
 	}
 	r.ParseForm()
@@ -52,7 +52,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 	category_int, err := strconv.Atoi(category_str)
 	if err != nil {
 		util.Warning(err, " Cannot convert class to int")
-		Report(w, r, "你好，茶博士表示无法理解地点的类型，请稍后再试。")
+		Report(w, r, "你好，茶博士表示无法理解地方的类型，请稍后再试。")
 		return
 	}
 	// check category 参数是否合法
@@ -60,7 +60,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 	case 1, 0:
 		break
 	default:
-		Report(w, r, "你好，茶博士表示无法理解地点的类型，请确认后再试。")
+		Report(w, r, "你好，茶博士表示无法理解地方的类型，请确认后再试。")
 		return
 	}
 	name := r.PostFormValue("name")
@@ -68,7 +68,6 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 	description := r.PostFormValue("description")
 	is_public := r.PostFormValue("is_public") == "0"
 	place := data.Place{
-		Uuid:        data.Random_UUID(),
 		Name:        name,
 		Nickname:    nickname,
 		UserId:      s_u.Id,
@@ -79,10 +78,10 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = place.Create(); err != nil {
 		util.Danger(err, "Cannot create place")
-		Report(w, r, "你好，茶博士居然说墨水用完了无法记录新地点，请确认后再试。")
+		Report(w, r, "你好，茶博士居然说墨水用完了无法记录新地方，请确认后再试。")
 		return
 	}
-	//把这个地点绑定到当前用户名下
+	//把这个地方绑定到当前用户名下
 	up := data.UserPlace{
 		UserId:  s_u.Id,
 		PlaceId: place.Id,
@@ -92,7 +91,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，闪电考拉正在飞速为你写字服务中，请确认后再试。")
 		return
 	}
-	// 统计用户绑定的地点数量，如果是 == 1，那么就把这个地点设置为该用户的默认地点
+	// 统计用户绑定的地方数量，如果是 == 1，那么就把这个地方设置为该用户的默认地方
 	place_count := up.Count()
 	if place_count == 1 {
 		udp := data.UserDefaultPlace{
@@ -110,7 +109,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/place/my
-// 读取当前用户的全部绑定（收集）地点
+// 读取当前用户的全部绑定（收集）地方
 func MyPlace(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
@@ -119,7 +118,7 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Info(err, s.Email, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -127,7 +126,7 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 	places, err := s_u.GetAllBindPlaces()
 	if err != nil {
 		util.Warning(err, "Cannot get places from user")
-		Report(w, r, "你好，茶博士表示无法获取您收集的地点，请稍后再试。")
+		Report(w, r, "你好，茶博士表示无法获取您收集的地方，请稍后再试。")
 		return
 	}
 	pL.PlaceList = places
@@ -137,7 +136,7 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 
 // GET  /v1/place/detail?uuid=
 func PlaceDetail(w http.ResponseWriter, r *http.Request) {
-	//获取地点的uuid
+	//获取地方的uuid
 	r.ParseForm()
 	uuid := r.FormValue("uuid")
 	place := data.Place{
@@ -146,7 +145,7 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 
 	if err := place.GetByUuid(); err != nil {
 		util.Warning(err, "Cannot get place by uuid")
-		Report(w, r, "你好，������表示无法获取您要查看的地点，请稍后再试。")
+		Report(w, r, "你好，������表示无法获取您要查看的地方，请稍后再试。")
 		return
 	}
 
@@ -165,7 +164,7 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	var pD data.PlaceDetail
 	pD.Place = place
 	pD.SessUser = s_u
-	//是否地点登记者
+	//是否地方登记者
 	if place.UserId == s_u.Id {
 		pD.IsAuthor = true
 	} else {

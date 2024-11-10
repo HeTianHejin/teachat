@@ -69,7 +69,7 @@ type ProjectBean struct {
 	Count         int // 附属对象计数
 	Author        User
 	AuthorTeam    Team  // 作者默认团队
-	Place         Place //项目地点
+	Place         Place //项目地方
 }
 
 // 某个茶台详情页面渲染所需的动态数据
@@ -86,7 +86,7 @@ type ProjectDetail struct {
 	Master     User    //台主
 	MasterTeam Team    //台主开台时选择的成员身份，所属团队
 
-	Place    Place //茶台(项目)活动地点
+	Place    Place //茶台(项目)活动地方
 	Open     bool
 	IsEdited bool
 
@@ -94,9 +94,10 @@ type ProjectDetail struct {
 	QuoteObjectiveAuthor     User      // 引用的茶围作者
 	QuoteObjectiveAuthorTeam Team      // 引用的茶围作者创建时所选择的成员身份，所属团队
 
-	ThreadBeanList []ThreadBean // project下所有Threads和作者资料荚
-	ThreadCount    int          // project下所有Threads个数
-	IsOverTwelve   bool         //是否超过12个
+	ThreadBeanList        []ThreadBean // project下所有Threads和作者资料荚
+	ThreadCount           int          // project下所有Threads个数
+	ThreadIsApprovedCount int          //project（茶台）已采纳茶议数量
+	IsOverTwelve          bool         //是否超过12个
 
 }
 
@@ -126,16 +127,18 @@ type ThreadDetail struct {
 	ProgressOppose  int // 反对百分比整数
 	ProgressSupport int // 支持百分比整数
 
-	QuoteProject           Project
+	QuoteObjective Objective // 引用的茶围
+
+	QuoteProject           Project // 引用的茶台
 	QuoteProjectAuthor     User
 	QuoteProjectAuthorTeam Team
+
+	ThreadBean   ThreadBean
+	PostBeanList []PostBean // 跟贴豆荚队列
 
 	QuotePost           Post
 	QuotePostAuthor     User
 	QuotePostAuthorTeam Team
-
-	ThreadBean   ThreadBean
-	PostBeanList []PostBean // 跟贴豆荚队列
 }
 
 // 茶议对象和作者资料荚（豆荚一样有许多个单元）
@@ -170,6 +173,10 @@ type PostDetail struct {
 	QuoteThread           Thread // 引用的茶议
 	QuoteThreadAuthor     User   // 引用茶议的作者
 	QuoteThreadAuthorTeam Team   // 引用茶议的作者所在的默认茶团
+
+	QuoteProject Project // 引用的茶台
+
+	QuoteObjective Objective // 引用的茶围
 
 	IsInput      bool // 是否需要显示输入面板
 	IsOverTwelve bool // 是否超过12个
@@ -237,6 +244,19 @@ type TeamBean struct {
 	Founder       User
 	FounderTeam   Team // 发起人默认所在的团队
 	Count         int  //成员计数
+}
+
+// 好东西，物资清单
+type GoodsList struct {
+	SessUser  User
+	GoodsList []Goods
+}
+
+// 物资详情
+type GoodsDetail struct {
+	SessUser User
+	Goods    Goods
+	IsAuthor bool
 }
 
 // 我的地盘我做主

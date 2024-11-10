@@ -26,6 +26,99 @@ type Thread struct {
 	PageData PublicPData
 }
 
+// struct ThreadGoods 茶议涉及物资
+type ThreadGoods struct {
+	Id          int
+	UserId      int       // 用户ID
+	ThreadId    int       // 茶议ID
+	GoodsId     int       // 物资ID
+	ProjectId   int       // 项目ID
+	Type        int       // 物资类型ID 1-装备 2-物品 3-材料
+	Number      int       // 数量
+	CreatedTime time.Time // 创建时间
+	UpdatedTime time.Time // 更新时间
+}
+
+// ThreadGoods.Create() 创建1条茶议涉及物资记录
+func (tg *ThreadGoods) Create() (err error) {
+	statement := "INSERT INTO thread_goods (user_id, thread_id, goods_id, project_id, type, number, created_time, updated_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(tg.UserId, tg.ThreadId, tg.GoodsId, tg.ProjectId, tg.Type, tg.Number, time.Now(), time.Now()).Scan(&tg.Id)
+	return
+}
+
+// ThreadGoods.Update() 更新1条茶议涉及物资记录
+func (tg *ThreadGoods) Update() (err error) {
+	statement := "UPDATE thread_goods SET user_id = $1, thread_id = $2, goods_id = $3, project_id = $4, type = $5, number = $6, updated_time = $7 WHERE id = $8"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(tg.UserId, tg.ThreadId, tg.GoodsId, tg.ProjectId, tg.Type, tg.Number, time.Now(), tg.Id)
+	return
+}
+
+// ThreadGoods.GetbyThreadId() 获取1条茶议涉及物资记录
+func (tg *ThreadGoods) GetbyThreadId() (err error) {
+	err = Db.QueryRow("SELECT id, user_id, thread_id, goods_id, project_id, type, number, created_time, updated_time FROM thread_goods WHERE thread_id = $1", tg.ThreadId).
+		Scan(&tg.Id, &tg.UserId, &tg.ThreadId, &tg.GoodsId, &tg.ProjectId, &tg.Type, &tg.Number, &tg.CreatedTime, &tg.UpdatedTime)
+	return
+}
+
+// ThreadGoods.GetById() 获取1条茶议涉及物资记录
+func (tg *ThreadGoods) GetById() (err error) {
+	err = Db.QueryRow("SELECT id, user_id, thread_id, goods_id, project_id, type, number, created_time, updated_time FROM thread_goods WHERE id = $1", tg.Id).
+		Scan(&tg.Id, &tg.UserId, &tg.ThreadId, &tg.GoodsId, &tg.ProjectId, &tg.Type, &tg.Number, &tg.CreatedTime, &tg.UpdatedTime)
+	return
+}
+
+// ThreadGoods.Delete() 删除1条茶议涉及物资记录
+func (tg *ThreadGoods) Delete() (err error) {
+	statement := "DELETE FROM thread_goods WHERE id = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(tg.Id)
+	return
+}
+
+// ThreadGoods.CountByProjectId() 统计茶台涉及物资总数
+func (tg *ThreadGoods) CountByProjectId() (count int, err error) {
+	err = Db.QueryRow("SELECT COUNT(id) FROM thread_goods WHERE project_id = $1", tg.ProjectId).Scan(&count)
+	return
+}
+
+// ThreadGoods.CountByThreadId() 统计茶议涉及物资总数
+func (tg *ThreadGoods) CountByThreadId() (count int, err error) {
+	err = Db.QueryRow("SELECT COUNT(id) FROM thread_goods WHERE thread_id = $1", tg.ThreadId).Scan(&count)
+	return
+}
+
+// (thread *Thread) GetThreadGoodsByThreadId() 获取茶议涉及全部物资队列
+func (thread *Thread) GetThreadGoodsByThreadId() (threadGoods []ThreadGoods, err error) {
+	rows, err := Db.Query("SELECT id, user_id, thread_id, goods_id, project_id, type, number, created_time, updated_time FROM thread_goods WHERE thread_id = $1", thread.Id)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var tg ThreadGoods
+		err = rows.Scan(&tg.Id, &tg.UserId, &tg.ThreadId, &tg.GoodsId, &tg.ProjectId, &tg.Type, &tg.Number, &tg.CreatedTime, &tg.UpdatedTime)
+		if err != nil {
+			return
+		}
+		threadGoods = append(threadGoods, tg)
+	}
+	return
+}
+
 // 记录茶议的花费
 type ThreadCost struct {
 	Id        int
@@ -419,7 +512,7 @@ func (threadApproved *ThreadApproved) Delete() (err error) {
 	return
 }
 
-// threadApproved.CountByProjectId() 统计茶台采纳的方案数量
+// threadApproved.CountByProjectId() 统计茶台采纳的茶议（方案）数量
 func (threadApproved *ThreadApproved) CountByProjectId() (count int) {
 	err := Db.QueryRow("SELECT COUNT(*) FROM thread_approved WHERE project_id = $1", threadApproved.ProjectId).Scan(&count)
 	if err != nil {

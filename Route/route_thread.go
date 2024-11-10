@@ -8,8 +8,131 @@ import (
 	util "teachat/Util"
 )
 
+// NewThreadHandle()
+func NewThreadHandle(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		GetNewThread(w, r)
+	case "POST":
+		PostNewThread(w, r)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/thread/new?id=
+// GET /v1/thread/new?postid=
+// 处理提交的完整版新茶议草稿，索要表单请求
+func GetNewThread(w http.ResponseWriter, r *http.Request) {
+	//尝试从http请求中读取用户会话信息
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	// 根据会话读取当前用户的信息
+	s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	if err != nil {
+		util.Danger(err, "cannot fetch s_u s_teams given session")
+		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		return
+	}
+	var tD data.ThreadDetail
+
+	// 读取用户提交的茶台参数
+	vals := r.URL.Query()
+	uuid := vals.Get("id")
+
+	if uuid == "" {
+		uuid = vals.Get("postid")
+		//读取品味资料
+		tD.QuotePost, err = data.GetPostByUuid(uuid)
+		if err != nil {
+			util.Warning(err, uuid, " Cannot read post given uuid")
+			Report(w, r, "你好，������失������，��影一����见���，�������地不�����，请稍后再试。")
+			return
+		}
+		tD.QuotePostAuthor, err = tD.QuotePost.User()
+		if err != nil {
+			util.Warning(err, tD.QuotePost.Id, " Cannot read post user")
+			Report(w, r, "你好，����������������，����������������。请稍后再试。")
+			return
+		}
+		tD.QuotePostAuthorTeam, err = data.GetTeamById(tD.QuotePost.TeamId)
+		if err != nil {
+			util.Warning(err, tD.QuotePost.TeamId, " Cannot read post team")
+			Report(w, r, "你好，����������������，����������������。请稍后再试。")
+			return
+		}
+		tD.ThreadBean.Thread.PostId = tD.QuotePost.Id
+		//读取茶议资料
+		// thread, err := tD.QuotePost.Thread()
+		// if err != nil {
+		// 	util.Warning(err, uuid, " Cannot read thread given uuid")
+		// 	Report(w, r, "你好，������失������，��影一����见���，�������地不�����，请稍后再试。")
+		// 	return
+		// }
+		// tD.ThreadBean, err = GetThreadBean(thread)
+		// if err != nil {
+		// 	util.Warning(err, uuid, " Cannot read thread given uuid")
+		// 	Report(w, r, "你好，������失������，��影一����见���，�������地不�����，请稍后再试。")
+		// 	return
+		// }
+		//读取茶台资料
+		tD.QuoteProject, err = tD.QuotePost.Project()
+		if err != nil {
+			util.Warning(err, uuid, " Cannot read project given uuid")
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
+			return
+		}
+	} else {
+		tD.ThreadBean.Thread.PostId = 0
+		//读取茶台资料
+		tD.QuoteProject, err = data.GetProjectByUuid(uuid)
+		if err != nil {
+			util.Warning(err, uuid, " Cannot read project given uuid")
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
+			return
+		}
+	}
+	//检查project.Class=1 or 2,否则属于未经 友邻盲评 通过的草稿，不允许查看
+	if tD.QuoteProject.Class != 1 && tD.QuoteProject.Class != 2 {
+		util.Warning(err, s_u.Id, "欲查看未经友邻盲评通过的茶台资料被阻止")
+		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
+		return
+	}
+
+	// 填写页面数据
+
+	tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
+	if err != nil {
+		util.Warning(err, tD.QuoteProject.Id, " Cannot read project user")
+		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
+		return
+	}
+	tD.QuoteProjectAuthorTeam, err = data.GetTeamById(tD.QuoteProject.TeamId)
+	if err != nil {
+		util.Warning(err, tD.QuoteProject.TeamId, " Cannot read project team")
+		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
+		return
+	}
+	tD.SessUser = s_u
+	tD.SessUserDefaultTeam = s_default_team
+	tD.SessUserSurvivalTeams = s_survival_teams
+	tD.SessUserDefaultPlace = s_default_place
+	tD.SessUserBindPlaces = s_places
+	// 给请求用户返回新建完整版茶议表单页面
+	GenerateHTML(w, &tD, "layout", "navbar.private", "thread.new")
+}
+
+// POST /v1/thread/new
+// 处理提交的完整版新茶议草稿，待邻座盲审后转为正式茶议
+func PostNewThread(w http.ResponseWriter, r *http.Request) {
+	panic("unimplemented")
+}
+
 // POST /v1/thread/draft
-// 创建新茶议草稿，待邻座盲审后转为正式茶议
+// 处理提交的简化版新茶议草稿，待邻座盲审后转为正式茶议
 func DraftThread(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
@@ -214,7 +337,34 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
 		return
 	}
+	//读取茶台资料
+	tD.QuoteProject, err = thread.Project()
+	if err != nil {
+		util.Warning(err, " Cannot read project")
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
+		return
+	}
+	tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
+	if err != nil {
+		util.Warning(err, " Cannot read project author")
+		Report(w, r, "你好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
+		return
+	}
+	tD.QuoteProjectAuthorTeam, err = data.GetTeamById(tD.QuoteProject.TeamId)
+	if err != nil {
+		util.Warning(err, " Cannot read project author team")
+		Report(w, r, "你好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
+		return
+	}
+	//读取茶围资料
+	tD.QuoteObjective, err = tD.QuoteProject.Objective()
+	if err != nil {
+		util.Warning(err, " Cannot read objective given project")
+		Report(w, r, "你好，������失������，未能读取����资料。")
+		return
+	}
 
+	//检查品味的类型
 	if thread.PostId != 0 {
 		// 说明这是一个附加类型的,针对某个post发表的茶议(chat-in-chat，讲开又讲，延伸话题)
 		tD.QuotePost, err = data.GetPostById(thread.PostId)
@@ -240,26 +390,9 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		// 是一个普通的茶议
-		tD.QuoteProject, err = thread.Project()
-		if err != nil {
-			util.Warning(err, " Cannot read project")
-			Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
-			return
-		}
 		// 截短body
 		tD.QuoteProject.Body = Substr(tD.QuoteProject.Body, 66)
-		tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
-		if err != nil {
-			util.Warning(err, " Cannot read project author")
-			Report(w, r, "你好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
-			return
-		}
-		tD.QuoteProjectAuthorTeam, err = data.GetTeamById(tD.QuoteProject.TeamId)
-		if err != nil {
-			util.Warning(err, " Cannot read project author team")
-			Report(w, r, "你好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
-			return
-		}
+
 	}
 
 	// 读取茶议资料荚

@@ -74,7 +74,7 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, tea
 		return
 	}
 	if len(places) > 0 {
-		//移除默认地点
+		//移除默认地方
 		for i, place := range places {
 			if place.Id == default_place.Id {
 				places = append(places[:i], places[i+1:]...)

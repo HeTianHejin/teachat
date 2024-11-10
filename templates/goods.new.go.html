@@ -1,0 +1,108 @@
+{{ define "content" }}
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li class="active">新物资</li>
+</ol>
+
+{{/* 这是登记一个新物资的页面 */}}
+<div class="panel panel-default">
+
+    <div class="panel-heading">
+        登记新物资
+    </div>
+    <div class="panel-body">
+
+        <form role="form" action="/v1/goods/new" method="post">
+
+            <div class=" form-group">
+                <p><label for="category">选择物资类型：</label></p>
+                <label class="radio-inline">
+                    <input type="radio" name="category" id="real" value="1" checked required> 实体物资（有重力）
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="category" id="virtual" value="0" required> 虚拟物资（无重力）
+                </label>
+            </div>
+            <div class=" form-group">
+                <p><label for="features">选择物资属性：</label></p>
+                <label class="radio-inline">
+                    <input type="radio" name="features" id="tradable" value="0" checked required> 可以买卖
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="features" id="privacy" value="1" required> 不可交易
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label for="name">名称：</label>
+                <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="24"
+                placeholder="例如：（猪八戒）上宝沁金钯" />
+            </div>
+
+            <div class="form-group">
+                <label for="nickname">昵称：</label>
+                <input type="text" class="form-control" name="nickname" id="nickname" minlength="2" maxlength="24"
+                placeholder="例如：（猪八戒）九齿钉耙"  required />
+            </div>
+
+            <div class="form-group">
+                <label for="describe">描述：</label>
+                <textarea class="form-control" name="describe" id="describe" rows="6" minlength="2"
+                placeholder="例如：（猪八戒）此是锻炼神镔铁，磨琢成工光皎洁。老君自己动钤锤，荧惑亲身添炭屑。
+                五方五帝用心机，六丁六甲费周折。造成九齿玉垂牙，铸就双环金坠叶。
+                身妆六曜排五星，体按四时依八节。短长上下定乾坤，左右阴阳分日月。
+                六爻神将按天条，八卦星辰依斗列。名为上宝沁金钯，进与玉皇镇丹阙。
+                "  maxlength="567" required></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="applicability">用处：</label>
+                <input class="form-control" name="applicability" id="applicability" minlength="2"
+                placeholder="例如：（猪八戒）上宝沁金钯，天宫第一神器，上镇天庭，下摄地府，中筑妖魔。"  maxlength="567" required />
+            </div>
+            
+            <div class="form-group">
+                <label for="brandname">品牌：</label>
+                <input class="form-control" name="brandname" id="brandname" minlength="2"
+                placeholder="例如：上宝"  maxlength="64" />
+            </div>
+
+            <div class="form-group">
+                <label for="model">型号：</label>
+                <input class="form-control" name="model" id="model" minlength="2"
+                placeholder="例如：随身变化可心怀，任意翻腾依口诀"  maxlength="64" />
+            </div>
+            
+            <div class="form-group">
+                <label for="color">款式：</label>
+                <input class="form-control" name="color" id="color" minlength="2"
+                placeholder="例如：九齿玉垂牙，双环金坠叶"  maxlength="64" />
+            </div>
+            
+            <div class="form-group">
+                <label for="specification">规格：</label>
+                <input class="form-control" name="specification" id="specification" minlength="2"
+                placeholder="例如：一藏之数，连柄五千零四十八斤"  maxlength="64" />
+            </div>
+
+            <div class="form-group">
+                <label for="manufacturer">生产商：</label>
+                <input class="form-control" name="manufacturer" id="manufacturer" minlength="2"
+                placeholder="例如：太上老君御品工坊"  maxlength="64" required />
+            </div>
+
+            <div class="form-group">
+                <label for="origin">产地：</label>
+                <input class="form-control" name="origin" id="origin" minlength="2"
+                placeholder="例如：离恨天兜率宫"  maxlength="64" />
+            </div>
+
+            <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+                  <button type="submit" class="btn btn-default">提交</button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{{ end }}

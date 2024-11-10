@@ -53,7 +53,7 @@
         <h5><mark>{{ .Thread.TypeStatus }}</mark>
           {{if .IsApproved }}
           {{/* 这个主意已被台主采纳 */}}
-          <i class="bi-check" style="font-size: 2rem; color: red;"></i>
+          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;"></i>
           {{ end }}
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
             <span style="margin-inline-start: 1rem;">{{ .Thread.Title }}</span>
@@ -132,7 +132,7 @@
           <mark>{{ .Thread.TypeStatus }}</mark>
           {{if .IsApproved }}
           {{/* 这个主意已被台主采纳 */}}
-          <i class="bi-check" style="font-size: 2rem; color: red;"></i>
+          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;"></i>
           {{ end }}
           <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
             <span style="margin-inline-start: 1rem;">{{ .Thread.Title }}</span>

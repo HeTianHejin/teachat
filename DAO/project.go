@@ -34,7 +34,7 @@ type ProjectInvitedTeam struct {
 	CreatedAt time.Time
 }
 
-// 茶台（事件）地点
+// 茶台（事件）地方
 type ProjectPlace struct {
 	Id        int
 	ProjectId int

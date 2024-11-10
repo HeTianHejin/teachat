@@ -25,17 +25,16 @@
 <div class="panel panel-default">
   <div class="panel-body">
     <div class="media">
-      <div class="media-left media-middle">
+      <div class="media-left">
         {{ if .Count }}
         <span class="badge">{{ .Count }}</span>
         {{ else }}
         {{ end }}
 
         {{ if .Open }}
-        <img class="media-object" src="/v1/static/bootstrap-icons/buildings.svg" alt="茶话会封面" width="32" height="32">
+        <img class="media-object" src="/v1/static/bootstrap-icons/egg.svg" alt="茶话会封面" width="40" height="40">
         {{ else }}
-        <img class="media-object" src="/v1/static/bootstrap-icons/buildings-fill.svg" alt="茶话会封面" width="32"
-          height="32">
+        <img class="media-object" src="/v1/static/bootstrap-icons/egg-fill.svg" alt="茶话会封面" width="40" height="40">
         {{ end }}
 
       </div>
@@ -62,13 +61,13 @@
 
           <span style="margin-inline-end: 30px;">
             <span style="font-size: small;">
+              {{ .Author.Name }}
               {{if .Author.Gender }}
               <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
-              {{ .Author.Name }}
-              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
           </span>
           </span>
 

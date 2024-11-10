@@ -16,17 +16,17 @@ import (
 func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		NewObjectivePage(w, r)
+		NewObjectiveForm(w, r)
 	case "POST":
 		CreateObjective(w, r)
 	default:
-		w.WriteHeader(http.StatusNotFound)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
 
 // GET /objective/create
 // 返回objective.new页面
-func NewObjectivePage(w http.ResponseWriter, r *http.Request) {
+func NewObjectiveForm(w http.ResponseWriter, r *http.Request) {
 	//尝试从http请求中读取用户会话信息
 	s, err := Session(r)
 	if err != nil {

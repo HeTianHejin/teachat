@@ -3,7 +3,8 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li class="active">{{ .ObjectiveBean.Objective.Title }}@茶话会</li>
+  <li><a href="/v1/objective/square">茶话会</a></li>
+  <li class="active">#{{ .ObjectiveBean.Objective.Id }} @茶话会</li>
 </ol>
 
 
@@ -20,11 +21,11 @@
         <p class="text-center">
 
           {{ if .ObjectiveBean.Open }}
-          <i class="bi-buildings" style="font-size: 2rem; color:white;"></i>
+          <i class="bi-egg" style="font-size: 2rem;"></i>
          
           <span class="label label-success">开放式茶话会
             {{ else }}
-            <i class="bi-buildings-fill" style="font-size: 2rem; color:black;"></i>
+            <i class="bi-egg-fill" style="font-size: 2rem;"></i>
 
             <span class="label label-default">封闭式茶话会
               {{ end }}
@@ -57,17 +58,8 @@
   <div class="panel-footer">
     {{/* 这是面板注脚 */}}
     {{/* 这是面板注脚中的茶台计数 */}}
-    <span style="font-size: smaller; margin-inline-end: 20px;">
-      {{ if .ObjectiveBean.Open }}
-      <a href="/v1/project/new?id={{ .ObjectiveBean.Objective.Uuid }}">
-        <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
-      </a>
-      {{ else }}
-      <span class="glyphicon glyphicon-tasks" aria-hidden="true"></span>
-      {{ end }}
-      {{ .ObjectiveBean.Count }}
-    </span>
-
+    <i class="bi-disc" style="font-size: 2rem;"> {{ .ObjectiveBean.Count }}</i>
+    
     {{ if .ObjectiveBean.Objective.IsEdited }}
     {{/* 编辑过（补充内容），显示编辑时间  */}}
     <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
@@ -88,7 +80,7 @@
 {{ if .IsGuest }}
 <p class="text text-center">
   <a href="/v1/login?footprint={{ .SessUser.Footprint }}&query={{ .SessUser.Query }}">
-  <i class="bi-airplane" style="font-size: 2rem; color: black;""></i>
+  <i class="bi-airplane" style="font-size: 2rem; color: black;"></i>
     登机</a> 以开始聊天品茶 </p>
 {{ else }}
 
@@ -96,7 +88,7 @@
 {{/* 如果是开放式茶围 */}}
 <p class="text-center">
   <a href="/v1/project/new?uuid={{ .ObjectiveBean.Objective.Uuid }}">
-    <i class="bi-patch-plus" style="font-size: 2rem; color: black;""></i>
+    <i class="bi-patch-plus" style="font-size: 2rem; color: black;"></i>
     我的茶台</a>
 </p>
 {{ else }}
@@ -104,7 +96,7 @@
 {{/* 是封闭式茶围的受邀请团队成员 */}}
 <p class="text-center">
   <a href="/v1/project/new?uuid={{ .ObjectiveBean.Objective.Uuid }}">
-    <i class="bi-patch-plus" style="font-size: 2rem; color: black;""></i>
+    <i class="bi-patch-plus" style="font-size: 2rem; color: black;"></i>
     我的茶台</a>
 </p>
 {{ else }}
@@ -127,19 +119,18 @@
 <div class="panel panel-default">
   <div class="panel-body">
     <div class="media">
-      <div class="media-left media-middle">
+      <div class="media-left">
         {{ if .Count }}
         <span class="badge">{{ .Count }}</span>
-        {{ else }}
         {{ end }}
 
         {{ if .Open }}
         <a href="/v1/project/detail?id={{ .Project.Uuid }}">
-          <img class="media-object" src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="48" height="48">
+          <img class="media-object" src="/v1/static/bootstrap-icons/disc.svg" alt="茶台封面" width=40 height=40>
         </a>
         {{ else }}
         <a href="/v1/project/detail?id={{ .Project.Uuid }}">
-          <img class="media-object" src="/v1/static/image/teachat-table-fill.svg" alt="茶台封面" width="48" height="48">
+          <img class="media-object" src="/v1/static/bootstrap-icons/disc-fill.svg" alt="茶台封面" width=40 height=40>
         </a>
        {{ end }}
 

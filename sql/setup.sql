@@ -32,11 +32,12 @@ drop table if exists administrators;
 drop table if exists watchwords;
 drop table if exists monologues;
 drop table if exists goods;
+drop table if exists user_goods;
 drop table if exists groups;
 drop table if exists handicrafts;
 drop table if exists inaugurations;
 drop table if exists parts;
-drop table if exists tool_lists;
+drop table if exists tools;
 drop table if exists evidences;
 drop table if exists last_queries;
 drop table if exists place_addresses;
@@ -51,6 +52,20 @@ drop table if exists project_place;
 drop table if exists thread_approved;
 drop table if exists thread_costs;
 drop table if exists thread_time_slots;
+drop table if exists thread_goods;
+
+CREATE TABLE thread_goods (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INTEGER NOT NULL,
+    thread_id             INTEGER NOT NULL,
+    goods_id              INTEGER NOT NULL,
+    project_id            INTEGER NOT NULL,
+    type                  SMALLINT NOT NULL,
+    number                INTEGER NOT NULL,
+    created_time          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_time          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 
 CREATE TABLE thread_time_slots (
     id                    SERIAL PRIMARY KEY,
@@ -182,89 +197,92 @@ CREATE TABLE place_addresses (
 
 
 CREATE TABLE last_queries (
-    id                 SERIAL PRIMARY KEY,
-    user_id            INTEGER REFERENCES users(id),
-    path               VARCHAR(255),
-    query              VARCHAR(255),
-    query_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                         SERIAL PRIMARY KEY,
+    user_id                    INTEGER REFERENCES users(id),
+    path                       VARCHAR(255),
+    query                      VARCHAR(255),
+    query_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
 CREATE TABLE evidences (
-    id                 SERIAL PRIMARY KEY,
-    uuid               VARCHAR(64) NOT NULL UNIQUE,
-    handicraft_id      INTEGER NOT NULL,
-    recorder           INTEGER NOT NULL,
-    description        TEXT,
-    images             VARCHAR(255),
-    video              VARCHAR(255), 
-    audio              VARCHAR(255), 
-    created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                         SERIAL PRIMARY KEY,
+    uuid                       VARCHAR(64) NOT NULL UNIQUE,
+    handicraft_id              INTEGER NOT NULL,
+    recorder                   INTEGER NOT NULL,
+    description                TEXT,
+    images                     VARCHAR(255),
+    video                      VARCHAR(255), 
+    audio                      VARCHAR(255), 
+    created_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE tool_lists (
-    id               BIGSERIAL PRIMARY KEY,
-    uuid             VARCHAR(64) NOT NULL UNIQUE,
-    part_id          BIGINT NOT NULL REFERENCES parts(id),
-    goods_id         BIGINT NOT NULL REFERENCES goods(id),
-    remark           TEXT,
-    num              INTEGER NOT NULL, 
-    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE tools (
+    id                         BIGSERIAL PRIMARY KEY,
+    uuid                       VARCHAR(64) NOT NULL UNIQUE,
+    handicraft_id              INTEGER NOT NULL,
+    part_id                    BIGINT,
+    goods_id                   BIGINT,
+    note                       TEXT,
+    category                   INTEGER, 
+    created_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE parts (
-    id               SERIAL PRIMARY KEY,
-    uuid             VARCHAR(64) NOT NULL UNIQUE,
-    handicraft_id    INTEGER NOT NULL,
-    name             VARCHAR(255) NOT NULL,
-    nickname         VARCHAR(255),
-    artist           INTEGER NOT NULL REFERENCES users(id),
-    target_goods_id  INTEGER NOT NULL,
-    tool_list_id     INTEGER NOT NULL,
-    strength         INTEGER NOT NULL,
-    intelligence     INTEGER NOT NULL,
-    difficulty_level  INTEGER NOT NULL,
-    recorder         INTEGER NOT NULL REFERENCES users(id),
-    description      TEXT,
-    evidence_id      INTEGER DEFAULT 0,
-    status           INTEGER NOT NULL,
-    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                         SERIAL PRIMARY KEY,
+    uuid                       VARCHAR(64) NOT NULL UNIQUE,
+    handicraft_id              INTEGER NOT NULL,
+    name                       VARCHAR(255) NOT NULL,
+    nickname                   VARCHAR(255),
+    artist                     INTEGER NOT NULL REFERENCES users(id),
+    target_goods_id            INTEGER,
+    tool_list_id               INTEGER,
+    magic_list_id              INTEGER,
+    strength                   INTEGER,
+    intelligence               INTEGER,
+    difficulty_level            INTEGER,
+    recorder                   INTEGER NOT NULL REFERENCES users(id),
+    description                TEXT,
+    evidence_id                INTEGER DEFAULT 0,
+    status                     INTEGER NOT NULL,
+    created_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE inaugurations (
-    id                  SERIAL PRIMARY KEY,
-    uuid                VARCHAR(64) NOT NULL UNIQUE,
-    handicraft_id       INTEGER NOT NULL,
-    name                VARCHAR(255) NOT NULL,
-    nickname            VARCHAR(255),
-    artist              INTEGER NOT NULL REFERENCES users(id),
-    recorder            INTEGER NOT NULL REFERENCES users(id),
-    description         TEXT,
-    evidence_id         INTEGER DEFAULT 0,
-    status              INTEGER NOT NULL,
-    created_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                         SERIAL PRIMARY KEY,
+    uuid                       VARCHAR(64) NOT NULL UNIQUE,
+    handicraft_id              INTEGER NOT NULL,
+    name                       VARCHAR(255) NOT NULL,
+    nickname                   VARCHAR(255),
+    artist                     INTEGER NOT NULL REFERENCES users(id),
+    recorder                   INTEGER NOT NULL REFERENCES users(id),
+    description                TEXT,
+    evidence_id                INTEGER DEFAULT 0,
+    status                     INTEGER NOT NULL,
+    created_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE handicrafts (
     id                        SERIAL PRIMARY KEY,
     uuid                      VARCHAR(64) NOT NULL,
-    project_id                INTEGER REFERENCES projects(id),
+    project_id                INTEGER NOT NULL,
     name                      VARCHAR(255) NOT NULL,
     nickname                  VARCHAR(255),
-    client                    INTEGER NOT NULL REFERENCES users(id),
-    target_goods_id           INTEGER,
-    tool_list_id              INTEGER,        
-    artist                    INTEGER NOT NULL REFERENCES users(id), 
+    client_team_id            INTEGER DEFAULT 0,
+    goods_list_id             INTEGER DEFAULT 0,
+    target_goods_id           INTEGER DEFAULT 0,
+    tool_list_id              INTEGER DEFAULT 0,
+    artist                    INTEGER NOT NULL, 
     strength                  INTEGER,
     intelligence              INTEGER,
     difficulty_level           INTEGER,
-    recorder                  INTEGER NOT NULL REFERENCES users(id),
+    recorder                  INTEGER NOT NULL,
     description               TEXT,
-    evidence_id               INTEGER DEFAULT 0,
+    category                  INTEGER DEFAULT 0,
     status                    INTEGER,
     created_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -288,14 +306,14 @@ CREATE TABLE groups (
 CREATE TABLE goods (
     id                           SERIAL PRIMARY KEY,
     uuid                         VARCHAR(64) NOT NULL,
-    user_id                      INTEGER NOT NULL REFERENCES users(id), 
+    user_id                      INTEGER NOT NULL, 
     name                         VARCHAR(255) NOT NULL,
     nickname                     VARCHAR(255),
     designer                     VARCHAR(255),
     describe                     TEXT,
     price                        NUMERIC(10,2),
     applicability                VARCHAR(255),
-    category                     VARCHAR(255),
+    category                     integer,
     specification                 VARCHAR(255),
     brand_name                   VARCHAR(255),
     model                        VARCHAR(255),
@@ -305,10 +323,10 @@ CREATE TABLE goods (
     size                         VARCHAR(255),
     color                        VARCHAR(255),
     network_connection_type      VARCHAR(255),
-    features                     TEXT,
+    features                     integer,
     serial_number                VARCHAR(255),
-    production_date              DATE,
-    expiration_date              DATE,
+    production_date              DATE DEFAULT CURRENT_DATE,
+    expiration_date              DATE DEFAULT CURRENT_DATE + interval '365 day',
     state                        VARCHAR(255),
     origin                       VARCHAR(255),
     manufacturer                 VARCHAR(255),
@@ -318,124 +336,131 @@ CREATE TABLE goods (
     created_time                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_time                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+create table user_goods (
+    id                           SERIAL PRIMARY KEY,
+    user_id                      INTEGER NOT NULL,
+    goods_id                     INTEGER NOT NULL,
+    created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 
 create table users (
-  id                 serial primary key,
-  uuid               varchar(64) not null unique,
-  name               varchar(255),
-  email              varchar(255) not null unique,
-  password           varchar(255) not null,
-  created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  biography          text,
-  role               varchar(64),
-  gender             integer,
-  avatar             varchar(255),
-  updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                             serial primary key,
+  uuid                           varchar(64) not null unique,
+  name                           varchar(255),
+  email                          varchar(255) not null unique,
+  password                       varchar(255) not null,
+  created_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  biography                      text,
+  role                           varchar(64),
+  gender                         integer,
+  avatar                         varchar(255),
+  updated_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE follows (
-    id                   SERIAL PRIMARY KEY,
-    uuid                 varchar(64) NOT NULL UNIQUE,
-    user_id              INT NOT NULL REFERENCES users(id),
-    followed_user_id     INT NOT NULL REFERENCES users(id),
-    nickname             TEXT,
-    note                 TEXT,
-    relationship_level   INT, 
-    is_disdain           boolean,
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id                           SERIAL PRIMARY KEY,
+    uuid                         varchar(64) NOT NULL UNIQUE,
+    user_id                      INT NOT NULL REFERENCES users(id),
+    followed_user_id             INT NOT NULL REFERENCES users(id),
+    nickname                     TEXT,
+    note                         TEXT,
+    relationship_level           INT, 
+    is_disdain                   boolean,
+    created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE friends (
-    id                   SERIAL PRIMARY KEY,
-    uuid                 varchar(64) NOT NULL UNIQUE,
-    user_id              INT NOT NULL REFERENCES users(id),
-    friend_user_id       INT NOT NULL REFERENCES users(id),
-    nickname             TEXT,
-    note                 TEXT,
-    relationship_level   INT, 
-    is_rival             BOOLEAN,
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                           SERIAL PRIMARY KEY,
+    uuid                         varchar(64) NOT NULL UNIQUE,
+    user_id                      INT NOT NULL REFERENCES users(id),
+    friend_user_id               INT NOT NULL REFERENCES users(id),
+    nickname                     TEXT,
+    note                         TEXT,
+    relationship_level           INT, 
+    is_rival                     BOOLEAN,
+    created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE fans (
-    id                   SERIAL PRIMARY KEY,
-    uuid                 varchar(64) NOT NULL UNIQUE,
-    user_id              INT NOT NULL REFERENCES users(id),
-    fan_user_id          INT NOT NULL REFERENCES users(id),
-    nickname             TEXT,
-    note                 TEXT,
-    relationship_level   INT, 
-    is_black_list        BOOLEAN,
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                           SERIAL PRIMARY KEY,
+    uuid                         varchar(64) NOT NULL UNIQUE,
+    user_id                      INT NOT NULL REFERENCES users(id),
+    fan_user_id                  INT NOT NULL REFERENCES users(id),
+    nickname                     TEXT,
+    note                         TEXT,
+    relationship_level           INT, 
+    is_black_list                BOOLEAN,
+    created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table user_stars (
-  id             serial primary key,
-  uuid           varchar(64) not null unique,
-  user_id        integer references users(id),
-  type           integer default 0,
-  object_id      integer default 0,
-  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                             serial primary key,
+  uuid                           varchar(64) not null unique,
+  user_id                        integer references users(id),
+  type                           integer default 0,
+  object_id                      integer default 0,
+  created_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table user_default_teams (
-  id             serial primary key,
-  user_id        integer references users(id),
-  team_id        integer references teams(id),
-  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                             serial primary key,
+  user_id                        integer references users(id),
+  team_id                        integer references teams(id),
+  created_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table administrators (
-  id         serial primary key
-  user_id    integer references users(id),
+  id                     serial primary key
+  user_id                integer references users(id),
 );
 
 create table sessions (
-  id             serial primary key,
-  uuid           varchar(64) not null unique,
-  email          varchar(255),
-  user_id        integer references users(id),
-  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  gender         integer
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  email                  varchar(255),
+  user_id                integer references users(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  gender                 integer
 );
 
 create table watchwords (
-  id                   serial primary key,
-  word                 varchar(255) not null,
-  administrator_id     integer references administrators(id),
-  created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP   
+  id                     serial primary key,
+  word                   varchar(255) not null,
+  administrator_id       integer references administrators(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP   
 );
 
 create table objectives (
-  id              serial primary key,
-  uuid            varchar(64) not null unique,
-  title           varchar(64) not null,
-  body            text,
-  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  user_id         integer references users(id),
-  class           integer,
-  edit_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  star_count      integer default 0,
-  cover           varchar(64),
-  team_id         integer not null default 2
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  title                  varchar(64) not null,
+  body                   text,
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  user_id                integer references users(id),
+  class                  integer,
+  edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  star_count             integer default 0,
+  cover                  varchar(64),
+  team_id                integer not null default 2
 );
 
 create table projects (
-  id              serial primary key,
-  uuid            varchar(64) not null unique,
-  title           varchar(64) not null,
-  body            text,
-  objective_id    integer references objectives(id),
-  user_id         integer references users(id),
-  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  class           integer,
-  edit_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  cover           varchar(64),
-  team_id         integer not null default 2
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  title                  varchar(64) not null,
+  body                   text,
+  objective_id           integer references objectives(id),
+  user_id                integer references users(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  class                  integer,
+  edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  cover                  varchar(64),
+  team_id                integer not null default 2
 );
 
 create table draft_threads (
@@ -468,87 +493,87 @@ create table threads (
 );
 
 create table reads (
-  id            serial primary key,
-  user_id       integer,
-  thread_id     integer references threads(id),
-  read_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                     serial primary key,
+  user_id                integer,
+  thread_id              integer references threads(id),
+  read_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table draft_posts (
-   id            serial primary key,
-  body           text,
-  user_id        integer references users(id),
-  thread_id      integer references threads(id),
-  created_at     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  attitude       boolean,
-  class          integer default 0,
-  team_id        integer not null default 2
+   id                    serial primary key,
+  body                   text,
+  user_id                integer references users(id),
+  thread_id              integer references threads(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  attitude               boolean,
+  class                  integer default 0,
+  team_id                integer not null default 2
 );
 
 create table posts (
-  id            serial primary key,
-  uuid          varchar(64) not null unique,
-  body          text,
-  user_id       integer references users(id),
-  thread_id     integer references threads(id),
-  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  edit_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  attitude      boolean,
-  score         integer default 60,
-  team_id       integer not null default 2
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  body                   text,
+  user_id                integer references users(id),
+  thread_id              integer references threads(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  attitude               boolean,
+  score                  integer default 60,
+  team_id                integer not null default 2
 );
 
 create table administrators (
-  id              serial primary key,
-  uuid            varchar(64) not null unique,
-  user_id         integer references users(id),
-  role            varchar(64) not null,
-  password        varchar(255) not null,
-  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  valid           boolean default false,
-  invalidReason   text,
-  invalid_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  user_id                integer references users(id),
+  role                   varchar(64) not null,
+  password               varchar(255) not null,
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  valid                  boolean default false,
+  invalidReason          text,
+  invalid_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table teams (
-  id              serial primary key,
-  uuid            varchar(64) not null unique,
-  name            varchar(255),
-  mission         text,
-  founder_id      integer references users(id),
-  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  class           integer,
-  abbreviation    integer,
-  logo            varchar(255),
-  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  group_id        integer default 0
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  name                   varchar(255),
+  mission                text,
+  founder_id             integer references users(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  class                  integer,
+  abbreviation           integer,
+  logo                   varchar(255),
+  updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  group_id               integer default 0
 );
 
 create table team_members (
-  id              serial primary key,
-  uuid            varchar(64) not null unique,
-  team_id         integer references teams(id),
-  user_id         integer references users(id),
-  role            varchar(255), 
-  created_at      timestamp DEFAULT CURRENT_TIMESTAMP,
-  class           integer default 1,
-  updated_at      timestamp DEFAULT CURRENT_TIMESTAMP
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  team_id                integer references teams(id),
+  user_id                integer references users(id),
+  role                   varchar(255), 
+  created_at             timestamp DEFAULT CURRENT_TIMESTAMP,
+  class                  integer default 1,
+  updated_at             timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
 create table project_invited_teams (
-  id              serial primary key,
-  project_id      integer references projects(id),
-  team_id         integer references teams(id),
-  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                     serial primary key,
+  project_id             integer references projects(id),
+  team_id                integer references teams(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table objective_invited_teams (
-  id              serial primary key,
-  objective_id    integer references objectives(id),
-  team_id         integer references teams(id),
-  created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                     serial primary key,
+  objective_id           integer references objectives(id),
+  team_id                integer references teams(id),
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table team_roles (
@@ -576,47 +601,47 @@ create table invitations (
 );
 
 CREATE TABLE invitation_replies (
-  id                 SERIAL PRIMARY KEY,
-  uuid               VARCHAR(50) NOT NULL,
-  invitation_id      INT references invitations(id), 
-  user_id            integer references users(id),
-  reply_word         text NOT NULL,
-  created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                   SERIAL PRIMARY KEY,
+  uuid                 VARCHAR(50) NOT NULL,
+  invitation_id        INT references invitations(id), 
+  user_id              integer references users(id),
+  reply_word           text NOT NULL,
+  created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE accept_messages (
-  id                 SERIAL PRIMARY KEY,
-  from_user_id       integer references users(id),
-  to_user_id         integer references users(id),
-  title              varchar(64),
-  content            text,
-  accept_object_id   integer references accept_objects(id),
-  class              integer default 0,
-  created_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                   SERIAL PRIMARY KEY,
+  from_user_id         integer references users(id),
+  to_user_id           integer references users(id),
+  title                varchar(64),
+  content              text,
+  accept_object_id     integer references accept_objects(id),
+  class                integer default 0,
+  created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE acceptances (
-  id                  SERIAL PRIMARY KEY,
-  accept_object_id    INTEGER references accept_objects(id),
-  x_accept            BOOLEAN default false,
-  x_user_id           INTEGER references users(id),
-  x_accepted_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-  y_accept            BOOLEAN default false,
-  y_user_id           INTEGER references users(id),
-  y_accepted_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  id                   SERIAL PRIMARY KEY,
+  accept_object_id     INTEGER references accept_objects(id),
+  x_accept             BOOLEAN default false,
+  x_user_id            INTEGER references users(id),
+  x_accepted_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+  y_accept             BOOLEAN default false,
+  y_user_id            INTEGER references users(id),
+  y_accepted_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table accept_objects (
-  id              SERIAL PRIMARY KEY,
-  object_type     INTEGER default 0,
-  object_id       INTEGER
+  id                   SERIAL PRIMARY KEY,
+  object_type          INTEGER default 0,
+  object_id            INTEGER
 );
 
 CREATE TABLE new_message_counts (
-  id              SERIAL PRIMARY KEY,
-  user_id         INTEGER,
-  count           INTEGER default 0
+  id                   SERIAL PRIMARY KEY,
+  user_id              INTEGER,
+  count                INTEGER default 0
 );
 
 CREATE TABLE families (

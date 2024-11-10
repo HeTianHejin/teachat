@@ -78,6 +78,7 @@ func main() {
 
 	// defined in route_thread.go
 	mux.HandleFunc("/v1/thread/draft", route.DraftThread)
+	mux.HandleFunc("/v1/thread/new", route.NewThreadHandle)
 	mux.HandleFunc("/v1/thread/detail", route.ThreadDetail)
 	mux.HandleFunc("/v1/thread/edit", route.EditThread)
 	mux.HandleFunc("/v1/thread/update", route.UpdateThread)
@@ -109,6 +110,12 @@ func main() {
 	mux.HandleFunc("/v1/place/create", route.CreatePlace)
 	mux.HandleFunc("/v1/place/detail", route.PlaceDetail)
 	mux.HandleFunc("/v1/place/my", route.MyPlace)
+
+	// defined in route_goods.go
+	mux.HandleFunc("/v1/goods/new", route.HandleNewGoods)
+	mux.HandleFunc("/v1/goods/mine", route.MyGoods)
+	//mux.HandleFunc("/v1/goods/detail", goodsDetail)
+	//mux.HandleFunc("/v1/goods/edit", route.EditGoods)
 
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)

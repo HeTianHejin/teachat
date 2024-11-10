@@ -76,19 +76,22 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // show About page 区别是导航条不同
 func About(w http.ResponseWriter, r *http.Request) {
 	var userBPD data.UserBiography
-	s, err := Session(r)
+	sess, err := Session(r)
 	if err != nil {
+		//游客
+		userBPD.IsAuthor = false
 		userBPD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 		}
 		GenerateHTML(w, &userBPD, "layout", "navbar.public", "about")
-
+		return
+	} else {
+		//已登录
+		userBPD.SessUser, _ = sess.User()
+		//展示tea客的首页
+		GenerateHTML(w, &userBPD, "layout", "navbar.private", "about")
 	}
-
-	userBPD.SessUser, _ = s.User()
-	//展示tea客的首页
-	GenerateHTML(w, &userBPD, "layout", "navbar.private", "about")
 
 }
 

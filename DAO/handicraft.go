@@ -10,16 +10,17 @@ type Handicraft struct {
 	ProjectId       int // 茶台ID，项目，
 	Name            string
 	Nickname        string
-	Client          int    // 客户/需求者ID，如果客户是一个组织（team），则填写其CEO作为代表人。例如海棠诗社要求贾宝玉交卷命题古诗，则客户ID是海棠诗社的CEO李纨。当然，最终客户是潜在的公众消费者（所有读者）
+	ClientTeamId    int    // 需求（甲方）客户,需求团队ID，客户必须是一个组织（team），如果是个体人，则需要注册为单身家庭team（如果这个工程出现单身人身亡事故赔偿，谁是第一受益人？）
 	TargetGoodsId   int    // 作业靶子商品Id,例子，1或n首写在白纸上的命题古诗，白纸是作业目标，手工艺内容是在纸上留下美丽的墨迹。如果写了多首，每一份诗（可交易标的物）都可以是一个手艺成品。
-	ToolListId      int    // 装备或工具商品Id集合，完成这个部分作业，可能需要多个工具（装备），例如写一首古诗，需要毛笔、墨、纸、砚台和水，书桌等
+	GoodsListId     int    // 消耗品，材料，（货物）商品清单单号
+	ToolListId      int    // 装备或工具（短期租赁的商品）清单单号，完成这个部分作业，可能需要多个工具（装备），例如写一首古诗，需要毛笔、墨、纸、砚台和水，书桌等
 	Artist          int    // 手艺人ID
 	Strength        int    // 体力耗费等级(1-5)
 	Intelligence    int    // 智力耗费等级(1-5)Mental effort level required
 	DifficultyLevel int    // 掌握工艺的学习课程难度等级(1-5)
 	Recorder        int    // 记录人id，ID of the person recording the handicraft details
 	Description     string // 手工艺总览，任务综合描述。例如，在绢纸上用毛笔（沾墨）创建一首格律诗词。
-	EvidenceId      int    // 音视频等视觉证据，默认值为 0，表示没有
+	Category        int    // 类型，0:日常普通作业，1:非物质文化遗产？
 	Status          int    // 状态
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
@@ -36,33 +37,33 @@ const (
 )
 
 // handicraft.Create()
-func (handicraft *Handicraft) Create() (err error) {
-	statement := "INSERT INTO handicrafts (uuid, project_id, name, nickname, client, target_goods_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) RETURNING id"
+func (hc *Handicraft) Create() (err error) {
+	statement := "INSERT INTO handicrafts (uuid, project_id, name, nickname, client_team_id, target_goods_id, goods_list_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), handicraft.ProjectId, handicraft.Name, handicraft.Nickname, handicraft.Client, handicraft.TargetGoodsId, handicraft.ToolListId, handicraft.Artist, handicraft.Strength, handicraft.Intelligence, handicraft.DifficultyLevel, handicraft.Recorder, handicraft.Description, handicraft.EvidenceId, handicraft.Status, time.Now(), time.Now()).Scan(&handicraft.Id)
+	err = stmt.QueryRow(Random_UUID(), hc.ProjectId, hc.Name, hc.Nickname, hc.ClientTeamId, hc.TargetGoodsId, hc.GoodsListId, hc.ToolListId, hc.Artist, hc.Strength, hc.Intelligence, hc.DifficultyLevel, hc.Recorder, hc.Description, hc.Category, hc.Status, time.Now(), time.Now()).Scan(&hc.Id)
 	return
 }
 
 // handicraft.Get()
 func (h *Handicraft) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, project_id, name, nickname, client, target_goods_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM handicrafts WHERE id = $1", h.Id).
-		Scan(&h.Id, &h.Uuid, &h.ProjectId, &h.Name, &h.Nickname, &h.Client, &h.TargetGoodsId, &h.ToolListId, &h.Artist, &h.Strength, &h.Intelligence, &h.DifficultyLevel, &h.Recorder, &h.Description, &h.EvidenceId, &h.Status, &h.CreatedAt, &h.UpdatedAt)
+	err = Db.QueryRow("SELECT id, uuid, project_id, name, nickname, client_team_id, target_goods_id, goods_list_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM handicrafts WHERE id = $1", h.Id).
+		Scan(&h.Id, &h.Uuid, &h.ProjectId, &h.Name, &h.Nickname, &h.ClientTeamId, &h.TargetGoodsId, &h.GoodsListId, &h.ToolListId, &h.Artist, &h.Strength, &h.Intelligence, &h.DifficultyLevel, &h.Recorder, &h.Description, &h.Category, &h.Status, &h.CreatedAt, &h.UpdatedAt)
 	return
 }
 
 // handicraft.Update()
 func (h *Handicraft) Update() (err error) {
-	statement := "UPDATE handicrafts SET project_id = $1, name = $2, nickname = $3, client = $4, target_goods_id = $5, tool_list_id = $6, artist = $7, strength = $8, intelligence = $9, difficulty_level = $10, recorder = $11, description = $12, evidence_id = $13, status = $14, updated_at = $15 WHERE id = $16"
+	statement := "UPDATE handicrafts SET project_id = $1, name = $2, nickname = $3, client = $4, target_goods_id = $5, tool_list_id = $6, artist = $7, strength = $8, intelligence = $9, difficulty_level = $10, recorder = $11, description = $12, category = $13, status = $14, updated_at = $15 WHERE id = $16"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(h.ProjectId, h.Name, h.Nickname, h.Client, h.TargetGoodsId, h.ToolListId, h.Artist, h.Strength, h.Intelligence, h.DifficultyLevel, h.Recorder, h.Description, h.EvidenceId, h.Status, time.Now(), h.Id)
+	_, err = stmt.Exec(h.ProjectId, h.Name, h.Nickname, h.ClientTeamId, h.TargetGoodsId, h.GoodsListId, h.ToolListId, h.Artist, h.Strength, h.Intelligence, h.DifficultyLevel, h.Recorder, h.Description, h.Category, h.Status, time.Now(), h.Id)
 	return
 }
 
@@ -80,14 +81,14 @@ func (handicraft *Handicraft) Delete() (err error) {
 
 // handicraft.GetHandicraftByProjectId()
 func GetHandicraftsByProjectId(projectId int) (handicrafts []Handicraft, err error) {
-	rows, err := Db.Query("SELECT id, uuid, project_id, name, nickname, client, target_goods_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM handicrafts WHERE project_id = $1", projectId)
+	rows, err := Db.Query("SELECT id, uuid, project_id, name, nickname, client_team_id, target_goods_id, goods_list_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM handicrafts WHERE project_id = $1", projectId)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		handicraft := Handicraft{}
-		err = rows.Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.Client, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.EvidenceId, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
+		err = rows.Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.ClientTeamId, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.Category, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
 		if err != nil {
 			return
 		}
@@ -99,29 +100,29 @@ func GetHandicraftsByProjectId(projectId int) (handicrafts []Handicraft, err err
 // handicraft.GetHandicraftByUuid()
 func GetHandicraftByUuid(uuid string) (handicraft Handicraft, err error) {
 	handicraft = Handicraft{}
-	err = Db.QueryRow("SELECT id, uuid, project_id, name, nickname, client, target_goods_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM handicrafts WHERE uuid = $1", uuid).
-		Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.Client, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.EvidenceId, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
+	err = Db.QueryRow("SELECT id, uuid, project_id, name, nickname, client_team_id, target_goods_id, goods_list_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM handicrafts WHERE uuid = $1", uuid).
+		Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.ClientTeamId, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.Category, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
 	return
 }
 
 // handicraft.GetHandicraftByTargetGoodsId()
 func GetHandicraftByTargetGoodsId(targetGoodsId int) (handicraft Handicraft, err error) {
 	handicraft = Handicraft{}
-	err = Db.QueryRow("SELECT id, uuid, project_id, name, nickname, client, target_goods_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM handicrafts WHERE target_goods_id = $1", targetGoodsId).
-		Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.Client, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.EvidenceId, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
+	err = Db.QueryRow("SELECT id, uuid, project_id, name, nickname, client_team_id, target_goods_id, goods_list_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM handicrafts WHERE target_goods_id = $1", targetGoodsId).
+		Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.ClientTeamId, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.Category, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
 	return
 }
 
 // handicraft.GetHandicraftsByArtist()
 func GetHandicraftsByArtist(artist int) (handicrafts []Handicraft, err error) {
-	rows, err := Db.Query("SELECT id, uuid, project_id, name, nickname, client, target_goods_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM handicrafts WHERE artist = $1", artist)
+	rows, err := Db.Query("SELECT id, uuid, project_id, name, nickname, client_team_id, target_goods_id, goods_list_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM handicrafts WHERE artist = $1", artist)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		handicraft := Handicraft{}
-		err = rows.Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.Client, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.EvidenceId, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
+		err = rows.Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.ClientTeamId, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.Category, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
 		if err != nil {
 			return
 		}
@@ -132,14 +133,14 @@ func GetHandicraftsByArtist(artist int) (handicrafts []Handicraft, err error) {
 
 // handicraft.GetHandicraftsByRecorder()
 func GetHandicraftsByRecorder(recorder int) (handicrafts []Handicraft, err error) {
-	rows, err := Db.Query("SELECT id, uuid, project_id, name, nickname, client, target_goods_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM handicrafts WHERE recorder = $1", recorder)
+	rows, err := Db.Query("SELECT id, uuid, project_id, name, nickname, client_team_id, target_goods_id, goods_list_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM handicrafts WHERE recorder = $1", recorder)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		handicraft := Handicraft{}
-		err = rows.Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.Client, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.EvidenceId, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
+		err = rows.Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.ClientTeamId, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.Category, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
 		if err != nil {
 			return
 		}
@@ -150,14 +151,14 @@ func GetHandicraftsByRecorder(recorder int) (handicrafts []Handicraft, err error
 
 // handicraft.GetHandicraftsByStatus()
 func GetHandicraftsByStatus(status int) (handicrafts []Handicraft, err error) {
-	rows, err := Db.Query("SELECT id, uuid, project_id, name, nickname, client, target_goods_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM handicrafts WHERE status = $1", status)
+	rows, err := Db.Query("SELECT id, uuid, project_id, name, nickname, client_team_id, target_goods_id, goods_list_id, tool_list_id, artist, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM handicrafts WHERE status = $1", status)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		handicraft := Handicraft{}
-		err = rows.Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.Client, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.EvidenceId, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
+		err = rows.Scan(&handicraft.Id, &handicraft.Uuid, &handicraft.ProjectId, &handicraft.Name, &handicraft.Nickname, &handicraft.ClientTeamId, &handicraft.TargetGoodsId, &handicraft.ToolListId, &handicraft.Artist, &handicraft.Strength, &handicraft.Intelligence, &handicraft.DifficultyLevel, &handicraft.Recorder, &handicraft.Description, &handicraft.Category, &handicraft.Status, &handicraft.CreatedAt, &handicraft.UpdatedAt)
 		if err != nil {
 			return
 		}
@@ -166,7 +167,7 @@ func GetHandicraftsByStatus(status int) (handicrafts []Handicraft, err error) {
 	return
 }
 
-// 手工艺就职仪式，到岗准备开工。例如，书法的起手式，准备动手前一刻的快照
+// 手工艺开工仪式，到岗准备开工。例如，书法的起手式，准备动手前一刻的快照
 type Inauguration struct {
 	Id           int
 	Uuid         string
@@ -184,7 +185,7 @@ type Inauguration struct {
 
 // inaguration.Create()
 func (inauguration *Inauguration) Create() (err error) {
-	statement := "INSERT INTO inaugurations (uuid, handicraft_id, name, nickname, artist, recorder, description, evidence_id, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
+	statement := "INSERT INTO inaugurations (uuid, handicraft_id, name, nickname, artist, recorder, description, category, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -196,14 +197,14 @@ func (inauguration *Inauguration) Create() (err error) {
 
 // inauguration.Get()
 func (inauguration *Inauguration) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, evidence_id, status, created_at, updated_at FROM inaugurations WHERE id = $1", inauguration.Id).
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, category, status, created_at, updated_at FROM inaugurations WHERE id = $1", inauguration.Id).
 		Scan(&inauguration.Id, &inauguration.Uuid, &inauguration.HandicraftId, &inauguration.Name, &inauguration.Nickname, &inauguration.Artist, &inauguration.Recorder, &inauguration.Description, &inauguration.EvidenceId, &inauguration.Status, &inauguration.CreatedAt, &inauguration.UpdatedAt)
 	return
 }
 
 // inauguration.Update()
 func (inauguration *Inauguration) Update() (err error) {
-	statement := "UPDATE inaugurations SET handicraft_id = $1, name = $2, nickname = $3, artist = $4, recorder = $5, description = $6, evidence_id = $7, status = $8, updated_at = $9 WHERE id = $10"
+	statement := "UPDATE inaugurations SET handicraft_id = $1, name = $2, nickname = $3, artist = $4, recorder = $5, description = $6, category = $7, status = $8, updated_at = $9 WHERE id = $10"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -228,7 +229,7 @@ func (inauguration *Inauguration) Delete() (err error) {
 // inauguration.GetInaugurationByHandicraftId()
 func GetInaugurationByHandicraftId(handicraftId int) (inauguration Inauguration, err error) {
 	inauguration = Inauguration{}
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, evidence_id, status, created_at, updated_at FROM inaugurations WHERE handicraft_id = $1", handicraftId).
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, category, status, created_at, updated_at FROM inaugurations WHERE handicraft_id = $1", handicraftId).
 		Scan(&inauguration.Id, &inauguration.Uuid, &inauguration.HandicraftId, &inauguration.Name, &inauguration.Nickname, &inauguration.Artist, &inauguration.Recorder, &inauguration.Description, &inauguration.EvidenceId, &inauguration.Status, &inauguration.CreatedAt, &inauguration.UpdatedAt)
 	return
 }
@@ -236,7 +237,7 @@ func GetInaugurationByHandicraftId(handicraftId int) (inauguration Inauguration,
 // inauguration.GetInaugurationByUuid()
 func GetInaugurationByUuid(uuid string) (inauguration Inauguration, err error) {
 	inauguration = Inauguration{}
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, evidence_id, status, created_at, updated_at FROM inaugurations WHERE uuid = $1", uuid).
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, category, status, created_at, updated_at FROM inaugurations WHERE uuid = $1", uuid).
 		Scan(&inauguration.Id, &inauguration.Uuid, &inauguration.HandicraftId, &inauguration.Name, &inauguration.Nickname, &inauguration.Artist, &inauguration.Recorder, &inauguration.Description, &inauguration.EvidenceId, &inauguration.Status, &inauguration.CreatedAt, &inauguration.UpdatedAt)
 	return
 }
@@ -261,98 +262,52 @@ type Part struct {
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
 }
-type ToolList struct {
+type Tool struct {
 	Id           int
 	Uuid         string
 	HandicraftId int
 	PartId       int
 	GoodsId      int
-	Remark       string //备注,特别说明
-	Num          int    //数量
+	Note         string //备注,特别说明
+	Category     int    //类型
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
 
-// toolList.Create()
-func (toolList *ToolList) Create() (err error) {
-	statement := "INSERT INTO tool_lists (uuid, handicraft_id, part_id, goods_id, remark, num, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+// tool.Create()
+func (tool *Tool) Create() (err error) {
+	statement := "INSERT INTO tools (uuid, handicraft_id, part_id, goods_id, note, category, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), toolList.HandicraftId, toolList.PartId, toolList.GoodsId, toolList.Remark, toolList.Num, time.Now(), time.Now()).Scan(&toolList.Id)
+	err = stmt.QueryRow(Random_UUID(), tool.HandicraftId, tool.PartId, tool.GoodsId, tool.Note, tool.Category, time.Now(), time.Now()).Scan(&tool.Id)
 	return
 }
 
-// toolList.Get()
-func (toolList *ToolList) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, part_id, goods_id, remark, num, created_at, updated_at FROM tool_lists WHERE id = $1", toolList.Id).
-		Scan(&toolList.Id, &toolList.Uuid, &toolList.HandicraftId, &toolList.PartId, &toolList.GoodsId, &toolList.Remark, &toolList.Num, &toolList.CreatedAt, &toolList.UpdatedAt)
+// tool.Get()
+func (tool *Tool) Get() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, part_id, goods_id, note, category, created_at, updated_at FROM tools WHERE id = $1", tool.Id).
+		Scan(&tool.Id, &tool.Uuid, &tool.HandicraftId, &tool.PartId, &tool.GoodsId, &tool.Note, &tool.Category, &tool.CreatedAt, &tool.UpdatedAt)
 	return
 }
 
-// toolList.Update()
-func (toolList *ToolList) Update() (err error) {
-	statement := "UPDATE tool_lists SET handicraft_id = $1, part_id = $2, goods_id = $3, remark = $4, num = $5, updated_at = $6 WHERE id = $7"
+// tool.Update()
+func (tool *Tool) Update() (err error) {
+	statement := "UPDATE tools SET handicraft_id = $1, part_id = $2, goods_id = $3, note = $4, category = $5, updated_at = $6 WHERE id = $7"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(toolList.HandicraftId, toolList.PartId, toolList.GoodsId, toolList.Remark, toolList.Num, time.Now(), toolList.Id)
-	return
-}
-
-// toolList.Delete()
-func (toolList *ToolList) Delete() (err error) {
-	statement := "DELETE FROM tool_lists WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(toolList.Id)
-	return
-}
-
-// toolList.GetToolListByHandicraftId()
-func GetToolListByHandicraftId(handicraftId int) (toolLists []ToolList, err error) {
-	rows, err := Db.Query("SELECT id, uuid, handicraft_id, part_id, goods_id, remark, num, created_at, updated_at FROM tool_lists WHERE handicraft_id = $1", handicraftId)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		toolList := ToolList{}
-		err = rows.Scan(&toolList.Id, &toolList.Uuid, &toolList.HandicraftId, &toolList.PartId, &toolList.GoodsId, &toolList.Remark, &toolList.Num, &toolList.CreatedAt, &toolList.UpdatedAt)
-		if err != nil {
-			return
-		}
-		toolLists = append(toolLists, toolList)
-	}
-	return
-}
-
-// toolList.GetToolListByPartId()
-func GetToolListByPartId(partId int) (toolList ToolList, err error) {
-	toolList = ToolList{}
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, part_id, goods_id, remark, num, created_at, updated_at FROM tool_lists WHERE part_id = $1", partId).
-		Scan(&toolList.Id, &toolList.Uuid, &toolList.HandicraftId, &toolList.PartId, &toolList.GoodsId, &toolList.Remark, &toolList.Num, &toolList.CreatedAt, &toolList.UpdatedAt)
-	return
-}
-
-// toolList.GetToolListByUuid()
-func GetToolListByUuid(uuid string) (toolList ToolList, err error) {
-	toolList = ToolList{}
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, part_id, goods_id, remark, num, created_at, updated_at FROM tool_lists WHERE uuid = $1", uuid).
-		Scan(&toolList.Id, &toolList.Uuid, &toolList.HandicraftId, &toolList.PartId, &toolList.GoodsId, &toolList.Remark, &toolList.Num, &toolList.CreatedAt, &toolList.UpdatedAt)
+	_, err = stmt.Exec(tool.HandicraftId, tool.PartId, tool.GoodsId, tool.Note, tool.Category, time.Now(), tool.Id)
 	return
 }
 
 // part.Create()
 func (part *Part) Create() (err error) {
-	statement := "INSERT INTO parts (uuid, handicraft_id, name, nickname, artist, target_goods_id, tool_list_id, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id"
+	statement := "INSERT INTO parts (uuid, handicraft_id, name, nickname, artist, target_goods_id, goods_list_id, tool_list_id, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -364,14 +319,14 @@ func (part *Part) Create() (err error) {
 
 // part.Get()
 func (part *Part) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, target_goods_id, tool_list_id, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM parts WHERE id = $1", part.Id).
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, target_goods_id, goods_list_id, tool_list_id, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM parts WHERE id = $1", part.Id).
 		Scan(&part.Id, &part.Uuid, &part.HandicraftId, &part.Name, &part.Nickname, &part.Artist, &part.TargetGoodsId, &part.ToolListId, &part.Strength, &part.Intelligence, &part.DifficultyLevel, &part.Recorder, &part.Description, &part.EvidenceId, &part.Status, &part.CreatedAt, &part.UpdatedAt)
 	return
 }
 
 // part.Update()
 func (part *Part) Update() (err error) {
-	statement := "UPDATE parts SET handicraft_id = $1, name = $2, nickname = $3, artist = $4, recorder = $10, description = $11, evidence_id = $12, status = $13, updated_at = $14 WHERE id = $15"
+	statement := "UPDATE parts SET handicraft_id = $1, name = $2, nickname = $3, artist = $4, recorder = $10, description = $11, category = $12, status = $13, updated_at = $14 WHERE id = $15"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -396,7 +351,7 @@ func (part *Part) Delete() (err error) {
 // part.GetPartByHandicraftId()
 func GetPartByHandicraftId(handicraftId int) (part Part, err error) {
 	part = Part{}
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, target_goods_id, tool_list_id, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM parts WHERE handicraft_id = $1", handicraftId).
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, target_goods_id, goods_list_id, tool_list_id, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM parts WHERE handicraft_id = $1", handicraftId).
 		Scan(&part.Id, &part.Uuid, &part.HandicraftId, &part.Name, &part.Nickname, &part.Artist, &part.TargetGoodsId, &part.ToolListId, &part.Strength, &part.Intelligence, &part.DifficultyLevel, &part.Recorder, &part.Description, &part.EvidenceId, &part.Status, &part.CreatedAt, &part.UpdatedAt)
 	return
 }
@@ -404,7 +359,7 @@ func GetPartByHandicraftId(handicraftId int) (part Part, err error) {
 // part.GetPartByUuid()
 func GetPartByUuid(uuid string) (part Part, err error) {
 	part = Part{}
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, target_goods_id, tool_list_id, strength, intelligence, difficulty_level, recorder, description, evidence_id, status, created_at, updated_at FROM parts WHERE uuid = $1", uuid).
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, target_goods_id, goods_list_id, tool_list_id, strength, intelligence, difficulty_level, recorder, description, category, status, created_at, updated_at FROM parts WHERE uuid = $1", uuid).
 		Scan(&part.Id, &part.Uuid, &part.HandicraftId, &part.Name, &part.Nickname, &part.Artist, &part.TargetGoodsId, &part.ToolListId, &part.Strength, &part.Intelligence, &part.DifficultyLevel, &part.Recorder, &part.Description, &part.EvidenceId, &part.Status, &part.CreatedAt, &part.UpdatedAt)
 	return
 }
@@ -433,7 +388,7 @@ type Ending struct {
 
 // ending.Create() 创建一个新的ending
 func (ending *Ending) Create() (err error) {
-	statement := "INSERT INTO endings (uuid, handicraft_id, name, nickname, artist, recorder, description, evidence_id, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
+	statement := "INSERT INTO endings (uuid, handicraft_id, name, nickname, artist, recorder, description, category, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -445,14 +400,14 @@ func (ending *Ending) Create() (err error) {
 
 // ending.Get() 通过Id获取一个ending
 func (ending *Ending) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, evidence_id, status, created_at, updated_at FROM endings WHERE id = $1", ending.Id).
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, category, status, created_at, updated_at FROM endings WHERE id = $1", ending.Id).
 		Scan(&ending.Id, &ending.Uuid, &ending.HandicraftId, &ending.Name, &ending.Nickname, &ending.Artist, &ending.Recorder, &ending.Description, &ending.EvidenceId, &ending.Status, &ending.CreatedAt, &ending.UpdatedAt)
 	return
 }
 
 // ending.Update() 更新一个ending
 func (ending *Ending) Update() (err error) {
-	statement := "UPDATE endings SET handicraft_id = $1, name = $2, nickname = $3, artist = $4, recorder = $5, description = $6, evidence_id=$7 , status = $8, updated_at = $9 WHERE id = $10"
+	statement := "UPDATE endings SET handicraft_id = $1, name = $2, nickname = $3, artist = $4, recorder = $5, description = $6, category=$7 , status = $8, updated_at = $9 WHERE id = $10"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -477,7 +432,7 @@ func (ending *Ending) Delete() (err error) {
 // ending.GetEndingByHandicraftId() 通过手工艺Id获取1 ending
 func GetEndingsByHandicraftId(handicraftId int) (ending Ending, err error) {
 	ending = Ending{}
-	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, evidence_id, status, created_at, updated_at FROM endings WHERE handicraft_id = $1", handicraftId).
+	err = Db.QueryRow("SELECT id, uuid, handicraft_id, name, nickname, artist, recorder, description, category, status, created_at, updated_at FROM endings WHERE handicraft_id = $1", handicraftId).
 		Scan(&ending.Id, &ending.Uuid, &ending.HandicraftId, &ending.Name, &ending.Nickname, &ending.Artist, &ending.Recorder, &ending.Description, &ending.EvidenceId, &ending.Status, &ending.CreatedAt, &ending.UpdatedAt)
 	return
 }

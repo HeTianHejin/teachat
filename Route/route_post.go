@@ -82,6 +82,20 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
+
+	pD.QuoteProject, err = pD.QuoteThread.Project()
+	if err != nil {
+		util.Warning(err, pD.QuoteThread.Id, " Cannot get project given thread")
+		Report(w, r, "你好，������失������，未能读取专��资料。")
+		return
+	}
+	pD.QuoteObjective, err = pD.QuoteProject.Objective()
+	if err != nil {
+		util.Warning(err, pD.QuoteProject.Id, " Cannot get objective given project")
+		Report(w, r, "你好，������失������，未能读取专��资料。")
+		return
+	}
+
 	// 读取会话
 	// 检测pageData.ThreadList数量是否超过一打dozen
 	if len(thread_list) > 12 {

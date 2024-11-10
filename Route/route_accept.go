@@ -239,6 +239,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		// 根据对象类型处理
 		switch ao.ObjectType {
 		case 1:
+			//茶围
 			ob := data.Objective{
 				Id: ao.ObjectId}
 			if err = ob.GetById(); err != nil {
@@ -250,6 +251,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				ob.Class = 1
 			} else if ob.Class == 20 {
 				ob.Class = 2
+			} else {
+				//非法class值
+				Report(w, r, "你好，������失������，��然说有时找资料也是一种修��的过程。")
+				return
 			}
 			// 更新茶话会，友邻盲评已通过！
 			if err = ob.UpdateClass(); err != nil {
@@ -259,6 +264,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case 2:
+			//茶台
 			pr := data.Project{
 				Id: ao.ObjectId,
 			}
@@ -271,6 +277,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				pr.Class = 1
 			} else if pr.Class == 20 {
 				pr.Class = 2
+			} else {
+				//非法class值
+				Report(w, r, "你好，������失������，��然说有时找资料也是一种修��的过程。")
+				return
 			}
 			// 更新����，友邻盲评已通过！
 			if err = pr.UpdateClass(); err != nil {
@@ -280,6 +290,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case 3:
+			//茶议草稿
 			dThread := data.DraftThread{
 				Id: ao.ObjectId,
 			}
@@ -343,6 +354,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case 4:
+			//品味草稿
 			dPost := data.DraftPost{
 				Id: ao.ObjectId,
 			}
@@ -370,6 +382,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case 5:
+			//茶团
 			team, err := data.GetTeamById(ao.ObjectId)
 			if err != nil {
 				util.Danger(err, "Cannot get team")
@@ -400,6 +413,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		case 6:
+			//集团
 			group, err := data.GetGroup(ao.ObjectId)
 			if err != nil {
 				util.Danger(err, "Cannot get group")

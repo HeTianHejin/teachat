@@ -14,12 +14,12 @@ func HandleNewProject(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		//请求表单
-		GetCreateProjectPage(w, r)
+		NewProject(w, r)
 	case "POST":
 		//处理表单
 		CreateProject(w, r)
 	default:
-		w.WriteHeader(http.StatusNotFound)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -61,7 +61,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		Uuid: place_uuid}
 	if err = place.GetByUuid(); err != nil {
 		util.Warning(err, " Cannot get place")
-		Report(w, r, "你好，闪电考拉为你疯狂服务中，眼镜都模糊了也未能找到你提交的活动地点资料，请确认后再试。")
+		Report(w, r, "你好，闪电考拉为你疯狂服务中，眼镜都模糊了也未能找到你提交的活动地方资料，请确认后再试。")
 		return
 	}
 
@@ -228,14 +228,14 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 保存草台活动地点
+	// 保存草台活动地方
 	pp := data.ProjectPlace{
 		ProjectId: proj.Id,
 		PlaceId:   place.Id}
 
 	if err = pp.Create(); err != nil {
 		util.Warning(err, " Cannot create project place")
-		Report(w, r, "你好，闪电考拉抹了抹汗，竟然说茶台地点保存失败，请确认后再试。")
+		Report(w, r, "你好，闪电考拉抹了抹汗，竟然说茶台地方保存失败，请确认后再试。")
 		return
 	}
 
@@ -274,7 +274,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/project/new?uuid=xxx
 // 渲染创建新茶台表单页面
-func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
+func NewProject(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -293,13 +293,13 @@ func GetCreateProjectPage(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能找到茶台，请稍后再试。")
 		return
 	}
-	//根据会话从数据库中读取当前用户的团队,地点信息，
+	//根据会话从数据库中读取当前用户的团队,地方信息，
 	s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		Report(w, r, "你好，三人行，必有大佬焉，请稍后再试。")
 		return
 	}
-	//默认和常用地点
+	//默认和常用地方
 
 	// 填写页面数据
 	// 填写页面会话用户资料
@@ -375,14 +375,14 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pD.Master, err = pD.Project.User()
 	if err != nil {
-		util.Warning(err, " Cannot read project user")
+		util.Warning(err, pD.Project.Id, " Cannot read project user")
 		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
 		return
 	}
 
 	pD.MasterTeam, err = data.GetTeamById(pD.Project.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read project team")
+		util.Warning(err, pD.Project.TeamId, " Cannot read project team")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 		return
 	}
@@ -425,6 +425,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	len := len(threadlist)
+	// .ThreadCount数量
 	pD.ThreadCount = len
 	// 检测pageData.ThreadList数量是否超过一打dozen
 	if len > 12 {
@@ -433,6 +434,12 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		//测试时都设为true显示效果 🐶🐶🐶
 		pD.IsOverTwelve = true
 	}
+	// .ThreadIsApprovedCount数量
+	ta := data.ThreadApproved{
+		ProjectId: pD.Project.Id,
+	}
+	pD.ThreadIsApprovedCount = ta.CountByProjectId()
+
 	// 获取茶议和作者相关资料荚
 	oabList, err = GetThreadBeanList(threadlist)
 	if err != nil {
@@ -442,7 +449,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	pD.ThreadBeanList = oabList
 
-	// 获取茶台项目活动地点
+	// 获取茶台项目活动地方
 	pD.Place, err = pD.Project.Place()
 	if err != nil {
 		util.Warning(err, " Cannot read project place")
