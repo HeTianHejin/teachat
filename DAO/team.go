@@ -1,8 +1,31 @@
 package data
 
 import (
+	"errors"
 	"time"
 )
+
+// 根据茶团team_id_list，获取全部申请加盟的茶团[]team
+func GetTeamsByIds(team_id_list []int) (teams []Team, err error) {
+	n := len(team_id_list)
+	if n == 0 {
+		return nil, errors.New("team_id_list is empty")
+	}
+	teams = make([]Team, n)
+	rows, err := Db.Query("SELECT * FROM team WHERE id IN (?)", team_id_list)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		team := Team{}
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId); err != nil {
+			return
+		}
+		teams = append(teams, team)
+	}
+	rows.Close()
+	return
+}
 
 // 茶团=团队,同一桌喝茶的人，
 // 原则上来说team的人数上限是12人，1 dozen。
@@ -26,7 +49,7 @@ type TeamMember struct {
 	Uuid      string
 	TeamId    int
 	UserId    int
-	Role      string // 角色，职务
+	Role      string // 角色，职务,分别为：CEO，CTO，CMO，CFO，taster
 	CreatedAt time.Time
 	Class     int // 状态指数， 默认正常=1,活跃=2?，失联=0?
 }
@@ -75,13 +98,13 @@ var TeamProperty = map[int]string{
 
 // Create() UserDefaultTeam{}创建用户设置默认团队的记录
 func (udteam *UserDefaultTeam) Create() (err error) {
-	statement := "INSERT INTO user_default_teams (user_id, team_id, created_at) VALUES ($1, $2, $3) RETURNING id, created_at"
+	statement := "INSERT INTO user_default_teams (user_id, team_id) VALUES ($1, $2) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(udteam.UserId, udteam.TeamId, time.Now()).Scan(&udteam.Id, &udteam.CreatedAt)
+	err = stmt.QueryRow(udteam.UserId, udteam.TeamId).Scan(&udteam.Id)
 	return
 }
 
@@ -391,7 +414,7 @@ func (user *User) CountTeamsByFounderId() (count int, err error) {
 
 // 根据用户提交的当前Uuid获取一个团队详情
 // AWS CodeWhisperer assist in writing
-func TeamByUuid(uuid string) (team Team, err error) {
+func GetTeamByUuid(uuid string) (team Team, err error) {
 	team = Team{}
 	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE uuid = $1", uuid).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
@@ -443,7 +466,7 @@ func (team *Team) CoreMembers() (teamMembers []TeamMember, err error) {
 	return
 }
 
-// 检查team中是否存在teamMember
+// 根据用户id，检查是否茶团成员；team中是否存在某个teamMember
 func GetTeamMemberByTeamIdAndUserId(team_id, user_id int) (teamMember TeamMember, err error) {
 	teamMember = TeamMember{}
 	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).

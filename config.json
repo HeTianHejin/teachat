@@ -1,13 +1,10 @@
 {
-"Address"             : "192.168.50.113:8000",
-"ReadTimeout"         : 10,
-"WriteTimeout"        : 600,
-"Static"              : "public",
-"SysMail_Username"    : "xxxxxxx@exmail.com",
-"SysMail_Password"    : "your password",
-"SysMail_Host"        : "smtp.exmail.qq.com",
-"SysMail_Port"        : "465",
-"MaxInviteTeams"      : 12,
-"MaxTeamMembers"      : 12,
-"MaxTeamsCount"      : 9         
+    "Address": "192.168.50.113:8000",
+    "ReadTimeout": 10,
+    "WriteTimeout": 600,
+    "Static": "public",
+    "MaxInviteTeams": 12,
+    "MaxTeamMembers": 12,
+    "MaxTeamsCount": 99
 }
+

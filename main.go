@@ -22,7 +22,7 @@ func main() {
 	mux.HandleFunc("/v1/", route.Index)
 
 	// search
-	mux.HandleFunc("/v1/search", route.Search)
+	mux.HandleFunc("/v1/search", route.HandleSearch)
 
 	// defined in route_user.go
 	mux.HandleFunc("/v1/user/biography", route.Biography)
@@ -45,24 +45,28 @@ func main() {
 	mux.HandleFunc("/v1/team/new", route.NewTeam)
 	mux.HandleFunc("/v1/team/create", route.CreateTeam)
 	mux.HandleFunc("/v1/team/detail", route.TeamDetail)
-	mux.HandleFunc("/v1/team/open", route.OpenTeams)
-	mux.HandleFunc("/v1/team/closed", route.ClosedTeams)
-	mux.HandleFunc("/v1/team/hold", route.HoldTeams)
-	mux.HandleFunc("/v1/team/joined", route.JoinedTeam)
-	mux.HandleFunc("/v1/team/employed", route.EmployedTeam)
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
 	mux.HandleFunc("/v1/team/core_manage", route.CoreManage)
 	mux.HandleFunc("/v1/team/avatar", route.TeamAvatar)
 	mux.HandleFunc("/v1/team/invitations", route.ReviewInvitations)
+	mux.HandleFunc("/v1/teams/open", route.OpenTeams)
+	mux.HandleFunc("/v1/teams/closed", route.ClosedTeams)
+	mux.HandleFunc("/v1/teams/hold", route.HoldTeams)
+	mux.HandleFunc("/v1/teams/joined", route.JoinedTeams)
+	mux.HandleFunc("/v1/teams/employed", route.EmployedTeams)
+	mux.HandleFunc("/v1/teams/application", route.ApplyTeams)
+	//mux.HandleFunc("/v1/teams/rejected", route.RejectedTeams)
 	// defined in route_group.go
 	mux.HandleFunc("/v1/group/new", route.NewGroup)
 	mux.HandleFunc("/v1/group/create", route.CreateGroup)
 	mux.HandleFunc("/v1/group/detail", route.GroupDetail)
 
 	//defined in route_team_member.go
-	mux.HandleFunc("/v1/team/team_member/join", route.HandleJoinTeam)
-	mux.HandleFunc("/v1/team/team_member/invite_page", route.HandleInviteMember)
-	mux.HandleFunc("/v1/team/team_member/invitation", route.HandleInvitation)
+	mux.HandleFunc("/v1/team/team_member/application/new", route.HandleNewMemberApplication)
+	mux.HandleFunc("/v1/team/team_member/application/review", route.HandleMemberApplication)
+	mux.HandleFunc("/v1/team/team_member/application/check", route.MemberApplyCheck)
+	mux.HandleFunc("/v1/team/team_member/invite", route.HandleInviteMember)
+	mux.HandleFunc("/v1/team/team_member/invitation", route.HandleMemberInvitation)
 	mux.HandleFunc("/v1/team/team_member/quit", route.HandleMemberQuit)
 
 	//defined in route_objective.go
@@ -95,7 +99,7 @@ func main() {
 	mux.HandleFunc("/v1/pilot/add", route.AddPilot)
 	mux.HandleFunc("/v1/pilot/office", route.OfficePilot)
 	//mux.HandleFunc("/v1/pilot/detail", pilotDetail)
-	mux.HandleFunc("/v1/pilot/invitepage", route.InvitePage)
+	mux.HandleFunc("/v1/pilot/inviteform", route.Invite)
 
 	//defined in route_office
 	mux.HandleFunc("/v1/office/polite", route.Polite)

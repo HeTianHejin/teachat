@@ -48,7 +48,7 @@ func NewObjectiveForm(w http.ResponseWriter, r *http.Request) {
 	oD.SessUserDefaultPlace = s_default_place
 	oD.SessUserBindPlaces = s_places
 	// 给请求用户返回新建茶话会页面
-	GenerateHTML(w, &oD, "layout", "navbar.private", "objective.new")
+	RenderHTML(w, &oD, "layout", "navbar.private", "objective.new")
 }
 
 // POST /objective/create
@@ -121,7 +121,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 最大团队可以创建 茶话会 数量
-	if count >= util.Config.MaxInviteTeams {
+	if count >= int(util.Config.MaxInviteTeams) {
 		Report(w, r, "你好，编新不如述旧，刻古终胜雕今!一个茶团最多可以开12个茶话会呢，请确认后再试。")
 		return
 	}
@@ -173,7 +173,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId,以便处理
 		te_ids_str := strings.Split(tIds_str, ",")
 		// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
-		if len(te_ids_str) > util.Config.MaxInviteTeams {
+		if len(te_ids_str) > int(util.Config.MaxInviteTeams) {
 			util.Warning(err, " Too many team ids")
 			Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，茶壶不够用，请确认后再试。")
 			return
@@ -297,7 +297,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//返回页面
-		GenerateHTML(w, &oSpD, "layout", "navbar.public", "objectives.square")
+		RenderHTML(w, &oSpD, "layout", "navbar.public", "objectives.square")
 		return
 	}
 	//已登录
@@ -319,7 +319,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 			oSpD.ObjectiveBeanList[i].Objective.PageData.IsAuthor = false
 		}
 	}
-	GenerateHTML(w, &oSpD, "layout", "navbar.private", "objectives.square")
+	RenderHTML(w, &oSpD, "layout", "navbar.private", "objectives.square")
 
 }
 
@@ -386,7 +386,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsInvited = false
 
 		//配置公开导航条的茶话会详情页面
-		GenerateHTML(w, &oD, "layout", "navbar.public", "objective.detail")
+		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail")
 		return
 	}
 	//已经登录！
@@ -418,14 +418,14 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		//准备页面数据
 		oD.ObjectiveBean.Objective.PageData.IsAuthor = true
 		//配置私有导航条的茶话会详情页面
-		GenerateHTML(w, &oD, "layout", "navbar.private", "objective.detail")
+		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")
 		return
 	} else {
 		//不是作者
 		oD.ObjectiveBean.Objective.PageData.IsAuthor = false
 
 		//配置私有导航条的茶话会详情页面
-		GenerateHTML(w, &oD, "layout", "navbar.private", "objective.detail")
+		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")
 		return
 	}
 

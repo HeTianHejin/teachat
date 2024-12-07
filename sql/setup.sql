@@ -53,6 +53,47 @@ drop table if exists thread_approved;
 drop table if exists thread_costs;
 drop table if exists thread_time_slots;
 drop table if exists thread_goods;
+drop table if exists member_applications;
+drop table if exists member_application_replies;
+drop table if exists footprints;
+
+
+CREATE TABLE footprints (
+    id                    SERIAL PRIMARY KEY,
+    user_id               INTEGER,
+    team_id               INTEGER,
+    team_name             VARCHAR(255),
+    team_type             SMALLINT,
+    content               TEXT,
+    content_id            INTEGER,
+    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE member_applications (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(36),
+    team_id               INTEGER,
+    user_id               INTEGER,
+    content               TEXT,
+    status                SMALLINT NOT NULL DEFAULT 0,
+    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE member_application_replies (
+    id                                SERIAL PRIMARY KEY,
+    uuid                              VARCHAR(36),
+    member_application_id             INTEGER,
+    team_id                           INTEGER,
+    user_id                           INTEGER,
+    reply_content                     VARCHAR(255),
+    status                            SMALLINT NOT NULL DEFAULT 0,
+    created_at                        TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at                        TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+
+
 
 CREATE TABLE thread_goods (
     id                    SERIAL PRIMARY KEY,

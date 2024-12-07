@@ -6,7 +6,7 @@ import (
 	util "teachat/Util"
 )
 
-// GET /user/Biography?id=
+// GET /user/biography?id=
 // 展示用户个人主页
 func Biography(w http.ResponseWriter, r *http.Request) {
 	//检查是否已经登录
@@ -17,74 +17,42 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	su, err := s.User()
+	s_u, err := s.User()
 	if err != nil {
 		util.Warning(err, " 未能读取用户信息！")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
-	var uB data.UserBiography
+	var uB data.UserBean
 
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	//有id参数，读取指定用户资料
-	user, err := data.UserByUuid(uuid)
+	user, err := data.GetUserByUuid(uuid)
 	if err != nil {
-		Report(w, r, "报告，大王，未能找到大唐和尚的资料！")
+		Report(w, r, "报告，大王，未能找到茶友的资料！")
 		return
 	}
+	uB, err = FetchUserBean(user)
+	if err != nil {
+		util.Warning(err, " 未能读取用户信息！")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
+		return
+	}
+
 	// 准备页面数据
-	uB.SessUser = su
-	team, err := user.GetLastDefaultTeam()
-	if err != nil {
-		util.Warning(err, " 未能读取用户团队信息！")
-		Report(w, r, "报告，大王，找不到西天取经团队资料！")
-		return
-	}
-	uB.DefaultTeamBean, err = GetTeamBean(team)
-	if err != nil {
-		util.Warning(err, " 根据team未能读取用户团队信息")
-		Report(w, r, "报告，大王，找不到西天取经团队资料！")
-		return
-	}
+	uB.SessUser = s_u
 
-	team_list_core, err := user.CoreExecTeams()
-	if err != nil {
-		util.Info(err, " Cannot get core teams")
-		Report(w, r, "你好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
-		return
-	}
-	uB.ManageTeamBeanList, err = GetTeamBeanList(team_list_core)
-	if err != nil {
-		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。")
-		return
-	}
-
-	team_list, err := user.NormalExecTeams()
-	if err != nil {
-		util.Info(err, " Cannot get joined teams")
-		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
-		return
-	}
-	uB.JoinTeamBeanList, err = GetTeamBeanList(team_list)
-	if err != nil {
-		util.Info(err, " Cannot get team bean list")
-		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
-		return
-	}
-
-	//检查登录者是否简介所有者本人？是则打开编辑页
-	if user.Id == su.Id {
-		//uBP.User = data.User{}
+	//检查登录者是否简介所有者本人？
+	if user.Id == s_u.Id {
+		//是本人,则打开编辑页
 		uB.IsAuthor = true
-		GenerateHTML(w, &uB, "layout", "navbar.private", "biography.private")
+		RenderHTML(w, &uB, "layout", "navbar.private", "biography.private")
 		return
 	} else {
-		uB.User = user
+		//不是简介主人,打开公开介绍页
 		uB.IsAuthor = false
-		//登录者不是简介主人,打开公开介绍页
-		GenerateHTML(w, &uB, "layout", "navbar.private", "biography.public")
+		RenderHTML(w, &uB, "layout", "navbar.private", "biography.public")
 	}
 
 }
@@ -171,7 +139,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	GenerateHTML(w, nil, "layout", "navbar.private", "avatar.upload")
+	RenderHTML(w, nil, "layout", "navbar.private", "avatar.upload")
 }
 
 // GET
@@ -188,12 +156,12 @@ func Reset(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/users/connection_follow
 func Follow(w http.ResponseWriter, r *http.Request) {
-	GenerateHTML(w, nil, "layout", "navbar.private", "connection.follow")
+	RenderHTML(w, nil, "layout", "navbar.private", "connection.follow")
 }
 
 // GET /v1/users/connection_fans
 func Fans(w http.ResponseWriter, r *http.Request) {
-	GenerateHTML(w, nil, "layout", "navbar.private", "connection.fans")
+	RenderHTML(w, nil, "layout", "navbar.private", "connection.fans")
 }
 
 // GET /v1/users/connection_friend
@@ -208,5 +176,5 @@ func Friend(w http.ResponseWriter, r *http.Request) {
 	var cFPData data.ConnectionFriendPageData
 	cFPData.SessUser = u
 
-	GenerateHTML(w, &cFPData, "layout", "navbar.private", "connection.friend")
+	RenderHTML(w, &cFPData, "layout", "navbar.private", "connection.friend")
 }

@@ -23,7 +23,7 @@ func NewPlace(w http.ResponseWriter, r *http.Request) {
 	}
 	var pL data.PlaceList
 	pL.SessUser = s_u
-	GenerateHTML(w, &pL, "layout", "navbar.private", "place.new")
+	RenderHTML(w, &pL, "layout", "navbar.private", "place.new")
 
 }
 
@@ -131,7 +131,7 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 	}
 	pL.PlaceList = places
 	pL.SessUser = s_u
-	GenerateHTML(w, &pL, "layout", "navbar.private", "places.my")
+	RenderHTML(w, &pL, "layout", "navbar.private", "places.my")
 }
 
 // GET  /v1/place/detail?uuid=
@@ -170,5 +170,5 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		pD.IsAuthor = false
 	}
-	GenerateHTML(w, &pD, "layout", "navbar.private", "place.detail")
+	RenderHTML(w, &pD, "layout", "navbar.private", "place.detail")
 }

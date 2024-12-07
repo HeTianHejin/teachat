@@ -55,7 +55,7 @@ func init() {
 	if err != nil {
 		log.Fatal(err, "ping teachat database failure - 测试链接茶话会数据库失败~~~")
 	}
-	log.Println("星际茶棚开始营运服务")
+	log.Println("星际茶棚开始服务")
 
 }
 

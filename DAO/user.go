@@ -21,7 +21,26 @@ type User struct {
 	//Footprint 浏览页面足迹，不保存到数据库，
 	//用于临时记录点击‘登录’按钮时页面，以便登机成功后返回同一页面，提升用户体验
 	Footprint string
-	Query     string
+	Query     string //查询参数
+}
+
+// SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users.name模糊查询用户，WHERE column LIKE 'keyword%',返回[]User,err
+func SearchUserByNameKeyword(keyword string) ([]User, error) {
+	rows, err := Db.Query("SELECT * FROM users WHERE name LIKE $1", "%"+keyword+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var users []User
+	for rows.Next() {
+		var user User
+		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+	return users, nil
 }
 
 // 未激活账号用户
@@ -335,7 +354,7 @@ func UserById(id int) (user User, err error) {
 }
 
 // Get a single user given the UUID
-func UserByUuid(uuid string) (user User, err error) {
+func GetUserByUuid(uuid string) (user User, err error) {
 	user = User{}
 	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE uuid = $1", uuid).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)

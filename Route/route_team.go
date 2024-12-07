@@ -9,6 +9,112 @@ import (
 	util "teachat/Util"
 )
 
+// GET /v1/team_member/application/check?id=
+// 查看加盟某个茶团的全部新的加盟申请书
+func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	//获取参数
+	uuid := r.URL.Query().Get("id")
+
+	//查询目标茶团
+	team, err := data.GetTeamByUuid(uuid)
+	if err != nil {
+		util.Danger(err, uuid, "Cannot get team by given uuid")
+		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		return
+	}
+	//检查用户是否茶团成员，非成员不能查看加盟申请书
+	_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, s_u.Id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			Report(w, r, "你好，茶博士失魂鱼，你不是茶团成员，无法查看申请书。")
+			return
+		} else {
+			util.Danger(err, "Cannot get team member by team id and user id")
+			Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+			return
+		}
+	}
+
+	//查询茶团全部新的加盟申请书，包含已查看但未处理的
+	applies, err := data.GetMemberApplicationByTeamIdAndStatus(team.Id)
+	if err != nil {
+		util.Danger(err, "Cannot get applys by team id")
+		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		return
+	}
+	apply_bean_list, err := GetMemberApplicationBeanList(applies)
+	if err != nil {
+		util.Danger(err, "Cannot get apply bean list")
+		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		return
+	}
+
+	//截短MemberApplication.Content为66字，方便布局列表预览
+	for _, bean := range apply_bean_list {
+		bean.MemberApplication.Content = Substr(bean.MemberApplication.Content, 66)
+	}
+
+	var mAL data.MemberApplicationList
+	//填写页面数据
+	mAL.SessUser = s_u
+	mAL.Team = team
+	mAL.MemberApplicationBeanList = apply_bean_list
+
+	// 渲染页面
+	RenderHTML(w, &mAL, "layout", "navbar.private", "team.applications_check")
+
+}
+
+// GET /v1/teams/application
+// 显示申请加入的全部茶团的表单页面
+func ApplyTeams(w http.ResponseWriter, r *http.Request) {
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	//查询用户全部加盟申请书
+	applys, err := data.GetMemberApplicationByUserId(s_u.Id)
+	if err != nil {
+		util.Danger(err, "Cannot get applys by user id")
+		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		return
+	}
+	apply_bean_list, err := GetMemberApplicationBeanList(applys)
+	if err != nil {
+		util.Danger(err, "Cannot get apply bean list")
+		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		return
+	}
+
+	var mAL data.MemberApplicationList
+	//查询用户全部加盟申请书
+	mAL.SessUser = s_u
+	mAL.MemberApplicationBeanList = apply_bean_list
+
+	// 渲染页面
+	RenderHTML(w, &mAL, "layout", "navbar.private", "teams.application")
+
+}
+
 // GET /v1/team/new
 // 显示创建新茶团的表单页面
 func NewTeam(w http.ResponseWriter, r *http.Request) {
@@ -25,36 +131,36 @@ func NewTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	var tpd data.TeamSquare
 	tpd.SessUser = s_u
-	GenerateHTML(w, &tpd, "layout", "navbar.private", "team.new")
+	RenderHTML(w, &tpd, "layout", "navbar.private", "team.new")
 }
 
 // POST /v1/team/create
 // 创建新茶团
 func CreateTeam(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	err = r.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		util.Warning(err, " Cannot parse form")
 		Report(w, r, "你好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
 		return
 	}
-	su, err := s.User()
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
 	if err != nil {
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
 
-	count, err := su.CountTeamsByFounderId()
+	count, err := s_u.CountTeamsByFounderId()
 	if err != nil {
 		util.Danger(err, "connot count teams given founder_id")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	if count >= util.Config.MaxTeamCount {
+	if count > int(util.Config.MaxTeamsCount) {
 		Report(w, r, "你好，三月香巢已垒成，梁间燕子太无情。开团数量太多了，未能创建新茶团。")
 		return
 	}
@@ -118,7 +224,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	// 将NewTeam草稿存入数据库，class=10/20
 	logo := "teamLogo"
-	team, err := su.CreateTeam(name, abbr, mission, logo, class, 1)
+	team, err := s_u.CreateTeam(name, abbr, mission, logo, class, 1)
 	if err != nil {
 		util.Info(err, " At create team")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建你的天团，请稍后再试。")
@@ -144,7 +250,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: aO.Id,
 	}
 	//发送消息
-	if err = AcceptMessageSendExceptUserId(su.Id, mess); err != nil {
+	if err = AcceptMessageSendExceptUserId(s_u.Id, mess); err != nil {
 		Report(w, r, "你好，茶博士迷路了，未能发送盲评请求消息。")
 		return
 	}
@@ -154,8 +260,8 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/team/open
-// 显示茶棚全部开放式茶团详细信息
+// GET /v1/teams/open
+// 显示茶棚全部开放式茶团列表信息
 func OpenTeams(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var tS data.TeamSquare
@@ -179,20 +285,20 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		GenerateHTML(w, &tS, "layout", "navbar.public", "teams.open", "teams.public")
+		RenderHTML(w, &tS, "layout", "navbar.public", "teams.open", "teams.public")
 		return
 	}
 	sUser, _ := s.User()
 	tS.SessUser = sUser
-	GenerateHTML(w, &tS, "layout", "navbar.private", "teams.open", "teams.public")
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.open", "teams.public")
 
 }
 
-// Get /v1/team/closed
+// Get /v1/teams/closed
 // 显示茶棚全部封闭式茶团
 func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var ts data.TeamSquare
+	var tS data.TeamSquare
 
 	team_list, err := data.GetClosedTeams()
 	if err != nil {
@@ -200,7 +306,7 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
-	ts.TeamBeanList, err = GetTeamBeanList(team_list)
+	tS.TeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
@@ -209,19 +315,20 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 	s, _ := Session(r)
 	u, err := s.User()
 	if err != nil {
-		ts.SessUser = data.User{
+		tS.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 		}
-		GenerateHTML(w, &ts, "layout", "navbar.public", "teams.closed", "teams.public")
+		RenderHTML(w, &tS, "layout", "navbar.public", "teams.closed", "teams.public")
 		return
 	}
-	ts.SessUser = u
-	GenerateHTML(w, &ts, "layout", "navbar.private", "teams.closed", "teams.public")
+	tS.SessUser = u
+
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.closed", "teams.public")
 
 }
 
-// GET /v1/team/hold
+// GET /v1/teams/hold
 // 显示当前用户创建的全部茶团
 func HoldTeams(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
@@ -233,7 +340,6 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.Info(err, " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
-
 		return
 	}
 	var ts data.TeamSquare
@@ -249,40 +355,45 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ts.SessUser = s_u
-	GenerateHTML(w, &ts, "layout", "navbar.private", "teams.hold", "teams.public")
+	RenderHTML(w, &ts, "layout", "navbar.private", "teams.hold", "teams.public")
 }
 
-// GET /v1/team/joined
+// GET /v1/teams/joined
 // 显示用户已经加入的全部茶团的表单页面
-func JoinedTeam(w http.ResponseWriter, r *http.Request) {
-	sess, err := Session(r)
+func JoinedTeams(w http.ResponseWriter, r *http.Request) {
+	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	su, _ := sess.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 
-	var ts data.TeamSquare
-	ts.SessUser = su
-	team_list, err := su.SurvivalTeams()
+	var tS data.TeamSquare
+	tS.SessUser = s_u
+	team_list, err := s_u.SurvivalTeams()
 	if err != nil {
 		util.Info(err, " Cannot get joined teams")
 		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
-	ts.TeamBeanList, err = GetTeamBeanList(team_list)
+	tS.TeamBeanList, err = GetTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
 
-	GenerateHTML(w, &ts, "layout", "navbar.private", "teams.joined", "teams.public")
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.joined", "teams.public")
 }
 
-// GET /v1/team/Employed
+// GET /v1/teams/employed
 // 显示用户任职高管的全部茶团表单页面
-func EmployedTeam(w http.ResponseWriter, r *http.Request) {
+func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -304,7 +415,7 @@ func EmployedTeam(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
-	GenerateHTML(w, &ts, "layout", "navbar.private", "teams.employed", "teams.public")
+	RenderHTML(w, &ts, "layout", "navbar.private", "teams.employed", "teams.public")
 }
 
 // GET /v1/team/quit
@@ -315,27 +426,27 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	//获取茶团资料
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
-	te, err := data.TeamByUuid(uuid)
+	te, err := data.GetTeamByUuid(uuid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
 		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
 
-	var tPD data.TeamDetail
-	tPD.Team = te
-	tPD.CreatedAtDate = te.CreatedAtDate()
-	fu, err := te.Founder()
+	var tD data.TeamDetail
+	tD.Team = te
+	tD.CreatedAtDate = te.CreatedAtDate()
+	f_u, err := te.Founder()
 	if err != nil {
 		util.Info(err, " Cannot get team founder")
 		Report(w, r, "你好，闪电考拉为你极速效劳中，请稍后再试。")
 		return
 	}
-	tPD.Founder = fu
-	founder_default_team, _ := fu.GetLastDefaultTeam()
-	tPD.FounderTeam = founder_default_team
+	tD.Founder = f_u
+	founder_default_team, _ := f_u.GetLastDefaultTeam()
+	tD.FounderTeam = founder_default_team
 
-	tPD.TeamMemberCount = te.NumMembers()
+	tD.TeamMemberCount = te.NumMembers()
 	teamCoreMembers, err := te.CoreMembers()
 	if err != nil {
 		util.Info(err, " Cannot get team core member")
@@ -377,7 +488,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		user, err := data.GetUserById(member.UserId)
 		if err != nil {
 			util.Info(err, " Cannot get user")
-			Report(w, r, "你好，疯狂的闪电考拉为你效劳中，请稍后再试。")
+			Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 			return
 		}
 		tn.User = user
@@ -391,37 +502,71 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		tn.CreatedAtDate = member.CreatedAtDate()
 		tnList = append(tnList, tn)
 	}
-	tPD.CoreMemberDataList = tcList
-	tPD.NormalMemberDataList = tnList
+	tD.CoreMemberDataList = tcList
+	tD.NormalMemberDataList = tnList
 
-	if tPD.Team.Class == 1 {
-		tPD.Open = true
+	if tD.Team.Class == 1 {
+		tD.Open = true
 	} else {
-		tPD.Open = false
+		tD.Open = false
 	}
+
+	tD.IsCoreMember = false
+	tD.IsMember = false
 	s, err := Session(r)
 	if err != nil {
 		//游客
-		tPD.SessUser = data.User{
+		tD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 			// 用户足迹
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-		GenerateHTML(w, &tPD, "layout", "navbar.public", "team.detail")
+		RenderHTML(w, &tD, "layout", "navbar.public", "team.detail")
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
+		util.Info(err, " Cannot get user from session")
 		Report(w, r, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
 	// 用户足迹
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
-	tPD.SessUser = s_u
-	GenerateHTML(w, &tPD, "layout", "navbar.private", "team.detail")
+	tD.SessUser = s_u
+	//检查当前用户是否核心成员
+	for _, member := range tD.CoreMemberDataList {
+		if member.User.Id == s_u.Id {
+			tD.IsCoreMember = true
+			tD.IsMember = true
+			break
+		}
+	}
+	//检查当前用户是否普通成员
+	for _, member := range tD.NormalMemberDataList {
+		if member.User.Id == s_u.Id {
+			tD.IsMember = true
+			break
+		}
+	}
+
+	tD.HasApplication = false
+	if tD.IsCoreMember {
+		//检查茶团是否有待处理的加盟申请书
+		count, err := data.GetMemberApplicationByTeamIdAndStatusCount(tD.Team.Id)
+		if err != nil {
+			util.Info(err, "Cannot get member application count")
+			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+			return
+		}
+		if count > 0 {
+			tD.HasApplication = true
+		}
+	}
+
+	RenderHTML(w, &tD, "layout", "navbar.private", "team.detail")
 
 }
 
@@ -449,10 +594,15 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, _ := sess.User()
+	s_u, err := sess.User()
+	if err != nil {
+		util.Info(err, " Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	//一次管理一个茶团，根据提交的team.Uuid来确定
 	//这个茶团是否存在？
-	team, err := data.TeamByUuid(r.FormValue("id"))
+	team, err := data.GetTeamByUuid(r.FormValue("id"))
 	if err != nil {
 		util.Info(err, " Cannot get this team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
@@ -466,11 +616,11 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士未能找到此茶团发起人资料，请确认后再试。")
 		return
 	}
-	if fund.Id == u.Id {
+	if fund.Id == s_u.Id {
 		//是创建人,可以管理这个茶团
-		tPD.SessUser = u
+		tPD.SessUser = s_u
 		tPD.Team = team
-		GenerateHTML(w, &tPD, "layout", "navbar.private", "team.manage")
+		RenderHTML(w, &tPD, "layout", "navbar.private", "team.manage")
 		return
 	}
 	//如果不是创建人，那么就检查一下是否是茶团的ceo
@@ -489,14 +639,14 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if manager.UserId != u.Id {
+	if manager.UserId != s_u.Id {
 		Report(w, r, "你好，您无权管理此茶团。")
 		return
 	}
 	//是茶团的ceo，可以管理这个茶团
-	tPD.SessUser = u
+	tPD.SessUser = s_u
 	tPD.Team = team
-	GenerateHTML(w, &tPD, "layout", "navbar.private", "team.manage")
+	RenderHTML(w, &tPD, "layout", "navbar.private", "team.manage")
 }
 
 // CoreManage() 处理用户管理团队核心成员角色事务
@@ -601,7 +751,7 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 	}
 	u, _ := s.User()
 	uuid := r.FormValue("team_uuid")
-	team, err := data.TeamByUuid(uuid)
+	team, err := data.GetTeamByUuid(uuid)
 	if err != nil {
 		Report(w, r, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
@@ -626,7 +776,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 	}
 	u, _ := s.User()
 	uuid := r.URL.Query().Get("id")
-	team, err := data.TeamByUuid(uuid)
+	team, err := data.GetTeamByUuid(uuid)
 	if err != nil {
 		Report(w, r, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
@@ -636,7 +786,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 	if u.Id == team.FounderId {
 		//如果是创建者，那么就可以上传图标
 
-		GenerateHTML(w, &uuid, "layout", "navbar.private", "team_avatar.upload")
+		RenderHTML(w, &uuid, "layout", "navbar.private", "team_avatar.upload")
 		return
 	}
 	Report(w, r, "你好，茶博士摸摸头，居然说只有团建人可以修改这个茶团相关资料。")
@@ -656,7 +806,7 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 	//根据用户提交的Uuid，查询获取团队信息
 	v := r.URL.Query()
 	tUid := v.Get("id")
-	team, err := data.TeamByUuid(tUid)
+	team, err := data.GetTeamByUuid(tUid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
 		Report(w, r, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
@@ -695,7 +845,7 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 	for _, member := range coreMembers {
 		if u.Id == member.UserId {
 			//向用户返回接收邀请函的表单页面
-			GenerateHTML(w, &isPD, "layout", "navbar.private", "team.invitations")
+			RenderHTML(w, &isPD, "layout", "navbar.private", "team.invitations")
 			return
 		}
 	}

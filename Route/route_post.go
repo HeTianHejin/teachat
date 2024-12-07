@@ -116,7 +116,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-		GenerateHTML(w, &pD, "layout", "navbar.public", "post.detail")
+		RenderHTML(w, &pD, "layout", "navbar.public", "post.detail")
 		return
 	}
 	// 读取已登陆用户资料
@@ -150,7 +150,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsAuthor = false
 	}
 
-	GenerateHTML(w, &pD, "layout", "navbar.private", "post.detail")
+	RenderHTML(w, &pD, "layout", "navbar.private", "post.detail")
 
 }
 
@@ -378,7 +378,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if post.UserId == user.Id {
-			GenerateHTML(w, &post, "layout", "navbar.private", "post.edit")
+			RenderHTML(w, &post, "layout", "navbar.private", "post.edit")
 		} else {
 			util.Danger(err, " Cannot edit other user's post")
 			Report(w, r, "茶博士提示，目前仅能补充自己的回复")

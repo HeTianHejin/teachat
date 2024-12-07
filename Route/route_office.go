@@ -12,9 +12,9 @@ func ActivateDraftThread(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /pilot/InvitePage
+// GET /pilot/Invite
 // 打开获取邀请词页面
-func InvitePage(w http.ResponseWriter, r *http.Request) {
+func Invite(w http.ResponseWriter, r *http.Request) {
 	s, e := Session(r)
 	if e != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -26,7 +26,7 @@ func InvitePage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if u.Role == "pilot" || u.Role == "captain" {
-		GenerateHTML(w, nil, "layout", "navbar.private", "pilot.invite")
+		RenderHTML(w, nil, "layout", "navbar.private", "pilot.invite")
 	}
 }
 

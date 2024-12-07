@@ -147,7 +147,7 @@ func NewGoods(w http.ResponseWriter, r *http.Request) {
 	var gL data.GoodsList
 	gL.SessUser = s_u
 	//生成html，返回给用户
-	GenerateHTML(w, &gL, "layout", "navbar.private", "goods.new")
+	RenderHTML(w, &gL, "layout", "navbar.private", "goods.new")
 }
 
 // GET /v1/goods/mine
@@ -174,5 +174,5 @@ func MyGoods(w http.ResponseWriter, r *http.Request) {
 	gL.GoodsList = goods
 	gL.SessUser = s_u
 	// print html and send to user
-	GenerateHTML(w, &gL, "layout", "navbar.private", "goods.mine")
+	RenderHTML(w, &gL, "layout", "navbar.private", "goods.mine")
 }

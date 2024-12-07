@@ -12,17 +12,17 @@ import (
 */
 
 type Configuration struct {
-	Address          string
-	ReadTimeout      int64
-	WriteTimeout     int64
-	Static           string
-	SysMail_Username string
-	SysMail_Password string
-	SysMail_Host     string
-	SysMail_Port     string
-	MaxInviteTeams   int // 茶围、茶台最大可邀请团队数
-	MaxTeamMembers   int // 团队最大成员数
-	MaxTeamCount     int // ����创建的��队数上限
+	Address      string
+	ReadTimeout  int64
+	WriteTimeout int64
+	Static       string
+	// SysMail_Username string
+	// SysMail_Password string
+	// SysMail_Host     string
+	//SysMail_Port   string
+	MaxInviteTeams int64 // 茶围、茶台最大可邀请团队数
+	MaxTeamMembers int64 // 团队最大成员数
+	MaxTeamsCount  int64 // 个人创建的团队数上限
 }
 
 var Config Configuration

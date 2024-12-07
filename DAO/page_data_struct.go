@@ -1,7 +1,7 @@
 package data
 
-// UserBiographyPagedata 个人页面数据
-type UserBiography struct {
+// UserBeanPagedata 个人主页，渲染所需数据
+type UserBean struct {
 	SessUser           User
 	User               User // 作者资料
 	DefaultTeamBean    TeamBean
@@ -11,6 +11,8 @@ type UserBiography struct {
 	IsAuthor           bool
 	Message            string // 通知消息
 }
+
+// 个人独白，独角戏资料
 type MonologueBean struct {
 	Monologue Monologue
 	Author    User
@@ -190,18 +192,23 @@ type PostBean struct {
 	AuthorTeam    Team // 作者默认团队
 }
 
-// 用于茶团详情页面渲染
+// 用于某个茶团详情页面渲染
 type TeamDetail struct {
-	SessUser             User
-	Team                 Team
-	Founder              User // 茶团创建者
+	SessUser     User //当前访问用户
+	IsCoreMember bool //是否核心成员（管理员）
+	IsMember     bool //是否成员
+
+	Team                 Team //茶团
+	Founder              User // 茶团发起人（创建者）
 	FounderTeam          Team // 发起人默认所在的团队
 	CreatedAtDate        string
-	TeamMemberCount      int
-	CoreMemberDataList   []TeamMemberBean
-	NormalMemberDataList []TeamMemberBean
+	TeamMemberCount      int              //成员数量统计
+	CoreMemberDataList   []TeamMemberBean //核心成员资料夹
+	NormalMemberDataList []TeamMemberBean //普通成员资料夹
 	IsAuthor             bool
-	Open                 bool
+	Open                 bool //是否开放式茶团
+
+	HasApplication bool //是否有新的加盟申请书
 }
 
 // 茶团成员资料荚
@@ -246,6 +253,23 @@ type TeamBean struct {
 	Count         int  //成员计数
 }
 
+// 查询茶团加盟申请书状态列表
+type MemberApplicationList struct {
+	SessUser                  User
+	Team                      Team                    //当前茶团
+	MemberApplicationBeanList []MemberApplicationBean //申请书队列
+}
+type MemberApplicationBean struct {
+	MemberApplication MemberApplication //申请书
+	Status            string            //申请书状态
+
+	Team Team //欲加盟的茶团资料
+
+	Author        User   //申请人
+	AuthorTeam    Team   // 申请人默认所在的团队
+	CreatedAtDate string //申请时间
+}
+
 // 好东西，物资清单
 type GoodsList struct {
 	SessUser  User
@@ -282,6 +306,7 @@ type LetterboxPageData struct {
 	InvitationList []Invitation
 }
 
+// 茶团加盟邀请函详情页面数据
 type InvitationDetail struct {
 	SessUser              User
 	SessUserDefaultTeam   Team
@@ -293,6 +318,18 @@ type InvitationDetail struct {
 	Team       Team // 发出邀请的茶团队
 
 	InviteUser User // 受邀请人
+}
+
+// 茶团加盟申请书审查页面数据
+type ApplicationReview struct {
+	SessUser            User
+	SessUserDefaultTeam Team //默认所属茶团
+
+	Application MemberApplication //申请书
+	Team        Team              // 拟加盟的茶团队
+
+	Applicant            User // 申请人
+	ApplicantDefaultTeam Team // 申请人默认所属茶团
 }
 
 // 某个茶团的全部邀请函页面数据
@@ -316,4 +353,13 @@ type AcceptObjectPageData struct {
 
 type ConnectionFriendPageData struct {
 	SessUser User
+}
+
+// 查找数据库记录，所得到的数据集合，页面数据
+type FetchPageData struct {
+	SessUser User
+
+	UserBeanList []UserBean //茶友（用户）资料夹队列
+	//TeamBeanList     []TeamBean
+	//ThreadBeanList   []ThreadBean
 }

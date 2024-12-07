@@ -128,7 +128,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId
 			team_ids_str := strings.Split(tIds_str, ",")
 			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
-			if len(team_ids_str) > util.Config.MaxInviteTeams {
+			if len(team_ids_str) > int(util.Config.MaxInviteTeams) {
 				util.Info(err, " Too many team ids")
 				Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
 				return
@@ -189,7 +189,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId
 			team_ids_str := strings.Split(tIds_str, ",")
 			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
-			if len(team_ids_str) > util.Config.MaxInviteTeams {
+			if len(team_ids_str) > int(util.Config.MaxInviteTeams) {
 				util.Info(err, " Too many team ids")
 				Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
 				return
@@ -322,7 +322,7 @@ func NewProject(w http.ResponseWriter, r *http.Request) {
 	case 1:
 		// 开放式茶话会，可以在茶话会下新开茶台
 		// 向用户返回添加指定的茶台的表单页面
-		GenerateHTML(w, &oD, "layout", "navbar.private", "project.new")
+		RenderHTML(w, &oD, "layout", "navbar.private", "project.new")
 		return
 	case 2:
 		// 封闭式茶话会，需要看围主指定了那些茶团成员可以开新茶台，如果围主没有指定，则不能新开茶台
@@ -336,7 +336,7 @@ func NewProject(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if ok {
-			GenerateHTML(w, &oD, "layout", "navbar.private", "project.new")
+			RenderHTML(w, &oD, "layout", "navbar.private", "project.new")
 			return
 		} else {
 			// 当前用户不是茶话会邀请团队成员，不能新开茶台
@@ -480,7 +480,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.RawQuery,
 		}
 		// 返回给浏览者茶台详情页面
-		GenerateHTML(w, &pD, "layout", "navbar.public", "project.detail")
+		RenderHTML(w, &pD, "layout", "navbar.public", "project.detail")
 		return
 	}
 
@@ -563,5 +563,5 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path
 	pD.SessUser.Query = r.URL.RawQuery
-	GenerateHTML(w, &pD, "layout", "navbar.private", "project.detail")
+	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail")
 }

@@ -39,6 +39,53 @@ func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 	return
 }
 
+// Fetch userbean given user 根据user参数，查询用户所得资料荚,包括默认团队，全部已经加入的状态正常团队,成为核心团队，
+func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
+	userbean.User = user
+
+	default_team, err := user.GetLastDefaultTeam()
+	if err != nil {
+		return
+	}
+	teambean, err := GetTeamBean(default_team)
+	if err != nil {
+		return
+	}
+	userbean.DefaultTeamBean = teambean
+
+	team_list_core, err := user.CoreExecTeams()
+	if err != nil {
+		return
+	}
+	userbean.ManageTeamBeanList, err = GetTeamBeanList(team_list_core)
+	if err != nil {
+		return
+	}
+
+	team_list_normal, err := user.NormalExecTeams()
+	if err != nil {
+		return
+	}
+	userbean.JoinTeamBeanList, err = GetTeamBeanList(team_list_normal)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+// fetch userbean_list given []user
+func FetchUserBeanList(user_list []data.User) (userbean_list []data.UserBean, err error) {
+	for _, user := range user_list {
+		userbean, err := FetchUserBean(user)
+		if err != nil {
+			return nil, err
+		}
+		userbean_list = append(userbean_list, userbean)
+	}
+	return
+}
+
 // Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队
 func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
 	// 读取已登陆用户资料
@@ -237,41 +284,43 @@ func GetPostBeanList(post_list []data.Post) (PostBeanList []data.PostBean, err e
 
 // 据给出的post参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回。
 func GetPostBean(post data.Post) (PostBean data.PostBean, err error) {
-	var pb data.PostBean
-	pb.Post = post
-	pb.Attitude = post.Atti()
-	pb.Count = post.NumReplies()
-	pb.CreatedAtDate = post.CreatedAtDate()
+	PostBean.Post = post
+	PostBean.Attitude = post.Atti()
+	PostBean.Count = post.NumReplies()
+	PostBean.CreatedAtDate = post.CreatedAtDate()
 	user, err := post.User()
 	if err != nil {
 		util.Warning(err, " Cannot read post author")
-		return pb, err
+		return PostBean, err
 	}
-	pb.Author = user
+	PostBean.Author = user
 	team, err := data.GetTeamById(post.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot read team given author")
-		return pb, err
+		return PostBean, err
 	}
-	pb.AuthorTeam = team
-	return pb, nil
+	PostBean.AuthorTeam = team
+	return PostBean, nil
 }
 
 // 据给出的team参数，去获取对应的茶团资料，是否开放，成员计数，发起日期，发起人（Founder）及其默认团队，然后按结构拼装返回。
 func GetTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
-	var tb data.TeamBean
-	tb.Team = team
+	TeamBean.Team = team
 	if team.Class == 1 {
-		tb.Open = true
+		TeamBean.Open = true
 	} else {
-		tb.Open = false
+		TeamBean.Open = false
 	}
-	tb.CreatedAtDate = team.CreatedAtDate()
-	u, _ := team.Founder()
-	tb.Founder = u
-	tb.FounderTeam, _ = u.GetLastDefaultTeam()
-	tb.Count = team.NumMembers()
-	return tb, nil
+	TeamBean.CreatedAtDate = team.CreatedAtDate()
+	u, err := team.Founder()
+	if err != nil {
+		util.Warning(err, " Cannot read team founder")
+		return TeamBean, err
+	}
+	TeamBean.Founder = u
+	TeamBean.FounderTeam, _ = u.GetLastDefaultTeam()
+	TeamBean.Count = team.NumMembers()
+	return TeamBean, nil
 }
 func GetTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err error) {
 	for _, tea := range team_list {
@@ -280,6 +329,43 @@ func GetTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err e
 			return nil, err
 		}
 		TeamBeanList = append(TeamBeanList, teamBean)
+	}
+	return
+}
+
+// 根据给出的MemberApplication参数，去获取对应的加盟申请书资料夹
+func GetMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBean data.MemberApplicationBean, err error) {
+	MemberApplicationBean.MemberApplication = ma
+	MemberApplicationBean.Status = ma.GetStatus()
+
+	team, err := data.GetTeamById(ma.TeamId)
+	if err != nil {
+		util.Warning(err, " Cannot read team given author")
+		return MemberApplicationBean, err
+	}
+	MemberApplicationBean.Team = team
+
+	MemberApplicationBean.Author, err = data.GetUserById(ma.UserId)
+	if err != nil {
+		util.Warning(err, " Cannot read member application author")
+		return MemberApplicationBean, err
+	}
+	MemberApplicationBean.AuthorTeam, err = MemberApplicationBean.Author.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read member application author default team")
+		return MemberApplicationBean, err
+	}
+
+	MemberApplicationBean.CreatedAtDate = ma.CreatedAtDate()
+	return MemberApplicationBean, nil
+}
+func GetMemberApplicationBeanList(ma_list []data.MemberApplication) (MemberApplicationBeanList []data.MemberApplicationBean, err error) {
+	for _, ma := range ma_list {
+		maBean, err := GetMemberApplicationBean(ma)
+		if err != nil {
+			return nil, err
+		}
+		MemberApplicationBeanList = append(MemberApplicationBeanList, maBean)
 	}
 	return
 }
@@ -390,7 +476,7 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 // 茶博士-teaOffice，是古代中华传统文化对茶馆工作人员的昵称，如：富家宴会，犹有专供茶事之人，谓之茶博士。——唐代《西湖志馀》
 // 现在多指精通茶艺的师傅，尤其是四川的长嘴壶茶艺，茶博士个个都是身怀绝技的“高手”。
 func Report(w http.ResponseWriter, r *http.Request, msg string) {
-	var userBPD data.UserBiography
+	var userBPD data.UserBean
 	userBPD.Message = msg
 	s, err := Session(r)
 	if err != nil {
@@ -398,7 +484,7 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 			Id:   0,
 			Name: "游客",
 		}
-		GenerateHTML(w, &userBPD, "layout", "navbar.public", "feedback")
+		RenderHTML(w, &userBPD, "layout", "navbar.public", "feedback")
 		return
 	}
 	s_u, _ := s.User()
@@ -408,7 +494,7 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 	// if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
 	// 	util.Warning(err, s_u.Id, " Cannot record last query path")
 	// }
-	GenerateHTML(w, &userBPD, "layout", "navbar.private", "feedback")
+	RenderHTML(w, &userBPD, "layout", "navbar.private", "feedback")
 }
 
 // Checks if the user is logged in and has a Session, if not err is not nil
@@ -436,7 +522,7 @@ func ParseTemplateFiles(filenames ...string) (t *template.Template) {
 }
 
 // 处理器把页面模版和需求数据揉合后，由这个方法，将填写好的页面“制作“成HTML格式，调用http响应方法，发送给浏览器端客户
-func GenerateHTML(w http.ResponseWriter, data interface{}, filenames ...string) {
+func RenderHTML(w http.ResponseWriter, data interface{}, filenames ...string) {
 	var files []string
 	for _, file := range filenames {
 		files = append(files, fmt.Sprintf("templates/%s.go.html", file))

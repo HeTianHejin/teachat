@@ -32,7 +32,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// t := ParseTemplateFiles("layout", "navbar.public", "login")
 		// t.Execute(w, nil)
-		GenerateHTML(w, &aopD, "layout", "navbar.public", "login")
+		RenderHTML(w, &aopD, "layout", "navbar.public", "login")
 		return
 	}
 	http.Redirect(w, r, "/v1/", http.StatusFound)
@@ -41,7 +41,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 // GET /SignupForm
 // 新用户注册页面
 func SignupForm(w http.ResponseWriter, r *http.Request) {
-	GenerateHTML(w, nil, "layout", "navbar.public", "signup")
+	RenderHTML(w, nil, "layout", "navbar.public", "signup")
 }
 
 // POST /signup
@@ -117,7 +117,7 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.Info(newU.Email, "注册新账号ok")
+	//util.Info(newU.Email, "注册新账号ok")
 	t := fmt.Sprintf("%s 你好，注册成功！祝愿你拥有一段美好时光。", newU.Name)
 	Report(w, r, t)
 

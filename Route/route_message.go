@@ -29,7 +29,7 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 	lbPD.SessUser = u
 
 	//向用户返回接收邀请函的表单页面
-	GenerateHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")
+	RenderHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")
 }
 
 // Get /v1/message/accetp
@@ -54,6 +54,6 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//向用户返回接收��请��的表单页面
-	GenerateHTML(w, &amPD, "layout", "navbar.private", "message.accept")
+	RenderHTML(w, &amPD, "layout", "navbar.private", "message.accept")
 
 }

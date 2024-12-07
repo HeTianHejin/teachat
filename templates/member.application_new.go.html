@@ -1,0 +1,84 @@
+{{ define "content" }}
+
+{{/* 这是 撰写新的茶团申请书 页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}@茶团</a></li>
+    <li class="active">申请加盟茶团</li>
+
+</ol>
+
+
+
+<div class="media">
+    <div class="media-left">
+        <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+            <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="团队团标">
+        </a>
+    </div>
+
+    <div class="media-body">
+        <div class="panel panel-info">
+
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; font-size: smaller;text-align: center;">
+                            {{ .Team.CreatedAtDate }}
+                        </span>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; text-align: right;">
+                            <span class="label label-success">{{ .Team.TeamProperty }}
+                            </span>
+                        </span>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+
+                <form role="form" action="/v1/team/team_member/application/new" method="post">
+
+                    <div class="form-group">
+                        <label>茶团号：</label>
+                        {{ .Team.Id }}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="content">申请加盟内容：</label>
+        <textarea class="form-control" name="content" id="content" rows="3" minlength="17" maxlength="567"
+        placeholder="例如：朕拟加盟你茶团" required></textarea>
+                        
+                    </div>
+                    
+                    <input type="hidden" name="team_uuid" id="team_uuid" value="{{ .Team.Uuid }}">
+                    <input type="hidden" name="user_uuid" id="user_uuid" value="{{ .SessUser.Uuid }}">
+                    
+                    <div class="form-group">
+                        <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+                            <button type="submit" class="btn btn-default">
+                                <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 发送
+                            </button>
+                        </div>
+                    </div>
+
+
+                </form>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+{{ end }}

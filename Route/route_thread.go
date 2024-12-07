@@ -49,35 +49,23 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		tD.QuotePost, err = data.GetPostByUuid(uuid)
 		if err != nil {
 			util.Warning(err, uuid, " Cannot read post given uuid")
-			Report(w, r, "你好，������失������，��影一����见���，�������地不�����，请稍后再试。")
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
 		tD.QuotePostAuthor, err = tD.QuotePost.User()
 		if err != nil {
 			util.Warning(err, tD.QuotePost.Id, " Cannot read post user")
-			Report(w, r, "你好，����������������，����������������。请稍后再试。")
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 			return
 		}
 		tD.QuotePostAuthorTeam, err = data.GetTeamById(tD.QuotePost.TeamId)
 		if err != nil {
 			util.Warning(err, tD.QuotePost.TeamId, " Cannot read post team")
-			Report(w, r, "你好，����������������，����������������。请稍后再试。")
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 			return
 		}
 		tD.ThreadBean.Thread.PostId = tD.QuotePost.Id
-		//读取茶议资料
-		// thread, err := tD.QuotePost.Thread()
-		// if err != nil {
-		// 	util.Warning(err, uuid, " Cannot read thread given uuid")
-		// 	Report(w, r, "你好，������失������，��影一����见���，�������地不�����，请稍后再试。")
-		// 	return
-		// }
-		// tD.ThreadBean, err = GetThreadBean(thread)
-		// if err != nil {
-		// 	util.Warning(err, uuid, " Cannot read thread given uuid")
-		// 	Report(w, r, "你好，������失������，��影一����见���，�������地不�����，请稍后再试。")
-		// 	return
-		// }
+
 		//读取茶台资料
 		tD.QuoteProject, err = tD.QuotePost.Project()
 		if err != nil {
@@ -122,7 +110,7 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 	tD.SessUserDefaultPlace = s_default_place
 	tD.SessUserBindPlaces = s_places
 	// 给请求用户返回新建完整版茶议表单页面
-	GenerateHTML(w, &tD, "layout", "navbar.private", "thread.new")
+	RenderHTML(w, &tD, "layout", "navbar.private", "thread.new")
 }
 
 // POST /v1/thread/new
@@ -147,14 +135,14 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Warning(err, sess.Id, " Cannot get user from session")
+		util.Warning(err, sess.Email, " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	//读取表单数据
 	ty, err := strconv.Atoi(r.PostFormValue("type"))
 	if err != nil {
-		util.Warning(err, "Failed to convert class to int")
+		util.Warning(err, ty, "Failed to convert type to int")
 		Report(w, r, "你好，此地无银三百两，请确认后再试。")
 		return
 	}
@@ -171,13 +159,13 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	project_id, err := strconv.Atoi(r.PostFormValue("project_id"))
 	if err != nil {
-		util.Warning(err, "Failed to convert class to int")
+		util.Warning(err, project_id, "Failed to convert project_id to int")
 		Report(w, r, "你好，闪电考拉极速查找茶台中，请确认后再试。")
 		return
 	}
 	post_id, err := strconv.Atoi(r.PostFormValue("post_id"))
 	if err != nil {
-		util.Warning(err, "Failed to convert class to int")
+		util.Warning(err, project_id, "Failed to convert post_id to int")
 		Report(w, r, "你好，闪电考拉极速服务，任然无法识别提交的品味资料，请确认后再试。")
 		return
 	}
@@ -186,7 +174,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		_, err := data.GetPostById(post_id)
 		// 查post是否存在
 		if err != nil {
-			util.Warning(err, " Cannot get post given id")
+			util.Warning(err, post_id, " Cannot get post given id")
 			Report(w, r, "你好，��电考拉��速服务，任然无法找到提及的品��资料，请确认后再试。")
 			return
 		}
@@ -359,8 +347,8 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	//读取茶围资料
 	tD.QuoteObjective, err = tD.QuoteProject.Objective()
 	if err != nil {
-		util.Warning(err, " Cannot read objective given project")
-		Report(w, r, "你好，������失������，未能读取����资料。")
+		util.Warning(err, tD.QuoteProject.Id, " Cannot read objective given project")
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
 
@@ -462,7 +450,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			}
 
 			//show the thread and the posts展示页面
-			GenerateHTML(w, &tD, "layout", "navbar.public", "thread.detail")
+			RenderHTML(w, &tD, "layout", "navbar.public", "thread.detail")
 			return
 		} else {
 			//非法访问未开放的话题？
@@ -508,7 +496,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				}
 
 				//show the thread and the posts展示页面
-				GenerateHTML(w, &tD, "layout", "navbar.private", "thread.detail")
+				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail")
 				return
 			} else {
 				//不是茶议作者
@@ -561,7 +549,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				}
 
 				//展示茶议详情
-				GenerateHTML(w, &tD, "layout", "navbar.private", "thread.detail")
+				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail")
 				return
 			}
 		} else if tD.ThreadBean.Thread.Class == 0 {
@@ -738,7 +726,7 @@ func EditThread(w http.ResponseWriter, r *http.Request) {
 			// 是作者，可以加水（补充内容）
 			thDPD.ThreadBean.Thread.PageData.IsAuthor = true
 			thDPD.SessUser = sUser
-			GenerateHTML(w, &thDPD, "layout", "navbar.private", "thread.edit")
+			RenderHTML(w, &thDPD, "layout", "navbar.private", "thread.edit")
 			return
 		}
 		//不是作者，不能加水

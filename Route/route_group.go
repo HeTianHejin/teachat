@@ -23,7 +23,7 @@ func NewGroup(w http.ResponseWriter, r *http.Request) {
 	}
 	var tpd data.TeamSquare
 	tpd.SessUser = u
-	GenerateHTML(w, &tpd, "layout", "navbar.private", "group.new")
+	RenderHTML(w, &tpd, "layout", "navbar.private", "group.new")
 }
 
 // POST /v1/group/create
@@ -204,5 +204,5 @@ func GroupDetail(w http.ResponseWriter, r *http.Request) {
 		gd.IsOverTwelve = false
 	}
 
-	GenerateHTML(w, &gd, "layout", "navbar.private", "group.detail", "teams.public")
+	RenderHTML(w, &gd, "layout", "navbar.private", "group.detail", "teams.public")
 }
