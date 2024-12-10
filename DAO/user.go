@@ -26,7 +26,7 @@ type User struct {
 
 // SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users.name模糊查询用户，WHERE column LIKE 'keyword%',返回[]User,err
 func SearchUserByNameKeyword(keyword string) ([]User, error) {
-	rows, err := Db.Query("SELECT * FROM users WHERE name LIKE $1", "%"+keyword+"%")
+	rows, err := Db.Query("SELECT * FROM users WHERE name LIKE $1 Limit 9", "%"+keyword+"%")
 	if err != nil {
 		return nil, err
 	}

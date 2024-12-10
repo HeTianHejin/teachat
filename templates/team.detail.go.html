@@ -9,6 +9,22 @@
 </ol>
 
 {{ if .IsCoreMember }}
+{{/*  管理菜单  */}}
+<div class="dropdown">
+  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+    管理菜单
+    <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+    <li><a href="/v1/team/edit">修改资料</a></li>
+    <li><a href="/v1/team_member/role">调整角色</a></li>
+    <li><a href="/v1/team_member/fire">开除成员</a></li>
+    <li><a href="/v1/search">添加成员</a></li>
+    <li role="separator" class="divider"></li>
+    <li><a href="#">解散团队</a></li>
+  </ul>
+</div>
+
 {{ if .HasApplication }}
 
 <div class="alert alert-info" role="alert">你好，有待处理的加盟申请书！
@@ -23,22 +39,19 @@
 {{ if .Open }}
 {{ if .IsMember }}
 {{ if .IsCoreMember }}
-<div class="panel panel-default">
-  <div class="panel-heading">
-   眼镜片很厚的茶博士
-  </div>
-   <div class="panel-body">
-     <span style="margin-inline-start: 2em ;">
-      你好，邀请茶友加入团队的方法：先 <strong><a href="/v1/search">查找</a></strong> 该茶友，然后在其个人页面点击“邀请加盟”按钮。
-     </span>
-   </div>
- </div>
+<p class="text-center">
+  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
+  茶博士提示： 邀请茶友加入团队的方法：先 <strong><a href="/v1/search">查找</a></strong> 该茶友，然后在其个人页面点击“邀请加盟”按钮。
+</p>
 {{ end }}{{/*  检查是否核心管理成员结束  */}}
 {{ else }}{{/*  不是茶团成员  */}}
 <span style="margin-inline-end: 30px;">
-  <a href="/v1/team/team_member/application/new?id={{ .Team.Uuid }}">申请加入该团</a>
+  <a href="/v1/team/team_member/application/new?id={{ .Team.Uuid }}">申请加盟</a>
 </span>
 {{ end }}{{/*  检查是否团队成员结束  */}}
+
+
+
 {{ else }}{{/*  是封闭式茶团  */}}
 <p class="text-center">
   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
@@ -82,13 +95,13 @@
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: right; font-size: smaller;">
+              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
               {{if .Founder.Gender }}
               <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
-              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
-              @<span style="font-style: italic;"><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+              <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
 
               {{ .CreatedAtDate }}
             </span>

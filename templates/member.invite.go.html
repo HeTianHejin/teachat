@@ -31,7 +31,7 @@
                 {{/* 这是受邀请的用户email提交 */}}
                 <label for="email" class="col-sm-2 control-label">受邀人邮箱：</label>
                 <div class="col-sm-10">
-                    <input type="text" name="email" class="form-control" id="email" value="{{ .InviteUser.Email }}" readonly disabled />
+                    <input type="text" name="email" class="form-control" id="email" value="{{ .InviteUser.Email }}" readonly required />
                 </div>
             </div>
 
@@ -73,7 +73,7 @@
 
 
             <div class="form-group">
-                <label for="team_uuid" class="col-sm-2 control-label">  发邀请茶团：</label>
+                <label for="team_uuid" class="col-sm-2 control-label">  邀请茶团：</label>
                 <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
                   <select name="team_uuid" class="form-control" id="team_uuid" required>
                     <option value="{{ .SessUserDefaultTeam.Uuid }}">{{ .SessUserDefaultTeam.Name }}

@@ -159,6 +159,19 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 	return teams, nil
 }
 
+// SurvivalTeamsCount() 获取用户当前所在的状态正常的全部团队计数(不包括系统预留的“自由人”茶团)
+func (user *User) SurvivalTeamsCount() (count int, err error) {
+	query := `
+        SELECT COUNT(DISTINCT teams.id)
+        FROM teams
+        JOIN team_members ON teams.id = team_members.team_id
+        WHERE teams.class IN (1, 2) AND team_members.user_id = $1 AND team_members.class = 1`
+
+	err = Db.QueryRow(query, user.Id).Scan(&count)
+	count = -1
+	return
+}
+
 // 获取全部封闭式团队的信息
 func GetClosedTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE class = 2")

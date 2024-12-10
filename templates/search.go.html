@@ -2,17 +2,12 @@
 
 {{/* 这是查找页面 */}}
 
-<div class="panel panel-default">
-  <div class="panel-heading">
-   眼镜片很厚的茶博士
-  </div>
-   <div class="panel-body">
-     <p style="margin-inline-start: 2em ;">
-      <strong>你好！</strong> 在这里，可以帮你找到茶友、茶话会、茶台、茶议 ...
-     </p>
-     <p>提示：如果知道对应的号数，查询速度会更快。</p>
-   </div>
- </div>
+<hr />
+<p>
+  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
+  茶博士：如果知道对应的茶号数，查询速度会更快。
+</p>
+<hr />
 
 
 <form role="form" action="/v1/search" method="post">
@@ -20,7 +15,7 @@
     <div class="panel-body form-group">
 
       <div >
-        <label for="radio">选择查找类别：</label>
+        <label for="radio">选择类别：</label>
         <fieldset id="radio"> 
             <input type="radio" name="class" id="user" style="width: fit-content;" value="0" required checked />
             <label for="user">茶友花名</label>
@@ -77,7 +72,9 @@
 
     <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .DefaultTeamBean.Team.Uuid }}">{{ .DefaultTeamBean.Team.Abbreviation }}</a></span>
 
-    <p>核心成员茶团：</p>
+    <p>所在茶团</p>
+    
+    <p>核心成员</p>
     {{ range .ManageTeamBeanList }}
     
     <table class="table table-bordered table-hover">
@@ -99,7 +96,7 @@
     <p>没有相关记录。</p>
     {{ end }}{{/* 这是迭代用户核心成员茶团结束 */}}
     
-    <p>普通成员茶团：</p>
+    <p>普通成员</p>
     {{ range .JoinTeamBeanList }}
     <table class="table table-bordered table-hover">
       <thead>

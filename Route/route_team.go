@@ -544,11 +544,31 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
-	//检查当前用户是否普通成员
-	for _, member := range tD.NormalMemberDataList {
-		if member.User.Id == s_u.Id {
-			tD.IsMember = true
-			break
+	if !tD.IsCoreMember {
+		//茶团发起人也是核心成员？
+		f_teams, err := s_u.FounderTeams()
+		if err != nil {
+			util.Info(err, " Cannot get founderTeams given s_u")
+			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+			return
+		}
+		//检查当前用户是否核心成员
+		for _, team := range f_teams {
+			if team.Id == tD.Team.Id {
+				tD.IsCoreMember = true
+				tD.IsMember = true
+				break
+			}
+		}
+	}
+
+	if !tD.IsMember {
+		//检查当前用户是否普通成员
+		for _, member := range tD.NormalMemberDataList {
+			if member.User.Id == s_u.Id {
+				tD.IsMember = true
+				break
+			}
 		}
 	}
 
