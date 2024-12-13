@@ -40,7 +40,7 @@ func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 }
 
 // Fetch userbean given user 根据user参数，查询用户所得资料荚,包括默认团队，全部已经加入的状态正常团队,成为核心团队，
-func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
+func GetUserBean(user data.User) (userbean data.UserBean, err error) {
 	userbean.User = user
 
 	default_team, err := user.GetLastDefaultTeam()
@@ -75,9 +75,9 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 }
 
 // fetch userbean_list given []user
-func FetchUserBeanList(user_list []data.User) (userbean_list []data.UserBean, err error) {
+func GetUserBeanList(user_list []data.User) (userbean_list []data.UserBean, err error) {
 	for _, user := range user_list {
-		userbean, err := FetchUserBean(user)
+		userbean, err := GetUserBean(user)
 		if err != nil {
 			return nil, err
 		}
@@ -322,6 +322,8 @@ func GetTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 	TeamBean.Count = team.NumMembers()
 	return TeamBean, nil
 }
+
+// 根据给出的茶团队列，查询，获取对应的茶团资料夹
 func GetTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err error) {
 	for _, tea := range team_list {
 		teamBean, err := GetTeamBean(tea)

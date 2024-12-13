@@ -96,6 +96,24 @@ var TeamProperty = map[int]string{
 	32: "已婉拒闭团",
 }
 
+// 根据给出的关键词（keyword），查询相似的team.Abbreviation，返回 []team,err
+func SearchTeamByAbbreviation(keyword string) ([]Team, error) {
+	teams := []Team{}
+	rows, err := Db.Query("SELECT * FROM teams WHERE abbreviation LIKE $1", "%"+keyword+"%")
+	if err != nil {
+		return teams, err
+	}
+	for rows.Next() {
+		team := Team{}
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId); err != nil {
+			return teams, err
+		}
+		teams = append(teams, team)
+	}
+	rows.Close()
+	return teams, nil
+}
+
 // Create() UserDefaultTeam{}创建用户设置默认团队的记录
 func (udteam *UserDefaultTeam) Create() (err error) {
 	statement := "INSERT INTO user_default_teams (user_id, team_id) VALUES ($1, $2) RETURNING id"
@@ -168,7 +186,8 @@ func (user *User) SurvivalTeamsCount() (count int, err error) {
         WHERE teams.class IN (1, 2) AND team_members.user_id = $1 AND team_members.class = 1`
 
 	err = Db.QueryRow(query, user.Id).Scan(&count)
-	count = -1
+	//减记自由人茶团计数
+	count = count - 1
 	return
 }
 
@@ -519,7 +538,7 @@ func (team *Team) CEO() (teamMember TeamMember, err error) {
 	return
 }
 
-// GetTeamMemberByRole 检查茶团拟邀请的新成员角色是否已经占用
+// GetTeamMemberByRole() 根据角色查找茶团成员资料。用于检查茶团拟邀请的新成员角色是否已经被占用
 // AWS CodeWhisperer assist in writing
 func (team *Team) GetTeamMemberByRole(role string) (teamMember TeamMember, err error) {
 	teamMember = TeamMember{}
@@ -542,13 +561,13 @@ func (teamMember *TeamMember) Update() (err error) {
 
 // 更换茶团默认CEO的方法，Update team_members记录中role=CEO的行 user_id 为当前user_id
 func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
-	statement := `UPDATE team_members SET user_id = $1 WHERE team_id = $2 AND role = $3`
+	statement := `UPDATE team_members SET user_id = $1, created_at = $2 WHERE team_id = $3 AND role = $4`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(user_id, teamMember.TeamId, "CEO")
+	_, err = stmt.Exec(user_id, time.Now(), teamMember.TeamId, "CEO")
 	return
 }
 

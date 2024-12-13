@@ -139,61 +139,81 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	keyword := r.PostFormValue("keyword")
+	//检查keyword的文字长度是否>1 and <17
+	keyword_len := len(keyword)
+	if keyword_len < 1 || keyword_len > 17 {
+		Report(w, r, "你好，茶博士摸摸头，说关键词太长了记不住呢，请确认后再试。")
+		return
+	}
 
 	//根据查询类型操作
 	var fPD data.FetchPageData
+	fPD.IsEmpty = true
+
 	switch class_int {
 	case 0:
 		//茶友，user
 		user_list, err := data.SearchUserByNameKeyword(keyword)
 		if err != nil {
-			util.Warning(err, " Cannot search user with SearchUser().")
-			Report(w, r, "你好，茶博士摸摸头，没有找到类似的茶友名称，请换个关键词再试。")
-			return
+			util.Warning(err, " Cannot search user by keyword")
 		}
-		fPD.UserBeanList, err = FetchUserBeanList(user_list)
-		if err != nil {
-			util.Warning(err, " Cannot read user info from session")
-			Report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
-			return
+
+		if len(user_list) >= 1 {
+			fPD.UserBeanList, err = GetUserBeanList(user_list)
+			if err != nil {
+				util.Info(err, " Cannot fetch user bean list given user_list")
+			}
+			if len(fPD.UserBeanList) >= 1 {
+				fPD.IsEmpty = false
+			}
 		}
 
 	case 10:
 		//按user_id查询茶友
 		keyword_int, err := strconv.Atoi(keyword)
 		if err != nil {
-			util.Warning(err, " Cannot convert keyword to int")
-			Report(w, r, "你好，茶博士摸摸头，没有找到类似的茶友名称，请换个关键词再试。")
+			Report(w, r, "你好，茶博士摸摸头，看不懂提交的茶友号，请换个关键词再试。")
 			return
 		}
 		user, err := data.GetUserById(keyword_int)
 		if err != nil {
-			if err == sql.ErrNoRows {
-				Report(w, r, "你好，茶博士摸摸头，找不到这个茶友，请换个茶友号再试。")
-				return
+			if err != sql.ErrNoRows {
+				util.Warning(err, " Cannot get user by keyword_int id")
 			}
-			util.Warning(err, " Cannot search user with SearchUserByUserId().")
-			Report(w, r, "你好，茶博士摸摸头，没有找到类似的茶友名称，请换个关键词再试。")
-			return
 		}
-		userbean, err := FetchUserBean(user)
-		if err != nil {
-			util.Warning(err, " Cannot read user info from session")
-			Report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
-			return
+
+		//如果user是非空
+		if user.Id > 0 {
+			userbean, err := GetUserBean(user)
+			if err != nil {
+				util.Warning(err, "cannot get user-bean given user")
+			} else {
+				fPD.UserBeanList = append(fPD.UserBeanList, userbean)
+				fPD.IsEmpty = false
+			}
 		}
-		fPD.UserBeanList = append(fPD.UserBeanList, userbean)
 
 	case 1:
-		//茶议，thread
-		// thread_list, err := data.SearchThread(keyword)
-		// if err != nil {
-		// 	util.Warning(err, " Cannot search thread with SearchThread().")
-		Report(w, r, "你好，非常抱歉！负责这个检索作业的茶博士还没有出现，尚未能提供此服务。")
-		// 	return
-		// }
+		//查询，茶团简称，team.abbreviation
+		team_list, err := data.SearchTeamByAbbreviation(keyword)
+		if err != nil {
+			util.Warning(err, " Cannot search team by abbreviation")
+		}
+
+		if len(team_list) >= 1 {
+			t_b_list, err := GetTeamBeanList(team_list)
+			if err != nil {
+				util.Warning(err, " Cannot fetch team bean list given team_list")
+			}
+			if len(t_b_list) >= 1 {
+				fPD.TeamBeanList = t_b_list
+				fPD.IsEmpty = false
+			}
+		}
+
 	default:
-		Report(w, r, "你好，茶博士摸摸头，没有找到类似的茶语记录，请换个关键词再试。")
+		Report(w, r, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
+		return
 	}
 	fPD.SessUser = s_u
 

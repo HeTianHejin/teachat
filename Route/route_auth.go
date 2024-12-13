@@ -118,7 +118,7 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//util.Info(newU.Email, "注册新账号ok")
-	t := fmt.Sprintf("%s 你好，注册成功！祝愿你拥有美好品茶时光。", newU.Name)
+	t := fmt.Sprintf("%s 你好，注册成功！请登机，祝愿你拥有美好品茶时光。", newU.Name)
 	Report(w, r, t)
 
 }

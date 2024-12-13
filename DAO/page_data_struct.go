@@ -359,7 +359,12 @@ type ConnectionFriendPageData struct {
 type FetchPageData struct {
 	SessUser User
 
+	IsEmpty bool //查询结果为空
+
+	Count int //查询结果个数
+
 	UserBeanList []UserBean //茶友（用户）资料夹队列
-	//TeamBeanList     []TeamBean
+
+	TeamBeanList []TeamBean //茶团资料夹队列
 	//ThreadBeanList   []ThreadBean
 }

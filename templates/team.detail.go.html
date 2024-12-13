@@ -16,10 +16,10 @@
     <span class="caret"></span>
   </button>
   <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-    <li><a href="/v1/team/edit">修改资料</a></li>
-    <li><a href="/v1/team_member/role">调整角色</a></li>
-    <li><a href="/v1/team_member/fire">开除成员</a></li>
     <li><a href="/v1/search">添加成员</a></li>
+    <li><a href="/v1/team/team_member/role">调整角色</a></li>
+    <li><a href="/v1/team/edit">修改资料</a></li>
+    <li><a href="/v1/team/team_member/remove">移除成员</a></li>
     <li role="separator" class="divider"></li>
     <li><a href="#">解散团队</a></li>
   </ul>
@@ -27,7 +27,7 @@
 
 {{ if .HasApplication }}
 
-<div class="alert alert-info" role="alert">你好，有待处理的加盟申请书！
+<div class="alert alert-info" role="alert" style="margin-top: 1rem;">你好，有待处理的加盟申请书！
   <i class="bi bi-envelope"></i>
   <a href="/v1/team/team_member/application/check?id={{ .Team.Uuid }}">查看 >></a>
 </div>
@@ -168,6 +168,8 @@
 
       </div>
     </div>
+
+    <hr />
     {{ end }}
 
     {{ range .NormalMemberDataList }}
@@ -199,6 +201,7 @@
       </div>
     </div>
 
+    <hr />
     {{ end }}
 
   </div>

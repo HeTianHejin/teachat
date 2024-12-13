@@ -67,6 +67,7 @@ func main() {
 	mux.HandleFunc("/v1/team/team_member/application/check", route.MemberApplyCheck)
 	mux.HandleFunc("/v1/team/team_member/invite", route.HandleInviteMember)
 	mux.HandleFunc("/v1/team/team_member/invitation", route.HandleMemberInvitation)
+	mux.HandleFunc("/v1/team/team_member/role", route.HandleMemberRole)
 	mux.HandleFunc("/v1/team/team_member/quit", route.HandleMemberQuit)
 
 	//defined in route_objective.go

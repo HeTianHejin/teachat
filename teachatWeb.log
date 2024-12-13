@@ -1,2 +1,0 @@
-
-ERROR 2024/12/09 11:33:42 utils.go:69: sql: no rows in result set   Cannot search user given email

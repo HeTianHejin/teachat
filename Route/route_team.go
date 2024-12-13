@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	data "teachat/DAO"
 	util "teachat/Util"
 )
@@ -165,13 +166,14 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	name := r.PostFormValue("name")
+	n := r.PostFormValue("name")
 	// 茶团名称是否在4-24中文字符
-	le := CnStrLen(name)
-	if le < 4 || le > 24 {
+	l := CnStrLen(n)
+	if l < 4 || l > 24 {
 		Report(w, r, "你好，茶博士摸摸头，竟然说茶团名字字数太多或者太少，未能创建新茶团。")
 		return
 	}
+
 	abbr := r.PostFormValue("abbreviation")
 	// 队名简称是否在4-6中文字符
 	lenA := CnStrLen(abbr)
@@ -209,25 +211,34 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检测同名的team是否已经存在，团队不允许同名
-	_, err = data.GetTeamByName(name)
+	_, err = data.GetTeamByName(n)
 	if err == nil {
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个茶团名称已经被占用，请换一个更响亮的团名，再试一次。")
 		return
 	}
-
+	//检测是否包含“自由人”这样的保留关键字，不允许，以免误导其他茶友
+	if strings.Contains(n, "自由人") || strings.Contains(n, "Freelancer") {
+		Report(w, r, "你好，茶团名称不能包含“自由人”这样的保留关键字，请换一个更响亮的团名，再试一次。")
+		return
+	}
 	_, err = data.GetTeamByAbbreviation(abbr)
 	if err == nil {
 		// 重复的简称
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个茶团简称已经被占用，请换一个更响亮的团名，再试一次。")
 		return
 	}
+	//检测abbr中是否包含“自由人”或者“Freelancer”这样不允许使用的保留关键字
+	if strings.Contains(abbr, "自由人") || strings.Contains(abbr, "Freelancer") {
+		Report(w, r, "你好，茶团简称不能包含“自由人”或者“Freelancer”这样的保留关键字，请换一个更响亮的团名简称，再试一次。")
+		return
+	}
 
 	// 将NewTeam草稿存入数据库，class=10/20
 	logo := "teamLogo"
-	team, err := s_u.CreateTeam(name, abbr, mission, logo, class, 1)
+	team, err := s_u.CreateTeam(n, abbr, mission, logo, class, 1)
 	if err != nil {
 		util.Info(err, " At create team")
-		Report(w, r, "你好，茶博士失魂鱼，未能创建你的天团，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
 		return
 	}
 

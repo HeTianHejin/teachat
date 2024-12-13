@@ -22,12 +22,15 @@
             <input type="radio" name="class" id="user_id" style="width: fit-content;" value="10" required />
             <label for="user_id">茶友茶号</label>
 
-            <input type="radio" name="class" id="thread" style="width: fit-content;" value="1" required />
-            <label for="thread">茶议标题</label>
-            <input type="radio" name="class" id="team" style="width: fit-content;" value="2" required />
+            <input type="radio" name="class" id="team" style="width: fit-content;" value="1" required />
             <label for="team">茶团简称</label>
+
+            <input type="radio" name="class" id="thread" style="width: fit-content;" value="2" required />
+            <label for="thread">茶议标题</label>
+
             <input type="radio" name="class" id="objective" style="width: fit-content;" value="3" required />
-            <label for="objective">茶话会名称</label>
+            <label for="objective">茶话会名</label>
+
             <input type="radio" name="class" id="project" style="width: fit-content;" value="4" required />
             <label for="project">茶台名称</label>
          
@@ -36,7 +39,7 @@
 
       <div class="form-group">
         <label for="keyword">关键词：</label>
-        <input type="text" class="form-control" name="keyword" id="keyword" minlength="2" maxlength="42" required autofocus>
+        <input type="text" class="form-control" name="keyword" id="keyword" minlength="1" maxlength="17" required autofocus>
       </div>
      
       <div class="form-group">
@@ -51,8 +54,13 @@
     </div>
   </form>
 
- {{ range .UserBeanList }}
- {{/* 这是查找用户（茶友）结果展示 */}}
+ {{ if .IsEmpty }}
+ <hr />
+ <p>获得 0 个相似记录。</p>
+ <hr />
+ {{ else }}{{/* 这是查找结果非零 */}}
+
+ {{ range .UserBeanList }}{{/* 这是查找用户（茶友）结果展示 */}}
  
  <div class="media">
   <div class="media-left">
@@ -122,11 +130,96 @@
 </div>
 
 <hr />
+{{ end }}{{/* 这是查找用户（茶友）结果队列迭代结束 */}}
 
- {{ else }}{{/* 这是查找用户（茶友）结果为零 */}}
-    <p>没有相关记录。</p>
+
+
+{{ range .TeamBeanList }}
+{{/* 这是查找茶团（团队）结果展示 */}}
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+      {{ if .Open }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/people.svg" alt="茶团旗帜" height="32" width="32">
+      {{ else }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/people-fill.svg" alt="茶团旗帜" height="32" width="32">
+      {{ end }}
+    </a>
+  </div>
+  <div class="media-body">
+    <div class="panel panel-default">
+
+      <div class="panel-heading">
+        <div class="row">
     
- {{ end }} {{/* 这是查找用户（茶友）结果队列迭代结束 */}}
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+          </div>
+          
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+
+              {{ if .Open }}
+              
+              <span class="label label-success">{{ .Team.TeamProperty }}
+                {{ else }}
+                <span class="label label-default">{{ .Team.TeamProperty }}
+                  {{ end }}
+                </span>
+              </span>
+              
+            </span>
+          </div>
+          
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="pull-right" style="font-size: small;">
+              {{if .Founder.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+              {{ end }}
+              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
+              @<span><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+        
+              {{ .CreatedAtDate }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+       
+
+        {{ .Team.Mission }} ...
+      </div>
+    
+      <div class="panel-footer">
+          <span style="margin-inline-end: 20px;" title="团号">
+          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+           {{ .Team.Id }}
+          </span>
+         
+          <span style="margin-inline-end: 20px;">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+             {{ .Count }}
+            </span>
+        <div class="pull-right">
+          <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+          <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+          </a>
+        </div>
+      </div>
+    
+    </div>
+  </div>
+</div>
+<hr />
+{{ end }}{{/* 这是查找到的茶团结果队列迭代结束 */}}
+
+
+{{ end }}{{/* 这是查找结果非零 结束*/}}
+
+
+ 
 
 
  {{ end }}
