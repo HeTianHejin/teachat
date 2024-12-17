@@ -93,17 +93,21 @@ func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//查询用户全部加盟申请书
-	applys, err := data.GetMemberApplicationByUserId(s_u.Id)
+	applies, err := data.GetMemberApplies(s_u.Id)
 	if err != nil {
 		util.Danger(err, "Cannot get applys by user id")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
-	apply_bean_list, err := GetMemberApplicationBeanList(applys)
+	apply_bean_list, err := GetMemberApplicationBeanList(applies)
 	if err != nil {
 		util.Danger(err, "Cannot get apply bean list")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
+	}
+	//截短MemberApplication.Content为66字，方便布局列表预览
+	for _, bean := range apply_bean_list {
+		bean.MemberApplication.Content = Substr(bean.MemberApplication.Content, 66)
 	}
 
 	var mAL data.MemberApplicationList
@@ -655,7 +659,7 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//如果不是创建人，那么就检查一下是否是茶团的ceo
-	manager, err := team.CEO()
+	manager, err := team.MemberCEO()
 	if err != nil {
 		//检查一下err是否是因为teamMember中没有这个team的ceo
 		//如果是，那么就说明当前用户无权管理这个茶团
@@ -702,7 +706,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
-	ceo, err := team.CEO()
+	ceo, err := team.MemberCEO()
 	if err != nil {
 		//检查一下err是否是因为teamMember中没有这个team的ceo
 		//如果是，那么就说明当前用户无权管理这个茶团

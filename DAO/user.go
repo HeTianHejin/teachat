@@ -647,11 +647,11 @@ func (invitation *Invitation) TeamCEO() (user User, err error) {
 	if err != nil {
 		return
 	}
-	ceo, err := team.CEO()
+	member, err := team.MemberCEO()
 	if err != nil {
 		return
 	}
-	err = Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", ceo.UserId).
+	err = Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", member.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }

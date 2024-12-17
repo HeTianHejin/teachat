@@ -97,7 +97,7 @@ func HandleMemberApplication(w http.ResponseWriter, r *http.Request) {
 // POST /v1/team/team_member/application/review
 // 接受 加盟茶团申请书审查人，提交处理（决定）结果
 func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
-	sess, err := Session(r)
+	s, err := Session(r)
 	if err != nil {
 		util.Danger(err, " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -111,9 +111,9 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据会话信息读取茶友资料
-	s_u, err := sess.User()
+	s_u, err := s.User()
 	if err != nil {
-		util.Warning(err, sess.Email, "Cannot get user from session")
+		util.Warning(err, s.Email, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -546,6 +546,22 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//检测当前用户是否向指定茶团，已经提交过加盟申请？而且申请书状态为等待处理（Status<=1）
+	_, err = data.CheckMemberApplicationByTeamIdAndUserId(team.Id, s_u.Id)
+	if err != nil {
+		switch err {
+		case sql.ErrNoRows:
+			break
+		default:
+			util.Danger(err, s_u.Email, " when checking member_application")
+			Report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			return
+		}
+	} else {
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你已经提交过申请书了噢？请确认后再试。")
+		return
+	}
+
 	//检查这个茶团是否已经存在该茶友
 	_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, s_u.Id)
 	if err != nil {
@@ -845,7 +861,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查当前茶友是否团队的Ceo或者founder，是否有权限邀请新成员
-	ceo, err := team.CEO()
+	ceo, err := team.MemberCEO()
 	if err != nil {
 		util.Danger(err, s_u.Email, " Cannot search team ceo")
 		Report(w, r, "你好，未能找到茶团CEO，请确认后再试。")
@@ -1001,7 +1017,7 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, te := range teams {
-		ceo, err := te.CEO()
+		ceo, err := te.MemberCEO()
 		if err != nil {
 			util.Danger(err, "cannot get ceo given team")
 			Report(w, r, "你好，桃李明年能再发，明年闺中知有谁？")

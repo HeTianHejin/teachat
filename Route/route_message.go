@@ -10,23 +10,31 @@ import (
 // 用户信箱
 func Letterbox(w http.ResponseWriter, r *http.Request) {
 	//获取session
-	sess, err := Session(r)
+	s, err := Session(r)
 	if err != nil {
 		util.Danger(err, " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, _ := sess.User()
-	var lbPD data.LetterboxPageData
-	lbPD.InvitationList, err = u.Invitations()
+	s_u, err := s.User()
 	if err != nil {
-		util.Warning(err, u.Email, " Cannot get invitations")
+		util.Danger(err, " Cannot get user")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	var lbPD data.LetterboxPageData
+
+	i_list, err := s_u.Invitations()
+	if err != nil {
+		util.Warning(err, s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 
 	//填写页面资料
-	lbPD.SessUser = u
+	lbPD.SessUser = s_u
+	lbPD.InvitationList = i_list
 
 	//向用户返回接收邀请函的表单页面
 	RenderHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")

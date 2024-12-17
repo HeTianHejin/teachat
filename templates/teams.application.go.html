@@ -19,7 +19,49 @@
 
 </div>
 
+{{/*  这是指定茶友的，全部加盟申请书列表页面  */}}
+
 {{ range .MemberApplicationBeanList }}
+
+<hr />
+<p>志愿茶团：<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></p>
+<p><strong>申请书状态：{{ .Status }}</strong>
+  <a href="/v1/team/team_member/application/detail?id={{ .MemberApplication.Uuid }}"> 详情 >></a></p>
+  
+<div class="media">
+    <div class="media-left">
+      <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+        <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
+      </a>
+    </div>
+
+    <div class="media-body">
+    <h5 class="media-heading">
+      {{ .Author.Name }}
+        <span  style="font-size: small;">
+          {{if .Author.Gender }}
+          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+          {{ else }}
+          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+          {{ end }}
+      </span>
+      
+      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+
+      <span style="font-style: italic;">< {{ .Author.Email }} ></span>
+    </h5>
+     <p>正文预览：</p>
+    <p>{{ .MemberApplication.Content }}...</p>
+    <p>时间：{{ .CreatedAtDate }}</p>
+
+    
+    
+    </div>
+  </div>
+
+  <hr />
+
+
 
 {{ else }}
 <div class="alert alert-info" role="alert">没有加盟申请书记录。

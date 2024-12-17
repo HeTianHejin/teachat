@@ -55,6 +55,7 @@ func main() {
 	mux.HandleFunc("/v1/teams/joined", route.JoinedTeams)
 	mux.HandleFunc("/v1/teams/employed", route.EmployedTeams)
 	mux.HandleFunc("/v1/teams/application", route.ApplyTeams)
+
 	//mux.HandleFunc("/v1/teams/rejected", route.RejectedTeams)
 	// defined in route_group.go
 	mux.HandleFunc("/v1/group/new", route.NewGroup)

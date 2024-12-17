@@ -253,7 +253,7 @@ type TeamBean struct {
 	Count         int  //成员计数
 }
 
-// 查询茶团加盟申请书状态列表
+// 查询某个茶团全部加盟申请书状态列表
 type MemberApplicationList struct {
 	SessUser                  User
 	Team                      Team                    //当前茶团
@@ -269,6 +269,12 @@ type MemberApplicationBean struct {
 	AuthorTeam    Team   // 申请人默认所在的团队
 	CreatedAtDate string //申请时间
 }
+
+//查询某个用户全部加盟茶团申请书状态列表
+// type MemberApplicationListByUser struct {
+// 	SessUser                  User
+// 	MemberApplicationBeanList []MemberApplicationBean //申请书队列
+// }
 
 // 好东西，物资清单
 type GoodsList struct {
@@ -305,6 +311,8 @@ type LetterboxPageData struct {
 	SessUser       User
 	InvitationList []Invitation
 }
+
+//InvitationBean
 
 // 茶团加盟邀请函详情页面数据
 type InvitationDetail struct {

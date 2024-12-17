@@ -529,9 +529,9 @@ func (teamMember *TeamMember) CreatedAtDate() string {
 	return teamMember.CreatedAt.Format(FMT_DATE_CN)
 }
 
-// 查询一个茶团team的CEO，不是founder，是teamMember.Role = “CEO”，返回一个 teamMember TeamMember
+// 查询一个茶团team的MemberCEO，不是founder，是teamMember.Role = “MemberCEO”，返回一个 teamMember TeamMember
 // AWS CodeWhisperer assist in writing
-func (team *Team) CEO() (teamMember TeamMember, err error) {
+func (team *Team) MemberCEO() (teamMember TeamMember, err error) {
 	teamMember = TeamMember{}
 	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "CEO").
 		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)

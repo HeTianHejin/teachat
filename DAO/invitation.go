@@ -14,6 +14,15 @@ type MemberApplication struct {
 	UpdatedAt time.Time
 }
 
+// 申请书状态map
+var MemberApplicationStatus = map[int]string{
+	0: "待处理",
+	1: "已查看",
+	2: "已批准",
+	3: "已婉拒",
+	4: "已过期",
+}
+
 // 根据team_id,查询全部加盟申请书，[]MemberApplication，error
 func GetMemberApplicationByTeamId(team_id int) (member_application_list []MemberApplication, err error) {
 	rows, err := Db.Query("SELECT * FROM member_applications WHERE team_id = $1", team_id)
@@ -59,8 +68,17 @@ func GetMemberApplicationByTeamIdAndStatusCount(team_id int) (count int, err err
 	return
 }
 
+// 检测当前用户是否向指定茶团，已经提交过加盟申请？而且申请书状态为等待处理（Status<=1）
+func CheckMemberApplicationByTeamIdAndUserId(team_id int, user_id int) (member_application MemberApplication, err error) {
+	err = Db.QueryRow("SELECT * FROM member_applications WHERE team_id = $1 AND user_id = $2 AND status <= 1", team_id, user_id).Scan(&member_application.Id, &member_application.Uuid, &member_application.TeamId, &member_application.UserId, &member_application.Content, &member_application.Status, &member_application.CreatedAt, &member_application.UpdatedAt)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // 根据user_id，查询用户全部加盟申请书 []MemberApplication，error
-func GetMemberApplicationByUserId(user_id int) (member_application_list []MemberApplication, err error) {
+func GetMemberApplies(user_id int) (member_application_list []MemberApplication, err error) {
 	rows, err := Db.Query("SELECT * FROM member_applications WHERE user_id = $1", user_id)
 	if err != nil {
 		return
@@ -93,15 +111,6 @@ func GetApplyTeamIdsByUserId(user_id int) (teamIds []int, err error) {
 	}
 	rows.Close()
 	return
-}
-
-// 申请书状态map
-var MemberApplicationStatus = map[int]string{
-	0: "待处理",
-	1: "已查看",
-	2: "已批准",
-	3: "已婉拒",
-	4: "已过期",
 }
 
 // 加盟申请书答复
