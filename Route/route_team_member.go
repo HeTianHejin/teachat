@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-// Handle() /v1/team/team_member/role
+// Handle() /v1/team_member/role
 // 调整茶团成员角色办事窗口
 func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -25,25 +25,71 @@ func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// MemberRole() GET /v1/team/team_member/role?id=
+// MemberRole() GET /v1/team_member/role?id=
 // 取出一张空白茶团成员角色任命书
 func MemberRole(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+	// 读取会话
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	// 根据会话信息读取茶友资料
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	// 读取提交的查询参数
+	vals := r.URL.Query()
+	team_uuid := vals.Get("id")
+
+	//读取目标茶团资料
+	team, err := data.GetTeamByUUID(team_uuid)
+	if err != nil {
+		util.Info(err, "Cannot get team by uuid")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	//检查当前用户是否茶团核心（管理员）
+	// 检查用户是否可以查看，CEO，CTO，CFO，CMO核心成员可以
+	IsCoreMember := false
+
+	coreMembers, err := team.CoreMembers()
+	// 查err内容
+	if err != nil {
+		util.Info(err, " Cannot get core members")
+		Report(w, r, "你好，茶博士失魂鱼，居然说这个茶团是由外星人组织的，请确认后再试。")
+		return
+	}
+	// 检测用户是否茶团管理员
+	for _, member := range coreMembers {
+		if s_u.Id == member.UserId {
+			IsCoreMember = true
+		}
+	}
+
+	if IsCoreMember {
+	}
+
 }
 
-// MemberRole() POST /v1/team/team_member/role?id=
+// MemberRole() POST /v1/team_member/role?id=
 // 提交一个成员角色任命书答复
 func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	panic("unimplemented")
 }
 
-// /v1/team/team_member/invite
+// /v1/team_member/invite
 // 邀请一个指定的新茶友加入封闭式茶团
 func HandleInviteMember(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		//返回邀请团队新成员，即邀请函填写页面
-		InviteMember(w, r)
+		InviteMemberNew(w, r)
 	case "POST":
 		//生成邀请函方法
 		InviteMemberReply(w, r)
@@ -52,13 +98,13 @@ func HandleInviteMember(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// /v1/team/team_member/invitation
+// /v1/team_member/invitation
 // 处理茶团邀请新成员函
 func HandleMemberInvitation(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		//返回邀请函详情页面
-		MemberInvitationDetail(w, r)
+		MemberInvitationRead(w, r)
 	case "POST":
 		//设置邀请函回复方法
 		MemberInvitationReply(w, r)
@@ -67,7 +113,7 @@ func HandleMemberInvitation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// /v1/team/team_member/application/new
+// /v1/team_member/application/new
 // 申请加入一个开放式茶团
 func HandleNewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -81,7 +127,7 @@ func HandleNewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// /v1/team/team_member/application/review
+// /v1/team_member/application/review
 // 审查，处理茶团加盟申请书
 func HandleMemberApplication(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -94,7 +140,7 @@ func HandleMemberApplication(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST /v1/team/team_member/application/review
+// POST /v1/team_member/application/review
 // 接受 加盟茶团申请书审查人，提交处理（决定）结果
 func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
@@ -319,7 +365,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/team/team_member/application/review?id=xxx
+// GET /v1/team_member/application/review?id=xxx
 // 打开新加盟申请书，审查其内容
 func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	// 读取会话
@@ -434,10 +480,10 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//渲染页面
-	RenderHTML(w, &aR, "layout", "navbar.private", "member.application_review")
+	RenderHTML(w, &aR, "layout", "navbar.private", "team.application_review")
 }
 
-// POST /v1/team/team_member/application/new
+// POST /v1/team_member/application/new
 // 递交 茶团加盟申请书，处理窗口
 func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	// 读取会话
@@ -455,7 +501,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	}
 	//读取表单数据
 	team_uuid := r.FormValue("team_uuid")
-	team, err := data.GetTeamByUuid(team_uuid)
+	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Danger(err, team_uuid, "Cannot get team given uuid")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -519,7 +565,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/team/team_member/application/new
+// GET /v1/team_member/application/new
 // 返回 申请加入表单 页面
 func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	// 读取会话
@@ -539,7 +585,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	team_uuid := vals.Get("id")
 	// 读取茶团资料
-	team, err := data.GetTeamByUuid(team_uuid)
+	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Danger(err, team_uuid, "Cannot get team given uuid")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -586,7 +632,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// POST /v1/team/team_member/invitation
+// POST /v1/team_member/invitation
 // 邀请函处理（回复）方法
 func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	//解析表单内容，获取茶友提交的内容
@@ -792,13 +838,14 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		//返回此茶团页面给茶友，成员名单上没有该茶友，示意已经拒绝该邀请
-		team, err := data.GetTeamById(invitation.TeamId)
-		if err != nil {
-			util.Danger(err, s_u.Email, " Cannot get team")
-			Report(w, r, "你好，粗心大意的茶博士还没有找到茶团登记本，请稍后再试。")
-			return
-		}
-		http.Redirect(w, r, "/v1/team/detail?id="+(team.Uuid), http.StatusFound)
+		Report(w, r, "你好，茶博士已经成功记录你的拒绝邀请意愿。")
+		// team, err := data.GetTeamById(invitation.TeamId)
+		// if err != nil {
+		// 	util.Danger(err, s_u.Email, " Cannot get team")
+		// 	Report(w, r, "你好，粗心大意的茶博士还没有找到茶团登记本，请稍后再试。")
+		// 	return
+		// }
+		// http.Redirect(w, r, "/v1/team/detail?id="+(team.Uuid), http.StatusFound)
 		return
 	} else {
 		// 无效的reply 数值
@@ -807,7 +854,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST /v1/team/team_member/invite
+// POST /v1/team_member/invite
 // 提交一封邀请函参数。处理邀请某个看中的茶友到teamId指定的团队事项
 func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 	//获取session
@@ -817,7 +864,12 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	s_u, _ := s.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	//解析表单内容，获取茶友提交的内容
 	err = r.ParseForm()
 	if err != nil {
@@ -826,10 +878,11 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	email := r.PostFormValue("email")
-	if email == "" {
-		Report(w, r, "你好，电子邮箱不能为空，稍后再试。")
+	if ok := VerifyEmailFormat(email); !ok {
+		Report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
 		return
 	}
+
 	i_word := r.PostFormValue("invite_word")
 	//检查一下茶友提交的string，即i_word是否不为空，中文长度小于239字符之间
 	if 1 > CnStrLen(i_word) || CnStrLen(i_word) > 239 {
@@ -854,7 +907,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		return
 	} */
 	//根据茶友提交的teamId，检查是否存在该team
-	team, err := data.GetTeamByUuid(team_uuid)
+	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Danger(err, s_u.Email, " Cannot search team given team_uuid")
 		Report(w, r, "你好，茶博士未能找到这个团队，请确认后再试。")
@@ -959,9 +1012,9 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/team/team_member/invite?id=
+// GET /v1/team_member/invite?id=
 // 编写对某个指定茶友的邀请函
-func InviteMember(w http.ResponseWriter, r *http.Request) {
+func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -990,7 +1043,7 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 	iD.SessUserSurvivalTeams = s_survival_teams
 	iD.SessUserDefaultPlace = s_default_place
 	iD.SessUserBindPlaces = s_places
-	iD.InviteUser = in_user
+	iD.InvitationBean.InviteUser = in_user
 
 	//检查一下s_u茶友是否有权以某个茶团Team的名义发送邀请函
 
@@ -1035,55 +1088,52 @@ func InviteMember(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/team/team_member/invitation?id=
-func MemberInvitationDetail(w http.ResponseWriter, r *http.Request) {
+// GET /v1/team_member/invitation?id=
+// 用户查看收到的某封加盟邀请函详情及处理页面
+func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	//获取session
-	sess, err := Session(r)
+	s, err := Session(r)
 	if err != nil {
 		util.Danger(err, " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	s_u, _ := sess.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Danger(err, " Cannot get user")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 
 	var iD data.InvitationDetail
 
 	//根据茶友提交的Uuid，查询邀请函信息
 	vals := r.URL.Query()
 	invi_uuid := vals.Get("id")
-	invitation, err := data.GetInvitationByUuid(invi_uuid)
+	invi, err := data.GetInvitationByUuid(invi_uuid)
 	if err != nil {
-		util.Danger(err, " Cannot get invitation")
+		//util.Info(err, invi_uuid," Cannot get invitation given uuid")
 		Report(w, r, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
 		return
 	}
 
 	//检查一下当前茶友是否有权查看此邀请函
-	if invitation.InviteEmail != s_u.Email {
-		Report(w, r, "你好，该邀请函不属于您，无法查看。")
+	if invi.InviteEmail != s_u.Email {
+		Report(w, r, "你好，该邀请函不属于您或者权限问题，无法查看。")
 		return
 	}
 
-	//填写页面资料
-	iD.SessUser = s_u
-	iD.Invitation = invitation
-	iD.Team, err = invitation.Team()
+	i_b, err := FetchInvitationBean(invi)
 	if err != nil {
-		util.Danger(err, " Cannot get team")
-		Report(w, r, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
-		return
-	}
-	iD.InviteUser, err = invitation.ToUser()
-	if err != nil {
-		util.Danger(err, " Cannot get user")
-		Report(w, r, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
+		util.Danger(err, invi.Id, " Cannot fetch invitationBean given invitation")
+		Report(w, r, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
 
 	//如果邀请函目前是未读状态=0，则将邀请函的状态改为已读=1
-	if invitation.Status == 0 {
-		invitation.Status = 1
-		err = invitation.Update()
+	if invi.Status == 0 {
+		invi.Status = 1
+		err = invi.Update()
 		if err != nil {
 			util.Danger(err, s_u.Email, " Cannot update invitation")
 			Report(w, r, "你好，茶博士正在努力的更新邀请函状态，请稍后再试。")
@@ -1096,11 +1146,16 @@ func MemberInvitationDetail(w http.ResponseWriter, r *http.Request) {
 		}
 
 	}
+
+	//填写页面资料
+	iD.SessUser = s_u
+	iD.InvitationBean = i_b
+
 	//向茶友返回该邀请函的详细信息
-	RenderHTML(w, &iD, "layout", "navbar.private", "member.invitation")
+	RenderHTML(w, &iD, "layout", "navbar.private", "member.invitation_read")
 }
 
-// GET /v1/team/team_member/quit?id=
+// GET /v1/team_member/quit?id=
 // 退出某个茶团
 func HandleMemberQuit(w http.ResponseWriter, r *http.Request) {
 	Report(w, r, "你好，目前满头大汗的茶博士正在忙于抛砖引玉之中，欢迎加盟茶棚服务。")

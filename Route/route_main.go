@@ -30,7 +30,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tb_list, err = GetThreadBeanList(thread_list)
+	tb_list, err = FetchThreadBeanList(thread_list)
 	if err != nil {
 		util.Warning(err, " Cannot read thread and author list")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
@@ -159,7 +159,7 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(user_list) >= 1 {
-			fPD.UserBeanList, err = GetUserBeanList(user_list)
+			fPD.UserBeanList, err = FetchUserBeanList(user_list)
 			if err != nil {
 				util.Info(err, " Cannot fetch user bean list given user_list")
 			}
@@ -184,7 +184,7 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 
 		//如果user是非空
 		if user.Id > 0 {
-			userbean, err := GetUserBean(user)
+			userbean, err := FetchUserBean(user)
 			if err != nil {
 				util.Warning(err, "cannot get user-bean given user")
 			} else {
@@ -201,7 +201,7 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(team_list) >= 1 {
-			t_b_list, err := GetTeamBeanList(team_list)
+			t_b_list, err := FetchTeamBeanList(team_list)
 			if err != nil {
 				util.Warning(err, " Cannot fetch team bean list given team_list")
 			}

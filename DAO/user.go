@@ -2,6 +2,8 @@ package data
 
 import (
 	"database/sql"
+	"errors"
+	util "teachat/Util"
 	"time"
 )
 
@@ -629,7 +631,7 @@ func (team_member *TeamMember) User() (user User, err error) {
 }
 
 // 获取邀请函的茶团创建人
-func (invitation *Invitation) TeamFounder() (user User, err error) {
+func (invitation *Invitation) Founder() (user User, err error) {
 	user = User{}
 	team, err := GetTeamById(invitation.TeamId)
 	if err != nil {
@@ -641,14 +643,20 @@ func (invitation *Invitation) TeamFounder() (user User, err error) {
 }
 
 // 获取邀请函的茶团CEO
-func (invitation *Invitation) TeamCEO() (user User, err error) {
+func (invitation *Invitation) CEO() (user User, err error) {
 	user = User{}
+	//过滤系统保留的茶团号
+	if invitation.TeamId <= 2 {
+		return user, errors.New("invalided Invitation's team-id")
+	}
 	team, err := GetTeamById(invitation.TeamId)
 	if err != nil {
+		util.Warning(err, invitation.Id, "cannot fetch team given team-id")
 		return
 	}
 	member, err := team.MemberCEO()
 	if err != nil {
+		util.Warning(err, invitation.Id, "cannot fetch team member given team-id")
 		return
 	}
 	err = Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", member.UserId).
@@ -672,7 +680,7 @@ func (user *User) InvitationsCount() (count int) {
 	return
 }
 
-// ��据invite_email查询一个User收到的未查看class=0��请函数量
+// ��据invite_email查询一个User收到的未查看class=0请函数量
 // AWS CodeWhisperer assist in writing
 func (user *User) InvitationUnviewedCount() (count int) {
 	rows, err := Db.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 0", user.Email)

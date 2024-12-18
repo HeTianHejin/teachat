@@ -1,11 +1,11 @@
 {{ define "content" }}
 
-{{/* 这是 某个茶团邀请新成员，邀请函详情页面 */}}
+{{/* 这是 某个茶团邀请对象，对邀请函阅读处理页面 */}}
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
     <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}@茶团</a></li>
-    <li class="active">加盟邀请函</li>
+    <li class="active">阅读加盟邀请函</li>
 </ol>
 
 
@@ -51,7 +51,7 @@
                     {{ .Invitation.InviteWord }}
                 </p>
                 <p class="text-right">茶团CEO：
-                    <strong>{{ .Invitation.TeamCEO.Name }}</strong> 此致</p>
+                    <strong>{{ .Invitation.CEO.Name }}</strong> 此致</p>
 
                 <p>拟邀任茶团角色为: {{ .Invitation.Role }}</p>
             </div>
@@ -71,7 +71,7 @@
         处理邀请函
     </div>
     <div class="panel-body">
-        <form class="form-horizontal" role="form" action="/v1/team/team_member/invitation" method="post">
+        <form class="form-horizontal" role="form" action="/v1/team_member/invitation" method="post">
             <div class="form-group">
                 <fieldset>
                     <legend style="font-size: small;">
@@ -125,8 +125,7 @@
     </div>
 </div>
 
-{{/* 展示邀请函回复 */}}
 
-{{ end }}
+{{ end }}{{/* 展示邀请函回复结束 */}}
 
 {{ end }}

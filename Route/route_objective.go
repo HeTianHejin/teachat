@@ -65,7 +65,12 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
-	u, _ := s.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	// 默认的茶话会封面图名
 	cover := "default-ob-cover"
 	// 读取http请求中form的数据
@@ -82,7 +87,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check the given team_id is valid
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, u.Id)
+	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, s_u.Id)
 	if err != nil {
 		Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
 		return
@@ -142,7 +147,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		Body:   body,
 		Cover:  cover,
 		Class:  class,
-		UserId: u.Id,
+		UserId: s_u.Id,
 		TeamId: team_id,
 	}
 
@@ -230,7 +235,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: aO.Id,
 	}
 	// 发送消息给两个在线用户
-	if err = AcceptMessageSendExceptUserId(u.Id, mess); err != nil {
+	if err = AcceptMessageSendExceptUserId(s_u.Id, mess); err != nil {
 		util.Warning(err, "Cannot send 2 acceptMessage")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶，请稍后再试。")
 		return
@@ -275,7 +280,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	// 	}
 	// }
 
-	oSpD.ObjectiveBeanList, err = GetObjectiveBeanList(objective_list)
+	oSpD.ObjectiveBeanList, err = FetchObjectiveBeanList(objective_list)
 	if err != nil {
 		util.Warning(err, " Cannot read objective-bean list")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
@@ -353,7 +358,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，这个茶话会主人据说因为很cool，资料似乎被外星人看中带走了。")
 		return
 	}
-	oD.ObjectiveBean, err = GetObjectiveBean(ob)
+	oD.ObjectiveBean, err = FetchObjectiveBean(ob)
 	if err != nil {
 		util.Warning(err, " Cannot read objective-bean list")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
@@ -361,7 +366,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	//fetch public projects
 	project_list, _ := oD.ObjectiveBean.Objective.GetPublicProjects()
-	oD.ProjectBeanList, err = GetProjectBeanList(project_list)
+	oD.ProjectBeanList, err = FetchProjectBeanList(project_list)
 	if err != nil {
 		util.Warning(err, " Cannot read objective-bean list")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
@@ -390,7 +395,12 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//已经登录！
-	s_u, _ := s.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	oD.IsGuest = false
 	// 记录用户查询的资讯
 	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {

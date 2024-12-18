@@ -1,0 +1,89 @@
+{{ define "content" }}
+
+{{/* 这是 某个茶团管理员，查看邀请函(状态/进度情况)详情页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/detail?id={{ .InvitationBean.Team.Uuid }}">{{ .InvitationBean.Team.Name }}@茶团</a></li>
+    <li class="active">查看邀请函进度</li>
+</ol>
+
+{{ with .InvitationBean }}
+
+<div class="alert alert-info">
+    <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+    邀请函当前状态：<strong>{{ .Status }}</strong>
+</div>
+
+<div class="media">
+    <div class="media-left">
+        <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+            <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="团队团标">
+        </a>
+    </div>
+
+    <div class="media-body">
+        <div class="panel panel-info">
+
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; font-size: smaller;text-align: center;">
+                            {{ .Team.CreatedAtDate }}
+                        </span>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; text-align: right;">
+                            <span class="label label-success">{{ .Team.TeamProperty }}
+                            </span>
+                        </span>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <h4 class="text-center">茶团邀请函</h4>
+                <p>
+                    致 <strong>{{ .InviteUser.Name }}</strong> 阁下：
+                </p>
+                <p>
+                    {{ .Invitation.InviteWord }}
+                </p>
+                <p class="text-right">茶团CEO：
+                    <strong>{{ .Invitation.CEO.Name }}</strong> 此致</p>
+
+                <p>拟邀任茶团角色为: {{ .Invitation.Role }}</p>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{{ else }}
+邀请函内容为空。
+{{ end }}
+
+
+{{ if .Invitation.Check }}
+
+{{/* 展示邀请函回复 */}}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        收到答复：
+    </div>
+    <div class="panel-body">
+        <p>{{ .Invitation.Reply.ReplyWord }}</p>
+        <span style="font-size: smaller;"> {{ .Invitation.ReplyCreatedAtDate }}</span>
+    </div>
+</div>
+{{ end }}{{/* 展示邀请函回复结束 */}}
+
+
+
+{{ end }}

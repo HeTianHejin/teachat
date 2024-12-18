@@ -31,7 +31,7 @@
 
 
 
-{{ range .InvitationList }}
+{{ range .InvitationBeanList }}
 
 <div class="panel panel-default">
 
@@ -40,18 +40,18 @@
     <div class="row">
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
     
-          <a href="/v1/user/biography?id={{ .TeamCEO.Uuid }}">{{ .TeamCEO.Name }}</a>
+          <a href="/v1/user/biography?id={{ .CEO.Uuid }}">{{ .CEO.Name }}</a>
        
       </div>
 
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
         <span style="display: block; font-size: smaller;text-align: center;">
-          {{ .CreatedAtDate }}
+          {{ .Invitation.CreatedAtDate }}
         </span>
       </div>
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
         <span style="display: block; text-align: right;">
-          <span class="label label-success">{{ .GetStatus }}
+          <span class="label label-success">{{ .Status }}
           </span>
         </span>
       </div>
@@ -60,13 +60,13 @@
   </div>
 
   <div class="panel-body">
-    <a href="/v1/team/team_member/invitation?id={{ .Uuid }}">
+    <a href="/v1/team_member/invitation?id={{ .Invitation.Uuid }}">
       
       <h3>茶团邀请函</h3>
     </a>
 
     <p>
-      受邀请人邮箱：{{ .InviteEmail }}
+      受邀请人邮箱：{{ .Invitation.InviteEmail }}
     </p>
     <p>
       发自：<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>@茶团

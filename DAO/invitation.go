@@ -364,7 +364,7 @@ func (invitation *Invitation) Update() (err error) {
 
 // 茶团team发送的全部邀请函-资料
 func (team *Team) Invitations() (invitations []Invitation, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status FROM invitations WHERE team_id = $1", team.Id)
+	rows, err := Db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status FROM invitations WHERE team_id = $1 ORDER BY created_at DESC", team.Id)
 	if err != nil {
 		return
 	}
@@ -492,7 +492,7 @@ func (teamMember *TeamMember) InvitationReplyCreatedAtDate() string {
 // 根据invite_email查询一个User收到的全部邀请函
 // AWS CodeWhisperer assist in writing
 func (user *User) Invitations() (invitations []Invitation, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status FROM invitations WHERE invite_email = $1", user.Email)
+	rows, err := Db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status FROM invitations WHERE invite_email = $1 ORDER BY created_at DESC", user.Email)
 	if err != nil {
 		return
 	}

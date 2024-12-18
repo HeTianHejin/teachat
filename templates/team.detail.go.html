@@ -16,10 +16,11 @@
     <span class="caret"></span>
   </button>
   <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-    <li><a href="/v1/search">添加成员</a></li>
-    <li><a href="/v1/team/team_member/role">调整角色</a></li>
-    <li><a href="/v1/team/edit">修改资料</a></li>
-    <li><a href="/v1/team/team_member/remove">移除成员</a></li>
+    <li><a href="/v1/search">邀请成员</a></li>
+    <li><a href="/v1/team/invitations?id={{ .Team.Uuid }}">查看邀请</a></li>
+    <li><a href="/v1/team_member/role?id={{ .Team.Uuid }}">调整角色</a></li>
+    <li><a href="/v1/team/edit?id={{ .Team.Uuid }}">修改资料</a></li>
+    <li><a href="/v1/team_member/remove?id={{ .Team.Uuid }}">移除成员</a></li>
     <li role="separator" class="divider"></li>
     <li><a href="#">解散团队</a></li>
   </ul>
@@ -29,7 +30,7 @@
 
 <div class="alert alert-info" role="alert" style="margin-top: 1rem;">你好，有待处理的加盟申请书！
   <i class="bi bi-envelope"></i>
-  <a href="/v1/team/team_member/application/check?id={{ .Team.Uuid }}">查看 >></a>
+  <a href="/v1/team_member/application/check?id={{ .Team.Uuid }}">查看 >></a>
 </div>
 
 {{ end }}{{/*  检查是否有新的加盟申请书结束  */}}
@@ -46,7 +47,7 @@
 {{ end }}{{/*  检查是否核心管理成员结束  */}}
 {{ else }}{{/*  不是茶团成员  */}}
 <span style="margin-inline-end: 30px;">
-  <a href="/v1/team/team_member/application/new?id={{ .Team.Uuid }}">申请加盟</a>
+  <a href="/v1/team_member/application/new?id={{ .Team.Uuid }}">申请加盟</a>
 </span>
 {{ end }}{{/*  检查是否团队成员结束  */}}
 

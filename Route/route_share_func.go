@@ -40,14 +40,14 @@ func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 }
 
 // Fetch userbean given user 根据user参数，查询用户所得资料荚,包括默认团队，全部已经加入的状态正常团队,成为核心团队，
-func GetUserBean(user data.User) (userbean data.UserBean, err error) {
+func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	userbean.User = user
 
 	default_team, err := user.GetLastDefaultTeam()
 	if err != nil {
 		return
 	}
-	teambean, err := GetTeamBean(default_team)
+	teambean, err := FetchTeamBean(default_team)
 	if err != nil {
 		return
 	}
@@ -57,7 +57,7 @@ func GetUserBean(user data.User) (userbean data.UserBean, err error) {
 	if err != nil {
 		return
 	}
-	userbean.ManageTeamBeanList, err = GetTeamBeanList(team_list_core)
+	userbean.ManageTeamBeanList, err = FetchTeamBeanList(team_list_core)
 	if err != nil {
 		return
 	}
@@ -66,7 +66,7 @@ func GetUserBean(user data.User) (userbean data.UserBean, err error) {
 	if err != nil {
 		return
 	}
-	userbean.JoinTeamBeanList, err = GetTeamBeanList(team_list_normal)
+	userbean.JoinTeamBeanList, err = FetchTeamBeanList(team_list_normal)
 	if err != nil {
 		return
 	}
@@ -75,9 +75,9 @@ func GetUserBean(user data.User) (userbean data.UserBean, err error) {
 }
 
 // fetch userbean_list given []user
-func GetUserBeanList(user_list []data.User) (userbean_list []data.UserBean, err error) {
+func FetchUserBeanList(user_list []data.User) (userbean_list []data.UserBean, err error) {
 	for _, user := range user_list {
-		userbean, err := GetUserBean(user)
+		userbean, err := FetchUserBean(user)
 		if err != nil {
 			return nil, err
 		}
@@ -134,7 +134,7 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, tea
 }
 
 // 根据给出的thread_list参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
-func GetThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadBean, err error) {
+func FetchThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadBean, err error) {
 	var oablist []data.ThreadBean
 	// 截短ThreadList中thread.Body文字长度为168字符,
 	// 展示时长度接近，排列比较整齐，最小惊讶原则？效果比较nice
@@ -142,7 +142,7 @@ func GetThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadB
 		thread_list[i].Body = Substr(thread_list[i].Body, 168)
 	}
 	for _, thread := range thread_list {
-		ThreadBean, err := GetThreadBean(thread)
+		ThreadBean, err := FetchThreadBean(thread)
 		if err != nil {
 			return nil, err
 		}
@@ -153,7 +153,7 @@ func GetThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadB
 }
 
 // 根据给出的thread参数，去获取对应的茶议，附属品味计数，作者资料，作者发帖时候选择的茶团，费用和费时。
-func GetThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
+func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
 	var tB data.ThreadBean
 	tB.Thread = thread
 	tB.Status = thread.Status()
@@ -179,13 +179,13 @@ func GetThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
 }
 
 // 根据给出的objectiv_list参数，去获取对应的茶话会（objective），截短正文保留前168字符，附属茶台计数，发起人资料，发帖时候选择的茶团。然后按结构填写返回资料荚。
-func GetObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []data.ObjectiveBean, err error) {
+func FetchObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []data.ObjectiveBean, err error) {
 	// 截短ObjectiveList中objective.Body文字长度为168字符,
 	for i := range objectiv_list {
 		objectiv_list[i].Body = Substr(objectiv_list[i].Body, 168)
 	}
 	for _, obj := range objectiv_list {
-		ob, err := GetObjectiveBean(obj)
+		ob, err := FetchObjectiveBean(obj)
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +195,7 @@ func GetObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []d
 }
 
 // 根据给出的objectiv参数，去获取对应的茶话会（objective），附属茶台计数，发起人资料，作者发贴时选择的茶团。然后按结构填写返回资料荚。
-func GetObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err error) {
+func FetchObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err error) {
 	var oB data.ObjectiveBean
 
 	oB.Objective = o
@@ -223,13 +223,13 @@ func GetObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err e
 }
 
 // 据给出的project_list参数，去获取对应的茶台（project），截短正文保留前168字符，附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
-func GetProjectBeanList(project_list []data.Project) (ProjectBeanList []data.ProjectBean, err error) {
+func FetchProjectBeanList(project_list []data.Project) (ProjectBeanList []data.ProjectBean, err error) {
 	// 截短ObjectiveList中objective.Body文字长度为168字符,
 	for i := range project_list {
 		project_list[i].Body = Substr(project_list[i].Body, 168)
 	}
 	for _, pro := range project_list {
-		pb, err := GetProjectBean(pro)
+		pb, err := FetchProjectBean(pro)
 		if err != nil {
 			return nil, err
 		}
@@ -239,7 +239,7 @@ func GetProjectBeanList(project_list []data.Project) (ProjectBeanList []data.Pro
 }
 
 // 据给出的project参数，去获取对应的茶台（project），附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
-func GetProjectBean(project data.Project) (ProjectBean data.ProjectBean, err error) {
+func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err error) {
 	var pb data.ProjectBean
 	pb.Project = project
 	if project.Class == 1 {
@@ -271,9 +271,9 @@ func GetProjectBean(project data.Project) (ProjectBean data.ProjectBean, err err
 }
 
 // 据给出的post_list参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回。
-func GetPostBeanList(post_list []data.Post) (PostBeanList []data.PostBean, err error) {
+func FetchPostBeanList(post_list []data.Post) (PostBeanList []data.PostBean, err error) {
 	for _, pos := range post_list {
-		postBean, err := GetPostBean(pos)
+		postBean, err := FetchPostBean(pos)
 		if err != nil {
 			return nil, err
 		}
@@ -283,7 +283,7 @@ func GetPostBeanList(post_list []data.Post) (PostBeanList []data.PostBean, err e
 }
 
 // 据给出的post参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回。
-func GetPostBean(post data.Post) (PostBean data.PostBean, err error) {
+func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 	PostBean.Post = post
 	PostBean.Attitude = post.Atti()
 	PostBean.Count = post.NumReplies()
@@ -304,7 +304,7 @@ func GetPostBean(post data.Post) (PostBean data.PostBean, err error) {
 }
 
 // 据给出的team参数，去获取对应的茶团资料，是否开放，成员计数，发起日期，发起人（Founder）及其默认团队，然后按结构拼装返回。
-func GetTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
+func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 	TeamBean.Team = team
 	if team.Class == 1 {
 		TeamBean.Open = true
@@ -324,9 +324,9 @@ func GetTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 }
 
 // 根据给出的茶团队列，查询，获取对应的茶团资料夹
-func GetTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err error) {
+func FetchTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err error) {
 	for _, tea := range team_list {
-		teamBean, err := GetTeamBean(tea)
+		teamBean, err := FetchTeamBean(tea)
 		if err != nil {
 			return nil, err
 		}
@@ -336,7 +336,7 @@ func GetTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err e
 }
 
 // 根据给出的MemberApplication参数，去获取对应的加盟申请书资料夹
-func GetMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBean data.MemberApplicationBean, err error) {
+func FetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBean data.MemberApplicationBean, err error) {
 	MemberApplicationBean.MemberApplication = ma
 	MemberApplicationBean.Status = ma.GetStatus()
 
@@ -361,9 +361,9 @@ func GetMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBean 
 	MemberApplicationBean.CreatedAtDate = ma.CreatedAtDate()
 	return MemberApplicationBean, nil
 }
-func GetMemberApplicationBeanList(ma_list []data.MemberApplication) (MemberApplicationBeanList []data.MemberApplicationBean, err error) {
+func FetchMemberApplicationBeanList(ma_list []data.MemberApplication) (MemberApplicationBeanList []data.MemberApplicationBean, err error) {
 	for _, ma := range ma_list {
-		maBean, err := GetMemberApplicationBean(ma)
+		maBean, err := FetchMemberApplicationBean(ma)
 		if err != nil {
 			return nil, err
 		}
@@ -372,8 +372,46 @@ func GetMemberApplicationBeanList(ma_list []data.MemberApplication) (MemberAppli
 	return
 }
 
+// FetchInvitationBean() 根据给出的Invitation参数，去获取对应的邀请书资料夹
+func FetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error) {
+	I_B.Invitation = i
+
+	I_B.Team, err = i.Team()
+	if err != nil {
+		util.Warning(err, " Cannot read invitation default team")
+		return I_B, err
+	}
+
+	I_B.CEO, err = i.CEO()
+	if err != nil {
+		util.Warning(err, " Cannot fetch team CEO given invitation")
+		return I_B, err
+	}
+
+	I_B.InviteUser, err = i.ToUser()
+	if err != nil {
+		util.Warning(err, " Cannot read invitation invite user")
+		return I_B, err
+	}
+
+	I_B.Status = i.GetStatus()
+	return I_B, nil
+}
+
+// FetchInvitationBeanList() 根据给出的Invitation列表参数，去获取对应的邀请书资料夹列表
+func FetchInvitationBeanList(i_list []data.Invitation) (I_B_List []data.InvitationBean, err error) {
+	for _, i := range i_list {
+		iBean, err := FetchInvitationBean(i)
+		if err != nil {
+			return nil, err
+		}
+		I_B_List = append(I_B_List, iBean)
+	}
+	return
+}
+
 // 据给出的 group 参数，去获取对应的 group 资料，是否开放，下属茶团计数，发起日期，发起人（Founder）及其默认团队，第一团队，然后按结构拼装返回。
-func GetGroupBean(group data.Group) (GroupBean data.GroupBean, err error) {
+func FetchGroupBean(group data.Group) (GroupBean data.GroupBean, err error) {
 	var gb data.GroupBean
 	gb.Group = group
 	if group.Class == 1 {
@@ -489,7 +527,12 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 		RenderHTML(w, &userBPD, "layout", "navbar.public", "feedback")
 		return
 	}
-	s_u, _ := s.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	userBPD.SessUser = s_u
 
 	// 记录用户最后查询的资讯

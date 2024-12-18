@@ -23,7 +23,7 @@ drop table if exists new_message_counts;
 drop table if exists acceptance;
 drop table if exists teams;
 drop table if exists team_members;
-drop table if exists team_roles;
+drop table if exists team_member_role_notices;
 drop table if exists invitations;
 drop table if exists invitation_replies;
 drop table if exists families;
@@ -601,6 +601,22 @@ create table team_members (
   updated_at             timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
+
+create table team_member_role_notices (
+  id                     serial primary key,
+  uuid                   varchar(64) not null unique,
+  team_id                integer references teams(id),
+  ceo_id                 integer references users(id),
+  member_id              integer references users(id),
+  old_role               varchar(64),
+  new_role               varchar(64),
+  title                  varchar(64),
+  content                text,
+  status                 integer,
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 create table project_invited_teams (
   id                     serial primary key,
   project_id             integer references projects(id),
@@ -617,18 +633,7 @@ create table objective_invited_teams (
   updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-create table team_roles (
-  id                     serial primary key,
-  uuid                   varchar(64) not null unique,
-  team_id                integer references teams(id),
-  team_ceo_user_id       integer references users(id),
-  target_team_member_id  integer references team_members(id),
-  role                   varchar(64),
-  word                   text,
-  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  check_team_member_id   integer references team_members(id),
-  check_at               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-); 
+
 
 create table invitations (
   id                   serial primary key,

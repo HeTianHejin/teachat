@@ -33,7 +33,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "报告，大王，未能找到茶友的资料！")
 		return
 	}
-	uB, err = GetUserBean(user)
+	uB, err = FetchUserBean(user)
 	if err != nil {
 		util.Warning(err, " 未能读取用户信息！")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
@@ -172,9 +172,14 @@ func Friend(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据会话读取当前用户信息
-	u, _ := s.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	var cFPData data.ConnectionFriendPageData
-	cFPData.SessUser = u
+	cFPData.SessUser = s_u
 
 	RenderHTML(w, &cFPData, "layout", "navbar.private", "connection.friend")
 }

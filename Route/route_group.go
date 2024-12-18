@@ -161,7 +161,7 @@ func GroupDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 读取集团资料荚
-	gb, err := GetGroupBean(g)
+	gb, err := FetchGroupBean(g)
 	if err != nil {
 		Report(w, r, "你好，茶博士摸摸头，居然说集团可能不存在，未能查看集团详情。")
 		return
@@ -174,7 +174,7 @@ func GroupDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	// 读取第一管理团队
 	f_team, _ := data.GetTeamById(g.FirstTeamId)
-	gd.FirstTeamBean, err = GetTeamBean(f_team)
+	gd.FirstTeamBean, err = FetchTeamBean(f_team)
 	if err != nil {
 		Report(w, r, "你好，����������头，��然说集��可能存在黑��，未能查看集��详情。")
 		return
@@ -188,7 +188,7 @@ func GroupDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	gd.TeamBeanList, err = GetTeamBeanList(team_list)
+	gd.TeamBeanList, err = FetchTeamBeanList(team_list)
 	if err != nil {
 		Report(w, r, "你好，茶博士摸摸头，居然说集团可能不存在，未能查看集团详情。")
 		return

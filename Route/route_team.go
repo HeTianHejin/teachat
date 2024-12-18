@@ -29,7 +29,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	uuid := r.URL.Query().Get("id")
 
 	//查询目标茶团
-	team, err := data.GetTeamByUuid(uuid)
+	team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Danger(err, uuid, "Cannot get team by given uuid")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
@@ -55,7 +55,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
-	apply_bean_list, err := GetMemberApplicationBeanList(applies)
+	apply_bean_list, err := FetchMemberApplicationBeanList(applies)
 	if err != nil {
 		util.Danger(err, "Cannot get apply bean list")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
@@ -74,7 +74,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	mAL.MemberApplicationBeanList = apply_bean_list
 
 	// 渲染页面
-	RenderHTML(w, &mAL, "layout", "navbar.private", "team.applications_check")
+	RenderHTML(w, &mAL, "layout", "navbar.private", "team.applications")
 
 }
 
@@ -99,7 +99,7 @@ func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
-	apply_bean_list, err := GetMemberApplicationBeanList(applies)
+	apply_bean_list, err := FetchMemberApplicationBeanList(applies)
 	if err != nil {
 		util.Danger(err, "Cannot get apply bean list")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
@@ -287,7 +287,7 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
-	tS.TeamBeanList, err = GetTeamBeanList(team_list)
+	tS.TeamBeanList, err = FetchTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
@@ -321,7 +321,7 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
-	tS.TeamBeanList, err = GetTeamBeanList(team_list)
+	tS.TeamBeanList, err = FetchTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
@@ -363,7 +363,7 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		util.Info(err, " Cannot get hold teams")
 		return
 	}
-	ts.TeamBeanList, err = GetTeamBeanList(team_list)
+	ts.TeamBeanList, err = FetchTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
@@ -396,7 +396,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
-	tS.TeamBeanList, err = GetTeamBeanList(team_list)
+	tS.TeamBeanList, err = FetchTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
@@ -424,7 +424,7 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
 		return
 	}
-	ts.TeamBeanList, err = GetTeamBeanList(team_list)
+	ts.TeamBeanList, err = FetchTeamBeanList(team_list)
 	if err != nil {
 		util.Info(err, " Cannot get team bean list")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
@@ -441,7 +441,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	//获取茶团资料
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
-	te, err := data.GetTeamByUuid(uuid)
+	te, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
 		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
@@ -637,7 +637,7 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	}
 	//一次管理一个茶团，根据提交的team.Uuid来确定
 	//这个茶团是否存在？
-	team, err := data.GetTeamByUuid(r.FormValue("id"))
+	team, err := data.GetTeamByUUID(r.FormValue("id"))
 	if err != nil {
 		util.Info(err, " Cannot get this team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
@@ -686,11 +686,17 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 
 // CoreManage() 处理用户管理团队核心成员角色事务
 func CoreManage(w http.ResponseWriter, r *http.Request) {
-	sess, err := Session(r)
+	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 	}
-	u, _ := sess.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, " Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
 	//检查当前用户是否具备管理此core角色的权限
 	//检查一下是否是茶团的ceo，如果是，那么就可以管理核心角色
 	team_id, err := strconv.Atoi(r.FormValue("team_id"))
@@ -721,7 +727,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	if u.Id != ceo.UserId {
+	if s_u.Id != ceo.UserId {
 		Report(w, r, "你好，您无权管理此茶团。")
 		return
 	}
@@ -784,16 +790,21 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, _ := s.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	uuid := r.FormValue("team_uuid")
-	team, err := data.GetTeamByUuid(uuid)
+	team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		Report(w, r, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
 	}
 
 	// 检查team的创建者
-	if u.Id == team.FounderId {
+	if s_u.Id == team.FounderId {
 		//如果是创建者，那么就可以上传图标
 		//读取上传的图标
 		ProcessUploadAvatar(w, r, team.Uuid)
@@ -809,16 +820,21 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, _ := s.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	uuid := r.URL.Query().Get("id")
-	team, err := data.GetTeamByUuid(uuid)
+	team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		Report(w, r, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
 	}
 
 	// 检查team的创建者
-	if u.Id == team.FounderId {
+	if s_u.Id == team.FounderId {
 		//如果是创建者，那么就可以上传图标
 
 		RenderHTML(w, &uuid, "layout", "navbar.private", "team_avatar.upload")
@@ -827,9 +843,9 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 	Report(w, r, "你好，茶博士摸摸头，居然说只有团建人可以修改这个茶团相关资料。")
 }
 
-// GET /v1/team//Invitations?id=
+// GET /v1/team//invitations?id=
 // 查询根据Uuid指定茶团team发送的全部邀请函
-func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
+func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := Session(r)
 	if err != nil {
@@ -837,11 +853,16 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, _ := s.User()
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	//根据用户提交的Uuid，查询获取团队信息
 	v := r.URL.Query()
 	tUid := v.Get("id")
-	team, err := data.GetTeamByUuid(tUid)
+	team, err := data.GetTeamByUUID(tUid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
 		Report(w, r, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
@@ -850,40 +871,119 @@ func ReviewInvitations(w http.ResponseWriter, r *http.Request) {
 
 	var isPD data.InvitationsPageData
 	/// 填写页面资料
-	isPD.SessUser = u
+	isPD.SessUser = s_u
 	isPD.Team = team
 
 	// 根据用户提交的Uuid，查询该茶团发送的全部邀请函
 	is, err := team.Invitations()
 	if err != nil {
-		util.Info(err, u.Email, " Cannot get invitations")
+		util.Info(err, s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，茶博士正在努力的查找茶团发送的邀请函，请稍后再试。")
 		return
 	}
-	//检查查询结果集是否为空
-	if len(is) == 0 {
-		Report(w, r, "你好，该茶团还没有发送过任何邀请函。")
-		return
-	}
+
 	//填写页面资料
 	isPD.InvitationList = is
 
 	// 检查用户是否可以查看，CEO，CTO，CFO，CMO核心成员可以
+	IsCoreMember := false
+
 	coreMembers, err := team.CoreMembers()
-	// ���查err内容
+	// 查err内容
 	if err != nil {
 		util.Info(err, " Cannot get core members")
 		Report(w, r, "你好，茶博士失魂鱼，居然说这个茶团是由外星人组织的，请确认后再试。")
 		return
 	}
-	// ���查用户是否在����中
+	// 检测用户是否茶团管理员
 	for _, member := range coreMembers {
-		if u.Id == member.UserId {
-			//向用户返回接收邀请函的表单页面
-			RenderHTML(w, &isPD, "layout", "navbar.private", "team.invitations")
-			return
+		if s_u.Id == member.UserId {
+			IsCoreMember = true
 		}
 	}
 
-	Report(w, r, "你好，蛮不讲理的茶博士竟然说，只有茶团核心成员才能查看邀请函发送记录。")
+	if IsCoreMember {
+		//say yes,向用户返回接收邀请函的表单页面
+		RenderHTML(w, &isPD, "layout", "navbar.private", "team.invitations")
+		return
+	} else {
+		// say no
+		Report(w, r, "你好，蛮不讲理的茶博士竟然说，只有茶团核心成员才能查看邀请函发送记录。")
+		return
+	}
+
+}
+
+// GET /v1/team//invitation?id=
+// 根据Uuid查看某个茶团已发出指定的邀请函
+func InvitationView(w http.ResponseWriter, r *http.Request) {
+	//获取session
+	s, err := Session(r)
+	if err != nil {
+		util.Info(err, " Cannot get session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Info(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	//根据用户提交的Uuid，查询获取邀请函信息
+	v := r.URL.Query()
+	i_uuid := v.Get("id")
+	in, err := data.GetInvitationByUuid(i_uuid)
+	if err != nil {
+		util.Info(err, " Cannot get invitation")
+		Report(w, r, "你好，茶博士失魂鱼，未能找到这个邀请函，请稍后再试。")
+		return
+	}
+
+	team, err := in.Team()
+	if err != nil {
+		util.Warning(err, " Cannot get team given invitation")
+		Report(w, r, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
+		return
+	}
+
+	var iD data.InvitationDetail
+	/// 填写页面资料
+	iD.SessUser = s_u
+	i_b, err := FetchInvitationBean(in)
+	if err != nil {
+		util.Warning(err, " Cannot get invitation bean")
+		Report(w, r, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
+		return
+	}
+
+	iD.InvitationBean = i_b
+
+	// 检查用户是否可以查看，CEO，CTO，CFO，CMO核心成员可以
+	//检查当前用户是否茶团核心（管理员）
+	IsCoreMember := false
+
+	coreMembers, err := team.CoreMembers()
+	// 查err内容
+	if err != nil {
+		util.Info(err, " Cannot get core members")
+		Report(w, r, "你好，茶博士失魂鱼，居然说这个茶团是由外星人组织的，请确认后再试。")
+		return
+	}
+	// 检测用户是否茶团管理员
+	for _, member := range coreMembers {
+		if s_u.Id == member.UserId {
+			IsCoreMember = true
+		}
+	}
+
+	if IsCoreMember {
+		//say yes,向用户返回接收邀请函的表单页面
+		RenderHTML(w, &iD, "layout", "navbar.private", "team.invitation_view")
+		return
+	} else {
+		// say no
+		Report(w, r, "你好，蛮不讲理的茶博士竟然说，只有茶团核心成员才能查看邀请函发送记录。")
+	}
+
 }

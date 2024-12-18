@@ -72,18 +72,80 @@ type UserDefaultTeam struct {
 	CreatedAt time.Time
 }
 
-// 记录团队成员角色变动书
-type TeamRole struct {
-	Id                 int
-	Uuid               string
-	TeamId             int
-	TeamCeoUserId      int
-	TargetTeamMemberId int
-	Role               string
-	Word               string
-	CreatedAt          time.Time
-	CheckTeamMemberId  int
-	CheckAt            time.Time
+// 团队成员角色变动公告
+type TeamMemberRoleNotice struct {
+	Id        int
+	Uuid      string
+	TeamId    int    //公告茶团
+	CeoId     int    //时任茶团CEO茶友id
+	MemberId  int    //成员茶友id
+	OldRole   string //旧角色
+	NewRole   string //新角色
+	Title     string //标题
+	Content   string //内容
+	Status    int    //公告状态
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+// TeamMemberRoleNotice.Create()
+func (notice *TeamMemberRoleNotice) Create() (err error) {
+	statement := "INSERT INTO team_member_role_notices (team_id, ceo_id, member_id, old_role, new_role, title, content, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(notice.TeamId, notice.CeoId, notice.MemberId, notice.OldRole, notice.NewRole, notice.Title, notice.Content, notice.Status).Scan(&notice.Id)
+	return
+}
+
+// TeamMemberRoleNotice.Get()
+func (notice *TeamMemberRoleNotice) Get() (err error) {
+	statement := "SELECT * FROM team_member_role_notices WHERE id = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(notice.Id).Scan(&notice.Id, &notice.Uuid, &notice.TeamId, &notice.CeoId, &notice.MemberId, &notice.OldRole, &notice.NewRole, &notice.Title, &notice.Content, &notice.Status, &notice.CreatedAt, &notice.UpdatedAt)
+	return
+}
+
+// Team.CountTeamMemberRoleNotices() 统计某个茶团的角色调整公告数量
+func (team *Team) CountTeamMemberRoleNotices() (count int, err error) {
+	statement := "SELECT COUNT(*) FROM team_member_role_notices WHERE team_id = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(team.Id).Scan(&count)
+	return
+}
+
+// TeamMemberRoleNotice.UpdateStatus()
+func (notice *TeamMemberRoleNotice) UpdateStatus() (err error) {
+	statement := "UPDATE team_member_role_notices SET status = $1 WHERE id = $2"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(notice.Status, notice.Id)
+	return
+}
+
+// TeamMemberRoleNotice.Update()
+func (notice *TeamMemberRoleNotice) Update() (err error) {
+	statement := "UPDATE team_member_role_notices SET team_id = $1, ceo_id = $2, member_id = $3, old_role = $4, new_role = $5, title = $6, content = $7, status = $8, updated_at = $9 WHERE id = $10"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(notice.TeamId, notice.CeoId, notice.MemberId, notice.OldRole, notice.NewRole, notice.Title, notice.Content, notice.Status, time.Now(), notice.Id)
+	return
 }
 
 var TeamProperty = map[int]string{
@@ -446,7 +508,7 @@ func (user *User) CountTeamsByFounderId() (count int, err error) {
 
 // 根据用户提交的当前Uuid获取一个团队详情
 // AWS CodeWhisperer assist in writing
-func GetTeamByUuid(uuid string) (team Team, err error) {
+func GetTeamByUUID(uuid string) (team Team, err error) {
 	team = Team{}
 	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE uuid = $1", uuid).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.GroupId)
@@ -529,7 +591,7 @@ func (teamMember *TeamMember) CreatedAtDate() string {
 	return teamMember.CreatedAt.Format(FMT_DATE_CN)
 }
 
-// 查询一个茶团team的MemberCEO，不是founder，是teamMember.Role = “MemberCEO”，返回一个 teamMember TeamMember
+// 查询一个茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 teamMember TeamMember
 // AWS CodeWhisperer assist in writing
 func (team *Team) MemberCEO() (teamMember TeamMember, err error) {
 	teamMember = TeamMember{}

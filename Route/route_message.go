@@ -28,13 +28,19 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 	i_list, err := s_u.Invitations()
 	if err != nil {
 		util.Warning(err, s_u.Email, " Cannot get invitations")
+		Report(w, r, "你好，满头大汗的茶博士在努力查找您的邀请函中，请稍后再试。")
+		return
+	}
+	i_b_list, err := FetchInvitationBeanList(i_list)
+	if err != nil {
+		util.Warning(err, s_u.Email, " Cannot get invitations bean list")
 		Report(w, r, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 
 	//填写页面资料
 	lbPD.SessUser = s_u
-	lbPD.InvitationList = i_list
+	lbPD.InvitationBeanList = i_b_list
 
 	//向用户返回接收邀请函的表单页面
 	RenderHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")

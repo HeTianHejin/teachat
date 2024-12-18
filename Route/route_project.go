@@ -31,7 +31,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, err := s.User()
+	s_u, err := s.User()
 	if err != nil {
 		util.Danger(err, " Cannot get user from session")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
@@ -66,7 +66,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check the given team_id is valid
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, u.Id)
+	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, s_u.Id)
 	if err != nil {
 		util.Info(err, " Cannot get team member")
 		Report(w, r, "你好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")
@@ -110,7 +110,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		// 检查提交的class值是否有效，必须为10或者20
 		if class == 10 {
 			// 创建开放式草台
-			proj, err = u.CreateProject(title, body, ob.Id, class, team_id)
+			proj, err = s_u.CreateProject(title, body, ob.Id, class, team_id)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
 				Report(w, r, "你好，出浴太真冰作影，捧心西子玉为魂。")
@@ -140,7 +140,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			}
 
 			//创建封闭式草台
-			proj, err = u.CreateProject(title, body, ob.Id, class, team_id)
+			proj, err = s_u.CreateProject(title, body, ob.Id, class, team_id)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
 				Report(w, r, "你好，斜阳寒草带重门，苔翠盈铺雨后盆。")
@@ -166,7 +166,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	case 2:
 		// 封闭式茶话会
 		// 检查用户是否可以在此茶话会下新开茶台
-		ok, err := ob.IsInvitedMember(u.Id)
+		ok, err := ob.IsInvitedMember(s_u.Id)
 		if !ok {
 			// 当前用户不是茶话会邀请团队成员，不能新开茶台
 			util.Warning(err, " Cannot create project")
@@ -201,7 +201,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 			}
 
 			//创建茶台
-			proj, err := u.CreateProject(title, body, ob.Id, class, team_id)
+			proj, err := s_u.CreateProject(title, body, ob.Id, class, team_id)
 			if err != nil {
 				util.Warning(err, " Cannot create project")
 				Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
@@ -258,7 +258,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: aO.Id,
 	}
 	// 发送消息给两个在线用户
-	err = AcceptMessageSendExceptUserId(u.Id, mess)
+	err = AcceptMessageSendExceptUserId(s_u.Id, mess)
 	if err != nil {
 		util.Danger(err, " Cannot send message")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
@@ -308,7 +308,7 @@ func NewProject(w http.ResponseWriter, r *http.Request) {
 	oD.SessUserSurvivalTeams = s_survival_teams
 	oD.SessUserDefaultPlace = s_default_place
 	oD.SessUserBindPlaces = s_places
-	oD.ObjectiveBean, err = GetObjectiveBean(o)
+	oD.ObjectiveBean, err = FetchObjectiveBean(o)
 	if err != nil {
 		Report(w, r, "你好，������失������，未能找到��台，请稍后再试。")
 		return
@@ -441,7 +441,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.ThreadIsApprovedCount = ta.CountByProjectId()
 
 	// 获取茶议和作者相关资料荚
-	oabList, err = GetThreadBeanList(threadlist)
+	oabList, err = FetchThreadBeanList(threadlist)
 	if err != nil {
 		util.Warning(err, " Cannot read thread-bean list")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中...")

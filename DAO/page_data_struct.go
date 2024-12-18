@@ -308,11 +308,19 @@ type IndexPageData struct {
 
 // 用户信箱页面数据
 type LetterboxPageData struct {
-	SessUser       User
-	InvitationList []Invitation
+	SessUser User
+
+	InvitationBeanList []InvitationBean
 }
 
-//InvitationBean
+// InvitationBean
+type InvitationBean struct {
+	Invitation Invitation
+	Team       Team   //发出邀请函的团队
+	CEO        User   //团队首席执行官
+	InviteUser User   //邀请对象
+	Status     string //邀请函目前状态
+}
 
 // 茶团加盟邀请函详情页面数据
 type InvitationDetail struct {
@@ -322,10 +330,8 @@ type InvitationDetail struct {
 	SessUserDefaultPlace  Place
 	SessUserBindPlaces    []Place
 
-	Invitation Invitation
-	Team       Team // 发出邀请的茶团队
+	InvitationBean InvitationBean //邀请函资料夹
 
-	InviteUser User // 受邀请人
 }
 
 // 茶团加盟申请书审查页面数据

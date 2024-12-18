@@ -384,7 +384,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 读取茶议资料荚
-	tD.ThreadBean, err = GetThreadBean(thread)
+	tD.ThreadBean, err = FetchThreadBean(thread)
 	if err != nil {
 		util.Warning(err, " Cannot read threadBean")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料荚。")
@@ -418,7 +418,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	tD.PostBeanList, err = GetPostBeanList(post_list)
+	tD.PostBeanList, err = FetchPostBeanList(post_list)
 	if err != nil {
 		util.Warning(err, " Cannot read posts")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")

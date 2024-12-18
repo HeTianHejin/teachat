@@ -48,7 +48,8 @@ func main() {
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
 	mux.HandleFunc("/v1/team/core_manage", route.CoreManage)
 	mux.HandleFunc("/v1/team/avatar", route.TeamAvatar)
-	mux.HandleFunc("/v1/team/invitations", route.ReviewInvitations)
+	mux.HandleFunc("/v1/team/invitations", route.InvitationsBrowse)
+	mux.HandleFunc("/v1/team/invitation", route.InvitationView)
 	mux.HandleFunc("/v1/teams/open", route.OpenTeams)
 	mux.HandleFunc("/v1/teams/closed", route.ClosedTeams)
 	mux.HandleFunc("/v1/teams/hold", route.HoldTeams)
@@ -63,13 +64,13 @@ func main() {
 	mux.HandleFunc("/v1/group/detail", route.GroupDetail)
 
 	//defined in route_team_member.go
-	mux.HandleFunc("/v1/team/team_member/application/new", route.HandleNewMemberApplication)
-	mux.HandleFunc("/v1/team/team_member/application/review", route.HandleMemberApplication)
-	mux.HandleFunc("/v1/team/team_member/application/check", route.MemberApplyCheck)
-	mux.HandleFunc("/v1/team/team_member/invite", route.HandleInviteMember)
-	mux.HandleFunc("/v1/team/team_member/invitation", route.HandleMemberInvitation)
-	mux.HandleFunc("/v1/team/team_member/role", route.HandleMemberRole)
-	mux.HandleFunc("/v1/team/team_member/quit", route.HandleMemberQuit)
+	mux.HandleFunc("/v1/team_member/application/new", route.HandleNewMemberApplication)
+	mux.HandleFunc("/v1/team_member/application/review", route.HandleMemberApplication)
+	mux.HandleFunc("/v1/team_member/application/check", route.MemberApplyCheck)
+	mux.HandleFunc("/v1/team_member/invite", route.HandleInviteMember)
+	mux.HandleFunc("/v1/team_member/invitation", route.HandleMemberInvitation)
+	mux.HandleFunc("/v1/team_member/role", route.HandleMemberRole)
+	mux.HandleFunc("/v1/team_member/quit", route.HandleMemberQuit)
 
 	//defined in route_objective.go
 	mux.HandleFunc("/v1/objective/new", route.HandleNewObjective)

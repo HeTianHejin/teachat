@@ -39,7 +39,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	post_bean, err := GetPostBean(post)
+	post_bean, err := FetchPostBean(post)
 	if err != nil {
 		util.Warning(err, " Cannot get post bean given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
@@ -76,7 +76,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	pD.ThreadBeanList, err = GetThreadBeanList(thread_list)
+	pD.ThreadBeanList, err = FetchThreadBeanList(thread_list)
 	if err != nil {
 		util.Warning(err, " Cannot get thread_bean_list given thread_list")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
