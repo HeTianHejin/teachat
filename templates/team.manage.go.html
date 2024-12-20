@@ -1,49 +1,197 @@
 {{ define "content" }}
 
+{{/* 这是某个茶团管理首页，默认“调整角色”tab标签页，内容是展示全部成员列表，以便调整成员角色及移除离队成员，html页面 */}}
+
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/office">写字室</a></li>
-    <li class="active">？茶团@管理核心成员</li>
+    <li><a href="/v1/team/office">茶团写字台</a></li>
+    <li class="active">{{ .Team.Abbreviation }} 管理团队事务</li>
   </ol>
 
 
-<div class="panel panel-default">
-<div class="panel-heading">
-    <a href="/v1/team/detail?id={{ .Uuid }}">{{ .Name }}</a> 茶团核心成员角色
-</div>
+  <div style="margin: 2rem;">
+    <ol class="nav nav-tabs">
+        <li class="active"><a href="#top">调整角色</a></li>
+        <li><a href="/v1/team/edit?id={{ .Team.Uuid }}">修改资料</a></li>
+        <li><a href="/v1/search">邀请新人</a></li>
+        <li><a href="/v1/team/invitations?id={{ .Team.Uuid }}">看邀请函</a></li>
+        <li><a href="/v1/team/applications?id={{ .Team.Uuid }}">看申请书</a></li>
+        <li><a href="/v1/team_member/quited?={{ .Team.Uuid }}">离队成员</a></li>
+        <li><a href="#">冰封团队</a></li>
+    </ol>
+  </div>
 
-    <div class="panel-body">
-       说明：CEO仅能由茶团创建人指定和撤销；CEO可以指定和撤销CTO，CMO，CFO，每个核心角色只能指定一人担任，品茶师调整为核心成员之前需要先将该角色空缺。
+  <div class="well">
+     说明：CEO仅能由茶团创建人指定和撤销；CEO可以指定和撤销CTO，CMO，CFO，每个核心角色只能指定一人担任，
+     品茶师调整为核心成员之前需要先将该角色留空;如果CEO角色出现空缺，默认创建人自动成为临时CEO。
+  </div>
+
+  {{ if .IsFounder }}{{/*  这是茶团创建人可见页面 开始 */}}
+  {{ range .CoreMemberBeanList }}{{/*  这是可管理的茶团核心成员展示  */}}
+  <div class="media">
+    <div class="media-left">
+      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+        <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
+      </a>
     </div>
-</div>
+    <div class="media-body">
 
-{{ range .CoreMembers }}
+      {{ .Member.Name }}
+      <span  style="font-size: small;">
+        {{if .Member.Gender }}
+          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+          {{ else }}
+          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+          {{ end }}
+      </span>
+      
+      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
 
-<div class="panel panel-default">
+     
+      <h4>{{ .TeamMember.Role }}</h4>
 
-    <div class="panel-heading">
-        
-        {{ .Role }}
-        <div class="pull-right">
-        <a href="/v1/user/biography?id={{ .User.Uuid }}">个人主页</a>
+      <p>加盟时间：{{ .CreatedAtDate }}</p>
 
-        </div>
-    </div>
-
-    <div class="panel-body">
-
-        <p>花名：{{ .User.Name }}</p>
-        <p>邮箱：{{ .User.Email }}</p>
-        <p style="white-space: pre-wrap;">拼团茶话：{{ .InvitationReply.ReplyWord }}</p>
-        <p>上岗时间：{{ .GetWorkTime }}</p>
+      <span style="font-style: italic;">{{ .Member.Email }}</span>
 
     </div>
+  </div>
 
-    <div class="panel-footer">
-        <a href="/v1/team/core_manage?id={{ .Uuid }}">撤销</a>
+{{/*  显示调整角色功能按钮  */}}
+<form class="form" role="form" action="/v1/team_member/change_role" method="post">
+  <div class="form-group">
+    <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
+    <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
+    <button type="submit" class="btn btn-default btn-sm">调整角色</button>
+  </div>
+</form>
+
+<form class="form" role="form" action="/v1/team_member/remove" method="post">
+  <div class="form-group">
+    <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
+    <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
+    <button type="submit" class="btn btn-default btn-sm">移除成员</button>
+  </div>
+</form>
+<hr />
+{{ end }}{{/* 展示创建人可管理的核心成员结束 */}}
+
+
+  {{ else }}{{/*  非茶团创建人可见页面  */}}
+  
+  {{ range .CoreMemberBeanList }}{{/*  这是茶团核心成员展示页面  */}}
+
+  <div class="media">
+    <div class="media-left">
+      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+        <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
+      </a>
     </div>
-</div>
+    <div class="media-body">
 
-{{ end }}
+      {{ .Member.Name }}
+      <span  style="font-size: small;">
+        {{if .Member.Gender }}
+          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+          {{ else }}
+          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+          {{ end }}
+      </span>
+      
+      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+
+     
+      <h4>{{ .TeamMember.Role }}</h4>
+
+      <p>加盟时间：{{ .CreatedAtDate }}</p>
+
+      <span style="font-style: italic;">{{ .Member.Email }}</span>
+
+    </div>
+  </div>
+
+{{ if .IsFounder }}
+{{ else }}
+{{ if .IsCEO }}
+  {{ else }}{{/*  显示调整角色功能按钮  */}}
+<form class="form" role="form" action="/v1/team_member/change_role" method="post">
+  <div class="form-group">
+    <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
+    <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
+    <button type="submit" class="btn btn-default btn-sm">调整角色</button>
+  </div>
+</form>
+
+<form class="form" role="form" action="/v1/team_member/remove" method="post">
+  <div class="form-group">
+    <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
+    <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
+    <button type="submit" class="btn btn-default btn-sm">移除成员</button>
+  </div>
+</form>
+{{ end }}{{/* 检查是否CEO结束 */}}
+{{ end }}{{/* 非创建人可见页面，检查是否创建人结束 */}}
+<hr />
+{{ end }}{{/* 展示核心成员结束 */}}
+
+{{ end }}{{/*  这是茶团创建人可见页面 结束  */}}
+
+  {{ range .NormalMemberBeanList }}{{/* 展示普通成员 */}}
+
+  <div class="media">
+    <div class="media-left">
+      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+        <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
+      </a>
+    </div>
+    <div class="media-body">
+      {{ .Member.Name }}
+      <span  style="font-size: small;">
+        {{if .Member.Gender }}
+        <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+        {{ else }}
+        <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+        {{ end }}
+        </span>
+
+      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+ 
+      <h5>{{ .TeamMember.Role }}</h5>
+
+      <p>加盟时间：{{ .CreatedAtDate }}</p>
+
+      <span style="font-style: italic;">{{ .Member.Email }}</span>
+
+    </div>
+  </div>
+
+  {{ if .IsCEO }}
+  {{ else }}
+  {{ if .IsCoreMember }}
+  {{ else }}{{/*  显示调整角色功能按钮  */}}
+  <form class="form" role="form" action="/v1/team_member/change_role" method="post">
+    <div class="form-group">
+
+      <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
+      <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
+      <button type="submit" class="btn btn-default btn-sm">调整角色</button>
+    </div>
+  </form>
+
+  <form class="form" role="form" action="/v1/team_member/remove" method="post">
+    <div class="form-group">
+      
+      <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
+      <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
+      <button type="submit" class="btn btn-default btn-sm">移除成员</button>
+    </div>
+  </form>
+  {{ end }}{{/* 检查是否CEO结束 */}}
+  {{ end }}{{/* 检查是否核心成员（管理员）结束 */}}
+
+  <hr />
+  {{ end }}{{/* 展示普通成员结束 */}}
+
+  
 
 {{ end }}

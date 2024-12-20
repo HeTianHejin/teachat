@@ -335,6 +335,90 @@ func FetchTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err
 	return
 }
 
+// 茶团成员资料荚
+//
+//	type TeamMemberBean struct {
+//		Member            User
+//		IsFounder         bool   //是否为创建者
+//		IsCEO             bool   //是否CEO
+//		IsCoreMember      bool   //是否核心成员（管理员）
+//		TeamMemberRole    string //现任角色
+//		MemberDefaultTeam Team   //First优先茶团
+//		CreatedAtDate     string
+//	}
+//
+// FetchTeamMemberBean() 根据给出的TeamMember参数，去获取对应的团队成员资料夹
+func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error) {
+	u, err := data.GetUserById(tm.UserId)
+	if err != nil {
+		util.Warning(err, " Cannot read user given TeamMember")
+		return TMB, err
+	}
+	TMB.Member = u
+
+	team, err := data.GetTeamById(tm.TeamId)
+	if err != nil {
+		util.Warning(err, " Cannot read team given team member")
+		return TMB, err
+	}
+
+	if tm.UserId == team.FounderId {
+		TMB.IsFounder = true
+	} else {
+		TMB.IsFounder = false
+	}
+
+	//读取茶团的member_ceo
+	member_ceo, err := team.MemberCEO()
+	if err != nil {
+		//茶团已经设定了ceo，但是出现了其他错误
+		util.Info(err, team.Id, " Cannot get ceo of this team")
+		return
+	}
+	if member_ceo.UserId == u.Id {
+		TMB.IsCEO = true
+	} else {
+		TMB.IsCEO = false
+	}
+
+	teamCoreMembers, err := team.CoreMembers()
+	if err != nil {
+		util.Info(err, " Cannot get team core member FetchTeamMemberBean()")
+		return
+	}
+	for _, coreMember := range teamCoreMembers {
+		if coreMember.UserId == u.Id {
+			TMB.IsCoreMember = true
+			break
+		}
+	}
+
+	member_default_team, err := u.GetLastDefaultTeam()
+	if err != nil {
+		util.Info(err, " Cannot get GetLastDefaultTeam FetchTeamMemberBean()")
+		return
+	}
+	TMB.MemberDefaultTeam = member_default_team
+
+	TMB.TeamMember = tm
+
+	TMB.CreatedAtDate = team.CreatedAtDate()
+
+	return TMB, nil
+}
+
+// FtchTeamMemberBeanList() 根据给出的TeamMember列表参数，去获取对应的团队成员资料夹列表
+func FetchTeamMemberBeanList(tm_list []data.TeamMember) (TMB_List []data.TeamMemberBean, err error) {
+	for _, tm := range tm_list {
+		tmBean, err := FetchTeamMemberBean(tm)
+		if err != nil {
+			return nil, err
+		}
+		TMB_List = append(TMB_List, tmBean)
+	}
+	return
+}
+
 // 根据给出的MemberApplication参数，去获取对应的加盟申请书资料夹
 func FetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBean data.MemberApplicationBean, err error) {
 	MemberApplicationBean.MemberApplication = ma
@@ -406,6 +490,48 @@ func FetchInvitationBeanList(i_list []data.Invitation) (I_B_List []data.Invitati
 			return nil, err
 		}
 		I_B_List = append(I_B_List, iBean)
+	}
+	return
+}
+
+// FetchTeamMemberRoleNoticeBean() 根据给出的TeamMemberRoleNotice参数，去获取对应的团队成员角色通知资料夹
+func FetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean data.TeamMemberRoleNoticeBean, err error) {
+	tmrnBean.TeamMemberRoleNotice = tmrn
+
+	tmrnBean.Team, err = data.GetTeamById(tmrn.TeamId)
+	if err != nil {
+		util.Warning(err, " Cannot read team given team member role notice")
+		return tmrnBean, err
+	}
+
+	tmrnBean.CEO, err = data.GetUserById(tmrn.CeoId)
+	if err != nil {
+		util.Warning(err, " Cannot read ceo given team member role notice")
+		return tmrnBean, err
+	}
+
+	tm := data.TeamMember{Id: tmrn.MemberId}
+	if err = tm.Get(); err != nil {
+		util.Warning(err, " Cannot read team member given team member role notice")
+		return tmrnBean, err
+	}
+	tmrnBean.Member, err = data.GetUserById(tm.UserId)
+	if err != nil {
+		util.Warning(err, " Cannot read member given team member role notice")
+		return tmrnBean, err
+	}
+
+	return tmrnBean, nil
+}
+
+// FetchTeamMemberRoleNoticeBeanList() 根据给出的TeamMemberRoleNotice列表参数，去获取对应的团队成员角色通知资料夹列表
+func FetchTeamMemberRoleNoticeBeanList(tmrn_list []data.TeamMemberRoleNotice) (tmrnBeanList []data.TeamMemberRoleNoticeBean, err error) {
+	for _, tmrn := range tmrn_list {
+		tmrnBean, err := FetchTeamMemberRoleNoticeBean(tmrn)
+		if err != nil {
+			return nil, err
+		}
+		tmrnBeanList = append(tmrnBeanList, tmrnBean)
 	}
 	return
 }

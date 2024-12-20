@@ -74,29 +74,34 @@ type UserDefaultTeam struct {
 
 // 团队成员角色变动公告
 type TeamMemberRoleNotice struct {
-	Id        int
-	Uuid      string
-	TeamId    int    //公告茶团
-	CeoId     int    //时任茶团CEO茶友id
-	MemberId  int    //成员茶友id
-	OldRole   string //旧角色
-	NewRole   string //新角色
-	Title     string //标题
-	Content   string //内容
-	Status    int    //公告状态
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id                int
+	Uuid              string
+	TeamId            int    //公告茶团
+	CeoId             int    //时任茶团CEO茶友id
+	MemberId          int    //成员id(team_member.id)
+	MemberCurrentRole string //当前角色
+	NewRole           string //新角色
+	Title             string //标题
+	Content           string //内容
+	Status            int    //公告状态
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+}
+
+// TeamMemberRoleNotice.CreatedAtDate()
+func (notice *TeamMemberRoleNotice) CreatedAtDate() string {
+	return notice.CreatedAt.Format("2006-01-02")
 }
 
 // TeamMemberRoleNotice.Create()
 func (notice *TeamMemberRoleNotice) Create() (err error) {
-	statement := "INSERT INTO team_member_role_notices (team_id, ceo_id, member_id, old_role, new_role, title, content, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+	statement := "INSERT INTO team_member_role_notices (team_id, ceo_id, member_id, member_current_role, new_role, title, content, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(notice.TeamId, notice.CeoId, notice.MemberId, notice.OldRole, notice.NewRole, notice.Title, notice.Content, notice.Status).Scan(&notice.Id)
+	err = stmt.QueryRow(notice.TeamId, notice.CeoId, notice.MemberId, notice.MemberCurrentRole, notice.NewRole, notice.Title, notice.Content, notice.Status).Scan(&notice.Id)
 	return
 }
 
@@ -108,7 +113,7 @@ func (notice *TeamMemberRoleNotice) Get() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(notice.Id).Scan(&notice.Id, &notice.Uuid, &notice.TeamId, &notice.CeoId, &notice.MemberId, &notice.OldRole, &notice.NewRole, &notice.Title, &notice.Content, &notice.Status, &notice.CreatedAt, &notice.UpdatedAt)
+	err = stmt.QueryRow(notice.Id).Scan(&notice.Id, &notice.Uuid, &notice.TeamId, &notice.CeoId, &notice.MemberId, &notice.MemberCurrentRole, &notice.NewRole, &notice.Title, &notice.Content, &notice.Status, &notice.CreatedAt, &notice.UpdatedAt)
 	return
 }
 
@@ -138,13 +143,13 @@ func (notice *TeamMemberRoleNotice) UpdateStatus() (err error) {
 
 // TeamMemberRoleNotice.Update()
 func (notice *TeamMemberRoleNotice) Update() (err error) {
-	statement := "UPDATE team_member_role_notices SET team_id = $1, ceo_id = $2, member_id = $3, old_role = $4, new_role = $5, title = $6, content = $7, status = $8, updated_at = $9 WHERE id = $10"
+	statement := "UPDATE team_member_role_notices SET team_id = $1, ceo_id = $2, member_id = $3, member_current_role = $4, new_role = $5, title = $6, content = $7, status = $8, updated_at = $9 WHERE id = $10"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(notice.TeamId, notice.CeoId, notice.MemberId, notice.OldRole, notice.NewRole, notice.Title, notice.Content, notice.Status, time.Now(), notice.Id)
+	_, err = stmt.Exec(notice.TeamId, notice.CeoId, notice.MemberId, notice.MemberCurrentRole, notice.NewRole, notice.Title, notice.Content, notice.Status, time.Now(), notice.Id)
 	return
 }
 
@@ -560,10 +565,28 @@ func (team *Team) CoreMembers() (teamMembers []TeamMember, err error) {
 	return
 }
 
-// 根据用户id，检查是否茶团成员；team中是否存在某个teamMember
-func GetTeamMemberByTeamIdAndUserId(team_id, user_id int) (teamMember TeamMember, err error) {
+// 根据用户id，检查当前用户是否茶团成员；team中是否存在某个teamMember
+func GetMemberByTeamIdAndUserId(team_id, user_id int) (teamMember TeamMember, err error) {
 	teamMember = TeamMember{}
 	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).
+		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
+	return
+}
+
+// 查询一个茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 teamMember TeamMember
+// AWS CodeWhisperer assist in writing
+func (team *Team) MemberCEO() (teamMember TeamMember, err error) {
+	teamMember = TeamMember{}
+	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "CEO").
+		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
+	return
+}
+
+// GetTeamMemberByRole() 根据角色查找茶团成员资料。用于检查茶团拟邀请的新成员角色是否已经被占用
+// AWS CodeWhisperer assist in writing
+func (team *Team) GetTeamMemberByRole(role string) (teamMember TeamMember, err error) {
+	teamMember = TeamMember{}
+	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
 		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
 	return
 }
@@ -591,20 +614,9 @@ func (teamMember *TeamMember) CreatedAtDate() string {
 	return teamMember.CreatedAt.Format(FMT_DATE_CN)
 }
 
-// 查询一个茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 teamMember TeamMember
-// AWS CodeWhisperer assist in writing
-func (team *Team) MemberCEO() (teamMember TeamMember, err error) {
-	teamMember = TeamMember{}
-	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "CEO").
-		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
-	return
-}
-
-// GetTeamMemberByRole() 根据角色查找茶团成员资料。用于检查茶团拟邀请的新成员角色是否已经被占用
-// AWS CodeWhisperer assist in writing
-func (team *Team) GetTeamMemberByRole(role string) (teamMember TeamMember, err error) {
-	teamMember = TeamMember{}
-	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
+// TeamMember.Get()
+func (teamMember *TeamMember) Get() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE id = $1", teamMember.Id).
 		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
 	return
 }

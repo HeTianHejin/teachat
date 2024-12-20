@@ -195,16 +195,20 @@ type PostBean struct {
 // 用于某个茶团详情页面渲染
 type TeamDetail struct {
 	SessUser     User //当前访问用户
+	IsFounder    bool //是否为创建者
+	IsCEO        bool //是否CEO
 	IsCoreMember bool //是否核心成员（管理员）
 	IsMember     bool //是否成员
 
 	Team                 Team //茶团
 	Founder              User // 茶团发起人（创建者）
 	FounderTeam          Team // 发起人默认所在的团队
+	CEO                  User // CEO
+	CEOTeam              Team // CEO所在默认团队
 	CreatedAtDate        string
 	TeamMemberCount      int              //成员数量统计
-	CoreMemberDataList   []TeamMemberBean //核心成员资料夹
-	NormalMemberDataList []TeamMemberBean //普通成员资料夹
+	CoreMemberBeanList   []TeamMemberBean //核心成员资料夹
+	NormalMemberBeanList []TeamMemberBean //普通成员资料夹
 	IsAuthor             bool
 	Open                 bool //是否开放式茶团
 
@@ -213,10 +217,15 @@ type TeamDetail struct {
 
 // 茶团成员资料荚
 type TeamMemberBean struct {
-	User           User
-	AuthorTeam     Team
-	CreatedAtDate  string
-	TeamMemberRole string
+	TeamMember TeamMember
+
+	Member       User
+	IsFounder    bool //是否为创建者
+	IsCEO        bool //是否CEO
+	IsCoreMember bool //是否核心成员（管理员）
+
+	MemberDefaultTeam Team //First优先茶团
+	CreatedAtDate     string
 }
 
 // 集团队列页面动态渲染
@@ -348,9 +357,25 @@ type ApplicationReview struct {
 
 // 某个茶团的全部邀请函页面数据
 type InvitationsPageData struct {
-	SessUser       User
+	SessUser User
+
 	Team           Team
 	InvitationList []Invitation
+}
+
+// 团队成员角色变动公告，页面
+type TeamMemberRoleChangeNoticePage struct {
+	SessUser User
+
+	TeamMemberRoleNoticeBeanList []TeamMemberRoleNoticeBean //团队成员角色变动公告资料夹串
+}
+
+// 团队成员角色变动公告资料夹
+type TeamMemberRoleNoticeBean struct {
+	TeamMemberRoleNotice TeamMemberRoleNotice
+	Team                 Team //需要调整角色的当前茶团
+	CEO                  User //时任茶团CEO茶友
+	Member               User //被调整角色茶友
 }
 
 type AcceptMessagePageData struct {

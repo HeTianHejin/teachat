@@ -608,7 +608,7 @@ create table team_member_role_notices (
   team_id                integer references teams(id),
   ceo_id                 integer references users(id),
   member_id              integer references users(id),
-  old_role               varchar(64),
+  member_current_role    varchar(64),
   new_role               varchar(64),
   title                  varchar(64),
   content                text,

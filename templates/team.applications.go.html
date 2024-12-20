@@ -4,10 +4,22 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li>{{ .Team.Abbreviation }}@茶团</li>
-  <li class="=active">待处理加盟申请书</li>
+  <li class="=active">全部加盟申请书</li>
 </ol>
 
-{{/*  这是指定茶团的，待处理的加盟申请书列表页面  */}}
+<div style="margin: 2rem;">
+  <ol class="nav nav-tabs">
+      <li><a href="/v1/team_member/role?id={{ .Team.Uuid }}">调整角色</a></li>
+      <li><a href="/v1/team/edit?id={{ .Team.Uuid }}">修改资料</a></li>
+      <li><a href="/v1/search">邀请新人</a></li>
+      <li><a href="/v1/team/invitations?id={{ .Team.Uuid }}">看邀请函</a></li>
+      <li class="active"><a href="/v1/team/applications?id={{ .Team.Uuid }}">看申请书</a></li>
+      <li><a href="/v1/team_member/remove?id={{ .Team.Uuid }}">移除成员</a></li>
+      <li><a href="#">冰封团队</a></li>
+  </ol>
+</div>
+
+{{/*  这是指定茶团的，全部加盟申请书列表页面  */}}
 
 {{ range .MemberApplicationBeanList }}
 

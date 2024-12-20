@@ -16,7 +16,7 @@ func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		//返回调整角色页面
-		MemberRole(w, r)
+		MemberRoleChange(w, r)
 	case "POST":
 		//设置角色
 		MemberRoleReply(w, r)
@@ -25,9 +25,9 @@ func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// MemberRole() GET /v1/team_member/role?id=
+// MemberRoleChange() GET /v1/team_member/change_role?id=XXX&m_id=XXX
 // 取出一张空白茶团成员角色任命书
-func MemberRole(w http.ResponseWriter, r *http.Request) {
+func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	// 读取会话
 	s, err := Session(r)
 	if err != nil {
@@ -45,36 +45,79 @@ func MemberRole(w http.ResponseWriter, r *http.Request) {
 	// 读取提交的查询参数
 	vals := r.URL.Query()
 	team_uuid := vals.Get("id")
+	member_email := vals.Get("m_email")
+
+	//检查email格式是否正常
+	if ok := VerifyEmailFormat(member_email); !ok {
+		Report(w, r, "你好，茶博士的眼镜被闪电破坏了，看不清提及的邮箱，请稍后再试。")
+		return
+	}
 
 	//读取目标茶团资料
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Info(err, "Cannot get team by uuid")
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		util.Info(err, team_uuid, "Cannot get team by uuid")
+		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
-
-	//检查当前用户是否茶团核心（管理员）
-	// 检查用户是否可以查看，CEO，CTO，CFO，CMO核心成员可以
-	IsCoreMember := false
-
-	coreMembers, err := team.CoreMembers()
-	// 查err内容
+	//读取拟调整角色茶团成员资料
+	member, err := data.GetUserByEmail(member_email)
 	if err != nil {
-		util.Info(err, " Cannot get core members")
-		Report(w, r, "你好，茶博士失魂鱼，居然说这个茶团是由外星人组织的，请确认后再试。")
+		util.Info(err, member_email, "Cannot get user given email")
+		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶友，稍后再试。")
 		return
 	}
-	// 检测用户是否茶团管理员
-	for _, member := range coreMembers {
-		if s_u.Id == member.UserId {
-			IsCoreMember = true
+
+	//检查当前用户是否茶团成员
+	_, err = data.GetMemberByTeamIdAndUserId(team.Id, member.Id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			Report(w, r, "你好，满头大汗的茶博士表示你不是这个茶团的成员，稍后再试。")
+			return
+		} else {
+			util.Warning(err, team.Id, " when GetMemberByTeamIdAndUserId() checking team_member")
+			Report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			return
 		}
 	}
 
-	if IsCoreMember {
+	//检查当前用户是否茶团CEO
+	member_ceo, err := team.MemberCEO()
+	if err != nil {
+		util.Warning(err, team.Id, "Cannot get team ceo given team id")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
 	}
 
+	// CEO不能自己调整自己的角色
+	if member_ceo.UserId == member.Id {
+		Report(w, r, "你好，茶博士抬了抬厚重的眼镜，竟然说需要FOUNDER权限，请确认后再试。")
+		return
+	}
+
+	// 如果是CEO，可以调整成员角色
+	if ok := member_ceo.UserId == s_u.Id; !ok {
+		Report(w, r, "你好，茶博士抬了抬厚重的眼镜，竟然说需要CEO权限，请确认后再试。")
+		return
+	}
+
+	ceo, err := data.GetUserById(member_ceo.UserId)
+	if err != nil {
+		util.Warning(err, member_ceo.UserId, "Cannot get user by id")
+		Report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
+		return
+	}
+
+	//准备资料
+	var tmrcnP data.TeamMemberRoleChangeNoticePage
+	//填充资料
+	tmrcnP.SessUser = s_u
+	tmrcnP.TeamMemberRoleNoticeBeanList[0].Team = team
+	tmrcnP.TeamMemberRoleNoticeBeanList[0].CEO = ceo
+	tmrcnP.TeamMemberRoleNoticeBeanList[0].Member = member
+
+	//渲染茶团角色调整页面
+	RenderHTML(w, &tmrcnP, "layout", "navbar.private", "member.role_change_new")
 }
 
 // MemberRole() POST /v1/team_member/role?id=
@@ -239,7 +282,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查申请人是否已经是茶团成员=这个茶团是否已经存在该茶友
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, applicant.Id)
+	_, err = data.GetMemberByTeamIdAndUserId(team.Id, applicant.Id)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -409,7 +452,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查这个茶团是否已经存在该茶友
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, applicant.Id)
+	_, err = data.GetMemberByTeamIdAndUserId(team.Id, applicant.Id)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -508,7 +551,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user_uuid := r.FormValue("user_uuid")
-	app_user, err := data.GetUserByUuid(user_uuid)
+	app_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
 		util.Danger(err, user_uuid, "Cannot get user given uuid")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -528,7 +571,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查这个茶团是否已经存在该茶友
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, app_user.Id)
+	_, err = data.GetMemberByTeamIdAndUserId(team.Id, app_user.Id)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -609,7 +652,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查这个茶团是否已经存在该茶友
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, s_u.Id)
+	_, err = data.GetMemberByTeamIdAndUserId(team.Id, s_u.Id)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -721,7 +764,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		//接受加盟邀请!
 
 		// 检查这个茶团是否已经存在该茶友了
-		_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, reply_user.Id)
+		_, err = data.GetMemberByTeamIdAndUserId(team.Id, reply_user.Id)
 		if err != nil {
 			switch err {
 			case sql.ErrNoRows:
@@ -894,7 +937,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 	team_uuid := r.PostFormValue("team_uuid")
 
 	//根据茶友提交的Uuid，检查是否存在该User
-	invite_user, err := data.UserByEmail(email)
+	invite_user, err := data.GetUserByEmail(email)
 	if err != nil {
 		util.Danger(err, email, " Cannot search user given email")
 		Report(w, r, "你好，满头大汗的茶博士未能茶棚里找到这个茶友，请确认后再试。")
@@ -971,7 +1014,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查team中是否存在teamMember
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, invite_user.Id)
+	_, err = data.GetMemberByTeamIdAndUserId(team.Id, invite_user.Id)
 	if err != nil {
 		//如果err类型为空行，说明团队中还没有这个茶友，可以向其发送邀请函
 		if err == sql.ErrNoRows {
@@ -1029,7 +1072,7 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 	//根据茶友提交的Uuid，查询获取拟邀请加盟的茶友信息
 	vals := r.URL.Query()
 	user_uuid := vals.Get("id")
-	in_user, err := data.GetUserByUuid(user_uuid)
+	in_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
 		util.Danger(err, " Cannot get user given uuid")
 		Report(w, r, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
@@ -1153,10 +1196,4 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 
 	//向茶友返回该邀请函的详细信息
 	RenderHTML(w, &iD, "layout", "navbar.private", "member.invitation_read")
-}
-
-// GET /v1/team_member/quit?id=
-// 退出某个茶团
-func HandleMemberQuit(w http.ResponseWriter, r *http.Request) {
-	Report(w, r, "你好，目前满头大汗的茶博士正在忙于抛砖引玉之中，欢迎加盟茶棚服务。")
 }

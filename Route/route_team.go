@@ -36,7 +36,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查用户是否茶团成员，非成员不能查看加盟申请书
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team.Id, s_u.Id)
+	_, err = data.GetMemberByTeamIdAndUserId(team.Id, s_u.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			Report(w, r, "你好，茶博士失魂鱼，你不是茶团成员，无法查看申请书。")
@@ -407,7 +407,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/teams/employed
-// 显示用户任职高管的全部茶团表单页面
+// 显示用户担任核心成员（管理员）的全部茶团表单页面
 func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
@@ -433,15 +433,13 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, &ts, "layout", "navbar.private", "teams.employed", "teams.public")
 }
 
-// GET /v1/team/quit
-
 // GET /v1/team/detail?id=
 // 显示茶团详细信息
 func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	//获取茶团资料
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
-	te, err := data.GetTeamByUUID(uuid)
+	team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Info(err, " Cannot get team")
 		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
@@ -449,26 +447,26 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var tD data.TeamDetail
-	tD.Team = te
-	tD.CreatedAtDate = te.CreatedAtDate()
-	f_u, err := te.Founder()
+	tD.Team = team
+	tD.CreatedAtDate = team.CreatedAtDate()
+	founder, err := team.Founder()
 	if err != nil {
 		util.Info(err, " Cannot get team founder")
 		Report(w, r, "你好，闪电考拉为你极速效劳中，请稍后再试。")
 		return
 	}
-	tD.Founder = f_u
-	founder_default_team, _ := f_u.GetLastDefaultTeam()
+	tD.Founder = founder
+	founder_default_team, _ := founder.GetLastDefaultTeam()
 	tD.FounderTeam = founder_default_team
 
-	tD.TeamMemberCount = te.NumMembers()
-	teamCoreMembers, err := te.CoreMembers()
+	tD.TeamMemberCount = team.NumMembers()
+	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
 		util.Info(err, " Cannot get team core member")
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
-	teamNormalMembers, err := te.NormalMembers()
+	teamNormalMembers, err := team.NormalMembers()
 	if err != nil {
 		util.Info(err, " Cannot get team normal member")
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
@@ -488,14 +486,14 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tc.User = user
-		tc.AuthorTeam, err = user.GetLastDefaultTeam()
+		tc.Member = user
+		tc.MemberDefaultTeam, err = user.GetLastDefaultTeam()
 		if err != nil {
 			util.Info(err, " Cannot get user's default team")
 			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 			return
 		}
-		tc.TeamMemberRole = member.Role
+		tc.TeamMember = member
 		tc.CreatedAtDate = member.CreatedAtDate()
 		tcList = append(tcList, tc)
 	}
@@ -506,19 +504,19 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 			return
 		}
-		tn.User = user
-		tn.AuthorTeam, err = user.GetLastDefaultTeam()
+		tn.Member = user
+		tn.MemberDefaultTeam, err = user.GetLastDefaultTeam()
 		if err != nil {
 			util.Info(err, " Cannot get user's default team")
 			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 			return
 		}
-		tn.TeamMemberRole = member.Role
+		tn.TeamMember = member
 		tn.CreatedAtDate = member.CreatedAtDate()
 		tnList = append(tnList, tn)
 	}
-	tD.CoreMemberDataList = tcList
-	tD.NormalMemberDataList = tnList
+	tD.CoreMemberBeanList = tcList
+	tD.NormalMemberBeanList = tnList
 
 	if tD.Team.Class == 1 {
 		tD.Open = true
@@ -552,8 +550,8 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	s_u.Query = r.URL.RawQuery
 	tD.SessUser = s_u
 	//检查当前用户是否核心成员
-	for _, member := range tD.CoreMemberDataList {
-		if member.User.Id == s_u.Id {
+	for _, member := range tD.CoreMemberBeanList {
+		if member.Member.Id == s_u.Id {
 			tD.IsCoreMember = true
 			tD.IsMember = true
 			break
@@ -579,8 +577,8 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	if !tD.IsMember {
 		//检查当前用户是否普通成员
-		for _, member := range tD.NormalMemberDataList {
-			if member.User.Id == s_u.Id {
+		for _, member := range tD.NormalMemberBeanList {
+			if member.Member.Id == s_u.Id {
 				tD.IsMember = true
 				break
 			}
@@ -609,21 +607,21 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 func HandleManageTeam(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		HandleManageTeamGet(w, r)
+		ManageTeamGet(w, r)
 	case "POST":
-		HandleManageTeamPost(w, r)
+		ManageTeamPost(w, r)
 	}
 }
 
 // POST /v1/team/manage
 // 处理用户管理团队事务
-func HandleManageTeamPost(w http.ResponseWriter, r *http.Request) {
+func ManageTeamPost(w http.ResponseWriter, r *http.Request) {
 	Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 }
 
-// GET /v1/team/manage
-// 显示用户管理茶团的表单页面
-func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
+// GET /v1/team/manage?id=
+// 显示管理茶团的表单(首页-角色调整)页面
+func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -635,53 +633,122 @@ func HandleManageTeamGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
+
+	vals := r.URL.Query()
+	t_uuid := vals.Get("id")
 	//一次管理一个茶团，根据提交的team.Uuid来确定
 	//这个茶团是否存在？
-	team, err := data.GetTeamByUUID(r.FormValue("id"))
+	team, err := data.GetTeamByUUID(t_uuid)
 	if err != nil {
 		util.Info(err, " Cannot get this team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
-	var tPD data.TeamDetail
-	//检查一下当前用户是否有权管理这个茶团？即teamMember中Role为"ceo"或者founder
+
+	var tD data.TeamDetail
+	//检查一下当前用户是否有权管理这个茶团？即teamMember中Role为"ceo".或者是茶团创建人
+	is_manager := false
 	//如果是创建人，那么就可以管理这个茶团
-	fund, err := team.Founder()
+	founder, err := team.Founder()
 	if err != nil {
-		Report(w, r, "你好，茶博士未能找到此茶团发起人资料，请确认后再试。")
+		util.Info(err, " Cannot get team founder")
+		Report(w, r, "你好，闪电考拉为你极速效劳中，请稍后再试。")
 		return
 	}
-	if fund.Id == s_u.Id {
+
+	//读取茶团的member_ceo
+	member_ceo, err := team.MemberCEO()
+	if err != nil {
+		//茶团已经设定了ceo，但是出现了其他错误
+		util.Info(err, " Cannot get ceo of this team")
+		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
+		return
+	}
+
+	if member_ceo.UserId == s_u.Id {
+		//是茶团的ceo，可以管理这个茶团
+		is_manager = true
+		tD.IsCEO = true
+		tD.IsFounder = false
+		tD.IsCoreMember = true
+		tD.IsMember = true
+	} else if founder.Id == s_u.Id {
 		//是创建人,可以管理这个茶团
-		tPD.SessUser = s_u
-		tPD.Team = team
-		RenderHTML(w, &tPD, "layout", "navbar.private", "team.manage")
-		return
+		is_manager = true
+		tD.IsFounder = true
+		tD.IsCEO = false
+		tD.IsCoreMember = true
+		tD.IsMember = true
 	}
-	//如果不是创建人，那么就检查一下是否是茶团的ceo
-	manager, err := team.MemberCEO()
-	if err != nil {
-		//检查一下err是否是因为teamMember中没有这个team的ceo
-		//如果是，那么就说明当前用户无权管理这个茶团
-		//这是特殊情况？CEO空缺？例如唐僧被妖怪抓走了？
-		if err == sql.ErrNoRows {
-			Report(w, r, "你好，您无权管理此茶团。")
-			return
-		} else {
-			//茶团已经设定了ceo，但是出现了其他错误
-			util.Info(err, " Cannot get ceo of this team")
-			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
-			return
-		}
-	}
-	if manager.UserId != s_u.Id {
+
+	if !is_manager {
 		Report(w, r, "你好，您无权管理此茶团。")
 		return
 	}
-	//是茶团的ceo，可以管理这个茶团
-	tPD.SessUser = s_u
-	tPD.Team = team
-	RenderHTML(w, &tPD, "layout", "navbar.private", "team.manage")
+
+	// 填写页面数据
+	tD.Team = team
+	tD.CreatedAtDate = team.CreatedAtDate()
+
+	tD.Founder = founder
+	founder_default_team, err := founder.GetLastDefaultTeam()
+	if err != nil {
+		util.Info(err, "Cannot get founder's default team")
+		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
+		return
+	}
+	tD.FounderTeam = founder_default_team
+
+	ceo, err := data.GetUserById(member_ceo.UserId)
+	if err != nil {
+		util.Info(err, "Cannot get ceo given member.user_id")
+		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
+		return
+	}
+	tD.CEO = ceo
+	ceo_default_team, err := ceo.GetLastDefaultTeam()
+	if err != nil {
+		util.Info(err, "Cannot get ceo's default team")
+		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
+		return
+	}
+	tD.CEOTeam = ceo_default_team
+
+	tD.TeamMemberCount = team.NumMembers()
+	teamCoreMembers, err := team.CoreMembers()
+	if err != nil {
+		util.Info(err, " Cannot get team core member")
+		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
+		return
+	}
+	teamNormalMembers, err := team.NormalMembers()
+	if err != nil {
+		util.Info(err, " Cannot get team normal member")
+		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
+		return
+	}
+
+	var tCMBList []data.TeamMemberBean
+	var tNMBList []data.TeamMemberBean
+
+	tCMBList, err = FetchTeamMemberBeanList(teamCoreMembers)
+	if err != nil {
+		util.Info(err, " Cannot get FetchTeamMemberBeanList()")
+		Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
+		return
+	}
+	tNMBList, err = FetchTeamMemberBeanList(teamNormalMembers)
+	if err != nil {
+		util.Info(err, " Cannot get FetchTeamMemberBeanList()")
+		Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
+		return
+	}
+	tD.CoreMemberBeanList = tCMBList
+	tD.NormalMemberBeanList = tNMBList
+
+	tD.SessUser = s_u
+
+	RenderHTML(w, &tD, "layout", "navbar.private", "team.manage")
 }
 
 // CoreManage() 处理用户管理团队核心成员角色事务

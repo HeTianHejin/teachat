@@ -326,7 +326,7 @@ func (user *User) UpdateAvatar() (err error) {
 }
 
 // Get a single user given the email
-func UserByEmail(email string) (user User, err error) {
+func GetUserByEmail(email string) (user User, err error) {
 	user = User{}
 	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", email).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
@@ -356,7 +356,7 @@ func UserById(id int) (user User, err error) {
 }
 
 // Get a single user given the UUID
-func GetUserByUuid(uuid string) (user User, err error) {
+func GetUserByUUID(uuid string) (user User, err error) {
 	user = User{}
 	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE uuid = $1", uuid).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)

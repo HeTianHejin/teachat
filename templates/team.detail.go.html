@@ -4,27 +4,12 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li>{{ .Team.Abbreviation }}@茶团</li>
+  <li>{{ .Team.Name }}</li>
   <li class="=active">详情</li>
 </ol>
 
 {{ if .IsCoreMember }}
-{{/*  管理菜单  */}}
-<div class="dropdown">
-  <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-    管理菜单
-    <span class="caret"></span>
-  </button>
-  <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-    <li><a href="/v1/search">邀请成员</a></li>
-    <li><a href="/v1/team/invitations?id={{ .Team.Uuid }}">查看邀请</a></li>
-    <li><a href="/v1/team_member/role?id={{ .Team.Uuid }}">调整角色</a></li>
-    <li><a href="/v1/team/edit?id={{ .Team.Uuid }}">修改资料</a></li>
-    <li><a href="/v1/team_member/remove?id={{ .Team.Uuid }}">移除成员</a></li>
-    <li role="separator" class="divider"></li>
-    <li><a href="#">解散团队</a></li>
-  </ul>
-</div>
+<a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
 
 {{ if .HasApplication }}
 
@@ -130,74 +115,75 @@
     </div>
 
 
-    <div style="margin: 20px;">
+    <div style="margin: 2rem;">
       <ol class="nav nav-tabs">
         <li class="active"><a href="#">在座成员</a></li>
-        <li><a href="/v1/team/member_quited">已退成员</a></li>
+        <li><a href="/v1/team_member/quited">已退成员</a></li>
       </ol>
     </div>
 
 
     {{/*  这是茶团核心成员展示页面  */}}
-    {{ range .CoreMemberDataList }}
+    {{ range .CoreMemberBeanList }}
 
     <div class="media">
       <div class="media-left">
-        <a href="/v1/user/biography?id={{ .User.Uuid }}">
-          <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+        <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+          <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
         </a>
       </div>
       <div class="media-body">
 
-        {{ .User.Name }}
+        {{ .Member.Name }}
         <span  style="font-size: small;">
-          {{if .User.Gender }}
+          {{if .Member.Gender }}
             <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
             {{ end }}
         </span>
         
-        <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+        <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
 
        
-        <h5>{{ .TeamMemberRole }}</h5>
+        <h5>{{ .TeamMember.Role }}</h5>
 
         <p>加盟时间：{{ .CreatedAtDate }}</p>
 
-        <span style="font-style: italic;">{{ .User.Email }}</span>
+        <span style="font-style: italic;">{{ .Member.Email }}</span>
 
       </div>
     </div>
 
+   
     <hr />
     {{ end }}
 
-    {{ range .NormalMemberDataList }}
+    {{ range .NormalMemberBeanList }}
 
     <div class="media">
       <div class="media-left">
-        <a href="/v1/user/biography?id={{ .User.Uuid }}">
-          <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+        <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+          <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
         </a>
       </div>
       <div class="media-body">
-        {{ .User.Name }}
+        {{ .Member.Name }}
         <span  style="font-size: small;">
-          {{if .User.Gender }}
+          {{if .Member.Gender }}
           <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
           {{ else }}
           <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
           {{ end }}
           </span>
 
-        <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+        <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
    
-        <h5>{{ .TeamMemberRole }}</h5>
+        <h5>{{ .TeamMember.Role }}</h5>
 
         <p>加盟时间：{{ .CreatedAtDate }}</p>
 
-        <span style="font-style: italic;">{{ .User.Email }}</span>
+        <span style="font-style: italic;">{{ .Member.Email }}</span>
 
       </div>
     </div>

@@ -157,7 +157,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 // POST /v1/post/draft
 // Create the post 创建品味（跟帖/回复）草稿
 func NewPostDraft(w http.ResponseWriter, r *http.Request) {
-	sess, err := Session(r)
+	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -169,7 +169,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sUser, err := sess.User()
+	s_u, err := s.User()
 	if err != nil {
 		util.Warning(err, " Cannot get user from session")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
@@ -213,7 +213,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查team_id是否有效
-	_, err = data.GetTeamMemberByTeamIdAndUserId(team_id, sUser.Id)
+	_, err = data.GetMemberByTeamIdAndUserId(team_id, s_u.Id)
 	if err != nil {
 		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
 		return
@@ -229,14 +229,14 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	switch proj.Class {
 	case 1:
 		// class=1可以品茶，
-		if dPost, err = sUser.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
+		if dPost, err = s_u.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
 			Report(w, r, "你好，茶博士摸摸头，记录品味失败。")
 			return
 		}
 
 	case 2:
 		// 当前会话用户是否可以入席品茶？需要看台主指定了那些茶团成员可以品茶
-		ok, err := proj.IsInvitedMember(sUser.Id)
+		ok, err := proj.IsInvitedMember(s_u.Id)
 		if err != nil {
 			Report(w, r, "你好，������失������，未能读取专����台资料。")
 			return
@@ -248,7 +248,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Can have tea
-		if dPost, err = sUser.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
+		if dPost, err = s_u.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
 			Report(w, r, "你好，茶博士摸摸头，竟然说没有墨水，记录品味失败。")
 			return
 		}
@@ -277,7 +277,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: aO.Id,
 	}
 	// 发送消息
-	if err = AcceptMessageSendExceptUserId(sUser.Id, mess); err != nil {
+	if err = AcceptMessageSendExceptUserId(s_u.Id, mess); err != nil {
 		Report(w, r, "你好，茶博士迷路了，未能发送盲评请求消息。")
 		return
 	}
