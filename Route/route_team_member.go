@@ -109,7 +109,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	member_email := vals.Get("m_email")
 
 	//检查提交的email参数格式是否正常
-	if ok := VerifyEmailFormat(member_email); !ok {
+	if ok := IsEmail(member_email); !ok {
 		Report(w, r, "你好，茶博士的眼镜被闪电破坏了，看不清提及的邮箱，请稍后再试。")
 		return
 	}
@@ -231,7 +231,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	}
 	//提交的成员邮箱
 	m_email := r.PostFormValue("m_email")
-	if ok := VerifyEmailFormat(m_email); !ok {
+	if ok := IsEmail(m_email); !ok {
 		Report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
 		return
 	}
@@ -1198,7 +1198,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	email := r.PostFormValue("email")
-	if ok := VerifyEmailFormat(email); !ok {
+	if ok := IsEmail(email); !ok {
 		Report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
 		return
 	}

@@ -708,8 +708,8 @@ func RenderHTML(w http.ResponseWriter, data interface{}, filenames ...string) {
 	templates.ExecuteTemplate(w, "layout", data)
 }
 
-// 验证邮箱格式是否正确，正确返回true，错误返回false。
-func VerifyEmailFormat(email string) bool {
+// 验证邮箱地址，格式是否正确，正确返回true，错误返回false。
+func IsEmail(email string) bool {
 	pattern := `^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$`
 	reg := regexp.MustCompile(pattern)
 	return reg.MatchString(email)

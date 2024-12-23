@@ -77,7 +77,7 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 		Avatar:    "teaSet",
 	}
 	// 用正则表达式匹配一下提交的邮箱格式是否正确
-	if ok := VerifyEmailFormat(newU.Email); !ok {
+	if ok := IsEmail(newU.Email); !ok {
 		Report(w, r, "你好，请确认邮箱拼写是否正确。")
 		return
 	}
@@ -157,7 +157,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 					Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
 					return
 				}
-			} else if VerifyEmailFormat(email) {
+			} else if IsEmail(email) {
 				// Retrieve user by email
 				s_u, err = data.GetUserByEmail(email)
 				if err != nil {
