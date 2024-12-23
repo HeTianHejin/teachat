@@ -10,12 +10,65 @@ import (
 	"time"
 )
 
+// GET /v1/team_member/role_changed?id=XXX
+// MemberRoleChanged() 某个茶团的全部已发布成员角色调整声明列表页面
+func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
+	// 读取会话
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	// 根据会话信息读取茶友资料
+	s_u, err := s.User()
+	if err != nil {
+		util.Warning(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	// 读取查询参数
+	vals := r.URL.Query()
+	team_uuid := vals.Get("id")
+
+	//读取目标茶团资料
+	t_team, err := data.GetTeamByUUID(team_uuid)
+	if err != nil {
+		util.Warning(err, team_uuid, "Cannot get team by uuid")
+		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
+		return
+	}
+
+	//读取这支茶团已发布的，全部成员角色调整声明
+	role_notices, err := data.GetMemberRoleNoticesByTeamId(t_team.Id)
+	if err != nil {
+		util.Warning(err, t_team.Id, "Cannot get team member role change notice by team id")
+		Report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
+		return
+	}
+	tmrnBeanList, err := FetchTeamMemberRoleNoticeBeanList(role_notices)
+	if err != nil {
+		util.Warning(err, "Cannot fetch team member role notice bean list")
+		Report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
+		return
+	}
+
+	var tmrcnpd data.TeamMemberRoleChangedNoticesPageData
+	tmrcnpd.SessUser = s_u
+	tmrcnpd.Team = t_team
+	tmrcnpd.TeamMemberRoleNoticeBeanList = tmrnBeanList
+
+	//渲染茶团成员角色调整通知页面
+	RenderHTML(w, &tmrcnpd, "layout", "navbar.private", "member.role_changed_notices")
+
+}
+
 // Handle() /v1/team_member/role
-// 调整茶团成员角色办事窗口
+// 调整茶团成员角色管理窗口
 func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		//返回调整角色页面
+		//返回调整角色（撰写角色调整公告）页面
 		MemberRoleChange(w, r)
 	case "POST":
 		//设置角色
@@ -25,7 +78,7 @@ func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// MemberRoleChange() GET /v1/team_member/change_role?id=XXX&m_id=XXX
+// MemberRoleChange() GET /v1/team_member/role?id=XXX&m_email=XXX
 // 取出一张空白茶团成员角色任命书
 func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	// 读取会话
@@ -37,93 +90,317 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	// 根据会话信息读取茶友资料
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Warning(err, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 
 	// 读取提交的查询参数
 	vals := r.URL.Query()
-	team_uuid := vals.Get("id")
+	team_id_str := vals.Get("id")
+	//检查提交的id参数格式是否正常
+	team_id_int, err := strconv.Atoi(team_id_str)
+	if err != nil {
+		util.Warning(err, team_id_str, "Cannot convert team_id to int")
+		Report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+		return
+	}
+
 	member_email := vals.Get("m_email")
 
-	//检查email格式是否正常
+	//检查提交的email参数格式是否正常
 	if ok := VerifyEmailFormat(member_email); !ok {
 		Report(w, r, "你好，茶博士的眼镜被闪电破坏了，看不清提及的邮箱，请稍后再试。")
 		return
 	}
 
 	//读取目标茶团资料
-	team, err := data.GetTeamByUUID(team_uuid)
+	t_team, err := data.GetTeamById(team_id_int)
 	if err != nil {
-		util.Info(err, team_uuid, "Cannot get team by uuid")
+		util.Warning(err, team_id_str, "Cannot get team by id")
 		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
-	//读取拟调整角色茶团成员资料
-	member, err := data.GetUserByEmail(member_email)
+	//读取拟调整角色目标茶友资料
+	t_member, err := data.GetUserByEmail(member_email)
 	if err != nil {
-		util.Info(err, member_email, "Cannot get user given email")
+		util.Warning(err, member_email, "Cannot get user given email")
 		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶友，稍后再试。")
 		return
 	}
 
-	//检查当前用户是否茶团成员
-	_, err = data.GetMemberByTeamIdAndUserId(team.Id, member.Id)
+	//检查目标茶友是否茶团成员
+	_, err = data.GetMemberByTeamIdAndUserId(t_team.Id, t_member.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			Report(w, r, "你好，满头大汗的茶博士表示你不是这个茶团的成员，稍后再试。")
+			Report(w, r, "你好，满头大汗的茶博士表示这个不是茶团的成员，稍后再试。")
 			return
 		} else {
-			util.Warning(err, team.Id, " when GetMemberByTeamIdAndUserId() checking team_member")
+			util.Warning(err, t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member")
 			Report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
 	}
 
-	//检查当前用户是否茶团CEO
-	member_ceo, err := team.MemberCEO()
+	//检查提交者（当前用户）是否茶团CEO
+	//先读取茶团CEO成员资料
+	member_ceo, err := t_team.MemberCEO()
 	if err != nil {
-		util.Warning(err, team.Id, "Cannot get team ceo given team id")
+		util.Warning(err, t_team.Id, "Cannot get team ceo given team id")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
+	//读取目标茶团创建人的资料，Founder也可以调整成员角色！包括CEO！太疯狂了？（参考自观音菩萨可以决定西天取经团队的任何角色人选）
+	t_founder, err := t_team.Founder()
+	if err != nil {
+		util.Warning(err, t_team.Id, "Cannot get team founder given team id")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+	}
+	// 准备资料
+	var tmrcnP data.TeamMemberRoleChangeNoticePage
+	is_manager := false
 
-	// CEO不能自己调整自己的角色
-	if member_ceo.UserId == member.Id {
-		Report(w, r, "你好，茶博士抬了抬厚重的眼镜，竟然说需要FOUNDER权限，请确认后再试。")
+	if t_founder.Id == s_u.Id {
+		is_manager = true
+		tmrcnP.IsCEO = false
+	} else if member_ceo.UserId == s_u.Id {
+		// 如果会话用户是CEO，可以调整目标成员角色
+		is_manager = true
+		tmrcnP.IsCEO = true
+		// 然后检查目标茶友和目标茶团CEO身份，CEO不能自己调整自己的角色，（WHY？）
+		if member_ceo.UserId == t_member.Id {
+			is_manager = false
+		}
+	}
+
+	if !is_manager {
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，你不是这个茶团的管理者，无权调整角色噢。")
 		return
 	}
 
-	// 如果是CEO，可以调整成员角色
-	if ok := member_ceo.UserId == s_u.Id; !ok {
-		Report(w, r, "你好，茶博士抬了抬厚重的眼镜，竟然说需要CEO权限，请确认后再试。")
-		return
-	}
-
-	ceo, err := data.GetUserById(member_ceo.UserId)
+	//读取CEO茶友资料
+	t_ceo, err := data.GetUserById(member_ceo.UserId)
 	if err != nil {
 		util.Warning(err, member_ceo.UserId, "Cannot get user by id")
 		Report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
 
-	//准备资料
-	var tmrcnP data.TeamMemberRoleChangeNoticePage
+	m_c_role, err := data.GetTeamMemberRoleByTeamIdAndUserId(t_team.Id, t_member.Id)
+	if err != nil {
+		util.Warning(err, t_team.Id, "Cannot get team member role given team id")
+		Report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
+		return
+	}
+
 	//填充资料
 	tmrcnP.SessUser = s_u
-	tmrcnP.TeamMemberRoleNoticeBeanList[0].Team = team
-	tmrcnP.TeamMemberRoleNoticeBeanList[0].CEO = ceo
-	tmrcnP.TeamMemberRoleNoticeBeanList[0].Member = member
+	tmrcnP.Team = t_team
+	tmrcnP.TeamMemberRoleNoticeBean.Team = t_team
+	tmrcnP.TeamMemberRoleNoticeBean.Founder = t_founder
+	tmrcnP.TeamMemberRoleNoticeBean.CEO = t_ceo
+	tmrcnP.TeamMemberRoleNoticeBean.Member = t_member
+	tmrcnP.TeamMemberRoleNoticeBean.TeamMemberRoleNotice.MemberCurrentRole = m_c_role
 
 	//渲染茶团角色调整页面
 	RenderHTML(w, &tmrcnP, "layout", "navbar.private", "member.role_change_new")
 }
 
-// MemberRole() POST /v1/team_member/role?id=
-// 提交一个成员角色任命书答复
+// MemberRole() POST /v1/team_member/role
+// 提交一个成员新的团队角色任命书答复
 func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+	//获取session
+	s, err := Session(r)
+	if err != nil {
+		util.Danger(err, " Cannot get session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Warning(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	//解析表单内容，获取当前用户提交的内容
+	err = r.ParseForm()
+	if err != nil {
+		util.Danger(err, " Cannot parse form")
+		http.Redirect(w, r, "/v1/", http.StatusFound)
+		return
+	}
+	//提交的成员邮箱
+	m_email := r.PostFormValue("m_email")
+	if ok := VerifyEmailFormat(m_email); !ok {
+		Report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
+		return
+	}
+	//提交的目标茶团
+	team_id_str := r.PostFormValue("team_id")
+	team_id, err := strconv.Atoi(team_id_str)
+	if err != nil {
+		util.Danger(err, team_id_str, "Cannot convert team_id to int")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	//读取目标茶团资料
+	t_team, err := data.GetTeamById(team_id)
+	if err != nil {
+		util.Danger(err, team_id, "Cannot get team by id")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	//提交的成员新角色参数
+	new_role := r.PostFormValue("role")
+	//提交的成员新角色参数是否正常
+	switch new_role {
+	case "taster":
+		break
+	case "CEO", "CTO", "CFO", "CMO":
+		//需要检查目标角色是否空缺
+		_, err = t_team.GetTeamMemberByRole(new_role)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				//目标角色空缺,可以调整
+				break
+			} else {
+				util.Danger(err, t_team.Id, new_role, "Cannot get team member by role")
+				Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+		} else {
+			Report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的角色已经有人担任了，请确认后再提交。")
+			return
+		}
+
+	default:
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的角色不在茶团角色列表中，请确认后再提交。")
+		return
+	}
+
+	//目标茶友
+	t_member, err := data.GetUserByEmail(m_email)
+	if err != nil {
+		util.Danger(err, m_email, "Cannot get user by email")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	//检查目标茶友是否茶团成员
+	member, err := data.GetMemberByTeamIdAndUserId(t_team.Id, t_member.Id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			Report(w, r, "你好，茶博士摸摸头嘀咕说，这个茶友不是茶团成员，无法调整角色。")
+			return
+		} else {
+			util.Danger(err, t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member")
+			Report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			return
+		}
+	}
+	//检查提交者是否在尝试调整自己的角色，不合规
+	if member.UserId == s_u.Id {
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，你不能调整自己的角色。")
+		return
+	}
+	//Role no change
+	if new_role == member.Role {
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，你没有调整角色，无需提交。")
+		return
+	}
+
+	//提交的角色调整标题
+	title := r.PostFormValue("title")
+	//检查提交的标题是否正常，中文字数>6,<24
+	if CnStrLen(title) < 6 || CnStrLen(title) > 24 {
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的标题太长或太短，请确认后再提交。")
+		return
+	}
+	//提交的角色调整内容
+	content := r.PostFormValue("content")
+	//检查提交的内容是否正常，中文字数>2,<456,
+	if CnStrLen(content) < 2 || CnStrLen(content) > 456 {
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的内容太长或太短，请确认后再提交。")
+		return
+	}
+
+	//检查提交者（当前用户）是否茶团CEO？如果不是CEO，再检查是否是茶团创建人
+	//读取CEO成员资料
+	m_ceo, err := t_team.MemberCEO()
+	if err != nil {
+		util.Danger(err, t_team.Id, "Cannot get team ceo given team id")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	//读取目标茶团创建人资料
+	t_founder, err := t_team.Founder()
+	if err != nil {
+		util.Danger(err, t_team.Id, "Cannot get team founder given team id")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	if m_ceo.UserId == s_u.Id && new_role != "CEO" {
+		//会话用户是CEO，可以调整非CEO成员角色
+		//创建一个新的团队成员角色变动公告
+		team_member_role_notice := data.TeamMemberRoleNotice{
+			Uuid:              data.Random_UUID(),
+			TeamId:            t_team.Id,
+			CeoId:             m_ceo.UserId,
+			MemberId:          member.Id,
+			MemberCurrentRole: member.Role,
+			NewRole:           new_role,
+			Title:             title,
+			Content:           content,
+			Status:            0,
+			CreatedAt:         time.Now(),
+		}
+		if err = team_member_role_notice.Create(); err != nil {
+			util.Warning(err, team_member_role_notice, "Cannot create team_member_role_notice")
+			Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			return
+		}
+		//更新成员角色
+		member.Role = new_role
+		if err = member.Update(); err != nil {
+			util.Warning(err, member, "Cannot update member")
+			Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			return
+		}
+
+	} else if t_founder.Id == s_u.Id {
+		//会话用户是创建人，可以调整CEO和非CEO成员角色
+		//创建一个新的团队成员角色变动公告
+		team_member_role_notice := data.TeamMemberRoleNotice{
+			Uuid:              data.Random_UUID(),
+			TeamId:            t_team.Id,
+			CeoId:             m_ceo.UserId,
+			MemberId:          member.Id,
+			MemberCurrentRole: member.Role,
+			NewRole:           new_role,
+			Title:             title,
+			Content:           content,
+			Status:            0,
+			CreatedAt:         time.Now(),
+		}
+		if err = team_member_role_notice.Create(); err != nil {
+			util.Warning(err, team_member_role_notice, "Cannot create team_member_role_notice")
+			Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			return
+		}
+		// 更新成员角色
+		member.Role = new_role
+		if err = member.Update(); err != nil {
+			util.Warning(err, member, "Cannot update member")
+			Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			return
+		}
+	} else {
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，你不是这个茶团的管理者，无权调整角色噢。")
+		return
+	}
+
+	//报告调整角色成功消息
+	Report(w, r, "你好，茶博士摸摸头说，已经调整了 "+t_member.Name+" 的角色为 "+new_role+" 。")
 }
 
 // /v1/team_member/invite
@@ -420,7 +697,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	// 根据会话信息读取茶友资料
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Warning(err, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -538,7 +815,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	// 根据会话信息读取茶友资料
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Warning(err, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -620,7 +897,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	// 根据会话信息读取茶友资料
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Warning(err, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -909,7 +1186,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Warning(err, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1155,7 +1432,7 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	invi_uuid := vals.Get("id")
 	invi, err := data.GetInvitationByUuid(invi_uuid)
 	if err != nil {
-		//util.Info(err, invi_uuid," Cannot get invitation given uuid")
+		//util.Warning(err, invi_uuid," Cannot get invitation given uuid")
 		Report(w, r, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
 		return
 	}

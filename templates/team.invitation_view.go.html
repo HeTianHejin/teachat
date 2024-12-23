@@ -48,17 +48,21 @@
             </div>
 
             <div class="panel-body">
-                <h4 class="text-center">茶团邀请函</h4>
+                <h4 class="text-center">诚邀加盟邀请函</h4>
+                
                 <p>
                     致 <strong>{{ .InviteUser.Name }}</strong> 阁下：
                 </p>
+                
                 <p>
                     {{ .Invitation.InviteWord }}
                 </p>
+
+                <p>拟邀任角色: {{ .Invitation.Role }}</p>
+
                 <p class="text-right">茶团CEO：
                     <strong>{{ .Invitation.CEO.Name }}</strong> 此致</p>
 
-                <p>拟邀任茶团角色为: {{ .Invitation.Role }}</p>
             </div>
 
         </div>

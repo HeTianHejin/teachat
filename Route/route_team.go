@@ -603,7 +603,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// v1/team/HandleManageTeam
+// HandleFunc() /v1/team/manage
 func HandleManageTeam(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
@@ -614,9 +614,10 @@ func HandleManageTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/team/manage
-// 处理用户管理团队事务
+// 根据提交的参数，处理管理某支团队事务，例如：冰封团队，调整状态等
 func ManageTeamPost(w http.ResponseWriter, r *http.Request) {
-	Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+	Report(w, r, "您好，茶博士正在忙碌建设这个功能中。。。")
+
 }
 
 // GET /v1/team/manage?id=
@@ -743,6 +744,12 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 		return
 	}
+
+	if len(tCMBList) == 0 {
+		Report(w, r, "你好，茶博士未能找到此茶团核心成员资料，请确认后再试。")
+		return
+	}
+
 	tD.CoreMemberBeanList = tCMBList
 	tD.NormalMemberBeanList = tNMBList
 
@@ -751,7 +758,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, &tD, "layout", "navbar.private", "team.manage")
 }
 
-// CoreManage() 处理用户管理团队核心成员角色事务
+// CoreManage() 处理用户管理团队核心成员角色事务（例如：表决事项）
 func CoreManage(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
@@ -952,7 +959,7 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 	//填写页面资料
 	isPD.InvitationList = is
 
-	// 检查用户是否可以查看，CEO，CTO，CFO，CMO核心成员可以
+	// 检查用户是否可以查看，FOUNDER，CEO，CTO，CFO，CMO核心成员可以
 	IsCoreMember := false
 
 	coreMembers, err := team.CoreMembers()
@@ -965,6 +972,19 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 	// 检测用户是否茶团管理员
 	for _, member := range coreMembers {
 		if s_u.Id == member.UserId {
+			IsCoreMember = true
+			break
+		}
+	}
+	if !IsCoreMember {
+		//查询创建人资料
+		founder, err := team.Founder()
+		if err != nil {
+			util.Info(err, team.Id, " Cannot get team founder")
+			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
+			return
+		}
+		if founder.Id == s_u.Id {
 			IsCoreMember = true
 		}
 	}
@@ -1006,7 +1026,7 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能找到这个邀请函，请稍后再试。")
 		return
 	}
-
+	//目标茶团
 	team, err := in.Team()
 	if err != nil {
 		util.Warning(err, " Cannot get team given invitation")
@@ -1041,6 +1061,19 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 	for _, member := range coreMembers {
 		if s_u.Id == member.UserId {
 			IsCoreMember = true
+			break
+		}
+	}
+	if !IsCoreMember {
+		//查询创建人资料
+		founder, err := team.Founder()
+		if err != nil {
+			util.Info(err, team.Id, " Cannot get team founder")
+			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
+			return
+		}
+		if founder.Id == s_u.Id {
+			IsCoreMember = true
 		}
 	}
 
@@ -1050,7 +1083,7 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		// say no
-		Report(w, r, "你好，蛮不讲理的茶博士竟然说，只有茶团核心成员才能查看邀请函发送记录。")
+		Report(w, r, "你好，蛮不讲理的茶博士竟然说，只有茶团创始人和核心成员才能查看邀请函发送记录。")
 	}
 
 }

@@ -2,27 +2,29 @@
 
 
 
-{{ range .TeamMemberRoleNoticeBeanList }}
-
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/office">{{ .Team.Name }}@茶团</a></li>
-    <li class="active">调整茶团成员角色</li>
+    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li class="active">发布调整茶团成员角色声明</li>
 </ol>
 
-<p>
-    说明：CEO仅能由茶团创建人指定和撤销；CEO可以指定和撤销CTO，CMO，CFO，每个核心角色只能指定一人担任，品茶师调整为核心成员之前需要先将该角色空缺。
-</p>
+<div class="well">
+    说明：CEO可以指定和撤销CTO，CMO，CFO，每个核心角色只能指定一人担任，品茶师调整为核心成员之前需要先将该角色空缺。CEO仅能由茶团创建人指定和撤销；
+</div>
+
+{{/*  如果是撰写人是CEO，显示CEO作为发布者的调整角色声明撰写页面，否则显示Founder作为发布者的撰写声明  */}}
+{{ if .IsCEO }}
+{{ with .TeamMemberRoleNoticeBean }}
 
 <div class="panel panel-default">
 
     <div class="panel-heading">
-        撰写成员角色变更公告
+        撰写成员角色变更声明
     </div>
 
     <div class="panel-body">
 
-        <form class="form-horizontal" role="form" action="/v1/team_member/change_role" method="post">
+        <form class="form-horizontal" role="form" action="/v1/team_member/role" method="post">
 
             <div class="form-group">
 
@@ -30,8 +32,8 @@
 
                 <div class="col-sm-10">
 
-                    <input type="text" name="member_name" class="form-control" id="member_name" minlength="3"
-                        maxlength="54" value="{{ .Member.Name }}" readonly>
+                    <input type="text"  class="form-control" id="member_name" minlength="2"
+                        maxlength="54" value="{{ .Member.Name }}" readonly disabled />
 
                 </div>
 
@@ -39,94 +41,87 @@
 
             <div class="form-group">
 
-                <label for="member_email" class="col-sm-2 control-label">成员邮箱：</label>
+                <label for="m_email" class="col-sm-2 control-label">成员邮箱：</label>
 
                 <div class="col-sm-10">
 
-                    <input type="email" name="member_email" class="form-control" id="member_email" minlength="3"
-                        maxlength="54" value="{{ .Member.Email }}" readonly>
+                    <input  type="email" name="m_email" class="form-control" minlength="2"
+                        maxlength="54" value="{{ .Member.Email }}" readonly />
 
                 </div>
 
             </div>
 
             <div class="form-group">
-                <label for="member_current_role" class="col-sm-2 control-label">成员当前角色：</label>
+                <label for="member_current_role" class="col-sm-2 control-label">当前角色：</label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" id="member_current_role" minlength="3"
-                        maxlength="54" value="{{ .TeamMemberRoleNotice.MemberCurrentRole }}" readonly disabled>
+                    <input type="text" class="form-control" id="member_current_role" minlength="2"
+                        maxlength="54" value="{{ .TeamMemberRoleNotice.MemberCurrentRole }}" readonly disabled />
                 </div>
             </div>
 
             <div class="form-group">
-                <label for="title" class="col-sm-2 control-label">角色调整公告标题：</label>
+                <label for="radio" class="col-sm-2 control-label"> 新任角色：</label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" id="title" minlength="3"
-                        maxlength="54" value="{{ .TeamMemberRoleNotice.MemberCurrentRole }}" readonly disabled>
+                    <fieldset id="radio">
+                        
+
+                        <input type="radio" name="role" id="CTO" style="width: fit-content;" value=CTO required />
+                        <label for="CTO" style="margin-inline-end: 20px;">CTO</label>
+
+                        <input type="radio" name="role" id="CMO" style="width: fit-content;" value=CMO required />
+                        <label for="CMO" style="margin-inline-end: 20px;">CMO</label>
+
+                        <input type="radio" name="role" id="CFO" style="width: fit-content;" value=CFO required />
+                        <label for="CFO" style="margin-inline-end: 20px;">CFO</label>
+
+                        <input type="radio" name="role" id="member" style="width: fit-content;" value="taster" required checked />
+                        <label for="member">品茶师</label>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="title" class="col-sm-2 control-label">声明标题：</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="title" id="title" minlength="2"
+                        maxlength="24" value="关于 {{ .Member.Name }} 成员角色调整声明" required readonly />
                 </div>
             </div>
 
           
             <div class="form-group">
-                <label for="content" class="col-sm-2 control-label">角色调整公告内容：</label>
+                <label for="content" class="col-sm-2 control-label">声明内容：</label>
                 <div class="col-sm-10">
-                    <textarea class="form-control" name="content" id="content" rows="3" minlength="9"
+                    <textarea class="form-control" name="content" id="content" rows="3" minlength="2"
                         maxlength="567" placeholder="请输入一些声明话语" required></textarea>
                 </div>
             </div>
 
-            <div class="form-group col-sm-offset-2 col-sm-10">
-
-                <fieldset>
-
-                    <legend style="font-size: small;">为成员选择新角色：
-
-                        <input type="radio" name="new_role" id="CEO" style="width: fit-content;" value=CEO checked />
-
-                        <label for="CEO">首席执行官</label>
-
-                        <input type="radio" name="new_role" id="CTO" style="width: fit-content;" value=CTO />
-
-                        <label for="CTO">首席技术官</label>
-
-                        <input type="radio" name="new_role" id="CMO" style="width: fit-content;" value=CMO />
-
-                        <label for="CMO">首席营销官</label>
-
-                        <input type="radio" name="new_role" id="CFO" style="width: fit-content;" value=CFO />
-
-                        <label for="CFO">首席财务官</label>
-
-                        <input type="radio" name="new_role" id="member" style="width: fit-content;" value=taster />
-
-                        <label for="member">品茶师</label>
-
-                    </legend>
-
-                </fieldset>
-
-            </div>
+           
 
             <div class="form-group">
-
-                <label for="ceo_email" class="col-sm-2 control-label">茶团CEO邮箱：</label>
-
+                <label for="ceo_name" class="col-sm-2 control-label">茶团CEO：</label>
                 <div class="col-sm-10">
-
-                    <input type="email" name="ceo_email" class="form-control" id="ceo_email" minlength="3"
-                        maxlength="54" value="{{ .CEO.Email }}" readonly>
-
+                    <input type="text" class="form-control" id="ceo_name" minlength="2"
+                        maxlength="54" value="{{ .CEO.Name }}" readonly />
                 </div>
-
+            </div>
+            <div class="form-group">
+                <label for="c_email" class="col-sm-2 control-label">CEO邮箱：</label>
+                <div class="col-sm-10">
+                    <input type="email"  class="form-control" id="c_email" minlength="2"
+                        maxlength="54" value="{{ .CEO.Email }}" readonly />
+                </div>
             </div>
 
-            <input type="hidden" name="team_id" id="team_id" value="{{ .Team.Uuid }}">
+            <input type="hidden" name="team_id" id="team_id" value="{{ .Team.Id }}">
 
             <div class="form-group">
 
                 <div class="col-sm-offset-2 col-sm-10">
 
-                    <button type="submit" class="btn btn-default">发送</button>
+                    <button type="submit" class="btn btn-default">发布</button>
 
                 </div>
 
@@ -137,9 +132,129 @@
     </div>
 
     <div class="panel-footer">
-        Panel footer
+       茶博士提示：请谨慎发布角色调整声明，一旦发布，角色变动立即生效，将不可撤销。
     </div>
 
 </div>
+
+{{ end }}
+{{ else }}{{/*  不是CEO，显示Founder作为发布者的撰写声明  */}}
+{{ with .TeamMemberRoleNoticeBean }}
+<div class="panel panel-default">
+
+    <div class="panel-heading">
+        撰写成员角色变更声明
+    </div>
+
+    <div class="panel-body">
+
+        <form class="form-horizontal" role="form" action="/v1/team_member/role" method="post">
+
+            <div class="form-group">
+                <label for="member_name" class="col-sm-2 control-label">成员花名：</label>
+                <div class="col-sm-10">
+                    <input type="text"  class="form-control" id="member_name" minlength="2"
+                        maxlength="54" value="{{ .Member.Name }}" readonly disabled />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="m_email" class="col-sm-2 control-label">成员邮箱：</label>
+                <div class="col-sm-10">
+                    <input type="email" name="m_email" class="form-control"  minlength="2"
+                        maxlength="54" value="{{ .Member.Email }}" readonly />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="member_current_role" class="col-sm-2 control-label">当前角色：</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="member_current_role" minlength="2"
+                        maxlength="54" value="{{ .TeamMemberRoleNotice.MemberCurrentRole }}" readonly disabled />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="radio" class="col-sm-2 control-label"> 新任角色：</label>
+                <div class="col-sm-10">
+                    <fieldset id="radio">
+                        <input type="radio" name="role" id="CEO" style="width: fit-content;margin-inline-start: 20px;"
+                            value=CEO checked required />
+                        <label for="CEO" style="margin-inline-end: 20px;">CEO</label>
+
+                        <input type="radio" name="role" id="CTO" style="width: fit-content;" value=CTO  required />
+                        <label for="CTO" style="margin-inline-end: 20px;">CTO</label>
+
+                        <input type="radio" name="role" id="CMO" style="width: fit-content;" value=CMO required />
+                        <label for="CMO" style="margin-inline-end: 20px;">CMO</label>
+
+                        <input type="radio" name="role" id="CFO" style="width: fit-content;" value=CFO required />
+                        <label for="CFO" style="margin-inline-end: 20px;">CFO</label>
+
+                        <input type="radio" name="role" id="member" style="width: fit-content;" value="taster" required />
+                        <label for="member">品茶师</label>
+                    </fieldset>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="title" class="col-sm-2 control-label">声明标题：</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" name="title" id="title" minlength="2"
+                        maxlength="24" value="关于 {{ .Member.Name }} 成员角色调整声明" required readonly />
+                </div>
+            </div>
+
+          
+            <div class="form-group">
+                <label for="content" class="col-sm-2 control-label">声明内容：</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" name="content" id="content" rows="3" minlength="2"
+                        maxlength="567" placeholder="请输入一些声明话语" required></textarea>
+                </div>
+            </div>
+
+            
+
+                 
+
+            <div class="form-group">
+                <label for="founder_name" class="col-sm-2 control-label">创建人：</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="founder_name" minlength="2"
+                        maxlength="54" value="{{ .Founder.Name }}" readonly />
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="f_email" class="col-sm-2 control-label">邮箱：</label>
+                <div class="col-sm-10">
+                    <input type="email" class="form-control" id="f_email" minlength="2"
+                        maxlength="54" value="{{ .Founder.Email }}" readonly />
+                </div>
+            </div>
+
+            <input type="hidden" name="team_id" id="team_id" value="{{ .Team.Id }}">
+
+            <div class="form-group">
+
+                <div class="col-sm-offset-2 col-sm-10">
+
+                    <button type="submit" class="btn btn-default">发布</button>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <div class="panel-footer">
+       茶博士提示：请谨慎发布角色调整声明，一旦发布，角色变动立即生效，将不可撤销。
+    </div>
+
+</div>
+{{ end }}
+{{ end }}
 
 {{ end }}

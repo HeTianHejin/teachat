@@ -147,7 +147,7 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//根据查询类型操作
-	var fPD data.FetchPageData
+	var fPD data.SearchPageData
 	fPD.IsEmpty = true
 
 	switch class_int {
@@ -234,7 +234,7 @@ func Search(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var f data.FetchPageData
+	var f data.SearchPageData
 	f.SessUser = s_u
 
 	// 打开查询页面

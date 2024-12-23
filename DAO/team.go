@@ -72,18 +72,18 @@ type UserDefaultTeam struct {
 	CreatedAt time.Time
 }
 
-// 团队成员角色变动公告
+// 团队成员角色变动声明
 type TeamMemberRoleNotice struct {
 	Id                int
 	Uuid              string
-	TeamId            int    //公告茶团
+	TeamId            int    //声明茶团
 	CeoId             int    //时任茶团CEO茶友id
 	MemberId          int    //成员id(team_member.id)
 	MemberCurrentRole string //当前角色
 	NewRole           string //新角色
 	Title             string //标题
 	Content           string //内容
-	Status            int    //公告状态
+	Status            int    //声明状态 0:未读,1:已读,2:已处理
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 }
@@ -95,13 +95,13 @@ func (notice *TeamMemberRoleNotice) CreatedAtDate() string {
 
 // TeamMemberRoleNotice.Create()
 func (notice *TeamMemberRoleNotice) Create() (err error) {
-	statement := "INSERT INTO team_member_role_notices (team_id, ceo_id, member_id, member_current_role, new_role, title, content, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+	statement := "INSERT INTO team_member_role_notices (uuid, team_id, ceo_id, member_id, member_current_role, new_role, title, content, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(notice.TeamId, notice.CeoId, notice.MemberId, notice.MemberCurrentRole, notice.NewRole, notice.Title, notice.Content, notice.Status).Scan(&notice.Id)
+	err = stmt.QueryRow(notice.Uuid, notice.TeamId, notice.CeoId, notice.MemberId, notice.MemberCurrentRole, notice.NewRole, notice.Title, notice.Content, notice.Status).Scan(&notice.Id)
 	return
 }
 
@@ -117,7 +117,24 @@ func (notice *TeamMemberRoleNotice) Get() (err error) {
 	return
 }
 
-// Team.CountTeamMemberRoleNotices() 统计某个茶团的角色调整公告数量
+// TeamMemberRoleNotice.GetByTeamId()
+func GetMemberRoleNoticesByTeamId(team_id int) (notices []TeamMemberRoleNotice, err error) {
+	rows, err := Db.Query("SELECT * FROM team_member_role_notices WHERE team_id = $1", team_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		notice := TeamMemberRoleNotice{}
+		if err = rows.Scan(&notice.Id, &notice.Uuid, &notice.TeamId, &notice.CeoId, &notice.MemberId, &notice.MemberCurrentRole, &notice.NewRole, &notice.Title, &notice.Content, &notice.Status, &notice.CreatedAt, &notice.UpdatedAt); err != nil {
+			return
+		}
+		notices = append(notices, notice)
+	}
+	rows.Close()
+	return
+}
+
+// Team.CountTeamMemberRoleNotices() 统计某个茶团的角色调整声明数量
 func (team *Team) CountTeamMemberRoleNotices() (count int, err error) {
 	statement := "SELECT COUNT(*) FROM team_member_role_notices WHERE team_id = $1"
 	stmt, err := Db.Prepare(statement)

@@ -520,6 +520,11 @@ func FetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean dat
 		util.Warning(err, " Cannot read member given team member role notice")
 		return tmrnBean, err
 	}
+	tmrnBean.MemberDefaultTeam, err = tmrnBean.Member.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read member default team given team member role notice")
+		return tmrnBean, err
+	}
 
 	return tmrnBean, nil
 }

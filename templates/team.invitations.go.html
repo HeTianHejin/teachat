@@ -4,7 +4,7 @@
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}@茶团</a></li>
+    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
     <li class="active">全部邀请函</li>
 
 </ol>
@@ -27,53 +27,38 @@
 
 {{ range .InvitationList }}
 
-<div class="panel panel-default">
-
-  <div class="panel-heading">
-
-    <div class="row">
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-          <a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a>
-      </div>
-
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <span style="display: block; font-size: smaller;text-align: center;">
-          {{ .CreatedAtDate }}
-        </span>
-      </div>
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <span style="display: block; text-align: right;">
-          <span class="label label-success">{{ .GetStatus }}
-          </span>
-        </span>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="panel-body">
-    <h3>邀请函</h3>
-    <p>
-      受邀人邮箱：{{ .InviteEmail }}
-    </p>
-  </div>
-
-  <div class="panel-footer">
-      <a href="/v1/team/invitation?id={{ .Uuid }}">
-        <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
-        <span style="font-size: smaller;">
-          打开
-        </span>
-      </a>
+<ul class="media-list">
+  <li class="media">
    
+    <div class="media-body">
+      <h4 class="media-heading">诚邀加盟-邀请函</h4>
 
-  </div>
+      <p>
+        <span class="label label-success">{{ .GetStatus }}</span>
+      </p>
 
-</div>
+      <p style="font-style: italic;">
+        受邀人邮箱：{{ .InviteEmail }}
+      </p>
+      <p>
+        <a href="/v1/team/invitation?id={{ .Uuid }}">
+          <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
+          <span style="font-size: smaller;">
+            详情
+          </span>
+        </a>
+      </p>
+    </div>
+  </li>
+</ul>
+
+<hr />
 
 {{ else }}
 
+<hr />
 没有发出的加盟邀请函记录。
+<hr />
 
 {{ end }}
 

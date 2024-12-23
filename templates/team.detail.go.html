@@ -4,7 +4,7 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li>{{ .Team.Name }}</li>
+  <li><a href="#">{{ .Team.Name }}</a></li>
   <li class="=active">详情</li>
 </ol>
 
@@ -118,7 +118,8 @@
     <div style="margin: 2rem;">
       <ol class="nav nav-tabs">
         <li class="active"><a href="#">在座成员</a></li>
-        <li><a href="/v1/team_member/quited">已退成员</a></li>
+        <li><a href="/v1/team_member/role_changed?id={{ .Team.Uuid }}">角色变动</a></li>
+        <li><a href="/v1/team_member/quited?id={{ .Team.Uuid }}">离开成员</a></li>
       </ol>
     </div>
 

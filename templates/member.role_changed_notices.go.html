@@ -1,0 +1,71 @@
+{{ define "content" }}{{/*  这是某支茶团已发布的全部调整角色声明列表页面,start  */}}
+
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li class="active">已发布成员角色变动声明</li>
+</ol>
+
+<div style="margin: 2rem;">
+    <ol class="nav nav-tabs">
+      <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">在座成员</a></li>
+      <li class="active"><a href="#">角色变动</a></li>
+      <li><a href="/v1/team_member/quited?id={{ .Team.Uuid }}">离开成员</a></li>
+    </ol>
+  </div>
+
+{{ range .TeamMemberRoleNoticeBeanList }}{{/*  展示全部调整角色声明列表,开始  */}}
+
+<div class="media">
+    <div class="media-left">
+      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+        <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
+      </a>
+    </div>
+    <div class="media-body">
+      {{ .Member.Name }}
+      <span  style="font-size: small;">
+        {{if .Member.Gender }}
+        <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+        {{ else }}
+        <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+        {{ end }}
+        </span>
+
+      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+ 
+      <h5>{{ .TeamMemberRoleNotice.Title }}</h5>
+
+      
+      <p>角色变动成员邮箱：
+          <span style="font-style: italic;">{{ .Member.Email }}</span>
+        </p>
+        <p>原任角色：{{ .TeamMemberRoleNotice.MemberCurrentRole }}</p>
+        <p>新任角色：{{ .TeamMemberRoleNotice.NewRole }}</p>
+        
+        <div class="well">{{ .TeamMemberRoleNotice.Content }}</div>
+
+        {{ with .Founder }}
+        <p>茶团创始人：{{ .Name }}</p>
+        {{ end }}
+        
+        {{ with .CEO }}
+        <p>茶团CEO：{{ .Name }} <span style="font-style: italic;">{{ .Email }}</span></p>
+        {{ end }}
+
+        <p>发布时间：{{ .TeamMemberRoleNotice.CreatedAtDate }}</p>
+    </div>
+  </div>
+
+  <hr />
+
+
+{{ else }}{{/*  如果没有调整角色声明，显示提示信息，开始  */}}
+<div class="alert alert-warning" role="alert">
+    <strong>提示：</strong>暂无调整角色声明。
+</div>
+{{ end }}{{/*  展示全部调整角色声明列表，结束  */}}
+ 
+
+{{ end}}{{/*  这是某支茶团已发布的全部调整角色声明列表页面，结束  */}}

@@ -623,7 +623,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 		//是台主，可以处理请求
 		ok = true
 	} else {
-		//不是台主，检查是否是支持team核心成员
+		//不是台主，检查是否是team核心成员
 		for _, tm := range team_members {
 			if tm.UserId == s_u.Id {
 				//是team核心成员，可以处理请求

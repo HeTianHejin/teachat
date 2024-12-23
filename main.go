@@ -66,13 +66,14 @@ func main() {
 	mux.HandleFunc("/v1/group/detail", route.GroupDetail)
 
 	//defined in route_team_member.go
-	//定义茶团成员个人事务
+	//处理茶团成员个人事务
 	mux.HandleFunc("/v1/team_member/application/new", route.HandleNewMemberApplication)
 	mux.HandleFunc("/v1/team_member/application/review", route.HandleMemberApplication)
 	mux.HandleFunc("/v1/team_member/application/check", route.MemberApplyCheck)
 	mux.HandleFunc("/v1/team_member/invite", route.HandleInviteMember)
 	mux.HandleFunc("/v1/team_member/invitation", route.HandleMemberInvitation)
 	mux.HandleFunc("/v1/team_member/role", route.HandleMemberRole)
+	mux.HandleFunc("/v1/team_member/role_changed", route.MemberRoleChanged)
 
 	//defined in route_objective.go
 	mux.HandleFunc("/v1/objective/new", route.HandleNewObjective)

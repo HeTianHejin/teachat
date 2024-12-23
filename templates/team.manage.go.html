@@ -56,23 +56,13 @@
 
     </div>
   </div>
-
 {{/*  显示调整角色功能按钮  */}}
-<form class="form" role="form" action="/v1/team_member/change_role" method="post">
-  <div class="form-group">
-    <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
-    <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
-    <button type="submit" class="btn btn-default btn-sm">调整角色</button>
+  <div style="margin: 2rem;">
+    <a class="btn btn-default" href="/v1/team_member/role?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">调整角色</a>
+    <a class="btn btn-default" href="/v1/team_member/remove?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
   </div>
-</form>
 
-<form class="form" role="form" action="/v1/team_member/remove" method="post">
-  <div class="form-group">
-    <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
-    <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
-    <button type="submit" class="btn btn-default btn-sm">移除成员</button>
-  </div>
-</form>
+
 <hr />
 {{ end }}{{/* 展示创建人可管理的核心成员结束 */}}
 
@@ -113,22 +103,13 @@
 {{ if .IsFounder }}
 {{ else }}
 {{ if .IsCEO }}
-  {{ else }}{{/*  显示调整角色功能按钮  */}}
-<form class="form" role="form" action="/v1/team_member/change_role" method="post">
-  <div class="form-group">
-    <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
-    <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
-    <button type="submit" class="btn btn-default btn-sm">调整角色</button>
+  {{ else }} 
+  {{/*  显示调整角色功能按钮  */}}
+  <div style="margin: 2rem;">
+    <a class="btn btn-default" href="/v1/team_member/role?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">调整角色</a>
+    <a class="btn btn-default" href="/v1/team_member/remove?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
   </div>
-</form>
-
-<form class="form" role="form" action="/v1/team_member/remove" method="post">
-  <div class="form-group">
-    <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
-    <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
-    <button type="submit" class="btn btn-default btn-sm">移除成员</button>
-  </div>
-</form>
+  
 {{ end }}{{/* 检查是否CEO结束 */}}
 {{ end }}{{/* 非创建人可见页面，检查是否创建人结束 */}}
 <hr />
@@ -168,24 +149,12 @@
   {{ if .IsCEO }}
   {{ else }}
   {{ if .IsCoreMember }}
-  {{ else }}{{/*  显示调整角色功能按钮  */}}
-  <form class="form" role="form" action="/v1/team_member/change_role" method="post">
-    <div class="form-group">
+  {{ else }} {{/*  显示调整角色功能按钮  */}}
+  <div style="margin: 2rem;">
+    <a class="btn btn-default" href="/v1/team_member/role?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">调整角色</a>
+    <a class="btn btn-default" href="/v1/team_member/remove?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
+  </div>
 
-      <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
-      <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
-      <button type="submit" class="btn btn-default btn-sm">调整角色</button>
-    </div>
-  </form>
-
-  <form class="form" role="form" action="/v1/team_member/remove" method="post">
-    <div class="form-group">
-      
-      <input type="hidden" name="id" value="{{ .TeamMember.TeamId }}" />
-      <input type="hidden" name="m_email" value="{{ .Member.Email }}" />
-      <button type="submit" class="btn btn-default btn-sm">移除成员</button>
-    </div>
-  </form>
   {{ end }}{{/* 检查是否CEO结束 */}}
   {{ end }}{{/* 检查是否核心成员（管理员）结束 */}}
 

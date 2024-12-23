@@ -363,26 +363,40 @@ type InvitationsPageData struct {
 	InvitationList []Invitation
 }
 
-// 团队成员角色变动公告，页面
+// 团队成员角色变动声明撰写（new）页面
 type TeamMemberRoleChangeNoticePage struct {
 	SessUser User
+	IsCEO    bool // 会话茶友是否为CEO？
 
-	TeamMemberRoleNoticeBeanList []TeamMemberRoleNoticeBean //团队成员角色变动公告资料夹串
+	Team                     Team                     // 声明所属团队
+	TeamMemberRoleNoticeBean TeamMemberRoleNoticeBean //团队成员角色变动声明资料夹串
 }
 
-// 团队成员角色变动公告资料夹
+// 团队成员角色变动声明集合，浏览（查阅）页面
+type TeamMemberRoleChangedNoticesPageData struct {
+	SessUser User
+
+	Team                         Team // 声明所属团队
+	TeamMemberRoleNoticeBeanList []TeamMemberRoleNoticeBean
+}
+
+// 团队成员角色变动声明资料夹
 type TeamMemberRoleNoticeBean struct {
 	TeamMemberRoleNotice TeamMemberRoleNotice
 	Team                 Team //需要调整角色的当前茶团
+	Founder              User //团队创建人
 	CEO                  User //时任茶团CEO茶友
 	Member               User //被调整角色茶友
+	MemberDefaultTeam    Team //被调整角色茶友默认所属团队
 }
 
+// 接纳茶语消息页面数据
 type AcceptMessagePageData struct {
 	SessUser          User
 	AcceptMessageList []AcceptMessage
 }
 
+// 接纳茶语对象页面数据
 type AcceptObjectPageData struct {
 	SessUser User
 	Title    string //标题
@@ -394,8 +408,8 @@ type ConnectionFriendPageData struct {
 	SessUser User
 }
 
-// 查找数据库记录，所得到的数据集合，页面数据
-type FetchPageData struct {
+// 查询功能，根据关键词查找数据库记录，所得到的数据集合，页面数据
+type SearchPageData struct {
 	SessUser User
 
 	IsEmpty bool //查询结果为空
