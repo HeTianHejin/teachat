@@ -10,6 +10,12 @@ import (
 	util "teachat/Util"
 )
 
+// GET /v1/team/members/fired
+// 显示被开除的成员的表单页面
+func MemberFired(w http.ResponseWriter, r *http.Request) {
+	Report(w, r, "您好，茶博士正在忙碌建设这个功能中。。。")
+}
+
 // GET /v1/team_member/application/check?id=
 // 查看加盟某个茶团的全部新的加盟申请书
 func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
@@ -36,7 +42,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查用户是否茶团成员，非成员不能查看加盟申请书
-	_, err = data.GetMemberByTeamIdAndUserId(team.Id, s_u.Id)
+	_, err = data.GetMemberByTeamIdUserId(team.Id, s_u.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			Report(w, r, "你好，茶博士失魂鱼，你不是茶团成员，无法查看申请书。")
@@ -134,9 +140,9 @@ func NewTeam(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var tpd data.TeamSquare
-	tpd.SessUser = s_u
-	RenderHTML(w, &tpd, "layout", "navbar.private", "team.new")
+	var tSPD data.TeamSquare
+	tSPD.SessUser = s_u
+	RenderHTML(w, &tSPD, "layout", "navbar.private", "team.new")
 }
 
 // POST /v1/team/create
@@ -159,6 +165,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//统计当前用户已创建的茶团数量，如果>最大许可值，则不能再创建
 	count, err := s_u.CountTeamsByFounderId()
 	if err != nil {
 		util.Danger(err, "connot count teams given founder_id")
@@ -269,16 +276,21 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士迷路了，未能发送盲评请求消息。")
 		return
 	}
-	t := fmt.Sprintf("你好，新开茶团 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", team.Name)
-	// 提示用户草稿保存成功
-	Report(w, r, t)
+
+	// 提示用户新茶团保存成功
+	text := ""
+	if s_u.Gender == 0 {
+		text = fmt.Sprintf("%s 女士，你好，登记 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, team.Name)
+	} else {
+		text = fmt.Sprintf("%s 先生，你好，登记 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, team.Name)
+	}
+	Report(w, r, text)
 
 }
 
 // GET /v1/teams/open
 // 显示茶棚全部开放式茶团列表信息
 func OpenTeams(w http.ResponseWriter, r *http.Request) {
-	var err error
 	var tS data.TeamSquare
 
 	team_list, err := data.GetOpenTeams()
@@ -468,7 +480,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	teamNormalMembers, err := team.NormalMembers()
 	if err != nil {
-		util.Info(err, " Cannot get team normal member")
+		util.Info(err, " Cannot get team normal member given team uuid")
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
@@ -603,14 +615,17 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// HandleFunc() /v1/team/manage
+// HandleManageTeam() /v1/team/manage
 func HandleManageTeam(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
 		ManageTeamGet(w, r)
 	case "POST":
 		ManageTeamPost(w, r)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
+
 }
 
 // POST /v1/team/manage
@@ -724,7 +739,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	}
 	teamNormalMembers, err := team.NormalMembers()
 	if err != nil {
-		util.Info(err, " Cannot get team normal member")
+		util.Info(err, team.Id, " Cannot get team normal member")
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
@@ -835,7 +850,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 	switch action {
 	case "appoint", "discharge":
 		member.Role = role
-		err := member.Update()
+		err := member.UpdateRoleClass()
 		if err != nil {
 			Report(w, r, "你好，保存角色管理操作失败，请稍后再试。")
 			return

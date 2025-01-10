@@ -27,6 +27,7 @@ drop table if exists team_member_role_notices;
 drop table if exists invitations;
 drop table if exists invitation_replies;
 drop table if exists families;
+drop table if exists family_members;
 drop table if exists communities;
 drop table if exists administrators;
 drop table if exists watchwords;
@@ -55,8 +56,25 @@ drop table if exists thread_time_slots;
 drop table if exists thread_goods;
 drop table if exists member_applications;
 drop table if exists member_application_replies;
+drop table if exists team_member_resignations;
 drop table if exists footprints;
 
+
+CREATE TABLE team_member_resignations (
+    id                   SERIAL PRIMARY KEY,
+    uuid                 VARCHAR(36),
+    team_id              INTEGER,
+    ceo_user_id          INTEGER,
+    core_member_user_id  INTEGER,
+    member_id            INTEGER,
+    member_user_id       INTEGER,
+    member_current_role  VARCHAR(36),
+    title                VARCHAR(255),
+    content              TEXT,
+    status               SMALLINT,
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE footprints (
     id                    SERIAL PRIMARY KEY,
@@ -596,9 +614,9 @@ create table team_members (
   team_id                integer references teams(id),
   user_id                integer references users(id),
   role                   varchar(255), 
-  created_at             timestamp DEFAULT CURRENT_TIMESTAMP,
+  created_at             timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   class                  integer default 1,
-  updated_at             timestamp DEFAULT CURRENT_TIMESTAMP
+  updated_at             timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -693,20 +711,42 @@ CREATE TABLE new_message_counts (
 CREATE TABLE families (
     id                                    SERIAL PRIMARY KEY,
     uuid                                  VARCHAR(255),
+    author_id                             INTEGER,
     name                                  VARCHAR(255),
     introduction                          TEXT,
-    husband_user_id                       INTEGER references users(id),
-    wife_user_id                          INTEGER references users(id),
-    child_user_id_set                     INTEGER[],
-    husband_from_family_id_set            INTEGER[],
-    wife_from_family_id_set               INTEGER[],
-    married                               BOOLEAN default false,
-    adopted_child_user_id_set             INTEGER[],
-    class                                 INTEGER default 0,
+    is_married                            BOOLEAN default true,
+    has_child                             BOOLEAN,
+    husband_from_family_id                INTEGER default 0,
+    wife_from_family_id                   INTEGER default 0,
+    status                                 INTEGER default 1,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     logo                                  VARCHAR(255)
 );
+
+CREATE TABLE family_members (
+    id                                    SERIAL PRIMARY KEY,
+    uuid                                  VARCHAR(255),
+    family_id                             INTEGER,
+    user_id                               INTEGER,
+    role                                  INTEGER default 0,
+    is_adult                              BOOLEAN default true,
+    nick_name                             VARCHAR(255) default ':P',
+    is_adopted                            BOOLEAN default false,
+    age                                   INTEGER default 0,
+    order_of_seniority                    INTEGER default 0,
+    created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE user_default_families (
+    id                                    SERIAL PRIMARY KEY,
+    user_id                               INTEGER,
+    family_id                             INTEGER,
+    created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+
 
 CREATE TABLE communities (
     id                                    SERIAL PRIMARY KEY,

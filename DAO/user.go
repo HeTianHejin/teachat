@@ -248,7 +248,7 @@ func (session *Session) Delete() (err error) {
 
 // Get the user from the session
 func (session *Session) User() (user User, err error) {
-	user = User{}
+	//user = User{}
 	err = Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", session.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
@@ -274,6 +274,7 @@ func (user *User) Create() (err error) {
 	// Postgres does not automatically return the last insert id, because it would be wrong to assume
 	// you're always using a sequence.You need to use the RETURNING keyword in your insert to get this
 	// information from postgres.
+
 	statement := "INSERT INTO users (uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid, created_at"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {

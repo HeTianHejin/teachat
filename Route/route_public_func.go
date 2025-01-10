@@ -335,18 +335,105 @@ func FetchTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err
 	return
 }
 
-// 茶团成员资料荚
-//
-//	type TeamMemberBean struct {
-//		Member            User
-//		IsFounder         bool   //是否为创建者
-//		IsCEO             bool   //是否CEO
-//		IsCoreMember      bool   //是否核心成员（管理员）
-//		TeamMemberRole    string //现任角色
-//		MemberDefaultTeam Team   //First优先茶团
-//		CreatedAtDate     string
-//	}
-//
+// 根据给出的family参数，从数据库获取对应的家庭资料
+func FetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error) {
+	FamilyBean.Family = family
+	//登记人资料
+	FamilyBean.Founder, err = data.GetUserById(family.AuthorId)
+	if err != nil {
+		util.Warning(err, family.AuthorId, " Cannot read family founder")
+		return FamilyBean, err
+	}
+	FamilyBean.FounderTeam, err = FamilyBean.Founder.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, family.AuthorId, " Cannot read family founder default team")
+		return FamilyBean, err
+	}
+
+	FamilyBean.Count, _ = data.CountFamilyMembers(family.Id)
+	return
+}
+
+// 根据给出的家庭队列，查询，获取对应的家庭茶团资料集合
+func FetchFamilyBeanList(family_list []data.Family) (FamilyBeanList []data.FamilyBean, err error) {
+	for _, fam := range family_list {
+		familyBean, err := FetchFamilyBean(fam)
+		if err != nil {
+			return nil, err
+		}
+		FamilyBeanList = append(FamilyBeanList, familyBean)
+	}
+	return
+}
+
+// FetchFamilyMemberBean() 根据给出的FamilyMember参数，去获取对应的家庭成员资料夹
+func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err error) {
+	FMB.FamilyMember = fm
+
+	u, err := data.GetUserById(fm.UserId)
+	if err != nil {
+		util.Warning(err, " Cannot read user given FamilyMember")
+		return FMB, err
+	}
+	FMB.Member = u
+	default_team, err := u.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(err, " Cannot read user given FamilyMember")
+		return FMB, err
+	}
+	FMB.MemberDefaultTeam = default_team
+
+	f := data.Family{Id: fm.FamilyId}
+
+	//读取茶团的parent_members
+	family_parent_members, err := f.ParentMembers()
+	if err != nil {
+		util.Info(err, " Cannot get family core member FetchFamilyMemberBean()")
+		return
+	}
+	FMB.IsParent = false
+	FMB.IsChild = true
+	FMB.IsHusband = false
+	FMB.IsWife = false
+	for _, f_p_member := range family_parent_members {
+		if f_p_member.UserId == u.Id {
+			// Set parent flags in one block
+			FMB.IsParent = true
+			FMB.IsChild = false
+			FMB.IsHusband = f_p_member.Role == 1
+			FMB.IsWife = f_p_member.Role == 2
+			break // Exit loop since we found the match
+		}
+	}
+
+	member_default_family, err := u.GetLastDefaultFamily()
+	if err != nil {
+		util.Info(err, " Cannot get GetLastDefaultFamily FetchFamilyMemberBean()")
+		return
+	}
+	FMB.MemberDefaultFamily = member_default_family
+
+	if member_default_family.AuthorId == u.Id {
+		FMB.IsFounder = true
+	} else {
+		FMB.IsFounder = false
+	}
+
+	return FMB, nil
+}
+
+// FetchFamilyMemberBeanList() 根据给出的FamilyMember列表参数，去获取对应的家庭成员资料夹列表
+func FetchFamilyMemberBeanList(fm_list []data.FamilyMember) (FMB_List []data.FamilyMemberBean, err error) {
+	for _, fm := range fm_list {
+		fmBean, err := FetchFamilyMemberBean(fm)
+		if err != nil {
+			return nil, err
+		}
+		FMB_List = append(FMB_List, fmBean)
+	}
+	return
+}
+
 // FetchTeamMemberBean() 根据给出的TeamMember参数，去获取对应的团队成员资料夹
 func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error) {
 	u, err := data.GetUserById(tm.UserId)

@@ -10,6 +10,189 @@ import (
 	"time"
 )
 
+// HandleMemberResign() /v1/team_member/resign
+// 处理某个茶团的某个成员退出茶团声明撰写和提交
+func HandleMemberResign(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		MemberResign(w, r)
+	case "POST":
+		MemberResignReply(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// POST /v1/team_member/resign
+// 处理成员提交“退出茶团声明”事务
+func MemberResignReply(w http.ResponseWriter, r *http.Request) {
+	// 获取session
+	s, err := Session(r)
+	if err != nil {
+		util.Danger(err, " Cannot get session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Warning(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	// 解析表单内容，获取当前用户提交的内容
+	err = r.ParseForm()
+	if err != nil {
+		util.Danger(err, " Cannot parse form")
+		http.Redirect(w, r, "/v1/", http.StatusFound)
+		return
+	}
+	// 提交的声明标题
+	titl := r.PostFormValue("title")
+	// 提交的声明内容
+	cont := r.PostFormValue("content")
+	// 提交的成员邮箱
+	m_email := r.PostFormValue("m_email")
+	if ok := IsEmail(m_email); !ok {
+		Report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
+		return
+	}
+	//读取声明退出的成员资料
+	t_user, err := data.GetUserByEmail(m_email)
+	if err != nil {
+		util.Warning(err, m_email, "Cannot get user by email")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	//检查提交人是否和会话用户一致
+	if s_u.Id != t_user.Id {
+		Report(w, r, "你好，目前不能代替他人提交退出茶团声明，请确认后再试。")
+		return
+	}
+
+	// 提交的目标茶团
+	team_id_str := r.PostFormValue("team_id")
+	team_id, err := strconv.Atoi(team_id_str)
+	if err != nil {
+		util.Danger(err, team_id_str, "Cannot convert team_id to int")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	// 读取目标茶团资料
+	t_team, err := data.GetTeamById(team_id)
+	if err != nil {
+		util.Danger(err, team_id, "Cannot get team by id")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	// 检查提交人是否为茶团成员
+	t_member, err := data.GetMemberByTeamIdUserId(t_team.Id, t_user.Id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			Report(w, r, "你好，茶博士嘀咕，你不是茶团成员，不接受退出声明噢。")
+			return
+		} else {
+			util.Warning(err, t_team.Id, t_user.Id, "Cannot get team member by team id and user id")
+			Report(w, r, "你好，茶博士失魂鱼，未能获取拟退出的茶团资料，请稍后再试。")
+			return
+		}
+	}
+
+	//查看成员角色，分类处理：1、CEO，2、核心成员：CTO、CFO、CMO，3、普通成员：taster
+	switch t_member.Role {
+	case "taster":
+		break
+	case "CTO", "CFO", "CMO":
+		Report(w, r, "你好，请先联系CEO，将你目前角色核心成员调整为普通成员品茶师，然后再声明退出。")
+		return
+	case "CEO":
+		Report(w, r, "你好，请先联系茶团创建人，将你目前角色调整为品茶师，然后再声明退出。")
+		return
+	default:
+		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶友角色，请确认后再试。")
+		return
+	}
+
+	//声明一份茶团成员退出声明书
+	tmqD := data.TeamMemberResignation{
+		Uuid:              data.Random_UUID(),
+		TeamId:            t_team.Id,
+		CeoUserId:         0,
+		CoreMemberUserId:  0,
+		MemberId:          t_member.Id,
+		MemberUserId:      t_user.Id,
+		MemberCurrentRole: t_member.Role,
+		Title:             titl,
+		Content:           cont,
+		Status:            0,
+		CreatedAt:         time.Now(),
+	}
+
+	//尝试保存退出声明
+	if err := tmqD.Create(); err != nil {
+		util.Warning(err, "Cannot create team member resignation")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	//返回成功保存声明的报告
+	Report(w, r, "你好，茶博士已经收到了你的退出声明，我们会尽快处理。")
+
+	//返回茶团主页
+	//http.Redirect(w, r, fmt.Sprintf("/v1/team?id=%s", t_team.Uuid), http.StatusFound)
+
+}
+
+// MemberResign() GET /v1/team_member/resign?id=XXX
+// 取出一张空白茶团成员“退出茶团声明”撰写页面
+func MemberResign(w http.ResponseWriter, r *http.Request) {
+	// 读取会话
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	// 根据会话信息读取茶友资料
+	s_u, err := s.User()
+	if err != nil {
+		util.Warning(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	// 读取提交的查询参数
+	vals := r.URL.Query()
+	team_uuid := vals.Get("id")
+
+	//读取目标茶团资料
+	t_team, err := data.GetTeamByUUID(team_uuid)
+	if err != nil {
+		util.Warning(err, team_uuid, "Cannot get team by uuid")
+		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
+		return
+	}
+
+	//检查目标茶友是否茶团成员
+	_, err = data.GetMemberByTeamIdUserId(t_team.Id, s_u.Id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			Report(w, r, "你好，满头大汗的茶博士表示这个不是茶团的成员，稍后再试。")
+			return
+		} else {
+			util.Warning(err, t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member")
+			Report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			return
+		}
+	}
+
+	var tmqPD data.TeamMemberResignPageData
+	tmqPD.SessUser = s_u
+	tmqPD.Team = t_team
+
+	//渲染退出声明撰写页面
+	RenderHTML(w, &tmqPD, "layout", "navbar.private", "member.resign_new")
+
+}
+
 // GET /v1/team_member/role_changed?id=XXX
 // MemberRoleChanged() 某个茶团的全部已发布成员角色调整声明列表页面
 func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +313,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查目标茶友是否茶团成员
-	_, err = data.GetMemberByTeamIdAndUserId(t_team.Id, t_member.Id)
+	_, err = data.GetMemberByTeamIdUserId(t_team.Id, t_member.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			Report(w, r, "你好，满头大汗的茶博士表示这个不是茶团的成员，稍后再试。")
@@ -206,7 +389,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, &tmrcnP, "layout", "navbar.private", "member.role_change_new")
 }
 
-// MemberRole() POST /v1/team_member/role
+// POST /v1/team_member/role
 // 提交一个成员新的团队角色任命书答复
 func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	//获取session
@@ -286,7 +469,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查目标茶友是否茶团成员
-	member, err := data.GetMemberByTeamIdAndUserId(t_team.Id, t_member.Id)
+	member, err := data.GetMemberByTeamIdUserId(t_team.Id, t_member.Id)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			Report(w, r, "你好，茶博士摸摸头嘀咕说，这个茶友不是茶团成员，无法调整角色。")
@@ -361,7 +544,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		}
 		//更新成员角色
 		member.Role = new_role
-		if err = member.Update(); err != nil {
+		if err = member.UpdateRoleClass(); err != nil {
 			util.Warning(err, member, "Cannot update member")
 			Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 			return
@@ -389,7 +572,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		}
 		// 更新成员角色
 		member.Role = new_role
-		if err = member.Update(); err != nil {
+		if err = member.UpdateRoleClass(); err != nil {
 			util.Warning(err, member, "Cannot update member")
 			Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 			return
@@ -559,7 +742,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查申请人是否已经是茶团成员=这个茶团是否已经存在该茶友
-	_, err = data.GetMemberByTeamIdAndUserId(team.Id, applicant.Id)
+	_, err = data.GetMemberByTeamIdUserId(team.Id, applicant.Id)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -597,11 +780,13 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		//批准加盟
 		//创建一个新的茶团成员
 		team_member := data.TeamMember{
+			Uuid:      data.Random_UUID(),
 			TeamId:    team.Id,
 			UserId:    applicant.Id,
 			Role:      "taster",
 			CreatedAt: time.Now(),
 			Class:     1,
+			UpdatedAt: time.Now(),
 		}
 		//将新的茶团成员写入数据库
 		if err = team_member.Create(); err != nil {
@@ -729,7 +914,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查这个茶团是否已经存在该茶友
-	_, err = data.GetMemberByTeamIdAndUserId(team.Id, applicant.Id)
+	_, err = data.GetMemberByTeamIdUserId(team.Id, applicant.Id)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -848,7 +1033,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查这个茶团是否已经存在该茶友
-	_, err = data.GetMemberByTeamIdAndUserId(team.Id, app_user.Id)
+	_, err = data.GetMemberByTeamIdUserId(team.Id, app_user.Id)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -929,7 +1114,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查这个茶团是否已经存在该茶友
-	_, err = data.GetMemberByTeamIdAndUserId(team.Id, s_u.Id)
+	_, err = data.GetMemberByTeamIdUserId(team.Id, s_u.Id)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
@@ -1041,7 +1226,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		//接受加盟邀请!
 
 		// 检查这个茶团是否已经存在该茶友了
-		_, err = data.GetMemberByTeamIdAndUserId(team.Id, reply_user.Id)
+		_, err = data.GetMemberByTeamIdUserId(team.Id, reply_user.Id)
 		if err != nil {
 			switch err {
 			case sql.ErrNoRows:
@@ -1093,11 +1278,13 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		// 准备将新成员添加进茶团所需的资料
 		team_member := data.TeamMember{
+			Uuid:      data.Random_UUID(),
 			TeamId:    invitation.TeamId,
 			UserId:    reply_user.Id,
 			Role:      invitation.Role,
 			CreatedAt: time.Now(),
 			Class:     1,
+			UpdatedAt: time.Now(),
 		}
 
 		// 如果team_member.Role == "CEO",采取更换CEO方法
@@ -1291,7 +1478,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查team中是否存在teamMember
-	_, err = data.GetMemberByTeamIdAndUserId(team.Id, invite_user.Id)
+	_, err = data.GetMemberByTeamIdUserId(team.Id, invite_user.Id)
 	if err != nil {
 		//如果err类型为空行，说明团队中还没有这个茶友，可以向其发送邀请函
 		if err == sql.ErrNoRows {
@@ -1340,7 +1527,7 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, s_default_team, s_survival_teams, _, _, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Danger(err, "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -1349,7 +1536,7 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 	//根据茶友提交的Uuid，查询获取拟邀请加盟的茶友信息
 	vals := r.URL.Query()
 	user_uuid := vals.Get("id")
-	in_user, err := data.GetUserByUUID(user_uuid)
+	invi_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
 		util.Danger(err, " Cannot get user given uuid")
 		Report(w, r, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
@@ -1361,9 +1548,10 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 	iD.SessUser = s_u
 	iD.SessUserDefaultTeam = s_default_team
 	iD.SessUserSurvivalTeams = s_survival_teams
-	iD.SessUserDefaultPlace = s_default_place
-	iD.SessUserBindPlaces = s_places
-	iD.InvitationBean.InviteUser = in_user
+	// iD.SessUserDefaultPlace = s_default_place
+	// iD.SessUserBindPlaces = s_places
+
+	iD.InvitationBean.InviteUser = invi_user
 
 	//检查一下s_u茶友是否有权以某个茶团Team的名义发送邀请函
 

@@ -30,33 +30,40 @@
 </head>
 
 <body>
+  
+  {{ template "navbar" .SessUser }}
 
   <div class="container">
 
-    {{ template "navbar" .SessUser }}
-
     {{ template "content" . }}
 
-  </div> {{/* /container  */}}
+  </div>{{/* content - container  */}}
 
  
-  <div class="footer">
-    <p class="text-center">
-      感谢:
-      <a href="https://golang.google.cn">Golang</a>
-      <a href="https://www.postgresql.org/">PostgreSQL</a>
-      <a href="https://code.visualstudio.com/">VisualStudioCode</a>
-      <a href="https://aws.amazon.com/q/">Amazon-Q</a>
-      <a href="https://github.com/twbs/bootstrap">Bootstrap</a>
-      <a href="https://www.glyphicons.com/">Glyphicons</a>
-      <a href="https://icons.bootcss.com/">Bootstrap-icons</a>
-    </p>
-    <p class="text-center">
-      <a href="/v1/about" style="color: #000000">关于</a>
-      联系: <a href="mailto:hejinluo@gmail.com" style="color: #000000">hejinluo@gmail.com</a>
-    </p>
-  </div>
+  <footer class="footer">
+    <div class="container">
+      <p class="text-center" style="font-size: x-small;margin: 10px 0;">
 
+          感谢:
+          <a href="https://golang.google.cn">Golang</a>
+          <a href="https://www.postgresql.org/">PostgreSQL</a>
+          <a href="https://code.visualstudio.com/">VSCode</a>
+          <a href="https://aws.amazon.com/q/">Amazon-Q</a>
+          <a href="https://www.glyphicons.com/">Glyphicons</a>
+          <a href="https://icons.bootcss.com/">Bootstrap-icons</a>
+          &nbsp;&nbsp;
+          <a href="/v1/about">关于</a>
+          联系: <a href="mailto:hejinluo@gmail.com">hejinluo@gmail.com</a>
+       
+      </p>
+    </div>{{/* footer - container */}}
+  </footer>
+
+
+
+  <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
   <script src="/v1/static/js/jquery.min.js"></script>
   <script src="/v1/static/js/bootstrap.min.js"></script>
 </body>

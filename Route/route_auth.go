@@ -6,6 +6,7 @@ import (
 	"strconv"
 	data "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // GET /Login?footprint=xxx&query=xxx
@@ -84,7 +85,7 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	// 检查提交的邮箱是否已经注册过了
 	exist, _ := data.UserExistByEmail(newU.Email)
 	if exist {
-		util.Warning(newU.Email, "提交注册的邮箱地址已经注册。")
+		//util.Warning(newU.Email, "提交注册的邮箱地址已经注册。")
 		Report(w, r, "你好，提交注册的邮箱地址已经注册,请确认后再试。")
 		return
 	}
@@ -96,17 +97,20 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	}
 	// 将新成员添加进默认的自由人茶团
 	team_member := data.TeamMember{
-		TeamId: 2,
-		UserId: newU.Id,
-		Role:   "taster",
-		Class:  1,
+		Uuid:      data.Random_UUID(),
+		TeamId:    2,
+		UserId:    newU.Id,
+		Role:      "taster",
+		CreatedAt: time.Now(),
+		Class:     1,
+		UpdatedAt: time.Now(),
 	}
 	if err = team_member.Create(); err != nil {
 		util.Danger(err, " Cannot create default_free team_member")
 		Report(w, r, "你好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
-	//设置默认团队
+	//设置茶棚预设的默认团队（自由人）
 	udt := data.UserDefaultTeam{
 		UserId: newU.Id,
 		TeamId: 2,
@@ -118,7 +122,12 @@ func SignupAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//util.Info(newU.Email, "注册新账号ok")
-	t := fmt.Sprintf("%s 你好，注册成功！请登机，祝愿你拥有美好品茶时光。", newU.Name)
+	t := ""
+	if newU.Gender == 0 {
+		t = fmt.Sprintf("%s 女士，你好，注册成功！请登机，祝愿你拥有美好品茶时光。", newU.Name)
+	} else {
+		t = fmt.Sprintf("%s 先生，你好，注册成功！请登机，祝愿你拥有美好品茶时光。", newU.Name)
+	}
 	Report(w, r, t)
 
 }
@@ -161,7 +170,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 				// Retrieve user by email
 				s_u, err = data.GetUserByEmail(email)
 				if err != nil {
-					util.Warning(err, email, "cannot get user given email")
+					//util.Warning(err, email, "cannot get user given email")
 					Report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
 					return
 				}

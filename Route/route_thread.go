@@ -199,7 +199,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// check submit team_id is valid
-	_, err = data.GetMemberByTeamIdAndUserId(team_id, s_u.Id)
+	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
 	if err != nil {
 		util.Warning(err, " Cannot get team member by team id and user id")
 		Report(w, r, "你好，此地无茶团三百两，请确认后再试。")

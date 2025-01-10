@@ -12,7 +12,7 @@ func GetTeamsByIds(team_id_list []int) (teams []Team, err error) {
 		return nil, errors.New("team_id_list is empty")
 	}
 	teams = make([]Team, n)
-	rows, err := Db.Query("SELECT * FROM team WHERE id IN (?)", team_id_list)
+	rows, err := Db.Query("SELECT * FROM team WHERE id IN ($1)", team_id_list)
 	if err != nil {
 		return
 	}
@@ -51,17 +51,146 @@ type TeamMember struct {
 	UserId    int
 	Role      string // 角色，职务,分别为：CEO，CTO，CMO，CFO，taster
 	CreatedAt time.Time
-	Class     int // 状态指数， 默认正常=1,活跃=2?，失联=0?
+	Class     int // 状态指数：0、冰封，1、正常，2、暂停品茶，3、退出茶团
+	UpdatedAt time.Time
 }
 
-// 团队成员离开记录
-type TeamMemberLeave struct {
-	Id        int
-	Uuid      string
-	TeamId    int
-	UserId    int
-	Reason    string //离队原因
-	LeaveTime time.Time
+// TeamMember.GetClass()
+func (member *TeamMember) GetClass() string {
+	switch member.Class {
+	case 0:
+		return "冰封"
+	case 1:
+		return "正常品茶"
+	case 2:
+		return "暂停品茶"
+	case 3:
+		return "退出茶团"
+	}
+	return ""
+}
+
+// 成员“退出团队声明书”（相当于辞职信？）
+type TeamMemberResignation struct {
+	Id                int
+	Uuid              string
+	TeamId            int    //“声明退出团队”所指向的茶团id
+	CeoUserId         int    //时任茶团CEO茶友id
+	CoreMemberUserId  int    //时任核心成员茶友id
+	MemberId          int    //成员id(team_member.id)
+	MemberUserId      int    //声明退出团队的茶友id
+	MemberCurrentRole string //时任角色
+	Title             string //标题
+	Content           string //内容
+	Status            int    //声明状态： 0、未读，1、已读，2、已核对，3、已批准，4、挽留中(未批准)，5、强行退出
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+}
+
+// TeamMemberResignation.GetStatus()
+func (resignation *TeamMemberResignation) GetStatus() string {
+	switch resignation.Status {
+	case 0:
+		return "未阅读"
+	case 1:
+		return "已阅读"
+	case 2:
+		return "已核对"
+	case 3:
+		return "已批准"
+	case 4:
+		return "挽留中"
+	case 5:
+		return "强行退出"
+	}
+	return ""
+}
+
+// TeamMemberResignation.Create()
+func (resignation *TeamMemberResignation) Create() (err error) {
+	statement := "INSERT INTO team_member_resignations (uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(resignation.Uuid, resignation.TeamId, resignation.CeoUserId, resignation.CoreMemberUserId, resignation.MemberId, resignation.MemberUserId, resignation.MemberCurrentRole, resignation.Title, resignation.Content, resignation.Status).Scan(&resignation.Id)
+	return
+}
+
+// TeamMemberResignation.CreatedAtDate()
+func (resignation *TeamMemberResignation) CreatedAtDate() string {
+	return resignation.CreatedAt.Format("2006-01-02")
+}
+
+// TeamMemberResignation.Get()
+func (resignation *TeamMemberResignation) Get() (err error) {
+	statement := "SELECT * FROM team_member_resignations WHERE id = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(resignation.Id).Scan(&resignation.Id, &resignation.Uuid, &resignation.TeamId, &resignation.CeoUserId, &resignation.CoreMemberUserId, &resignation.MemberId, &resignation.MemberUserId, &resignation.MemberCurrentRole, &resignation.Title, &resignation.Content, &resignation.Status, &resignation.CreatedAt, &resignation.UpdatedAt)
+	return
+}
+
+// TeamMemberResignation.GetByUuid()
+func (resignation *TeamMemberResignation) GetByUuid() (err error) {
+	statement := "SELECT * FROM team_member_resignations WHERE uuid = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(resignation.Uuid).Scan(&resignation.Id, &resignation.Uuid, &resignation.TeamId, &resignation.CeoUserId, &resignation.CoreMemberUserId, &resignation.MemberId, &resignation.MemberUserId, &resignation.MemberCurrentRole, &resignation.Title, &resignation.Content, &resignation.Status, &resignation.CreatedAt, &resignation.UpdatedAt)
+	return
+}
+
+// TeamMemberResignation.UpdateCeoUserIdCoreMemberUserIdStatus()
+func (resignation *TeamMemberResignation) UpdateCeoUserIdCoreMemberUserIdStatus() (err error) {
+	statement := "UPDATE team_member_resignations SET ceo_user_id = $1, core_member_user_id = $2, status = $3, updated_at = $4 WHERE id = $5"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(resignation.CeoUserId, resignation.CoreMemberUserId, resignation.Status, resignation.UpdatedAt, resignation.Id)
+	return
+}
+
+// TeamMemberResignations.GetByUserIdAndTeamId()  获取某个用户在某个茶团的全部“退出团队声明书”
+func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []TeamMemberResignation, err error) {
+	rows, err := Db.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 AND team_id = $2", user_id, team_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		resignation := TeamMemberResignation{}
+		if err = rows.Scan(&resignation.Id, &resignation.Uuid, &resignation.TeamId, &resignation.CeoUserId, &resignation.CoreMemberUserId, &resignation.MemberId, &resignation.MemberUserId, &resignation.MemberCurrentRole, &resignation.Title, &resignation.Content, &resignation.Status, &resignation.CreatedAt, &resignation.UpdatedAt); err != nil {
+			return
+		}
+		resignations = append(resignations, resignation)
+	}
+	rows.Close()
+	return
+}
+
+// TeamMemberResignations.GetByTeamId() 获取某个茶团的全部“退出团队声明书”
+func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation, err error) {
+	rows, err := Db.Query("SELECT * FROM team_member_resignations WHERE team_id = $1", team_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		resignation := TeamMemberResignation{}
+		if err = rows.Scan(&resignation.Id, &resignation.Uuid, &resignation.TeamId, &resignation.CeoUserId, &resignation.CoreMemberUserId, &resignation.MemberId, &resignation.MemberUserId, &resignation.MemberCurrentRole, &resignation.Title, &resignation.Content, &resignation.Status, &resignation.CreatedAt, &resignation.UpdatedAt); err != nil {
+			return
+		}
+		resignations = append(resignations, resignation)
+	}
+	rows.Close()
+	return
 }
 
 // 用户的“默认团队”设置记录
@@ -207,12 +336,6 @@ func (udteam *UserDefaultTeam) Create() (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRow(udteam.UserId, udteam.TeamId).Scan(&udteam.Id)
-	return
-}
-
-// 根据user_id 获取最后1条默认团队设置记录，返回udteam UserDefaultTeam
-func GetDefaultTeamRecordByUserId(user_id int) (udteam UserDefaultTeam, err error) {
-	err = Db.QueryRow("SELECT * FROM user_default_teams WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1", user_id).Scan(&udteam.Id, &udteam.UserId, &udteam.TeamId, &udteam.CreatedAt)
 	return
 }
 
@@ -458,24 +581,24 @@ func (user *User) CreateTeam(name, abbreviation, mission, logo string, class, gr
 // 注意，这里的userId，可能是某个拉人入会的团队成员，不一定是团队创建者！
 // 注意，这里的role是团队成员的角色，不是用户的角色。
 // AWS CodeWhisperer assist in writing 20240127
-func AddTeamMember(teamId int, user_id int, role string) (teamMember TeamMember, err error) {
-	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at) 
-	VALUES ($1, $2, $3, $4, $5) RETURNING id, uuid, team_id, user_id, role, created_at`
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	cmd := stmt.QueryRow(Random_UUID(), teamId, user_id, role, time.Now())
-	err = cmd.Scan(
-		&teamMember.Id,
-		&teamMember.Uuid,
-		&teamMember.TeamId,
-		&teamMember.UserId,
-		&teamMember.Role,
-		&teamMember.CreatedAt)
-	return
-}
+// func AddTeamMember(teamId int, user_id int, role string) (team_member TeamMember, err error) {
+// 	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, updated_at)
+// 	VALUES ($1, $2, $3, $4, $5) RETURNING id, uuid, team_id, user_id, role, created_at`
+// 	stmt, err := Db.Prepare(statement)
+// 	if err != nil {
+// 		return
+// 	}
+// 	defer stmt.Close()
+// 	cmd := stmt.QueryRow(Random_UUID(), teamId, user_id, role, time.Now(), time.Now())
+// 	err = cmd.Scan(
+// 		&team_member.Id,
+// 		&team_member.Uuid,
+// 		&team_member.TeamId,
+// 		&team_member.UserId,
+// 		&team_member.Role,
+// 		&team_member.CreatedAt)
+// 	return
+// }
 
 // 根据邀请函中的TeamId，查询一个茶团
 // AWS CodeWhisperer assist in writing
@@ -500,7 +623,7 @@ func GetNumAllTeams() (count int) {
 	return
 }
 
-// 获取某个团队的成员数
+// 统计某个团队的成员数
 // AWS CodeWhisperer assist in writing
 func (team *Team) NumMembers() (count int) {
 	rows, _ := Db.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1", team.Id)
@@ -549,16 +672,16 @@ func GetTeamById(id int) (team Team, err error) {
 // 获取团队全部普通成员role=“品茶师”的方法
 // AWS CodeWhisperer assist in writing
 func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "taster")
+	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "taster")
 	if err != nil {
 		return
 	}
 	for rows.Next() {
-		member := TeamMember{}
-		if err = rows.Scan(&member.Id, &member.Uuid, &member.TeamId, &member.UserId, &member.Role, &member.CreatedAt, &member.Class); err != nil {
+		teamMember := TeamMember{}
+		if err = rows.Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class, &teamMember.UpdatedAt); err != nil {
 			return
 		}
-		team_members = append(team_members, member)
+		team_members = append(team_members, teamMember)
 	}
 	rows.Close()
 	return
@@ -566,65 +689,67 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 
 // coreMember() 返回茶团核心成员,teamMember.Role = “CEO” and “CTO” and “CMO” and “CFO”
 // AWS CodeWhisperer assist in writing
-func (team *Team) CoreMembers() (teamMembers []TeamMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5)", team.Id, "CEO", "CTO", "CMO", "CFO")
+func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
+	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5)", team.Id, "CEO", "CTO", "CMO", "CFO")
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		teamMember := TeamMember{}
-		if err = rows.Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class); err != nil {
+		if err = rows.Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class, &teamMember.UpdatedAt); err != nil {
 			return
 		}
-		teamMembers = append(teamMembers, teamMember)
+		team_members = append(team_members, teamMember)
 	}
 	rows.Close()
 	return
 }
 
 // 根据用户id，检查当前用户是否茶团成员；team中是否存在某个teamMember
-func GetMemberByTeamIdAndUserId(team_id, user_id int) (teamMember TeamMember, err error) {
-	teamMember = TeamMember{}
-	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).
-		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
+func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err error) {
+	team_member = TeamMember{}
+	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).
+		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Class, &team_member.UpdatedAt)
 	return
 }
 
-// 查询一个茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 teamMember TeamMember
+// 查询一个茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 (team_member TeamMember,err error)
 // AWS CodeWhisperer assist in writing
-func (team *Team) MemberCEO() (teamMember TeamMember, err error) {
-	teamMember = TeamMember{}
-	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "CEO").
-		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
+func (team *Team) MemberCEO() (team_member TeamMember, err error) {
+	team_member = TeamMember{}
+	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "CEO").
+		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Class, &team_member.UpdatedAt)
 	return
 }
 
 // GetTeamMemberByRole() 根据角色查找茶团成员资料。用于检查茶团拟邀请的新成员角色是否已经被占用
 // AWS CodeWhisperer assist in writing
-func (team *Team) GetTeamMemberByRole(role string) (teamMember TeamMember, err error) {
-	teamMember = TeamMember{}
-	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
-		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
+func (team *Team) GetTeamMemberByRole(role string) (team_member TeamMember, err error) {
+	team_member = TeamMember{}
+	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
+		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Class, &team_member.UpdatedAt)
 	return
 }
 
 // 根据team_member struct 生成Create()方法
 // AWS CodeWhisperer assist in writing
-func (teamMember *TeamMember) Create() (err error) {
-	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, class)
-	VALUES ($1, $2, $3, $4, $5, $6)`
+func (tM *TeamMember) Create() (err error) {
+	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, class, updated_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(
-		Random_UUID(),
-		teamMember.TeamId,
-		teamMember.UserId,
-		teamMember.Role,
+		tM.Uuid,
+		tM.TeamId,
+		tM.UserId,
+		tM.Role,
 		time.Now(),
-		teamMember.Class)
+		tM.Class,
+		time.Now(),
+	)
 	return
 }
 func (teamMember *TeamMember) CreatedAtDate() string {
@@ -633,32 +758,32 @@ func (teamMember *TeamMember) CreatedAtDate() string {
 
 // TeamMember.Get()
 func (teamMember *TeamMember) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class FROM team_members WHERE id = $1", teamMember.Id).
-		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class)
+	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE id = $1", teamMember.Id).
+		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Class, &teamMember.UpdatedAt)
 	return
 }
 
 // teamMemberUpdate() 更新茶团成员的角色和属性
-func (teamMember *TeamMember) Update() (err error) {
-	statement := `UPDATE team_members SET role = $1, class = $2 WHERE id = $3`
+func (teamMember *TeamMember) UpdateRoleClass() (err error) {
+	statement := `UPDATE team_members SET role = $1, updated_at = $2, class = $3 WHERE id = $4`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(teamMember.Role, teamMember.Class, teamMember.Id)
+	_, err = stmt.Exec(teamMember.Role, time.Now(), teamMember.Class, teamMember.Id)
 	return
 }
 
 // 更换茶团默认CEO的方法，Update team_members记录中role=CEO的行 user_id 为当前user_id
 func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
-	statement := `UPDATE team_members SET user_id = $1, created_at = $2 WHERE team_id = $3 AND role = $4`
+	statement := `UPDATE team_members SET user_id = $1, created_at = $2, updated_at = $3 WHERE team_id = $4 AND role = $5`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(user_id, time.Now(), teamMember.TeamId, "CEO")
+	_, err = stmt.Exec(user_id, time.Now(), time.Now(), teamMember.TeamId, "CEO")
 	return
 }
 

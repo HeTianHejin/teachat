@@ -1,0 +1,66 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/group_of_relatives/office">家族事务</a></li>
+    <li class="active">登记家庭茶话团队</li>
+
+</ol>
+
+<div class="panel panel-default">
+
+    <div class="panel-heading">
+        新建家庭茶团
+    </div>
+
+    <form role="form" action="/v1/family/new" method="post">
+
+        <div class="panel-body">
+
+            <div class=" form-group">
+                <p><label for="single">选择家庭目前状态：</label></p>
+                <label class="radio-inline">
+                    <input type="radio" name="status" id="single" value="single" required /> 单身贵族
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="status" id="married" value="married" required /> 已婚家庭
+                </label>
+            </div>
+            
+            <div class=" form-group">
+                <p><label for="no">是否有孩子？</label></p>
+                <label class="radio-inline">
+                    <input type="radio" name="child" id="no" value="no" required checked /> 否
+                </label>
+                <label class="radio-inline">
+                    <input type="radio" name="child" id="yes" value="yes" required /> 是
+                </label>
+            </div>
+
+           
+            <label for="name">家庭茶团名称（4-18字）:</label>
+            <div class="input-group">
+                <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="72" placeholder="例如：贾宝玉及宝钗" aria-describedby="basic-addon2">
+                <span class="input-group-addon" id="basic-addon2">&家庭茶团</span>
+              </div>
+
+              <div class="form-group" style="margin-top: 1rem;">
+                  <label for="introduction">家庭茶团简介（17～456字）:</label>
+                <textarea class="form-control" name="introduction" id="introduction" rows="3" minlength="4" maxlength="567" placeholder="例如：都道是金玉良缘，俺只念木石前盟。"
+                    required ></textarea>
+            </div>
+
+            <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+                <button type="submit" class="btn btn-default">提交</button>
+            </div>
+
+        </div>
+    </form>
+
+    <div class="panel-footer">
+        自斟自饮的茶博士：家，是人生最重要的地方，没有之一。
+    </div>
+
+</div>
+
+{{ end }}

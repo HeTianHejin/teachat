@@ -7,7 +7,7 @@ type UserBean struct {
 	DefaultTeamBean    TeamBean
 	ManageTeamBeanList []TeamBean
 	JoinTeamBeanList   []TeamBean
-	QuitTeamBeanList   []TeamBean
+	ResignTeamBeanList []TeamBean
 	IsAuthor           bool
 	Message            string // 通知消息
 }
@@ -262,6 +262,40 @@ type TeamBean struct {
 	Count         int  //成员计数
 }
 
+// 用于家庭茶团资料集合页面渲染
+type FamilySquare struct {
+	SessUser       User
+	FamilyBeanList []FamilyBean
+}
+type FamilyDetail struct {
+	SessUser User
+	IsParent bool //当前茶友是否为人父母角色？
+
+	FamilyBean           FamilyBean
+	ParentMemberBeanList []FamilyMemberBean
+	ChildMemberBeanList  []FamilyMemberBean
+}
+type FamilyBean struct {
+	Family      Family
+	Founder     User
+	FounderTeam Team // 发起人默认所在的团队
+
+	Count int //成员计数
+}
+type FamilyMemberBean struct {
+	FamilyMember FamilyMember
+	Member       User
+	IsHusband    bool //是否为丈夫
+	IsWife       bool //是否为妻子
+	IsChild      bool //是否为子女
+	IsParent     bool //是否为父母
+	IsFounder    bool //是否为创建者
+
+	MemberDefaultFamily Family //当前家庭
+	MemberDefaultTeam   Team   //First优先茶团
+
+}
+
 // 查询某个茶团全部加盟申请书状态列表
 type MemberApplicationList struct {
 	SessUser                  User
@@ -284,6 +318,20 @@ type MemberApplicationBean struct {
 // 	SessUser                  User
 // 	MemberApplicationBeanList []MemberApplicationBean //申请书队列
 // }
+
+// 茶团成员退出声明撰写页面数据
+type TeamMemberResignPageData struct {
+	SessUser User
+
+	Team     Team     //声明人所指的茶团
+	TeamBean TeamBean //声明人所指的茶团资料荚
+
+	ResignMember            TeamMember //退出声明茶团成员
+	ResignUser              User       //退出声明人
+	ResignMemberDefaultTeam Team       //退出声明人默认所属团队
+
+	TeamMemberResignation TeamMemberResignation //退出团队声明书
+}
 
 // 好东西，物资清单
 type GoodsList struct {

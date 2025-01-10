@@ -18,22 +18,22 @@
         <div id="navbar" class="collapse navbar-collapse">
 
             <ul class="nav navbar-nav">
-                <li><a href="/v1/objective/square">茶话会</a></li>
-                <li><a href="/v1/teams/open">茶团</a></li>
-                <li><a href="/v1/help/doc">帮助</a></li>
+                
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                         aria-expanded="false">我的<span class="caret"></span></a>
                     <ul class="dropdown-menu">
                         <li><a href="/v1/message/letterbox">信箱</a></li>
+                        <li><a href="/v1/thread/mine">茶议</a></li>
+                        <li role="separator" class="divider"></li>
                         <li><a href="/v1/users/connection_friend">人缘</a></li>
                         <li><a href="/v1/teams/joined">团队</a></li>
-                        <li><a href="/v1/thread/mine">茶议</a></li>
+                        <li><a href="/v1/families/home">家团</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a href="/v1/goods/mine">仓库</a></li>
                         <li><a href="/v1/place/my">地盘</a></li>
-                        <li><a href="/v1/user/biography?id={{ .Uuid }}">资料</a></li>
                         <li role="separator" class="divider"></li>
+                        <li><a href="/v1/user/biography?id={{ .Uuid }}">资料</a></li>
                         <li><a href="/v1/logout">退出登录</a></li>
                     </ul>
                 </li>
@@ -45,7 +45,8 @@
                     {{ else }}
                     <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
                     {{ end }}
-                </a></li>
+                     </a>
+                 </li>
                 {{ if .HasUnreadMessage }}
                 <li role="presentation"><a href="/v1/message/letterbox">
                     <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>

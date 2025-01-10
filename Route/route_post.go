@@ -213,7 +213,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查team_id是否有效
-	_, err = data.GetMemberByTeamIdAndUserId(team_id, s_u.Id)
+	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
 	if err != nil {
 		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
 		return

@@ -2,12 +2,12 @@
 
 {{/* 这是查找页面 */}}
 
-<hr />
-<p>
+
+<div class="well">
   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
-  茶博士：如果知道对应的茶号数，查询速度会更快。
-</p>
-<hr />
+  茶博士：如果知道对应的茶号数，查询速度会更快。可以用邮箱查找茶友。
+</div>
+
 
 
 <form role="form" action="/v1/search" method="post">
@@ -37,8 +37,8 @@
         </fieldset>
       </div>
 
-      <div class="form-group">
-        <label for="keyword">关键词：</label>
+      <div class="form-group" style="margin-top: 1rem;">
+        <label for="keyword">填关键词：</label>
         <input type="text" class="form-control" name="keyword" id="keyword" minlength="1" maxlength="32" required autofocus>
       </div>
      
@@ -56,7 +56,7 @@
 
  {{ if .IsEmpty }}
  <hr />
- <p>获得 0 个相似记录。</p>
+ <p>查到 0 个记录。</p>
  <hr />
  {{ else }}{{/* 这是查找结果非零 */}}
 

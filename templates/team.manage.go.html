@@ -16,7 +16,7 @@
         <li><a href="/v1/search">邀请新人</a></li>
         <li><a href="/v1/team/invitations?id={{ .Team.Uuid }}">看邀请函</a></li>
         <li><a href="/v1/team/applications?id={{ .Team.Uuid }}">看申请书</a></li>
-        <li><a href="/v1/team_member/quited?={{ .Team.Uuid }}">离队成员</a></li>
+        <li><a href="/v1/team_member/resigned?={{ .Team.Uuid }}">离队成员</a></li>
         <li><a href="#">冰封团队</a></li>
     </ol>
   </div>
@@ -59,7 +59,7 @@
 {{/*  显示调整角色功能按钮  */}}
   <div style="margin: 2rem;">
     <a class="btn btn-default" href="/v1/team_member/role?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">调整角色</a>
-    <a class="btn btn-default" href="/v1/team_member/remove?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
+    <a class="btn btn-default" style="margin-inline-start: 2rem;" href="/v1/team_member/fire?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
   </div>
 
 
@@ -107,7 +107,7 @@
   {{/*  显示调整角色功能按钮  */}}
   <div style="margin: 2rem;">
     <a class="btn btn-default" href="/v1/team_member/role?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">调整角色</a>
-    <a class="btn btn-default" href="/v1/team_member/remove?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
+   <a class="btn btn-default" style="margin-inline-start: 2rem;" href="/v1/team_member/fire?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
   </div>
   
 {{ end }}{{/* 检查是否CEO结束 */}}
@@ -152,7 +152,7 @@
   {{ else }} {{/*  显示调整角色功能按钮  */}}
   <div style="margin: 2rem;">
     <a class="btn btn-default" href="/v1/team_member/role?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">调整角色</a>
-    <a class="btn btn-default" href="/v1/team_member/remove?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
+   <a class="btn btn-default" style="margin-inline-start: 2rem;" href="/v1/team_member/fire?id={{ .TeamMember.TeamId }}&m_email={{ .Member.Email }}" role="button">移出成员</a>
   </div>
 
   {{ end }}{{/* 检查是否CEO结束 */}}

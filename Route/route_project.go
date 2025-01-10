@@ -66,7 +66,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check the given team_id is valid
-	_, err = data.GetMemberByTeamIdAndUserId(team_id, s_u.Id)
+	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
 	if err != nil {
 		util.Info(err, " Cannot get team member")
 		Report(w, r, "你好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")

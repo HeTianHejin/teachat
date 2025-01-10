@@ -1,6 +1,6 @@
 {{ define "content"}}
 
-{{/*  这是指定茶团详情展示页面面包屑导航栏  */}}
+{{/*  这是指定茶团详情展示页面-面包屑导航栏  */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
@@ -119,7 +119,7 @@
       <ol class="nav nav-tabs">
         <li class="active"><a href="#">在座成员</a></li>
         <li><a href="/v1/team_member/role_changed?id={{ .Team.Uuid }}">角色变动</a></li>
-        <li><a href="/v1/team_member/quited?id={{ .Team.Uuid }}">离开成员</a></li>
+        <li><a href="/v1/team_member/resigned?id={{ .Team.Uuid }}">离开成员</a></li>
       </ol>
     </div>
 

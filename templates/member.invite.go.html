@@ -19,11 +19,11 @@
     <div class="panel-body">
 
         <form class="form-horizontal" role="form" action="/v1/team_member/invite" method="post">
-
+{{ with .InvitationBean }}{{/* 检查邀请函资料夹非空，填写受邀对象 - 开始 */}}
             <div class="form-group">
-                <label for="user_uuid" class="col-sm-2 control-label">受邀人花名：</label>
+                <label for="u_name" class="col-sm-2 control-label">受邀人花名：</label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" id="user_uuid" value="{{ .InviteUser.Name }}" readonly disabled />
+                    <input type="text" class="form-control" id="u_name" value="{{ .InviteUser.Name }}" readonly disabled />
                 </div>
             </div>
             
@@ -47,7 +47,7 @@
             <hr />
 
             <div class="form-group">
-                <label for="radio" class="col-sm-2 control-label"> 拟定新角色：</label>
+                <label for="radio" class="col-sm-2 control-label"> 拟任新角色：</label>
                 <div class="col-sm-10">
                     <fieldset id="radio">
                         <input type="radio" name="role" id="CEO" style="width: fit-content;margin-inline-start: 20px;"
@@ -68,12 +68,12 @@
                     </fieldset>
                 </div>
             </div>
-
+{{ end }}{{/* 检查邀请函资料夹非空，填写受邀对象 - 结束 */}}
             
 
 
             <div class="form-group">
-                <label for="team_uuid" class="col-sm-2 control-label">  邀请茶团：</label>
+                <label for="team_uuid" class="col-sm-2 control-label"> 选择茶团：</label>
                 <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
                   <select name="team_uuid" class="form-control" id="team_uuid" required>
                     <option value="{{ .SessUserDefaultTeam.Uuid }}">{{ .SessUserDefaultTeam.Name }}

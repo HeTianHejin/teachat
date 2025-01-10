@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	// 在控制台输出一些运行地址,应用版本信息
+	// 在控制台输出当前运行地址、版本等信息
 	util.PrintStdout("teachat", util.Version(), "server at", util.Config.Address)
 
 	// handle static assets
@@ -30,6 +30,7 @@ func main() {
 	mux.HandleFunc("/v1/user/forgot", route.Forgot)
 	mux.HandleFunc("/v1/user/reset", route.Reset)
 	mux.HandleFunc("/v1/user/avatar", route.UserAvatar)
+
 	mux.HandleFunc("/v1/users/connection_friend", route.Friend)
 	mux.HandleFunc("/v1/users/connection_follow", route.Follow)
 	mux.HandleFunc("/v1/users/connection_fans", route.Fans)
@@ -48,6 +49,7 @@ func main() {
 	mux.HandleFunc("/v1/team/avatar", route.TeamAvatar)
 	mux.HandleFunc("/v1/team/invitations", route.InvitationsBrowse)
 	mux.HandleFunc("/v1/team/invitation", route.InvitationView)
+	mux.HandleFunc("/v1/team/members/fired", route.MemberFired)
 
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
 	mux.HandleFunc("/v1/team/core_manage", route.CoreManage)
@@ -60,6 +62,7 @@ func main() {
 	mux.HandleFunc("/v1/teams/application", route.ApplyTeams)
 
 	//mux.HandleFunc("/v1/teams/rejected", route.RejectedTeams)
+
 	// defined in route_group.go
 	mux.HandleFunc("/v1/group/new", route.NewGroup)
 	mux.HandleFunc("/v1/group/create", route.CreateGroup)
@@ -74,6 +77,14 @@ func main() {
 	mux.HandleFunc("/v1/team_member/invitation", route.HandleMemberInvitation)
 	mux.HandleFunc("/v1/team_member/role", route.HandleMemberRole)
 	mux.HandleFunc("/v1/team_member/role_changed", route.MemberRoleChanged)
+	mux.HandleFunc("/v1/team_member/resign", route.HandleMemberResign)
+
+	//defined in route_family.go
+	//处理家庭茶团事务
+	mux.HandleFunc("/v1/family/new", route.HandleNewFamily)
+	mux.HandleFunc("/v1/family/detail", route.FamilyDetail)
+
+	mux.HandleFunc("/v1/families/home", route.HomeFamilies)
 
 	//defined in route_objective.go
 	mux.HandleFunc("/v1/objective/new", route.HandleNewObjective)
