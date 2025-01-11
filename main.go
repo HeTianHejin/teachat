@@ -86,6 +86,9 @@ func main() {
 
 	mux.HandleFunc("/v1/families/home", route.HomeFamilies)
 
+	//defined in route_family_member.go
+	mux.HandleFunc("/v1/family_member/sign_in", route.HandleFamilyMemberSignIn)
+
 	//defined in route_objective.go
 	mux.HandleFunc("/v1/objective/new", route.HandleNewObjective)
 	mux.HandleFunc("/v1/objective/square", route.ObjectiveSquare)

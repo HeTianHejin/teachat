@@ -184,7 +184,7 @@ func MemberResign(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var tmqPD data.TeamMemberResignPageData
+	var tmqPD data.TeamMemberResign
 	tmqPD.SessUser = s_u
 	tmqPD.Team = t_team
 
@@ -1527,7 +1527,7 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	s_u, s_default_team, s_survival_teams, _, _, err := FetchUserRelatedData(s)
+	s_u, _, _, s_default_team, s_survival_teams, _, _, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Danger(err, "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")

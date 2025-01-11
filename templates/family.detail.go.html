@@ -11,11 +11,12 @@
 {{ if .IsParent }}
 <div style="margin: 1rem;">
   <a class="btn btn-default" href="/v1/families/home" role="button">管理团队</a>
-  {{/*  显示添加家庭成员的功能按钮  */}}
-  <a class="btn btn-default" href="/v1/family_member/sign_in?id={{ .FamilyBean.Family.Uuid }}" role="button" style="margin-inline-start: 2rem;">
+  {{/* 显示添加家庭成员的功能按钮  */}}
+  <a class="btn btn-default" href="/v1/family_member/sign_in?id={{ .FamilyBean.Family.Uuid }}" role="button"
+    style="margin-inline-start: 2rem;">
     <i class="bi-pencil-square" style="font-size: 1.2rem; color: green;"></i>
     添加成员</a>
-  </div>
+</div>
 
 {{ end }}{{/* 检查是否家庭&团队管理员(父母角色)结束  */}}
 
@@ -32,7 +33,7 @@
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             {{ .FamilyBean.Family.Name }}
-            @<span style="font-style: italic;"><a href="#">金陵X大家族</a></span>
+            @<span style="font-style: italic;"><a href="/v1/group-of-relatives/detail?id=x">金陵X大家族</a></span>
 
           </div>
 
@@ -88,77 +89,76 @@
       </ol>
     </div>
 
-    {{/* 这是家庭&茶团父母角色成员展示页面  */}}
-    {{ range .ParentMemberBeanList }}
+  </div>
+</div>
 
-    <div class="media">
-      <div class="media-left">
-        <a href="/v1/user/biography?id={{ .Member.Uuid }}">
-          <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
-        </a>
-      </div>
-      <div class="media-body">
+{{/* 这是家庭&茶团父母角色成员展示页面  */}}
+{{ range .ParentMemberBeanList }}
 
-        {{ .Member.Name }}
-        <span style="font-size: small;">
-          {{if .Member.Gender }}
-          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-          {{ else }}
-          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-          {{ end }}
-        </span>
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
+    </a>
+  </div>
+  <div class="media-body">
 
-        <span style="font-style: italic;"><a
-            href="/v1/family/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+    {{ .Member.Name }}
+    <span style="font-size: small;">
+      {{if .Member.Gender }}
+      <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+      {{ end }}
+    </span>
 
-        <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
+    <span style="font-style: italic;"><a
+        href="/v1/family/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
 
-        <p>登记时间：{{ .FamilyMember.CreatedAtDate }}</p>
+    <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
 
-        <span style="font-style: italic;">{{ .Member.Email }}</span>
+    <p>登记时间：{{ .FamilyMember.CreatedAtDate }}</p>
 
-      </div>
-    </div>
-
-    <hr />
-    {{ end }}
-
-
-    {{/* 这是家庭&茶团孩子角色成员展示页面  */}}
-    {{ range .ChildMemberBeanList }}
-
-    <div class="media">
-      <div class="media-left">
-        <a href="/v1/user/biography?id={{ .Member.Uuid }}">
-          <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
-        </a>
-      </div>
-      <div class="media-body">
-        {{ .Member.Name }}
-        <span style="font-size: small;">
-          {{if .Member.Gender }}
-          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-          {{ else }}
-          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-          {{ end }}
-        </span>
-
-        <span style="font-style: italic;"><a
-            href="/v1/family/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
-
-        <h5>{{ .FamilyMember.Role }}</h5>
-
-        <p>登记时间：{{ .CreatedAtDate }}</p>
-
-        <span style="font-style: italic;">{{ .Member.Email }}</span>
-
-      </div>
-    </div>
-
-    <hr />
-    {{ end }}
+    <span style="font-style: italic;">{{ .Member.Email }}</span>
 
   </div>
 </div>
+
+<hr />
+{{ end }}
+
+{{/* 这是家庭&茶团孩子角色成员展示页面  */}}
+{{ range .ChildMemberBeanList }}
+
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
+    </a>
+  </div>
+  <div class="media-body">
+    {{ .Member.Name }}
+    <span style="font-size: small;">
+      {{if .Member.Gender }}
+      <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+      {{ end }}
+    </span>
+
+    <span style="font-style: italic;"><a
+        href="/v1/family/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+
+    <h5>{{ .FamilyMember.Role }}</h5>
+
+    <p>登记时间：{{ .CreatedAtDate }}</p>
+
+    <span style="font-style: italic;">{{ .Member.Email }}</span>
+
+  </div>
+</div>
+
+<hr />
+{{ end }}
 
 {{ end }}

@@ -125,6 +125,18 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭&茶团没有登记，未能查看家庭&茶团详情。")
 		return
 	}
+	other_members, err := f.OtherMembers()
+	if err != nil {
+		util.Warning(err, family.Id, "Cannot fetch family's other members")
+		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭&茶团没有登记，未能查看家庭&茶团详情。")
+		return
+	}
+	other_member_bean_list, err := FetchFamilyMemberBeanList(other_members)
+	if err != nil {
+		util.Warning(err, family.Id, "Cannot fetch family's other members bean")
+		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭&茶团没有登记，未能查看家庭&茶团详情。")
+		return
+	}
 
 	var fD data.FamilyDetail
 	// 3.1 check user is parent of family
@@ -138,6 +150,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	fD.FamilyBean = family_bean
 	fD.ParentMemberBeanList = parent_member_bean_list
 	fD.ChildMemberBeanList = child_member_bean_list
+	fD.OtherMemberBeanList = other_member_bean_list
 
 	// 4. render
 	RenderHTML(w, &fD, "layout", "navbar.private", "family.detail")

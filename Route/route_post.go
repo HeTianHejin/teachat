@@ -103,7 +103,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		pD.IsOverTwelve = false
 	}
-	sess, err := Session(r)
+	s, err := Session(r)
 	if err != nil {
 		// 未登录，游客
 		pD.IsAuthor = false
@@ -120,10 +120,10 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 读取已登陆用户资料
-	s_u, _ := sess.User()
+	s_u, _ := s.User()
 	pD.SessUser = s_u
 	// 从会话查获当前浏览用户资料荚
-	s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(sess)
+	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Warning(err, " Cannot get user-related data from session")
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
@@ -138,9 +138,9 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	pD.IsInput = true
 	pD.SessUserDefaultTeam = s_default_team
 	pD.SessUserSurvivalTeams = s_survival_teams
-	// ���������
+	// 默认地点
 	pD.SessUserDefaultPlace = s_default_place
-	// �����б�
+	// 全部绑定地点
 	pD.SessUserBindPlaces = s_places
 
 	// 当前会话用户是否此品味作者？

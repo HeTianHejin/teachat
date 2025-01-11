@@ -294,7 +294,7 @@ func NewProject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//根据会话从数据库中读取当前用户的团队,地方信息，
-	s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		Report(w, r, "你好，三人行，必有大佬焉，请稍后再试。")
 		return
@@ -458,7 +458,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取会话session
-	sess, err := Session(r)
+	s, err := Session(r)
 	if err != nil {
 		// 未登录，游客
 		// 填写页面数据
@@ -487,7 +487,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 已登陆用户
 	pD.IsGuest = false
 	//从会话查获当前浏览用户资料荚
-	s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(sess)
+	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Warning(err, " Cannot get user-related data from session")
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")

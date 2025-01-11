@@ -87,9 +87,19 @@ func FetchUserBeanList(user_list []data.User) (userbean_list []data.UserBean, er
 }
 
 // Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队
-func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
+func FetchUserRelatedData(sess data.Session) (s_u data.User, family data.Family, families []data.Family, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
 	// 读取已登陆用户资料
 	s_u, err = sess.User()
+	if err != nil {
+		return
+	}
+
+	member_default_family, err := s_u.GetLastDefaultFamily()
+	if err != nil {
+		return
+	}
+
+	member_all_families, err := s_u.GetAllFamilies()
 	if err != nil {
 		return
 	}
@@ -130,7 +140,7 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, team data.Team, tea
 		}
 	}
 
-	return s_u, defaultTeam, survivalTeams, default_place, places, nil
+	return s_u, member_default_family, member_all_families, defaultTeam, survivalTeams, default_place, places, nil
 }
 
 // 根据给出的thread_list参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回

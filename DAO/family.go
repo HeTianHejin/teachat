@@ -52,7 +52,7 @@ type FamilyMember struct {
 	Uuid             string
 	FamilyId         int    // 家庭id
 	UserId           int    // 茶友id
-	Role             int    // 家庭角色，0、未知，1、丈夫，2、妻子，3、女儿， 4、儿子，5、宠物？！
+	Role             int    // 家庭角色，0、秘密，1、丈夫，2、妻子，3、女儿， 4、儿子，5、宠物, 6、男朋友，7女朋友
 	IsAdult          bool   // 是否成年?
 	NickName         string // 父母对孩童时期的昵称，例如：狗剩
 	IsAdopted        bool   // 是否被领养?例如：木偶人匹诺曹Pinocchio
@@ -66,7 +66,7 @@ type FamilyMember struct {
 func (fm *FamilyMember) GetRole() string {
 	switch fm.Role {
 	case 0:
-		return "未知"
+		return "秘密"
 	case 1:
 		return "丈夫"
 	case 2:
@@ -77,8 +77,12 @@ func (fm *FamilyMember) GetRole() string {
 		return "儿子"
 	case 5:
 		return "宠物"
+	case 6:
+		return "男朋友"
+	case 7:
+		return "女朋友"
 	default:
-		return "秘密"
+		return "AIAssistant"
 	}
 }
 
@@ -115,6 +119,35 @@ func (user *User) GetLastDefaultFamily() (family Family, err error) {
 			//如果找不到设置记录，则返回id=0，表示“默认家庭=温暖之家”
 			return Family{Id: 0, Uuid: "x", Name: "温暖之家"}, nil
 		}
+		return
+	}
+	return
+}
+
+// (user *User) GetAllFamilies() 根据user.Id从user_default_families和families，获取用户登记的全部家庭资料，返回 (Families []Family, err error)
+func (user *User) GetAllFamilies() (families []Family, err error) {
+	families = []Family{}
+	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo FROM user_default_families udf LEFT JOIN families f ON udf.family_id = f.id WHERE udf.user_id = $1 ORDER BY udf.created_at DESC"
+	rows, err := Db.Query(statement, user.Id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		family := Family{}
+		err = rows.Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo)
+		if err != nil {
+			return
+		}
+		families = append(families, family)
+	}
+	return
+}
+
+// (user *User) CountAllFamilies() 统计用户登记的全部家庭数量值
+func (user *User) CountAllFamilies() (count int, err error) {
+	statement := "SELECT COUNT(*) FROM user_default_families WHERE user_id = $1"
+	err = Db.QueryRow(statement, user.Id).Scan(&count)
+	if err != nil {
 		return
 	}
 	return
@@ -306,7 +339,7 @@ func (fm *FamilyMember) GetByUserId() (err error) {
 
 // FamilyMember.ParentMember() 获取家庭成员的父母成员,return parentMembers []FamilyMember,err error
 func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN (1, 2)", f.Id)
+	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN (1, 2, 6, 7)", f.Id)
 	if err != nil {
 		return
 	}
@@ -335,6 +368,24 @@ func (f *Family) ChildMembers() (child_members []FamilyMember, err error) {
 			return
 		}
 		child_members = append(child_members, childMember)
+	}
+	rows.Close()
+	return
+}
+
+// FamilyMember.OtherMembers() 获取家庭成员的其他成员列表
+func (f *Family) OtherMembers() (other_members []FamilyMember, err error) {
+	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN (0, 5)", f.Id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		otherMember := FamilyMember{}
+		err = rows.Scan(&otherMember.Id, &otherMember.Uuid, &otherMember.FamilyId, &otherMember.UserId, &otherMember.Role, &otherMember.IsAdult, &otherMember.NickName, &otherMember.IsAdopted, &otherMember.Age, &otherMember.OrderOfSeniority, &otherMember.CreatedAt, &otherMember.UpdatedAt)
+		if err != nil {
+			return
+		}
+		other_members = append(other_members, otherMember)
 	}
 	rows.Close()
 	return

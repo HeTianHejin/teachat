@@ -31,7 +31,7 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据会话读取当前用户的信息
-	s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Danger(err, "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -425,7 +425,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 读取会话
-	sess, err := Session(r)
+	s, err := Session(r)
 
 	if err != nil {
 		// 游客
@@ -462,7 +462,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		//用户是登录状态,可以访问1和2级茶议
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//从会话查获当前浏览用户资料荚
-			s_u, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(sess)
+			s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 			if err != nil {
 				util.Warning(err, " Cannot get user-related data from session")
 				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")

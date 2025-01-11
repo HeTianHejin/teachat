@@ -272,8 +272,9 @@ type FamilyDetail struct {
 	IsParent bool //当前茶友是否为人父母角色？
 
 	FamilyBean           FamilyBean
-	ParentMemberBeanList []FamilyMemberBean
-	ChildMemberBeanList  []FamilyMemberBean
+	ParentMemberBeanList []FamilyMemberBean //男主人和女主人
+	ChildMemberBeanList  []FamilyMemberBean //孩子们
+	OtherMemberBeanList  []FamilyMemberBean //其他类型的家庭成员，例如：猫猫，狗狗……
 }
 type FamilyBean struct {
 	Family      Family
@@ -294,6 +295,19 @@ type FamilyMemberBean struct {
 	MemberDefaultFamily Family //当前家庭
 	MemberDefaultTeam   Team   //First优先茶团
 
+}
+
+// 申报家庭&茶团新成员页面数据
+type FamilyMemberSignIn struct {
+	SessUser              User
+	SessUserDefaultFamily Family
+	SessUserAllFamilies   []Family
+	SessUserDefaultTeam   Team
+	SessUserSurvivalTeams []Team
+	SessUserDefaultPlace  Place
+	SessUserBindPlaces    []Place
+
+	FamilyBean FamilyBean
 }
 
 // 查询某个茶团全部加盟申请书状态列表
@@ -320,7 +334,7 @@ type MemberApplicationBean struct {
 // }
 
 // 茶团成员退出声明撰写页面数据
-type TeamMemberResignPageData struct {
+type TeamMemberResign struct {
 	SessUser User
 
 	Team     Team     //声明人所指的茶团
