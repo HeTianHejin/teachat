@@ -30,6 +30,7 @@ func main() {
 	mux.HandleFunc("/v1/user/forgot", route.Forgot)
 	mux.HandleFunc("/v1/user/reset", route.Reset)
 	mux.HandleFunc("/v1/user/avatar", route.UserAvatar)
+	mux.HandleFunc("/v1/user/invite", route.Invite)
 
 	mux.HandleFunc("/v1/users/connection_friend", route.Friend)
 	mux.HandleFunc("/v1/users/connection_follow", route.Follow)
@@ -119,7 +120,6 @@ func main() {
 	mux.HandleFunc("/v1/pilot/add", route.AddPilot)
 	mux.HandleFunc("/v1/pilot/office", route.OfficePilot)
 	//mux.HandleFunc("/v1/pilot/detail", pilotDetail)
-	mux.HandleFunc("/v1/pilot/inviteform", route.Invite)
 
 	//defined in route_office
 	mux.HandleFunc("/v1/office/polite", route.Polite)

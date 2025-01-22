@@ -5,7 +5,7 @@
 <ol class="breadcrumb">
 
   <li>大堂</li>
-  <li class="active">和我有关系的家庭&茶团</li>
+  <li class="active">和我有关系的&家庭茶团</li>
 </ol>
 
 <div style="margin: 20px;">
@@ -20,8 +20,8 @@
 </div>
 
 <div class="well">
-    <i class="bi bi-house-add" style="font-size: 1.8rem; color: black;"></i>
-      <a href="/v1/family/new">家庭&茶团</a>
+  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+      <a href="/v1/family/new">家庭茶团</a>
   </div>
 
 {{ range .FamilyBeanList }}
@@ -30,9 +30,9 @@
   <div class="media-left">
     <a href="/v1/family/detail?id={{ .Family.Uuid }}">
       {{ if .Family.Status }}
-      <img class="media-object" src="/v1/static/bootstrap-icons/people.svg" alt="已婚家庭" height="32" width="32">
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door-fill.svg" alt="单身贵族" height="32" width="32">
       {{ else }}
-      <img class="media-object" src="/v1/static/bootstrap-icons/person.svg" alt="单身贵族" height="32" width="32">
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door.svg" alt="已婚家庭" height="32" width="32">
       {{ end }}
     </a>
     
@@ -44,7 +44,7 @@
         <div class="row">
     
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+            <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}家庭茶团</a>
           </div>
           
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -120,7 +120,7 @@
   </div>
 
   <div class="panel-body">
-      你好，目前没有已登记的家庭&茶团。
+      你好，目前没有已登记的&家庭茶团。
   </div>
 
 </div>

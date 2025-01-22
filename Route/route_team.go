@@ -272,7 +272,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: aO.Id,
 	}
 	//发送消息
-	if err = AcceptMessageSendExceptUserId(s_u.Id, mess); err != nil {
+	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
 		Report(w, r, "你好，茶博士迷路了，未能发送盲评请求消息。")
 		return
 	}
@@ -1017,7 +1017,7 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/team//invitation?id=
-// 根据Uuid查看某个茶团已发出指定的邀请函
+// 管理员根据Uuid查看某个茶团已发出的邀请函
 func InvitationView(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := Session(r)

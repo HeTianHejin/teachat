@@ -25,7 +25,7 @@ const (
 	dbhost     = "localhost"
 	dbport     = 5432
 	dbuser     = "postgres"
-	dbpassword = "tea"
+	dbpassword = "teachat"
 	dbname     = "teachat"
 	dbsslmode  = "disable"
 	dbTimeZone = "Asia/Shanghai"

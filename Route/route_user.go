@@ -27,6 +27,10 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
+	//没有id参数，读取自己的资料
+	if uuid == "" {
+		uuid = s_u.Uuid
+	}
 	//有id参数，读取指定用户资料
 	user, err := data.GetUserByUUID(uuid)
 	if err != nil {

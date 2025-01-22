@@ -258,7 +258,7 @@ func CreateProject(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: aO.Id,
 	}
 	// 发送消息给两个在线用户
-	err = AcceptMessageSendExceptUserId(s_u.Id, mess)
+	err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess)
 	if err != nil {
 		util.Danger(err, " Cannot send message")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")

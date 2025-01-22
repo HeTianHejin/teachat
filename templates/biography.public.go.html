@@ -3,8 +3,12 @@
 <ol class="breadcrumb">
 
     <li>大堂</li>
-    <li class="active">@<span style="font-style: italic;">洞天福地</span></li>
-
+    <li class="active">
+        {{ with .DefaultPlace }}
+        {{ .Name }}
+        <span style="font-style: italic;">@洞天福地</span>
+        {{ end }}
+    </li>
 </ol>
 
 <div class="media">
@@ -28,19 +32,31 @@
     </div>
 </div>
 
+{{ with .DefaultFamilyBean }}
 <div class="panel panel-default">
-    <div class="panel-heading">主力茶团</div>
+    <div class="panel-heading">默认$家庭茶团</div>
+    <div class="panel-body">
+        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+    </div>
+
+    <p style="margin-inline-start: 2rem;"><a href="#">
+            更多
+        </a>
+    </p>
+</div>
+{{ end }}
+
+<div class="panel panel-default">
+    <div class="panel-heading">默认$事业茶团</div>
     <div class="panel-body">
         {{ with .DefaultTeamBean }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
-        无茶团纪录
+        无$事业茶团纪录
         {{ end }}
     </div>
 
-
-
-    <div class="panel-heading">管理茶团</div>
+    <div class="panel-heading">管理$事业茶团</div>
     <div class="panel-body">
         {{ range .ManageTeamBeanList }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
@@ -49,39 +65,41 @@
         {{ end }}
     </div>
 
-
-
-    <div class="panel-heading">普通茶团</div>
+    <div class="panel-heading">普通$事业茶团</div>
     <div class="panel-body">
         {{ range .JoinTeamBeanList }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
-        无纪录
+        无$事业茶团纪录
         {{ end }}
     </div>
 
-
-
-    <div class="panel-heading">离开茶团</div>
+    <div class="panel-heading">离开$事业茶团</div>
     <div class="panel-body">
-        无纪录
+        {{ range .ResignTeamBeanList }}
+        @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        {{ else }}
+        无$事业茶团纪录
+        {{ end }}
     </div>
 </div>
-  
-   
-   
 
-
+{{ with .DefaultPlace }}
+<div class="panel panel-default">
+    <div class="panel-heading">品茶老地方</div>
+    <div class="panel-body">
+        @<a href="/v1/place/detail?id={{ .Uuid }}">{{ .Name }}</a>
+    </div>
+</div>
+{{ end }}
 
 <ul class="nav nav-pills" style="margin-bottom: 20px;">
     <li role="presentation" class="active"><a href="#">关注</a></li>
     <li role="presentation"><a href="#">搭讪</a></li>
     <li role="presentation"><a href="#">标识</a></li>
     <li role="presentation"><a href="/v1/team_member/invite?id={{ .User.Uuid }}">邀请加盟</a></li>
-  </ul>
-
-
-
+    <li role="presentation"><a href="/v1/family_member/sign_in?id={{ .User.Uuid }}">这是家人</a></li>
+</ul>
 
 <ul class="nav nav-tabs nav-justified" style="margin-top: 0px;margin-bottom: 20px;">
     <li role="presentation" class="active"><a href="/v1/user/amuse">自泡茶</a></li>
@@ -92,11 +110,9 @@
 <div class="list-group">
     <a href="/v1/user/monologue/index" class="list-group-item">
         <h4 class="list-group-item-heading">独白</h5>
-        <p class="list-group-item-text">...莫若随花飞到天尽头，天尽头，何处有香丘...</p>
+            <p class="list-group-item-text">...莫若随花飞到天尽头，天尽头，何处有香丘...</p>
     </a>
 </div>
-
-
 
 <div class="panel panel-default">
     <div class="panel-heading">

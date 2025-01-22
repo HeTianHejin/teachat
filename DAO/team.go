@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// 根据茶团team_id_list，获取全部申请加盟的茶团[]team
+// 根据$事业茶团team_id_list，获取全部申请加盟的$事业茶团[]team
 func GetTeamsByIds(team_id_list []int) (teams []Team, err error) {
 	n := len(team_id_list)
 	if n == 0 {
@@ -27,8 +27,8 @@ func GetTeamsByIds(team_id_list []int) (teams []Team, err error) {
 	return
 }
 
-// 茶团=团队,同一桌喝茶的人，
-// 原则上来说team的人数上限是12人，1 dozen。
+// $事业茶团=同事团队,拥有共同利益的非家族团队,
+// 预算上来说team的人数上限是12人，1 dozen。
 type Team struct {
 	Id           int
 	Uuid         string
@@ -36,14 +36,14 @@ type Team struct {
 	Mission      string
 	FounderId    int
 	CreatedAt    time.Time
-	Class        int    //0:"系统茶团", 1: "开放式茶团",2: "封闭式茶团",10: "开放式草团",20: "封闭式草团"
+	Class        int    //0:"系统$事业茶团", 1: "开放式$事业茶团",2: "封闭式$事业茶团",10: "开放式草团",20: "封闭式草团"
 	Abbreviation string // 队名简称
-	Logo         string // 团队标志
+	Logo         string // $事业茶团标志
 	UpdatedAt    time.Time
 	GroupId      int // 上级集合单位(集团)id
 }
 
-// 团队成员=当前茶团加入成员记录
+// 团队成员=当前$事业茶团加入成员记录
 type TeamMember struct {
 	Id        int
 	Uuid      string
@@ -51,7 +51,7 @@ type TeamMember struct {
 	UserId    int
 	Role      string // 角色，职务,分别为：CEO，CTO，CMO，CFO，taster
 	CreatedAt time.Time
-	Class     int // 状态指数：0、冰封，1、正常，2、暂停品茶，3、退出茶团
+	Class     int // 状态指数：0、冰封，1、正常，2、暂停品茶，3、退出$事业茶团
 	UpdatedAt time.Time
 }
 
@@ -70,15 +70,15 @@ func (member *TeamMember) GetClass() string {
 	return ""
 }
 
-// 成员“退出团队声明书”（相当于辞职信？）
+// 成员“退出$事业茶团声明书”（相当于辞职信？）
 type TeamMemberResignation struct {
 	Id                int
 	Uuid              string
-	TeamId            int    //“声明退出团队”所指向的茶团id
-	CeoUserId         int    //时任茶团CEO茶友id
+	TeamId            int    //“声明退出$事业茶团”所指向的$事业茶团id
+	CeoUserId         int    //时任$事业茶团CEO茶友id
 	CoreMemberUserId  int    //时任核心成员茶友id
 	MemberId          int    //成员id(team_member.id)
-	MemberUserId      int    //声明退出团队的茶友id
+	MemberUserId      int    //声明退出$事业茶团的茶友id
 	MemberCurrentRole string //时任角色
 	Title             string //标题
 	Content           string //内容
@@ -159,7 +159,7 @@ func (resignation *TeamMemberResignation) UpdateCeoUserIdCoreMemberUserIdStatus(
 	return
 }
 
-// TeamMemberResignations.GetByUserIdAndTeamId()  获取某个用户在某个茶团的全部“退出团队声明书”
+// TeamMemberResignations.GetByUserIdAndTeamId()  获取某个用户在某个$事业茶团的全部“退出$事业茶团声明书”
 func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []TeamMemberResignation, err error) {
 	rows, err := Db.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 AND team_id = $2", user_id, team_id)
 	if err != nil {
@@ -176,7 +176,7 @@ func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []Team
 	return
 }
 
-// TeamMemberResignations.GetByTeamId() 获取某个茶团的全部“退出团队声明书”
+// TeamMemberResignations.GetByTeamId() 获取某个$事业茶团的全部“退出$事业茶团声明书”
 func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation, err error) {
 	rows, err := Db.Query("SELECT * FROM team_member_resignations WHERE team_id = $1", team_id)
 	if err != nil {
@@ -193,7 +193,7 @@ func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation,
 	return
 }
 
-// 用户的“默认团队”设置记录
+// 用户的“默认$事业茶团”设置记录
 type UserDefaultTeam struct {
 	Id        int
 	UserId    int
@@ -201,12 +201,12 @@ type UserDefaultTeam struct {
 	CreatedAt time.Time
 }
 
-// 团队成员角色变动声明
+// $事业茶团成员角色变动声明
 type TeamMemberRoleNotice struct {
 	Id                int
 	Uuid              string
-	TeamId            int    //声明茶团
-	CeoId             int    //时任茶团CEO茶友id
+	TeamId            int    //声明$事业茶团
+	CeoId             int    //时任$事业茶团CEO茶友id
 	MemberId          int    //成员id(team_member.id)
 	MemberCurrentRole string //当前角色
 	NewRole           string //新角色
@@ -263,7 +263,7 @@ func GetMemberRoleNoticesByTeamId(team_id int) (notices []TeamMemberRoleNotice, 
 	return
 }
 
-// Team.CountTeamMemberRoleNotices() 统计某个茶团的角色调整声明数量
+// Team.CountTeamMemberRoleNotices() 统计某个$事业茶团的角色调整声明数量
 func (team *Team) CountTeamMemberRoleNotices() (count int, err error) {
 	statement := "SELECT COUNT(*) FROM team_member_role_notices WHERE team_id = $1"
 	stmt, err := Db.Prepare(statement)
@@ -300,9 +300,9 @@ func (notice *TeamMemberRoleNotice) Update() (err error) {
 }
 
 var TeamProperty = map[int]string{
-	0:  "系统茶团",
-	1:  "开放式茶团",
-	2:  "封闭式茶团",
+	0:  "系统$事业茶团",
+	1:  "开放式$事业茶团",
+	2:  "封闭式$事业茶团",
 	10: "开放式草团",
 	20: "封闭式草团",
 	31: "已接纳开团",
@@ -327,7 +327,7 @@ func SearchTeamByAbbreviation(keyword string) ([]Team, error) {
 	return teams, nil
 }
 
-// Create() UserDefaultTeam{}创建用户设置默认团队的记录
+// Create() UserDefaultTeam{}创建用户设置默认$事业茶团的记录
 func (udteam *UserDefaultTeam) Create() (err error) {
 	statement := "INSERT INTO user_default_teams (user_id, team_id) VALUES ($1, $2) RETURNING id"
 	stmt, err := Db.Prepare(statement)
@@ -346,13 +346,13 @@ func (user *User) GetLastDefaultTeam() (team Team, err error) {
 	return
 }
 
-// GetTeamMemberRoleByTeamId() 获取用户在给定团队中担任的角色
+// GetTeamMemberRoleByTeamId() 获取用户在给定$事业茶团中担任的角色
 func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err error) {
 	err = Db.QueryRow("SELECT role FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).Scan(&role)
 	return
 }
 
-// SurvivalTeams() 获取用户当前所在的状态正常的全部团队,team.class = 1 or 2, team_members.class = 1
+// SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团,team.class = 1 or 2, team_members.class = 1
 func (user *User) SurvivalTeams() ([]Team, error) {
 	query := `
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id
@@ -360,7 +360,7 @@ func (user *User) SurvivalTeams() ([]Team, error) {
         JOIN team_members ON teams.id = team_members.team_id
         WHERE teams.class IN (1, 2) AND team_members.user_id = $1 AND team_members.class = 1`
 
-	estimatedCapacity := 6 //设定用户最多创建3茶团+担任3ceo
+	estimatedCapacity := 6 //设定用户最多创建3$事业茶团+担任3ceo
 	teams := make([]Team, 0, estimatedCapacity)
 
 	rows, err := Db.Query(query, user.Id)
@@ -384,7 +384,7 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 	return teams, nil
 }
 
-// SurvivalTeamsCount() 获取用户当前所在的状态正常的全部团队计数(不包括系统预留的“自由人”茶团)
+// SurvivalTeamsCount() 获取用户当前所在的状态正常的全部$事业茶团计数(不包括系统预留的“自由人”$事业茶团)
 func (user *User) SurvivalTeamsCount() (count int, err error) {
 	query := `
         SELECT COUNT(DISTINCT teams.id)
@@ -393,12 +393,12 @@ func (user *User) SurvivalTeamsCount() (count int, err error) {
         WHERE teams.class IN (1, 2) AND team_members.user_id = $1 AND team_members.class = 1`
 
 	err = Db.QueryRow(query, user.Id).Scan(&count)
-	//减记自由人茶团计数
+	//减记自由人$事业茶团计数
 	count = count - 1
 	return
 }
 
-// 获取全部封闭式团队的信息
+// 获取全部封闭式$事业茶团的信息
 func GetClosedTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE class = 2")
 	if err != nil {
@@ -415,7 +415,7 @@ func GetClosedTeams() (teams []Team, err error) {
 	return
 }
 
-// 获取全部开放式团队对象
+// 获取全部开放式$事业茶团对象
 func GetOpenTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE class = 1")
 	if err != nil {
@@ -432,7 +432,7 @@ func GetOpenTeams() (teams []Team, err error) {
 	return
 }
 
-// 根据用户的id获取全部加入的团队
+// 根据用户的id获取全部加入的$事业茶团
 // AWS CodeWhisperer assist in writing
 // func (user *User) JoinedTeams() (teams []Team, err error) {
 // 	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id", user.Id)
@@ -450,7 +450,7 @@ func GetOpenTeams() (teams []Team, err error) {
 // 	return
 // }
 
-// 获取用户创建的全部团队，FounderId = UserId
+// 获取用户创建的全部$事业茶团，FounderId = UserId
 // AWS CodeWhisperer assist in writing
 func (user *User) HoldTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE founder_id = $1", user.Id)
@@ -468,7 +468,7 @@ func (user *User) HoldTeams() (teams []Team, err error) {
 	return
 }
 
-// 用户担任CEO的团队，team_member.role = "CEO"
+// 用户担任CEO的$事业茶团，team_member.role = "CEO"
 // AWS CodeWhisperer assist in writing
 func (user *User) CeoTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'CEO'", user.Id)
@@ -486,7 +486,7 @@ func (user *User) CeoTeams() (teams []Team, err error) {
 	return
 }
 
-// user.FounderTeams() 用户创建的全部团队，team.FounderId = user.Id, return teams []team
+// user.FounderTeams() 用户创建的全部$事业茶团，team.FounderId = user.Id, return teams []team
 func (usre *User) FounderTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams WHERE teams.founder_id = $1", usre.Id)
 	if err != nil {
@@ -504,7 +504,7 @@ func (usre *User) FounderTeams() (teams []Team, err error) {
 
 }
 
-// 用户担任核心高管成员的全部茶团，team_member.role = "CEO", "CTO", "CMO", "CFO"
+// 用户担任核心高管成员的全部$事业茶团，team_member.role = "CEO", "CTO", "CMO", "CFO"
 // AWS CodeWhisperer assist in writing
 func (user *User) CoreExecTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND (team_members.role = 'CEO' or team_members.role = 'CTO' or team_members.role = 'CMO' or team_members.role = 'CFO')", user.Id)
@@ -522,7 +522,7 @@ func (user *User) CoreExecTeams() (teams []Team, err error) {
 	return
 }
 
-// 用户作为普通成员的全部茶团，team_member.role = "taster"
+// 用户作为普通成员的全部$事业茶团，team_member.role = "taster"
 // AWS CodeWhisperer assist in writing
 func (user *User) NormalExecTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.group_id FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'taster'", user.Id)
@@ -578,8 +578,8 @@ func (user *User) CreateTeam(name, abbreviation, mission, logo string, class, gr
 }
 
 // create a new team member。
-// 注意，这里的userId，可能是某个拉人入会的团队成员，不一定是团队创建者！
-// 注意，这里的role是团队成员的角色，不是用户的角色。
+// 注意，这里的userId，可能是某个拉人入会的$事业茶团成员，不一定是$事业茶团创建者！
+// 注意，这里的role是$事业茶团成员的角色，不是用户的角色。
 // AWS CodeWhisperer assist in writing 20240127
 // func AddTeamMember(teamId int, user_id int, role string) (team_member TeamMember, err error) {
 // 	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, updated_at)
@@ -600,7 +600,7 @@ func (user *User) CreateTeam(name, abbreviation, mission, logo string, class, gr
 // 	return
 // }
 
-// 根据邀请函中的TeamId，查询一个茶团
+// 根据邀请函中的TeamId，查询一个$事业茶团
 // AWS CodeWhisperer assist in writing
 func (invitation *Invitation) Team() (team Team, err error) {
 	team = Team{}
@@ -611,7 +611,7 @@ func (invitation *Invitation) Team() (team Team, err error) {
 
 // get the nember of teams
 // AWS CodeWhisperer assist in writing
-// 统计全部注册团队数量
+// 统计全部注册$事业茶团数量
 func GetNumAllTeams() (count int) {
 	rows, _ := Db.Query("SELECT COUNT(*) FROM teams")
 	for rows.Next() {
@@ -623,7 +623,7 @@ func GetNumAllTeams() (count int) {
 	return
 }
 
-// 统计某个团队的成员数
+// 统计某个$事业茶团的成员数
 // AWS CodeWhisperer assist in writing
 func (team *Team) NumMembers() (count int) {
 	rows, _ := Db.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1", team.Id)
@@ -636,7 +636,7 @@ func (team *Team) NumMembers() (count int) {
 	return
 }
 
-// user.CountTeamsByFounderId() 获取用户创建的团队数量值
+// user.CountTeamsByFounderId() 获取用户创建的$事业茶团数量值
 func (user *User) CountTeamsByFounderId() (count int, err error) {
 	rows, err := Db.Query("SELECT COUNT(*) FROM teams WHERE founder_id = $1", user.Id)
 	if err != nil {
@@ -651,7 +651,7 @@ func (user *User) CountTeamsByFounderId() (count int, err error) {
 	return
 }
 
-// 根据用户提交的当前Uuid获取一个团队详情
+// 根据用户提交的当前Uuid获取一个$事业茶团详情
 // AWS CodeWhisperer assist in writing
 func GetTeamByUUID(uuid string) (team Team, err error) {
 	team = Team{}
@@ -660,7 +660,7 @@ func GetTeamByUUID(uuid string) (team Team, err error) {
 	return
 }
 
-// 根据用户提交的Id获取一个团队
+// 根据用户提交的Id获取一个$事业茶团
 // AWS CodeWhisperer assist in writing
 func GetTeamById(id int) (team Team, err error) {
 	team = Team{}
@@ -669,7 +669,7 @@ func GetTeamById(id int) (team Team, err error) {
 	return
 }
 
-// 获取团队全部普通成员role=“品茶师”的方法
+// 获取$事业茶团全部普通成员role=“品茶师”的方法
 // AWS CodeWhisperer assist in writing
 func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "taster")
@@ -687,7 +687,7 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	return
 }
 
-// coreMember() 返回茶团核心成员,teamMember.Role = “CEO” and “CTO” and “CMO” and “CFO”
+// coreMember() 返回$事业茶团核心成员,teamMember.Role = “CEO” and “CTO” and “CMO” and “CFO”
 // AWS CodeWhisperer assist in writing
 func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5)", team.Id, "CEO", "CTO", "CMO", "CFO")
@@ -705,7 +705,7 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	return
 }
 
-// 根据用户id，检查当前用户是否茶团成员；team中是否存在某个teamMember
+// 根据用户id，检查当前用户是否$事业茶团成员；team中是否存在某个teamMember
 func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err error) {
 	team_member = TeamMember{}
 	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).
@@ -713,7 +713,7 @@ func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err 
 	return
 }
 
-// 查询一个茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 (team_member TeamMember,err error)
+// 查询一个$事业茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 (team_member TeamMember,err error)
 // AWS CodeWhisperer assist in writing
 func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 	team_member = TeamMember{}
@@ -722,7 +722,7 @@ func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 	return
 }
 
-// GetTeamMemberByRole() 根据角色查找茶团成员资料。用于检查茶团拟邀请的新成员角色是否已经被占用
+// GetTeamMemberByRole() 根据角色查找$事业茶团成员资料。用于检查$事业茶团拟邀请的新成员角色是否已经被占用
 // AWS CodeWhisperer assist in writing
 func (team *Team) GetTeamMemberByRole(role string) (team_member TeamMember, err error) {
 	team_member = TeamMember{}
@@ -763,7 +763,7 @@ func (teamMember *TeamMember) Get() (err error) {
 	return
 }
 
-// teamMemberUpdate() 更新茶团成员的角色和属性
+// teamMemberUpdate() 更新$事业茶团成员的角色和属性
 func (teamMember *TeamMember) UpdateRoleClass() (err error) {
 	statement := `UPDATE team_members SET role = $1, updated_at = $2, class = $3 WHERE id = $4`
 	stmt, err := Db.Prepare(statement)
@@ -775,7 +775,7 @@ func (teamMember *TeamMember) UpdateRoleClass() (err error) {
 	return
 }
 
-// 更换茶团默认CEO的方法，Update team_members记录中role=CEO的行 user_id 为当前user_id
+// 更换$事业茶团默认CEO的方法，Update team_members记录中role=CEO的行 user_id 为当前user_id
 func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
 	statement := `UPDATE team_members SET user_id = $1, created_at = $2, updated_at = $3 WHERE team_id = $4 AND role = $5`
 	stmt, err := Db.Prepare(statement)
@@ -807,7 +807,7 @@ func GetTeamByName(name string) (team Team, err error) {
 
 // InvitedTeams()
 // 根据ProjectId从LicenceTeam获取[]TeamId,然后用teamId，获取对应的Team，最后返回[]team
-// 获取一个封闭式茶台的全部受邀请茶团
+// 获取一个封闭式茶台的全部受邀请$事业茶团
 func (project *Project) InvitedTeams() (teams []Team, err error) {
 	rows, err := Db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, group_id FROM teams WHERE id IN (SELECT team_id FROM project_invited_teams WHERE project_id = $1)", project.Id)
 	if err != nil {
@@ -873,7 +873,7 @@ func GetGroupFirstTeam(group_id int) (team Team, err error) {
 	return
 }
 
-// 获取开放式团队的数量
+// 获取开放式$事业茶团的数量
 func OpenTeamCount() (count int) {
 	rows, err := Db.Query("SELECT count(*) FROM teams WHERE class = 1")
 	if err != nil {
@@ -888,7 +888,7 @@ func OpenTeamCount() (count int) {
 	return
 }
 
-// 获取封闭式团队数量
+// 获取封闭式$事业茶团数量
 func ClosedTeamCount() (count int) {
 	rows, err := Db.Query("SELECT count(*) FROM teams WHERE class = 2")
 	if err != nil {
@@ -903,7 +903,7 @@ func ClosedTeamCount() (count int) {
 	return
 }
 
-// 获取团队的属性
+// 获取$事业茶团的属性
 // AWS CodeWhisperer assist in writing
 func (team *Team) TeamProperty() string {
 	return TeamProperty[team.Class]

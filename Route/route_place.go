@@ -41,7 +41,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//限制用户登记的地方最大数量为99,防止机器人暴力填表
+	//限制用户登记的地方最大数量为99,防止暴表
 	if count_place, err := data.CountPlaceByUserId(s_u.Id); err != nil || count_place >= 99 {
 		util.Warning(err, "Cannot get user place count")
 		Report(w, r, "你好，闪电考拉表示您已经提交了多得数不过来，就要爆表的地方，请确定后再试。")
@@ -134,16 +134,16 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, &pL, "layout", "navbar.private", "places.my")
 }
 
-// GET  /v1/place/detail?uuid=
+// GET  /v1/place/detail?id=
 func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	//获取地方的uuid
 	r.ParseForm()
-	uuid := r.FormValue("uuid")
-	place := data.Place{
-		Uuid: uuid,
+	place_uuid := r.FormValue("id")
+	t_place := data.Place{
+		Uuid: place_uuid,
 	}
 
-	if err := place.GetByUuid(); err != nil {
+	if err := t_place.GetByUuid(); err != nil {
 		util.Warning(err, "Cannot get place by uuid")
 		Report(w, r, "你好，������表示无法获取您要查看的地方，请稍后再试。")
 		return
@@ -162,10 +162,10 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pD data.PlaceDetail
-	pD.Place = place
+	pD.Place = t_place
 	pD.SessUser = s_u
 	//是否地方登记者
-	if place.UserId == s_u.Id {
+	if t_place.UserId == s_u.Id {
 		pD.IsAuthor = true
 	} else {
 		pD.IsAuthor = false

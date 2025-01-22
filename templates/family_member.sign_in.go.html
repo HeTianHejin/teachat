@@ -1,109 +1,135 @@
-
 {{ define "content" }}
 
-{{/* 这是家庭&茶团实际控制人撰写邀请函，邀请新成员加入茶团页面 */}}
+{{/* 这是&家庭茶团实际控制人撰写声明，声明新成员加入茶团页面 */}}
 
-<ol class="breadcrumb">
-  <li><a href="/v1/">大堂</a></li>
-  <li class="active">撰写家庭&茶团新成员邀请函</li>
+<ol class="breadcrumb" style="margin-top: 1.4rem;">
+    <li><a href="/v1/">大堂</a></li>
+    <li class="active">撰写&家庭茶团新成员声明</li>
 </ol>
 
+{{/* 这是撰写&家庭茶团新成员声明输入面板 */}}
 
-{{/* 这是撰写茶团邀请函输入面板 */}}
-<div class="panel panel-default">
+<div style="margin: 1.4rem;">
+    
+    <form class="form-horizontal" role="form" action="/v1/family_member/sign_in" method="post">
+        
+        <div class="form-group">
+            {{/* 这是声明新成员的标题提交 */}}
+            <label for="title" control-label>声明标题：</label>
+            <input type="text" class="form-control" id="title" value="关于增加家庭茶团新成员的声明" readonly required />
+        </div>
 
-    <div class="panel-heading">
-        <strong>邀请个人加盟茶团</strong>  
-    </div>
-
-    <div class="panel-body">
-
-        <form class="form-horizontal" role="form" action="/v1/team_member/invite" method="post">
-              {{ with .InvitationBean }}{{/* 检查邀请函资料夹非空，填写受邀对象 - 开始 */}}
-            
-            <div class="form-group">
-                {{/* 这是受邀请的用户email提交 */}}
-                <label for="email" class="col-sm-2 control-label">受邀人邮箱：</label>
-                <div class="col-sm-10">
-                    <input type="text" name="email" class="form-control" id="email" value="{{ .InviteUser.Email }}" readonly required />
-                </div>
-            </div>
-
-
-            <div class="form-group">
-                <label for="invite_word" class="col-sm-2 control-label">邀请函正文：</label>
-                <div class="col-sm-10">
-                    <textarea class="form-control" name="invite_word" id="invite_word" rows="3" minlength="2"
-                        maxlength="567" placeholder="请输入一些邀请话语" required></textarea>
-                </div>
-            </div>
-
-            <hr />
-
-            <div class="form-group">
-                <label for="radio" class="col-sm-2 control-label"> 拟任角色：</label>
-                <div class="col-sm-10">
-                    <fieldset id="radio">
-                        <input type="radio" name="role" id="hasband" style="width: fit-content;margin-inline-start: 20px;"
-                            value=1 required />
-                        <label for="hasband" style="margin-inline-end: 20px;">丈夫</label>
-
-                        <input type="radio" name="role" id="wife" style="width: fit-content;" value=2 />
-                        <label for="wife" style="margin-inline-end: 20px;">妻子</label>
-
-                        <input type="radio" name="role" id="daughter" style="width: fit-content;" value=3 />
-                        <label for="daughter" style="margin-inline-end: 20px;">女儿</label>
-
-                        <input type="radio" name="role" id="son" style="width: fit-content;" value=4 />
-                        <label for="son" style="margin-inline-end: 20px;">儿子</label>
-
-                        <input type="radio" name="role" id="pet" style="width: fit-content;" value=5 />
-                        <label for="pet">宠物</label>
-                        
-                        <input type="radio" name="role" id="boyfriend" style="width: fit-content;" value=6 />
-                        <label for="boyfriend">男朋友</label>
-                        
-                        <input type="radio" name="role" id="girlfriend" style="width: fit-content;" value=7 />
-                        <label for="girlfriend">女朋友</label>
-                        
-                        <input type="radio" name="role" id="secret" style="width: fit-content;" value=0 />
-                        <label for="secret">秘密</label>
-                    </fieldset>
-                </div>
-            </div>
-          {{ end }}{{/* 检查邀请函资料夹非空，填写受邀对象 - 结束 */}}
-            
-
-
-            <div class="form-group">
-                <label for="family_uuid" class="col-sm-2 control-label"> 选择家庭&茶团：</label>
-                <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
-                  <select name="family_uuid" class="form-control" id="family_uuid" required>
-                    <option value="{{ .SessUserDefaultfamily.Uuid }}">{{ .SessUserDefaultfamily.Name }}
+        <div class="form-group">
+            <label for="family_uuid" control-label> 选择&家庭茶团：</label>
+            <div>
+                <select name="family_uuid" class="form-control" id="family_uuid" required>
+                    <option value="{{ .SessUserDefaultFamily.Uuid }}">{{ .SessUserDefaultFamily.Name }}
                     </option>
-                    {{ range .SessUserSurvivalFamilies }}
+                    {{ range .SessUserAllFamilies }}
                     <option value="{{ .Uuid }}">{{ .Name }}</option>
                     {{ end }}
-                  </select>
-                </div>
-              </div>
-
-            <div class="form-group">
-                <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
-                    <button type="submit" class="btn btn-default">
-                        <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 发送
-                    </button>
-                </div>
+                </select>
             </div>
+        </div>
 
-        </form>
+        {{ with .FamilyMemberUser }}{{/* 检查声明资料夹非空，填写声明对象 - 开始 */}}
 
-    </div>
+        <div class="form-group">
+            {{/* 这是声明新成员的茶友名称 */}}
+            <label for="name" control-label>成员名称：</label>
+            <input type="text" class="form-control" id="name" value="{{ .Name }}" readonly />
+        </div>
 
-    <div class="panel-footer">
-        提示：收到邀请的用户同意后即可加入茶团。
-    </div>
+        <div class="form-group">
+            {{/* 这是声明新成员的茶友email提交 */}}
+            <label for="m_email" control-label>成员邮箱：</label>
+            <input type="email" name="m_email" class="form-control" id="m_email" value="{{ .Email }}" readonly required />
+        </div>
+
+
+        <div class="form-group">
+            <label for="content" control-label>声明内容：</label>
+            <div>
+                <textarea class="form-control" name="content" id="content" rows="3" minlength="3" maxlength="567"
+                    required>声明，{{ .Name }} 是 {{ $.SessUser.Name }}&家庭茶团 的成员.</textarea>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="radio" control-label> 成员角色：</label>
+
+            <fieldset id="radio">
+                <input type="radio" name="role" id="hasband" style="width: fit-content;" value="1" required />
+                <label for="hasband" style="margin-inline-end: 20px;">男主人</label>
+
+                <input type="radio" name="role" id="wife" style="width: fit-content;" value="2" required />
+                <label for="wife" style="margin-inline-end: 20px;">女主人</label>
+
+                <input type="radio" name="role" id="daughter" style="width: fit-content;" value="3" required />
+                <label for="daughter" style="margin-inline-end: 20px;">女儿</label>
+
+                <input type="radio" name="role" id="son" style="width: fit-content;" value="4" required />
+                <label for="son" style="margin-inline-end: 20px;">儿子</label>
+
+                <input type="radio" name="role" id="pet" style="width: fit-content;" value="5" required />
+                <label for="pet" style="margin-inline-end: 20px;">宠物</label>
+
+                <input type="radio" name="role" id="secret" style="width: fit-content;" value="0" required />
+                <label for="secret" style="margin-inline-end: 20px;">秘密</label>
+            </fieldset>
+
+        </div>
+
+        {{ end }}{{/* 检查声明资料夹非空，填写声明对象 - 结束 */}}
+
+        <div class="form-group">
+            <label for="radio" control-label> 是否成年？</label>
+            <fieldset id="radio">
+                <input type="radio" name="is_adult" id="true" style="width: fit-content;" value="1" checked required />
+                <label for="true" style="margin-inline-end: 20px;">是</label>
+                <input type="radio" name="is_adult" id="false" style="width: fit-content;" value="0" required />
+                <label for="false" style="margin-inline-end: 20px;">否</label>
+            </fieldset>
+        </div>
+
+        <div class="form-group">
+            <label for="radio" control-label> 是否领养？</label>
+            <fieldset id="radio">
+                <input type="radio" name="is_adopted" id="true" style="width: fit-content;" value="1" required />
+                <label for="true" style="margin-inline-end: 20px;">是</label>
+                <input type="radio" name="is_adopted" id="false" style="width: fit-content;" value="0" checked
+                    required />
+                <label for="false" style="margin-inline-end: 20px;">否</label>
+            </fieldset>
+        </div>
+
+        <div class="form-group">
+            <label for="place_uuid" control-label> 选择品茶老地方：</label>
+            <div>
+                <select name="place_uuid" class="form-control" id="place_uuid" required>
+                    <option value="{{ .SessUserDefaultPlace.Uuid }}">{{ .SessUserDefaultPlace.Name }}
+                    </option>
+                    {{ range .SessUserBindPlaces }}
+                    <option value="{{ .Uuid }}">{{ .Name }}</option>
+                    {{ end }}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+                <button type="submit" class="btn btn-default" style="margin-top: 1.4rem;">
+                    <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 发送
+                </button>
+            </div>
+        </div>
+
+    </form>
 
 </div>
+
+<p>
+    提示：收到声明的茶友同意后即加入&家庭茶团。
+</p>
 
 {{ end }}

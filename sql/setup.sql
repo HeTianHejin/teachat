@@ -28,6 +28,8 @@ drop table if exists invitations;
 drop table if exists invitation_replies;
 drop table if exists families;
 drop table if exists family_members;
+drop table if exists family_member_role_notices;
+drop table if exists family_member_sign_ins;
 drop table if exists communities;
 drop table if exists administrators;
 drop table if exists watchwords;
@@ -661,7 +663,8 @@ create table invitations (
   role                 varchar(50),
   invite_word          text,
   created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  status               integer
+  status               integer,
+  author_user_id       integer
 );
 
 CREATE TABLE invitation_replies (
@@ -721,7 +724,8 @@ CREATE TABLE families (
     status                                 INTEGER default 1,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    logo                                  VARCHAR(255)
+    logo                                  VARCHAR(255),
+    is_open                               BOOLEAN default true
 );
 
 CREATE TABLE family_members (
@@ -737,6 +741,22 @@ CREATE TABLE family_members (
     order_of_seniority                    INTEGER default 0,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE family_member_sign_ins (
+    id                                    SERIAL PRIMARY KEY,
+    uuid                                  VARCHAR(255),
+    family_id                             INTEGER,
+    user_id                               INTEGER,
+    role                                  INTEGER default 0,
+    is_adult                              BOOLEAN default true,
+    title                                 VARCHAR(255),
+    content                               TEXT,
+    place_id                              INTEGER default 0,
+    status                                INTEGER default 0,
+    created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_adopted                            BOOLEAN default false
 );
 
 CREATE TABLE user_default_families (

@@ -1,24 +1,37 @@
 {{ define "content"}}
 
-{{/* 这是指定的家庭&茶团详情展示页面-面包屑导航栏  */}}
+{{/* 这是指定的&家庭茶团详情展示页面-面包屑导航栏  */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a>{{ .FamilyBean.Family.Name }}</a></li>
+  <li><a>{{ .FamilyBean.Family.Name }}家庭茶团</a></li>
   <li class="=active">详情</li>
 </ol>
+
+
+{{ if .IsNewMember }}{{/* 检查是否新家庭成员声明提及的茶友 -开始 */}}
+{{ with .FamilyMemberSignIn }}{{/* 检查是否新家庭成员声明为空 -开始  */}}
+<div class="alert alert-info" role="alert">
+  注意，你被这个家庭声明为家人，如果属实，
+  <a href="/v1/family_member/sign_in?id={{ .Uuid }}" class="alert-link">请点此查看声明</a>
+  ，否则请忽略。
+</div>
+{{ end }}{{/* 检查是否新家庭成员声明为空 -结束  */}}
+{{ end }}{{/* 检查是否新家庭成员声明提及的茶友 -结束  */}}
+
+
 
 {{ if .IsParent }}
 <div style="margin: 1rem;">
   <a class="btn btn-default" href="/v1/families/home" role="button">管理团队</a>
   {{/* 显示添加家庭成员的功能按钮  */}}
-  <a class="btn btn-default" href="/v1/family_member/sign_in?id={{ .FamilyBean.Family.Uuid }}" role="button"
+  <a class="btn btn-default" href="/v1/search" role="button"
     style="margin-inline-start: 2rem;">
     <i class="bi-pencil-square" style="font-size: 1.2rem; color: green;"></i>
     添加成员</a>
 </div>
 
-{{ end }}{{/* 检查是否家庭&团队管理员(父母角色)结束  */}}
+{{ end }}{{/* 检查是否家庭&团队管理员(父母角色)-结束  */}}
 
 <hr />
 
@@ -85,14 +98,14 @@
     <div style="margin: 2rem;">
       <ol class="nav nav-tabs">
         <li class="active"><a href="#">在座成员</a></li>
-        <li><a href="/v1/family_member/resigned?id={{ .FamilyBean.Family.Uuid }}">离开成员</a></li>
+        <li><a href="/v1/family_member/resigned?id={{ .FamilyBean.Family.Uuid }}">离巢成员</a></li>
       </ol>
     </div>
 
   </div>
 </div>
 
-{{/* 这是家庭&茶团父母角色成员展示页面  */}}
+{{/* 这是&家庭茶团父母角色成员展示页面-开始  */}}
 {{ range .ParentMemberBeanList }}
 
 <div class="media">
@@ -125,9 +138,9 @@
 </div>
 
 <hr />
-{{ end }}
+{{ end }}{{/* 这是&家庭茶团父母角色成员展示页面-结束  */}}
 
-{{/* 这是家庭&茶团孩子角色成员展示页面  */}}
+{{/* 这是&家庭茶团孩子角色成员展示页面  */}}
 {{ range .ChildMemberBeanList }}
 
 <div class="media">
@@ -159,6 +172,41 @@
 </div>
 
 <hr />
-{{ end }}
+{{ end }}{{/* 这是&家庭茶团孩子角色成员展示页面-结束 */}}
+
+{{/* 这是&家庭茶团其他角色成员展示页面-开始 */}}
+{{ range .OtherMemberBeanList }}
+
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
+    </a>
+  </div>
+  <div class="media-body">
+
+    {{ .Member.Name }}
+    <span style="font-size: small;">
+      {{if .Member.Gender }}
+      <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+      {{ end }}
+    </span>
+
+    <span style="font-style: italic;"><a
+        href="/v1/family/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+
+    <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
+
+    <p>登记时间：{{ .FamilyMember.CreatedAtDate }}</p>
+
+    <span style="font-style: italic;">{{ .Member.Email }}</span>
+
+  </div>
+</div>
+
+<hr />
+{{ end }}{{/* 这是&家庭茶团其他角色成员展示页面-结束  */}}
 
 {{ end }}

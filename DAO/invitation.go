@@ -293,14 +293,15 @@ func (memberApplicationReply *MemberApplicationReply) Update() (err error) {
 
 // 茶团邀请函
 type Invitation struct {
-	Id          int
-	Uuid        string
-	TeamId      int
-	InviteEmail string
-	Role        string
-	InviteWord  string
-	CreatedAt   time.Time
-	Status      int //0: "待处理",1: "已查看",2: "已接受",3: "已拒绝",4: "已过期",
+	Id           int
+	Uuid         string
+	TeamId       int
+	InviteEmail  string //邀请对象的邮箱
+	Role         string //拟邀请担任角色
+	InviteWord   string //邀请涵内容
+	CreatedAt    time.Time
+	Status       int //0: "待处理",1: "已查看",2: "已接受",3: "已拒绝",4: "已过期",
+	AuthorUserId int //邀请函的撰写者茶友id，
 }
 
 // 茶团邀请函答复
@@ -308,8 +309,8 @@ type InvitationReply struct {
 	Id           int
 	Uuid         string
 	InvitationId int
-	UserId       int
-	ReplyWord    string
+	UserId       int    //答复人茶友ID
+	ReplyWord    string //答复内容
 	CreatedAt    time.Time
 }
 
@@ -329,8 +330,8 @@ func (invitation *Invitation) GetStatus() string {
 // 创建一个邀请函
 // AWS CodeWhisperer assist in writing
 func (invitation *Invitation) Create() (err error) {
-	statement := `INSERT INTO invitations (uuid, team_id, invite_email, role, invite_word, created_at, status)
-	VALUES ($1, $2, $3, $4, $5 ,$6 ,$7)`
+	statement := `INSERT INTO invitations (uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id)
+	VALUES ($1, $2, $3, $4, $5 ,$6 ,$7, $8)`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -343,7 +344,8 @@ func (invitation *Invitation) Create() (err error) {
 		invitation.Role,
 		invitation.InviteWord,
 		invitation.CreatedAt,
-		invitation.Status)
+		invitation.Status,
+		invitation.AuthorUserId)
 	return
 }
 
@@ -364,13 +366,31 @@ func (invitation *Invitation) Update() (err error) {
 
 // 茶团team发送的全部邀请函-资料
 func (team *Team) Invitations() (invitations []Invitation, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status FROM invitations WHERE team_id = $1 ORDER BY created_at DESC", team.Id)
+	rows, err := Db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE team_id = $1 ORDER BY created_at DESC", team.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		invitation := Invitation{}
-		if err = rows.Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status); err != nil {
+		if err = rows.Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status, &invitation.AuthorUserId); err != nil {
+			return
+		}
+		invitations = append(invitations, invitation)
+	}
+	rows.Close()
+	return
+}
+
+// 根据invite_email查询一个User收到的全部邀请函
+// AWS CodeWhisperer assist in writing
+func (user *User) Invitations() (invitations []Invitation, err error) {
+	rows, err := Db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE invite_email = $1 ORDER BY created_at DESC", user.Email)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		invitation := Invitation{}
+		if err = rows.Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status, &invitation.AuthorUserId); err != nil {
 			return
 		}
 		invitations = append(invitations, invitation)
@@ -399,16 +419,16 @@ func (invitation *Invitation) CreatedAtDate() string {
 // GetInvitationByUuid
 func GetInvitationByUuid(uuid string) (invitation Invitation, err error) {
 	invitation = Invitation{}
-	err = Db.QueryRow("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status FROM invitations WHERE uuid = $1", uuid).
-		Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status)
+	err = Db.QueryRow("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE uuid = $1", uuid).
+		Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status, &invitation.AuthorUserId)
 	return
 }
 
 // GetInvitationById(invitation_id)
 func GetInvitationById(id int) (invitation Invitation, err error) {
 	invitation = Invitation{}
-	err = Db.QueryRow("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status FROM invitations WHERE id = $1", id).
-		Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status)
+	err = Db.QueryRow("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE id = $1", id).
+		Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status, &invitation.AuthorUserId)
 	return
 }
 
@@ -487,22 +507,4 @@ func (teamMember *TeamMember) InvitationReply() (invitationReply InvitationReply
 func (teamMember *TeamMember) InvitationReplyCreatedAtDate() string {
 	invitationReply, _ := teamMember.InvitationReply()
 	return invitationReply.CreatedAtDate()
-}
-
-// 根据invite_email查询一个User收到的全部邀请函
-// AWS CodeWhisperer assist in writing
-func (user *User) Invitations() (invitations []Invitation, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status FROM invitations WHERE invite_email = $1 ORDER BY created_at DESC", user.Email)
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		invitation := Invitation{}
-		if err = rows.Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status); err != nil {
-			return
-		}
-		invitations = append(invitations, invitation)
-	}
-	rows.Close()
-	return
 }

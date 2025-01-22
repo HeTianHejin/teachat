@@ -148,6 +148,8 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	// 增加口令检查，提示用户这是茶话会
 	watchword := r.PostFormValue("watchword")
 	pw := r.PostFormValue("password")
+	var s_u data.User
+	email := r.PostFormValue("email")
 
 	wordValid, err := data.CheckWatchword(watchword)
 	if err != nil {
@@ -156,27 +158,27 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	} else {
 		if wordValid {
 			// 口令正确
-			var s_u data.User
-			email := r.PostFormValue("email")
 			// Check if the email parameter is a positive integer (user ID)
-			if s_u_id, err := strconv.Atoi(email); err == nil && s_u_id > 0 {
+			if s_u_id, convErr := strconv.Atoi(email); convErr == nil && s_u_id > 0 {
 				// Retrieve user by ID
-				s_u, err = data.UserById(s_u_id)
-				if err != nil {
+				t_user, userErr := data.UserById(s_u_id)
+				if userErr != nil {
 					Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
 					return
 				}
+				s_u = t_user
 			} else if IsEmail(email) {
 				// Retrieve user by email
-				s_u, err = data.GetUserByEmail(email)
-				if err != nil {
+				t_u, userErr := data.GetUserByEmail(email)
+				if userErr != nil {
 					//util.Warning(err, email, "cannot get user given email")
 					Report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
 					return
 				}
+				s_u = t_u
 			} else {
 				// Invalid email format
-				Report(w, r, "茶博士嘀咕说，请确认握笔姿势正确,而且身形健美")
+				Report(w, r, "茶博士嘀咕说，请确认握笔姿势正确,而且身形健美。")
 				return
 			}
 

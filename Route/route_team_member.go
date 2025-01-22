@@ -36,21 +36,34 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Warning(err, "Cannot get user from session")
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	// 解析表单内容，获取当前用户提交的内容
 	err = r.ParseForm()
 	if err != nil {
 		util.Danger(err, " Cannot parse form")
-		http.Redirect(w, r, "/v1/", http.StatusFound)
+		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	// 提交的声明标题
 	titl := r.PostFormValue("title")
+	// 检查提交的声明标题字数是否>3 and <32
+	lenTit := CnStrLen(titl)
+	if lenTit < 3 || lenTit > 32 {
+		Report(w, r, "你好，茶博士认为标题字数太长或者太短，请确认后再试。")
+		return
+	}
+
 	// 提交的声明内容
 	cont := r.PostFormValue("content")
-	// 提交的成员邮箱
+	// 检查提交的声明内容字数是否>3 and <456
+	lenCont := CnStrLen(cont)
+	if lenCont < 3 || lenCont > 456 {
+		Report(w, r, "你好，茶博士认为内容字数太长或者太短，请确认后再试。")
+		return
+	}
+	// 检查提交的成员邮箱
 	m_email := r.PostFormValue("m_email")
 	if ok := IsEmail(m_email); !ok {
 		Report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
@@ -1527,7 +1540,7 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	s_u, _, _, s_default_team, s_survival_teams, _, _, err := FetchUserRelatedData(s)
+	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Danger(err, "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -1546,10 +1559,12 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 	var iD data.InvitationDetail
 	// 填写页面资料
 	iD.SessUser = s_u
-	iD.SessUserDefaultTeam = s_default_team
+	iD.SessUserDefaultFamily = s_d_family
+	iD.SessUserAllFamilies = s_all_families
+	iD.SessUserDefaultTeam = s_d_team
 	iD.SessUserSurvivalTeams = s_survival_teams
-	// iD.SessUserDefaultPlace = s_default_place
-	// iD.SessUserBindPlaces = s_places
+	iD.SessUserDefaultPlace = s_d_place
+	iD.SessUserBindPlaces = s_places
 
 	iD.InvitationBean.InviteUser = invi_user
 

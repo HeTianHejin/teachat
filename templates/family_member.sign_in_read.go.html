@@ -1,20 +1,19 @@
 {{ define "content" }}
 
-{{/* 这是 某个茶团邀请对象，阅读邀请函，处理页面 */}}
+{{/* 这是 某个茶友阅读，关于被某个家庭声明为家人，处理页面 */}}
 
-{{ with .InvitationBean }}{{/* 检查邀请函资料夹非空 -开始 */}}
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
-    <li class="active">阅读加盟邀请函</li>
+    <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+    <li class="active">阅读新家庭成员声明</li>
 </ol>
 
 
 
 <div class="media">
     <div class="media-left">
-        <a href="/v1/team/detail?id={{ .Team.Uuid }}">
-            <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="团队团标">
+        <a href="/v1/family/detail?id={{ .Family.Uuid }}">
+            <img class="media-object" src="/v1/static/image/{{ .Family.Logo }}.jpeg" alt="家庭茶团标">
         </a>
     </div>
 
@@ -24,18 +23,18 @@
             <div class="panel-heading">
                 <div class="row">
                     <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-                        <a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+                        <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
                     </div>
 
                     <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-                        <span class="label label-success">
-                           {{ .Status }}
+                        <span style="display: block; font-size: smaller;text-align: center;">
+                            {{ .Family.CreatedAtDate }}
                         </span>
                     </div>
 
                     <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
                         <span style="display: block; text-align: right;">
-                            <span> {{ .Invitation.CreatedAtDate }}
+                            <span class="label label-success">{{ .Family.Status }}
                             </span>
                         </span>
 
@@ -44,16 +43,15 @@
             </div>
 
             <div class="panel-body">
-                <h4 class="text-center">茶团邀请函</h4>
+                <h4 class="text-center">{{ .Family.Title }}</h4>
                 <p>
                     致 <strong>{{ .InviteUser.Name }}</strong> 阁下：
                 </p>
                 <p>
                     {{ .Invitation.InviteWord }}
                 </p>
-                <p class="text-right">CEO：
-
-                    <a href="/v1/user/biography?id={{ .AuthorCEO.Uuid }}">{{ .AuthorCEO.Name }}</a></p>
+                <p class="text-right">茶团CEO：
+                    <strong>{{ .Invitation.CEO.Name }}</strong> 此致</p>
 
                 <p>拟邀任茶团角色为: {{ .Invitation.Role }}</p>
             </div>
@@ -129,8 +127,5 @@
 
 
 {{ end }}{{/* 展示邀请函回复结束 */}}
-
-
-{{ end }}{{/* 检查邀请函资料夹非空 -结束 */}}
 
 {{ end }}

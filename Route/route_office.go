@@ -12,26 +12,48 @@ func ActivateDraftThread(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /pilot/Invite
-// 打开获取邀请词页面
+// GET /v1/user/invite?id=xxx
+// 打开选择邀请茶友成为管理员页面
 func Invite(w http.ResponseWriter, r *http.Request) {
-	s, e := Session(r)
-	if e != nil {
+	//读取会话资料
+	s, err := Session(r)
+	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	u, e := s.User()
-	if e != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
+	//读取当前用户的相关资料
+	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := FetchUserRelatedData(s)
+	if err != nil {
+		util.Info(err, " Cannot fetch user related data")
+		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	if u.Role == "pilot" || u.Role == "captain" {
-		RenderHTML(w, nil, "layout", "navbar.private", "pilot.invite")
+	//读取被邀请用户的相关资料
+	user_uuid := r.FormValue("id")
+	invi_user, err := data.GetUserByUUID(user_uuid)
+	if err != nil {
+		util.Info(err, " Cannot get user by uuid")
+		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		return
 	}
+	var iD data.InvitationDetail
+	// 填写页面资料
+	iD.SessUser = s_u
+	iD.SessUserDefaultFamily = s_d_family
+	iD.SessUserAllFamilies = s_all_families
+	iD.SessUserDefaultTeam = s_d_team
+	iD.SessUserSurvivalTeams = s_survival_teams
+	iD.SessUserDefaultPlace = s_d_place
+	iD.SessUserBindPlaces = s_places
+
+	iD.InvitationBean.InviteUser = invi_user
+
+	RenderHTML(w, &iD, "layout", "navbar.private", "pilot.invite")
+
 }
 
 // 向2个非当前用户发送盲评审核消息
-func AcceptMessageSendExceptUserId(u_id int, mess data.AcceptMessage) error {
+func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error {
 	var user_ids []int
 	var err error
 	// if data.UserCount() < 50 {

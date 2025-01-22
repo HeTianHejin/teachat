@@ -43,6 +43,16 @@ func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	userbean.User = user
 
+	default_family, err := user.GetLastDefaultFamily()
+	if err != nil {
+		return
+	}
+	familybean, err := FetchFamilyBean(default_family)
+	if err != nil {
+		return
+	}
+	userbean.DefaultFamilyBean = familybean
+
 	default_team, err := user.GetLastDefaultTeam()
 	if err != nil {
 		return
@@ -70,6 +80,12 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	if err != nil {
 		return
 	}
+
+	default_place, err := user.GetLastDefaultPlace()
+	if err != nil && err != sql.ErrNoRows {
+		return
+	}
+	userbean.DefaultPlace = default_place
 
 	return
 }
@@ -563,7 +579,7 @@ func FetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error)
 		return I_B, err
 	}
 
-	I_B.CEO, err = i.CEO()
+	I_B.AuthorCEO, err = i.AuthorCEO()
 	if err != nil {
 		util.Warning(err, " Cannot fetch team CEO given invitation")
 		return I_B, err

@@ -235,7 +235,7 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: aO.Id,
 	}
 	// 发送消息给两个在线用户
-	if err = AcceptMessageSendExceptUserId(s_u.Id, mess); err != nil {
+	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
 		util.Warning(err, "Cannot send 2 acceptMessage")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶，请稍后再试。")
 		return

@@ -2,14 +2,21 @@ package data
 
 // UserBeanPagedata 个人主页，渲染所需数据
 type UserBean struct {
-	SessUser           User
-	User               User // 作者资料
-	DefaultTeamBean    TeamBean
-	ManageTeamBeanList []TeamBean
-	JoinTeamBeanList   []TeamBean
-	ResignTeamBeanList []TeamBean
-	IsAuthor           bool
-	Message            string // 通知消息
+	SessUser User //会话茶友
+	IsAuthor bool //是否作者
+
+	User User // 目标茶友
+
+	DefaultFamilyBean FamilyBean //目标茶友默认的家庭茶团资料夹
+
+	DefaultTeamBean    TeamBean   //目标茶友默认事业茶团资料夹
+	ManageTeamBeanList []TeamBean //目标茶友管理的事业茶团资料夹
+	JoinTeamBeanList   []TeamBean //目标茶友已加入的事业茶团资料夹
+	ResignTeamBeanList []TeamBean // 目标茶友已离开的事业茶团资料夹
+
+	DefaultPlace Place //目标茶友首选品茶地点
+
+	Message string // 给目标茶友的通知消息
 }
 
 // 个人独白，独角戏资料
@@ -270,11 +277,18 @@ type FamilySquare struct {
 type FamilyDetail struct {
 	SessUser User
 	IsParent bool //当前茶友是否为人父母角色？
+	IsChild  bool //当前茶友是否为人子女角色？
+	IsOther  bool //当前茶友是否为其他类型的家庭成员？
 
 	FamilyBean           FamilyBean
 	ParentMemberBeanList []FamilyMemberBean //男主人和女主人
 	ChildMemberBeanList  []FamilyMemberBean //孩子们
 	OtherMemberBeanList  []FamilyMemberBean //其他类型的家庭成员，例如：猫猫，狗狗……
+
+	IsNewMember        bool               //是否为新成员声明书提及茶友？
+	NewMember          User               //新成员声明书提及茶友
+	FamilyMemberSignIn FamilyMemberSignIn //提及当前茶友的家庭新成员声明书
+
 }
 type FamilyBean struct {
 	Family      Family
@@ -297,8 +311,8 @@ type FamilyMemberBean struct {
 
 }
 
-// 申报家庭&茶团新成员页面数据
-type FamilyMemberSignIn struct {
+// 申报&家庭茶团新成员页面数据
+type FamilyMemberSignInPageData struct {
 	SessUser              User
 	SessUserDefaultFamily Family
 	SessUserAllFamilies   []Family
@@ -307,7 +321,7 @@ type FamilyMemberSignIn struct {
 	SessUserDefaultPlace  Place
 	SessUserBindPlaces    []Place
 
-	FamilyBean FamilyBean
+	FamilyMemberUser User // 声明为家庭新成员目标茶友
 }
 
 // 查询某个茶团全部加盟申请书状态列表
@@ -388,7 +402,7 @@ type LetterboxPageData struct {
 type InvitationBean struct {
 	Invitation Invitation
 	Team       Team   //发出邀请函的团队
-	CEO        User   //团队首席执行官
+	AuthorCEO  User   //团队首席执行官
 	InviteUser User   //邀请对象
 	Status     string //邀请函目前状态
 }
@@ -396,6 +410,8 @@ type InvitationBean struct {
 // 茶团加盟邀请函详情页面数据
 type InvitationDetail struct {
 	SessUser              User
+	SessUserDefaultFamily Family
+	SessUserAllFamilies   []Family
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
 	SessUserDefaultPlace  Place

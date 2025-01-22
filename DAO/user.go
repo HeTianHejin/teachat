@@ -2,8 +2,6 @@ package data
 
 import (
 	"database/sql"
-	"errors"
-	util "teachat/Util"
 	"time"
 )
 
@@ -632,7 +630,7 @@ func (team_member *TeamMember) User() (user User, err error) {
 }
 
 // 获取邀请函的茶团创建人
-func (invitation *Invitation) Founder() (user User, err error) {
+func (invitation *Invitation) TeamFounder() (user User, err error) {
 	user = User{}
 	team, err := GetTeamById(invitation.TeamId)
 	if err != nil {
@@ -643,24 +641,10 @@ func (invitation *Invitation) Founder() (user User, err error) {
 	return
 }
 
-// 获取邀请函的茶团CEO
-func (invitation *Invitation) CEO() (user User, err error) {
+// 获取撰写邀请函的茶团AuthorCEO（原作者），可能不是现任CEO
+func (invitation *Invitation) AuthorCEO() (user User, err error) {
 	user = User{}
-	//过滤系统保留的茶团号
-	if invitation.TeamId <= 2 {
-		return user, errors.New("invalided Invitation's team-id")
-	}
-	team, err := GetTeamById(invitation.TeamId)
-	if err != nil {
-		util.Warning(err, invitation.Id, "cannot fetch team given team-id")
-		return
-	}
-	member, err := team.MemberCEO()
-	if err != nil {
-		util.Warning(err, invitation.Id, "cannot fetch team member given team-id")
-		return
-	}
-	err = Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", member.UserId).
+	err = Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", invitation.AuthorUserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
