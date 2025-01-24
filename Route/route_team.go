@@ -246,8 +246,17 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	// 将NewTeam草稿存入数据库，class=10/20
 	logo := "teamLogo"
-	team, err := s_u.CreateTeam(n, abbr, mission, logo, class, 1)
-	if err != nil {
+	new_team := data.Team{
+		Name:              n,
+		Abbreviation:      abbr,
+		Mission:           mission,
+		Logo:              logo,
+		Class:             class,
+		FounderId:         s_u.Id,
+		SuperiorTeamId:    0,
+		SubordinateTeamId: 0,
+	}
+	if err := new_team.Create(); err != nil {
 		util.Info(err, " At create team")
 		Report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
 		return
@@ -255,7 +264,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	// 创建一条友邻盲评,是否接纳 新茶团的记录
 	aO := data.AcceptObject{
-		ObjectId:   team.Id,
+		ObjectId:   new_team.Id,
 		ObjectType: 5,
 	}
 	if err = aO.Create(); err != nil {
@@ -280,9 +289,9 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	// 提示用户新茶团保存成功
 	text := ""
 	if s_u.Gender == 0 {
-		text = fmt.Sprintf("%s 女士，你好，登记 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, team.Name)
+		text = fmt.Sprintf("%s 女士，你好，登记 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
 	} else {
-		text = fmt.Sprintf("%s 先生，你好，登记 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, team.Name)
+		text = fmt.Sprintf("%s 先生，你好，登记 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
 	}
 	Report(w, r, text)
 

@@ -144,7 +144,7 @@ func GetTeamsCountByGroupId(group_id int) (count int) {
 // team.Group() 获取team所在的group
 func (team *Team) Group() (group Group, err error) {
 	// fetch group
-	group, err = GetGroup(team.GroupId)
+	group, err = GetGroup(team.SuperiorTeamId)
 	return group, err
 }
 

@@ -36,7 +36,6 @@ drop table if exists watchwords;
 drop table if exists monologues;
 drop table if exists goods;
 drop table if exists user_goods;
-drop table if exists groups;
 drop table if exists handicrafts;
 drop table if exists inaugurations;
 drop table if exists parts;
@@ -349,20 +348,7 @@ CREATE TABLE handicrafts (
     updated_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE groups (
-    id                      SERIAL PRIMARY KEY,
-    uuid                    VARCHAR(64) NOT NULL,
-    name                    VARCHAR(255) NOT NULL,
-    mission                 TEXT,
-    founder_id              INTEGER NOT NULL REFERENCES users(id),
-    first_team_id            INTEGER REFERENCES teams(id),
-    created_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    class                   VARCHAR(255),
-    abbreviation            VARCHAR(255),
-    logo                    VARCHAR(255),
-    updated_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    ministry_id             INTEGER default 0
-);
+
 
 CREATE TABLE goods (
     id                           SERIAL PRIMARY KEY,
@@ -607,7 +593,8 @@ create table teams (
   abbreviation           integer,
   logo                   varchar(255),
   updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  group_id               integer default 0
+  superior_team_id     integer default 0,
+  subordinate_team_id    integer default 0
 );
 
 create table team_members (

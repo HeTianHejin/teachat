@@ -64,11 +64,6 @@ func main() {
 
 	//mux.HandleFunc("/v1/teams/rejected", route.RejectedTeams)
 
-	// defined in route_group.go
-	mux.HandleFunc("/v1/group/new", route.NewGroup)
-	mux.HandleFunc("/v1/group/create", route.CreateGroup)
-	mux.HandleFunc("/v1/group/detail", route.GroupDetail)
-
 	//defined in route_team_member.go
 	//处理茶团成员个人事务
 	mux.HandleFunc("/v1/team_member/application/new", route.HandleNewMemberApplication)
