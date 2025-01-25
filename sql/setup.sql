@@ -593,7 +593,7 @@ create table teams (
   abbreviation           integer,
   logo                   varchar(255),
   updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  superior_team_id     integer default 0,
+  superior_team_id       integer default 0,
   subordinate_team_id    integer default 0
 );
 

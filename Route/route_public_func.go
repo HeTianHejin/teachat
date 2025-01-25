@@ -47,11 +47,19 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	if err != nil {
 		return
 	}
-	familybean, err := FetchFamilyBean(default_family)
-	if err != nil {
-		return
+	//如果default_family.id == 0,说明茶友还没有设置默认的家庭，
+	if default_family.Id == 0 {
+		userbean.DefaultFamilyBean.Family = data.Family{Id: 0, Uuid: "x", Name: "温暖家庭"}
+		userbean.DefaultFamilyBean.Count = 1
+		userbean.DefaultFamilyBean.Founder = user
+		userbean.DefaultFamilyBean.FounderTeam, _ = user.GetLastDefaultTeam()
+	} else {
+		familybean, err := FetchFamilyBean(default_family)
+		if err != nil {
+			return userbean, err
+		}
+		userbean.DefaultFamilyBean = familybean
 	}
-	userbean.DefaultFamilyBean = familybean
 
 	default_team, err := user.GetLastDefaultTeam()
 	if err != nil {
@@ -87,7 +95,7 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	}
 	userbean.DefaultPlace = default_place
 
-	return
+	return userbean, err
 }
 
 // fetch userbean_list given []user
