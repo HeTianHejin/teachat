@@ -1,2 +1,1 @@
-WARNING 2025/01/25 21:25:36 utils.go:74: sql: no rows in result set 0  Cannot read family founder
-WARNING 2025/01/25 21:25:36 utils.go:74: sql: no rows in result set  未能读取用户信息！
+INFO 2025/01/26 09:22:56 utils.go:64: sql: no rows in result set cannot get family by uuid

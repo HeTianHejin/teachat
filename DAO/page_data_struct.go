@@ -312,7 +312,7 @@ type FamilyMemberBean struct {
 }
 
 // 申报&家庭茶团新成员页面数据
-type FamilyMemberSignInPageData struct {
+type FamilyMemberSignInNew struct {
 	SessUser              User
 	SessUserDefaultFamily Family
 	SessUserAllFamilies   []Family
@@ -322,6 +322,25 @@ type FamilyMemberSignInPageData struct {
 	SessUserBindPlaces    []Place
 
 	FamilyMemberUser User // 声明为家庭新成员目标茶友
+}
+
+// FamilyMemberSignInBeanDetail &家庭茶团新成员声明书详情页面数据
+type FamilyMemberSignInDetail struct {
+	SessUser User
+
+	FamilyMemberSignInBean FamilyMemberSignInBean //&家庭茶团新成员声明书资料夹
+}
+
+// FamilyMemberSignInBean &家庭茶团增加成员声明书资料夹
+type FamilyMemberSignInBean struct {
+	FamilyMemberSignIn FamilyMemberSignIn //声明书
+	Family             Family             //发出声明的家庭
+	NewMember          User               //新成员茶友id
+	Author             User               //声明书作者
+}
+type FamilyMemberSignInBeanList struct {
+	SessUser                   User
+	FamilyMemberSignInBeanList []FamilyMemberSignInBean //申请书队列
 }
 
 // 查询某个茶团全部加盟申请书状态列表

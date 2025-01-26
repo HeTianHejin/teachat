@@ -8,10 +8,10 @@ import (
 	util "teachat/Util"
 )
 
-// Handle() /v1/family_member/sign_in
+// Handle() /v1/family_member/sign_in_new
 // 处理&家庭茶团的登记新成员窗口
 // 根据提交的某个茶友邮箱地址，将其申报为&家庭茶团成员
-func HandleFamilyMemberSignIn(w http.ResponseWriter, r *http.Request) {
+func HandleFamilyMemberSignInNew(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		FamilyMemberSignInGet(w, r)
@@ -22,7 +22,7 @@ func HandleFamilyMemberSignIn(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /v1/family_member/sign_in?id=xxx
+// GET /v1/family_member/sign_in_new?id=xxx
 // 给用户返回一张空白的&家庭茶团新成员登记表格（页面）
 func FamilyMemberSignInGet(w http.ResponseWriter, r *http.Request) {
 	//读取会话资料
@@ -44,14 +44,14 @@ func FamilyMemberSignInGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//读取当前用户的相关资料
+	//读取当前会话用户的相关资料
 	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Danger(err, "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	var fms data.FamilyMemberSignInPageData
+	var fms data.FamilyMemberSignInNew
 	//将当前用户的资料填入表格
 	fms.SessUser = s_u
 	//将当前用户的默认茶团资料填入表格
@@ -72,7 +72,7 @@ func FamilyMemberSignInGet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// POST /v1/family_member/sign_in
+// POST /v1/family_member/sign_in_new
 // 处理增加&家庭茶团成员声明的提交事务
 func FamilyMemberSignInPost(w http.ResponseWriter, r *http.Request) {
 	// 获取session
@@ -102,7 +102,7 @@ func FamilyMemberSignInPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再试一次。")
 		return
 	}
-	//读取声明退出的成员资料
+	//读取声明增加的成员资料
 	t_user, err := data.GetUserByEmail(m_email)
 	if err != nil {
 		util.Warning(err, m_email, "Cannot get user by email")
@@ -134,18 +134,17 @@ func FamilyMemberSignInPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ok := false
-	// 检查提及的茶友是否已经是提及的家庭的成员
-	if ok, err = t_family.IsMember(t_user.Id); ok || err != nil {
-		Report(w, r, "你好，茶博士认为提及的茶友已经是家庭的成员，请确认后再试。")
-		util.Warning(err, t_user.Id, "Cannot check if user is member of family")
+	isMember := false
+	// check if session user is member of family
+	if isMember, err = t_family.IsMember(s_u.Id); err != nil || !isMember {
+		util.Warning(err, s_u.Id, "Cannot check if user is member of family")
+		Report(w, r, "你好，茶博士认为你不是这个家庭的成员，请确认后再试。")
 		return
 	}
-
-	// check if user is member of family
-	if ok, err = t_family.IsMember(s_u.Id); err != nil || !ok {
-		Report(w, r, "你好，茶博士认为你不是这个家庭的成员，请确认后再试。")
-		util.Warning(err, s_u.Id, "Cannot check if user is member of family")
+	// 检查提及的茶友是否已经是提及的家庭的成员
+	if isMember, err = t_family.IsMember(t_user.Id); isMember || err != nil {
+		util.Warning(err, t_user.Id, "Cannot check if user is member of family")
+		Report(w, r, "你好，茶博士认为提及的茶友已经是家庭的成员，请确认后再试。")
 		return
 	}
 
@@ -158,11 +157,11 @@ func FamilyMemberSignInPost(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, p := range parent_members {
 		if p.UserId == s_u.Id {
-			ok = true
+			isMember = true
 			break
 		}
 	}
-	if !ok {
+	if !isMember {
 		Report(w, r, "你好，茶博士认为你无权声明这个家庭增加新成员，请确认后再试。")
 		return
 	}
@@ -181,7 +180,7 @@ func FamilyMemberSignInPost(w http.ResponseWriter, r *http.Request) {
 
 	//读取提交的角色
 	role_str := r.PostFormValue("role")
-	// 检查提交的角色是否存在
+	// 检查提交的角色是否合法
 	if role_str == "" {
 		Report(w, r, "你好，茶博士认为你没有选择角色，请确认后再试。")
 		return
@@ -266,4 +265,81 @@ func FamilyMemberSignInPost(w http.ResponseWriter, r *http.Request) {
 	report := fmt.Sprintf("你好，%s 已经保存成功。请自行联系你的家人，查找访问你的家庭详情，阅读声明并确认后生效。", title)
 	Report(w, r, report)
 
+}
+
+// Handle() /v1/family_member/sign_in
+// 处理&家庭茶团的声明增加成员窗口
+// 根据答复结果，来决定是否将其添加为&家庭茶团成员
+func HandleFamilyMemberSignIn(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		FamilyMemberSignInRead(w, r)
+	case http.MethodPost:
+		FamilyMemberSignInReply(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// 为声明提及新成员办理取阅声明书，
+// GET /v1/family_member/sign_in?id=
+func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
+	// 获取session
+	s, err := Session(r)
+	if err != nil {
+		util.Danger(err, " Cannot get session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Danger(err, " Cannot get user")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	// 获取请求参数
+	family_member_sign_in_uuid := r.URL.Query().Get("id")
+	// 读取增加家庭成员声明资料
+	family_member_sign_in := data.FamilyMemberSignIn{
+		Uuid: family_member_sign_in_uuid,
+	}
+	if err := family_member_sign_in.GetByUuid(); err != nil {
+		util.Danger(err, " Cannot get family_member_sign_in given uuid")
+		Report(w, r, "读取声明书失误，请稍后再试一次。")
+		return
+	}
+
+	// 检查声明是否属于会话用户
+	if family_member_sign_in.UserId != s_u.Id {
+		Report(w, r, "你好，柳丝榆荚自芳菲，声明资料满天飞。请稍后再试。")
+		return
+	}
+
+	var fMSID data.FamilyMemberSignInDetail
+	// 读取声明书详细资料
+	family_member_sign_in_bean, err := FetchFamilyMemberSignInBean(family_member_sign_in)
+	if err != nil {
+		util.Danger(err, family_member_sign_in.Id, " Cannot get family_member_sign_in_bean")
+		Report(w, r, "读取声明书失误，请稍后再试一次。")
+		return
+	}
+	//更新声明书状态为已读
+	family_member_sign_in.Status = 1
+	if err := family_member_sign_in.Update(); err != nil {
+		util.Danger(err, " Cannot update family_member_sign_in")
+		Report(w, r, "更新声明书失误，请稍后再试一次。")
+		return
+	}
+
+	//填写页面数据
+	fMSID.SessUser = s_u
+	fMSID.FamilyMemberSignInBean = family_member_sign_in_bean
+
+	//渲染页面给用户
+	RenderHTML(w, &fMSID, "layout", "navbar.private", "family_member.sign_in_read")
+
+}
+
+func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
+	panic("unimplemented")
 }

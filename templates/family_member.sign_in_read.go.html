@@ -2,6 +2,9 @@
 
 {{/* 这是 某个茶友阅读，关于被某个家庭声明为家人，处理页面 */}}
 
+{{ with .FamilyMemberSignInBean }}{{/* 检查是否新家庭成员声明资料夹为空 -开始  */}}
+
+
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
     <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
@@ -43,17 +46,26 @@
             </div>
 
             <div class="panel-body">
-                <h4 class="text-center">{{ .Family.Title }}</h4>
+                <h4 class="text-center">{{ .FamilyMemberSignIn.Title }}</h4>
                 <p>
-                    致 <strong>{{ .InviteUser.Name }}</strong> 阁下：
+                    亲爱的 <strong>{{ .NewMember.Name }}</strong> ：
                 </p>
-                <p>
-                    {{ .Invitation.InviteWord }}
-                </p>
-                <p class="text-right">茶团CEO：
-                    <strong>{{ .Invitation.CEO.Name }}</strong> 此致</p>
 
-                <p>拟邀任茶团角色为: {{ .Invitation.Role }}</p>
+               <p>这就是我们的家庭茶团，一起来喝茶。</p>
+
+                <p>
+                    {{ .FamilyMemberSignIn.Content }}
+                </p>
+                <p class="text-right">
+                    {{if .Author.Gender }}
+                    男主人：<i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+                    {{ else }}
+                    女主人：<i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+                    {{ end }}
+                    {{ .Author.Name }} 特此声明
+                </p>
+
+                <p>新家庭成员角色: {{ .FamilyMemberSignIn.GetRole }}</p>
             </div>
 
         </div>
@@ -64,68 +76,68 @@
 
 
 
-{{ if .Invitation.Check }}
-{{/* 处理茶团邀请函 */}}
+{{ if .FamilyMemberSignIn.Check }}
+
+{{/* 展示对这个家庭新成员声明书回复-开始 */}}
+
 <div class="panel panel-default">
     <div class="panel-heading">
-        处理邀请函
+        我的选择：
     </div>
     <div class="panel-body">
-        <form class="form-horizontal" role="form" action="/v1/team_member/invitation" method="post">
+        <p>{{ .FamilyMemberSignIn.Reply }}</p>
+        <span style="font-size: smaller;"> {{ .FamilyMemberSignIn.ReplyCreatedAtDate }}</span>
+    </div>
+</div>
+
+{{ else }}
+
+{{/* 处理&家庭茶团新成员声明书 */}}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        处理&家庭茶团新成员声明书
+    </div>
+    <div class="panel-body">
+        <form class="form-horizontal" role="form" action="/v1/family_member/sign_in" method="post">
+            <div class="form-group">
+                <p style="margin-inline-start: 2rem;">是这个家庭新成员?</p>
+            </div>
             <div class="form-group">
                 <fieldset>
                     <legend style="font-size: small;">
-                        <label for="radio" class="col-sm-2 control-label">选择处理：</label>
-                        <div name="radio" class="col-sm-10">
+                        <div name="radio" class="col-sm-12">
                             <div class="col-sm-6">
-                                <input type="radio" name="reply" id="accept" value="1" checked />
-                                <label for="accept">接受</label>
+                                <input type="radio" name="reply" id="confirm" value="true" required />
+                                <label for="confirm">确认</label>
                             </div>
                             <div class="col-sm-6">
-                                <input type="radio" name="reply" id="decline" value="0" />
-                                <label for="decline">拒绝</label>
+                                <input type="radio" name="reply" id="deny" value="false" required />
+                                <label for="deny">否认</label>
                             </div>
                         </div>
                     </legend>
                 </fieldset>
             </div>
-            <div class="form-group">
-                <label for="invitation_reply" class="col-sm-2 control-label">回复邀请：</label>
-                <div class="col-sm-10">
-                    <textarea class="form-control" name="invitation_reply" id="invitation_reply" rows="3"
-                        maxlength="567" placeholder="捎带两句" required></textarea>
-                </div>
-            </div>
-            <input type="hidden" name="invitation_id" id="invitation_id" value="{{ .Invitation.Id }}">
-            <input type="hidden" name="user_id" id="user_id" value="{{ .InviteUser.Id }}">
+           
+            <input type="hidden" name="FamilyMemberSignIn_id" id="FamilyMemberSignIn_id" value="{{ .FamilyMemberSignIn.Id }}">
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-2">
                     <button type="submit" class="btn btn-default">
-                        <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 回复
+                        <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 确定
                     </button>
                 </div>
             </div>
         </form>
     </div>
     <div class="panel-footer">
-        提示：接受邀请即可加入茶团。
+        提示：确认是家庭成员将立即加入这个&家庭茶团。
     </div>
 </div>
 
-{{ else }}
-{{/* 展示邀请函回复 */}}
-
-<div class="panel panel-default">
-    <div class="panel-heading">
-        我的答复：
-    </div>
-    <div class="panel-body">
-        <p>{{ .Invitation.Reply.ReplyWord }}</p>
-        <span style="font-size: smaller;"> {{ .Invitation.ReplyCreatedAtDate }}</span>
-    </div>
-</div>
+{{ end }}{{/* 展示对这个家庭新成员声明书回复-结束 */}}
 
 
-{{ end }}{{/* 展示邀请函回复结束 */}}
+{{ end }}{{/* 检查是否新家庭成员声明资料夹为空 -结束  */}}
+
 
 {{ end }}

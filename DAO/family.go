@@ -86,30 +86,57 @@ func (fm *FamilyMember) GetRole() string {
 
 // 增加&家庭茶团成员声明
 type FamilyMemberSignIn struct {
-	Id        int
-	Uuid      string
-	FamilyId  int    //“新成员声明”所指向的&家庭茶团id
-	UserId    int    //茶友id
-	Role      int    // 家庭成员角色
-	IsAdult   bool   //是否成年
-	Title     string //标题
-	Content   string //声明内容
-	PlaceId   int    //“新成员声明”所指向的地点id
-	Status    int    //状态：0、未读，1、已读， 2、已确认， 3、已否认，
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	IsAdopted bool //是否领养
+	Id           int
+	Uuid         string
+	FamilyId     int    //“新成员声明”所指向的&家庭茶团id
+	UserId       int    //被声明为新成员的茶友id
+	Role         int    // 家庭成员角色：0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物,
+	IsAdult      bool   //是否成年
+	Title        string //标题
+	Content      string //声明内容
+	PlaceId      int    //“新成员声明”所指向的地点id
+	Status       int    //状态：0、未读，1、已读， 2、已确认， 3、已否认，
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	IsAdopted    bool //是否领养
+	AuthorUserId int  //声明书作者茶友id
+}
+
+// FamilyMemberSignIn.Check() 如果status > 1 ,表示已经处理完毕，返回true，表示无需再处理
+func (fms *FamilyMemberSignIn) Check() bool {
+	return fms.Status > 1
+}
+
+// FamilyMemberSignIn.GetRole()
+func (fms *FamilyMemberSignIn) GetRole() string {
+	switch fms.Role {
+	case 0:
+		return "秘密"
+	case 1:
+		return "男主人"
+	case 2:
+		return "女主人"
+	case 3:
+		return "女儿"
+	case 4:
+		return "儿子"
+	case 5:
+		return "宠物"
+
+	default:
+		return "未知"
+	}
 }
 
 // FamilyMemberSignIn.Create() 创建“新成员声明”
 func (fms *FamilyMemberSignIn) Create() (err error) {
-	statement := "INSERT INTO family_member_sign_ins (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id"
+	statement := "INSERT INTO family_member_sign_ins (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id, author_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), time.Now(), fms.IsAdopted).Scan(&fms.Id)
+	err = stmt.QueryRow(Random_UUID(), fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), time.Now(), fms.IsAdopted, fms.AuthorUserId).Scan(&fms.Id)
 	if err != nil {
 		return
 	}
@@ -118,8 +145,8 @@ func (fms *FamilyMemberSignIn) Create() (err error) {
 
 // FamilyMemberSignIn.Get() 根据id获取“新成员声明”
 func (fms *FamilyMemberSignIn) Get() (err error) {
-	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted FROM family_member_sign_ins WHERE id = $1"
-	err = Db.QueryRow(statement, fms.Id).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted)
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_ins WHERE id = $1"
+	err = Db.QueryRow(statement, fms.Id).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -141,8 +168,8 @@ func (fms *FamilyMemberSignIn) Update() (err error) {
 
 // FamilyMemberSignIn.GetByUUID() 根据uuid获取“新成员声明”
 func (fms *FamilyMemberSignIn) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted FROM family_member_sign_ins WHERE uuid = $1"
-	err = Db.QueryRow(statement, fms.Uuid).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted)
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_ins WHERE uuid = $1"
+	err = Db.QueryRow(statement, fms.Uuid).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -151,8 +178,8 @@ func (fms *FamilyMemberSignIn) GetByUuid() (err error) {
 
 // FamilyMemberSignIn.GetByFamilyIdMemberUserId() 根据family_id和user_id获取“新成员声明”
 func (fms *FamilyMemberSignIn) GetByFamilyIdMemberUserId() (err error) {
-	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted FROM family_member_sign_ins WHERE family_id = $1 AND user_id = $2"
-	err = Db.QueryRow(statement, fms.FamilyId, fms.UserId).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted)
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_ins WHERE family_id = $1 AND user_id = $2"
+	err = Db.QueryRow(statement, fms.FamilyId, fms.UserId).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}

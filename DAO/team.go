@@ -40,8 +40,8 @@ type Team struct {
 	Abbreviation      string // 队名简称
 	Logo              string // $事业茶团标志
 	UpdatedAt         time.Time
-	SuperiorTeamId    int // 上级 $事业茶团id（high level team）superior
-	SubordinateTeamId int // 下级 $事业茶团id（lower level team）Subordinate
+	SuperiorTeamId    int // (默认直接管理，顶头上司)上级 $事业茶团id（high level team）superior
+	SubordinateTeamId int // （默认直接下属？如果有多个下属团队，则是队长集合？）下级 $事业茶团id（lower level team）Subordinate
 }
 
 // 团队成员=当前$事业茶团加入成员记录

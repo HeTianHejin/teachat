@@ -47,19 +47,11 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	if err != nil {
 		return
 	}
-	//如果default_family.id == 0,说明茶友还没有设置默认的家庭，
-	if default_family.Id == 0 {
-		userbean.DefaultFamilyBean.Family = data.Family{Id: 0, Uuid: "x", Name: "温暖家庭"}
-		userbean.DefaultFamilyBean.Count = 1
-		userbean.DefaultFamilyBean.Founder = user
-		userbean.DefaultFamilyBean.FounderTeam, _ = user.GetLastDefaultTeam()
-	} else {
-		familybean, err := FetchFamilyBean(default_family)
-		if err != nil {
-			return userbean, err
-		}
-		userbean.DefaultFamilyBean = familybean
+	familybean, err := FetchFamilyBean(default_family)
+	if err != nil {
+		return
 	}
+	userbean.DefaultFamilyBean = familybean
 
 	default_team, err := user.GetLastDefaultTeam()
 	if err != nil {
@@ -95,7 +87,7 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	}
 	userbean.DefaultPlace = default_place
 
-	return userbean, err
+	return
 }
 
 // fetch userbean_list given []user
@@ -464,6 +456,44 @@ func FetchFamilyMemberBeanList(fm_list []data.FamilyMember) (FMB_List []data.Fam
 			return nil, err
 		}
 		FMB_List = append(FMB_List, fmBean)
+	}
+	return
+}
+
+// 根据给出的某个&家庭茶团增加成员声明书，获取&家庭茶团增加成员声明书资料夹
+func FetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.FamilyMemberSignInBean, err error) {
+	FMSIB.FamilyMemberSignIn = fmsi
+
+	family := data.Family{Id: fmsi.FamilyId}
+	if err = family.Get(); err != nil {
+		util.Warning(err, " Cannot read family given FamilyMemberSignIn")
+		return FMSIB, err
+	}
+	FMSIB.Family = family
+
+	FMSIB.NewMember, err = data.GetUserById(fmsi.UserId)
+	if err != nil {
+		util.Warning(err, " Cannot read new member given FamilyMemberSignIn")
+		return FMSIB, err
+	}
+
+	FMSIB.Author, err = data.GetUserById(fmsi.AuthorUserId)
+	if err != nil {
+		util.Warning(err, " Cannot read author given FamilyMemberSignIn")
+		return FMSIB, err
+	}
+
+	return FMSIB, nil
+}
+
+// 根据给出的多个&家庭茶团增加成员声明书队列，获取资料夹队列
+func FetchFamilyMemberSignInBeanList(fmsi_list []data.FamilyMemberSignIn) (FMSIB_List []data.FamilyMemberSignInBean, err error) {
+	for _, fmsi := range fmsi_list {
+		fmsiBean, err := FetchFamilyMemberSignInBean(fmsi)
+		if err != nil {
+			return nil, err
+		}
+		FMSIB_List = append(FMSIB_List, fmsiBean)
 	}
 	return
 }
