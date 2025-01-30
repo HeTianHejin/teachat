@@ -1,6 +1,9 @@
 package data
 
-import "time"
+import (
+	"database/sql"
+	"time"
+)
 
 // 地方，洞天福地，茶话会举办的空间。
 // 可能是一个建筑物大楼、大厅，房间 ...也可能是行驶中的机舱，船舱,还可能是野外的一块草地，一个帐篷。 maybe a cave like Water Curtain Cave
@@ -129,18 +132,17 @@ func (udp *UserDefaultPlace) Create() (err error) {
 	return
 }
 
-// User.GetLastDefaultPlace() 根据user_id，从user_default_place表中获取最后一条记录，再根据记录中place_id，从places表获取1个place
+// User.GetLastDefaultPlace() 根据user_id，从user_default_place表中获取最后一条记录，再根据.place_id，return (place Place, err error)
 func (u *User) GetLastDefaultPlace() (place Place, err error) {
-	statement := "SELECT id, user_id, place_id, created_at FROM user_default_place WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1"
-	stmt, err := Db.Prepare(statement)
+	udp := UserDefaultPlace{}
+	statement := "SELECT id, user_id, place_id, created_at FROM user_default_place WHERE user_id = $1 ORDER BY created_at DESC"
+	err = Db.QueryRow(statement, u.Id).Scan(&udp.Id, &udp.UserId, &udp.PlaceId, &udp.CreatedAt)
 	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	var udp UserDefaultPlace
-	err = stmt.QueryRow(u.Id).Scan(&udp.Id, &udp.UserId, &udp.PlaceId, &udp.CreatedAt)
-	if err != nil {
-		return
+		if err == sql.ErrNoRows {
+			//这是用户还没有设置默认品茶地方，统一返回虚设“星际茶棚”值
+			return Place{Id: 0, Uuid: "x", Name: "星际茶棚"}, nil
+		}
+		return place, err
 	}
 	place = Place{Id: udp.PlaceId}
 	err = place.Get()

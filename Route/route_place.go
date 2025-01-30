@@ -139,6 +139,13 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	//获取地方的uuid
 	r.ParseForm()
 	place_uuid := r.FormValue("id")
+
+	//如果uuid为茶棚系统值"x",这是一个占位值，跳转首页
+	if place_uuid == "x" {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
+
 	t_place := data.Place{
 		Uuid: place_uuid,
 	}

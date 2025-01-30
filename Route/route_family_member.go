@@ -415,6 +415,31 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
 			return
 		}
+		//如果role==0，表示家庭成员是家庭的父母角色，那么需要更新家庭的名称，
+		if family_member.Role == 1 || family_member.Role == 2 {
+			family := data.Family{
+				Id: family_member.FamilyId,
+			}
+			if err = family.Get(); err != nil {
+				util.Danger(err, family.Id, " Cannot get family given id")
+				Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
+				return
+			}
+			t_user, err := data.GetUserById(family_member.UserId)
+			if err != nil {
+				util.Danger(err, t_user.Id, " Cannot get user given id")
+				Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
+				return
+			}
+			//更新家庭的名称：男主人名+女主人名
+			family.Name = family.Name + t_user.Name
+			if err = family.Update(); err != nil {
+				util.Danger(err, " Cannot update family")
+				Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
+				return
+			}
+		}
+
 		//更新声明书状态为"已确认“ 2
 		family_member_sign_in.Status = 2
 		if err = family_member_sign_in.Update(); err != nil {

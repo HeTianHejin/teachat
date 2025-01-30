@@ -34,9 +34,9 @@
 
 {{ with .DefaultFamilyBean }}
 <div class="panel panel-default">
-    <div class="panel-heading">默认$家庭茶团</div>
+    <div class="panel-heading">默认&家庭茶团</div>
     <div class="panel-body">
-        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+        <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
     </div>
 
     <p style="margin-inline-start: 2rem;"><a href="#">
@@ -98,7 +98,7 @@
     <li role="presentation"><a href="#">搭讪</a></li>
     <li role="presentation"><a href="#">标识</a></li>
     <li role="presentation"><a href="/v1/team_member/invite?id={{ .User.Uuid }}">邀请加盟</a></li>
-    <li role="presentation"><a href="/v1/family_member/sign_in?id={{ .User.Uuid }}">这是家人</a></li>
+    <li role="presentation"><a href="/v1/family_member/sign_in_new?id={{ .User.Uuid }}">这是家人</a></li>
 </ul>
 
 <ul class="nav nav-tabs nav-justified" style="margin-top: 0px;margin-bottom: 20px;">

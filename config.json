@@ -5,6 +5,7 @@
     "Static": "public",
     "MaxInviteTeams": 12,
     "MaxTeamMembers": 12,
-    "MaxTeamsCount": 99
+    "MaxTeamsCount": 99,
+    "MaxSurvivalTeams": 12
 }
 

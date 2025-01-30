@@ -19,7 +19,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 
 	s_u, err := s.User()
 	if err != nil {
-		util.Warning(err, " 未能读取用户信息！")
+		util.Warning(err, " 根据会话未能读取用户信息")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}

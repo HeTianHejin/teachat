@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	util "teachat/Util"
 	"time"
 )
 
@@ -361,7 +362,7 @@ func (user *User) SurvivalTeams() ([]Team, error) {
         JOIN team_members ON teams.id = team_members.team_id
         WHERE teams.class IN (1, 2) AND team_members.user_id = $1 AND team_members.class = 1`
 
-	estimatedCapacity := 6 //设定用户最多创建3$事业茶团+担任3ceo
+	estimatedCapacity := util.Config.MaxSurvivalTeams //设定用户最多活跃$事业茶团？
 	teams := make([]Team, 0, estimatedCapacity)
 
 	rows, err := Db.Query(query, user.Id)

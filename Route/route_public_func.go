@@ -115,7 +115,7 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, family data.Family,
 		return
 	}
 
-	member_all_families, err := s_u.GetAllFamilies()
+	member_all_families, err := data.GetAllFamilies(s_u.Id)
 	if err != nil {
 		return
 	}

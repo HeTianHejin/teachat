@@ -362,23 +362,6 @@ func GetUserByUUID(uuid string) (user User, err error) {
 	return
 }
 
-// Get all users in the database and returns it
-func Users() (users []User, err error) {
-	rows, err := Db.Query("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_up  FROM users")
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		user := User{}
-		if err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt); err != nil {
-			return
-		}
-		users = append(users, user)
-	}
-	rows.Close()
-	return
-}
-
 // 根据管理员的UserId查询其user对象
 func (administrator *Administrator) User() (user User, err error) {
 	user = User{}

@@ -210,7 +210,7 @@ func HandleNewFamily(w http.ResponseWriter, r *http.Request) {
 		NewFamily(w, r)
 	case http.MethodPost:
 		// return family id
-		CreateFamily(w, r)
+		SaveFamily(w, r)
 	default:
 		// return error
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -220,7 +220,7 @@ func HandleNewFamily(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/family/new
 // create new family
-func CreateFamily(w http.ResponseWriter, r *http.Request) {
+func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Warning(err, " Cannot parse form")
@@ -309,6 +309,7 @@ func CreateFamily(w http.ResponseWriter, r *http.Request) {
 		UserId:   s_u.Id,
 		Role:     0,
 	}
+	//根据茶友性别，设置其相应的男主或者女主角色
 	if s_u.Gender == 1 {
 		new_member.Role = 1
 	} else {
@@ -318,6 +319,24 @@ func CreateFamily(w http.ResponseWriter, r *http.Request) {
 		util.Warning(err, s_u.Email, "Cannot create new family member")
 		Report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
+	}
+
+	//检查当前茶友是否已经设置了默认首选家庭茶团
+	//如果已经设置了默认首选家庭茶团，则不再设置
+	df, _ := s_u.GetLastDefaultFamily()
+
+	if df.Id == 0 {
+		//还没有设置默认家庭
+		udf := data.UserDefaultFamily{
+			UserId:   s_u.Id,
+			FamilyId: new_family.Id,
+		}
+		//把这个新家庭茶团设为默认
+		if err := udf.Create(); err != nil {
+			util.Warning(err, s_u.Email, "Cannot create user's default family")
+			Report(w, r, "你好，茶博士摸摸头，未能创建默认家庭茶团，请稍后再试。")
+			return
+		}
 	}
 
 	//报告用户登记家庭茶团成功

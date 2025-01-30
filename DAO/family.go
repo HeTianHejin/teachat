@@ -12,7 +12,7 @@ type Family struct {
 	Id                  int
 	Uuid                string
 	AuthorId            int    // 创建者id
-	Name                string // 家庭名称，默认是“丈夫-妻子”联合名字组合，例如：比尔及梅琳达·盖茨（Bill & Melinda Gates)基金会（Foundation)【命名方法】
+	Name                string // 家庭名称，默认是“丈夫&妻子”联合名字组合，例如：比尔及梅琳达·盖茨（Bill & Melinda Gates)基金会（Foundation)【命名方法】
 	Introduction        string // 家庭简介
 	IsMarried           bool   // 是否已结婚？（法律上的领取结婚证）
 	HasChild            bool   // 这个家庭是否有子女（包括领养的）？
@@ -271,13 +271,13 @@ type UserDefaultFamily struct {
 
 // UserDefaultFamily.Create() 创建用户的“默认家庭”设置记录
 func (udf *UserDefaultFamily) Create() (err error) {
-	statement := "INSERT INTO user_default_families (user_id, family_id, created_at) VALUES ($1, $2, $3) RETURNING id"
+	statement := "INSERT INTO user_default_families (user_id, family_id) VALUES ($1, $2) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(udf.UserId, udf.FamilyId, time.Now()).Scan(&udf.Id)
+	err = stmt.QueryRow(udf.UserId, udf.FamilyId).Scan(&udf.Id)
 	if err != nil {
 		return
 	}
@@ -291,25 +291,25 @@ func (user *User) GetLastDefaultFamily() (family Family, err error) {
 	err = Db.QueryRow(statement, user.Id).Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			//如果找不到设置记录，则返回id=0，表示“默认家庭=温暖之家”
-			return Family{Id: 0, Uuid: "x", Name: "温暖之家"}, nil
+			//如果找不到设置记录，则返回id=0，表示“默认家庭=星际茶棚”
+			return Family{Id: 0, Uuid: "x", Name: "星际茶棚", AuthorId: 1}, nil
 		}
 		return family, err
 	}
 	return
 }
 
-// (user *User) GetAllFamilies() 根据user.Id从user_default_families和families，获取用户登记的全部家庭资料，返回 (Families []Family, err error)
-func (user *User) GetAllFamilies() (families []Family, err error) {
-	families = []Family{}
-	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open FROM user_default_families udf LEFT JOIN families f ON udf.family_id = f.id WHERE udf.user_id = $1 ORDER BY udf.created_at DESC"
-	rows, err := Db.Query(statement, user.Id)
+// GetAllAuthorFamilies() 根据user.Id从families，获取用户登记的全部家庭资料，返回 (Families []Family, err error)
+func GetAllAuthorFamilies(user_id int) (families []Family, err error) {
+	//families = []Family{}
+	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo FROM families WHERE author_id = $1 ORDER BY created_at DESC"
+	rows, err := Db.Query(statement, user_id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		family := Family{}
-		err = rows.Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
+		err = rows.Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo)
 		if err != nil {
 			return
 		}
@@ -318,12 +318,40 @@ func (user *User) GetAllFamilies() (families []Family, err error) {
 	return
 }
 
-// (user *User) CountAllFamilies() 统计用户登记的全部家庭数量值
-func (user *User) CountAllFamilies() (count int, err error) {
-	statement := "SELECT COUNT(*) FROM user_default_families WHERE user_id = $1"
-	err = Db.QueryRow(statement, user.Id).Scan(&count)
+// CountAllAuthorFamilies() 统计用户登记的全部家庭数量值
+func CountAllAuthorFamilies(user_id int) (count int, err error) {
+	statement := "SELECT COUNT(*) FROM families WHERE author_id = $1"
+	err = Db.QueryRow(statement, user_id).Scan(&count)
 	if err != nil {
 		return
+	}
+	return
+}
+
+// CountAllfamilies() 根据family_member.user_id,统计某个茶友是多少个家庭茶团的成员，return count int, err error
+func CountAllfamilies(user_id int) (count int, err error) {
+	statement := "SELECT COUNT(*) FROM family_members WHERE user_id = $1"
+	err = Db.QueryRow(statement, user_id).Scan(&count)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// GetAllFamilies() 根据family_member.user_id,获取某个茶友是多少个家庭茶团的成员，return (families []Family, err error)
+func GetAllFamilies(user_id int) (families []Family, err error) {
+	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo FROM family_members fm LEFT JOIN families f ON fm.family_id = f.id WHERE fm.user_id = $1 ORDER BY f.created_at DESC"
+	rows, err := Db.Query(statement, user_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		family := Family{}
+		err = rows.Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo)
+		if err != nil {
+			return
+		}
+		families = append(families, family)
 	}
 	return
 }
