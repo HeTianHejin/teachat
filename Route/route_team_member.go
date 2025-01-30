@@ -263,14 +263,14 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 // 调整茶团成员角色管理窗口
 func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		//返回调整角色（撰写角色调整公告）页面
 		MemberRoleChange(w, r)
-	case "POST":
+	case http.MethodPost:
 		//设置角色
 		MemberRoleReply(w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -625,7 +625,7 @@ func HandleMemberInvitation(w http.ResponseWriter, r *http.Request) {
 		//设置邀请函回复方法
 		MemberInvitationReply(w, r)
 	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -1170,7 +1170,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Warning(err, s.Email, "Cannot get user from session")
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		Report(w, r, "你好，满地梨花一片天，请稍后再试一次")
 		return
 	}
 	//读取提交的参数
@@ -1337,10 +1337,10 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		//返回此茶团页面给茶友，成员列表上有该茶友，示意已经加入该茶团
-
+		//返回此茶团页面给茶友，成员列表上有该茶友，示意已经加入该茶团成功
 		http.Redirect(w, r, "/v1/team/detail?id="+(team.Uuid), http.StatusFound)
 		return
+
 	} else if reply_class_int == 0 {
 		//拒绝邀请，则改写邀请函状态并保存答复话语和时间
 		invitation.Status = 3
@@ -1357,16 +1357,11 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，晕头晕脑的茶博士竟然把邀请答复搞丢了，请稍后再试。")
 			return
 		}
-		//返回此茶团页面给茶友，成员名单上没有该茶友，示意已经拒绝该邀请
-		Report(w, r, "你好，茶博士已经成功记录你的拒绝邀请意愿。")
-		// team, err := data.GetTeamById(invitation.TeamId)
-		// if err != nil {
-		// 	util.Danger(err, s_u.Email, " Cannot get team")
-		// 	Report(w, r, "你好，粗心大意的茶博士还没有找到茶团登记本，请稍后再试。")
-		// 	return
-		// }
-		// http.Redirect(w, r, "/v1/team/detail?id="+(team.Uuid), http.StatusFound)
+		//报告用户已经保存拒绝该邀请到答复记录
+		t := fmt.Sprintf("你好，茶博士已经保存关于 %s 婉拒加盟答复。", team.Abbreviation)
+		Report(w, r, t)
 		return
+
 	} else {
 		// 无效的reply 数值
 		Report(w, r, "你好，何幸邀恩宠，宫车过往频。稍后再试。")

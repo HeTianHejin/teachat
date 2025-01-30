@@ -14,9 +14,9 @@ import (
 func HandleFamilyMemberSignInNew(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		FamilyMemberSignInGet(w, r)
+		FamilyMemberSignInNewGet(w, r)
 	case http.MethodPost:
-		FamilyMemberSignInPost(w, r)
+		FamilyMemberSignInNewPost(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -24,7 +24,7 @@ func HandleFamilyMemberSignInNew(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/family_member/sign_in_new?id=xxx
 // 给用户返回一张空白的&家庭茶团新成员登记表格（页面）
-func FamilyMemberSignInGet(w http.ResponseWriter, r *http.Request) {
+func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 	//读取会话资料
 	s, err := Session(r)
 	if err != nil {
@@ -74,7 +74,7 @@ func FamilyMemberSignInGet(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/family_member/sign_in_new
 // 处理增加&家庭茶团成员声明的提交事务
-func FamilyMemberSignInPost(w http.ResponseWriter, r *http.Request) {
+func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := Session(r)
 	if err != nil {
@@ -340,6 +340,125 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// POST /v1/family_member/sign_in
+// 答复家庭茶团成员声明
 func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+	// 获取session
+	s, err := Session(r)
+	if err != nil {
+		util.Danger(err, " Cannot get session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	// 根据会话信息读取茶友资料
+	s_u, err := s.User()
+	if err != nil {
+		util.Warning(err, s.Email, "Cannot get user from session")
+		Report(w, r, "你好，满地梨花一片天，请稍后再试一次")
+		return
+	}
+
+	//解析表单内容，获取茶友提交的参数
+	err = r.ParseForm()
+	if err != nil {
+		util.Danger(err, " Cannot parse form")
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	// 检查提交的是否为成年人参数是否合法
+	reply_str := r.PostFormValue("reply")
+	reply_bool, err := strconv.ParseBool(reply_str)
+	if err != nil {
+		Report(w, r, "你好，茶博士看不懂你选择的是否为家庭成员结果，请确认后再试。")
+		return
+	}
+	//获取声明书id
+	family_member_sign_in_uuid := r.PostFormValue("id")
+	// 读取声明书资料
+	family_member_sign_in := data.FamilyMemberSignIn{
+		Uuid: family_member_sign_in_uuid,
+	}
+	if err = family_member_sign_in.GetByUuid(); err != nil {
+		util.Danger(err, " Cannot get family_member_sign_in given uuid")
+		Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
+		return
+	}
+	// 检查声明是否属于会话用户
+	if family_member_sign_in.UserId != s_u.Id {
+		Report(w, r, "你好，声明资料满天飞。各人自有各人家，请勿乱入别人家。")
+		return
+	}
+	// 检查声明书状态是否已读但未处理，status==1是已读未处理，其它值都是非法的值
+	if family_member_sign_in.Status != 1 {
+		Report(w, r, "你好，柳丝榆荚自芳菲，声明资料满天飞。请稍后再试。")
+	}
+
+	family_member_sign_in_reply := data.FamilyMemberSignInReply{
+		SignInId: family_member_sign_in.Id,
+		UserId:   s_u.Id,
+	}
+
+	//根据reply_bool值，true表示同意加入家庭，false表示拒绝加入家庭
+	if reply_bool {
+		//同意加入家庭
+		//读取声明书资料
+		family_member := data.FamilyMember{
+			UserId:    family_member_sign_in.UserId,
+			FamilyId:  family_member_sign_in.FamilyId,
+			Role:      family_member_sign_in.Role,
+			IsAdult:   family_member_sign_in.IsAdult,
+			IsAdopted: family_member_sign_in.IsAdopted,
+		}
+		//保存家庭成员
+		if err = family_member.Create(); err != nil {
+			util.Danger(err, " Cannot create family_member")
+			Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
+			return
+		}
+		//更新声明书状态为"已确认“ 2
+		family_member_sign_in.Status = 2
+		if err = family_member_sign_in.Update(); err != nil {
+			util.Danger(err, " Cannot update family_member_sign_in")
+			Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
+			return
+		}
+		family_member_sign_in_reply.IsConfirm = true
+
+	} else {
+		//拒绝加入家庭
+		//在声明书状态中更新为“已否认”
+		family_member_sign_in.Status = 3
+		if err = family_member_sign_in.Update(); err != nil {
+			util.Danger(err, " Cannot update family_member_sign_in")
+			Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
+			return
+		}
+		family_member_sign_in_reply.IsConfirm = false
+
+	}
+	//保存家庭成员声明书答复
+	if err = family_member_sign_in_reply.Create(); err != nil {
+		util.Danger(err, " Cannot create family_member_sign_in_reply")
+		Report(w, r, "你好，茶博士正在忙碌中，乱花渐欲迷人眼，请稍后再试。")
+		return
+	}
+
+	if reply_bool {
+		//跳转到家庭茶团页面,成员列表上有该茶友，表示已经加入成功
+		family := data.Family{
+			Id: family_member_sign_in.FamilyId,
+		}
+		if err = family.Get(); err != nil {
+			util.Danger(err, family.Id, " Cannot get family given id")
+			Report(w, r, "你好，茶博士正在忙碌中，乱花渐欲迷人眼，请稍后再试。")
+			return
+		}
+		http.Redirect(w, r, "/v1/family/detail?id="+(family.Uuid), http.StatusFound)
+		return
+	}
+
+	//报告保存(否认是成员)成功
+	t := fmt.Sprintf("你好，茶博士已经保存关于 %s 否认是成员答复。", family_member_sign_in.Title)
+	Report(w, r, t)
+
 }

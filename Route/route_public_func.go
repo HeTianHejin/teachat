@@ -834,6 +834,7 @@ func Session(r *http.Request) (sess data.Session, err error) {
 		}
 	}
 	return
+
 }
 
 // parse HTML templates

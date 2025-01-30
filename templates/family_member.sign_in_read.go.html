@@ -2,51 +2,24 @@
 
 {{/* 这是 某个茶友阅读，关于被某个家庭声明为家人，处理页面 */}}
 
-{{ with .FamilyMemberSignInBean }}{{/* 检查是否新家庭成员声明资料夹为空 -开始  */}}
+{{ with .FamilyMemberSignInBean }}{{/* 检查是否家庭成员声明资料夹为空 -开始  */}}
 
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
-    <li class="active">阅读新家庭成员声明</li>
+    <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}家庭茶团</a></li>
+    <li class="active">阅读家庭成员声明</li>
 </ol>
 
 
-
-<div class="media">
-    <div class="media-left">
-        <a href="/v1/family/detail?id={{ .Family.Uuid }}">
-            <img class="media-object" src="/v1/static/image/{{ .Family.Logo }}.jpeg" alt="家庭茶团标">
-        </a>
-    </div>
-
-    <div class="media-body">
         <div class="panel panel-info">
 
             <div class="panel-heading">
-                <div class="row">
-                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-                        <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
-                    </div>
-
-                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-                        <span style="display: block; font-size: smaller;text-align: center;">
-                            {{ .Family.CreatedAtDate }}
-                        </span>
-                    </div>
-
-                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-                        <span style="display: block; text-align: right;">
-                            <span class="label label-success">{{ .Family.Status }}
-                            </span>
-                        </span>
-
-                    </div>
-                </div>
+               
+                <h4 class="text-center">{{ .FamilyMemberSignIn.Title }}</h4>
             </div>
 
             <div class="panel-body">
-                <h4 class="text-center">{{ .FamilyMemberSignIn.Title }}</h4>
                 <p>
                     亲爱的 <strong>{{ .NewMember.Name }}</strong> ：
                 </p>
@@ -58,19 +31,23 @@
                 </p>
                 <p class="text-right">
                     {{if .Author.Gender }}
-                    男主人：<i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+                    男主人：
+                    <a href="/v1/user/biography?id={{ .Author.Uuid }}">{{ .Author.Name }} </a>
+                    <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
                     {{ else }}
-                    女主人：<i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+                    女主人：
+                    <a href="/v1/user/biography?id={{ .Author.Uuid }}">{{ .Author.Name }} </a>
+                    <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
                     {{ end }}
-                    {{ .Author.Name }} 特此声明
                 </p>
 
-                <p>新家庭成员角色: {{ .FamilyMemberSignIn.GetRole }}</p>
+                <p>家庭成员角色: {{ .FamilyMemberSignIn.GetRole }}</p>
+                <p>特此声明 {{ .FamilyMemberSignIn.CreatedAtDate }}</p>
             </div>
 
         </div>
-    </div>
-</div>
+
+
 
 
 
@@ -78,7 +55,7 @@
 
 {{ if .FamilyMemberSignIn.Check }}
 
-{{/* 展示对这个家庭新成员声明书回复-开始 */}}
+{{/* 展示对这个家庭成员声明书回复-开始 */}}
 
 <div class="panel panel-default">
     <div class="panel-heading">
@@ -92,15 +69,15 @@
 
 {{ else }}
 
-{{/* 处理&家庭茶团新成员声明书 */}}
+{{/* 处理&家庭茶团成员声明书 */}}
 <div class="panel panel-default">
     <div class="panel-heading">
-        处理&家庭茶团新成员声明书
+        处理&家庭茶团成员声明书
     </div>
     <div class="panel-body">
         <form class="form-horizontal" role="form" action="/v1/family_member/sign_in" method="post">
             <div class="form-group">
-                <p style="margin-inline-start: 2rem;">是这个家庭新成员?</p>
+                <p style="margin-inline-start: 2rem;">是这个家庭茶团成员?</p>
             </div>
             <div class="form-group">
                 <fieldset>
@@ -119,25 +96,25 @@
                 </fieldset>
             </div>
            
-            <input type="hidden" name="FamilyMemberSignIn_id" id="FamilyMemberSignIn_id" value="{{ .FamilyMemberSignIn.Id }}">
+            <input type="hidden" name="id" id="FamilyMemberSignIn_id" value="{{ .FamilyMemberSignIn.Uuid }}">
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-2">
                     <button type="submit" class="btn btn-default">
-                        <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 确定
+                        <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 提交
                     </button>
                 </div>
             </div>
         </form>
     </div>
     <div class="panel-footer">
-        提示：确认是家庭成员将立即加入这个&家庭茶团。
+        提示：确认是成员将立即加入这个&家庭茶团。
     </div>
 </div>
 
-{{ end }}{{/* 展示对这个家庭新成员声明书回复-结束 */}}
+{{ end }}{{/* 展示对这个家庭成员声明书回复-结束 */}}
 
 
-{{ end }}{{/* 检查是否新家庭成员声明资料夹为空 -结束  */}}
+{{ end }}{{/* 检查是否家庭成员声明资料夹为空 -结束  */}}
 
 
 {{ end }}

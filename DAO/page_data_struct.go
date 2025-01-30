@@ -287,7 +287,7 @@ type FamilyDetail struct {
 
 	IsNewMember        bool               //是否为新成员声明书提及茶友？
 	NewMember          User               //新成员声明书提及茶友
-	FamilyMemberSignIn FamilyMemberSignIn //提及当前茶友的家庭新成员声明书
+	FamilyMemberSignIn FamilyMemberSignIn //提及当前茶友的家庭成员声明书
 
 }
 type FamilyBean struct {

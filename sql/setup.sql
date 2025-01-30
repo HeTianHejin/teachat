@@ -30,6 +30,8 @@ drop table if exists families;
 drop table if exists family_members;
 drop table if exists family_member_role_notices;
 drop table if exists family_member_sign_ins;
+drop table if exists family_member_sign_in_replies;
+drop table if exists family_member_sign_outs;
 drop table if exists communities;
 drop table if exists administrators;
 drop table if exists watchwords;
@@ -744,6 +746,15 @@ CREATE TABLE family_member_sign_ins (
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_adopted                            BOOLEAN default false
+);
+
+CREATE TABLE family_member_sign_in_replies (
+    id                                    SERIAL PRIMARY KEY,
+    uuid                                  VARCHAR(255),
+    sign_in_id                            INTEGER,
+    user_id                               INTEGER,
+    is_confirm                            BOOLEAN default false,
+    created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_default_families (
