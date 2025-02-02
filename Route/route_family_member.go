@@ -238,24 +238,25 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 新声明
-	t_family_member_sign_in := data.FamilyMemberSignIn{
-		FamilyId:  t_family.Id,
-		UserId:    t_user.Id,
-		Role:      role_int,
-		IsAdult:   is_adult,
-		Title:     title,
-		Content:   cont,
-		PlaceId:   t_place.Id,
-		IsAdopted: is_adopted,
+	new_family_member_sign_in := data.FamilyMemberSignIn{
+		FamilyId:     t_family.Id,
+		UserId:       t_user.Id,
+		Role:         role_int,
+		IsAdult:      is_adult,
+		Title:        title,
+		Content:      cont,
+		PlaceId:      t_place.Id,
+		IsAdopted:    is_adopted,
+		AuthorUserId: s_u.Id,
 	}
 	//检查是否已经存在重复的声明
-	if err = t_family_member_sign_in.GetByFamilyIdMemberUserId(); err == nil {
+	if err = new_family_member_sign_in.GetByFamilyIdMemberUserId(); err == nil {
 		Report(w, r, "你好，茶博士认为你已经提交过这个声明，请确认后再试。")
 		return
 	}
 
 	// 保存新声明
-	if err = t_family_member_sign_in.Create(); err != nil {
+	if err = new_family_member_sign_in.Create(); err != nil {
 		util.Warning(err, "Cannot create family member sign in")
 		Report(w, r, "你好，满头大汗的茶博士说，因为眼镜太模糊导致增加成员的声明保存失败，请确认后再试。")
 		return

@@ -1,6 +1,7 @@
 package route
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -24,7 +25,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 2. get user's family
-	family_list, err := data.GetFamiliesByAuthorId(s_u.Id)
+	family_list, err := data.GetAllFamilies(s_u.Id)
 	if err != nil {
 		util.Warning(err, s_u.Id, "Cannot get user's family given id")
 		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
@@ -51,6 +52,9 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/family/detail?id=XXX
 // 查看&家庭茶团详情
+// 需要检查会话用户是否被这个家庭声明为新成员，这影响是否展示新成员声明
+// 如果会话用户是家庭成员，可以直接查看详情，
+// 如果这个家庭设置isopen==false，检查会话用户不是家庭成员，也不是被声明为新成员，那么不能查看家庭茶团资料
 func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	// 1. get session
 	s, err := Session(r)
@@ -80,13 +84,13 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		Uuid: family_uuid,
 	}
 	if err = family.GetByUuid(); err != nil {
+		util.Warning(err, "Cannot get family by UUID")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 
-	//检查当前用户是否可以查看这个家庭茶团资料
-	isMember := false
 	fD.IsNewMember = false
+	isMember := false
 	// 3. check user is member of family
 	isMember, err = family.IsMember(s_u.Id)
 	if err != nil {
@@ -95,30 +99,36 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isMember {
-		// 如果不是家庭成员，则尝试读取这个家庭的增加新成员声明，看当前用户是否是某个声明对象
+		// 不是家庭成员，则尝试读取这个家庭的增加新成员声明，看当前用户是否是某个声明对象
 		// check user is new member of family
 		family_member_sign_in := data.FamilyMemberSignIn{
 			FamilyId: family.Id,
 			UserId:   s_u.Id,
 		}
 		if err = family_member_sign_in.GetByFamilyIdMemberUserId(); err != nil {
-			//查询资料出现失误
-			util.Warning(err, "Cannot get family member sign in")
-			Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
-			return
+			if err != sql.ErrNoRows {
+				//查询资料出现失误
+				util.Warning(err, "Cannot get family member sign in")
+				Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+				return
+			}
+			fD.IsNewMember = false
+		} else {
+			//是新成员声明书中的茶友
+			fD.IsNewMember = true
+			fD.FamilyMemberSignIn = family_member_sign_in
 		}
-		//是新成员声明书中的茶友
-		fD.IsNewMember = true
-		fD.FamilyMemberSignIn = family_member_sign_in
-		isMember = true
+
 	}
 
+	//检查当前用户是否可以查看这个家庭茶团资料
 	// 如果不是家庭成员或者新成员，
 	// 检查家庭是否被设置为公开，否则不能查看
-	if !isMember && !family.IsOpen {
-		Report(w, r, "你好，茶博士摸摸头，竟然说你不是这个&家庭茶团的成员，未能查看&家庭茶团详情。")
-		return
-
+	if !family.IsOpen {
+		if !isMember && !fD.IsNewMember {
+			Report(w, r, "你好，茶博士摸摸头，竟然说你不是这个&家庭茶团的成员，未能查看&家庭茶团详情。")
+			return
+		}
 	}
 
 	//读取目标家庭的资料夹
