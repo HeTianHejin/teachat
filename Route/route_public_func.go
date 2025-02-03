@@ -41,6 +41,7 @@ func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 
 // Fetch userbean given user 根据user参数，查询用户所得资料荚,包括默认团队，全部已经加入的状态正常团队,成为核心团队，
 func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
+
 	userbean.User = user
 
 	default_family, err := user.GetLastDefaultFamily()
@@ -52,6 +53,39 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 		return
 	}
 	userbean.DefaultFamilyBean = familybean
+
+	family_list_parent, err := data.ParentMemberFamilies(user.Id)
+	if err != nil {
+		return
+	}
+	userbean.ParentMemberFamilyBeanList, err = FetchFamilyBeanList(family_list_parent)
+	if err != nil {
+		return
+	}
+	family_list_child, err := data.ChildMemberFamilies(user.Id)
+	if err != nil {
+		return
+	}
+	userbean.ChildMemberFamilyBeanList, err = FetchFamilyBeanList(family_list_child)
+	if err != nil {
+		return
+	}
+	family_list_other, err := data.OtherMemberFamilies(user.Id)
+	if err != nil {
+		return
+	}
+	userbean.OtherMemberFamilyBeanList, err = FetchFamilyBeanList(family_list_other)
+	if err != nil {
+		return
+	}
+	family_list_resign, err := data.ResignMemberFamilies(user.Id)
+	if err != nil {
+		return
+	}
+	userbean.ResignMemberFamilyBeanList, err = FetchFamilyBeanList(family_list_resign)
+	if err != nil {
+		return
+	}
 
 	default_team, err := user.GetLastDefaultTeam()
 	if err != nil {
@@ -191,12 +225,21 @@ func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error)
 		return tB, err
 	}
 	tB.Author = user
+	//默认&家庭茶团资料
+	family, err := user.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, " Cannot read thread author family")
+		return tB, err
+	}
+	tB.AuthorFamily = family
+	//默认$事业茶团资料
 	team, err := data.GetTeamById(thread.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read team given author")
+		util.Warning(err, " Cannot read team given thread")
 		return tB, err
 	}
 	tB.AuthorTeam = team
+	//是否被采纳
 	tB.IsApproved = thread.IsApproved()
 	//费用和费时
 	tB.Cost, _ = thread.Cost()
@@ -239,6 +282,12 @@ func FetchObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err
 		return oB, err
 	}
 	oB.Author = user
+	family, err := user.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, " Cannot read objective author family")
+		return oB, err
+	}
+	oB.AuthorFamily = family
 	team, err := data.GetTeamById(oB.Objective.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot read team given author")
@@ -282,6 +331,12 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 		return pb, err
 	}
 	pb.Author = user
+	family, err := user.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, " Cannot read project author family")
+		return pb, err
+	}
+	pb.AuthorFamily = family
 	team, err := data.GetTeamById(project.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot read team given author")
@@ -320,6 +375,11 @@ func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 		return PostBean, err
 	}
 	PostBean.Author = user
+	PostBean.AuthorFamily, err = user.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, " Cannot read post author family")
+		return PostBean, err
+	}
 	team, err := data.GetTeamById(post.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot read team given author")

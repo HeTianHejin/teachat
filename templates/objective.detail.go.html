@@ -19,18 +19,19 @@
       </div>
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
         <p class="text-center">
-
+          
           {{ if .ObjectiveBean.Open }}
-          <i class="bi-egg" style="font-size: 2rem;"></i>
-         
-          <span class="label label-success">开放式茶话会
+          <i class="bi-egg" style="font-size: 1rem;"></i>
+          
+          <span class="label label-success" style="margin-inline-end: 1rem;">开放式
             {{ else }}
             <i class="bi-egg-fill" style="font-size: 2rem;"></i>
-
-            <span class="label label-default">封闭式茶话会
+            
+            <span class="label label-default" style="margin-inline-end: 1rem;">封闭式
               {{ end }}
             </span>
-
+            
+            {{ .ObjectiveBean.CreatedAtDate }}
         </p>
       </div>
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -43,9 +44,12 @@
           {{ else }}
           <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
           {{ end }}
-          <a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}"><span
-              style="font-weight: lighter;">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</span></a>
-          {{ .ObjectiveBean.CreatedAtDate }}
+          <span style="font-size: smaller;">
+          （<a href="/v1/family/detail?id={{ .ObjectiveBean.AuthorFamily.Uuid }}">
+              {{ .ObjectiveBean.AuthorFamily.Name }}</a>，
+          <a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}">
+              {{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a>）
+            </span>
         </span>
       </div>
     </div>
@@ -149,30 +153,31 @@
               </h5>
           </a>
           {{ if .Open }}
-          <span class="label label-success" style="margin-inline-end: 30px;">
+          <span class="label label-success" style="margin-inline-end: 30px;font-size: smaller;">
             {{ .Status }}
           </span>
 
           {{ else }}
-          <span class="label label-default" style="margin-inline-end: 30px;">
+          <span class="label label-default" style="margin-inline-end: 30px;font-size: smaller;">
             {{ .Status }}
           </span>
 
           {{ end }}
 
           <span style="margin-inline-end: 30px;">
-            <span style="font-size: small;">
+            <span style="font-size: smaller;">
               {{ .Author.Name }}
               {{if .Author.Gender }}
               <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
-              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+              （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）
             </span>
           </span>
 
-          <span style="font-weight: lighter;">
+          <span style="font-size: smaller;">
             {{ .CreatedAtDate }}
           </span>
         </p>

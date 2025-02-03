@@ -29,14 +29,15 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-            <span style="font-size: small;">
-              {{ .Author.Name }}
-              {{if .Author.Gender }}
-              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-              {{ end }}
-              @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+            {{ .Author.Name }}
+            {{if .Author.Gender }}
+            <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+            {{ end }}
+            <span style="font-size: smaller;">
+            （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）
             </span>
           </div>
 
@@ -114,8 +115,9 @@
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
             {{ end }}
-            <span style="font-weight: lighter;">
-              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>
+            <span style="font-size: smaller;">
+              （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）
             </span>
           </div>
 

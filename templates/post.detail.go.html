@@ -218,7 +218,8 @@
       {{ end }}
       <span>{{ .Author.Name }}</span>
       <span style="margin-inline-end: 20px; font-size: smaller;">
-        @<a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+        @（<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
 
       <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
       

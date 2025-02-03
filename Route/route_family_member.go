@@ -112,12 +112,19 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	// 读取提及的家庭资料
 	// 提及的家庭
 	family_uuid := r.PostFormValue("family_uuid")
+
+	// 如果family_uuid=“x“特殊值，这是虚值，报告错误
+	if family_uuid == "x" {
+		Report(w, r, "你好，茶博士认为你没有提及具体的家庭，或者提及的&家庭茶团还没有登记，请确认后再试。")
+		return
+	}
+
 	t_family := data.Family{
 		Uuid: family_uuid,
 	}
 	// 检查提及的家庭是否存在
 	if err = t_family.GetByUuid(); err != nil {
-		util.Warning(err, t_family.Uuid, "Cannot get family by uuid")
+		//util.Warning(err, t_family.Uuid, "Cannot get family by uuid")
 		Report(w, r, "你好，茶博士找不到提及的家庭资料，请确认后再试。")
 		return
 	}
@@ -152,7 +159,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	parent_members, err := t_family.ParentMembers()
 	if err != nil {
 		util.Warning(err, t_family.Id, "Cannot get parent members of family")
-		Report(w, r, "你好，茶博士认为你不是这个家庭的成员，请确认后再试。")
+		Report(w, r, "你好，茶博士认为你不是这个家庭的主人成员，请确认后再试。")
 		return
 	}
 	for _, p := range parent_members {
@@ -213,6 +220,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 	default:
 		Report(w, r, "你好，茶博士认为你选择的角色不存在，请确认后再试。")
+		return
 	}
 
 	// 提交的是否为成年人参数
@@ -263,8 +271,8 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//报告声明保存成功
-	report := fmt.Sprintf("你好，%s 已经保存成功。请自行联系你的家人，查找访问你的家庭详情，阅读声明并确认后生效。", title)
-	Report(w, r, report)
+	rt := fmt.Sprintf("你好，%s 已经保存成功。请自行联系你的家人，查找访问你的家庭详情，阅读声明并确认后生效。", title)
+	Report(w, r, rt)
 
 }
 

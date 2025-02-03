@@ -610,10 +610,10 @@ func GetTeamById(id int) (team Team, err error) {
 	return
 }
 
-// 获取$事业茶团全部普通成员role=“品茶师”的方法
+// 获取$事业茶团，每次查询最多24位普通成员，role=“品茶师”（taster）的方法
 // AWS CodeWhisperer assist in writing
 func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "taster")
+	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2 LIMIT 24", team.Id, "taster")
 	if err != nil {
 		return
 	}

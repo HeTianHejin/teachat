@@ -87,15 +87,18 @@
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block;text-align: right;">
-              <span style="font-size: small;">
+              <span style="font-size: smaller;">
                 {{ .ThreadBean.Author.Name }}
                 {{if .ThreadBean.Author.Gender }}
                 <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
                 {{ else }}
                 <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
                 {{ end }}
-                <a
-                  href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a></span>
+                （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}"
+          style="color: black;">{{ .AuthorFamily.Name }}</a>，
+        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}"
+          style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
+                </span>
             </span>
             </span>
           </div>
@@ -124,8 +127,12 @@
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
             {{ end }}
-            <span style="margin-inline-end: 20px;"><a
-                href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}">{{ .QuotePostAuthorTeam.Abbreviation }}</a></span>
+            <span style="margin-inline-end: 20px;">
+              （<a href="/v1/family/detail?id={{ .QuotePostAuthorFamily.Uuid }}"
+                  style="color: black;">{{ .QuotePostAuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}"
+                  style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a>）
+            </span>
           </footer>
         </blockquote>
 
@@ -141,9 +148,12 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
-              <span style="margin-inline-end: 20px;"><a
-                  href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}" style="color: black;">
-                  <span>{{ .QuoteProjectAuthorTeam.Abbreviation }}</span></a></span></cite>
+              <span style="margin-inline-end: 20px;">
+                （<a href="/v1/family/detail?id={{ .QuoteProjectAuthorFamily.Uuid }}"
+                  style="color: black;">{{ .QuoteProjectAuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}"
+                  style="color: black;">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a>）
+                </span></cite>
           </footer>
         </blockquote>
         {{ end }}
@@ -221,7 +231,8 @@
                 {{ else }}
                 <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
                 {{ end }}
-                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+                （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
             </span></span>
             </span>
           </div>
@@ -309,7 +320,8 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
-              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+              （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
             </span>
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -423,9 +435,11 @@
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
             {{ end }}
-            <span style="font-weight: lighter;">
+            <span style="font-size: smaller;">
+              （<a
+                href="/v1/family/detail?id={{ .ThreadBean.AuthorFamily.Uuid }}">{{ .ThreadBean.AuthorFamily.Name }}</a>，
               <a
-                href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>
+                href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>）
             </span>
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -460,8 +474,12 @@
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
             {{ end }}
-            <span style="margin-inline-end: 20px;"><a
-                href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}" style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a></span>
+            <span style="margin-inline-end: 20px;">
+              （<a
+                href="/v1/family/detail?id={{ .QuotePostAuthorFamily.Uuid }}" style="color: black;">{{ .QuotePostAuthorFamily.Name }}</a>，
+              <a
+                href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}" style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a>）
+              </span>
           </footer>
         </blockquote>
 
@@ -477,8 +495,12 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
-              <span style="margin-inline-end: 20px;"><a
-                  href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a></span></cite>
+              <span style="margin-inline-end: 20px;">
+                （<a
+                  href="/v1/family/detail?id={{ .QuoteProjectAuthorFamily.Uuid }}">{{ .QuoteProjectAuthorFamily.Name }}</a>，
+                <a
+                  href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a>）
+                </span></cite>
           </footer>
         </blockquote>
         {{ end }}
@@ -624,7 +646,8 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
-              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+              （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
             </span>
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -723,7 +746,8 @@
                   {{ else }}
                   <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
                   {{ end }}
-                  <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+                  （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
               </span></span>
             </div>
           </div>

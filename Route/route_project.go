@@ -380,6 +380,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pD.MasterFamily, err = pD.Master.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, pD.Master.Id, " Cannot read project master's default family")
+		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
+		return
+	}
+
 	pD.MasterTeam, err = data.GetTeamById(pD.Project.TeamId)
 	if err != nil {
 		util.Warning(err, pD.Project.TeamId, " Cannot read project team")
@@ -405,13 +412,19 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.QuoteObjectiveAuthor, err = pD.QuoteObjective.User()
 	if err != nil {
 		util.Warning(err, " Cannot read objective author")
-		Report(w, r, "你好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
+		Report(w, r, "你好，梨花满地不闻莺，请稍后再试。")
+		return
+	}
+	pD.QuoteObjectiveAuthorFamily, err = pD.QuoteObjectiveAuthor.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, " Cannot read objective author family")
+		Report(w, r, "你好，茶博士满头大汗，唱花开花谢花漫天，请稍后再试。")
 		return
 	}
 	pD.QuoteObjectiveAuthorTeam, err = data.GetTeamById(pD.QuoteObjective.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot read objective author team")
-		Report(w, r, "你好，������失������，��然说指定的����名单��然保存失败，请确认后再试。")
+		Report(w, r, "你好，茶博士满头大汗，唱花开花谢花漫天，请稍后再试。")
 		return
 	}
 
@@ -453,7 +466,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.Place, err = pD.Project.Place()
 	if err != nil {
 		util.Warning(err, " Cannot read project place")
-		Report(w, r, "你好，������失������，��影一����见���，�������地不�����。请稍后再试。")
+		Report(w, r, "你好，满头大汗的茶博士唱，过高花已妒，请稍后再试。")
 		return
 	}
 
@@ -511,7 +524,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			// 当前用户是��话会��请��队成员，可以新开茶议
 			pD.IsInput = true
 		} else {
-			// 当前用户不是��话会��请��队成员，不能新开茶议
+			// 当前会话用户不是本茶话会邀请$团队成员，不能新开茶议
 			pD.IsInput = false
 		}
 	} else {

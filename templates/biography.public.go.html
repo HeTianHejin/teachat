@@ -32,19 +32,50 @@
     </div>
 </div>
 
-{{ with .DefaultFamilyBean }}
 <div class="panel panel-default">
     <div class="panel-heading">默认&家庭茶团</div>
     <div class="panel-body">
+        {{ with .DefaultFamilyBean }}
         <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+        {{ end }}
     </div>
 
-    <p style="margin-inline-start: 2rem;"><a href="#">
-            更多
-        </a>
-    </p>
+    <div class="panel-heading">主人角色&家庭茶团</div>
+    <div class="panel-body">
+        {{ range .ParentMemberFamilyBeanList }}
+        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+        {{ else }}
+        无&纪录
+        {{ end }}
+    </div>
+
+    <div class="panel-heading">孩子角色&家庭茶团</div>
+    <div class="panel-body">
+        {{ range .ChildMemberFamilyBeanList }}
+        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+        {{ else }}
+        无&纪录
+        {{ end }}
+    </div>
+   
+    <div class="panel-heading">其他角色&家庭茶团</div>
+    <div class="panel-body">
+        {{ range .OtherMemberFamilyBeanList }}
+        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+        {{ else }}
+        无&纪录
+        {{ end }}
+    </div>
+    
+    <div class="panel-heading">声明离开&家庭茶团</div>
+    <div class="panel-body">
+        {{ range .ResignMemberFamilyBeanList }}
+        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+        {{ else }}
+        无&纪录
+        {{ end }}
+    </div>
 </div>
-{{ end }}
 
 <div class="panel panel-default">
     <div class="panel-heading">默认$事业茶团</div>
@@ -52,7 +83,7 @@
         {{ with .DefaultTeamBean }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
-        无$事业茶团纪录
+        无$纪录
         {{ end }}
     </div>
 
@@ -61,7 +92,7 @@
         {{ range .ManageTeamBeanList }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
-        无纪录
+        无&纪录
         {{ end }}
     </div>
 
@@ -70,7 +101,7 @@
         {{ range .JoinTeamBeanList }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
-        无$事业茶团纪录
+        无$纪录
         {{ end }}
     </div>
 
@@ -79,7 +110,7 @@
         {{ range .ResignTeamBeanList }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
-        无$事业茶团纪录
+        无$纪录
         {{ end }}
     </div>
 </div>

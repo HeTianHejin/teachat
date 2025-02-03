@@ -29,6 +29,8 @@
                 <p>
                     {{ .FamilyMemberSignIn.Content }}
                 </p>
+                <p>新成员角色: {{ .FamilyMemberSignIn.GetRole }}</p>
+
                 <p class="text-right">
                     {{if .Author.Gender }}
                     男主人：
@@ -41,7 +43,6 @@
                     {{ end }}
                 </p>
 
-                <p>家庭成员角色: {{ .FamilyMemberSignIn.GetRole }}</p>
                 <p>特此声明 {{ .FamilyMemberSignIn.CreatedAtDate }}</p>
             </div>
 

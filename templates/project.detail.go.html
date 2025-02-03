@@ -14,8 +14,6 @@
   <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
 </div>
 
-
-
 <div class="media">
 
   <div class="media-body">
@@ -29,16 +27,18 @@
           </div>
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block;text-align: center;">
+            <span style="display: block;text-align: center;font-size: smaller;">
               {{ if .Open }}
               <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
-              <span class="label label-info">开放式茶台
+              <span class="label label-info">开放式
+              </span>
                 {{ else }}
                 <i class="bi-disc-fill" style="font-size: 2rem; color: black;"></i>
-                <span class="label label-default">封闭式茶台
-                  {{ end }}
+                <span class="label label-default">封闭式
                 </span>
-              </span>
+                  {{ end }}
+              {{ .Project.CreatedAtDate }}
+            </span>
           </div>
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -49,9 +49,9 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
-              <a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}" style="color: black;">{{ .MasterTeam.Abbreviation }}</a>
+              （<a href="/v1/family/detail?id={{ .MasterFamily.Uuid }}">{{ .MasterFamily.Name }}</a>，
+              <a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}">{{ .MasterTeam.Abbreviation }}</a>）
 
-              {{ .Project.CreatedAtDate }}
             </span>
             </span>
 
@@ -63,17 +63,21 @@
 
         <p style="white-space: pre-wrap;">{{ .Project.Body }}</p>
 
-        
-
         <blockquote>
           <p style="font-size: small;"><a href="/v1/objective/detail?id={{ .QuoteObjective.Uuid }}">
-            <span class="label label-default">引用</span></a><span  style="margin-inline-start: 1rem;">{{ .QuoteObjective.Body }} ...</span></p>
+              <span class="label label-default">引用</span></a><span
+              style="margin-inline-start: 1rem;">{{ .QuoteObjective.Body }} ...</span></p>
           <footer style="font-size: small;">
             <cite>
-            <a href="/v1/user/biography?id={{ .QuoteObjectiveAuthor.Uuid }}" style="color: black;">{{ .QuoteObjectiveAuthor.Name }}</a>
-            <span style="margin-inline-end: 20px;">@<a
-                href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}" style="color: black;">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a></span>
-              </cite>
+              <a href="/v1/user/biography?id={{ .QuoteObjectiveAuthor.Uuid }}"
+                style="color: black;">{{ .QuoteObjectiveAuthor.Name }}</a>
+              <span style="margin-inline-end: 20px;">
+                （<a href="/v1/family/detail?id={{ .QuoteObjectiveAuthorFamily.Uuid }}"
+                  style="color: black;">{{ .QuoteObjectiveAuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}"
+                  style="color: black;">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a>）
+              </span>
+            </cite>
           </footer>
         </blockquote>
 
@@ -81,18 +85,21 @@
       <div class="panel-footer">
 
         {{/* 展示茶台的总花费（克茶叶） */}}
-        <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费用（克·茶叶）"> {{ .Project.CountThreadCostByProjectId }}</i>
+        <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费用（克·茶叶）">
+          {{ .Project.CountThreadCostByProjectId }}</i>
         {{/* 展示茶台的总费时（分钟） */}}
-        <i class="bi-stopwatch" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费时（分钟）"> {{ .Project.CountThreadTimeSlotByProjectId }}</i>
+        <i class="bi-stopwatch" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费时（分钟）">
+          {{ .Project.CountThreadTimeSlotByProjectId }}</i>
         {{/* 展示茶台的需求总物资（件） */}}
         <i class="bi-cart" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="物资（件）"> 9</i>
         {{/* 展示茶台的需求总工具（套） */}}
         <i class="bi-tools" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="工具（套）"> 4</i>
         {{/* 展示茶台的需求手艺（项） */}}
-        <i class="bi-hand-index-thumb" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="手艺（项）"> 7</i>
+        <i class="bi-hand-index-thumb" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="手艺（项）">
+          7</i>
         {{/* 展示茶台的需求法术（项） */}}
         <i class="bi-magic" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="法术（种）"> 2</i>
-        
+
         {{ if .IsEdited }}
 
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
@@ -100,7 +107,7 @@
         {{ else }}
         {{/* 没有编辑过（补充内容）则留空白 */}}
         {{ end }}
-        
+
       </div>
     </div>
 
@@ -202,8 +209,8 @@
 {{ else }}
 <hr />
 <p class=" text-center">
-      <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-      茶博士：这是封闭式茶台,只有台主邀请的茶团成员，才能入座品茶呢。</p>
+  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+  茶博士：这是封闭式茶台,只有台主邀请的茶团成员，才能入座品茶呢。</p>
 
 {{ end }}
 <hr />
@@ -212,26 +219,27 @@
 
 {{/* 这是关注这个茶台的总人数 显示 */}}
 <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-top: 15px;">
-  
-    <i class="bi-person-heart" style="font-size: 2rem; color: black;" title="关注人数"></i>
-   1510
+
+  <i class="bi-person-heart" style="font-size: 2rem; color: black;" title="关注人数"></i>
+  1510
 
   <span style="margin-inline-start: 2rem;">
     {{/* 这是茶台的总茶议数量 显示 */}}
     <a href="/v1/place/detail?id={{ .Place.Uuid }}">
-      <i class="bi-paint-bucket" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数"> {{ .ThreadCount }}</i>
+      <i class="bi-paint-bucket" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数">
+        {{ .ThreadCount }}</i>
     </a>
   </span>
 
   <span style="margin-inline-start: 2rem;">
     {{/* 这是茶台的已采纳茶议数量 显示 */}}
     <a href="/v1/place/detail?id={{ .Place.Uuid }}">
-      <i class="bi-bookmark-check" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="已采纳数"> {{ .ThreadIsApprovedCount }}</i>
+      <i class="bi-bookmark-check" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="已采纳数">
+        {{ .ThreadIsApprovedCount }}</i>
     </a>
   </span>
 
 </div>
-
 
 {{/* 以下是此茶台的全部茶议展示 */}}
 {{ range .ThreadBeanList }}
@@ -254,7 +262,11 @@
       <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
       {{ end }}
       <span style="margin-inline-end: 20px; font-size: smaller;">
-        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}" style="color: black;">{{ .AuthorTeam.Abbreviation }}</a></span>
+        （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}"
+          style="color: black;">{{ .AuthorFamily.Name }}</a>，
+        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}"
+          style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
+        </span>
 
       <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
       </span>
@@ -274,7 +286,7 @@
     <p>{{ .Thread.Body }} ...</p>
     {{/* 检查是否未被采纳 */}}{{if not .IsApproved }}
     {{/* 检查是出主意1 */}}{{ if .Thread.TypeStatus }}
-  
+
     {{/* 检查是否台主1 */}}{{ if .IsMaster }}
     <form class="form" role="form" action="/v1/thread/approve" method="post">
       <input type="hidden" name="id" value="{{ .Thread.Uuid }}" />
@@ -289,12 +301,14 @@
     {{/* 检查是否管理员2 */}}{{ end }}
     {{/* 检查是否台主3 */}}{{ end }}
     {{/* 检查是出主意1 */}}{{ end }}
-      {{/* 检查是否未被采纳 */}}{{ end }}
-      <br />
-      <p>
-      <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费用（克·茶叶）"> {{ .Cost }}</i>
-      <i class="bi-stopwatch" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="需时（分钟）"> {{ .TimeSlot }}</i>
-     
+    {{/* 检查是否未被采纳 */}}{{ end }}
+    <br />
+    <p>
+      <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费用（克·茶叶）">
+        {{ .Cost }}</i>
+      <i class="bi-stopwatch" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="需时（分钟）">
+        {{ .TimeSlot }}</i>
+
     </p>
   </div>
 

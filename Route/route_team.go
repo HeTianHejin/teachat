@@ -500,18 +500,24 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	var tnList []data.TeamMemberBean
 	//据teamMembers中的UserId获取User
 	for _, member := range teamCoreMembers {
-		user, err := data.GetUserById(member.UserId)
+		cm_user, err := data.GetUserById(member.UserId)
 		if err != nil {
 			util.Info(err, " Cannot get user")
 			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 			return
 		}
 
-		tc.Member = user
-		tc.MemberDefaultTeam, err = user.GetLastDefaultTeam()
+		tc.Member = cm_user
+		tc.MemberDefaultFamily, err = cm_user.GetLastDefaultFamily()
+		if err != nil {
+			util.Info(err, " Cannot get user's default family")
+			Report(w, r, "你好，满头大汗的茶博士，开口唱蝶恋花，请稍后再试。")
+			return
+		}
+		tc.MemberDefaultTeam, err = cm_user.GetLastDefaultTeam()
 		if err != nil {
 			util.Info(err, " Cannot get user's default team")
-			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
+			Report(w, r, "你好，闪电茶博士为你效劳中，请稍后再试。")
 			return
 		}
 		tc.TeamMember = member
@@ -519,17 +525,23 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		tcList = append(tcList, tc)
 	}
 	for _, member := range teamNormalMembers {
-		user, err := data.GetUserById(member.UserId)
+		tn_user, err := data.GetUserById(member.UserId)
 		if err != nil {
 			util.Info(err, " Cannot get user")
 			Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 			return
 		}
-		tn.Member = user
-		tn.MemberDefaultTeam, err = user.GetLastDefaultTeam()
+		tn.Member = tn_user
+		tn.MemberDefaultFamily, err = tn_user.GetLastDefaultFamily()
+		if err != nil {
+			util.Info(err, " Cannot get user's default family")
+			Report(w, r, "你好，满头大汗的茶博士说小生这边有礼了，请稍后再试。")
+			return
+		}
+		tn.MemberDefaultTeam, err = tn_user.GetLastDefaultTeam()
 		if err != nil {
 			util.Info(err, " Cannot get user's default team")
-			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
+			Report(w, r, "你好，闪电考拉为你效劳，请稍后再试。")
 			return
 		}
 		tn.TeamMember = member

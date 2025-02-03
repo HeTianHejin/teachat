@@ -352,9 +352,9 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	//报告用户登记家庭茶团成功
 	text := ""
 	if s_u.Gender == 0 {
-		text = fmt.Sprintf("%s 女士，你好，登记 %s 成功，祝愿拥有快乐品茶时光。", s_u.Name, new_family.Name)
+		text = fmt.Sprintf("%s 女士，你好，登记 %s 家庭茶团成功，祝愿拥有快乐品茶时光。", s_u.Name, new_family.Name)
 	} else {
-		text = fmt.Sprintf("%s 先生，你好，登记 %s 成功，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)
+		text = fmt.Sprintf("%s 先生，你好，登记 %s 家庭茶团成功，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)
 	}
 	Report(w, r, text)
 }

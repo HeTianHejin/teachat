@@ -67,7 +67,8 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
-              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
+              （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
           </span>
           </span>
 

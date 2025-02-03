@@ -55,9 +55,10 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		tD.QuotePostAuthor, err = tD.QuotePost.User()
 		if err != nil {
 			util.Warning(err, tD.QuotePost.Id, " Cannot read post user")
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭见鹤，梨花满地不闻莺。请稍后再试。")
 			return
 		}
+
 		tD.QuotePostAuthorTeam, err = data.GetTeamById(tD.QuotePost.TeamId)
 		if err != nil {
 			util.Warning(err, tD.QuotePost.TeamId, " Cannot read post team")
@@ -96,6 +97,12 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.Warning(err, tD.QuoteProject.Id, " Cannot read project user")
 		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
+		return
+	}
+	tD.QuoteProjectAuthorFamily, err = tD.QuoteProjectAuthor.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, tD.QuoteProjectAuthor.Id, " Cannot read project user family")
+		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见，梨花满地不闻莺。请稍后再试。")
 		return
 	}
 	tD.QuoteProjectAuthorTeam, err = data.GetTeamById(tD.QuoteProject.TeamId)
@@ -338,6 +345,12 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
 		return
 	}
+	tD.QuoteProjectAuthorFamily, err = tD.QuoteProjectAuthor.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, " Cannot read project author family")
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
+		return
+	}
 	tD.QuoteProjectAuthorTeam, err = data.GetTeamById(tD.QuoteProject.TeamId)
 	if err != nil {
 		util.Warning(err, " Cannot read project author team")
@@ -366,6 +379,12 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		tD.QuotePostAuthor, err = tD.QuotePost.User()
 		if err != nil {
 			util.Warning(err, " Cannot read post author")
+			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
+			return
+		}
+		tD.QuotePostAuthorFamily, err = tD.QuotePostAuthor.GetLastDefaultFamily()
+		if err != nil {
+			util.Warning(err, " Cannot read post author family")
 			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
 			return
 		}

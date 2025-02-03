@@ -757,6 +757,24 @@ CREATE TABLE family_member_sign_in_replies (
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE family_member_sign_outs (
+    id                                    SERIAL PRIMARY KEY,
+    uuid                                  VARCHAR(255),
+    family_id                             INTEGER,
+    user_id                               INTEGER,
+    role                                  INTEGER default 0,
+    is_adult                              BOOLEAN default true,
+    title                                 VARCHAR(255),
+    content                               TEXT,
+    place_id                              INTEGER default 0,
+    status                                INTEGER default 0,
+    created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_adopted                            BOOLEAN default false,
+    author_user_id                        INTEGER
+);
+
+
 CREATE TABLE user_default_families (
     id                                    SERIAL PRIMARY KEY,
     user_id                               INTEGER,

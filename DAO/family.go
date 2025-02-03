@@ -102,6 +102,79 @@ type FamilyMemberSignIn struct {
 	AuthorUserId int  //声明书作者茶友id
 }
 
+// 离开&家庭茶团成员声明
+type FamilyMemberSignOut struct {
+	Id           int
+	Uuid         string
+	FamilyId     int    //“家庭茶团成员声明”所指向的&家庭茶团id
+	UserId       int    //被声明为离开成员的茶友id
+	Role         int    //家庭成员角色：0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物,
+	IsAdult      bool   //是否成年
+	Title        string //标题
+	Content      string //声明内容
+	PlaceId      int    //“家庭茶团成员声明”所指向的地点id
+	Status       int    //状态：0、未读，1、已读， 2、已确认， 3、已否认，
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	IsAdopted    bool //是否领养
+	AuthorUserId int  //声明书作者茶友id
+}
+
+// FamilyMemberSignOut.Create() 创建“离开&家庭茶团成员声明”
+func (fms *FamilyMemberSignOut) Create() (err error) {
+	statement := "INSERT INTO family_member_sign_outs (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), time.Now(), fms.IsAdopted, fms.AuthorUserId).Scan(&fms.Id)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// FamilyMemberSignOut.Get()根据“id”获取“离开&家庭茶团成员声明”
+func (fms *FamilyMemberSignOut) Get() (err error) {
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_outs WHERE id = $1"
+	err = Db.QueryRow(statement, fms.Id).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// FamilyMemberSignOut.GetByFamilyIdUserId() 根据“家庭茶团id”和“茶友id”获取“离开&家庭茶团成员声明”
+func (fms *FamilyMemberSignOut) GetByFamilyIdUserId() (err error) {
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_outs WHERE family_id = $1 AND user_id = $2"
+	err = Db.QueryRow(statement, fms.FamilyId, fms.UserId).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// FamilyMemberSignOut.GetByUuid() 根据“uuid”获取“离开&家庭茶团成员声明”
+func (fms *FamilyMemberSignOut) GetByUuid() (err error) {
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_outs WHERE uuid = $1"
+	err = Db.QueryRow(statement, fms.Uuid).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// FamilyMemberSignOut.Update() 更新“离开&家庭茶团成员声明”
+func (fms *FamilyMemberSignOut) Update() (err error) {
+	statement := "UPDATE family_member_sign_outs SET family_id = $2, user_id = $3, role = $4, is_adult = $5, title = $6, content = $7, place_id = $8, status = $9, updated_at = $10, is_adopted = $11, author_user_id = $12 WHERE id = $1"
+	_, err = Db.Exec(statement, fms.Id, fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), fms.IsAdopted, fms.AuthorUserId)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // FamilyMemberSignInReply struct 针对“增加&家庭茶团成员声明”的答复
 type FamilyMemberSignInReply struct {
 	Id        int
@@ -292,9 +365,85 @@ func (user *User) GetLastDefaultFamily() (family Family, err error) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			//如果找不到设置记录，则返回id=0，表示“默认家庭=星际茶棚”
-			return Family{Id: 0, Uuid: "x", Name: "星际茶棚", AuthorId: 1}, nil
+			return Family{Id: 0, Uuid: "x", Name: "温暖的家&", AuthorId: 1}, nil
 		}
 		return family, err
+	}
+	return
+}
+
+// ParentMemberFamilies() 用户user担任核心（男、女主人）父母角色的全部&家庭茶团，
+// user.id = family_member.user_id,
+// family.id = family_member.family_id,
+// family_member.role = 1 or 2,
+// return (Families []Family, err error)
+func ParentMemberFamilies(user_id int) (families []Family, err error) {
+	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open FROM family_members fm LEFT JOIN families f ON fm.family_id = f.id WHERE fm.user_id = $1 AND (fm.role = 1 OR fm.role = 2) ORDER BY fm.created_at DESC"
+	rows, err := Db.Query(statement, user_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		family := Family{}
+		err = rows.Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
+		if err != nil {
+			return
+		}
+		families = append(families, family)
+	}
+	return
+}
+
+// ChildMemberFamilies() 用户担任子女角色的全部&家庭茶团，family_member.role = 3 or 4,return (Families []Family, err error)
+func ChildMemberFamilies(user_id int) (families []Family, err error) {
+	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open FROM family_members fm LEFT JOIN families f ON fm.family_id = f.id WHERE fm.user_id = $1 AND fm.role IN (3,4) ORDER BY fm.created_at DESC"
+	rows, err := Db.Query(statement, user_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		family := Family{}
+		err = rows.Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
+		if err != nil {
+			return
+		}
+		families = append(families, family)
+	}
+	return
+}
+
+// OtherMemberFamilies() 用户担任其他角色的全部&家庭茶团，family_member.role = 5,return (Families []Family, err error)
+func OtherMemberFamilies(user_id int) (families []Family, err error) {
+	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open FROM family_members fm LEFT JOIN families f ON fm.family_id = f.id WHERE fm.user_id = $1 AND fm.role = 5 ORDER BY fm.created_at DESC"
+	rows, err := Db.Query(statement, user_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		family := Family{}
+		err = rows.Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
+		if err != nil {
+			return
+		}
+		families = append(families, family)
+	}
+	return
+}
+
+// ResignMemberFamilies() 用户声明离开的&家庭茶团，family_member_sign_out.user_id == family_member.user_id ,return (Families []Family, err error)
+func ResignMemberFamilies(user_id int) (families []Family, err error) {
+	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open FROM family_member_sign_outs fmso LEFT JOIN families f ON fmso.family_id = f.id WHERE fmso.user_id = $1 ORDER BY fmso.created_at DESC"
+	rows, err := Db.Query(statement, user_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		family := Family{}
+		err = rows.Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
+		if err != nil {
+			return
+		}
+		families = append(families, family)
 	}
 	return
 }
