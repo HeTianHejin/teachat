@@ -80,9 +80,8 @@
             <div class="form-group">
                 <p style="margin-inline-start: 2rem;">是这个家庭茶团成员?</p>
             </div>
-            <div class="form-group">
-                <fieldset>
-                    <legend style="font-size: small;">
+
+            <div class="form-group">                    
                         <div name="radio" class="col-sm-12">
                             <div class="col-sm-6">
                                 <input type="radio" name="reply" id="confirm" value="true" required />
@@ -92,12 +91,11 @@
                                 <input type="radio" name="reply" id="deny" value="false" required />
                                 <label for="deny">否认</label>
                             </div>
-                        </div>
-                    </legend>
-                </fieldset>
+                        </div>                 
             </div>
            
             <input type="hidden" name="id" id="FamilyMemberSignIn_id" value="{{ .FamilyMemberSignIn.Uuid }}">
+            
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-2">
                     <button type="submit" class="btn btn-default">

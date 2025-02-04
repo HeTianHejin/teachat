@@ -87,7 +87,7 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
-              <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+              <span style="font-style: italic;"><a href="/v1/family/detail?id={{ .FounderDefaultFamily.Uuid }}">{{ .FounderDefaultFamily.Name }}</a></span>
 
               {{ .CreatedAtDate }}
             </span>

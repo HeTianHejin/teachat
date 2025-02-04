@@ -212,11 +212,12 @@ type TeamDetail struct {
 	IsCoreMember bool //是否核心成员（管理员）
 	IsMember     bool //是否成员
 
-	Team                 Team //茶团
-	Founder              User // 茶团发起人（创建者）
-	FounderTeam          Team // 发起人默认所在的团队
-	CEO                  User // CEO
-	CEOTeam              Team // CEO所在默认团队
+	Team                 Team   //茶团
+	Founder              User   // 茶团发起人（创建者）
+	FounderDefaultFamily Family //发起人默认&家庭茶团
+	FounderTeam          Team   // 发起人默认所在的团队
+	CEO                  User   // CEO
+	CEOTeam              Team   // CEO所在默认团队
 	CreatedAtDate        string
 	TeamMemberCount      int              //成员数量统计
 	CoreMemberBeanList   []TeamMemberBean //核心成员资料夹
@@ -277,8 +278,12 @@ type TeamBean struct {
 
 // 用于家庭茶团资料集合页面渲染
 type FamilySquare struct {
-	SessUser       User
-	FamilyBeanList []FamilyBean
+	SessUser User
+
+	IsEmpty bool //是否为空茶团资料夹队列
+
+	DefaultFamilyBean   FamilyBean   //茶友的默认家庭茶团资料夹
+	OtherFamilyBeanList []FamilyBean //其他家庭茶团资料夹队列
 }
 type FamilyDetail struct {
 	SessUser User

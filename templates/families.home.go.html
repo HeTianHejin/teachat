@@ -1,6 +1,6 @@
 {{ define "content" }}
 
-{{/*  这是 全部与浏览者有关联的家庭茶团展示 页面  */}}
+{{/* 这是 全部与浏览者有关联的家庭茶团展示 页面  */}}
 
 <ol class="breadcrumb">
 
@@ -11,53 +11,68 @@
 <div style="margin: 20px;">
 
   <ul class="nav nav-tabs nav-justified">
-      <li role="presentation" class="active"><a href="#">家庭首页</a></li>
-      <li role="presentation"><a href="/v1/families/parent">本家家族</a></li>
-      <li role="presentation"><a href="/v1/families/in-laws">外家姻亲</a></li>
-      <li role="presentation"><a href="/v1/families/gone">随风飘逝</a></li>
+    <li role="presentation" class="active"><a href="#">家庭首页</a></li>
+    <li role="presentation"><a href="/v1/families/parent">本家家族</a></li>
+    <li role="presentation"><a href="/v1/families/in-laws">外家姻亲</a></li>
+    <li role="presentation"><a href="/v1/families/gone">随风飘逝</a></li>
   </ul>
 
 </div>
 
 <div class="well">
   <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
-      <a href="/v1/family/new">家庭茶团</a>
+  <a href="/v1/family/new">家庭茶团</a>
+</div>
+
+{{ if .IsEmpty }}
+{{/* 这是检查 用户还没有登记的家庭茶团 -空值  */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="lead">茶博士</span>
   </div>
 
-{{ range .FamilyBeanList }}
+  <div class="panel-body">
+    没有 &家庭茶团记录。
+  </div>
 
+</div>
+{{ else }}
+
+{{ with .DefaultFamilyBean }}{{/* 这是 用户默认的家庭茶团展示 -开始  */}}
 <div class="media">
   <div class="media-left">
     <a href="/v1/family/detail?id={{ .Family.Uuid }}">
       {{ if .Family.Status }}
-      <img class="media-object" src="/v1/static/bootstrap-icons/house-door-fill.svg" alt="单身贵族" height="32" width="32">
-      {{ else }}
       <img class="media-object" src="/v1/static/bootstrap-icons/house-door.svg" alt="已婚家庭" height="32" width="32">
+      {{ else }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door-fill.svg" alt="单身贵族" height="32" width="32">
       {{ end }}
     </a>
     
+    <span style="font-size: xx-small;">默认&</span>
+    
+
   </div>
   <div class="media-body">
     <div class="panel panel-default">
 
       <div class="panel-heading">
         <div class="row">
-    
+
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }} 家庭茶团</a>
           </div>
-          
+
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: center;">
 
-              
-                <span class="label label-default">
-                  {{ .Family.GetStatus }}
-                </span>
-              
+              <span class="label label-default">
+                {{ .Family.GetStatus }}
+              </span>
+
             </span>
           </div>
-          
+
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <div class="pull-right" style="font-size: small;">
               <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
@@ -66,66 +81,169 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
-              <span style="font-style: italic;"><a href="/v1/Team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
-        
+              <span style="font-style: italic;"><a
+                  href="/v1/Team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+
               {{ .Family.CreatedAtDate }}
             </div>
           </div>
         </div>
       </div>
       <div class="panel-body">
-       
 
         {{ .Family.Introduction }} ...
       </div>
-    
+
       <div class="panel-footer">
-          <span style="margin-inline-end: 20px;" title="团号">
+        <span style="margin-inline-end: 20px;" title="团号">
           <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
-           {{ .Family.Id }}
-          </span>
-         
-          <span style="margin-inline-end: 20px;">
+          {{ .Family.Id }}
+        </span>
+
+        <span style="margin-inline-end: 20px;">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-             {{ .Count }}
-            </span>
-        
+          {{ .Count }}
+        </span>
+
       </div>
-    
+
     </div>
   </div>
 </div>
 
 <div style="margin: 1rem;">
-      {{/*  显示编辑茶团资料功能按钮  */}}
-      <a class="btn btn-default" href="/v1/family/edit?id={{ .Family.Uuid }}" role="button">
-        <i class="bi-pencil-square" style="font-size: 1.5rem; color: green;"></i>
-        编辑资料</a>
-      <span style="margin-inline-start: 2rem;">
-        {{/*  显示退出茶团功能按钮  */}}
-        <a class="btn btn-default" href="/v1/family_member/resign?id={{ .Family.Uuid }}" role="button">
-          <i class="bi-escape" style="font-size: 1.5rem; color: red;"></i>
-          退出茶团</a>
-        </span>
-  </div>
- 
+  {{/* 显示编辑茶团资料功能按钮  */}}
+  <a class="btn btn-default" href="/v1/family/edit?id={{ .Family.Uuid }}" role="button">
+    <i class="bi-pencil-square" style="font-size: 1.5rem; color: green;"></i>
+    编辑</a>
 
-  <hr />
+  <span style="margin-inline-start: 2rem;">
+    {{/* 显示退出茶团功能按钮  */}}
+    <a class="btn btn-default" href="/v1/family_member/resign?id={{ .Family.Uuid }}" role="button">
+      <i class="bi-escape" style="font-size: 1.5rem; color: red;"></i>
+      退出</a>
+  </span>
+</div>
+
+
+{{ end }}{{/* 这是 用户默认的家庭茶团展示 -结束  */}}
+
+
+
+
+
+
+
+
+{{ range .OtherFamilyBeanList }}{{/* 这是 用户其他的家庭茶团展示 -开始  */}}
+
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/family/detail?id={{ .Family.Uuid }}">
+      {{ if .Family.Status }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door.svg" alt="已婚家庭" height="32" width="32">
+      {{ else }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door-fill.svg" alt="单身贵族" height="32" width="32">
+      {{ end }}
+    </a>
+
+  </div>
+  <div class="media-body">
+    <div class="panel panel-default">
+
+      <div class="panel-heading">
+        <div class="row">
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }} 家庭茶团</a>
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+
+              <span class="label label-default">
+                {{ .Family.GetStatus }}
+              </span>
+
+            </span>
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="pull-right" style="font-size: small;">
+              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
+              {{if .Founder.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+              {{ end }}
+              <span style="font-style: italic;"><a
+                  href="/v1/Team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+
+              {{ .Family.CreatedAtDate }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        {{ .Family.Introduction }} ...
+      </div>
+
+      <div class="panel-footer">
+        <span style="margin-inline-end: 20px;" title="团号">
+          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+          {{ .Family.Id }}
+        </span>
+
+        <span style="margin-inline-end: 20px;">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+          {{ .Count }}
+        </span>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div style="margin: 1rem;">
+  {{/* 显示编辑茶团资料功能按钮  */}}
+  <a class="btn btn-default" href="/v1/family/edit?id={{ .Family.Uuid }}" role="button">
+    <i class="bi-pencil-square" style="font-size: 1.5rem; color: green;"></i>
+    编辑资料</a>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 显示设置默认&家庭茶团功能按钮  */}}
+    <a class="btn btn-default" href="/v1/family/default?id={{ .Family.Uuid }}" role="button">
+      <i class="bi-house-check" style="font-size: 1.5rem; color: black;"></i>
+      设为默认</a>
+  </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 显示退出茶团功能按钮  */}}
+    <a class="btn btn-default" href="/v1/family_member/resign?id={{ .Family.Uuid }}" role="button">
+      <i class="bi-escape" style="font-size: 1.5rem; color: red;"></i>
+      退出茶团</a>
+  </span>
+</div>
+
+<hr />
 
 {{ else }}
 
 <div class="panel panel-default">
   <div class="panel-heading">
-      <span class="lead">茶博士</span>
+    <span class="lead">茶博士</span>
   </div>
 
   <div class="panel-body">
-      你好，目前没有已登记的&家庭茶团。
+    没有其他&家庭茶团记录。
   </div>
 
 </div>
 
-{{ end }}
+{{ end }}{{/* 这是展示 其他家庭茶团 -结束  */}}
+
+
+{{ end }}{{/* 这是检查 用户还没有登记的家庭茶团 -结束  */}}
 
 
 {{ end }}

@@ -9,6 +9,48 @@ import (
 	util "teachat/Util"
 )
 
+// GET /v1/family/default?id=
+// 设置默认家庭茶团
+func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
+	// 1. get session
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Warning(err, "Cannot get user from session")
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	// 2. get family id
+	family_uuid := r.URL.Query().Get("id")
+	t_family := data.Family{
+		Uuid: family_uuid,
+	}
+	//check family is valid
+	//fetch family
+	if err = t_family.GetByUuid(); err != nil {
+		util.Warning(err, "Cannot get family by uuid")
+		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
+		return
+	}
+	// 3. set default family
+	new_user_default_family := data.UserDefaultFamily{
+		UserId:   s_u.Id,
+		FamilyId: t_family.Id,
+	}
+	if err = new_user_default_family.Create(); err != nil {
+		util.Warning(err, "Cannot create user default family")
+		Report(w, r, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
+		return
+	}
+
+	// 4. redirect
+	http.Redirect(w, r, "/v1/families/home", http.StatusFound)
+}
+
 // Get /v1/families/home
 // 浏览&家庭茶团队列
 func HomeFamilies(w http.ResponseWriter, r *http.Request) {
@@ -31,22 +73,53 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
+
 	f_b_list, err := FetchFamilyBeanList(family_list)
 	if err != nil {
 		util.Warning(err, s_u.Id, "Cannot get user's family")
 		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
-	//截短 family.introduction 内容为66中文字，方便排版浏览
-	for _, bean := range f_b_list {
-		bean.Family.Introduction = Substr(bean.Family.Introduction, 66)
+
+	var fSPD data.FamilySquare
+
+	f_b_l_len := len(f_b_list)
+	if f_b_l_len != 0 {
+		//如果len(f_b_list)!=0,说明用户已经登记有家庭茶团，
+
+		fSPD.IsEmpty = false
+
+		//2.1 get user's default family
+		l_default_family, err := s_u.GetLastDefaultFamily()
+		if err != nil {
+			util.Warning(err, s_u.Id, "Cannot get user's default family")
+			Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
+			return
+		}
+
+		for i, bean := range f_b_list {
+			//截短 family.introduction 内容为66中文字，方便排版浏览
+			bean.Family.Introduction = Substr(bean.Family.Introduction, 66)
+
+			//if l_default_family.id == bean.family.id ,fSPD.DefaultFamilyBean = bean
+			if bean.Family.Id == l_default_family.Id {
+
+				fSPD.DefaultFamilyBean = bean
+				//remove this bean from f_b_list
+				f_b_list = append(f_b_list[:i], f_b_list[i+1:]...)
+			}
+
+		}
+	} else {
+		//如果len(f_b_list)==0,说明用户还没有登记任何家庭茶团，那么标识为空
+		fSPD.IsEmpty = true
 	}
 
-	// 3. render
-	var fSPD data.FamilySquare
 	fSPD.SessUser = s_u
-	fSPD.FamilyBeanList = f_b_list
 
+	//fSPD.OtherFamilyBeanList = f_b_list
+
+	// 3. render
 	RenderHTML(w, &fSPD, "layout", "navbar.private", "families.home")
 }
 

@@ -83,9 +83,8 @@
     <div class="panel-body">
         <form class="form-horizontal" role="form" action="/v1/team_member/application/review" method="post">
             <div class="form-group">
-                <fieldset>
-                    <legend style="font-size: small;">
-                        <label for="radio" class="col-sm-2 control-label">选择处理：</label>
+                
+                        <label for="radio" class="col-sm-2 control-label">选择：</label>
                         <div name="radio" class="col-sm-10">
                             <div class="col-sm-6">
                                 <input type="radio" name="approval" id="accept" value="1" checked />
@@ -96,11 +95,10 @@
                                 <label for="decline">婉拒</label>
                             </div>
                         </div>
-                    </legend>
-                </fieldset>
+                
             </div>
             <div class="form-group">
-                <label for="reply" class="col-sm-2 control-label">回复申请：</label>
+                <label for="reply" class="col-sm-2 control-label">回复：</label>
                 <div class="col-sm-10">
                     <textarea class="form-control" name="reply" id="reply" rows="3"
                         maxlength="567" placeholder="致申请人的话" required></textarea>

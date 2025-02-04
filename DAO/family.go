@@ -364,8 +364,8 @@ func (user *User) GetLastDefaultFamily() (family Family, err error) {
 	err = Db.QueryRow(statement, user.Id).Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			//如果找不到设置记录，则返回id=0，表示“默认家庭=星际茶棚”
-			return Family{Id: 0, Uuid: "x", Name: "温暖的家&", AuthorId: 1}, nil
+			//如果找不到设置记录，则返回id=0，表示“默认家庭=温暖的家”
+			return Family{Id: 0, Uuid: "x", Name: "温暖的家&", AuthorId: 1, Introduction: "四海为家"}, nil
 		}
 		return family, err
 	}

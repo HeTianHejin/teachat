@@ -79,6 +79,7 @@ func main() {
 	//处理家庭茶团事务
 	mux.HandleFunc("/v1/family/new", route.HandleNewFamily)
 	mux.HandleFunc("/v1/family/detail", route.FamilyDetail)
+	mux.HandleFunc("/v1/family/default", route.SetDefaultFamily)
 
 	mux.HandleFunc("/v1/families/home", route.HomeFamilies)
 

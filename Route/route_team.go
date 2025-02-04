@@ -477,8 +477,11 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tD.Founder = founder
-	founder_default_team, _ := founder.GetLastDefaultTeam()
-	tD.FounderTeam = founder_default_team
+	// 获取团队发起人默认&家庭茶团
+	founder_default_family, _ := founder.GetLastDefaultFamily()
+	tD.FounderDefaultFamily = founder_default_family
+	// founder_default_team, _ := founder.GetLastDefaultTeam()
+	// tD.FounderTeam = founder_default_team
 
 	tD.TeamMemberCount = team.NumMembers()
 	teamCoreMembers, err := team.CoreMembers()
