@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 )
 
 /*
@@ -59,19 +60,32 @@ func loadConfig() {
 	}
 }
 
+// 尝试记录错误信息发生的位置(文件，行)
+func LogError(err error) (error_info string) {
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		file = "unknown"
+		line = 0
+	}
+
+	error_info = fmt.Sprintf("Error occurred in %s:%d - %v", file, line, err)
+	//log.Printf("%s", error_info) // 打印日志
+	return error_info // 返回错误信息
+}
+
 // for logging
 func Info(args ...interface{}) {
 	logger.SetPrefix("INFO ")
 	logger.Println(args...)
 }
 
-func Danger(args ...interface{}) {
-	logger.SetPrefix("ERROR ")
+func Warning(args ...interface{}) {
+	logger.SetPrefix("WARNING ")
 	logger.Println(args...)
 }
 
-func Warning(args ...interface{}) {
-	logger.SetPrefix("WARNING ")
+func Danger(args ...interface{}) {
+	logger.SetPrefix("ERROR ")
 	logger.Println(args...)
 }
 

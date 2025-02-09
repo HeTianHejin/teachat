@@ -35,13 +35,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	var pD data.PostDetail
 	post, err := data.GetPostByUuid(uuid)
 	if err != nil {
-		util.Warning(err, " Cannot get post detail")
+		util.Warning(util.LogError(err), " Cannot get post detail")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	post_bean, err := FetchPostBean(post)
 	if err != nil {
-		util.Warning(err, " Cannot get post bean given post")
+		util.Warning(util.LogError(err), " Cannot get post bean given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -49,7 +49,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取此品味引用的茶议
 	pD.QuoteThread, err = post.Thread()
 	if err != nil {
-		util.Warning(err, " Cannot get thread given post")
+		util.Warning(util.LogError(err), " Cannot get thread given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
 		return
 	}
@@ -58,40 +58,40 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 此品味针对的茶议作者资料
 	pD.QuoteThreadAuthor, err = pD.QuoteThread.User()
 	if err != nil {
-		util.Warning(err, " Cannot get thread author given post")
+		util.Warning(util.LogError(err), " Cannot get thread author given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
 	// 引用的茶议作者发帖时候选择的茶团
 	pD.QuoteThreadAuthorTeam, err = data.GetTeamById(pD.QuoteThread.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot get quote-thread-author-default-team given post")
+		util.Warning(util.LogError(err), " Cannot get quote-thread-author-default-team given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
 	// 读取全部针对此品味的茶议
 	thread_list, err := post.Threads()
 	if err != nil {
-		util.Warning(err, " Cannot get thread_list given post")
+		util.Warning(util.LogError(err), " Cannot get thread_list given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	pD.ThreadBeanList, err = FetchThreadBeanList(thread_list)
 	if err != nil {
-		util.Warning(err, " Cannot get thread_bean_list given thread_list")
+		util.Warning(util.LogError(err), " Cannot get thread_bean_list given thread_list")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 
 	pD.QuoteProject, err = pD.QuoteThread.Project()
 	if err != nil {
-		util.Warning(err, pD.QuoteThread.Id, " Cannot get project given thread")
+		util.Warning(util.LogError(err), pD.QuoteThread.Id, " Cannot get project given thread")
 		Report(w, r, "你好，������失������，未能读取专��资料。")
 		return
 	}
 	pD.QuoteObjective, err = pD.QuoteProject.Objective()
 	if err != nil {
-		util.Warning(err, pD.QuoteProject.Id, " Cannot get objective given project")
+		util.Warning(util.LogError(err), pD.QuoteProject.Id, " Cannot get objective given project")
 		Report(w, r, "你好，������失������，未能读取专��资料。")
 		return
 	}
@@ -125,7 +125,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 从会话查获当前浏览用户资料荚
 	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.Warning(err, " Cannot get user-related data from session")
+		util.Warning(util.LogError(err), " Cannot get user-related data from session")
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -164,14 +164,14 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Warning(err, " Cannot parse form")
+		util.Warning(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，茶博士摸摸头，竟然说今天电脑去热带海岛潜水了。")
 		return
 	}
 
 	s_u, err := s.User()
 	if err != nil {
-		util.Warning(err, " Cannot get user from session")
+		util.Warning(util.LogError(err), " Cannot get user from session")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -265,7 +265,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		ObjectType: 4,
 	}
 	if err = aO.Create(); err != nil {
-		util.Warning(err, "Cannot create accept_object")
+		util.Warning(util.LogError(err), "Cannot create accept_object")
 		Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 		return
 	}
@@ -299,24 +299,24 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Danger(err, " Cannot parse form")
+		util.Danger(util.LogError(err), " Cannot parse form")
 	}
 	//从会话中读取用户资料
 	user, err := sess.User()
 	if err != nil {
-		util.Danger(err, " Cannot get user from session")
+		util.Danger(util.LogError(err), " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	uuid := r.PostFormValue("uuid")
 	post, err := data.GetPostByUuid(uuid)
 	if err != nil {
-		util.Danger(err, " Cannot read given post")
+		util.Danger(util.LogError(err), " Cannot read given post")
 		Report(w, r, "茶博士失魂鱼，未能读取指定表态，请稍后再试。")
 		return
 	}
 	if post.UserId != user.Id {
-		util.Danger(err, " Cannot edit other user's post")
+		util.Danger(util.LogError(err), " Cannot edit other user's post")
 		Report(w, r, "茶博士提示，目前仅能补充自己的回复")
 		return
 	} else {
@@ -333,13 +333,13 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 			}
 			err = post.UpdateBody(body)
 			if err != nil {
-				util.Danger(err, " Cannot update post")
+				util.Danger(util.LogError(err), " Cannot update post")
 				Report(w, r, "茶博士失魂鱼，未能更新专属资料，请稍后再试。")
 				return
 			}
 			thread, err := data.GetThreadById(post.ThreadId)
 			if err != nil {
-				util.Danger(err, " Cannot read thread")
+				util.Danger(util.LogError(err), " Cannot read thread")
 				Report(w, r, "茶博士失魂鱼，未能读取专属资料，请稍后再试。")
 			}
 			url := fmt.Sprint("/v1/thread/detail?id=", thread.Uuid)
@@ -365,7 +365,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 
 		user, err := sess.User()
 		if err != nil {
-			util.Danger(err, " Cannot get user from session")
+			util.Danger(util.LogError(err), " Cannot get user from session")
 			http.Redirect(w, r, "/v1/login", http.StatusFound)
 			return
 		}
@@ -373,14 +373,14 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 		uuid := vals.Get("id")
 		post, err := data.GetPostByUuid(uuid)
 		if err != nil {
-			util.Danger(err, " Cannot read post")
+			util.Danger(util.LogError(err), " Cannot read post")
 			Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料，请稍后再试。")
 			return
 		}
 		if post.UserId == user.Id {
 			RenderHTML(w, &post, "layout", "navbar.private", "post.edit")
 		} else {
-			util.Danger(err, " Cannot edit other user's post")
+			util.Danger(util.LogError(err), " Cannot edit other user's post")
 			Report(w, r, "茶博士提示，目前仅能补充自己的回复")
 		}
 

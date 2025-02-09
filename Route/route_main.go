@@ -30,7 +30,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 	tb_list, err = FetchThreadBeanList(thread_list)
 	if err != nil {
-		util.Warning(err, " Cannot read thread and author list")
+		util.Warning(util.LogError(err), " Cannot read thread and author list")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
 		return
 	}
@@ -55,7 +55,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	//已登录
 	sUser, err := s.User()
 	if err != nil {
-		util.Warning(err, " Cannot read user info from session")
+		util.Warning(util.LogError(err), " Cannot read user info from session")
 		Report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
 		return
 	}

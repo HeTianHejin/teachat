@@ -221,21 +221,21 @@ func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error)
 	tB.CreatedAtDate = thread.CreatedAtDate()
 	user, err := thread.User()
 	if err != nil {
-		util.Warning(err, " Cannot read thread author")
+		util.Warning(util.LogError(err), " Cannot read thread author")
 		return tB, err
 	}
 	tB.Author = user
 	//默认&家庭茶团资料
 	family, err := user.GetLastDefaultFamily()
 	if err != nil {
-		util.Warning(err, " Cannot read thread author family")
+		util.Warning(util.LogError(err), " Cannot read thread author family")
 		return tB, err
 	}
 	tB.AuthorFamily = family
 	//默认$事业茶团资料
 	team, err := data.GetTeamById(thread.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read team given thread")
+		util.Warning(util.LogError(err), " Cannot read team given thread")
 		return tB, err
 	}
 	tB.AuthorTeam = team
@@ -278,19 +278,19 @@ func FetchObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err
 	oB.CreatedAtDate = o.CreatedAtDate()
 	user, err := o.User()
 	if err != nil {
-		util.Warning(err, " Cannot read objective author")
+		util.Warning(util.LogError(err), " Cannot read objective author")
 		return oB, err
 	}
 	oB.Author = user
 	family, err := user.GetLastDefaultFamily()
 	if err != nil {
-		util.Warning(err, " Cannot read objective author family")
+		util.Warning(util.LogError(err), " Cannot read objective author family")
 		return oB, err
 	}
 	oB.AuthorFamily = family
 	team, err := data.GetTeamById(oB.Objective.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read team given author")
+		util.Warning(util.LogError(err), " Cannot read team given author")
 		return oB, err
 	}
 	oB.AuthorTeam = team
@@ -327,25 +327,25 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 	pb.CreatedAtDate = project.CreatedAtDate()
 	user, err := project.User()
 	if err != nil {
-		util.Warning(err, " Cannot read project author")
+		util.Warning(util.LogError(err), " Cannot read project author")
 		return pb, err
 	}
 	pb.Author = user
 	family, err := user.GetLastDefaultFamily()
 	if err != nil {
-		util.Warning(err, " Cannot read project author family")
+		util.Warning(util.LogError(err), " Cannot read project author family")
 		return pb, err
 	}
 	pb.AuthorFamily = family
 	team, err := data.GetTeamById(project.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read team given author")
+		util.Warning(util.LogError(err), " Cannot read team given author")
 		return pb, err
 	}
 	pb.AuthorTeam = team
 	pb.Place, err = project.Place()
 	if err != nil {
-		util.Warning(err, "cannot read project place")
+		util.Warning(util.LogError(err), "cannot read project place")
 		return pb, err
 	}
 	return pb, nil
@@ -371,18 +371,18 @@ func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 	PostBean.CreatedAtDate = post.CreatedAtDate()
 	user, err := post.User()
 	if err != nil {
-		util.Warning(err, " Cannot read post author")
+		util.Warning(util.LogError(err), " Cannot read post author")
 		return PostBean, err
 	}
 	PostBean.Author = user
 	PostBean.AuthorFamily, err = user.GetLastDefaultFamily()
 	if err != nil {
-		util.Warning(err, " Cannot read post author family")
+		util.Warning(util.LogError(err), " Cannot read post author family")
 		return PostBean, err
 	}
 	team, err := data.GetTeamById(post.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read team given author")
+		util.Warning(util.LogError(err), " Cannot read team given author")
 		return PostBean, err
 	}
 	PostBean.AuthorTeam = team
@@ -400,7 +400,7 @@ func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 	TeamBean.CreatedAtDate = team.CreatedAtDate()
 	u, err := team.Founder()
 	if err != nil {
-		util.Warning(err, " Cannot read team founder")
+		util.Warning(util.LogError(err), " Cannot read team founder")
 		return TeamBean, err
 	}
 	TeamBean.Founder = u
@@ -428,12 +428,12 @@ func FetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error)
 	//登记人资料
 	FamilyBean.Founder, err = data.GetUserById(family.AuthorId)
 	if err != nil {
-		util.Warning(err, family.AuthorId, " Cannot read family founder")
+		util.Warning(util.LogError(err), family.AuthorId, " Cannot read family founder")
 		return FamilyBean, err
 	}
 	FamilyBean.FounderTeam, err = FamilyBean.Founder.GetLastDefaultTeam()
 	if err != nil {
-		util.Warning(err, family.AuthorId, " Cannot read family founder default team")
+		util.Warning(util.LogError(err), family.AuthorId, " Cannot read family founder default team")
 		return FamilyBean, err
 	}
 
@@ -459,13 +459,13 @@ func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 
 	u, err := data.GetUserById(fm.UserId)
 	if err != nil {
-		util.Warning(err, " Cannot read user given FamilyMember")
+		util.Warning(util.LogError(err), " Cannot read user given FamilyMember")
 		return FMB, err
 	}
 	FMB.Member = u
 	default_team, err := u.GetLastDefaultTeam()
 	if err != nil {
-		util.Warning(err, " Cannot read user given FamilyMember")
+		util.Warning(util.LogError(err), " Cannot read user given FamilyMember")
 		return FMB, err
 	}
 	FMB.MemberDefaultTeam = default_team
@@ -475,7 +475,7 @@ func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 	//读取茶团的parent_members
 	family_parent_members, err := f.ParentMembers()
 	if err != nil {
-		util.Info(err, " Cannot get family core member FetchFamilyMemberBean()")
+		util.Info(util.LogError(err), " Cannot get family core member FetchFamilyMemberBean()")
 		return
 	}
 	FMB.IsParent = false
@@ -495,7 +495,7 @@ func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 
 	member_default_family, err := u.GetLastDefaultFamily()
 	if err != nil {
-		util.Info(err, " Cannot get GetLastDefaultFamily FetchFamilyMemberBean()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefaultFamily FetchFamilyMemberBean()")
 		return
 	}
 	FMB.MemberDefaultFamily = member_default_family
@@ -527,26 +527,26 @@ func FetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.Famil
 
 	family := data.Family{Id: fmsi.FamilyId}
 	if err = family.Get(); err != nil {
-		util.Warning(err, " Cannot read family given FamilyMemberSignIn")
+		util.Warning(util.LogError(err), " Cannot read family given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 	FMSIB.Family = family
 
 	FMSIB.NewMember, err = data.GetUserById(fmsi.UserId)
 	if err != nil {
-		util.Warning(err, " Cannot read new member given FamilyMemberSignIn")
+		util.Warning(util.LogError(err), " Cannot read new member given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 
 	FMSIB.Author, err = data.GetUserById(fmsi.AuthorUserId)
 	if err != nil {
-		util.Warning(err, " Cannot read author given FamilyMemberSignIn")
+		util.Warning(util.LogError(err), " Cannot read author given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 
 	place := data.Place{Id: fmsi.PlaceId}
 	if err = place.Get(); err != nil {
-		util.Warning(err, " Cannot read place given FamilyMemberSignIn")
+		util.Warning(util.LogError(err), " Cannot read place given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 	FMSIB.Place = place
@@ -570,14 +570,14 @@ func FetchFamilyMemberSignInBeanList(fmsi_list []data.FamilyMemberSignIn) (FMSIB
 func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error) {
 	u, err := data.GetUserById(tm.UserId)
 	if err != nil {
-		util.Warning(err, " Cannot read user given TeamMember")
+		util.Warning(util.LogError(err), " Cannot read user given TeamMember")
 		return TMB, err
 	}
 	TMB.Member = u
 
 	team, err := data.GetTeamById(tm.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read team given team member")
+		util.Warning(util.LogError(err), " Cannot read team given team member")
 		return TMB, err
 	}
 
@@ -591,7 +591,7 @@ func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error
 	member_ceo, err := team.MemberCEO()
 	if err != nil {
 		//茶团已经设定了ceo，但是出现了其他错误
-		util.Info(err, team.Id, " Cannot get ceo of this team")
+		util.Info(util.LogError(err), team.Id, " Cannot get ceo of this team")
 		return
 	}
 	if member_ceo.UserId == u.Id {
@@ -602,7 +602,7 @@ func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error
 
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.Info(err, " Cannot get team core member FetchTeamMemberBean()")
+		util.Info(util.LogError(err), " Cannot get team core member FetchTeamMemberBean()")
 		return
 	}
 	for _, coreMember := range teamCoreMembers {
@@ -614,7 +614,7 @@ func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error
 
 	member_default_team, err := u.GetLastDefaultTeam()
 	if err != nil {
-		util.Info(err, " Cannot get GetLastDefaultTeam FetchTeamMemberBean()")
+		util.Info(util.LogError(err), " Cannot get GetLastDefaultTeam FetchTeamMemberBean()")
 		return
 	}
 	TMB.MemberDefaultTeam = member_default_team
@@ -645,19 +645,19 @@ func FetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBea
 
 	team, err := data.GetTeamById(ma.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read team given author")
+		util.Warning(util.LogError(err), " Cannot read team given author")
 		return MemberApplicationBean, err
 	}
 	MemberApplicationBean.Team = team
 
 	MemberApplicationBean.Author, err = data.GetUserById(ma.UserId)
 	if err != nil {
-		util.Warning(err, " Cannot read member application author")
+		util.Warning(util.LogError(err), " Cannot read member application author")
 		return MemberApplicationBean, err
 	}
 	MemberApplicationBean.AuthorTeam, err = MemberApplicationBean.Author.GetLastDefaultTeam()
 	if err != nil {
-		util.Warning(err, " Cannot read member application author default team")
+		util.Warning(util.LogError(err), " Cannot read member application author default team")
 		return MemberApplicationBean, err
 	}
 
@@ -681,19 +681,19 @@ func FetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error)
 
 	I_B.Team, err = i.Team()
 	if err != nil {
-		util.Warning(err, " Cannot read invitation default team")
+		util.Warning(util.LogError(err), " Cannot read invitation default team")
 		return I_B, err
 	}
 
 	I_B.AuthorCEO, err = i.AuthorCEO()
 	if err != nil {
-		util.Warning(err, " Cannot fetch team CEO given invitation")
+		util.Warning(util.LogError(err), " Cannot fetch team CEO given invitation")
 		return I_B, err
 	}
 
 	I_B.InviteUser, err = i.ToUser()
 	if err != nil {
-		util.Warning(err, " Cannot read invitation invite user")
+		util.Warning(util.LogError(err), " Cannot read invitation invite user")
 		return I_B, err
 	}
 
@@ -719,29 +719,29 @@ func FetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean dat
 
 	tmrnBean.Team, err = data.GetTeamById(tmrn.TeamId)
 	if err != nil {
-		util.Warning(err, " Cannot read team given team member role notice")
+		util.Warning(util.LogError(err), " Cannot read team given team member role notice")
 		return tmrnBean, err
 	}
 
 	tmrnBean.CEO, err = data.GetUserById(tmrn.CeoId)
 	if err != nil {
-		util.Warning(err, " Cannot read ceo given team member role notice")
+		util.Warning(util.LogError(err), " Cannot read ceo given team member role notice")
 		return tmrnBean, err
 	}
 
 	tm := data.TeamMember{Id: tmrn.MemberId}
 	if err = tm.Get(); err != nil {
-		util.Warning(err, " Cannot read team member given team member role notice")
+		util.Warning(util.LogError(err), " Cannot read team member given team member role notice")
 		return tmrnBean, err
 	}
 	tmrnBean.Member, err = data.GetUserById(tm.UserId)
 	if err != nil {
-		util.Warning(err, " Cannot read member given team member role notice")
+		util.Warning(util.LogError(err), " Cannot read member given team member role notice")
 		return tmrnBean, err
 	}
 	tmrnBean.MemberDefaultTeam, err = tmrnBean.Member.GetLastDefaultTeam()
 	if err != nil {
-		util.Warning(err, " Cannot read member default team given team member role notice")
+		util.Warning(util.LogError(err), " Cannot read member default team given team member role notice")
 		return tmrnBean, err
 	}
 
@@ -774,7 +774,7 @@ func FetchGroupBean(group data.Group) (GroupBean data.GroupBean, err error) {
 	gb.Founder = u
 	gb.FounderTeam, err = u.GetLastDefaultTeam()
 	if err != nil {
-		util.Warning(err, " Cannot read team given founder")
+		util.Warning(util.LogError(err), " Cannot read team given founder")
 		return gb, err
 	}
 	gb.TeamsCount = data.GetTeamsCountByGroupId(gb.Group.Id)
@@ -840,7 +840,7 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	newFilePath := data.ImageDir + uuid + data.ImageExt
 	newFile, err := os.Create(newFilePath)
 	if err != nil {
-		util.Danger(err, "创建头像文件名失败")
+		util.Danger(util.LogError(err), "创建头像文件名失败")
 		Report(w, r, "创建头像文件失败，请稍后再试。")
 		return err
 	}
@@ -852,7 +852,7 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	buff.Write(fileBytes)
 	err = buff.Flush()
 	if err != nil {
-		util.Warning(err, "fail to write avatar image")
+		util.Warning(util.LogError(err), "fail to write avatar image")
 		Report(w, r, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
 		return err
 	}
@@ -879,7 +879,7 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Info(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -887,7 +887,7 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 
 	// 记录用户最后查询的资讯
 	// if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
-	// 	util.Warning(err, s_u.Id, " Cannot record last query path")
+	// 	util.Warning(util.LogError(err), s_u.Id, " Cannot record last query path")
 	// }
 	RenderHTML(w, &userBPD, "layout", "navbar.private", "feedback")
 }

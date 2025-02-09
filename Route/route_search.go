@@ -28,7 +28,7 @@ func HandleSearch(w http.ResponseWriter, r *http.Request) {
 func SearchPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.Warning(err, " Cannot parse form")
+		util.Warning(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，茶博士失魂鱼，未能理解你的话语，请稍后再试。")
 		return
 	}
@@ -39,7 +39,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Info(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -49,7 +49,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	//转换class_str为int
 	class_int, err := strconv.Atoi(class_str)
 	if err != nil {
-		util.Info(err, "Cannot convert class_str to int")
+		util.Info(util.LogError(err), "Cannot convert class_str to int")
 		Report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
@@ -77,13 +77,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if ok := IsEmail(keyword); ok {
 			user, err := data.GetUserByEmail(keyword)
 			if err != nil {
-				util.Warning(err, keyword, " Cannot search user by keyword")
+				util.Warning(util.LogError(err), keyword, " Cannot search user by keyword")
 			}
 			//如果user是非空
 			if user.Id > 0 {
 				user_bean, err := FetchUserBean(user)
 				if err != nil {
-					util.Warning(err, "cannot get user-bean given user")
+					util.Warning(util.LogError(err), "cannot get user-bean given user")
 				} else {
 					fPD.UserBeanList = append(fPD.UserBeanList, user_bean)
 					fPD.IsEmpty = false
@@ -93,13 +93,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 			user_list, err := data.SearchUserByNameKeyword(keyword)
 			if err != nil {
-				util.Warning(err, keyword, " Cannot search user by keyword")
+				util.Warning(util.LogError(err), keyword, " Cannot search user by keyword")
 			}
 
 			if len(user_list) >= 1 {
 				fPD.UserBeanList, err = FetchUserBeanList(user_list)
 				if err != nil {
-					util.Info(err, " Cannot fetch user bean list given user_list")
+					util.Info(util.LogError(err), " Cannot fetch user bean list given user_list")
 				}
 				if len(fPD.UserBeanList) >= 1 {
 					fPD.IsEmpty = false
@@ -117,7 +117,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		user, err := data.GetUserById(keyword_int)
 		if err != nil {
 			if err != sql.ErrNoRows {
-				util.Warning(err, " Cannot get user by keyword_int id")
+				util.Warning(util.LogError(err), " Cannot get user by keyword_int id")
 			}
 		}
 
@@ -125,7 +125,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if user.Id > 0 {
 			userbean, err := FetchUserBean(user)
 			if err != nil {
-				util.Warning(err, "cannot get user-bean given user")
+				util.Warning(util.LogError(err), "cannot get user-bean given user")
 			} else {
 				fPD.UserBeanList = append(fPD.UserBeanList, userbean)
 				fPD.IsEmpty = false
@@ -136,13 +136,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询，茶团简称，team.abbreviation
 		team_list, err := data.SearchTeamByAbbreviation(keyword)
 		if err != nil {
-			util.Warning(err, " Cannot search team by abbreviation")
+			util.Warning(util.LogError(err), " Cannot search team by abbreviation")
 		}
 
 		if len(team_list) >= 1 {
 			t_b_list, err := FetchTeamBeanList(team_list)
 			if err != nil {
-				util.Warning(err, " Cannot fetch team bean list given team_list")
+				util.Warning(util.LogError(err), " Cannot fetch team bean list given team_list")
 			}
 			if len(t_b_list) >= 1 {
 				fPD.Count = len(t_b_list)
@@ -154,7 +154,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询品茶地点 place
 		place_list, err := data.FindPlaceByName(keyword)
 		if err != nil {
-			util.Warning(err, " Cannot search place by keyword")
+			util.Warning(util.LogError(err), " Cannot search place by keyword")
 		}
 		if len(place_list) >= 1 {
 			fPD.Count = len(place_list)
@@ -181,7 +181,7 @@ func SearchGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Info(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}

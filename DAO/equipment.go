@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	util "teachat/Util"
 	"time"
 
 	_ "github.com/lib/pq"
@@ -48,12 +49,12 @@ func init() {
 		dbhost, dbport, dbuser, dbpassword, dbname, dbsslmode, dbTimeZone)
 	Db, err = sql.Open(dbdriver, psqlInfo)
 	if err != nil {
-		log.Fatal(err, "星际茶棚数据库打开时迷失")
+		log.Fatal(util.LogError(err), "星际茶棚数据库打开时迷失")
 	}
 	//测试数据库连接是否成功
 	err = Db.Ping()
 	if err != nil {
-		log.Fatal(err, "ping teachat database failure - 测试链接茶话会数据库失败~~~")
+		log.Fatal(util.LogError(err), "ping teachat database failure - 测试链接茶话会数据库失败~~~")
 	}
 	log.Println("星际茶棚开始服务")
 

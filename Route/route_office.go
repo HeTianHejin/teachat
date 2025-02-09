@@ -24,7 +24,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	//读取当前用户的相关资料
 	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.Info(err, " Cannot fetch user related data")
+		util.Info(util.LogError(err), " Cannot fetch user related data")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -32,7 +32,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	user_uuid := r.FormValue("id")
 	invi_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
-		util.Info(err, " Cannot get user by uuid")
+		util.Info(util.LogError(err), " Cannot get user by uuid")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -59,7 +59,7 @@ func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error 
 	// if data.UserCount() < 50 {
 
 	// 	if user_ids, err = data.Get2RandomUserId(); err != nil {
-	// 		util.Info(err, " Cannot get 2 random user id")
+	// 		util.Info(util.LogError(err), " Cannot get 2 random user id")
 	// 		return err
 	// 	}
 	// } else {
@@ -67,14 +67,14 @@ func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error 
 	// 		// 在线不同性别随机
 	// 		user_ids, err = data.Get2GenderRandomSUserIdExceptId(u_id)
 	// 		if err != nil {
-	// 			util.Info(err, " Cannot get 2 gender random sess_user id")
+	// 			util.Info(util.LogError(err), " Cannot get 2 gender random sess_user id")
 	// 			user_ids, err = data.Get2GenderRandomUserIdExceptId(u_id)
 	// 			if err != nil {
-	// 				util.Info(err, " Cannot get 2 gender random user id")
+	// 				util.Info(util.LogError(err), " Cannot get 2 gender random user id")
 	// 				// 在线不分性别随机
 	// 				user_ids, err = data.Get2RandomSUserIdExceptId(u_id)
 	// 				if err != nil {
-	// 					util.Info(err, " Cannot get 2 random sess_user id")
+	// 					util.Info(util.LogError(err), " Cannot get 2 random sess_user id")
 	// 					return err
 	// 				}
 	// 			}
@@ -82,24 +82,24 @@ func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error 
 	// 	} else {
 	if user_ids, err = data.Get2RandomUserId(); err != nil {
 		//test status
-		util.Info(err, " Cannot get 2 random user id")
+		util.Info(util.LogError(err), " Cannot get 2 random user id")
 		return err
 	}
 	// 	}
 	// }
 	if len(user_ids) != 2 {
-		util.Info(err, " Cannot get 2 random-user-ids")
+		util.Info(util.LogError(err), " Cannot get 2 random-user-ids")
 		return err
 	}
 	// 发送“是否接纳”消息
 	if err = mess.Send(user_ids); err != nil {
-		util.Info(err, " Cannot send accept message")
+		util.Info(util.LogError(err), " Cannot send accept message")
 		return err
 	}
 	// 记录用户有1新消息
 	for _, u_id := range user_ids {
 		if err = data.AddUserMessageCount(u_id); err != nil {
-			util.Info(err, " Cannot add random user new-message-count")
+			util.Info(util.LogError(err), " Cannot add random user new-message-count")
 			return err
 		}
 	}
@@ -111,12 +111,12 @@ func PilotAcceptMessageSend(u_id int, mess data.AcceptMessage) error {
 
 	// 发送友����评结果通知消息
 	if err := mess.Send([]int{u_id}); err != nil {
-		util.Info(err, " Cannot send accept message")
+		util.Info(util.LogError(err), " Cannot send accept message")
 		return err
 	}
 	// ��录用户有1新消息
 	if err := data.AddUserMessageCount(u_id); err != nil {
-		util.Info(err, " Cannot add user new-message-count")
+		util.Info(util.LogError(err), " Cannot add user new-message-count")
 		return err
 	}
 	return nil

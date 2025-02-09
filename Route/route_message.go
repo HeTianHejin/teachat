@@ -12,13 +12,13 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := Session(r)
 	if err != nil {
-		util.Danger(err, " Cannot get session")
+		util.Danger(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Danger(err, " Cannot get user")
+		util.Danger(util.LogError(err), " Cannot get user")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -27,13 +27,13 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 
 	i_list, err := s_u.Invitations()
 	if err != nil {
-		util.Warning(err, s_u.Email, " Cannot get invitations")
+		util.Warning(util.LogError(err), s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，满头大汗的茶博士在努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 	i_b_list, err := FetchInvitationBeanList(i_list)
 	if err != nil {
-		util.Warning(err, s_u.Email, " Cannot get invitations bean list")
+		util.Warning(util.LogError(err), s_u.Email, " Cannot get invitations bean list")
 		Report(w, r, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
 		return
 	}
@@ -52,13 +52,13 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	sess, err := Session(r)
 	if err != nil {
-		util.Danger(err, " Cannot get session")
+		util.Danger(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Danger(err, " Cannot get user")
+		util.Danger(util.LogError(err), " Cannot get user")
 		Report(w, r, "你好，满头大汗的茶博士在努力中，请稍后再试。")
 		return
 	}
@@ -67,7 +67,7 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	amPD.SessUser = s_u
 	amPD.AcceptMessageList, err = s_u.UnreadAcceptMessages()
 	if err != nil {
-		util.Warning(err, s_u.Email, " Cannot get invitations")
+		util.Warning(util.LogError(err), s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，满头大汗的茶博士在加倍努力查找您的资料中，请稍后再试。")
 		return
 	}

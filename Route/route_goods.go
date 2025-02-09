@@ -30,13 +30,13 @@ func CreateGoods(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, "Cannot get user from session")
+		util.Info(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	//限制用户登记的物资最大数量为999,防止机器人暴力填表
 	if count_goods, err := data.CountGoodsByUserId(s_u.Id); err != nil || count_goods >= 999 {
-		util.Warning(err, "Cannot get user place count")
+		util.Warning(util.LogError(err), "Cannot get user place count")
 		Report(w, r, "你好，闪电考拉表示您已经提交了多得数不过来，就要爆表的物资，请确定后再试。")
 		return
 	}
@@ -45,7 +45,7 @@ func CreateGoods(w http.ResponseWriter, r *http.Request) {
 	category_str := r.PostFormValue("category")
 	category_int, err := strconv.Atoi(category_str)
 	if err != nil {
-		util.Warning(err, " Cannot convert class to int")
+		util.Warning(util.LogError(err), " Cannot convert class to int")
 		Report(w, r, "你好，茶博士表示无法理解物资的类型，请稍后再试。")
 		return
 	}
@@ -108,7 +108,7 @@ func CreateGoods(w http.ResponseWriter, r *http.Request) {
 	}
 	//入库存档
 	if err = goods.Create(); err != nil {
-		util.Warning(err, s_u.Id, "Cannot create goods")
+		util.Warning(util.LogError(err), s_u.Id, "Cannot create goods")
 		Report(w, r, "你好，闪电考拉表示无法理解暗黑物资，请确认后再试。")
 		return
 	}
@@ -118,7 +118,7 @@ func CreateGoods(w http.ResponseWriter, r *http.Request) {
 		GoodsId: goods.Id,
 	}
 	if err = ug.Create(); err != nil {
-		util.Warning(err, s_u.Id, "Cannot create user goods")
+		util.Warning(util.LogError(err), s_u.Id, "Cannot create user goods")
 		Report(w, r, "你好，闪电考拉表示无法理解暗黑物资，请确认后再试。")
 		return
 	}
@@ -139,7 +139,7 @@ func NewGoods(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, s.Email, "Cannot get user from session")
+		util.Info(util.LogError(err), s.Email, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -160,14 +160,14 @@ func MyGoods(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(err, s.Email, "Cannot get user from session")
+		util.Info(util.LogError(err), s.Email, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	var gL data.GoodsList
 	goods, err := data.GetGoodsByUserId(s_u.Id)
 	if err != nil {
-		util.Warning(err, "cannot get goods list given user id")
+		util.Warning(util.LogError(err), "cannot get goods list given user id")
 		Report(w, r, "你好，闪电考拉摸摸头，表示需要先找到眼镜，才能帮你找到私己宝贝资料。")
 		return
 	}
