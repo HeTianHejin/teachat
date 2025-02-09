@@ -7,6 +7,8 @@ import (
 
 // 地方，洞天福地，茶话会举办的空间。
 // 可能是一个建筑物大楼、大厅，房间 ...也可能是行驶中的机舱，船舱,还可能是野外的一块草地，一个帐篷。 maybe a cave like Water Curtain Cave
+// 品茶的地方place是一个共享口头表述地点，没有权限属性；
+// 物流地址address是有权限属性的，寄到某个地址的邮包必须由授权人签收。
 type Place struct {
 	Id             int
 	Uuid           string
@@ -23,6 +25,24 @@ type Place struct {
 	UserId         int    // 登记者id
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+}
+
+// 根据给出的关键词（keyword），查询相似的place.name，返回 []place, err
+func FindPlaceByName(keyword string) (places []Place, err error) {
+	rows, err := Db.Query("SELECT * FROM places WHERE name LIKE $1 OR nickname LIKE $1 LIMIT 24", "%"+keyword+"%")
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		var place Place
+		err = rows.Scan(&place.Id, &place.Uuid, &place.Name, &place.Nickname, &place.Description, &place.Icon, &place.OccupantUserId, &place.OwnerUserId, &place.Level, &place.Category, &place.IsPublic, &place.IsGovernment, &place.UserId, &place.CreatedAt, &place.UpdatedAt)
+		if err != nil {
+			return
+		}
+		places = append(places, place)
+	}
+	rows.Close()
+	return
 }
 
 // place.CountByUser() 统计某个用户登记的地方总数量
@@ -102,6 +122,26 @@ func (up *UserPlace) GetByUserId() (userPlaces []UserPlace, err error) {
 	}
 	rows.Close()
 	return
+}
+
+// CountUserPlace() 统计某个用户绑定的地方数量
+func CountUserPlace(user_id int) (count int, err error) {
+	err = Db.QueryRow("SELECT COUNT(*) FROM user_place WHERE user_id = $1", user_id).Scan(&count)
+	return
+}
+
+// CheckUserPlace() 检查用户是否已经绑定该地方
+func CheckUserPlace(user_id int, place_id int) (exist bool, err error) {
+	var count int
+	err = Db.QueryRow("SELECT COUNT(*) FROM user_place WHERE user_id = $1 AND place_id = $2", user_id, place_id).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	if count > 0 {
+		return true, nil
+	}
+	return false, err
+
 }
 
 // user_place.count() 统计某个用户绑定的地方数量
@@ -382,7 +422,9 @@ func (p *Place) Delete() (err error) {
 	return
 }
 
-// 物流快递地址，如大清帝国京都金陵市世袭园区贾府大街1号大观园
+// 物流快递地址，如大清帝国京都金陵市世袭园区贾府大街1号大观园，
+// 品茶的地方place是一个共享口头表述地点，没有私有权限属性；
+// 物流地址address是有权限属性的，例如寄到某个地址的邮包必须由该地址所有权人/授权人签收。
 type Address struct {
 	Id           int
 	Uuid         string

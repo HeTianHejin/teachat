@@ -248,12 +248,12 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	logo := "teamLogo"
 	new_team := data.Team{
 		Name:              n,
-		Abbreviation:      abbr,
+		Abbreviation:      abbr + "$",
 		Mission:           mission,
 		Logo:              logo,
 		Class:             class,
 		FounderId:         s_u.Id,
-		SuperiorTeamId:    0,
+		SuperiorTeamId:    1,
 		SubordinateTeamId: 0,
 	}
 	if err := new_team.Create(); err != nil {

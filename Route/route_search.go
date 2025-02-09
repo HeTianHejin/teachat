@@ -12,15 +12,20 @@ import (
 func HandleSearch(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		Search(w, r)
+		SearchGet(w, r)
 	case "POST":
-		Fetch(w, r)
+		SearchPost(w, r)
+	default:
+		//其他方法，不允许
+		// return error
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
+
 }
 
 // POST /v1/search
 // 处理用户提交的查询（参数）方法
-func Fetch(w http.ResponseWriter, r *http.Request) {
+func SearchPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Warning(err, " Cannot parse form")
@@ -140,9 +145,21 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 				util.Warning(err, " Cannot fetch team bean list given team_list")
 			}
 			if len(t_b_list) >= 1 {
+				fPD.Count = len(t_b_list)
 				fPD.TeamBeanList = t_b_list
 				fPD.IsEmpty = false
 			}
+		}
+	case 5:
+		//查询品茶地点 place
+		place_list, err := data.FindPlaceByName(keyword)
+		if err != nil {
+			util.Warning(err, " Cannot search place by keyword")
+		}
+		if len(place_list) >= 1 {
+			fPD.Count = len(place_list)
+			fPD.PlaceList = place_list
+			fPD.IsEmpty = false
 		}
 
 	default:
@@ -154,9 +171,9 @@ func Fetch(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, &fPD, "layout", "navbar.private", "search")
 }
 
-// GET /v1/Search
+// GET /v1/SearchGet
 // 打开查询页面
-func Search(w http.ResponseWriter, r *http.Request) {
+func SearchGet(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)

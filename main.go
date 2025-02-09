@@ -132,6 +132,7 @@ func main() {
 	mux.HandleFunc("/v1/place/create", route.CreatePlace)
 	mux.HandleFunc("/v1/place/detail", route.PlaceDetail)
 	mux.HandleFunc("/v1/place/my", route.MyPlace)
+	mux.HandleFunc("/v1/place/collect", route.CollectPlace)
 
 	// defined in route_goods.go
 	mux.HandleFunc("/v1/goods/new", route.HandleNewGoods)

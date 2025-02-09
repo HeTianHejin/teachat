@@ -79,7 +79,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 
 	// 权限检查。。。
 	if !s_u.CheckHasReadAcceptMessage(ao_id_int) {
-		Report(w, r, "你好，(摸摸头想了又想), 这里真的可以接受无票登陆星际飞船吗？")
+		Report(w, r, "你好，(茶博士摸摸头想了又想), 这里真的可以接受无票登陆星际飞船吗？")
 		return
 	}
 
@@ -134,7 +134,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	// 读取这个审核对象（根据审核对象id）
 	if err = ao.Get(); err != nil {
 		util.Danger(err, "Cannot get accept-object")
-		Report(w, r, "你好，(摸摸头想了又想),得道多助，失道寡助。")
+		Report(w, r, "你好，(茶博士摸摸头想了又想),居然说，得道多茶，失道寡茶。")
 		return
 	}
 	// 检查新茶评审结果,如果任意一位友邻否定这是文明发言，就判断为不通过审核
@@ -382,11 +382,11 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 
 		case 5:
-			//茶团
+			//把草团转为正式$事业茶团
 			team, err := data.GetTeamById(ao.ObjectId)
 			if err != nil {
 				util.Danger(err, "Cannot get team")
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚，比刻苦奋斗更有用？")
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚，比刻苦奋斗有用？")
 				return
 			}
 			if team.Class == 10 {
@@ -394,13 +394,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			} else if team.Class == 20 {
 				team.Class = 2
 			}
-			// 更新��队，友邻盲评已通过！
+			// 更新团队属性，友邻盲评已通过！
 			if err = team.UpdateClass(); err != nil {
 				util.Danger(err, "Cannot update team class")
 				Report(w, r, "你好，（摸摸头）考一考你，情中情因情感妹妹　错里错以错劝哥哥.是什么意思？")
 				return
 			}
-			// 将team的Founder作为默认的CEO，teamMember.Role="CEO"
+			// 将team的Founder作为默认的CEO成员，teamMember.Role="CEO"
 			teamMember := data.TeamMember{
 				TeamId: team.Id,
 				UserId: team.FounderId,
@@ -412,12 +412,41 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，花因喜洁难寻偶，人为悲秋易断魂。")
 				return
 			}
+			//检查团队发起人是否设置了默认$茶团，
+			t_founder, err := data.GetUserById(team.FounderId)
+			if err != nil {
+				util.Danger(err, "Cannot get team founder")
+				Report(w, r, "你好，茶博士失魂鱼，未能完成记录的任务，请稍后再试。")
+				return
+			}
+			//如果还没有设置，把这个新茶团设置为默认$茶团
+			old_default_team, err := t_founder.GetLastDefaultTeam()
+			if err != nil {
+				util.Danger(err, t_founder.Email, "Cannot get last default team")
+				Report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
+				return
+			}
+			//茶团2是“自由人$”，是系统预设占位茶团，
+			if old_default_team.Id == 2 {
+				// 没有设置默认茶团
+				// 设置默认茶团
+				uDT := data.UserDefaultTeam{
+					UserId: t_founder.Id,
+					TeamId: team.Id,
+				}
+				if err := uDT.Create(); err != nil {
+					util.Danger(err, t_founder.Email, team.Id, "Cannot create default team")
+					Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+					return
+				}
+
+			}
 		case 6:
 			//集团
 			group, err := data.GetGroup(ao.ObjectId)
 			if err != nil {
 				util.Danger(err, "Cannot get group")
-				Report(w, r, "你好，������失������，��然说有时�������������比��������更有用？")
+				Report(w, r, "你好，满头大汗的茶博士请教你，错里错以错劝哥哥，是什么意思？")
 				return
 			}
 			if group.Class == 10 {
@@ -428,7 +457,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			// 更新，友评已通过！
 			if err = group.Update(); err != nil {
 				util.Danger(err, "Cannot update group class")
-				Report(w, r, "你好，（����头）考一考你，情中情因情感������　错里错以错������是��么意思？")
+				Report(w, r, "你好，满头大汗的茶博士问，情中情因情感妹妹是么意思？")
 				return
 			}
 
@@ -437,6 +466,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候什么都不做,就能赢50%的竞争对手？")
 			return
 		}
+
 		// 感谢友邻维护了茶棚的文明秩序
 		Report(w, r, "好茶香护有缘人，感谢你出手维护文明品茶秩序！")
 		return

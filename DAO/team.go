@@ -35,7 +35,7 @@ type Team struct {
 	Uuid              string
 	Name              string
 	Mission           string
-	FounderId         int
+	FounderId         int //团队发起人茶友id
 	CreatedAt         time.Time
 	Class             int    //0:"系统$事业茶团", 1: "开放式$事业茶团",2: "封闭式$事业茶团",10: "开放式草团",20: "封闭式草团"
 	Abbreviation      string // 队名简称
@@ -537,7 +537,7 @@ func (team *Team) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Abbreviation, team.Logo, time.Now(), team.SuperiorTeamId, team.SubordinateTeamId).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
+	err = stmt.QueryRow(Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Abbreviation, team.Logo, time.Now(), team.SuperiorTeamId, team.SubordinateTeamId).Scan(&team.Id)
 	return
 }
 
@@ -683,7 +683,7 @@ func (tM *TeamMember) Create() (err error) {
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(
-		tM.Uuid,
+		Random_UUID(),
 		tM.TeamId,
 		tM.UserId,
 		tM.Role,

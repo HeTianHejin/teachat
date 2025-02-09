@@ -165,7 +165,7 @@
     <span style="font-style: italic;"><a
         href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
 
-    <h5>{{ .FamilyMember.Role }}</h5>
+    <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
 
     <p>登记时间：{{ .FamilyMember.CreatedAtDate }}</p>
 

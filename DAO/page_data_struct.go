@@ -268,12 +268,13 @@ type TeamSquare struct {
 	TeamBeanList []TeamBean
 }
 type TeamBean struct {
-	Team          Team
-	CreatedAtDate string
-	Open          bool
-	Founder       User
-	FounderTeam   Team // 发起人默认所在的团队
-	Count         int  //成员计数
+	Team                 Team
+	CreatedAtDate        string
+	Open                 bool
+	Founder              User
+	FounderDefaultFamily Family //发起人默认&家庭茶团
+	FounderTeam          Team   // 发起人默认所在的团队
+	Count                int    //成员计数
 }
 
 // 用于家庭茶团资料集合页面渲染
@@ -348,6 +349,7 @@ type FamilyMemberSignInBean struct {
 	Family             Family             //发出声明的家庭
 	NewMember          User               //新成员茶友id
 	Author             User               //声明书作者
+	Place              Place              //声明地点
 }
 type FamilyMemberSignInBeanList struct {
 	SessUser                   User
@@ -528,4 +530,5 @@ type SearchPageData struct {
 
 	TeamBeanList []TeamBean //茶团资料夹队列
 	//ThreadBeanList   []ThreadBean
+	PlaceList []Place //品茶地点集合
 }

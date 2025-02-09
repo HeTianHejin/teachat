@@ -404,6 +404,7 @@ func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 		return TeamBean, err
 	}
 	TeamBean.Founder = u
+	TeamBean.FounderDefaultFamily, _ = u.GetLastDefaultFamily()
 	TeamBean.FounderTeam, _ = u.GetLastDefaultTeam()
 	TeamBean.Count = team.NumMembers()
 	return TeamBean, nil
@@ -542,6 +543,13 @@ func FetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.Famil
 		util.Warning(err, " Cannot read author given FamilyMemberSignIn")
 		return FMSIB, err
 	}
+
+	place := data.Place{Id: fmsi.PlaceId}
+	if err = place.Get(); err != nil {
+		util.Warning(err, " Cannot read place given FamilyMemberSignIn")
+		return FMSIB, err
+	}
+	FMSIB.Place = place
 
 	return FMSIB, nil
 }

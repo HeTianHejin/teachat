@@ -612,7 +612,7 @@ func (f *Family) GetByUuid() (err error) {
 	return
 }
 
-// Family.Founder() 获取家庭创建者
+// Family.Founder() 获取家庭登记者
 func (f *Family) Founder() (user User, err error) {
 	err = Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", f.AuthorId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
@@ -633,6 +633,23 @@ func (f *Family) IsMember(user_id int) (isMember bool, err error) {
 		return false, err
 	}
 
+	return count > 0, nil
+}
+
+// IsFamilyExist(user_id, partner_user_id int)  在family_members表里，是否存在同一个family_id，family_member.user_id和partner_user_id是同一家庭成员，而且role=1 or 2，
+// 返回 exist bool, err error
+func IsFamilyExist(user_id, partner_user_id int) (exist bool, err error) {
+	statement := "SELECT COUNT(*) FROM family_members WHERE (user_id=$1 AND role IN (1, 2)) AND family_id IN (SELECT family_id FROM family_members WHERE user_id=$2 AND role IN (1, 2))"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return false, err
+	}
+	defer stmt.Close()
+	var count int
+	err = stmt.QueryRow(user_id, partner_user_id).Scan(&count)
+	if err != nil {
+		return false, err
+	}
 	return count > 0, nil
 }
 

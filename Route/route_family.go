@@ -110,14 +110,15 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 			}
 
 		}
+
+		fSPD.OtherFamilyBeanList = f_b_list
+
 	} else {
 		//如果len(f_b_list)==0,说明用户还没有登记任何家庭茶团，那么标识为空
 		fSPD.IsEmpty = true
 	}
 
 	fSPD.SessUser = s_u
-
-	//fSPD.OtherFamilyBeanList = f_b_list
 
 	// 3. render
 	RenderHTML(w, &fSPD, "layout", "navbar.private", "families.home")
@@ -320,33 +321,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
-
-	// n := r.PostFormValue("name")
-	// // &家庭茶团名称是否在4-24中文字符
-	// l := CnStrLen(n)
-	// if l < 4 || l > 24 {
-	// 	Report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团名字字数太多或者太少，未能创建新茶团。")
-	// 	return
-	// }
-	introduction := r.PostFormValue("introduction")
-	// 检测introduction是否在17-456中文字符
-	lenI := CnStrLen(introduction)
-	if lenI < 3 || lenI > 456 {
-		Report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团价绍字数太多或者太少，未能创建新茶团。")
-		return
-	}
-
-	//声明一个空白&家庭茶团
-	var new_family data.Family
-	//读取提交的is_open的checkbox值，判断&家庭茶团是否公开
-	is_open_str := r.PostFormValue("is_open")
-	//fmt.Println(is_open_str)
-	if is_open_str == "on" {
-		new_family.IsOpen = true
-	} else {
-		new_family.IsOpen = false
-	}
-	//读取提交的家庭状态
+	// 读取提交的家庭状态
 	status_str := r.PostFormValue("status")
 	// change str into int
 	status_int, err := strconv.Atoi(status_str)
@@ -359,8 +334,77 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团状态看不懂，未能创建新茶团。")
 		return
 	}
-	//fmt.Println(status_int)
+
+	// //假设是单身,没有提及伴侣/对象
+	// IsSingle := true
+	// partner_user := data.User{Id: 0}
+
+	// switch status_int {
+	// case 0, 1:
+	// 	//单身
+	// 	IsSingle = true
+	// case 2, 3, 4, 5:
+	// 	//有伴侣/对象
+	// 	IsSingle = false
+	// }
+
+	// partner_email := r.PostFormValue("partner")
+	// if partner_email == "" {
+	// 	IsSingle = true
+	// }
+	// if !IsSingle {
+	// 	//有伴侣/对象
+	// 	// 检查提交的对象邮箱
+	// 	if ok := IsEmail(partner_email); !ok {
+	// 		Report(w, r, "你好，涨红了脸的茶博士，竟然说，提及的对象电子邮箱看不懂，请确认后再试一次。")
+	// 		return
+	// 	}
+	// 	//读取对象的成员资料
+	// 	partner_user, err = data.GetUserByEmail(partner_email)
+	// 	if err != nil {
+	// 		util.Warning(err, partner_email, "Cannot get user by email")
+	// 		Report(w, r, "你好，茶博士正在无事忙之中，稍后再试。")
+	// 		return
+	// 	}
+	// 	if partner_user.Id > 0 {
+	// 		IsSingle = false
+	// 	}
+
+	// 	//检查s_u和partner_user作为男女主角色的家庭茶团是否存在？可能已经被partner_user登记为某个家庭
+	// 	exist, err := data.IsFamilyExist(s_u.Id, partner_user.Id)
+	// 	if err != nil {
+	// 		util.Warning(err, s_u.Id, partner_user.Id, "Cannot check family exist")
+	// 		Report(w, r, "你好，茶博士摸摸头，竟然说笔墨不见了，未能创建新茶团。")
+	// 		return
+	// 	}
+	// 	if exist {
+	// 		Report(w, r, "你好，茶博士摸摸头，竟然说你的对象已经登记过这个&家庭茶团，请确认后再试。")
+	// 		return
+	// 	}
+
+	// }
+
+	introduction := r.PostFormValue("introduction")
+	// 检测introduction是否在17-456中文字符
+	lenI := CnStrLen(introduction)
+	if lenI < 3 || lenI > 456 {
+		Report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团价绍字数太多或者太少，未能创建新茶团。")
+		return
+	}
+
+	//声明一个空白&家庭茶团
+	var new_family data.Family
+
 	new_family.Status = status_int
+
+	//读取提交的is_open的checkbox值，判断&家庭茶团是否公开
+	is_open_str := r.PostFormValue("is_open")
+	//fmt.Println(is_open_str)
+	if is_open_str == "on" {
+		new_family.IsOpen = true
+	} else {
+		new_family.IsOpen = false
+	}
 
 	child := r.PostFormValue("child")
 	if child == "yes" {
@@ -371,8 +415,10 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，&家庭茶团是否有孩子？看不懂提交内容，未能创建新茶团。")
 		return
 	}
-	new_family.AuthorId = s_u.Id
+
 	new_family.Name = s_u.Name + "&"
+
+	new_family.AuthorId = s_u.Id
 	new_family.Introduction = introduction
 	//初始化家庭茶团默认参数
 	new_family.HusbandFromFamilyId = 0
@@ -385,28 +431,34 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
-	//把创建者登记为默认&家庭茶团成员
-	//声明一个空白家庭成员
-	new_member := data.FamilyMember{
+
+	//把创建者登记为默认&家庭茶团成员之一
+	//声明一个家庭成员
+	author_member := data.FamilyMember{
 		FamilyId: new_family.Id,
 		UserId:   s_u.Id,
-		Role:     0,
+		IsAdult:  true,
 	}
 	//根据茶友性别，设置其相应的男主或者女主角色
 	if s_u.Gender == 1 {
-		new_member.Role = 1
+		author_member.Role = 1
 	} else {
-		new_member.Role = 2
+		author_member.Role = 2
 	}
-	if err := new_member.Create(); err != nil {
-		util.Warning(err, s_u.Email, "Cannot create new family member")
+	if err := author_member.Create(); err != nil {
+		util.Warning(err, s_u.Email, "Cannot create author family member")
 		Report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
 
-	//检查当前茶友是否已经设置了默认首选家庭茶团
+	//检查会话茶友是否已经设置了默认首选家庭茶团
 	//如果已经设置了默认首选家庭茶团，则不再设置
-	df, _ := s_u.GetLastDefaultFamily()
+	df, err := s_u.GetLastDefaultFamily()
+	if err != nil {
+		util.Warning(err, s_u.Email, "Cannot get user's default family")
+		Report(w, r, "你好，茶博士摸摸头，未能创建默认家庭茶团，请稍后再试。")
+		return
+	}
 
 	if df.Id == 0 {
 		//还没有设置默认家庭

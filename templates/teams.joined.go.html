@@ -24,6 +24,10 @@
     <a href="/v1/team/new">$茶团</a>
 </div>
 
+
+
+
+
 {{/* template "teams_public" .TeamBeanList */}}
 {{ range .TeamBeanList }}
 
@@ -61,6 +65,7 @@
               </span>
               
             </span>
+            
           </div>
           
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -71,9 +76,10 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
-              <span><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+              <span>
+                （<a href="/v1/family/detail?id={{ .FounderDefaultFamily.Uuid }}">{{ .FounderDefaultFamily.Name }}</a>）
+              </span>
         
-              {{ .CreatedAtDate }}
             </div>
           </div>
         </div>
