@@ -37,10 +37,10 @@ func main() {
 	mux.HandleFunc("/v1/users/connection_fans", route.Fans)
 
 	// defined in route_auth.go
-	mux.HandleFunc("/v1/login", route.Login)
+	mux.HandleFunc("/v1/login", route.LoginGet)
 	mux.HandleFunc("/v1/logout", route.Logout)
-	mux.HandleFunc("/v1/signup", route.SignupForm)
-	mux.HandleFunc("/v1/signup_account", route.SignupAccount)
+	mux.HandleFunc("/v1/signup", route.SignupGet)
+	mux.HandleFunc("/v1/signup_account", route.SignupPost)
 	mux.HandleFunc("/v1/authenticate", route.Authenticate)
 
 	// defined in route_team.go
@@ -136,7 +136,7 @@ func main() {
 
 	// defined in route_goods.go
 	mux.HandleFunc("/v1/goods/new", route.HandleNewGoods)
-	mux.HandleFunc("/v1/goods/mine", route.MyGoods)
+	//mux.HandleFunc("/v1/goods/hold", route.HoldGoods)
 	//mux.HandleFunc("/v1/goods/detail", goodsDetail)
 	//mux.HandleFunc("/v1/goods/edit", route.EditGoods)
 

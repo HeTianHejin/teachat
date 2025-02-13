@@ -72,6 +72,29 @@ func CollectPlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//检查用户是否已经设置默认品茶地点，
+	//如果没有设置，把这个地点设为默认地点
+	//如果设置了，不做任何操作
+	old_default_place, err := s_u.GetLastDefaultPlace()
+	if err != nil {
+		util.Warning(util.LogError(err), "Cannot get last default place")
+		Report(w, r, "你好，茶博士表示无法收藏地方，请稍后再试。")
+		return
+	}
+	if old_default_place.Id == 0 {
+		//这是茶棚占位地点，还没有设置用户默认地点
+		udp := data.UserDefaultPlace{
+			UserId:  s_u.Id,
+			PlaceId: user_place.Id,
+		}
+		if err = udp.Create(); err != nil {
+			util.Warning(util.LogError(err), "Cannot create user default place")
+			Report(w, r, "你好，茶博士表示无法收藏地方，请稍后再试。")
+			return
+		}
+
+	}
+
 	//重定向到用户地点本
 	http.Redirect(w, r, "/v1/place/my", http.StatusFound)
 

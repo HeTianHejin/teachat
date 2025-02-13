@@ -180,7 +180,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 检查提及的品茶地点是否存在
 	if err = t_place.GetByUuid(); err != nil {
-		util.Warning(util.LogError(err), t_place.Uuid, "Cannot get place by uuid")
+		//util.Warning(util.LogError(err), t_place.Uuid, "Cannot get place by uuid")
 		Report(w, r, "你好，茶博士找不到提及的地点，请确认后再试。")
 		return
 	}

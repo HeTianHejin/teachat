@@ -24,12 +24,13 @@
                     亲爱的 <strong>{{ .NewMember.Name }}</strong> ：
                 </p>
 
+                <p>新成员角色: {{ .FamilyMemberSignIn.GetRole }}</p>
+
                <p>这就是我们的家庭茶团，一起来喝茶。</p>
 
                 <p>
                     {{ .FamilyMemberSignIn.Content }}
                 </p>
-                <p>新成员角色: {{ .FamilyMemberSignIn.GetRole }}</p>
 
                 <p class="text-right">
                     {{if .Author.Gender }}

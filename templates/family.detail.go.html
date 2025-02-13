@@ -128,8 +128,10 @@
       {{ end }}
     </span>
 
-    <span style="font-style: italic;"><a
-        href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+    <span style="font-style: italic;">
+      （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+      </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
 
@@ -162,8 +164,10 @@
       {{ end }}
     </span>
 
-    <span style="font-style: italic;"><a
-        href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+    <span style="font-style: italic;">
+      （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+      </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
 
@@ -197,8 +201,10 @@
       {{ end }}
     </span>
 
-    <span style="font-style: italic;"><a
-        href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+    <span style="font-style: italic;">
+      （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+      </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
 

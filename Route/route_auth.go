@@ -9,10 +9,10 @@ import (
 	"time"
 )
 
-// GET /Login?footprint=xxx&query=xxx
-// Show the Login page
+// GET /LoginGet?footprint=xxx&query=xxx
+// Show the LoginGet page
 // 打开登录页面
-func Login(w http.ResponseWriter, r *http.Request) {
+func LoginGet(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot parse form")
@@ -39,15 +39,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/v1/", http.StatusFound)
 }
 
-// GET /SignupForm
+// GET /SignupGet
 // 新用户注册页面
-func SignupForm(w http.ResponseWriter, r *http.Request) {
+func SignupGet(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, nil, "layout", "navbar.public", "signup")
 }
 
 // POST /signup
 // 注册新用户帐号
-func SignupAccount(w http.ResponseWriter, r *http.Request) {
+func SignupPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot parse form")
