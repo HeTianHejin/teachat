@@ -1416,11 +1416,12 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//检查茶友是否自己邀请自己？也许是可以的，例如观音菩萨也可以加入自己创建的西天取经茶团喝茶？？
-	/* if u.Email == i_email {
-		util.Pop_message(w, r, "你好，请不要邀请自己加入茶团哈。")
+	//检查茶友是否自己邀请自己？
+	//也许是可以的?例如观音菩萨也可以加入自己创建的西天取经茶团喝茶？？
+	if s_u.Email == email {
+		Report(w, r, "你好，请不要邀请自己加入茶团哈。")
 		return
-	} */
+	}
 	//根据茶友提交的teamId，检查是否存在该team
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
@@ -1429,13 +1430,13 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查当前茶友是否团队的Ceo或者founder，是否有权限邀请新成员
-	ceo, err := team.MemberCEO()
+	ceo_member, err := team.MemberCEO()
 	if err != nil {
 		util.Danger(util.LogError(err), s_u.Email, " Cannot search team ceo")
 		Report(w, r, "你好，未能找到茶团CEO，请确认后再试。")
 		return
 	}
-	ceo_user, err := ceo.User()
+	ceo_user, err := ceo_member.User()
 	if err != nil {
 		util.Danger(util.LogError(err), s_u.Email, " Cannot search ceo_user")
 		Report(w, r, "你好，未能找到茶团CEO，请确认后再试。")
@@ -1448,9 +1449,9 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，未能找到这个茶团的发起人，请确认后再试。")
 		return
 	}
-	ok := s_u.Id == ceo_user.Id || s_u.Id == founder.Id
+	ok := s_u.Id == ceo_user.Id
 	if !ok {
-		Report(w, r, "你好，机关算尽太聪明，反算了卿卿性命。只有团队CEO或者创始人能够邀请请新成员加盟。")
+		Report(w, r, "你好，机关算尽太聪明，反算了卿卿性命。只有团队CEO能够邀请请新成员加盟。")
 		return
 	}
 
@@ -1470,7 +1471,8 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 
 	case "CEO":
 		if ceo_user.Id == founder.Id {
-			//CEO是默认创建人担任首个CEO，这意味着首次更换CEO，例如观音菩萨指定唐僧为取经团队CEO，这是初始化团队操作
+			//CEO是默认创建人担任首个CEO，这意味着首次更换CEO，ok。
+			//例如,西天取经团队发起人观音菩萨（默认首个ceo），指定唐僧为取经团队CEO，这是初始化团队操作
 			break
 		} else {
 			Report(w, r, "你好，请先邀请茶友加盟为普通茶友，然后再调整角色，请确认后再试。")
@@ -1481,6 +1483,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		// No additional validation needed for the "taster" role
 		break
 	default:
+		//其他非法角色，不允许
 		Report(w, r, "你好，请选择正确的角色。")
 		return
 	}
@@ -1488,17 +1491,18 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 	//检查team中是否存在teamMember
 	_, err = data.GetMemberByTeamIdUserId(team.Id, invite_user.Id)
 	if err != nil {
-		//如果err类型为空行，说明团队中还没有这个茶友，可以向其发送邀请函
+		//如果err类型为空行，说明团队中还没有这个茶友，可以向其发送加盟邀请函
 		if err == sql.ErrNoRows {
 
 			//创建一封邀请函
 			invi := data.Invitation{
-				TeamId:      team.Id,
-				InviteEmail: invite_user.Email,
-				Role:        role,
-				InviteWord:  i_word,
-				CreatedAt:   time.Now(),
-				Status:      0,
+				TeamId:       team.Id,
+				InviteEmail:  invite_user.Email,
+				Role:         role,
+				InviteWord:   i_word,
+				CreatedAt:    time.Now(),
+				Status:       0,
+				AuthorUserId: ceo_user.Id,
 			}
 			//存储邀请函
 			err = invi.Create()

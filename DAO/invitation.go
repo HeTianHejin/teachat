@@ -301,7 +301,7 @@ type Invitation struct {
 	InviteWord   string //邀请涵内容
 	CreatedAt    time.Time
 	Status       int //0: "待处理",1: "已查看",2: "已接受",3: "已拒绝",4: "已过期",
-	AuthorUserId int //邀请函的撰写者茶友id，
+	AuthorUserId int //邀请函的撰写者茶友id，就是现任团队CEO
 }
 
 // 茶团邀请函答复

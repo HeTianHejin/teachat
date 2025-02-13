@@ -314,7 +314,7 @@ var TeamProperty = map[int]string{
 // 根据给出的关键词（keyword），查询相似的team.Abbreviation，返回 []team,err
 func SearchTeamByAbbreviation(keyword string) ([]Team, error) {
 	teams := []Team{}
-	rows, err := Db.Query("SELECT * FROM teams WHERE abbreviation LIKE $1", "%"+keyword+"%")
+	rows, err := Db.Query("SELECT * FROM teams WHERE abbreviation LIKE $1 LIMIT 9", "%"+keyword+"%")
 	if err != nil {
 		return teams, err
 	}
