@@ -253,7 +253,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				ob.Class = 2
 			} else {
 				//非法class值
-				Report(w, r, "你好，������失������，��然说有时找资料也是一种修��的过程。")
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
 			// 更新茶话会，友邻盲评已通过！
@@ -279,7 +279,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				pr.Class = 2
 			} else {
 				//非法class值
-				Report(w, r, "你好，������失������，��然说有时找资料也是一种修��的过程。")
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
 			// 更新����，友邻盲评已通过！
@@ -322,34 +322,6 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			if err = thread.Create(); err != nil {
 				util.Danger(util.LogError(err), "Cannot save thread")
 				Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
-				return
-			}
-			//转为正式茶议稿第二步，记录花费
-			thread_cost := data.ThreadCost{
-				UserId:    thread.UserId,
-				ThreadId:  thread.Id,
-				Cost:      dThread.Cost,
-				Type:      0,
-				CreatedAt: time.Now(),
-				ProjectId: dThread.ProjectId,
-			}
-			if err = thread_cost.Create(); err != nil {
-				util.Danger(util.LogError(err), thread.Id, "Cannot save thread_cost")
-				Report(w, r, "你好，闪电考拉说，有时找资料快不一定好。")
-				return
-			}
-			//记录计划用时（耗时）
-			thread_time_slot := data.ThreadTimeSlot{
-				UserId:    thread.UserId,
-				ThreadId:  thread.Id,
-				TimeSlot:  dThread.TimeSlot,
-				IsConfirm: 0,
-				CreatedAt: time.Now(),
-				ProjectId: dThread.ProjectId,
-			}
-			if err = thread_time_slot.Create(); err != nil {
-				util.Danger(util.LogError(err), thread.Id, "Cannot save thread_time_slot")
-				Report(w, r, "你好，闪电考拉说，玉树则不大。")
 				return
 			}
 

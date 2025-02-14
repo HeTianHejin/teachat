@@ -38,10 +38,91 @@ type Goods struct {
 	UpdatedTime           time.Time  // 物资记录的最后更新时间。
 }
 
+// Goods.Create() 保存1物资记录，postgreSQL数据库语法,用queryRow方法存入goods表，返回id,uuid,
+func (g *Goods) Create() (err error) {
+	statement := "INSERT INTO goods (uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, production_date, expiration_date, state, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_time, updated_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30) RETURNING id, uuid"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), g.RecorderUserId, g.Name, g.Nickname, g.Designer, g.Describe, g.Price, g.Applicability, g.Category, g.Specification, g.BrandName, g.Model, g.Weight, g.Dimensions, g.Material, g.Size, g.Color, g.NetworkConnectionType, g.Features, g.SerialNumber, g.ProductionDate, g.ExpirationDate, g.State, g.Origin, g.Manufacturer, g.ManufacturerURL, g.EngineType, g.PurchaseURL, time.Now(), time.Now()).Scan(&g.Id, &g.Uuid)
+	return
+}
+
+// Goods.GetById() 根据id获取1物资记录
+func (g *Goods) Get() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, production_date, expiration_date, state, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_time, updated_time FROM goods WHERE id = $1", g.Id).
+		Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer, &g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName, &g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color, &g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.ProductionDate, &g.ExpirationDate, &g.State, &g.Origin, &g.Manufacturer, &g.ManufacturerURL, &g.EngineType, &g.PurchaseURL, &g.CreatedTime, &g.UpdatedTime)
+	return
+}
+
+// Goods.GetByUuid() 根据uuid获取1物资记录
+func (g *Goods) GetByUuid() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, production_date, expiration_date, state, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_time, updated_time FROM goods WHERE uuid = $1", g.Uuid).
+		Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer, &g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName, &g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color, &g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.ProductionDate, &g.ExpirationDate, &g.State, &g.Origin, &g.Manufacturer, &g.ManufacturerURL, &g.EngineType, &g.PurchaseURL, &g.CreatedTime, &g.UpdatedTime)
+	return
+}
+
+// Goods.Update() 更新1物资记录
+func (g *Goods) Update() (err error) {
+	statement := "UPDATE goods SET recorder_user_id = $2, name = $3, nickname = $4, designer = $5, describe = $6, price = $7, applicability = $8, category = $9, specification = $10, brand_name = $11, model = $12, weight = $13, dimensions = $14, material = $15, size = $16, color = $17, network_connection_type = $18, features = $19, serial_number = $20, production_date = $21, expiration_date = $22, state = $23, origin = $24, manufacturer = $25, manufacturer_url = $26, engine_type = $27, purchase_url = $28, updated_time = $29 WHERE id = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(g.Id, g.RecorderUserId, g.Name, g.Nickname, g.Designer, g.Describe, g.Price, g.Applicability, g.Category, g.Specification, g.BrandName, g.Model, g.Weight, g.Dimensions, g.Material, g.Size, g.Color, g.NetworkConnectionType, g.Features, g.SerialNumber, g.ProductionDate, g.ExpirationDate, g.State, g.Origin, g.Manufacturer, g.ManufacturerURL, g.EngineType, g.PurchaseURL, time.Now())
+	return
+}
+
 // 用户收集的物资清单
 type UserGoods struct {
 	Id        int
 	UserId    int
 	GoodsId   int
 	CreatedAt time.Time
+}
+
+// UserGoods.Create() 保存1用户收集的物资记录
+func (ug *UserGoods) Create() (err error) {
+	statement := "INSERT INTO user_goods (user_id, goods_id, created_at) VALUES ($1, $2, $3) RETURNING id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(ug.UserId, ug.GoodsId, time.Now()).Scan(&ug.Id)
+	return
+}
+
+// UserGoods.Get() 获取1用户收集的物资记录
+func (ug *UserGoods) Get() (err error) {
+	err = Db.QueryRow("SELECT id, user_id, goods_id, created_at FROM user_goods WHERE id = $1", ug.Id).
+		Scan(&ug.Id, &ug.UserId, &ug.GoodsId, &ug.CreatedAt)
+	return
+}
+
+// UserGoods.GetAllByUserId()  获取用户收集的所有物资记录
+func (ug *UserGoods) GetAllByUserId() (userGoodsList []UserGoods, err error) {
+	rows, err := Db.Query("SELECT id, user_id, goods_id, created_at FROM user_goods WHERE user_id = $1", ug.UserId)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var userGoods UserGoods
+		err = rows.Scan(&userGoods.Id, &userGoods.UserId, &userGoods.GoodsId, &userGoods.CreatedAt)
+		if err != nil {
+			return
+		}
+		userGoodsList = append(userGoodsList, userGoods)
+	}
+	return
+}
+
+// UserGoods.CountByUserId()  获取用户收集的物资记录数量
+func (ug *UserGoods) CountByUserId() (count int, err error) {
+	err = Db.QueryRow("SELECT COUNT(*) FROM user_goods WHERE user_id = $1", ug.UserId).Scan(&count)
+	return
 }

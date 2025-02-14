@@ -212,18 +212,6 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，此地无茶团三百两，请确认后再试。")
 		return
 	}
-	cost, err := strconv.Atoi(r.PostFormValue("cost"))
-	if err != nil {
-		util.Warning(util.LogError(err), "Failed to convert cost to int")
-		Report(w, r, "你好，泡茶不可无茶叶哦，请确认后再试。")
-		return
-	}
-	time_slot, err := strconv.Atoi(r.PostFormValue("time_slot"))
-	if err != nil {
-		util.Warning(util.LogError(err), "Failed to convert time_slot to int")
-		Report(w, r, "你好，泡一壶香茶需要一点点时间吧？请确认后再试。")
-		return
-	}
 
 	//检查该茶台是否存在，而且状态不是草台状态
 	proj := data.Project{
@@ -274,8 +262,6 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 			Type:      ty,
 			PostId:    post_id,
 			TeamId:    team_id,
-			Cost:      cost,
-			TimeSlot:  time_slot,
 		}
 		if err = draft_thread.Create(); err != nil {
 			util.Warning(util.LogError(err), " Cannot create thread draft")
@@ -617,7 +603,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	proj, err := thread.Project()
 	if err != nil {
 		util.Warning(util.LogError(err), thread.Id, " Cannot read project given thread_id")
-		Report(w, r, "你好，��电考拉��速服务中，未能读取��台资料，请稍后再试。")
+		Report(w, r, "你好，闪电考拉极速服务中，未能读取��台资料，请稍后再试。")
 		return
 	}
 
@@ -625,14 +611,14 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeamById(proj.TeamId)
 	if err != nil {
 		util.Warning(util.LogError(err), proj.TeamId, " Cannot get team given id")
-		Report(w, r, "你好，��电考拉��速服务中，未能读取��队资料，请稍后再试。")
+		Report(w, r, "你好，闪电考拉极速服务中，未能读取��队资料，请稍后再试。")
 		return
 	}
 	//读取支持team核心成员资料
 	team_members, err := team.CoreMembers()
 	if err != nil {
 		util.Warning(util.LogError(err), team.Id, " Cannot get team core members given team")
-		Report(w, r, "你好，���电考拉���速服务中，未能读取���队资料，请稍后再试。")
+		Report(w, r, "你好，闪电考拉极速服务中，未能读取���队资料，请稍后再试。")
 		return
 	}
 
@@ -660,39 +646,10 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = thread_approved.Create(); err != nil {
 			util.Warning(util.LogError(err), thread.Id, " Cannot create thread approved")
-			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
+			Report(w, r, "你好，闪电考拉极速服务中，未能处理你的请求，请稍后再试。")
 			return
 		}
-		// 更新thread的花费状态
-		tc := data.ThreadCost{
-			ThreadId: thread.Id,
-		}
-		if err = tc.GetbyThreadId(); err != nil {
-			util.Warning(util.LogError(err), thread.Id, " Cannot get thread cost")
-			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
-			return
-		}
-		tc.Type = 1
-		if err = tc.UpdateType(); err != nil {
-			util.Warning(util.LogError(err), thread.Id, " Cannot update thread cost")
-			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
-			return
-		}
-		//更新预算费时
-		tts := data.ThreadTimeSlot{
-			ThreadId: thread.Id,
-		}
-		if err = tts.GetbyThreadId(); err != nil {
-			util.Warning(util.LogError(err), thread.Id, " Cannot get thread time slot")
-			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
-			return
-		}
-		tts.IsConfirm = 1
-		if err = tts.UpdateIsConfirm(); err != nil {
-			util.Warning(util.LogError(err), thread.Id, " Cannot update thread time slot")
-			Report(w, r, "你好，��电考拉��速服务中，未能处理你的请求，请稍后再试。")
-			return
-		}
+
 		//采纳（认可好主意）成功
 		Report(w, r, "你好，闪电考拉极速服务，采纳该主意操作成功，请返回，刷新页面查看。")
 		return

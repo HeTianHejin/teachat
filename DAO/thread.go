@@ -26,233 +26,6 @@ type Thread struct {
 	PageData PublicPData
 }
 
-// struct ThreadGoods 茶议涉及物资
-type ThreadGoods struct {
-	Id          int
-	UserId      int       // 用户ID
-	ThreadId    int       // 茶议ID
-	GoodsId     int       // 物资ID
-	ProjectId   int       // 项目ID
-	Type        int       // 物资类型ID 1-装备 2-物品 3-材料
-	Number      int       // 数量
-	CreatedTime time.Time // 创建时间
-	UpdatedTime time.Time // 更新时间
-}
-
-// ThreadGoods.Create() 创建1条茶议涉及物资记录
-func (tg *ThreadGoods) Create() (err error) {
-	statement := "INSERT INTO thread_goods (user_id, thread_id, goods_id, project_id, type, number, created_time, updated_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(tg.UserId, tg.ThreadId, tg.GoodsId, tg.ProjectId, tg.Type, tg.Number, time.Now(), time.Now()).Scan(&tg.Id)
-	return
-}
-
-// ThreadGoods.Update() 更新1条茶议涉及物资记录
-func (tg *ThreadGoods) Update() (err error) {
-	statement := "UPDATE thread_goods SET user_id = $1, thread_id = $2, goods_id = $3, project_id = $4, type = $5, number = $6, updated_time = $7 WHERE id = $8"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(tg.UserId, tg.ThreadId, tg.GoodsId, tg.ProjectId, tg.Type, tg.Number, time.Now(), tg.Id)
-	return
-}
-
-// ThreadGoods.GetbyThreadId() 获取1条茶议涉及物资记录
-func (tg *ThreadGoods) GetbyThreadId() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, thread_id, goods_id, project_id, type, number, created_time, updated_time FROM thread_goods WHERE thread_id = $1", tg.ThreadId).
-		Scan(&tg.Id, &tg.UserId, &tg.ThreadId, &tg.GoodsId, &tg.ProjectId, &tg.Type, &tg.Number, &tg.CreatedTime, &tg.UpdatedTime)
-	return
-}
-
-// ThreadGoods.GetById() 获取1条茶议涉及物资记录
-func (tg *ThreadGoods) GetById() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, thread_id, goods_id, project_id, type, number, created_time, updated_time FROM thread_goods WHERE id = $1", tg.Id).
-		Scan(&tg.Id, &tg.UserId, &tg.ThreadId, &tg.GoodsId, &tg.ProjectId, &tg.Type, &tg.Number, &tg.CreatedTime, &tg.UpdatedTime)
-	return
-}
-
-// ThreadGoods.Delete() 删除1条茶议涉及物资记录
-func (tg *ThreadGoods) Delete() (err error) {
-	statement := "DELETE FROM thread_goods WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(tg.Id)
-	return
-}
-
-// ThreadGoods.CountByProjectId() 统计茶台涉及物资总数
-func (tg *ThreadGoods) CountByProjectId() (count int, err error) {
-	err = Db.QueryRow("SELECT COUNT(id) FROM thread_goods WHERE project_id = $1", tg.ProjectId).Scan(&count)
-	return
-}
-
-// ThreadGoods.CountByThreadId() 统计茶议涉及物资总数
-func (tg *ThreadGoods) CountByThreadId() (count int, err error) {
-	err = Db.QueryRow("SELECT COUNT(id) FROM thread_goods WHERE thread_id = $1", tg.ThreadId).Scan(&count)
-	return
-}
-
-// (thread *Thread) GetThreadGoodsByThreadId() 获取茶议涉及全部物资队列
-func (thread *Thread) GetThreadGoodsByThreadId() (threadGoods []ThreadGoods, err error) {
-	rows, err := Db.Query("SELECT id, user_id, thread_id, goods_id, project_id, type, number, created_time, updated_time FROM thread_goods WHERE thread_id = $1", thread.Id)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var tg ThreadGoods
-		err = rows.Scan(&tg.Id, &tg.UserId, &tg.ThreadId, &tg.GoodsId, &tg.ProjectId, &tg.Type, &tg.Number, &tg.CreatedTime, &tg.UpdatedTime)
-		if err != nil {
-			return
-		}
-		threadGoods = append(threadGoods, tg)
-	}
-	return
-}
-
-// 记录茶议的花费
-type ThreadCost struct {
-	Id        int
-	UserId    int
-	ThreadId  int
-	Cost      int
-	Type      int //0:预算，1:实际
-	CreatedAt time.Time
-	ProjectId int
-}
-
-// ThreadCost.Create() 创建1茶议花费记录
-func (tc *ThreadCost) Create() (err error) {
-	statement := "INSERT INTO thread_costs (user_id, thread_id, cost, type, created_at, project_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(tc.UserId, tc.ThreadId, tc.Cost, tc.Type, time.Now(), tc.ProjectId).Scan(&tc.Id)
-	return
-}
-
-// ThreadCost.UpdateType()
-func (tc *ThreadCost) UpdateType() (err error) {
-	statement := "UPDATE thread_costs SET type = $1 WHERE id = $2"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(tc.Type, tc.Id)
-	return
-}
-
-// ThreadCost.GetbyThreadId()
-func (tc *ThreadCost) GetbyThreadId() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, thread_id, cost, type, created_at, project_id FROM thread_costs WHERE thread_id = $1", tc.ThreadId).
-		Scan(&tc.Id, &tc.UserId, &tc.ThreadId, &tc.Cost, &tc.Type, &tc.CreatedAt, &tc.ProjectId)
-	return
-}
-
-// ThreadCost.GetById()
-func (tc *ThreadCost) GetById() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, thread_id, cost, type, created_at, project_id FROM thread_costs WHERE id = $1", tc.Id).
-		Scan(&tc.Id, &tc.UserId, &tc.ThreadId, &tc.Cost, &tc.Type, &tc.CreatedAt, &tc.ProjectId)
-	return
-}
-
-// (project *Project) CountThreadCostByProjectId() 统计threadCosts表中全部cost值加起来的总值，这是茶台的总花费用值（克茶叶）
-func (project *Project) CountThreadCostByProjectId() (count int, err error) {
-	err = Db.QueryRow("SELECT COALESCE(SUM(cost),0) FROM thread_costs WHERE type = 1 AND project_id = $1", project.Id).Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-	return
-}
-
-// (thread *Thread) Cost() 茶语的花费值（克茶叶）
-func (thread *Thread) Cost() (cost int, err error) {
-	err = Db.QueryRow("SELECT cost FROM thread_costs WHERE thread_id = $1", thread.Id).Scan(&cost)
-	if err != nil {
-		return 0, err
-	}
-	return
-}
-
-// 记录茶议的耗时
-type ThreadTimeSlot struct {
-	Id        int
-	UserId    int
-	ThreadId  int
-	TimeSlot  int
-	IsConfirm int //0:未确认，1:已确认
-	CreatedAt time.Time
-	ProjectId int
-}
-
-// ThreadTimeSlot.Create() 创建1茶议费时记录
-func (tts *ThreadTimeSlot) Create() (err error) {
-	statement := "INSERT INTO thread_time_slots (user_id, thread_id, time_slot, is_confirm, created_at, project_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(tts.UserId, tts.ThreadId, tts.TimeSlot, tts.IsConfirm, time.Now(), tts.ProjectId).Scan(&tts.Id)
-	return
-}
-
-// ThreadTimeSlot.UpdateIsConfirm()
-func (tts *ThreadTimeSlot) UpdateIsConfirm() (err error) {
-	statement := "UPDATE thread_time_slots SET is_confirm = $1 WHERE id = $2"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(tts.IsConfirm, tts.Id)
-	return
-}
-
-// ThreadTimeSlot.GetbyThreadId()
-func (tts *ThreadTimeSlot) GetbyThreadId() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, thread_id, time_slot, is_confirm, created_at, project_id FROM thread_time_slots WHERE thread_id = $1", tts.ThreadId).
-		Scan(&tts.Id, &tts.UserId, &tts.ThreadId, &tts.TimeSlot, &tts.IsConfirm, &tts.CreatedAt, &tts.ProjectId)
-	return
-}
-
-// ThreadTimeSlot.GetById()
-func (tts *ThreadTimeSlot) GetById() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, thread_id, time_slot, is_confirm, created_at, project_id FROM thread_time_slots WHERE id = $1", tts.Id).
-		Scan(&tts.Id, &tts.UserId, &tts.ThreadId, &tts.TimeSlot, &tts.IsConfirm, &tts.CreatedAt, &tts.ProjectId)
-	return
-}
-
-// (thread *Thread) TimeSlot() ���语的��时值（分钟）
-func (thread *Thread) TimeSlot() (timeSlot int, err error) {
-	err = Db.QueryRow("SELECT time_slot FROM thread_time_slots WHERE thread_id = $1", thread.Id).Scan(&timeSlot)
-	if err != nil {
-		return 0, err
-	}
-	return
-}
-
-// (project *Project) CountThreadTimeSlotByProjectId() 统计threadTimeSlots表中time_slot值加起来的总值，这是茶台总耗时（分钟）
-func (project *Project) CountThreadTimeSlotByProjectId() (count int, err error) {
-	err = Db.QueryRow("SELECT COALESCE(SUM(time_slot),0) FROM thread_time_slots WHERE is_confirm = 1 AND project_id = $1", project.Id).Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-	return
-}
-
 // 记录敲杯（评论）数
 // 记录敲杯（阅读）数
 type Read struct {
@@ -274,8 +47,7 @@ type DraftThread struct {
 	Type      int //哪一种提法？0: "我觉得",1: "出主意",
 	PostId    int //针对那一个品味？默认为 0 是普通茶议
 	TeamId    int //作者团队id
-	Cost      int //预计花费价值 （克茶叶）
-	TimeSlot  int //预计消耗时间（分钟）
+
 }
 
 // 根据type属性的int值，返回方便阅读的自然语字符
@@ -316,20 +88,20 @@ func (post *Post) Threads() (threads []Thread, err error) {
 
 // 根据DraftThread struct生成保存新茶议草稿
 func (d *DraftThread) Create() (err error) {
-	statement := "INSERT INTO draft_threads (user_id, project_id, title, body, class, created_at, type, post_id, team_id, cost, time_slot) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
+	statement := "INSERT INTO draft_threads (user_id, project_id, title, body, class, created_at, type, post_id, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(d.UserId, d.ProjectId, d.Title, d.Body, d.Class, time.Now(), d.Type, d.PostId, d.TeamId, d.Cost, d.TimeSlot).Scan(&d.Id)
+	err = stmt.QueryRow(d.UserId, d.ProjectId, d.Title, d.Body, d.Class, time.Now(), d.Type, d.PostId, d.TeamId).Scan(&d.Id)
 	return
 }
 
 // 读取茶议草稿
 func (d *DraftThread) GetById() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, project_id, title, body, class, created_at, type, post_id, team_id, cost, time_slot FROM draft_threads WHERE id = $1", d.Id).
-		Scan(&d.Id, &d.UserId, &d.ProjectId, &d.Title, &d.Body, &d.Class, &d.CreatedAt, &d.Type, &d.PostId, &d.TeamId, &d.Cost, &d.TimeSlot)
+	err = Db.QueryRow("SELECT id, user_id, project_id, title, body, class, created_at, type, post_id, team_id FROM draft_threads WHERE id = $1", d.Id).
+		Scan(&d.Id, &d.UserId, &d.ProjectId, &d.Title, &d.Body, &d.Class, &d.CreatedAt, &d.Type, &d.PostId, &d.TeamId)
 	return
 }
 
@@ -565,7 +337,7 @@ func ThreadsVisibleToTeam(limit int) (threads []Thread, err error) {
 
 // 首页展示的必须是class=1或者2状态,返回thread对象数组，按照点击数thread.hit_count从高到低排序的前limit个茶议
 // 如果点击数相同，则按创建时间从先到后排序
-func ThreadsIndex(limit int) (threads []Thread, err error) {
+func HotThreads(limit int) (threads []Thread, err error) {
 	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, hit_count, type, post_id, team_id FROM threads WHERE class = 1 OR class = 2 ORDER BY hit_count DESC, created_at DESC LIMIT $1", limit)
 	if err != nil {
 		return

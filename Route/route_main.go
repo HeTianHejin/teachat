@@ -16,7 +16,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	num := 12
 
 	// 读取最热的茶议
-	thread_list, err := data.ThreadsIndex(num)
+	thread_list, err := data.HotThreads(num)
 	if err != nil {
 		Report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return

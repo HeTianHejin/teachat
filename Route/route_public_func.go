@@ -241,9 +241,7 @@ func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error)
 	tB.AuthorTeam = team
 	//是否被采纳
 	tB.IsApproved = thread.IsApproved()
-	//费用和费时
-	tB.Cost, _ = thread.Cost()
-	tB.TimeSlot, _ = thread.TimeSlot()
+
 	return tB, nil
 }
 

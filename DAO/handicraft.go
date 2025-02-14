@@ -20,13 +20,13 @@ type Magic struct {
 
 // Magic.Create() 创建法力
 func (m *Magic) Create() (err error) {
-	statement := "INSERT INTO magics (uuid, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id"
+	statement := "INSERT INTO magics (uuid, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), m.Name, m.Nickname, m.Description, m.IntelligenceLevel, m.DifficultyLevel, m.Category, m.Level, time.Now(), time.Now()).Scan(&m.Id)
+	err = stmt.QueryRow(Random_UUID(), m.Name, m.Nickname, m.Description, m.IntelligenceLevel, m.DifficultyLevel, m.Category, m.Level, time.Now(), time.Now()).Scan(&m.Id, &m.Uuid)
 	if err != nil {
 		return
 	}

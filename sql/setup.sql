@@ -54,8 +54,6 @@ drop table if exists user_address;
 drop table if exists user_default_address;
 drop table if exists project_place;
 drop table if exists thread_approved;
-drop table if exists thread_costs;
-drop table if exists thread_time_slots;
 drop table if exists thread_goods;
 drop table if exists member_applications;
 drop table if exists member_application_replies;
@@ -116,39 +114,7 @@ CREATE TABLE member_application_replies (
 
 
 
-CREATE TABLE thread_goods (
-    id                    SERIAL PRIMARY KEY,
-    user_id               INTEGER NOT NULL,
-    thread_id             INTEGER NOT NULL,
-    goods_id              INTEGER NOT NULL,
-    project_id            INTEGER NOT NULL,
-    type                  SMALLINT NOT NULL,
-    number                INTEGER NOT NULL,
-    created_time          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_time          TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
 
-
-CREATE TABLE thread_time_slots (
-    id                    SERIAL PRIMARY KEY,
-    user_id               INTEGER NOT NULL,
-    thread_id             INTEGER NOT NULL,
-    time_slot             INTEGER NOT NULL,
-    is_confirm             SMALLINT NOT NULL,
-    created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    project_id            INTEGER NOT NULL
-);
-COMMENT ON COLUMN thread_time_slots.time_slot IS 'Duration in minutes';
-
-CREATE TABLE thread_costs (
-    id                    SERIAL PRIMARY KEY,
-    user_id               INTEGER NOT NULL,
-    thread_id             INTEGER NOT NULL,
-    cost                  INTEGER NOT NULL,
-    type                  SMALLINT NOT NULL,
-    created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    project_id            INTEGER NOT NULL
-);
 
 
 CREATE TABLE thread_approved (

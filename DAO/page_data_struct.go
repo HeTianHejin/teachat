@@ -165,8 +165,6 @@ type ThreadBean struct {
 	IsMaster bool // 是否为台主
 	IsAdmin  bool // 是否为管理员
 
-	Cost       int  // 花费
-	TimeSlot   int  // 耗费时间段
 	IsApproved bool // 主张方案是否被采纳
 }
 

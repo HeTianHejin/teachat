@@ -144,19 +144,7 @@
             </div>
           </div>
 
-          <div class="form-group">
-            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <label for="cost">预算花费（克茶叶）</label>
-              <input type="number" class="form-control" name="cost" id="cost" value="2" required />
-            </div>
-          </div>
-    
-          <div class="form-group">
-            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <label for="time_slot">预估耗时（分钟）</label>
-              <input type="number" class="form-control" name="time_slot" id="time_slot" value="3" required />
-            </div>
-          </div>
+          
 
           {{/* 这是对应的post的uuid提交 */}}
           <input type="hidden" name="post_id" value="{{ .PostBean.Post.Id }}" />

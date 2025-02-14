@@ -84,22 +84,9 @@
       </div>
       <div class="panel-footer">
 
-        {{/* 展示茶台的总花费（克茶叶） */}}
-        <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费用（克·茶叶）">
-          {{ .Project.CountThreadCostByProjectId }}</i>
-        {{/* 展示茶台的总费时（分钟） */}}
-        <i class="bi-stopwatch" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费时（分钟）">
-          {{ .Project.CountThreadTimeSlotByProjectId }}</i>
-        {{/* 展示茶台的需求总物资（件） */}}
-        <i class="bi-cart" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="物资（件）"> 9</i>
-        {{/* 展示茶台的需求总工具（套） */}}
-        <i class="bi-tools" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="工具（套）"> 4</i>
-        {{/* 展示茶台的需求手艺（项） */}}
-        <i class="bi-hand-index-thumb" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="手艺（项）">
-          7</i>
-        {{/* 展示茶台的需求法术（项） */}}
-        <i class="bi-magic" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="法术（种）"> 2</i>
-
+      
+               
+                
         {{ if .IsEdited }}
 
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
@@ -159,19 +146,7 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="cost">预算花费（克·茶叶）</label>
-          <input type="number" class="form-control" name="cost" id="cost" value="2" required />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="time_slot">预估耗时（分钟）</label>
-          <input type="number" class="form-control" name="time_slot" id="time_slot" value="3" required />
-        </div>
-      </div>
+     
 
       {{/* 这是project的id提交 */}}
       <input type="hidden" name="project_id" value="{{ .Project.Id }}" />
@@ -303,13 +278,7 @@
     {{/* 检查是出主意1 */}}{{ end }}
     {{/* 检查是否未被采纳 */}}{{ end }}
     <br />
-    <p>
-      <i class="bi-coin" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="费用（克·茶叶）">
-        {{ .Cost }}</i>
-      <i class="bi-stopwatch" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="需时（分钟）">
-        {{ .TimeSlot }}</i>
-
-    </p>
+   
   </div>
 
 </div>
