@@ -9,7 +9,7 @@ type Magic struct {
 	Uuid              string
 	Name              string //例如，红楼梦的“会作诗”就是一种法力，“填词”是另一种类似法力，解数学方程，找到设备故障能力，debug也是一种法力？？
 	Nickname          string
-	Description       string //对此法力的描述，例如：七步成诗，能构建出解决某种疑难问题思路
+	Description       string //对此法力的描述，例如：七步成诗，能构建出解决某种疑难问题思路方法
 	IntelligenceLevel int    // 智力耗费等级(1-5)Mental effort level required.大脑神经元消耗葡萄糖数量？解方程比吟诗更耗费脑力？
 	DifficultyLevel   int    // 掌握构思能力的学习课程难度等级(1-5)，例如，学习作诗需要先识字，再大量阅读理解，伴随反复思考实验...
 	Category          int    // 类型，
@@ -135,7 +135,7 @@ type Handicraft struct {
 	Nickname    string
 	Description string // 手工艺总览，任务综合描述。例如，在绢纸上用毛笔（沾墨）抄写一首格律诗词（从草稿眷录为成品）。
 
-	IsPrivate    bool // 服务对象类型
+	IsPrivate    bool // 服务对象类型，对&家庭（family）=true，对$团队（team）=false
 	ClientTeamId int  // 需求（甲方）客户,需求团队ID，客户必须是一个茶团（$team/&family）
 	ProjectId    int  // 发生的茶台ID，项目，
 

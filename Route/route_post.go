@@ -63,22 +63,22 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 引用的茶议作者发帖时候选择的茶团
-	pD.QuoteThreadAuthorTeam, err = data.GetTeamById(pD.QuoteThread.TeamId)
+	pD.QuoteThreadAuthorTeam, err = data.GetTeam(pD.QuoteThread.TeamId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot get quote-thread-author-default-team given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议主人资料。")
 		return
 	}
 	// 读取全部针对此品味的茶议
-	thread_list, err := post.Threads()
+	thread_slice, err := post.Threads()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get thread_list given post")
+		util.Warning(util.LogError(err), " Cannot get thread_slice given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	pD.ThreadBeanList, err = FetchThreadBeanList(thread_list)
+	pD.ThreadBeanSlice, err = FetchThreadBeanSlice(thread_slice)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get thread_bean_list given thread_list")
+		util.Warning(util.LogError(err), " Cannot get thread_bean_slice given thread_slice")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -97,8 +97,8 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 读取会话
-	// 检测pageData.ThreadList数量是否超过一打dozen
-	if len(thread_list) > 12 {
+	// 检测pageData.ThreadSlice数量是否超过一打dozen
+	if len(thread_slice) > 12 {
 		pD.IsOverTwelve = true
 	} else {
 		pD.IsOverTwelve = false
@@ -212,33 +212,51 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
 		return
 	}
-	//检查team_id是否有效
-	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
-	if err != nil {
-		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
-		return
+	//读取提交的is_private bool参数
+	is_private := r.PostFormValue("is_private") == "true"
+
+	if !is_private {
+		//提交的茶团id,是team.id
+		// check the given team_id is valid
+		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
+		if err != nil {
+			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+			return
+		}
+	} else {
+		//提交的茶团id,是family.id
+		// check submit family_id is valid
+		family := data.Family{
+			Id: team_id,
+		}
+		is_member, _ := family.IsMember(s_u.Id)
+		if !is_member {
+			util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+			return
+		}
 	}
 
 	//  检查茶议所在的茶台属性，
-	proj, err := thread.Project()
+	t_proj, err := thread.Project()
 	if err != nil {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 		return
 	}
 	var dPost data.DraftPost
-	switch proj.Class {
+	switch t_proj.Class {
 	case 1:
 		// class=1可以品茶，
-		if dPost, err = s_u.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
+		if dPost, err = s_u.CreateDraftPost(thread.Id, team_id, attitude, is_private, body); err != nil {
 			Report(w, r, "你好，茶博士摸摸头，记录品味失败。")
 			return
 		}
 
 	case 2:
 		// 当前会话用户是否可以入席品茶？需要看台主指定了那些茶团成员可以品茶
-		ok, err := proj.IsInvitedMember(s_u.Id)
+		ok, err := t_proj.IsInvitedMember(s_u.Id)
 		if err != nil {
-			Report(w, r, "你好，������失������，未能读取专����台资料。")
+			Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 			return
 		}
 		if !ok {
@@ -248,7 +266,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Can have tea
-		if dPost, err = s_u.CreateDraftPost(thread.Id, team_id, attitude, body); err != nil {
+		if dPost, err = s_u.CreateDraftPost(thread.Id, team_id, attitude, is_private, body); err != nil {
 			Report(w, r, "你好，茶博士摸摸头，竟然说没有墨水，记录品味失败。")
 			return
 		}

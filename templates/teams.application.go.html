@@ -21,7 +21,7 @@
 
 {{/*  这是指定茶友的，全部加盟申请书列表页面  */}}
 
-{{ range .MemberApplicationBeanList }}
+{{ range .MemberApplicationBeanSlice }}
 
 <hr />
 <p>志愿茶团：<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></p>

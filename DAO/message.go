@@ -38,7 +38,7 @@ func (a *AcceptMessage) CreatedAtDate() string {
 
 // Invitee() 友邻盲评 受邀请者
 func (a *AcceptMessage) Invitee() (user User, err error) {
-	user, err = GetUserById(a.ToUserId)
+	user, err = GetUser(a.ToUserId)
 	return
 }
 

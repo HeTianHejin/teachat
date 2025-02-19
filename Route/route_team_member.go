@@ -91,7 +91,7 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 读取目标茶团资料
-	t_team, err := data.GetTeamById(team_id)
+	t_team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Danger(util.LogError(err), team_id, "Cannot get team by id")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -242,9 +242,9 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
-	tmrnBeanList, err := FetchTeamMemberRoleNoticeBeanList(role_notices)
+	tmrnBeanSlice, err := FetchTeamMemberRoleNoticeBeanSlice(role_notices)
 	if err != nil {
-		util.Warning(util.LogError(err), "Cannot fetch team member role notice bean list")
+		util.Warning(util.LogError(err), "Cannot fetch team member role notice bean slice")
 		Report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
@@ -252,7 +252,7 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 	var tmrcnpd data.TeamMemberRoleChangedNoticesPageData
 	tmrcnpd.SessUser = s_u
 	tmrcnpd.Team = t_team
-	tmrcnpd.TeamMemberRoleNoticeBeanList = tmrnBeanList
+	tmrcnpd.TeamMemberRoleNoticeBeanSlice = tmrnBeanSlice
 
 	//渲染茶团成员角色调整通知页面
 	RenderHTML(w, &tmrcnpd, "layout", "navbar.private", "member.role_changed_notices")
@@ -311,7 +311,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取目标茶团资料
-	t_team, err := data.GetTeamById(team_id_int)
+	t_team, err := data.GetTeam(team_id_int)
 	if err != nil {
 		util.Warning(util.LogError(err), team_id_str, "Cannot get team by id")
 		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
@@ -375,7 +375,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取CEO茶友资料
-	t_ceo, err := data.GetUserById(member_ceo.UserId)
+	t_ceo, err := data.GetUser(member_ceo.UserId)
 	if err != nil {
 		util.Warning(util.LogError(err), member_ceo.UserId, "Cannot get user by id")
 		Report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
@@ -440,7 +440,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取目标茶团资料
-	t_team, err := data.GetTeamById(team_id)
+	t_team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Danger(util.LogError(err), team_id, "Cannot get team by id")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -719,7 +719,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取申请人申请加盟的茶团
-	team, err := data.GetTeamById(application.TeamId)
+	team, err := data.GetTeam(application.TeamId)
 	if err != nil {
 		util.Danger(util.LogError(err), application.TeamId, "Cannot get team given id")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -748,7 +748,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取申请人资料
-	applicant, err := data.GetUserById(application.UserId)
+	applicant, err := data.GetUser(application.UserId)
 	if err != nil {
 		util.Danger(util.LogError(err), application.UserId, "Cannot get user given id")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -913,14 +913,14 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取申请人资料
-	applicant, err := data.GetUserById(application.UserId)
+	applicant, err := data.GetUser(application.UserId)
 	if err != nil {
 		util.Danger(util.LogError(err), application.UserId, "Cannot get user given id")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取申请人申请加盟的茶团
-	team, err := data.GetTeamById(application.TeamId)
+	team, err := data.GetTeam(application.TeamId)
 	if err != nil {
 		util.Danger(util.LogError(err), application.TeamId, "Cannot get team given id")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1187,7 +1187,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查是否存在该茶友注册资料
-	reply_user, err := data.GetUserById(user_id)
+	reply_user, err := data.GetUser(user_id)
 	if err != nil {
 		util.Danger(util.LogError(err), user_id, "Cannot get user given id")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1228,7 +1228,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取目标茶团资料
-	team, err := data.GetTeamById(invitation.TeamId)
+	team, err := data.GetTeam(invitation.TeamId)
 	if err != nil {
 		util.Danger(util.LogError(err), s_u.Email, " Cannot get team")
 		Report(w, r, "你好，丢了眼镜的茶博士忙到现在，还没有找到茶团登记本，请稍后再试。")

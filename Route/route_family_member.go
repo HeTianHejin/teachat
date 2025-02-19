@@ -434,7 +434,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
 				return
 			}
-			t_user, err := data.GetUserById(family_member.UserId)
+			t_user, err := data.GetUser(family_member.UserId)
 			if err != nil {
 				util.Danger(util.LogError(err), t_user.Id, " Cannot get user given id")
 				Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜找不到，稍后再试。")

@@ -23,6 +23,7 @@ import (
 
 // 定义数据库链接常量
 const (
+	dbdriver   = "postgres"
 	dbhost     = "localhost"
 	dbport     = 5432
 	dbuser     = "postgres"
@@ -30,10 +31,9 @@ const (
 	dbname     = "teachat"
 	dbsslmode  = "disable"
 	dbTimeZone = "Asia/Shanghai"
-	dbdriver   = "postgres"
 )
 
-var Db *sql.DB // 数据库实例
+var Db *sql.DB // postgres 数据库实例
 
 // 使用常量管理文件路径和文件扩展名，增加可维护性
 const (

@@ -38,7 +38,7 @@ type Goods struct {
 	UpdatedTime           time.Time  // 物资记录的最后更新时间。
 }
 
-// Goods.Create() 保存1物资记录，postgreSQL数据库语法,用queryRow方法存入goods表，返回id,uuid,
+// Goods.Create() 保存1物资记录，postgreSQL,用queryRow方法存入goods表，返回id,uuid,
 func (g *Goods) Create() (err error) {
 	statement := "INSERT INTO goods (uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, production_date, expiration_date, state, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_time, updated_time) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
@@ -104,7 +104,7 @@ func (ug *UserGoods) Get() (err error) {
 }
 
 // UserGoods.GetAllByUserId()  获取用户收集的所有物资记录
-func (ug *UserGoods) GetAllByUserId() (userGoodsList []UserGoods, err error) {
+func (ug *UserGoods) GetAllByUserId() (userGoodsSlice []UserGoods, err error) {
 	rows, err := Db.Query("SELECT id, user_id, goods_id, created_at FROM user_goods WHERE user_id = $1", ug.UserId)
 	if err != nil {
 		return
@@ -116,7 +116,7 @@ func (ug *UserGoods) GetAllByUserId() (userGoodsList []UserGoods, err error) {
 		if err != nil {
 			return
 		}
-		userGoodsList = append(userGoodsList, userGoods)
+		userGoodsSlice = append(userGoodsSlice, userGoods)
 	}
 	return
 }

@@ -364,8 +364,8 @@ func (user *User) GetLastDefaultFamily() (family Family, err error) {
 	err = Db.QueryRow(statement, user.Id).Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			//如果找不到设置记录，则返回id=0，表示“默认家庭=温暖的家”
-			return Family{Id: 0, Uuid: "x", Name: "温暖的家&", AuthorId: 1, Introduction: "四海为家"}, nil
+			//如果找不到设置记录，则返回id=0，表示“默认家庭=四海为家”
+			return Family{Id: 0, Uuid: "x", Name: "四海为家&", AuthorId: 1, Introduction: "一人吃饱饭，全家打饱嗝。盛世无饥馑，四海可为家。"}, nil
 		}
 		return family, err
 	}
@@ -619,7 +619,7 @@ func (f *Family) Founder() (user User, err error) {
 	return
 }
 
-// Family.IsMember() 是否是家庭成员
+// Family.IsMember() 根据id，检查用户是否是家庭成员
 func (f *Family) IsMember(user_id int) (isMember bool, err error) {
 	statement := "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND user_id=$2"
 	stmt, err := Db.Prepare(statement)
@@ -634,6 +634,42 @@ func (f *Family) IsMember(user_id int) (isMember bool, err error) {
 	}
 
 	return count > 0, nil
+}
+
+// Family.AllMembers() 获取家庭所有成员
+func (f *Family) AllMembers() (members []FamilyMember, err error) {
+	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1", f.Id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		member := FamilyMember{}
+		err = rows.Scan(&member.Id, &member.Uuid, &member.FamilyId, &member.UserId, &member.Role, &member.IsAdult, &member.NickName, &member.IsAdopted, &member.Age, &member.OrderOfSeniority, &member.CreatedAt, &member.UpdatedAt)
+		if err != nil {
+			return
+		}
+		members = append(members, member)
+	}
+	rows.Close()
+	return
+}
+
+// Family.GetAllMembersUserIdsByFamilyId() 获取家庭所有成员的UserId切片
+func GetAllMembersUserIdsByFamilyId(family_id int) (userIds []int, err error) {
+	rows, err := Db.Query("SELECT user_id FROM family_members WHERE family_id=$1", family_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		var userId int
+		err = rows.Scan(&userId)
+		if err != nil {
+			return
+		}
+		userIds = append(userIds, userId)
+	}
+	rows.Close()
+	return
 }
 
 // IsFamilyExist(user_id, partner_user_id int)  在family_members表里，是否存在同一个family_id，family_member.user_id和partner_user_id是同一家庭成员，而且role=1 or 2，

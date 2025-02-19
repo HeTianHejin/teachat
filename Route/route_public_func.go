@@ -54,35 +54,35 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	}
 	userbean.DefaultFamilyBean = familybean
 
-	family_list_parent, err := data.ParentMemberFamilies(user.Id)
+	family_slice_parent, err := data.ParentMemberFamilies(user.Id)
 	if err != nil {
 		return
 	}
-	userbean.ParentMemberFamilyBeanList, err = FetchFamilyBeanList(family_list_parent)
+	userbean.ParentMemberFamilyBeanSlice, err = FetchFamilyBeanSlice(family_slice_parent)
 	if err != nil {
 		return
 	}
-	family_list_child, err := data.ChildMemberFamilies(user.Id)
+	family_slice_child, err := data.ChildMemberFamilies(user.Id)
 	if err != nil {
 		return
 	}
-	userbean.ChildMemberFamilyBeanList, err = FetchFamilyBeanList(family_list_child)
+	userbean.ChildMemberFamilyBeanSlice, err = FetchFamilyBeanSlice(family_slice_child)
 	if err != nil {
 		return
 	}
-	family_list_other, err := data.OtherMemberFamilies(user.Id)
+	family_slice_other, err := data.OtherMemberFamilies(user.Id)
 	if err != nil {
 		return
 	}
-	userbean.OtherMemberFamilyBeanList, err = FetchFamilyBeanList(family_list_other)
+	userbean.OtherMemberFamilyBeanSlice, err = FetchFamilyBeanSlice(family_slice_other)
 	if err != nil {
 		return
 	}
-	family_list_resign, err := data.ResignMemberFamilies(user.Id)
+	family_slice_resign, err := data.ResignMemberFamilies(user.Id)
 	if err != nil {
 		return
 	}
-	userbean.ResignMemberFamilyBeanList, err = FetchFamilyBeanList(family_list_resign)
+	userbean.ResignMemberFamilyBeanSlice, err = FetchFamilyBeanSlice(family_slice_resign)
 	if err != nil {
 		return
 	}
@@ -97,20 +97,20 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	}
 	userbean.DefaultTeamBean = teambean
 
-	team_list_core, err := user.CoreExecTeams()
+	team_slice_core, err := user.CoreExecTeams()
 	if err != nil {
 		return
 	}
-	userbean.ManageTeamBeanList, err = FetchTeamBeanList(team_list_core)
+	userbean.ManageTeamBeanSlice, err = FetchTeamBeanSlice(team_slice_core)
 	if err != nil {
 		return
 	}
 
-	team_list_normal, err := user.NormalExecTeams()
+	team_slice_normal, err := user.NormalExecTeams()
 	if err != nil {
 		return
 	}
-	userbean.JoinTeamBeanList, err = FetchTeamBeanList(team_list_normal)
+	userbean.JoinTeamBeanSlice, err = FetchTeamBeanSlice(team_slice_normal)
 	if err != nil {
 		return
 	}
@@ -124,14 +124,14 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	return
 }
 
-// fetch userbean_list given []user
-func FetchUserBeanList(user_list []data.User) (userbean_list []data.UserBean, err error) {
-	for _, user := range user_list {
+// fetch userbean_slice given []user
+func FetchUserBeanSlice(user_slice []data.User) (userbean_slice []data.UserBean, err error) {
+	for _, user := range user_slice {
 		userbean, err := FetchUserBean(user)
 		if err != nil {
 			return nil, err
 		}
-		userbean_list = append(userbean_list, userbean)
+		userbean_slice = append(userbean_slice, userbean)
 	}
 	return
 }
@@ -193,22 +193,22 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, family data.Family,
 	return s_u, member_default_family, member_all_families, defaultTeam, survivalTeams, default_place, places, nil
 }
 
-// 根据给出的thread_list参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
-func FetchThreadBeanList(thread_list []data.Thread) (ThreadBeanList []data.ThreadBean, err error) {
-	var oablist []data.ThreadBean
-	// 截短ThreadList中thread.Body文字长度为168字符,
+// 根据给出的thread_slice参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
+func FetchThreadBeanSlice(thread_slice []data.Thread) (ThreadBeanSlice []data.ThreadBean, err error) {
+	var oabslice []data.ThreadBean
+	// 截短ThreadSlice中thread.Body文字长度为168字符,
 	// 展示时长度接近，排列比较整齐，最小惊讶原则？效果比较nice
-	for i := range thread_list {
-		thread_list[i].Body = Substr(thread_list[i].Body, 168)
+	for i := range thread_slice {
+		thread_slice[i].Body = Substr(thread_slice[i].Body, 168)
 	}
-	for _, thread := range thread_list {
+	for _, thread := range thread_slice {
 		ThreadBean, err := FetchThreadBean(thread)
 		if err != nil {
 			return nil, err
 		}
-		oablist = append(oablist, ThreadBean)
+		oabslice = append(oabslice, ThreadBean)
 	}
-	ThreadBeanList = oablist
+	ThreadBeanSlice = oabslice
 	return
 }
 
@@ -219,44 +219,67 @@ func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error)
 	tB.Status = thread.Status()
 	tB.Count = thread.NumReplies()
 	tB.CreatedAtDate = thread.CreatedAtDate()
+	//作者资料
 	user, err := thread.User()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read thread author")
 		return tB, err
 	}
 	tB.Author = user
-	//默认&家庭茶团资料
-	family, err := user.GetLastDefaultFamily()
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read thread author family")
-		return tB, err
+	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
+	var family data.Family
+	if thread.IsPrivate {
+		//发帖时选择的&家庭茶团资料
+		family.Id = thread.TeamId
+		if err = family.Get(); err != nil {
+			util.Warning(util.LogError(err), " Cannot read thread author family")
+			return tB, err
+		}
+	} else {
+		//默认&家庭茶团资料
+		family, err = user.GetLastDefaultFamily()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot read thread author family")
+			return tB, err
+		}
 	}
 	tB.AuthorFamily = family
-	//默认$事业茶团资料
-	team, err := data.GetTeamById(thread.TeamId)
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read team given thread")
-		return tB, err
+	var team data.Team
+	if !thread.IsPrivate {
+		//发帖时选择的$事业团队资料
+		team.Id = thread.TeamId
+		if err = team.Get(); err != nil {
+			util.Warning(util.LogError(err), " Cannot read thread author team")
+			return tB, err
+		}
+	} else {
+		//默认$事业团队资料
+		team, err = user.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot read thread author team")
+			return tB, err
+		}
 	}
+
 	tB.AuthorTeam = team
-	//是否被采纳
+	//idea是否被采纳
 	tB.IsApproved = thread.IsApproved()
 
 	return tB, nil
 }
 
-// 根据给出的objectiv_list参数，去获取对应的茶话会（objective），截短正文保留前168字符，附属茶台计数，发起人资料，发帖时候选择的茶团。然后按结构填写返回资料荚。
-func FetchObjectiveBeanList(objectiv_list []data.Objective) (ObjectiveBeanList []data.ObjectiveBean, err error) {
-	// 截短ObjectiveList中objective.Body文字长度为168字符,
-	for i := range objectiv_list {
-		objectiv_list[i].Body = Substr(objectiv_list[i].Body, 168)
+// 根据给出的objectiv_slice参数，去获取对应的茶话会（objective），截短正文保留前168字符，附属茶台计数，发起人资料，发帖时候选择的茶团。然后按结构填写返回资料荚。
+func FetchObjectiveBeanSlice(objectiv_slice []data.Objective) (ObjectiveBeanSlice []data.ObjectiveBean, err error) {
+	// 截短ObjectiveSlice中objective.Body文字长度为168字符,
+	for i := range objectiv_slice {
+		objectiv_slice[i].Body = Substr(objectiv_slice[i].Body, 168)
 	}
-	for _, obj := range objectiv_list {
+	for _, obj := range objectiv_slice {
 		ob, err := FetchObjectiveBean(obj)
 		if err != nil {
 			return nil, err
 		}
-		ObjectiveBeanList = append(ObjectiveBeanList, ob)
+		ObjectiveBeanSlice = append(ObjectiveBeanSlice, ob)
 	}
 	return
 }
@@ -280,33 +303,59 @@ func FetchObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err
 		return oB, err
 	}
 	oB.Author = user
-	family, err := user.GetLastDefaultFamily()
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read objective author family")
-		return oB, err
+
+	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
+	var family data.Family
+	if o.IsPrivate {
+		//发帖时选择的&家庭茶团资料
+		family.Id = o.TeamId
+		if err = family.Get(); err != nil {
+			util.Warning(util.LogError(err), " Cannot read objective author family")
+			return oB, err
+		}
+	} else {
+		//默认&家庭茶团资料
+		family, err = user.GetLastDefaultFamily()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot read objective author family")
+			return oB, err
+		}
 	}
 	oB.AuthorFamily = family
-	team, err := data.GetTeamById(oB.Objective.TeamId)
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read team given author")
-		return oB, err
+
+	var team data.Team
+	if !o.IsPrivate {
+		//发帖时选择的$事业团队资料
+		team.Id = o.TeamId
+		if err = team.Get(); err != nil {
+			util.Warning(util.LogError(err), " Cannot read objective author team")
+			return oB, err
+		}
+	} else {
+		//默认$事业团队资料
+		team, err = user.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot read objective author team")
+			return oB, err
+		}
 	}
 	oB.AuthorTeam = team
+
 	return oB, nil
 }
 
-// 据给出的project_list参数，去获取对应的茶台（project），截短正文保留前168字符，附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
-func FetchProjectBeanList(project_list []data.Project) (ProjectBeanList []data.ProjectBean, err error) {
-	// 截短ObjectiveList中objective.Body文字长度为168字符,
-	for i := range project_list {
-		project_list[i].Body = Substr(project_list[i].Body, 168)
+// 据给出的project_slice参数，去获取对应的茶台（project），截短正文保留前168字符，附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
+func FetchProjectBeanSlice(project_slice []data.Project) (ProjectBeanSlice []data.ProjectBean, err error) {
+	// 截短ObjectiveSlice中objective.Body文字长度为168字符,
+	for i := range project_slice {
+		project_slice[i].Body = Substr(project_slice[i].Body, 168)
 	}
-	for _, pro := range project_list {
+	for _, pro := range project_slice {
 		pb, err := FetchProjectBean(pro)
 		if err != nil {
 			return nil, err
 		}
-		ProjectBeanList = append(ProjectBeanList, pb)
+		ProjectBeanSlice = append(ProjectBeanSlice, pb)
 	}
 	return
 }
@@ -329,18 +378,44 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 		return pb, err
 	}
 	pb.Author = user
-	family, err := user.GetLastDefaultFamily()
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read project author family")
-		return pb, err
+
+	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
+	var family data.Family
+	if project.IsPrivate {
+		//发帖时选择的&家庭茶团资料
+		family.Id = project.TeamId
+		if err = family.Get(); err != nil {
+			util.Warning(util.LogError(err), " Cannot read project author family")
+			return pb, err
+		}
+	} else {
+		//默认&家庭茶团资料
+		family, err = user.GetLastDefaultFamily()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot read project author family")
+			return pb, err
+		}
 	}
 	pb.AuthorFamily = family
-	team, err := data.GetTeamById(project.TeamId)
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read team given author")
-		return pb, err
+
+	var team data.Team
+	if !project.IsPrivate {
+		//发帖时选择的$事业团队资料
+		team.Id = project.TeamId
+		if err = team.Get(); err != nil {
+			util.Warning(util.LogError(err), " Cannot read project author team")
+			return pb, err
+		}
+	} else {
+		//默认$事业团队资料
+		team, err = user.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot read project author team")
+			return pb, err
+		}
 	}
 	pb.AuthorTeam = team
+
 	pb.Place, err = project.Place()
 	if err != nil {
 		util.Warning(util.LogError(err), "cannot read project place")
@@ -349,14 +424,14 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 	return pb, nil
 }
 
-// 据给出的post_list参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回。
-func FetchPostBeanList(post_list []data.Post) (PostBeanList []data.PostBean, err error) {
-	for _, pos := range post_list {
+// 据给出的post_slice参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回。
+func FetchPostBeanSlice(post_slice []data.Post) (PostBeanSlice []data.PostBean, err error) {
+	for _, pos := range post_slice {
 		postBean, err := FetchPostBean(pos)
 		if err != nil {
 			return nil, err
 		}
-		PostBeanList = append(PostBeanList, postBean)
+		PostBeanSlice = append(PostBeanSlice, postBean)
 	}
 	return
 }
@@ -373,17 +448,44 @@ func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 		return PostBean, err
 	}
 	PostBean.Author = user
-	PostBean.AuthorFamily, err = user.GetLastDefaultFamily()
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read post author family")
-		return PostBean, err
+
+	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
+	var family data.Family
+	if post.IsPrivate {
+		//发帖时选择的&家庭茶团资料
+		family.Id = post.TeamId
+		if err = family.Get(); err != nil {
+			util.Warning(util.LogError(err), " Cannot read post author family")
+			return PostBean, err
+		}
+	} else {
+		//默认&家庭茶团资料
+		family, err = user.GetLastDefaultFamily()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot read post author family")
+			return PostBean, err
+		}
 	}
-	team, err := data.GetTeamById(post.TeamId)
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read team given author")
-		return PostBean, err
+	PostBean.AuthorFamily = family
+
+	var team data.Team
+	if !post.IsPrivate {
+		//发帖时选择的$事业团队资料
+		team.Id = post.TeamId
+		if err = team.Get(); err != nil {
+			util.Warning(util.LogError(err), " Cannot read post author team")
+			return PostBean, err
+		}
+	} else {
+		//默认$事业团队资料
+		team, err = user.GetLastDefaultTeam()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot read post author team")
+			return PostBean, err
+		}
 	}
 	PostBean.AuthorTeam = team
+
 	return PostBean, nil
 }
 
@@ -409,13 +511,13 @@ func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 }
 
 // 根据给出的茶团队列，查询，获取对应的茶团资料夹
-func FetchTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err error) {
-	for _, tea := range team_list {
+func FetchTeamBeanSlice(team_slice []data.Team) (TeamBeanSlice []data.TeamBean, err error) {
+	for _, tea := range team_slice {
 		teamBean, err := FetchTeamBean(tea)
 		if err != nil {
 			return nil, err
 		}
-		TeamBeanList = append(TeamBeanList, teamBean)
+		TeamBeanSlice = append(TeamBeanSlice, teamBean)
 	}
 	return
 }
@@ -424,7 +526,7 @@ func FetchTeamBeanList(team_list []data.Team) (TeamBeanList []data.TeamBean, err
 func FetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error) {
 	FamilyBean.Family = family
 	//登记人资料
-	FamilyBean.Founder, err = data.GetUserById(family.AuthorId)
+	FamilyBean.Founder, err = data.GetUser(family.AuthorId)
 	if err != nil {
 		util.Warning(util.LogError(err), family.AuthorId, " Cannot read family founder")
 		return FamilyBean, err
@@ -440,13 +542,13 @@ func FetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error)
 }
 
 // 根据给出的家庭队列，查询，获取对应的家庭茶团资料集合
-func FetchFamilyBeanList(family_list []data.Family) (FamilyBeanList []data.FamilyBean, err error) {
-	for _, fam := range family_list {
+func FetchFamilyBeanSlice(family_slice []data.Family) (FamilyBeanSlice []data.FamilyBean, err error) {
+	for _, fam := range family_slice {
 		familyBean, err := FetchFamilyBean(fam)
 		if err != nil {
 			return nil, err
 		}
-		FamilyBeanList = append(FamilyBeanList, familyBean)
+		FamilyBeanSlice = append(FamilyBeanSlice, familyBean)
 	}
 	return
 }
@@ -455,7 +557,7 @@ func FetchFamilyBeanList(family_list []data.Family) (FamilyBeanList []data.Famil
 func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err error) {
 	FMB.FamilyMember = fm
 
-	u, err := data.GetUserById(fm.UserId)
+	u, err := data.GetUser(fm.UserId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read user given FamilyMember")
 		return FMB, err
@@ -507,14 +609,14 @@ func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 	return FMB, nil
 }
 
-// FetchFamilyMemberBeanList() 根据给出的FamilyMember列表参数，去获取对应的家庭成员资料夹列表
-func FetchFamilyMemberBeanList(fm_list []data.FamilyMember) (FMB_List []data.FamilyMemberBean, err error) {
-	for _, fm := range fm_list {
+// FetchFamilyMemberBeanSlice() 根据给出的FamilyMember列表参数，去获取对应的家庭成员资料夹列表
+func FetchFamilyMemberBeanSlice(fm_slice []data.FamilyMember) (FMB_slice []data.FamilyMemberBean, err error) {
+	for _, fm := range fm_slice {
 		fmBean, err := FetchFamilyMemberBean(fm)
 		if err != nil {
 			return nil, err
 		}
-		FMB_List = append(FMB_List, fmBean)
+		FMB_slice = append(FMB_slice, fmBean)
 	}
 	return
 }
@@ -530,13 +632,13 @@ func FetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.Famil
 	}
 	FMSIB.Family = family
 
-	FMSIB.NewMember, err = data.GetUserById(fmsi.UserId)
+	FMSIB.NewMember, err = data.GetUser(fmsi.UserId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read new member given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 
-	FMSIB.Author, err = data.GetUserById(fmsi.AuthorUserId)
+	FMSIB.Author, err = data.GetUser(fmsi.AuthorUserId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read author given FamilyMemberSignIn")
 		return FMSIB, err
@@ -553,27 +655,27 @@ func FetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.Famil
 }
 
 // 根据给出的多个&家庭茶团增加成员声明书队列，获取资料夹队列
-func FetchFamilyMemberSignInBeanList(fmsi_list []data.FamilyMemberSignIn) (FMSIB_List []data.FamilyMemberSignInBean, err error) {
-	for _, fmsi := range fmsi_list {
+func FetchFamilyMemberSignInBeanSlice(fmsi_slice []data.FamilyMemberSignIn) (FMSIB_slice []data.FamilyMemberSignInBean, err error) {
+	for _, fmsi := range fmsi_slice {
 		fmsiBean, err := FetchFamilyMemberSignInBean(fmsi)
 		if err != nil {
 			return nil, err
 		}
-		FMSIB_List = append(FMSIB_List, fmsiBean)
+		FMSIB_slice = append(FMSIB_slice, fmsiBean)
 	}
 	return
 }
 
 // FetchTeamMemberBean() 根据给出的TeamMember参数，去获取对应的团队成员资料夹
 func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error) {
-	u, err := data.GetUserById(tm.UserId)
+	u, err := data.GetUser(tm.UserId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read user given TeamMember")
 		return TMB, err
 	}
 	TMB.Member = u
 
-	team, err := data.GetTeamById(tm.TeamId)
+	team, err := data.GetTeam(tm.TeamId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read team given team member")
 		return TMB, err
@@ -624,14 +726,14 @@ func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error
 	return TMB, nil
 }
 
-// FtchTeamMemberBeanList() 根据给出的TeamMember列表参数，去获取对应的团队成员资料夹列表
-func FetchTeamMemberBeanList(tm_list []data.TeamMember) (TMB_List []data.TeamMemberBean, err error) {
-	for _, tm := range tm_list {
+// FtchTeamMemberBeanSlice() 根据给出的TeamMember列表参数，去获取对应的团队成员资料夹列表
+func FetchTeamMemberBeanSlice(tm_slice []data.TeamMember) (TMB_slice []data.TeamMemberBean, err error) {
+	for _, tm := range tm_slice {
 		tmBean, err := FetchTeamMemberBean(tm)
 		if err != nil {
 			return nil, err
 		}
-		TMB_List = append(TMB_List, tmBean)
+		TMB_slice = append(TMB_slice, tmBean)
 	}
 	return
 }
@@ -641,14 +743,14 @@ func FetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBea
 	MemberApplicationBean.MemberApplication = ma
 	MemberApplicationBean.Status = ma.GetStatus()
 
-	team, err := data.GetTeamById(ma.TeamId)
+	team, err := data.GetTeam(ma.TeamId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read team given author")
 		return MemberApplicationBean, err
 	}
 	MemberApplicationBean.Team = team
 
-	MemberApplicationBean.Author, err = data.GetUserById(ma.UserId)
+	MemberApplicationBean.Author, err = data.GetUser(ma.UserId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read member application author")
 		return MemberApplicationBean, err
@@ -662,13 +764,13 @@ func FetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBea
 	MemberApplicationBean.CreatedAtDate = ma.CreatedAtDate()
 	return MemberApplicationBean, nil
 }
-func FetchMemberApplicationBeanList(ma_list []data.MemberApplication) (MemberApplicationBeanList []data.MemberApplicationBean, err error) {
-	for _, ma := range ma_list {
+func FetchMemberApplicationBeanSlice(ma_slice []data.MemberApplication) (MemberApplicationBeanSlice []data.MemberApplicationBean, err error) {
+	for _, ma := range ma_slice {
 		maBean, err := FetchMemberApplicationBean(ma)
 		if err != nil {
 			return nil, err
 		}
-		MemberApplicationBeanList = append(MemberApplicationBeanList, maBean)
+		MemberApplicationBeanSlice = append(MemberApplicationBeanSlice, maBean)
 	}
 	return
 }
@@ -699,14 +801,14 @@ func FetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error)
 	return I_B, nil
 }
 
-// FetchInvitationBeanList() 根据给出的Invitation列表参数，去获取对应的邀请书资料夹列表
-func FetchInvitationBeanList(i_list []data.Invitation) (I_B_List []data.InvitationBean, err error) {
-	for _, i := range i_list {
+// FetchInvitationBeanSlice() 根据给出的Invitation列表参数，去获取对应的邀请书资料夹列表
+func FetchInvitationBeanSlice(i_slice []data.Invitation) (I_B_slice []data.InvitationBean, err error) {
+	for _, i := range i_slice {
 		iBean, err := FetchInvitationBean(i)
 		if err != nil {
 			return nil, err
 		}
-		I_B_List = append(I_B_List, iBean)
+		I_B_slice = append(I_B_slice, iBean)
 	}
 	return
 }
@@ -715,13 +817,13 @@ func FetchInvitationBeanList(i_list []data.Invitation) (I_B_List []data.Invitati
 func FetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean data.TeamMemberRoleNoticeBean, err error) {
 	tmrnBean.TeamMemberRoleNotice = tmrn
 
-	tmrnBean.Team, err = data.GetTeamById(tmrn.TeamId)
+	tmrnBean.Team, err = data.GetTeam(tmrn.TeamId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read team given team member role notice")
 		return tmrnBean, err
 	}
 
-	tmrnBean.CEO, err = data.GetUserById(tmrn.CeoId)
+	tmrnBean.CEO, err = data.GetUser(tmrn.CeoId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read ceo given team member role notice")
 		return tmrnBean, err
@@ -732,7 +834,7 @@ func FetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean dat
 		util.Warning(util.LogError(err), " Cannot read team member given team member role notice")
 		return tmrnBean, err
 	}
-	tmrnBean.Member, err = data.GetUserById(tm.UserId)
+	tmrnBean.Member, err = data.GetUser(tm.UserId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read member given team member role notice")
 		return tmrnBean, err
@@ -746,14 +848,14 @@ func FetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean dat
 	return tmrnBean, nil
 }
 
-// FetchTeamMemberRoleNoticeBeanList() 根据给出的TeamMemberRoleNotice列表参数，去获取对应的团队成员角色通知资料夹列表
-func FetchTeamMemberRoleNoticeBeanList(tmrn_list []data.TeamMemberRoleNotice) (tmrnBeanList []data.TeamMemberRoleNoticeBean, err error) {
-	for _, tmrn := range tmrn_list {
+// FetchTeamMemberRoleNoticeBeanSlice() 根据给出的TeamMemberRoleNotice列表参数，去获取对应的团队成员角色通知资料夹列表
+func FetchTeamMemberRoleNoticeBeanSlice(tmrn_slice []data.TeamMemberRoleNotice) (tmrnBeanSlice []data.TeamMemberRoleNoticeBean, err error) {
+	for _, tmrn := range tmrn_slice {
 		tmrnBean, err := FetchTeamMemberRoleNoticeBean(tmrn)
 		if err != nil {
 			return nil, err
 		}
-		tmrnBeanList = append(tmrnBeanList, tmrnBean)
+		tmrnBeanSlice = append(tmrnBeanSlice, tmrnBean)
 	}
 	return
 }
@@ -768,7 +870,7 @@ func FetchGroupBean(group data.Group) (GroupBean data.GroupBean, err error) {
 		gb.Open = false
 	}
 	gb.CreatedAtDate = group.CreatedAtDate()
-	u, _ := data.GetUserById(group.FounderId)
+	u, _ := data.GetUser(group.FounderId)
 	gb.Founder = u
 	gb.FounderTeam, err = u.GetLastDefaultTeam()
 	if err != nil {
@@ -904,7 +1006,7 @@ func Session(r *http.Request) (sess data.Session, err error) {
 }
 
 // parse HTML templates
-// pass in a list of file names, and get a template
+// pass in a slice of file names, and get a template
 func ParseTemplateFiles(filenames ...string) (t *template.Template) {
 	var files []string
 	t = template.New("layout")
@@ -943,14 +1045,14 @@ func VerifyPositiveIntegerFormat(str string) bool {
 	return reg.MatchString(str)
 }
 
-// 验证team_id_list:"2,19,87..."字符串格式是否正确，正确返回true，错误返回false。
-func VerifyTeamIdListFormat(teamIdList string) bool {
-	if teamIdList == "" {
+// 验证team_id_slice:"2,19,87..."字符串格式是否正确，正确返回true，错误返回false。
+func Verify_id_slice_Format(team_id_slice string) bool {
+	if team_id_slice == "" {
 		return false
 	}
 	pattern := `^[0-9]+(,[0-9]+)*$`
 	reg := regexp.MustCompile(pattern)
-	return reg.MatchString(teamIdList)
+	return reg.MatchString(team_id_slice)
 }
 
 // 输入两个统计数（辩论的正方累积得分数，辩论总得分数）（整数），计算前者与后者比值，结果浮点数向上四舍五入取整,
@@ -1037,22 +1139,22 @@ func RandomInt(start, end, count int) []int {
 }
 
 // 生成“火星文”替换下标队列
-func StaRepIntList(str_len, ratio int) (numList []int, err error) {
+func StaRepIntSlice(str_len, ratio int) (numSlice []int, err error) {
 
 	half := str_len / 2
 	substandard := str_len * ratio / 100
 	// 存放结果的slice
-	numList = make([]int, str_len)
+	numSlice = make([]int, str_len)
 
 	// 随机生成替换下标
 	switch {
 	case ratio < 50:
-		numList = []int{}
-		return numList, errors.New("ratio must be not less than 50")
+		numSlice = []int{}
+		return numSlice, errors.New("ratio must be not less than 50")
 	case ratio == 50:
-		numList = RandomInt(0, str_len, half)
+		numSlice = RandomInt(0, str_len, half)
 	case ratio > 50:
-		numList = RandomInt(0, str_len, substandard)
+		numSlice = RandomInt(0, str_len, substandard)
 	}
 
 	return
@@ -1067,7 +1169,7 @@ func CnStrLen(str string) int {
 func MarsString(str string, ratio int) string {
 	len := CnStrLen(str)
 	// 获取替换字符的下标队列
-	nlist, err := StaRepIntList(len, ratio)
+	nslice, err := StaRepIntSlice(len, ratio)
 	if err != nil {
 		return str
 	}
@@ -1075,7 +1177,7 @@ func MarsString(str string, ratio int) string {
 	rstr := []rune(str)
 	// 遍历替换字符的下标队列
 
-	for _, n := range nlist {
+	for _, n := range nslice {
 		// 替换下标指定的字符为星号
 		rstr[n] = '*'
 	}

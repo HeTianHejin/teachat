@@ -128,7 +128,7 @@
 
 
     {{/*  这是茶团核心成员展示页面  */}}
-    {{ range .CoreMemberBeanList }}
+    {{ range .CoreMemberBeanSlice }}
 
     <div class="media">
       <div class="media-left">
@@ -166,7 +166,7 @@
     <hr />
     {{ end }}
 
-    {{ range .NormalMemberBeanList }}
+    {{ range .NormalMemberBeanSlice }}
 
     <div class="media">
       <div class="media-left">

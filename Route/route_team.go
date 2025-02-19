@@ -61,23 +61,23 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
-	apply_bean_list, err := FetchMemberApplicationBeanList(applies)
+	apply_bean_slice, err := FetchMemberApplicationBeanSlice(applies)
 	if err != nil {
-		util.Danger(util.LogError(err), "Cannot get apply bean list")
+		util.Danger(util.LogError(err), "Cannot get apply bean slice")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 
 	//截短MemberApplication.Content为66字，方便布局列表预览
-	for _, bean := range apply_bean_list {
+	for _, bean := range apply_bean_slice {
 		bean.MemberApplication.Content = Substr(bean.MemberApplication.Content, 66)
 	}
 
-	var mAL data.MemberApplicationList
+	var mAL data.MemberApplicationSlice
 	//填写页面数据
 	mAL.SessUser = s_u
 	mAL.Team = team
-	mAL.MemberApplicationBeanList = apply_bean_list
+	mAL.MemberApplicationBeanSlice = apply_bean_slice
 
 	// 渲染页面
 	RenderHTML(w, &mAL, "layout", "navbar.private", "team.applications")
@@ -105,21 +105,21 @@ func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
-	apply_bean_list, err := FetchMemberApplicationBeanList(applies)
+	apply_bean_slice, err := FetchMemberApplicationBeanSlice(applies)
 	if err != nil {
-		util.Danger(util.LogError(err), "Cannot get apply bean list")
+		util.Danger(util.LogError(err), "Cannot get apply bean slice")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	//截短MemberApplication.Content为66字，方便布局列表预览
-	for _, bean := range apply_bean_list {
+	for _, bean := range apply_bean_slice {
 		bean.MemberApplication.Content = Substr(bean.MemberApplication.Content, 66)
 	}
 
-	var mAL data.MemberApplicationList
+	var mAL data.MemberApplicationSlice
 	//查询用户全部加盟申请书
 	mAL.SessUser = s_u
-	mAL.MemberApplicationBeanList = apply_bean_list
+	mAL.MemberApplicationBeanSlice = apply_bean_slice
 
 	// 渲染页面
 	RenderHTML(w, &mAL, "layout", "navbar.private", "teams.application")
@@ -177,9 +177,9 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	n := r.PostFormValue("name")
+	new_name := r.PostFormValue("name")
 	// 茶团名称是否在4-24中文字符
-	l := CnStrLen(n)
+	l := CnStrLen(new_name)
 	if l < 4 || l > 24 {
 		Report(w, r, "你好，茶博士摸摸头，竟然说茶团名字字数太多或者太少，未能创建新茶团。")
 		return
@@ -222,24 +222,27 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检测同名的team是否已经存在，团队不允许同名
-	_, err = data.GetTeamByName(n)
-	if err == nil {
+	old_team := data.Team{Name: new_name}
+
+	if err = old_team.GetByName(); err == nil {
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个茶团名称已经被占用，请换一个更响亮的团名，再试一次。")
 		return
 	}
-	//检测是否包含“自由人”这样的保留关键字，不允许，以免误导其他茶友
-	if strings.Contains(n, "自由人") || strings.Contains(n, "Freelancer") {
+
+	//检测新团队名字是否包含“自由人”这样的保留关键字，
+	if strings.Contains(new_name, "自由人") || strings.Contains(new_name, "Freelancer") {
+		//不允许，以免误导其他茶友
 		Report(w, r, "你好，茶团名称不能包含“自由人”这样的保留关键字，请换一个更响亮的团名，再试一次。")
 		return
 	}
-	_, err = data.GetTeamByAbbreviation(abbr)
-	if err == nil {
-		// 重复的简称
+	if err = old_team.GetByAbbreviation(); err == nil {
+		// 重复的简称,不允许，以免误导其他茶友
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个茶团简称已经被占用，请换一个更响亮的团名，再试一次。")
 		return
 	}
-	//检测abbr中是否包含“自由人”或者“Freelancer”这样不允许使用的保留关键字
+	//检测abbr中是否包含“自由人”或者“Freelancer”.
 	if strings.Contains(abbr, "自由人") || strings.Contains(abbr, "Freelancer") {
+		//不允许使用的保留关键字
 		Report(w, r, "你好，茶团简称不能包含“自由人”或者“Freelancer”这样的保留关键字，请换一个更响亮的团名简称，再试一次。")
 		return
 	}
@@ -247,7 +250,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	// 将NewTeam草稿存入数据库，class=10/20
 	logo := "teamLogo"
 	new_team := data.Team{
-		Name:              n,
+		Name:              new_name,
 		Abbreviation:      abbr + "$",
 		Mission:           mission,
 		Logo:              logo,
@@ -302,15 +305,15 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 func OpenTeams(w http.ResponseWriter, r *http.Request) {
 	var tS data.TeamSquare
 
-	team_list, err := data.GetOpenTeams()
+	team_slice, err := data.GetOpenTeams()
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get open teams")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
-	tS.TeamBeanList, err = FetchTeamBeanList(team_list)
+	tS.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean list")
+		util.Info(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -336,15 +339,15 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var tS data.TeamSquare
 
-	team_list, err := data.GetClosedTeams()
+	team_slice, err := data.GetClosedTeams()
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get closed teams")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
-	tS.TeamBeanList, err = FetchTeamBeanList(team_list)
+	tS.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean list")
+		util.Info(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -379,14 +382,14 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var ts data.TeamSquare
-	team_list, err := s_u.HoldTeams()
+	team_slice, err := s_u.HoldTeams()
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get hold teams")
 		return
 	}
-	ts.TeamBeanList, err = FetchTeamBeanList(team_list)
+	ts.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean list")
+		util.Info(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -411,15 +414,15 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 
 	var tS data.TeamSquare
 	tS.SessUser = s_u
-	team_list, err := s_u.SurvivalTeams()
+	team_slice, err := s_u.SurvivalTeams()
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get joined teams")
 		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
-	tS.TeamBeanList, err = FetchTeamBeanList(team_list)
+	tS.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean list")
+		util.Info(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -439,15 +442,15 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 
 	var ts data.TeamSquare
 	ts.SessUser = u
-	team_list, err := u.CoreExecTeams()
+	team_slice, err := u.CoreExecTeams()
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get employed teams")
 		Report(w, r, "你好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
 		return
 	}
-	ts.TeamBeanList, err = FetchTeamBeanList(team_list)
+	ts.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean list")
+		util.Info(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -499,11 +502,11 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	// 准备页面数据
 	var tc data.TeamMemberBean //核心成员资料荚
 	var tn data.TeamMemberBean //普通成员资料荚
-	var tcList []data.TeamMemberBean
-	var tnList []data.TeamMemberBean
+	var tcSlice []data.TeamMemberBean
+	var tnSlice []data.TeamMemberBean
 	//据teamMembers中的UserId获取User
 	for _, member := range teamCoreMembers {
-		cm_user, err := data.GetUserById(member.UserId)
+		cm_user, err := data.GetUser(member.UserId)
 		if err != nil {
 			util.Info(util.LogError(err), " Cannot get user")
 			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
@@ -525,10 +528,10 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 		tc.TeamMember = member
 		tc.CreatedAtDate = member.CreatedAtDate()
-		tcList = append(tcList, tc)
+		tcSlice = append(tcSlice, tc)
 	}
 	for _, member := range teamNormalMembers {
-		tn_user, err := data.GetUserById(member.UserId)
+		tn_user, err := data.GetUser(member.UserId)
 		if err != nil {
 			util.Info(util.LogError(err), " Cannot get user")
 			Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
@@ -549,10 +552,10 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 		tn.TeamMember = member
 		tn.CreatedAtDate = member.CreatedAtDate()
-		tnList = append(tnList, tn)
+		tnSlice = append(tnSlice, tn)
 	}
-	tD.CoreMemberBeanList = tcList
-	tD.NormalMemberBeanList = tnList
+	tD.CoreMemberBeanSlice = tcSlice
+	tD.NormalMemberBeanSlice = tnSlice
 
 	if tD.Team.Class == 1 {
 		tD.Open = true
@@ -586,7 +589,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	s_u.Query = r.URL.RawQuery
 	tD.SessUser = s_u
 	//检查当前用户是否核心成员
-	for _, member := range tD.CoreMemberBeanList {
+	for _, member := range tD.CoreMemberBeanSlice {
 		if member.Member.Id == s_u.Id {
 			tD.IsCoreMember = true
 			tD.IsMember = true
@@ -613,7 +616,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	if !tD.IsMember {
 		//检查当前用户是否普通成员
-		for _, member := range tD.NormalMemberBeanList {
+		for _, member := range tD.NormalMemberBeanSlice {
 			if member.Member.Id == s_u.Id {
 				tD.IsMember = true
 				break
@@ -739,7 +742,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	}
 	tD.FounderTeam = founder_default_team
 
-	ceo, err := data.GetUserById(member_ceo.UserId)
+	ceo, err := data.GetUser(member_ceo.UserId)
 	if err != nil {
 		util.Info(util.LogError(err), "Cannot get ceo given member.user_id")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
@@ -768,29 +771,29 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tCMBList []data.TeamMemberBean
-	var tNMBList []data.TeamMemberBean
+	var tCMBSlice []data.TeamMemberBean
+	var tNMBSlice []data.TeamMemberBean
 
-	tCMBList, err = FetchTeamMemberBeanList(teamCoreMembers)
+	tCMBSlice, err = FetchTeamMemberBeanSlice(teamCoreMembers)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get FetchTeamMemberBeanList()")
+		util.Info(util.LogError(err), " Cannot get FetchTeamMemberBeanSlice()")
 		Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 		return
 	}
-	tNMBList, err = FetchTeamMemberBeanList(teamNormalMembers)
+	tNMBSlice, err = FetchTeamMemberBeanSlice(teamNormalMembers)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get FetchTeamMemberBeanList()")
+		util.Info(util.LogError(err), " Cannot get FetchTeamMemberBeanSlice()")
 		Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 		return
 	}
 
-	if len(tCMBList) == 0 {
+	if len(tCMBSlice) == 0 {
 		Report(w, r, "你好，茶博士未能找到此茶团核心成员资料，请确认后再试。")
 		return
 	}
 
-	tD.CoreMemberBeanList = tCMBList
-	tD.NormalMemberBeanList = tNMBList
+	tD.CoreMemberBeanSlice = tCMBSlice
+	tD.NormalMemberBeanSlice = tNMBSlice
 
 	tD.SessUser = s_u
 
@@ -819,7 +822,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//这个茶团是否存在？
-	team, err := data.GetTeamById(team_id)
+	team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get ceo of this team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
@@ -996,7 +999,7 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//填写页面资料
-	isPD.InvitationList = is
+	isPD.InvitationSlice = is
 
 	// 检查用户是否可以查看，FOUNDER，CEO，CTO，CFO，CMO核心成员可以
 	IsCoreMember := false

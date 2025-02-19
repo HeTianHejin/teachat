@@ -67,14 +67,14 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 2. get user's family
-	family_list, err := data.GetAllFamilies(s_u.Id)
+	family_slice, err := data.GetAllFamilies(s_u.Id)
 	if err != nil {
 		util.Warning(util.LogError(err), s_u.Id, "Cannot get user's family given id")
 		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
 
-	f_b_list, err := FetchFamilyBeanList(family_list)
+	f_b_slice, err := FetchFamilyBeanSlice(family_slice)
 	if err != nil {
 		util.Warning(util.LogError(err), s_u.Id, "Cannot get user's family")
 		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
@@ -83,9 +83,9 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 
 	var fSPD data.FamilySquare
 
-	f_b_l_len := len(f_b_list)
+	f_b_l_len := len(f_b_slice)
 	if f_b_l_len != 0 {
-		//如果len(f_b_list)!=0,说明用户已经登记有家庭茶团，
+		//如果len(f_b_slice)!=0,说明用户已经登记有家庭茶团，
 
 		fSPD.IsEmpty = false
 
@@ -97,7 +97,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		for i, bean := range f_b_list {
+		for i, bean := range f_b_slice {
 			//截短 family.introduction 内容为66中文字，方便排版浏览
 			bean.Family.Introduction = Substr(bean.Family.Introduction, 66)
 
@@ -105,16 +105,16 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 			if bean.Family.Id == l_default_family.Id {
 
 				fSPD.DefaultFamilyBean = bean
-				//remove this bean from f_b_list
-				f_b_list = append(f_b_list[:i], f_b_list[i+1:]...)
+				//remove this bean from f_b_slice
+				f_b_slice = append(f_b_slice[:i], f_b_slice[i+1:]...)
 			}
 
 		}
 
-		fSPD.OtherFamilyBeanList = f_b_list
+		fSPD.OtherFamilyBeanSlice = f_b_slice
 
 	} else {
-		//如果len(f_b_list)==0,说明用户还没有登记任何家庭茶团，那么标识为空
+		//如果len(f_b_slice)==0,说明用户还没有登记任何家庭茶团，那么标识为空
 		fSPD.IsEmpty = true
 	}
 
@@ -150,7 +150,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 
 	//用户如果没有设置默认家庭，则其uuid为x(数据库查找方法返回特殊值)，则报告无信息可供查看。
 	if family_uuid == "x" {
-		Report(w, r, "家是世界上最温暖的地方，没有之一。")
+		Report(w, r, "一人吃饱饭，全家都不饿。盛世无饥馑，四海可为家。")
 		return
 	}
 
@@ -221,7 +221,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
-	parent_member_bean_list, err := FetchFamilyMemberBeanList(f_p_members)
+	parent_member_bean_slice, err := FetchFamilyMemberBeanSlice(f_p_members)
 	if err != nil {
 		util.Warning(util.LogError(err), family.Id, "Cannot fetch family's parent members bean")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
@@ -234,7 +234,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
-	child_member_bean_list, err := FetchFamilyMemberBeanList(c_members)
+	child_member_bean_slice, err := FetchFamilyMemberBeanSlice(c_members)
 	if err != nil {
 		util.Warning(util.LogError(err), family.Id, "Cannot fetch family's child members")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
@@ -246,7 +246,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
-	other_member_bean_list, err := FetchFamilyMemberBeanList(other_members)
+	other_member_bean_slice, err := FetchFamilyMemberBeanSlice(other_members)
 	if err != nil {
 		util.Warning(util.LogError(err), family.Id, "Cannot fetch family's other members bean")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
@@ -279,9 +279,9 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 
 	fD.SessUser = s_u
 	fD.FamilyBean = family_bean
-	fD.ParentMemberBeanList = parent_member_bean_list
-	fD.ChildMemberBeanList = child_member_bean_list
-	fD.OtherMemberBeanList = other_member_bean_list
+	fD.ParentMemberBeanSlice = parent_member_bean_slice
+	fD.ChildMemberBeanSlice = child_member_bean_slice
+	fD.OtherMemberBeanSlice = other_member_bean_slice
 
 	// 4. render
 	RenderHTML(w, &fD, "layout", "navbar.private", "family.detail")

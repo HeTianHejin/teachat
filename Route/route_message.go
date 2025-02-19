@@ -25,22 +25,22 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 
 	var lbPD data.LetterboxPageData
 
-	i_list, err := s_u.Invitations()
+	i_slice, err := s_u.Invitations()
 	if err != nil {
 		util.Warning(util.LogError(err), s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，满头大汗的茶博士在努力查找您的邀请函中，请稍后再试。")
 		return
 	}
-	i_b_list, err := FetchInvitationBeanList(i_list)
+	i_b_slice, err := FetchInvitationBeanSlice(i_slice)
 	if err != nil {
-		util.Warning(util.LogError(err), s_u.Email, " Cannot get invitations bean list")
+		util.Warning(util.LogError(err), s_u.Email, " Cannot get invitations bean slice")
 		Report(w, r, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 
 	//填写页面资料
 	lbPD.SessUser = s_u
-	lbPD.InvitationBeanList = i_b_list
+	lbPD.InvitationBeanSlice = i_b_slice
 
 	//向用户返回接收邀请函的表单页面
 	RenderHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")
@@ -65,7 +65,7 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	var amPD data.AcceptMessagePageData
 	//填写页面资料
 	amPD.SessUser = s_u
-	amPD.AcceptMessageList, err = s_u.UnreadAcceptMessages()
+	amPD.AcceptMessageSlice, err = s_u.UnreadAcceptMessages()
 	if err != nil {
 		util.Warning(util.LogError(err), s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，满头大汗的茶博士在加倍努力查找您的资料中，请稍后再试。")

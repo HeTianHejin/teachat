@@ -16,9 +16,9 @@ import (
 func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		NewObjectiveForm(w, r)
+		NewObjectiveGet(w, r)
 	case "POST":
-		CreateObjective(w, r)
+		NewObjectivePost(w, r)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
@@ -26,7 +26,7 @@ func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 
 // GET /objective/create
 // 返回objective.new页面
-func NewObjectiveForm(w http.ResponseWriter, r *http.Request) {
+func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	//尝试从http请求中读取用户会话信息
 	s, err := Session(r)
 	if err != nil {
@@ -35,7 +35,7 @@ func NewObjectiveForm(w http.ResponseWriter, r *http.Request) {
 	}
 	var oD data.ObjectiveDetail
 	//根据会话读取当前用户的信息
-	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Danger(util.LogError(err), "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -43,8 +43,13 @@ func NewObjectiveForm(w http.ResponseWriter, r *http.Request) {
 	}
 	// 填写页面数据
 	oD.SessUser = s_u
+
+	oD.SessUserDefaultFamily = s_d_family
+	oD.SessUserSurvivalFamilies = s_survival_families
+
 	oD.SessUserDefaultTeam = s_default_team
 	oD.SessUserSurvivalTeams = s_survival_teams
+
 	oD.SessUserDefaultPlace = s_default_place
 	oD.SessUserBindPlaces = s_places
 	// 给请求用户返回新建茶话会页面
@@ -54,7 +59,7 @@ func NewObjectiveForm(w http.ResponseWriter, r *http.Request) {
 // POST /objective/create
 // create the objective
 // 创建新茶话会
-func CreateObjective(w http.ResponseWriter, r *http.Request) {
+func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -81,15 +86,48 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		util.Warning(util.LogError(err), "Failed to convert class to int")
 		return
 	}
+
+	//读取提交的is_private bool参数
+	is_private := r.PostFormValue("is_private") == "true"
+	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
+	if err != nil {
+		util.Warning(util.LogError(err), "Failed to convert class to int")
+		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		return
+	}
+	if family_id == 0 {
+		Report(w, r, "你好，茶博士查阅了天书黄页，四海为家的人今天不适宜创建茶话会，请稍后再试。")
+		return
+	}
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
 		util.Warning(util.LogError(err), "Failed to convert class to int")
+		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
+	if team_id == 0 {
+		Report(w, r, "你好，茶博士查阅了天书黄页，无拘无束自由人明天才适宜创建茶话会，请稍后再试。")
+		return
+	}
+
+	//提交的茶团id,是team.id
 	// check the given team_id is valid
 	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
 	if err != nil {
+		util.Warning(util.LogError(err), "Cannot get team member by team id and user id")
 		Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+		return
+	}
+
+	//提交的茶团id,是family.id
+	// check submit family_id is valid
+	family := data.Family{
+		Id: team_id,
+	}
+	is_f_member, _ := family.IsMember(s_u.Id)
+	if !is_f_member {
+		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+		Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
 		return
 	}
 
@@ -104,30 +142,26 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, err := obj.CountByTitle()
+	count_title, err := obj.CountByTitle()
 	if err != nil {
 		util.Danger(util.LogError(err), " cannot get count given objective title")
 		Report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
 		return
 	}
 	// 最大可创建 相同名称 茶话会数量
-	if count >= 3 {
-		Report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会相同名称仅能使用3次，请确认后再试。")
-		return
-	} else if obj.TeamId != team_id {
-		// 已经存在相同名字的茶话会,检查是否同一团队
-		Report(w, r, "你好，这个茶话会名称已经被其它团队使用了，请确认后再试。")
+	if count_title > 1 {
+		Report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会相同名称仅能使用1次，请确认后再试。")
 		return
 	}
-	count, err = obj.CountByTeamId()
+	count_team, err := obj.CountByTeamId()
 	if err != nil {
 		util.Danger(util.LogError(err), " cannot get count given objective team_id")
 		Report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
 		return
 	}
 	// 最大团队可以创建 茶话会 数量
-	if count >= int(util.Config.MaxInviteTeams) {
-		Report(w, r, "你好，编新不如述旧，刻古终胜雕今!一个茶团最多可以开12个茶话会呢，请确认后再试。")
+	if count_team >= int(util.Config.MaxInviteTeams) {
+		Report(w, r, "你好，编新不如述旧，一个茶团最多可以开的茶话会数量是有限的，请确认后再试。")
 		return
 	}
 
@@ -143,12 +177,14 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 	}
 
 	new_ob := data.Objective{
-		Title:  title,
-		Body:   body,
-		Cover:  cover,
-		Class:  class,
-		UserId: s_u.Id,
-		TeamId: team_id,
+		Title:     title,
+		UserId:    s_u.Id,
+		Body:      body,
+		Cover:     cover,
+		Class:     class,
+		FamilyId:  family_id,
+		TeamId:    team_id,
+		IsPrivate: is_private,
 	}
 
 	switch class {
@@ -165,28 +201,28 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case 20:
-		//如果class=20封闭式茶话会草围，需要读取指定茶团号TeamId列表
+		//如果class=20封闭式茶话会草围，需要读取指定茶团号TeamIds列表
 
-		tIds_str := r.PostFormValue("invite_team_ids")
+		tIds_str := r.PostFormValue("invite_ids")
 
 		//用正则表达式检测茶团号TeamIds，是否符合“整数，整数，整数...”的格式
-		if !VerifyTeamIdListFormat(tIds_str) {
-			util.Warning(util.LogError(err), " TeamId list format is wrong")
+		if !Verify_id_slice_Format(tIds_str) {
+			util.Warning(util.LogError(err), " TeamId slice format is wrong")
 			Report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 			return
 		}
-		//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId,以便处理
-		te_ids_str := strings.Split(tIds_str, ",")
+		//用户提交的t_id是以逗号分隔的字符串,需要分割后，转换成[]Id,以便处理
+		t_ids_str := strings.Split(tIds_str, ",")
 		// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
-		if len(te_ids_str) > int(util.Config.MaxInviteTeams) {
+		if len(t_ids_str) > int(util.Config.MaxInviteTeams) {
 			util.Warning(util.LogError(err), " Too many team ids")
 			Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，茶壶不够用，请确认后再试。")
 			return
 		}
-		team_id_list := make([]int, 0, util.Config.MaxInviteTeams)
-		for _, t_id := range te_ids_str {
+		t_id_slice := make([]int, 0, util.Config.MaxInviteTeams)
+		for _, t_id := range t_ids_str {
 			te_id_int, _ := strconv.Atoi(t_id)
-			team_id_list = append(team_id_list, te_id_int)
+			t_id_slice = append(t_id_slice, te_id_int)
 		}
 		//尝试保存新茶话会草稿
 		if err = new_ob.Create(); err != nil {
@@ -197,11 +233,11 @@ func CreateObjective(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		// 迭代team_id_list，尝试保存新封闭式茶话会草围邀请的茶团
-		for _, team_id := range team_id_list {
+		// 迭代t_id_slice，尝试保存新封闭式茶话会草围邀请的茶团
+		for _, t_id := range t_id_slice {
 			obInviTeams := data.ObjectiveInvitedTeam{
 				ObjectiveId: new_ob.Id,
-				TeamId:      team_id,
+				TeamId:      t_id,
 			}
 			if err = obInviTeams.Create(); err != nil {
 				// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
@@ -259,30 +295,30 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	// 用（随机选中）选取24个用户的24茶话会的模式
 
 	// test获取所有茶话会
-	objective_list, err := data.GetPublicObjectives(24)
+	objective_slice, err := data.GetPublicObjectives(24)
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get objectives")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
 		return
 	}
-	len := len(objective_list)
+	len := len(objective_slice)
 	if len == 0 {
 		Report(w, r, "你好，山穷水尽疑无路，为何没有任何茶话会资料？请稍后再试。")
 		return
 	}
 
 	// 如果茶话会状态是草围（未经邻座盲评审核的草稿）,对其名称和描述内容局部进行随机遮盖处理。
-	// for i := range objective_list {
-	// 	if objective_list[i].Class == 10 || objective_list[i].Class == 20 {
+	// for i := range objective_slice {
+	// 	if objective_slice[i].Class == 10 || objective_slice[i].Class == 20 {
 	// 		// 随机遮盖50%处理
-	// 		objective_list[i].Title = MarsString(objective_list[i].Title, 50)
-	// 		objective_list[i].Body = MarsString(objective_list[i].Body, 50)
+	// 		objective_slice[i].Title = MarsString(objective_slice[i].Title, 50)
+	// 		objective_slice[i].Body = MarsString(objective_slice[i].Body, 50)
 	// 	}
 	// }
 
-	oSpD.ObjectiveBeanList, err = FetchObjectiveBeanList(objective_list)
+	oSpD.ObjectiveBeanSlice, err = FetchObjectiveBeanSlice(objective_slice)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read objective-bean list")
+		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
@@ -297,8 +333,8 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 			Name: "游客",
 		}
 		//迭代茶话会队列，把作者属性设置为false
-		for i := range oSpD.ObjectiveBeanList {
-			oSpD.ObjectiveBeanList[i].Objective.PageData.IsAuthor = false
+		for i := range oSpD.ObjectiveBeanSlice {
+			oSpD.ObjectiveBeanSlice[i].Objective.PageData.IsAuthor = false
 		}
 
 		//返回页面
@@ -317,11 +353,11 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	//准备页面数据
 	oSpD.SessUser = sUser
 	//检测u.Id == o.UserId是否这个茶话会作者
-	for i := range oSpD.ObjectiveBeanList {
-		if oSpD.ObjectiveBeanList[i].Objective.UserId == sUser.Id {
-			oSpD.ObjectiveBeanList[i].Objective.PageData.IsAuthor = true
+	for i := range oSpD.ObjectiveBeanSlice {
+		if oSpD.ObjectiveBeanSlice[i].Objective.UserId == sUser.Id {
+			oSpD.ObjectiveBeanSlice[i].Objective.PageData.IsAuthor = true
 		} else {
-			oSpD.ObjectiveBeanList[i].Objective.PageData.IsAuthor = false
+			oSpD.ObjectiveBeanSlice[i].Objective.PageData.IsAuthor = false
 		}
 	}
 	RenderHTML(w, &oSpD, "layout", "navbar.private", "objectives.square")
@@ -360,15 +396,15 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	oD.ObjectiveBean, err = FetchObjectiveBean(ob)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read objective-bean list")
+		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
 	//fetch public projects
-	project_list, _ := oD.ObjectiveBean.Objective.GetPublicProjects()
-	oD.ProjectBeanList, err = FetchProjectBeanList(project_list)
+	project_slice, _ := oD.ObjectiveBean.Objective.GetPublicProjects()
+	oD.ProjectBeanSlice, err = FetchProjectBeanSlice(project_slice)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read objective-bean list")
+		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
@@ -415,7 +451,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	if ob.Class == 2 {
 		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read objective-bean list")
+			util.Warning(util.LogError(err), " Cannot read objective-bean slice")
 			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌着。")
 			return
 		}

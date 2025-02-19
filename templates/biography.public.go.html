@@ -42,7 +42,7 @@
 
     <div class="panel-heading">主人角色&家庭茶团</div>
     <div class="panel-body">
-        {{ range .ParentMemberFamilyBeanList }}
+        {{ range .ParentMemberFamilyBeanSlice }}
         @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
         {{ else }}
         无&纪录
@@ -51,7 +51,7 @@
 
     <div class="panel-heading">孩子角色&家庭茶团</div>
     <div class="panel-body">
-        {{ range .ChildMemberFamilyBeanList }}
+        {{ range .ChildMemberFamilyBeanSlice }}
         @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
         {{ else }}
         无&纪录
@@ -60,7 +60,7 @@
    
     <div class="panel-heading">其他角色&家庭茶团</div>
     <div class="panel-body">
-        {{ range .OtherMemberFamilyBeanList }}
+        {{ range .OtherMemberFamilyBeanSlice }}
         @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
         {{ else }}
         无&纪录
@@ -69,7 +69,7 @@
     
     <div class="panel-heading">声明离开&家庭茶团</div>
     <div class="panel-body">
-        {{ range .ResignMemberFamilyBeanList }}
+        {{ range .ResignMemberFamilyBeanSlice }}
         @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
         {{ else }}
         无&纪录
@@ -89,7 +89,7 @@
 
     <div class="panel-heading">管理$事业茶团</div>
     <div class="panel-body">
-        {{ range .ManageTeamBeanList }}
+        {{ range .ManageTeamBeanSlice }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
         无&纪录
@@ -98,7 +98,7 @@
 
     <div class="panel-heading">普通$事业茶团</div>
     <div class="panel-body">
-        {{ range .JoinTeamBeanList }}
+        {{ range .JoinTeamBeanSlice }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
         无$纪录
@@ -107,7 +107,7 @@
 
     <div class="panel-heading">离开$事业茶团</div>
     <div class="panel-body">
-        {{ range .ResignTeamBeanList }}
+        {{ range .ResignTeamBeanSlice }}
         @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
         无$纪录

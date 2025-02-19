@@ -109,7 +109,7 @@
 </div>
 
 {{/* 这是&家庭茶团父母角色成员展示页面-开始  */}}
-{{ range .ParentMemberBeanList }}
+{{ range .ParentMemberBeanSlice }}
 
 <div class="media">
   <div class="media-left">
@@ -146,7 +146,7 @@
 {{ end }}{{/* 这是&家庭茶团父母角色成员展示页面-结束  */}}
 
 {{/* 这是&家庭茶团孩子角色成员展示页面  */}}
-{{ range .ChildMemberBeanList }}
+{{ range .ChildMemberBeanSlice }}
 
 <div class="media">
   <div class="media-left">
@@ -182,7 +182,7 @@
 {{ end }}{{/* 这是&家庭茶团孩子角色成员展示页面-结束 */}}
 
 {{/* 这是&家庭茶团其他角色成员展示页面-开始 */}}
-{{ range .OtherMemberBeanList }}
+{{ range .OtherMemberBeanSlice }}
 
 <div class="media">
   <div class="media-left">

@@ -10,32 +10,34 @@ import (
 // 打开首页,展示最热门的茶议？
 func Index(w http.ResponseWriter, r *http.Request) {
 	var indexPD data.IndexPageData
-	var tb_list []data.ThreadBean
+	var tb_slice []data.ThreadBean
 
 	//读取最热的茶议dozen?
 	num := 12
 
 	// 读取最热的茶议
-	thread_list, err := data.HotThreads(num)
+	thread_slice, err := data.HotThreads(num)
 	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read hot thread slice")
 		Report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
-	len := len(thread_list)
+	len := len(thread_slice)
 
 	if len == 0 {
+		util.Warning(util.LogError(err), " Cannot read hot thread slice")
 		Report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 
-	tb_list, err = FetchThreadBeanList(thread_list)
+	tb_slice, err = FetchThreadBeanSlice(thread_slice)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read thread and author list")
+		util.Warning(util.LogError(err), " Cannot read thread and author slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
 		return
 	}
 
-	indexPD.ThreadBeanList = tb_list
+	indexPD.ThreadBeanSlice = tb_slice
 
 	//是否登录
 	s, err := Session(r)
@@ -45,8 +47,8 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		for i := range thread_list {
-			thread_list[i].PageData.IsAuthor = false
+		for i := range thread_slice {
+			thread_slice[i].PageData.IsAuthor = false
 		}
 		//展示游客首页
 		RenderHTML(w, &indexPD, "layout", "navbar.public", "index")
@@ -60,11 +62,11 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	indexPD.SessUser = sUser
-	for i := range thread_list {
-		if sUser.Id == thread_list[i].UserId {
-			thread_list[i].PageData.IsAuthor = true
+	for i := range thread_slice {
+		if sUser.Id == thread_slice[i].UserId {
+			thread_slice[i].PageData.IsAuthor = true
 		} else {
-			thread_list[i].PageData.IsAuthor = false
+			thread_slice[i].PageData.IsAuthor = false
 		}
 	}
 	//展示茶客的首页

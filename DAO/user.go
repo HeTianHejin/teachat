@@ -80,7 +80,7 @@ type Fan struct {
 	Nickname          string //绰号，备注名
 	Note              string //备注事项
 	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
-	IsBlackList       bool   //是否黑名单
+	IsBlackSlice      bool   //是否黑名单
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 }
@@ -553,7 +553,7 @@ func Get2RandomUserExceptId(id int) (users []User, err error) {
 			return
 		}
 		var user_online User
-		user_online, err = GetUserById(user_id)
+		user_online, err = GetUser(user_id)
 		if err != nil {
 			return
 		}
@@ -586,8 +586,8 @@ func Get2RandomUserId() (user_ids []int, err error) {
 	return
 }
 
-// GetUserById() Get a single user given the id
-func GetUserById(id int) (user User, err error) {
+// GetUser() Get a single user given the id
+func GetUser(id int) (user User, err error) {
 	user = User{}
 	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", id).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
@@ -615,7 +615,7 @@ func (team_member *TeamMember) User() (user User, err error) {
 // 获取邀请函的茶团创建人
 func (invitation *Invitation) TeamFounder() (user User, err error) {
 	user = User{}
-	team, err := GetTeamById(invitation.TeamId)
+	team, err := GetTeam(invitation.TeamId)
 	if err != nil {
 		return
 	}

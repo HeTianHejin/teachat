@@ -79,39 +79,7 @@
 
       
 
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="goods_list_id">物资单号</label>
-          <a href="/v1/goods/newlist" class="pull-right">创建新的物资清单</a>
-          <input type="number" class="form-control" name="goods_list_id" id="goods_list_id" required />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="tool_list_id">工具单号</label>
-          <a href="/v1/goods/newlist" class="pull-right">创建新的工具清单</a>
-          <input type="number" class="form-control" name="tool_list_id" id="tool_list_id" required />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="handcraft_list_id">手艺单号</label>
-          <a href="/v1/handcraft/newlist" class="pull-right">创建新的手艺清单</a>
-
-          <input type="number" class="form-control" name="handcraft_list_id" id="handcraft_list_id" required />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="magic_list_id">法术单号</label>
-          <a href="/v1/handcraft/newlist" class="pull-right">创建新的法术清单</a>
-
-          <input type="number" class="form-control" name="magic_list_id" id="magic_list_id" required />
-        </div>
-      </div>
+     
 
       {{/* 这是project的id提交 */}}
       <input type="hidden" name="project_id" value="{{ .QuoteProject.Id }}" />

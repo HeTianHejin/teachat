@@ -4,27 +4,25 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a
-      href="/v1/objective/detail?uuid={{ .QuoteObjective.Uuid }}">{{ .QuoteObjective.Title }} </a>@茶话会
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjective.Uuid }}">{{ .QuoteObjective.Title }} </a>@茶话会
   </li>
-  <li><a
-      href="/v1/project/detail?id={{ .QuoteProject.Uuid }}">{{ .QuoteProject.Title }} </a>@茶台
+  <li><a href="/v1/project/detail?id={{ .QuoteProject.Uuid }}">{{ .QuoteProject.Title }} </a>@茶台
   </li>
   <li>#{{ .ThreadBean.Thread.Id }}</li> @茶议
 
 </ol>
 
-
 {{/* 这是关注这个茶议的总人数 显示 */}}
 <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
 
   {{/* 这是茶议的关注人数 数量显示 */}}
-    <i class="bi-person-heart" style="font-size: 2rem; color: black;" title="关注人数"></i> 1011
+  <i class="bi-person-heart" style="font-size: 2rem; color: black;" title="关注人数"></i> 1011
 
   <span style="margin-inline-start: 2rem;">
     {{/* 这是茶议的总品味数量 显示 */}}
     <a href="#">
-      <i class="bi-cup-hot" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数"> {{ .ThreadBean.Count }}</i>
+      <i class="bi-cup-hot" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数">
+        {{ .ThreadBean.Count }}</i>
     </a>
   </span>
   {{ if .ThreadBean.Thread.IsEdited }}
@@ -95,10 +93,10 @@
                 <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
                 {{ end }}
                 （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}"
-          style="color: black;">{{ .AuthorFamily.Name }}</a>，
-        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}"
-          style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
-                </span>
+                  style="color: black;">{{ .AuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}"
+                  style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
+              </span>
             </span>
             </span>
           </div>
@@ -129,9 +127,9 @@
             {{ end }}
             <span style="margin-inline-end: 20px;">
               （<a href="/v1/family/detail?id={{ .QuotePostAuthorFamily.Uuid }}"
-                  style="color: black;">{{ .QuotePostAuthorFamily.Name }}</a>，
-                <a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}"
-                  style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a>）
+                style="color: black;">{{ .QuotePostAuthorFamily.Name }}</a>，
+              <a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}"
+                style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a>）
             </span>
           </footer>
         </blockquote>
@@ -142,7 +140,7 @@
                 class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
           <footer style="font-size: small;">
             <cite><a href="/v1/user/biography?id={{ .QuoteProjectAuthor.Uuid }}" style="color: black;">
-              <span>{{ .QuoteProjectAuthor.Name }}</span></a>
+                <span>{{ .QuoteProjectAuthor.Name }}</span></a>
               {{if .QuoteProjectAuthor.Gender }}
               <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
               {{ else }}
@@ -153,7 +151,7 @@
                   style="color: black;">{{ .QuoteProjectAuthorFamily.Name }}</a>，
                 <a href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}"
                   style="color: black;">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a>）
-                </span></cite>
+              </span></cite>
           </footer>
         </blockquote>
         {{ end }}
@@ -161,8 +159,9 @@
       </div>
 
       <div class="panel-footer">
-       
-      
+       <span style="margin-inline-end: 2rem;">个人 4</span>
+       <span style="margin-inline-end: 2rem;">团队 1</span>
+       <span style="margin-inline-end: 2rem;">家庭 3</span>
       </div>
     </div>
 
@@ -176,10 +175,8 @@
 
 </div>
 
-
-
 {{/* [是茶议作者区域] 展示其他用户的品味 */}}
-{{ range .PostBeanList }}
+{{ range .PostBeanSlice }}
 {{/* [是茶议作者区域] 检查品味的立场以决定布局 */}}
 
 {{ if .Post.Attitude }}
@@ -298,7 +295,7 @@
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
               （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
+              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
             </span>
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -442,21 +439,23 @@
 
         {{ if .ThreadBean.Thread.PostId }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePost.Uuid }}" style="margin-inline-end: 1rem;"><span
-                class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...</p>
+          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePost.Uuid }}"
+              style="margin-inline-end: 1rem;"><span class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...
+          </p>
           <footer style="font-size: small;">
-            <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}" style="color: black;">{{ .QuotePostAuthor.Name }}</a>
+            <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}"
+              style="color: black;">{{ .QuotePostAuthor.Name }}</a>
             {{if .QuotePostAuthor.Gender }}
             <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
             {{ end }}
             <span style="margin-inline-end: 20px;">
-              （<a
-                href="/v1/family/detail?id={{ .QuotePostAuthorFamily.Uuid }}" style="color: black;">{{ .QuotePostAuthorFamily.Name }}</a>，
-              <a
-                href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}" style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a>）
-              </span>
+              （<a href="/v1/family/detail?id={{ .QuotePostAuthorFamily.Uuid }}"
+                style="color: black;">{{ .QuotePostAuthorFamily.Name }}</a>，
+              <a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}"
+                style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a>）
+            </span>
           </footer>
         </blockquote>
 
@@ -465,8 +464,9 @@
           <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProject.Uuid }}"><span
                 class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
           <footer style="font-size: small;">
-           
-            <cite title="Source Title"> <a href="/v1/user/biography?id={{ .QuoteProjectAuthor.Uuid }}">{{ .QuoteProjectAuthor.Name }}</a>
+
+            <cite title="Source Title"> <a
+                href="/v1/user/biography?id={{ .QuoteProjectAuthor.Uuid }}">{{ .QuoteProjectAuthor.Name }}</a>
               {{if .QuoteProjectAuthor.Gender }}
               <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
               {{ else }}
@@ -477,21 +477,21 @@
                   href="/v1/family/detail?id={{ .QuoteProjectAuthorFamily.Uuid }}">{{ .QuoteProjectAuthorFamily.Name }}</a>，
                 <a
                   href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a>）
-                </span></cite>
+              </span></cite>
           </footer>
         </blockquote>
         {{ end }}
       </div>
 
       <div class="panel-footer">
-       
-      
+        <span style="margin-inline-end: 2rem;">个人 4</span>
+        <span style="margin-inline-end: 2rem;">团队 1</span>
+        <span style="margin-inline-end: 2rem;">家庭 3</span>
       </div>
     </div>
   </div>
 
 </div>
-
 
 {{/* [不是茶议作者区域] 决定是否显示品味编辑区 */}}
 {{ if .IsInput }}
@@ -573,7 +573,7 @@
 {{/* [不是茶议作者区域] 品味编辑区结束 */}}
 
 {{/* 展示其他用户的品味 */}}
-{{ range .PostBeanList }}
+{{ range .PostBeanSlice }}
 {{/* [不是茶议作者区域] 检查品味的立场以决定左右侧布局 */}}
 
 {{ if .Post.Attitude }}
@@ -601,7 +601,7 @@
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
               （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
+              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
             </span>
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -701,7 +701,7 @@
                   <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
                   {{ end }}
                   （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
+                  <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
               </span></span>
             </div>
           </div>

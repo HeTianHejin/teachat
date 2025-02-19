@@ -162,7 +162,7 @@ func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 	case 1:
 		ob := Objective{
 			Id: ao.ObjectId}
-		if err = ob.GetById(); err != nil {
+		if err = ob.Get(); err != nil {
 			return nil, err
 		}
 		return ob, err
@@ -170,7 +170,7 @@ func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 		pr := Project{
 			Id: ao.ObjectId,
 		}
-		if err = pr.GetById(); err != nil {
+		if err = pr.Get(); err != nil {
 			return nil, err
 		}
 		return pr, err
@@ -178,7 +178,7 @@ func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 		dThread := DraftThread{
 			Id: ao.ObjectId,
 		}
-		if err = dThread.GetById(); err != nil {
+		if err = dThread.Get(); err != nil {
 			return nil, err
 		}
 		return dThread, err
@@ -189,7 +189,7 @@ func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 		}
 		return dPost, err
 	case 5:
-		team, err := GetTeamById(ao.ObjectId)
+		team, err := GetTeam(ao.ObjectId)
 		if err != nil {
 			return nil, err
 		}

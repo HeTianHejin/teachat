@@ -147,7 +147,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		case 1:
 			ob := data.Objective{
 				Id: ao.ObjectId}
-			if err = ob.GetById(); err != nil {
+			if err = ob.Get(); err != nil {
 				util.Danger(util.LogError(err), "Cannot get objective")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
 				return
@@ -167,7 +167,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			pr := data.Project{
 				Id: ao.ObjectId,
 			}
-			if err = pr.GetById(); err != nil {
+			if err = pr.Get(); err != nil {
 				util.Danger(util.LogError(err), "Cannot get project")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
@@ -188,7 +188,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId,
 			}
 
-			if err = dThread.GetById(); err != nil {
+			if err = dThread.Get(); err != nil {
 				util.Danger(util.LogError(err), "Cannot get dfart-thread")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术,而是耐心。")
 				return
@@ -203,7 +203,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			dPost := data.DraftPost{
 				Id: ao.ObjectId,
 			}
-			if err = dPost.GetById(); err != nil {
+			if err = dPost.Get(); err != nil {
 				util.Danger(util.LogError(err), "Cannot get draft-post")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候 弄丢草稿的人不一定是诗人？")
 				return
@@ -214,7 +214,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		case 5:
-			team, err := data.GetTeamById(ao.ObjectId)
+			team, err := data.GetTeam(ao.ObjectId)
 			if err != nil {
 				util.Danger(util.LogError(err), "Cannot get team")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚比刻苦奋斗更有用？")
@@ -242,7 +242,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			//茶围
 			ob := data.Objective{
 				Id: ao.ObjectId}
-			if err = ob.GetById(); err != nil {
+			if err = ob.Get(); err != nil {
 				util.Danger(util.LogError(err), "Cannot get objective")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
 				return
@@ -268,7 +268,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			pr := data.Project{
 				Id: ao.ObjectId,
 			}
-			if err = pr.GetById(); err != nil {
+			if err = pr.Get(); err != nil {
 				util.Danger(util.LogError(err), "Cannot get project")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
@@ -282,7 +282,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
-			// 更新����，友邻盲评已通过！
+			// 更新茶台，友邻盲评已通过！
 			if err = pr.UpdateClass(); err != nil {
 				util.Warning(util.LogError(err), "Cannot update pr class")
 				Report(w, r, "你好，一畦春韭绿，十里稻花香。")
@@ -295,12 +295,12 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId,
 			}
 
-			if err = dThread.GetById(); err != nil {
+			if err = dThread.Get(); err != nil {
 				util.Danger(util.LogError(err), "Cannot get dfart-thread")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
 				return
 			}
-			// 更新������，友邻盲评已通过！
+			// 更新茶议，友邻盲评已通过！
 			if err = dThread.UpdateClass(1); err != nil {
 				util.Warning(util.LogError(err), "Cannot update draft-thread class")
 				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
@@ -318,6 +318,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Type:      dThread.Type,
 				PostId:    dThread.PostId,
 				TeamId:    dThread.TeamId,
+				IsPrivate: dThread.IsPrivate,
 			}
 			if err = thread.Create(); err != nil {
 				util.Danger(util.LogError(err), "Cannot save thread")
@@ -330,7 +331,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			dPost := data.DraftPost{
 				Id: ao.ObjectId,
 			}
-			if err = dPost.GetById(); err != nil {
+			if err = dPost.Get(); err != nil {
 				util.Danger(util.LogError(err), "Cannot get draft-post given acceptObject.object_id")
 				Report(w, r, "你好，闪电考拉失魂鱼，竟然说有时候找资料的人不一定是外星人？")
 				return
@@ -341,13 +342,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// 转为正式品味稿
-			post_author, err := data.GetUserById(dPost.UserId)
+			post_author, err := data.GetUser(dPost.UserId)
 			if err != nil {
 				util.Danger(util.LogError(err), "Cannot get post_author given draftPost.user_id")
 				Report(w, r, "你好，绕堤柳借三篙翠。")
 				return
 			}
-			if _, err = post_author.CreatePost(dPost.ThreadId, dPost.TeamId, dPost.Attitude, dPost.Body); err != nil {
+			if _, err = post_author.CreatePost(dPost.ThreadId, dPost.TeamId, dPost.Attitude, dPost.IsPrivate, dPost.Body); err != nil {
 				util.Danger(util.LogError(err), "Cannot create post")
 				Report(w, r, "你好，品茶是一种艺术，一杯为品，二杯为解渴。")
 				return
@@ -355,7 +356,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 
 		case 5:
 			//把草团转为正式$事业茶团
-			team, err := data.GetTeamById(ao.ObjectId)
+			team, err := data.GetTeam(ao.ObjectId)
 			if err != nil {
 				util.Danger(util.LogError(err), "Cannot get team")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚，比刻苦奋斗有用？")
@@ -385,7 +386,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			//检查团队发起人是否设置了默认$茶团，
-			t_founder, err := data.GetUserById(team.FounderId)
+			t_founder, err := data.GetUser(team.FounderId)
 			if err != nil {
 				util.Danger(util.LogError(err), "Cannot get team founder")
 				Report(w, r, "你好，茶博士失魂鱼，未能完成记录的任务，请稍后再试。")
@@ -497,7 +498,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	case 1:
 		ob := data.Objective{
 			Id: ao.ObjectId}
-		if err = ob.GetById(); err != nil {
+		if err = ob.Get(); err != nil {
 			util.Danger(util.LogError(err), "Cannot get objective")
 			Report(w, r, "你好，有时候找不到新茶评审的资料未必是外星人闹事。")
 			return
@@ -512,7 +513,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		pr := data.Project{
 			Id: ao.ObjectId,
 		}
-		if err = pr.GetById(); err != nil {
+		if err = pr.Get(); err != nil {
 			util.Danger(util.LogError(err), "Cannot get project")
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修心养性的过程。")
 			return
@@ -527,7 +528,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		dThread := data.DraftThread{
 			Id: ao.ObjectId,
 		}
-		if err = dThread.GetById(); err != nil {
+		if err = dThread.Get(); err != nil {
 			util.Danger(util.LogError(err), "Cannot get dfart-thread")
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
 			return
@@ -543,7 +544,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		dPost := data.DraftPost{
 			Id: ao.ObjectId,
 		}
-		if err = dPost.GetById(); err != nil {
+		if err = dPost.Get(); err != nil {
 			util.Danger(util.LogError(err), "Cannot get post")
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料的人不一定是外星人？")
 			return
@@ -554,7 +555,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 			util.Warning(util.LogError(err), "Cannot update po accept-message class")
 		}
 	case 5:
-		team, err := data.GetTeamById(ao.ObjectId)
+		team, err := data.GetTeam(ao.ObjectId)
 		if err != nil {
 			util.Danger(util.LogError(err), "Cannot get team")
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚比刻苦奋斗更有用？")

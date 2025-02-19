@@ -15,18 +15,26 @@ type Project struct {
 	Uuid        string
 	Title       string
 	Body        string
-	ObjectiveId int
-	UserId      int
+	ObjectiveId int //茶围
+	UserId      int //开台人，台主，作者
 	CreatedAt   time.Time
 	Class       int // 属性 0:  "追加待评草台",1:  "开放式茶台",2:  "封闭式茶台",10: "开放式草台",20: "封闭式草台",31: "已婉拒开台",32: "已婉拒封台",
 	EditAt      time.Time
-	Cover       string
-	TeamId      int //作者支持团队id
+	Cover       string //封面图片文件名
+	TeamId      int    //作者发帖时选择的成员所属茶团id（team/family）
+	IsPrivate   bool   //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
+
 	// 仅用于页面渲染，不保存到数据库
 	PageData PublicPData
 }
 
-// 封闭式茶台限定茶团（团队）集合
+// CountProjectByTitleObjectiveId() 统计某个茶围下相同名称的茶台数量
+func CountProjectByTitleObjectiveId(title string, objectiveId int) (count int, err error) {
+	err = Db.QueryRow("SELECT count(*) FROM project WHERE title = $1 AND objective_id = $2", title, objectiveId).Scan(&count)
+	return
+}
+
+// 封闭式茶台限定茶团（团队/家庭）集合
 type ProjectInvitedTeam struct {
 	Id        int
 	ProjectId int
@@ -89,7 +97,7 @@ func (project *Project) IsEdited() bool {
 }
 
 // InvitedTeamIds() 获取一个封闭式茶台的全部受邀请茶团id
-func (project *Project) InvitedTeamIds() (teamIdList []int, err error) {
+func (project *Project) InvitedTeamIds() (team_id_slice []int, err error) {
 	rows, err := Db.Query("SELECT team_id FROM project_invited_teams WHERE project_id = $1", project.Id)
 	if err != nil {
 		return
@@ -99,24 +107,7 @@ func (project *Project) InvitedTeamIds() (teamIdList []int, err error) {
 		if err = rows.Scan(&team_id); err != nil {
 			return
 		}
-		teamIdList = append(teamIdList, team_id)
-	}
-	rows.Close()
-	return
-}
-
-// GetMemberUserIdsByTeamId() 从TeamMember获取全部茶团成员Userid
-func GetMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
-	rows, err := Db.Query("SELECT user_id FROM team_members WHERE team_id = $1", team_id)
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		var user_id int
-		if err = rows.Scan(&user_id); err != nil {
-			return
-		}
-		user_ids = append(user_ids, user_id)
+		team_id_slice = append(team_id_slice, team_id)
 	}
 	rows.Close()
 	return
@@ -145,24 +136,23 @@ func (project *Project) EditAtDate() string {
 	return project.EditAt.Format(FMT_DATE_CN)
 }
 
-// 用户在某个茶话会内创建新的茶台
-func (user *User) CreateProject(title, body string, objectiveId int, class, team_id int) (project Project, err error) {
-	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id"
+// Project.Create()  编写postgreSQL语句，插入新纪录，return （err error）
+func (project *Project) Create() (err error) {
+	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), title, body, objectiveId, user.Id, time.Now(), class, time.Now(), "default-pr-cover", team_id).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId)
+	err = stmt.QueryRow(Random_UUID(), project.Title, project.Body, project.ObjectiveId, project.UserId, time.Now(), project.Class, time.Now(), project.Cover, project.TeamId, project.IsPrivate).
+		Scan(&project.Id, &project.Uuid)
 	return
 }
 
-// 根据project的id,从projects表查询获取一个茶台对象信息
-// 返回一个茶台对象，如果查询失败，则返回err不为nil
-func (project *Project) GetById() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE id = $1", project.Id).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId)
+// Project.Get()  编写postgreSQL语句，根据id查询纪录，return （err error）
+func (project *Project) Get() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private FROM projects WHERE id = $1", project.Id).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate)
 	return
 }
 
@@ -170,16 +160,16 @@ func (project *Project) GetById() (err error) {
 // 返回一个茶台对象，如果查询失败，则返回err不为nil
 func GetProjectByUuid(uuid string) (project Project, err error) {
 	project = Project{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE uuid = $1", uuid).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId)
+	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private FROM projects WHERE uuid = $1", uuid).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate)
 	return
 }
 
 // 获取茶议所属的茶台
 func (t *Thread) Project() (project Project, err error) {
 	project = Project{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE id = $1", t.ProjectId).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId)
+	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private FROM projects WHERE id = $1", t.ProjectId).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate)
 	return
 }
 
@@ -214,13 +204,13 @@ func (project *Project) NumReplies() (count int) {
 
 // 获取某个ID的茶话会下全部茶台
 func (objective *Objective) Projects() (projects []Project, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE objective_id = $1", objective.Id)
+	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private FROM projects WHERE objective_id = $1", objective.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		project := Project{}
-		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId); err != nil {
+		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate); err != nil {
 			return
 		}
 		projects = append(projects, project)
@@ -231,13 +221,13 @@ func (objective *Objective) Projects() (projects []Project, err error) {
 
 // objective.GetPublicProjects() fetch project.Class=1 or 2,return projects
 func (objective *Objective) GetPublicProjects() (projects []Project, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id FROM projects WHERE objective_id = $1 AND class IN (1, 2)", objective.Id)
+	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private FROM projects WHERE objective_id = $1 AND class IN (1, 2)", objective.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		project := Project{}
-		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId); err != nil {
+		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate); err != nil {
 			return
 		}
 		projects = append(projects, project)
@@ -284,30 +274,53 @@ func (project *Project) UpdateClass() (err error) {
 	return
 }
 
-// 检查当前会话用户是否茶台邀请团队成员
+// 通过id，检查当前用户是否是茶台邀请茶团（$team/&family）成员,
+// 是成员的话，返回 true，nil
 func (proj *Project) IsInvitedMember(user_id int) (ok bool, err error) {
 	count, err := proj.InvitedTeamsCount()
 	if err != nil {
-		return false, err
+		return false, errors.New("this tea-table lost invited any teams to drink tea")
 	}
 	if count == 0 {
-		return false, errors.New("this tea-table  host has not invited any teams to drink tea")
+		return false, errors.New("this tea-table  host has not invited any teams to drink")
 	}
-	teamIDs, err := proj.InvitedTeamIds()
+	team_ids, err := proj.InvitedTeamIds()
 	if err != nil {
 		return false, errors.New("cannot read project invited team ids")
 	}
-	for _, teamID := range teamIDs {
-		userIDs, err := GetMemberUserIdsByTeamId(teamID)
-		if err != nil {
-			return false, err
+	if len(team_ids) < 1 {
+		return false, errors.New("this objective host has not invited any teams to drink tea")
+	}
+
+	if !proj.IsPrivate {
+		// 被邀请的对象是$事业团队 []Team.Id
+		// 迭代team_ids,用data.GetMemberUserIdsByTeamId()获取全部user_ids；
+		// 以UserId == u.Id？检查当前用户是否是茶话会邀请团队成员
+		for _, team_id := range team_ids {
+			user_ids, _ := GetAllMemberUserIdsByTeamId(team_id)
+			for _, u_id := range user_ids {
+				if u_id == user_id {
+					return true, nil
+				}
+			}
 		}
 
-		for _, userID := range userIDs {
-			if userID == user_id {
-				return true, nil
+	} else {
+		// 被邀请的对象是&家庭 []Family.Id
+		for _, family_id := range team_ids {
+			// 迭代team_ids,读取每个家庭的全部成员id
+			member_user_ids, err := GetAllMembersUserIdsByFamilyId(family_id)
+			if err != nil {
+				return false, err
+			}
+			for _, u_id := range member_user_ids {
+				// 检查是否家庭成员
+				if u_id == user_id {
+					return true, nil
+				}
 			}
 		}
 	}
+
 	return
 }

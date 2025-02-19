@@ -34,13 +34,11 @@ drop table if exists family_member_sign_in_replies;
 drop table if exists family_member_sign_outs;
 drop table if exists communities;
 drop table if exists administrators;
-drop table if exists watchwords;
 drop table if exists monologues;
 drop table if exists goods;
 drop table if exists user_goods;
 drop table if exists handicrafts;
 drop table if exists inaugurations;
-drop table if exists parts;
 drop table if exists tools;
 drop table if exists evidences;
 drop table if exists last_queries;
@@ -233,124 +231,20 @@ CREATE TABLE last_queries (
 );
 
 
-CREATE TABLE evidences (
-    id                         SERIAL PRIMARY KEY,
-    uuid                       VARCHAR(64) NOT NULL UNIQUE,
-    handicraft_id              INTEGER NOT NULL,
-    recorder                   INTEGER NOT NULL,
-    description                TEXT,
-    images                     VARCHAR(255),
-    video                      VARCHAR(255), 
-    audio                      VARCHAR(255), 
-    created_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE tools (
-    id                         BIGSERIAL PRIMARY KEY,
-    uuid                       VARCHAR(64) NOT NULL UNIQUE,
-    handicraft_id              INTEGER NOT NULL,
-    part_id                    BIGINT,
-    goods_id                   BIGINT,
-    note                       TEXT,
-    category                   INTEGER, 
-    created_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE parts (
-    id                         SERIAL PRIMARY KEY,
-    uuid                       VARCHAR(64) NOT NULL UNIQUE,
-    handicraft_id              INTEGER NOT NULL,
-    name                       VARCHAR(255) NOT NULL,
-    nickname                   VARCHAR(255),
-    artist                     INTEGER NOT NULL REFERENCES users(id),
-    target_goods_id            INTEGER,
-    tool_list_id               INTEGER,
-    magic_list_id              INTEGER,
-    strength                   INTEGER,
-    intelligence               INTEGER,
-    difficulty_level            INTEGER,
-    recorder                   INTEGER NOT NULL REFERENCES users(id),
-    description                TEXT,
-    evidence_id                INTEGER DEFAULT 0,
-    status                     INTEGER NOT NULL,
-    created_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE inaugurations (
-    id                         SERIAL PRIMARY KEY,
-    uuid                       VARCHAR(64) NOT NULL UNIQUE,
-    handicraft_id              INTEGER NOT NULL,
-    name                       VARCHAR(255) NOT NULL,
-    nickname                   VARCHAR(255),
-    artist                     INTEGER NOT NULL REFERENCES users(id),
-    recorder                   INTEGER NOT NULL REFERENCES users(id),
-    description                TEXT,
-    evidence_id                INTEGER DEFAULT 0,
-    status                     INTEGER NOT NULL,
-    created_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE handicrafts (
-    id                        SERIAL PRIMARY KEY,
-    uuid                      VARCHAR(64) NOT NULL,
-    project_id                INTEGER NOT NULL,
-    name                      VARCHAR(255) NOT NULL,
-    nickname                  VARCHAR(255),
-    client_team_id            INTEGER DEFAULT 0,
-    goods_list_id             INTEGER DEFAULT 0,
-    target_goods_id           INTEGER DEFAULT 0,
-    tool_list_id              INTEGER DEFAULT 0,
-    artist                    INTEGER NOT NULL, 
-    strength                  INTEGER,
-    intelligence              INTEGER,
-    difficulty_level           INTEGER,
-    recorder                  INTEGER NOT NULL,
-    description               TEXT,
-    category                  INTEGER DEFAULT 0,
-    status                    INTEGER,
-    created_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
 
 
 
-CREATE TABLE goods (
-    id                           SERIAL PRIMARY KEY,
-    uuid                         VARCHAR(64) NOT NULL,
-    user_id                      INTEGER NOT NULL, 
-    name                         VARCHAR(255) NOT NULL,
-    nickname                     VARCHAR(255),
-    designer                     VARCHAR(255),
-    describe                     TEXT,
-    price                        NUMERIC(10,2),
-    applicability                VARCHAR(255),
-    category                     integer,
-    specification                 VARCHAR(255),
-    brand_name                   VARCHAR(255),
-    model                        VARCHAR(255),
-    weight                       VARCHAR(255),
-    dimensions                   VARCHAR(255),
-    material                     VARCHAR(255),
-    size                         VARCHAR(255),
-    color                        VARCHAR(255),
-    network_connection_type      VARCHAR(255),
-    features                     integer,
-    serial_number                VARCHAR(255),
-    production_date              DATE DEFAULT CURRENT_DATE,
-    expiration_date              DATE DEFAULT CURRENT_DATE + interval '365 day',
-    state                        VARCHAR(255),
-    origin                       VARCHAR(255),
-    manufacturer                 VARCHAR(255),
-    manufacturer_link            VARCHAR(255),
-    engine_type                  VARCHAR(255),
-    purchase_link                VARCHAR(255),
-    created_time                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_time                 TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
+
+
+
+
+
+
+
+
+
+
 create table user_goods (
     id                           SERIAL PRIMARY KEY,
     user_id                      INTEGER NOT NULL,
@@ -407,7 +301,7 @@ CREATE TABLE fans (
     nickname                     TEXT,
     note                         TEXT,
     relationship_level           INT, 
-    is_black_list                BOOLEAN,
+    is_black_slice                BOOLEAN,
     created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -459,9 +353,10 @@ create table objectives (
   user_id                integer references users(id),
   class                  integer,
   edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  star_count             integer default 0,
+  family_id              integer default 0,
   cover                  varchar(64),
-  team_id                integer not null default 2
+  team_id                integer not null default 2,
+  is_private             boolean default false
 );
 
 create table projects (
@@ -475,7 +370,8 @@ create table projects (
   class                  integer,
   edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   cover                  varchar(64),
-  team_id                integer not null default 2
+  team_id                integer not null default 2,
+  is_private             boolean default false
 );
 
 create table draft_threads (
@@ -488,7 +384,8 @@ create table draft_threads (
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   type                   integer default 0,
   post_id                integer default 0,
-  team_id                integer not null default 2
+  team_id                integer not null default 2,
+  is_private             boolean default false
 );
 
 create table threads (
@@ -504,7 +401,8 @@ create table threads (
   hit_count              integer default 0,
   type                   integer default 0,
   post_id                integer default 0,
-  team_id                integer not null default 2
+  team_id                integer not null default 2,
+  is_private             boolean default false
 );
 
 create table reads (
@@ -522,7 +420,8 @@ create table draft_posts (
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   attitude               boolean,
   class                  integer default 0,
-  team_id                integer not null default 2
+  team_id                integer not null default 2,
+  is_private             boolean default false
 );
 
 create table posts (
@@ -535,7 +434,8 @@ create table posts (
   edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   attitude               boolean,
   score                  integer default 60,
-  team_id                integer not null default 2
+  team_id                integer not null default 2,
+  is_private             boolean default false
 );
 
 create table administrators (

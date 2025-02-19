@@ -145,84 +145,81 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	// 读取用户提交的资料
 	footprint := r.FormValue("footprint")
 	query := r.FormValue("query")
-	// 增加口令检查，提示用户这是茶话会
 	watchword := r.PostFormValue("watchword")
 	pw := r.PostFormValue("password")
-	var s_u data.User
+
 	email := r.PostFormValue("email")
 
-	wordValid, err := data.CheckWatchword(watchword)
-	if err != nil {
-		Report(w, r, "茶博士嘀咕说，今天吃鸡？不是来喝茶吗？")
-		return
-	} else {
-		if wordValid {
-			// 口令正确
-			// Check if the email parameter is a positive integer (user ID)
-			if s_u_id, convErr := strconv.Atoi(email); convErr == nil && s_u_id > 0 {
-				// Retrieve user by ID
-				t_user, userErr := data.UserById(s_u_id)
-				if userErr != nil {
-					Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
-					return
-				}
-				s_u = t_user
-			} else if IsEmail(email) {
-				// Retrieve user by email
-				t_u, userErr := data.GetUserByEmail(email)
-				if userErr != nil {
-					//util.Warning(util.LogError(err), email, "cannot get user given email")
-					Report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
-					return
-				}
-				s_u = t_u
-			} else {
-				// Invalid email format
-				Report(w, r, "茶博士嘀咕说，请确认握笔姿势正确,而且身形健美。")
+	// 增加口令检查，提示用户这是茶话会
+	wordValid := watchword == "闻香识茶" || watchword == "Recognizing Tea by Its Aroma"
+
+	s_u := data.User{}
+
+	if wordValid {
+		// 口令正确
+		// Check if the email parameter is a positive integer (user ID)
+		if s_u_id, convErr := strconv.Atoi(email); convErr == nil && s_u_id > 0 {
+			// Retrieve user by ID
+			t_user, userErr := data.UserById(s_u_id)
+			if userErr != nil {
+				Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
 				return
 			}
-
-			if s_u.Password == data.Encrypt(pw) {
-				//util.Info(user.Email, "密码匹配成功")
-
-				//创建新的会话
-				session, err := s_u.CreateSession()
-				if err != nil {
-					util.Warning(util.LogError(err), " Cannot create session")
-					return
-				}
-				//设置cookie
-				cookie := http.Cookie{
-					Name:     "_cookie",
-					Value:    session.Uuid,
-					HttpOnly: true,
-				}
-
-				http.SetCookie(w, &cookie)
-
-				//读取足迹，以决定返回那一个页面
-				if footprint == "" {
-					footprint = "/v1/"
-				} else {
-
-					footprint = footprint + "?" + query
-				}
-				http.Redirect(w, r, footprint, http.StatusFound)
-				return
-			} else {
-				//密码和用户名不匹配?
-				//如果连续输错密码，需要采取一些防暴力冲击措施！！！
-				util.Warning(s_u.Email, "密码和用户名不匹配。")
-				Report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
+			s_u = t_user
+		} else if IsEmail(email) {
+			// Retrieve user by email
+			t_u, userErr := data.GetUserByEmail(email)
+			if userErr != nil {
+				//util.Warning(util.LogError(err), email, "cannot get user given email")
+				Report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
 				return
 			}
-
+			s_u = t_u
 		} else {
-			//输入了错误的口令
-			Report(w, r, "你好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
+			// Invalid email format
+			Report(w, r, "茶博士嘀咕说，请确认握笔姿势正确,而且身形健美。")
 			return
 		}
 
+		if s_u.Password == data.Encrypt(pw) {
+			//util.Info(user.Email, "密码匹配成功")
+
+			//创建新的会话
+			session, err := s_u.CreateSession()
+			if err != nil {
+				util.Warning(util.LogError(err), " Cannot create session")
+				return
+			}
+			//设置cookie
+			cookie := http.Cookie{
+				Name:     "_cookie",
+				Value:    session.Uuid,
+				HttpOnly: true,
+			}
+
+			http.SetCookie(w, &cookie)
+
+			//读取足迹，以决定返回那一个页面
+			if footprint == "" {
+				footprint = "/v1/"
+			} else {
+
+				footprint = footprint + "?" + query
+			}
+			http.Redirect(w, r, footprint, http.StatusFound)
+			return
+		} else {
+			//密码和用户名不匹配?
+			//如果连续输错密码，需要采取一些防暴力冲击措施！！！
+			util.Warning(s_u.Email, "密码和用户名不匹配。")
+			Report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
+			return
+		}
+
+	} else {
+		//输入了错误的口令
+		Report(w, r, "你好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
+		return
 	}
 
 }

@@ -6,14 +6,14 @@ import (
 	"time"
 )
 
-// 根据$事业茶团team_id_list，获取全部申请加盟的$事业茶团[]team
-func GetTeamsByIds(team_id_list []int) (teams []Team, err error) {
-	n := len(team_id_list)
+// 根据$事业茶团team_id_slice，获取全部申请加盟的$事业茶团[]team
+func GetTeamsByIds(team_id_slice []int) (teams []Team, err error) {
+	n := len(team_id_slice)
 	if n == 0 {
-		return nil, errors.New("team_id_list is empty")
+		return nil, errors.New("team_id_slice is empty")
 	}
 	teams = make([]Team, n)
-	rows, err := Db.Query("SELECT * FROM team WHERE id IN ($1)", team_id_list)
+	rows, err := Db.Query("SELECT * FROM team WHERE id IN ($1)", team_id_slice)
 	if err != nil {
 		return
 	}
@@ -603,9 +603,16 @@ func GetTeamByUUID(uuid string) (team Team, err error) {
 
 // 根据用户提交的Id获取一个$事业茶团
 // AWS CodeWhisperer assist in writing
-func GetTeamById(id int) (team Team, err error) {
+func GetTeam(id int) (team Team, err error) {
 	team = Team{}
 	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE id = $1", id).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
+	return
+}
+
+// Team.Get() 根据$事业茶团Id获取$事业茶团
+func (team *Team) Get() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE id = $1", team.Id).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
 	return
 }
@@ -641,6 +648,23 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 			return
 		}
 		team_members = append(team_members, teamMember)
+	}
+	rows.Close()
+	return
+}
+
+// GetAllMemberUserIdsByTeamId() 从TeamMember获取某个茶团，全部状态正常的成员User_ids，返回 []user_id, err
+func GetAllMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
+	rows, err := Db.Query("SELECT user_id FROM team_members WHERE team_id = $1 AND class = 1", team_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		var user_id int
+		if err = rows.Scan(&user_id); err != nil {
+			return
+		}
+		user_ids = append(user_ids, user_id)
 	}
 	rows.Close()
 	return
@@ -738,10 +762,8 @@ func (teamMember *TeamMember) Team() (team Team, err error) {
 }
 
 // GetTeamByName()
-// AWS CodeWhisperer assist in writing
-func GetTeamByName(name string) (team Team, err error) {
-	team = Team{}
-	err = Db.QueryRow("SELECT id, uuid, name, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE name = $1", name).
+func (team *Team) GetByName() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, name, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE name = $1", team.Name).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
 	return
 }
@@ -799,9 +821,8 @@ func GetTeamByAbbreviationAndFounderId(abbreviation string, founder_id int) (tea
 }
 
 // GetTeamByAbbreviation()
-func GetTeamByAbbreviation(abbreviation string) (team Team, err error) {
-	team = Team{}
-	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE abbreviation = $1", abbreviation).
+func (team *Team) GetByAbbreviation() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE abbreviation = $1", team.Abbreviation).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
 	return
 }

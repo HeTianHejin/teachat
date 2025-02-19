@@ -85,23 +85,23 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					util.Warning(util.LogError(err), "cannot get user-bean given user")
 				} else {
-					fPD.UserBeanList = append(fPD.UserBeanList, user_bean)
+					fPD.UserBeanSlice = append(fPD.UserBeanSlice, user_bean)
 					fPD.IsEmpty = false
 				}
 			}
 		} else {
 
-			user_list, err := data.SearchUserByNameKeyword(keyword)
+			user_slice, err := data.SearchUserByNameKeyword(keyword)
 			if err != nil {
 				util.Warning(util.LogError(err), keyword, " Cannot search user by keyword")
 			}
 
-			if len(user_list) >= 1 {
-				fPD.UserBeanList, err = FetchUserBeanList(user_list)
+			if len(user_slice) >= 1 {
+				fPD.UserBeanSlice, err = FetchUserBeanSlice(user_slice)
 				if err != nil {
-					util.Info(util.LogError(err), " Cannot fetch user bean list given user_list")
+					util.Info(util.LogError(err), " Cannot fetch user bean slice given user_slice")
 				}
-				if len(fPD.UserBeanList) >= 1 {
+				if len(fPD.UserBeanSlice) >= 1 {
 					fPD.IsEmpty = false
 				}
 			}
@@ -114,7 +114,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士摸摸头，看不懂提交的茶友号，请换个关键词再试。")
 			return
 		}
-		user, err := data.GetUserById(keyword_int)
+		user, err := data.GetUser(keyword_int)
 		if err != nil {
 			if err != sql.ErrNoRows {
 				util.Warning(util.LogError(err), " Cannot get user by keyword_int id")
@@ -127,38 +127,38 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				util.Warning(util.LogError(err), "cannot get user-bean given user")
 			} else {
-				fPD.UserBeanList = append(fPD.UserBeanList, userbean)
+				fPD.UserBeanSlice = append(fPD.UserBeanSlice, userbean)
 				fPD.IsEmpty = false
 			}
 		}
 
 	case 1:
 		//查询，茶团简称，team.abbreviation
-		team_list, err := data.SearchTeamByAbbreviation(keyword)
+		team_slice, err := data.SearchTeamByAbbreviation(keyword)
 		if err != nil {
 			util.Warning(util.LogError(err), " Cannot search team by abbreviation")
 		}
 
-		if len(team_list) >= 1 {
-			t_b_list, err := FetchTeamBeanList(team_list)
+		if len(team_slice) >= 1 {
+			t_b_slice, err := FetchTeamBeanSlice(team_slice)
 			if err != nil {
-				util.Warning(util.LogError(err), " Cannot fetch team bean list given team_list")
+				util.Warning(util.LogError(err), " Cannot fetch team bean slice given team_slice")
 			}
-			if len(t_b_list) >= 1 {
-				fPD.Count = len(t_b_list)
-				fPD.TeamBeanList = t_b_list
+			if len(t_b_slice) >= 1 {
+				fPD.Count = len(t_b_slice)
+				fPD.TeamBeanSlice = t_b_slice
 				fPD.IsEmpty = false
 			}
 		}
 	case 5:
 		//查询品茶地点 place
-		place_list, err := data.FindPlaceByName(keyword)
+		place_slice, err := data.FindPlaceByName(keyword)
 		if err != nil {
 			util.Warning(util.LogError(err), " Cannot search place by keyword")
 		}
-		if len(place_list) >= 1 {
-			fPD.Count = len(place_list)
-			fPD.PlaceList = place_list
+		if len(place_slice) >= 1 {
+			fPD.Count = len(place_slice)
+			fPD.PlaceSlice = place_slice
 			fPD.IsEmpty = false
 		}
 

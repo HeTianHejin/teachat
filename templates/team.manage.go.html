@@ -27,7 +27,7 @@
   </div>
 
   {{ if .IsFounder }}{{/*  这是茶团创建人可见页面 开始 */}}
-  {{ range .CoreMemberBeanList }}{{/*  这是可管理的茶团核心成员展示  */}}
+  {{ range .CoreMemberBeanSlice }}{{/*  这是可管理的茶团核心成员展示  */}}
   <div class="media">
     <div class="media-left">
       <a href="/v1/user/biography?id={{ .Member.Uuid }}">
@@ -69,7 +69,7 @@
 
   {{ else }}{{/*  非茶团创建人可见页面  */}}
   
-  {{ range .CoreMemberBeanList }}{{/*  这是茶团核心成员展示页面  */}}
+  {{ range .CoreMemberBeanSlice }}{{/*  这是茶团核心成员展示页面  */}}
 
   <div class="media">
     <div class="media-left">
@@ -117,7 +117,7 @@
 
 {{ end }}{{/*  这是茶团创建人可见页面 结束  */}}
 
-  {{ range .NormalMemberBeanList }}{{/* 展示普通成员 */}}
+  {{ range .NormalMemberBeanSlice }}{{/* 展示普通成员 */}}
 
   <div class="media">
     <div class="media-left">

@@ -114,7 +114,7 @@ func NewPlace(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var pL data.PlaceList
+	var pL data.PlaceSlice
 	pL.SessUser = s_u
 	RenderHTML(w, &pL, "layout", "navbar.private", "place.new")
 
@@ -215,14 +215,14 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var pL data.PlaceList
+	var pL data.PlaceSlice
 	places, err := s_u.GetAllBindPlaces()
 	if err != nil {
 		util.Warning(util.LogError(err), "Cannot get places from user")
 		Report(w, r, "你好，茶博士表示无法获取您收集的地方，请稍后再试。")
 		return
 	}
-	pL.PlaceList = places
+	pL.PlaceSlice = places
 	pL.SessUser = s_u
 	RenderHTML(w, &pL, "layout", "navbar.private", "places.my")
 }

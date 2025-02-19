@@ -24,7 +24,7 @@ var MemberApplicationStatus = map[int]string{
 }
 
 // 根据team_id,查询全部加盟申请书，[]MemberApplication，error
-func GetMemberApplicationByTeamId(team_id int) (member_application_list []MemberApplication, err error) {
+func GetMemberApplicationByTeamId(team_id int) (member_application_slice []MemberApplication, err error) {
 	rows, err := Db.Query("SELECT * FROM member_applications WHERE team_id = $1", team_id)
 	if err != nil {
 		return
@@ -35,14 +35,14 @@ func GetMemberApplicationByTeamId(team_id int) (member_application_list []Member
 		if err != nil {
 			return
 		}
-		member_application_list = append(member_application_list, memberApplication)
+		member_application_slice = append(member_application_slice, memberApplication)
 	}
 	rows.Close()
 	return
 }
 
 // 根据team_id,status <= 1, 查询全部加盟申请书中需要处理的申请书,[]MemberApplication，error
-func GetMemberApplicationByTeamIdAndStatus(team_id int) (member_application_list []MemberApplication, err error) {
+func GetMemberApplicationByTeamIdAndStatus(team_id int) (member_application_slice []MemberApplication, err error) {
 	rows, err := Db.Query("SELECT * FROM member_applications WHERE team_id = $1 AND status <= 1", team_id)
 	if err != nil {
 		return
@@ -53,7 +53,7 @@ func GetMemberApplicationByTeamIdAndStatus(team_id int) (member_application_list
 		if err != nil {
 			return
 		}
-		member_application_list = append(member_application_list, memberApplication)
+		member_application_slice = append(member_application_slice, memberApplication)
 	}
 	rows.Close()
 	return
@@ -78,7 +78,7 @@ func CheckMemberApplicationByTeamIdAndUserId(team_id int, user_id int) (member_a
 }
 
 // 根据user_id，查询用户全部加盟申请书 []MemberApplication，error
-func GetMemberApplies(user_id int) (member_application_list []MemberApplication, err error) {
+func GetMemberApplies(user_id int) (member_application_slice []MemberApplication, err error) {
 	rows, err := Db.Query("SELECT * FROM member_applications WHERE user_id = $1", user_id)
 	if err != nil {
 		return
@@ -89,7 +89,7 @@ func GetMemberApplies(user_id int) (member_application_list []MemberApplication,
 		if err != nil {
 			return
 		}
-		member_application_list = append(member_application_list, memberApplication)
+		member_application_slice = append(member_application_slice, memberApplication)
 	}
 	rows.Close()
 	return

@@ -12,9 +12,14 @@
 <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;">
   <i class="bi-geo" style="font-size: 2rem; color: black;" title="地方"></i>
   <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
+
+  <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">个人 4</span>
+  <span style="margin-inline-end: 2rem;">家庭 3</span>
+       <span style="margin-inline-end: 2rem;">团队 1</span>
+       <span style="margin-inline-end: 2rem;">叩击 404</span>
 </div>
 
-<div class="media">
+<div class="media" style="margin-top: 20px;">
 
   <div class="media-body">
 
@@ -83,7 +88,9 @@
 
       </div>
       <div class="panel-footer">
-
+        <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">惦记 14</span>
+        <span style="margin-inline-end: 2rem;">电眼 22</span>
+        <span style="margin-inline-end: 2rem;">白眼 13</span>
       
                
                 
@@ -155,11 +162,41 @@
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <div class="radio">
+            <label>
+              <input type="radio" name="is_private" id="is_private" value="false" checked required />
+              以团队成员身份发言
+            </label>
+          </div>
+          <div class="radio">
+            <label>
+              <input type="radio" name="is_private" id="is_private" value="true" required />
+              以家庭成员身份发言
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
           <label for="team_id">支持团队</label>
           <select name="team_id" class="form-control" id="team_id" required>
             <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
             </option>
             {{ range .SessUserSurvivalTeams }}
+            <option value="{{ .Id }}">{{ .Name }}</option>
+            {{ end }}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="team_id">所属家庭</label>
+          <select name="team_id" class="form-control" id="team_id" required>
+            <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
+            </option>
+            {{ range .SessUserSurvivalFamilies }}
             <option value="{{ .Id }}">{{ .Name }}</option>
             {{ end }}
           </select>
@@ -217,7 +254,7 @@
 </div>
 
 {{/* 以下是此茶台的全部茶议展示 */}}
-{{ range .ThreadBeanList }}
+{{ range .ThreadBeanSlice }}
 <div class="media">
   <div class="media-left">
     {{ if .Count }}
