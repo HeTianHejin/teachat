@@ -45,7 +45,7 @@ func (lq *LastQuery) Get() (err error) {
 	return nil
 }
 
-// AcceptObject 友邻盲评对象
+// AcceptObject 友邻蒙评对象
 type AcceptObject struct {
 	Id         int
 	ObjectType int // 1:茶话会，2:茶台， 3:茶议，4: 品味， 5:茶团, 6: 集团
@@ -62,8 +62,8 @@ type NewMessageCount struct {
 	Count  int
 }
 
-// 记录友邻盲评，评判结果
-// 慎独，茶议正式发布之前需要邻桌盲评是否符合社区文明之约？
+// 记录友邻蒙评，评判结果
+// 慎独，茶议正式发布之前需要邻桌蒙评是否符合社区文明之约？
 type Acceptance struct {
 	Id             int
 	AcceptObjectId int
@@ -75,7 +75,7 @@ type Acceptance struct {
 	YAcceptedAt    time.Time
 }
 
-// Create() Acceptance新建一条 友邻盲评 记录
+// Create() Acceptance新建一条 友邻蒙评 记录
 func (a *Acceptance) Create() (err error) {
 	statement := `INSERT INTO acceptances (accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 	stmt, err := Db.Prepare(statement)
@@ -90,7 +90,7 @@ func (a *Acceptance) Create() (err error) {
 	return nil
 }
 
-// Update() 根据id更新一条友邻盲评 Y记录
+// Update() 根据id更新一条友邻蒙评 Y记录
 func (a *Acceptance) Update() (err error) {
 	statement := `UPDATE acceptances SET y_accept = $1, y_user_id = $2, y_accepted_at = $3 WHERE id = $4`
 	stmt, err := Db.Prepare(statement)
@@ -114,7 +114,7 @@ func (a *Acceptance) Get() (err error) {
 	return nil
 }
 
-// Acceptance.GetByAcceptObjectId() 根据友邻盲评对象id获取友邻盲评 1记录
+// Acceptance.GetByAcceptObjectId() 根据友邻蒙评对象id获取友邻蒙评 1记录
 func (a *Acceptance) GetByAcceptObjectId() (Acceptance, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -132,7 +132,7 @@ func (a *Acceptance) GetByAcceptObjectId() (Acceptance, error) {
 	return acceptance, nil
 }
 
-// Create（） AcceptObject新建一条盲评接纳对象的记录
+// Create（） AcceptObject新建一条蒙评接纳对象的记录
 func (a *AcceptObject) Create() (err error) {
 	statement := `INSERT INTO accept_objects (object_type, object_id) VALUES ($1, $2) RETURNING id`
 	stmt, err := Db.Prepare(statement)
@@ -156,7 +156,7 @@ func (a *AcceptObject) Get() (err error) {
 	return nil
 }
 
-// 根据acceptObjectId查询返回其“友邻盲评”对象
+// 根据acceptObjectId查询返回其“友邻蒙评”对象
 func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 	switch ao.ObjectType {
 	case 1:
@@ -183,11 +183,14 @@ func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
 		}
 		return dThread, err
 	case 4:
-		dPost, err := GetPostById(ao.ObjectId)
-		if err != nil {
+		d_post := DraftPost{
+			Id: ao.ObjectId,
+		}
+		if err = d_post.Get(); err != nil {
 			return nil, err
 		}
-		return dPost, err
+
+		return d_post, err
 	case 5:
 		team, err := GetTeam(ao.ObjectId)
 		if err != nil {
@@ -258,7 +261,7 @@ func (user *User) GetNewMessageCount() (count int, err error) {
 
 // 根据count是否大于0来判断是否有未读消息
 func (user *User) HasUnreadMessage() (has bool) {
-	// 友邻盲评未读消息数量
+	// 友邻蒙评未读消息数量
 	count1, _ := user.GetNewMessageCount()
 	// 邀请函未读消息数量
 	count2 := user.InvitationUnviewedCount()

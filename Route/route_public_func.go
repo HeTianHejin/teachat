@@ -25,6 +25,69 @@ import (
    存放各个路由文件共享的一些方法
 */
 
+// 默认家庭ID常量，默认家庭ID为0
+// DeepSeek建议使用默认家庭ID
+const DefaultFamilyId = 0
+const DefaultFamilyUuid = "x"
+
+// 默认未明确资料的家庭="四海为家",id=0
+// 任何人均是来自某个家庭，但是单独的个体，即使成年，属于一个未来家庭的成员之一，不能视为一个家庭。
+var DefaultFamily = data.Family{
+	Id:           DefaultFamilyId,
+	Uuid:         "x", //代表未知数
+	Name:         "四海为家",
+	AuthorId:     1, //表示系统预设的值
+	Introduction: "存在但未明确资料的家庭",
+}
+
+// 默认的系统“自由人”$事业茶团
+// 刚注册或者没有加入任何$团队的用户，属于基础$事业茶团
+var FreelancerTeam = data.Team{
+	Id:                2,
+	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
+	Name:              "特立独行的自由人",
+	Mission:           "星际旅行特立独行的自由人，不属于任何私有$茶团。",
+	FounderId:         1, //表示系统预设的值
+	Class:             0,
+	Abbreviation:      "自由人",
+	Logo:              "teaSet",
+	SuperiorTeamId:    0,
+	SubordinateTeamId: 0,
+}
+
+// 获取用户最后一次设定的“默认家庭”
+// 如果用户没有设定默认家庭，则返回默认id=0，名称为“四海为家”家庭
+func GetLastDefaultFamilyByUserId(user_id int) (family data.Family, err error) {
+	family = data.Family{}
+	user, err := data.GetUser(user_id)
+	if err != nil {
+		return
+	}
+
+	family, err = user.GetLastDefaultFamily()
+	if err != nil {
+		// 未设定默认家庭
+		if err == sql.ErrNoRows {
+			return DefaultFamily, nil
+		}
+		return
+	}
+	return
+}
+
+// 根据茶语中登记的家庭ID，获取某个茶语(茶围、茶台、茶议和品味)发布时选择的家庭
+func GetFamilyByFamilyId(family_id int) (family data.Family, err error) {
+	if family_id == 0 {
+		return DefaultFamily, nil
+	}
+	family = data.Family{Id: family_id}
+	if err = family.Get(); err != nil {
+		return
+	}
+
+	return
+}
+
 // 记录用户最后的查询路径和参数
 func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 	lq := data.LastQuery{
@@ -44,10 +107,11 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 
 	userbean.User = user
 
-	default_family, err := user.GetLastDefaultFamily()
+	default_family, err := GetLastDefaultFamilyByUserId(user.Id)
 	if err != nil {
-		return
+		return userbean, err
 	}
+
 	familybean, err := FetchFamilyBean(default_family)
 	if err != nil {
 		return
@@ -144,7 +208,7 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, family data.Family,
 		return
 	}
 
-	member_default_family, err := s_u.GetLastDefaultFamily()
+	member_default_family, err := GetLastDefaultFamilyByUserId(s_u.Id)
 	if err != nil {
 		return
 	}
@@ -220,48 +284,25 @@ func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error)
 	tB.Count = thread.NumReplies()
 	tB.CreatedAtDate = thread.CreatedAtDate()
 	//作者资料
-	user, err := thread.User()
+	author, err := thread.User()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read thread author")
-		return tB, err
+		return
 	}
-	tB.Author = user
+	tB.Author = author
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
-	var family data.Family
-	if thread.IsPrivate {
-		//发帖时选择的&家庭茶团资料
-		family.Id = thread.TeamId
-		if err = family.Get(); err != nil {
-			util.Warning(util.LogError(err), " Cannot read thread author family")
-			return tB, err
-		}
-	} else {
-		//默认&家庭茶团资料
-		family, err = user.GetLastDefaultFamily()
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read thread author family")
-			return tB, err
-		}
-	}
-	tB.AuthorFamily = family
-	var team data.Team
-	if !thread.IsPrivate {
-		//发帖时选择的$事业团队资料
-		team.Id = thread.TeamId
-		if err = team.Get(); err != nil {
-			util.Warning(util.LogError(err), " Cannot read thread author team")
-			return tB, err
-		}
-	} else {
-		//默认$事业团队资料
-		team, err = user.GetLastDefaultTeam()
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read thread author team")
-			return tB, err
-		}
+	tB.AuthorFamily, err = GetFamilyByFamilyId(thread.FamilyId)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read thread author family")
+		return
 	}
 
-	tB.AuthorTeam = team
+	tB.AuthorTeam, err = data.GetTeam(thread.TeamId)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read thread author team")
+		return
+	}
+
 	//idea是否被采纳
 	tB.IsApproved = thread.IsApproved()
 
@@ -300,46 +341,23 @@ func FetchObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err
 	user, err := o.User()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read objective author")
-		return oB, err
+		return
 	}
 	oB.Author = user
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
-	var family data.Family
-	if o.IsPrivate {
-		//发帖时选择的&家庭茶团资料
-		family.Id = o.TeamId
-		if err = family.Get(); err != nil {
-			util.Warning(util.LogError(err), " Cannot read objective author family")
-			return oB, err
-		}
-	} else {
-		//默认&家庭茶团资料
-		family, err = user.GetLastDefaultFamily()
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read objective author family")
-			return oB, err
-		}
-	}
-	oB.AuthorFamily = family
 
-	var team data.Team
-	if !o.IsPrivate {
-		//发帖时选择的$事业团队资料
-		team.Id = o.TeamId
-		if err = team.Get(); err != nil {
-			util.Warning(util.LogError(err), " Cannot read objective author team")
-			return oB, err
-		}
-	} else {
-		//默认$事业团队资料
-		team, err = user.GetLastDefaultTeam()
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read objective author team")
-			return oB, err
-		}
+	oB.AuthorFamily, err = GetFamilyByFamilyId(o.FamilyId)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read objective author family")
+		return
 	}
-	oB.AuthorTeam = team
+
+	oB.AuthorTeam, err = data.GetTeam(o.TeamId)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read objective author team")
+		return
+	}
 
 	return oB, nil
 }
@@ -372,49 +390,26 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 	pb.Status = project.GetStatus()
 	pb.Count = project.NumReplies()
 	pb.CreatedAtDate = project.CreatedAtDate()
-	user, err := project.User()
+	author, err := project.User()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read project author")
-		return pb, err
+		return
 	}
-	pb.Author = user
+	pb.Author = author
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
-	var family data.Family
-	if project.IsPrivate {
-		//发帖时选择的&家庭茶团资料
-		family.Id = project.TeamId
-		if err = family.Get(); err != nil {
-			util.Warning(util.LogError(err), " Cannot read project author family")
-			return pb, err
-		}
-	} else {
-		//默认&家庭茶团资料
-		family, err = user.GetLastDefaultFamily()
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read project author family")
-			return pb, err
-		}
-	}
-	pb.AuthorFamily = family
 
-	var team data.Team
-	if !project.IsPrivate {
-		//发帖时选择的$事业团队资料
-		team.Id = project.TeamId
-		if err = team.Get(); err != nil {
-			util.Warning(util.LogError(err), " Cannot read project author team")
-			return pb, err
-		}
-	} else {
-		//默认$事业团队资料
-		team, err = user.GetLastDefaultTeam()
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read project author team")
-			return pb, err
-		}
+	pb.AuthorFamily, err = GetFamilyByFamilyId(project.FamilyId)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read project author family")
+		return
 	}
-	pb.AuthorTeam = team
+
+	pb.AuthorTeam, err = data.GetTeam(project.TeamId)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read project author team")
+		return
+	}
 
 	pb.Place, err = project.Place()
 	if err != nil {
@@ -442,47 +437,26 @@ func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 	PostBean.Attitude = post.Atti()
 	PostBean.Count = post.NumReplies()
 	PostBean.CreatedAtDate = post.CreatedAtDate()
-	user, err := post.User()
+	author, err := post.User()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read post author")
-		return PostBean, err
+		return
 	}
-	PostBean.Author = user
+	PostBean.Author = author
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
-	var family data.Family
-	if post.IsPrivate {
-		//发帖时选择的&家庭茶团资料
-		family.Id = post.TeamId
-		if err = family.Get(); err != nil {
-			util.Warning(util.LogError(err), " Cannot read post author family")
-			return PostBean, err
-		}
-	} else {
-		//默认&家庭茶团资料
-		family, err = user.GetLastDefaultFamily()
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read post author family")
-			return PostBean, err
-		}
+
+	family, err := GetFamilyByFamilyId(post.FamilyId)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read post author family")
+		return
 	}
 	PostBean.AuthorFamily = family
 
-	var team data.Team
-	if !post.IsPrivate {
-		//发帖时选择的$事业团队资料
-		team.Id = post.TeamId
-		if err = team.Get(); err != nil {
-			util.Warning(util.LogError(err), " Cannot read post author team")
-			return PostBean, err
-		}
-	} else {
-		//默认$事业团队资料
-		team, err = user.GetLastDefaultTeam()
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read post author team")
-			return PostBean, err
-		}
+	team, err := data.GetTeam(post.TeamId)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read post author team")
+		return
 	}
 	PostBean.AuthorTeam = team
 
@@ -498,15 +472,29 @@ func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 		TeamBean.Open = false
 	}
 	TeamBean.CreatedAtDate = team.CreatedAtDate()
-	u, err := team.Founder()
+
+	founder, err := team.Founder()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read team founder")
-		return TeamBean, err
+		return
 	}
-	TeamBean.Founder = u
-	TeamBean.FounderDefaultFamily, _ = u.GetLastDefaultFamily()
-	TeamBean.FounderTeam, _ = u.GetLastDefaultTeam()
+	TeamBean.Founder = founder
+
+	founder_default_family, err := GetLastDefaultFamilyByUserId(founder.Id)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read team founder default family")
+		return
+	}
+	TeamBean.FounderDefaultFamily = founder_default_family
+
+	TeamBean.FounderTeam, err = founder.GetLastDefaultTeam()
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read team founder default team")
+		return
+	}
+
 	TeamBean.Count = team.NumMembers()
+
 	return TeamBean, nil
 }
 
@@ -537,7 +525,11 @@ func FetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error)
 		return FamilyBean, err
 	}
 
-	FamilyBean.Count, _ = data.CountFamilyMembers(family.Id)
+	FamilyBean.Count, err = data.CountFamilyMembers(family.Id)
+	if err != nil {
+		util.Warning(util.LogError(err), family.AuthorId, " Cannot read family member count")
+		return FamilyBean, err
+	}
 	return
 }
 
@@ -593,7 +585,7 @@ func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 		}
 	}
 
-	member_default_family, err := u.GetLastDefaultFamily()
+	member_default_family, err := GetLastDefaultFamilyByUserId(fm.UserId)
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get GetLastDefaultFamily FetchFamilyMemberBean()")
 		return

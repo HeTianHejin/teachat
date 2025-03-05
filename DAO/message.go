@@ -5,14 +5,14 @@ import (
 	"time"
 )
 
-// 友邻盲评消息
+// 友邻蒙评消息
 type AcceptMessage struct {
 	Id             int
 	FromUserId     int // 发送者
 	ToUserId       int // 受邀请的用户id
 	Title          string
 	Content        string
-	AcceptObjectId int // 盲评接纳对象id
+	AcceptObjectId int // 蒙评接纳对象id
 	Class          int // 状态： 0未读，1已读,
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
@@ -36,13 +36,13 @@ func (a *AcceptMessage) CreatedAtDate() string {
 	return a.CreatedAt.Format(FMT_DATE_CN)
 }
 
-// Invitee() 友邻盲评 受邀请者
+// Invitee() 友邻蒙评 受邀请者
 func (a *AcceptMessage) Invitee() (user User, err error) {
 	user, err = GetUser(a.ToUserId)
 	return
 }
 
-// Create() 创建邻桌盲评消息
+// Create() 创建邻桌蒙评消息
 func (a *AcceptMessage) Create() (err error) {
 	statement := "INSERT INTO accept_messages (from_user_id, to_user_id, title, content, accept_object_id, class, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
 	stmt, err := Db.Prepare(statement)
@@ -54,7 +54,7 @@ func (a *AcceptMessage) Create() (err error) {
 	return
 }
 
-// GetAccMesByUIdAndAOId() 根据接收用户ID和接纳对象id，获取邻桌盲评消息
+// GetAccMesByUIdAndAOId() 根据接收用户ID和接纳对象id，获取邻桌蒙评消息
 func (a *AcceptMessage) GetAccMesByUIdAndAOId(user_id, accept_object_id int) (err error) {
 	err = Db.QueryRow("SELECT * FROM accept_messages WHERE to_user_id = $1 AND accept_object_id = $2", user_id, accept_object_id).Scan(&a.Id, &a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, &a.CreatedAt, &a.UpdatedAt)
 	return
@@ -156,7 +156,7 @@ func (u *User) ReadAcceptMessages() (acceptMessages []AcceptMessage, err error) 
 	return
 }
 
-// Update() 根据ToUserId和接纳对象id，更新用户的邻桌新茶盲评消息为已读
+// Update() 根据ToUserId和接纳对象id，更新用户的邻桌新茶蒙评消息为已读
 func (a *AcceptMessage) Update(to_user_id, accept_object_id int) (err error) {
 	statement := "UPDATE accept_messages SET class = 1, updated_at = $3 WHERE to_user_id = $1 and accept_object_id = $2"
 	stmt, err := Db.Prepare(statement)
@@ -168,7 +168,7 @@ func (a *AcceptMessage) Update(to_user_id, accept_object_id int) (err error) {
 	return
 }
 
-// Send(user_ids) 向用户ID队列发送新茶盲评请求消息
+// Send(user_ids) 向用户ID队列发送新茶蒙评请求消息
 func (a *AcceptMessage) Send(user_ids []int) (err error) {
 	for _, user_id := range user_ids {
 		a.ToUserId = user_id

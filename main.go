@@ -44,8 +44,8 @@ func main() {
 	mux.HandleFunc("/v1/authenticate", route.Authenticate)
 
 	// defined in route_team.go
-	mux.HandleFunc("/v1/team/new", route.NewTeam)
-	mux.HandleFunc("/v1/team/create", route.CreateTeam)
+	mux.HandleFunc("/v1/team/new", route.NewTeamGet)
+	mux.HandleFunc("/v1/team/create", route.CreateTeamPost)
 	mux.HandleFunc("/v1/team/detail", route.TeamDetail)
 	mux.HandleFunc("/v1/team/avatar", route.TeamAvatar)
 	mux.HandleFunc("/v1/team/invitations", route.InvitationsBrowse)

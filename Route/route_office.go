@@ -7,7 +7,7 @@ import (
 )
 
 // GET /office/draftThread
-// 激活新茶语草稿进入邻桌盲评流程
+// 激活新茶语草稿进入邻桌蒙评流程
 func ActivateDraftThread(w http.ResponseWriter, r *http.Request) {
 
 }
@@ -52,7 +52,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// 向2个非当前用户发送盲评审核消息
+// 向2个非当前用户发送蒙评审核消息
 func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error {
 	var user_ids []int
 	var err error
@@ -106,7 +106,7 @@ func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error 
 	return nil
 }
 
-// 向当前用户发送友邻盲评结果通知消息
+// 向当前用户发送友邻蒙评结果通知消息
 func PilotAcceptMessageSend(u_id int, mess data.AcceptMessage) error {
 
 	// 发送友����评结果通知消息

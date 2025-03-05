@@ -80,29 +80,32 @@ type ProjectBean struct {
 	Open          bool
 	CreatedAtDate string
 	Status        string
-	Count         int // 附属对象茶议计数
-	Author        User
-	AuthorFamily  Family // 作者发帖时选择的家庭，或者默认&家庭
-	AuthorTeam    Team   // 作者发帖时选择的团队，或者默认团队
+	Count         int    // 附属对象茶议计数
+	Author        User   // 作者
+	AuthorFamily  Family // 作者发帖时选择的家庭，
+	AuthorTeam    Team   // 作者发帖时选择的团队，
 	Place         Place  //项目发生的地方,地点
 }
 
 // 某个茶台详情页面渲染所需的动态数据
 type ProjectDetail struct {
-	SessUser              User // 当前会话用户
-	SessUserDefaultTeam   Team
-	SessUserSurvivalTeams []Team
-	SessUserDefaultPlace  Place
-	SessUserBindPlaces    []Place
-	IsInput               bool // 是否需要显示输入面板
-	IsGuest               bool // 是否为游客
+	SessUser                 User   // 当前会话用户
+	IsMaster                 bool   // 是否为茶台主人（创建者）
+	IsGuest                  bool   // 是否为游客
+	IsInput                  bool   // 是否需要显示输入面板
+	SessUserDefaultFamily    Family //当前会话用户默认&家庭茶团
+	SessUserSurvivalFamilies []Family
+	SessUserDefaultTeam      Team
+	SessUserSurvivalTeams    []Team
+	SessUserDefaultPlace     Place
+	SessUserBindPlaces       []Place
 
-	Project      Project //当前浏览茶台
-	Master       User    //台主
-	MasterFamily Family  // 作者发帖时选择的家庭，或者默认&家庭茶团
-	MasterTeam   Team    //作者发帖时选择的团队，或者默认团队$事业团队
+	ProjectBean ProjectBean //当前浏览茶台资料夹
+	//Master       User    //台主，作者，发起人
+	MasterDefaultFamily Family // 作者当前默认&家庭，
+	MasterDefaultTeam   Team   //作者当前默认$团队，
 
-	Place    Place //茶台(项目)活动地方
+	Place    Place //茶台(项目)，活动地方
 	Open     bool
 	IsEdited bool
 
@@ -129,15 +132,16 @@ type DThreadDetail struct {
 
 // 用于茶议详情页面渲染
 type ThreadDetail struct {
-	SessUser              User // 当前会话用户
-	IsGuest               bool // 是否为游客
-	SessUserDefaultFamily Family
-	SessUserDefaultTeam   Team
-	SessUserSurvivalTeams []Team
-	SessUserDefaultPlace  Place
-	SessUserBindPlaces    []Place
-	IsInput               bool // 是否需要显示输入面板
-	IsPostExist           bool // 是否已经回复过了
+	SessUser                 User // 当前会话用户
+	IsGuest                  bool // 是否为游客
+	SessUserDefaultFamily    Family
+	SessUserSurvivalFamilies []Family
+	SessUserDefaultTeam      Team
+	SessUserSurvivalTeams    []Team
+	SessUserDefaultPlace     Place
+	SessUserBindPlaces       []Place
+	IsInput                  bool // 是否需要显示输入面板
+	IsPostExist              bool // 是否已经回复过了
 
 	NumSupport int // 支持人数
 	NumOppose  int // 反对人数

@@ -42,7 +42,6 @@
           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
             <input type="radio" name="class" id="close_project" style="width: fit-content;" value=20 required />
             <label for="close_project">封闭式-仅受邀团队可以品茶</label>
-            <input type="text" class="form-control" name="invite_team_ids" id="invite_team_ids" placeholder="拟邀请的茶团号，以逗号分隔" required />
           </div> 
       </div>
 
@@ -68,6 +67,24 @@
         </select>
       </div>
 
+      <div class="form-group">
+        <fieldset>
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="radio">
+              <label>
+                <input type="radio" name="is_private" id="is_private" value="false" checked required />
+                以团队成员身份
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="is_private" id="is_private" value="true" required />
+                以家庭成员身份
+              </label>
+            </div>
+          </div>
+        </fieldset>
+      </div>
 
       <div class="form-group">
         <label for="team_id">支持团队</label>
@@ -79,7 +96,23 @@
           {{ end }}
         </select>
       </div>
+
+      <div class="form-group">
+        <label for="description">选择家庭</label>
+          <select name="family_id" class="form-control" id="family_id" required>
+            <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
+            </option>
+            {{ range .SessUserSurvivalFamilies }}
+            <option value="{{ .Id }}">{{ .Name }}</option>
+            {{ end }}
+          </select>
+      </div>
       
+      <div class="form-group">
+        <label for="name">封闭式茶会指定邀请的茶团号，以逗号分隔。</label>
+        <input type="text" class="form-control" name="invite_ids" maxlength="456" placeholder="开放式茶会请留白"/>
+      </div>
+
       <input type="hidden" name="ob_uuid" id="ob_uuid" value="{{ .ObjectiveBean.Objective.Uuid }}">
 
       <div class="form-group; col-xs-offset-6 col-sm-offset-6 col-md-offset-6 col-lg-offset-6">

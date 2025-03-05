@@ -1,6 +1,6 @@
 {
-    "Address": "192.168.2.1:8000",
-    "ReadTimeout": 10,
+    "Address": "192.168.50.2:8000",
+    "ReadTimeout": 100,
     "WriteTimeout": 600,
     "Static": "public",
     "MaxInviteTeams": 12,

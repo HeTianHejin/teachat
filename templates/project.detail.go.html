@@ -2,8 +2,8 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?uuid={{ .Project.Objective.Uuid }}">{{ .Project.Objective.Title }}</a> @茶话会</li>
-  <li class="active"> #{{ .Project.Id }} @茶台</li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjective.Uuid }}">{{ .QuoteObjective.Title }}</a> @茶话会</li>
+  <li class="active"> #{{ .ProjectBean.Project.Id }} @茶台</li>
 </ol>
 
 {{/* 这是某个茶台（项目）的详情页 */}}
@@ -27,7 +27,7 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .Project.Title }}
+            {{ .ProjectBean.Project.Title }}
 
           </div>
 
@@ -42,20 +42,20 @@
                 <span class="label label-default">封闭式
                 </span>
                   {{ end }}
-              {{ .Project.CreatedAtDate }}
+              {{ .ProjectBean.Project.CreatedAtDate }}
             </span>
           </div>
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: right; font-size: smaller;">
-              <a href="/v1/user/biography?id={{ .Master.Uuid }}">{{ .Master.Name }}</a>
-              {{if .Master.Gender }}
+              <a href="/v1/user/biography?id={{ .ProjectBean.Author.Uuid }}">{{ .ProjectBean.Author.Name }}</a>
+              {{if .ProjectBean.Author.Gender }}
               <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
-              （<a href="/v1/family/detail?id={{ .MasterFamily.Uuid }}">{{ .MasterFamily.Name }}</a>，
-              <a href="/v1/team/detail?id={{ .MasterTeam.Uuid }}">{{ .MasterTeam.Abbreviation }}</a>）
+              （<a href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
+              <a href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
 
             </span>
             </span>
@@ -66,7 +66,7 @@
 
       <div class="panel-body">
 
-        <p style="white-space: pre-wrap;">{{ .Project.Body }}</p>
+        <p style="white-space: pre-wrap;">{{ .ProjectBean.Project.Body }}</p>
 
         <blockquote>
           <p style="font-size: small;"><a href="/v1/objective/detail?id={{ .QuoteObjective.Uuid }}">
@@ -97,7 +97,7 @@
         {{ if .IsEdited }}
 
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .Project.EditAtDate }} </span>
+        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .ProjectBean.Project.EditAtDate }} </span>
         {{ else }}
         {{/* 没有编辑过（补充内容）则留空白 */}}
         {{ end }}
@@ -115,7 +115,7 @@
   <div class="panel-heading">
     <i class="bi bi-paint-bucket" style="font-size: 1.5rem;"> 新茶议 </i>
     快速撰写
-    <span class="pull-right"><a href="/v1/thread/new?id={{ .Project.Uuid }}">完整撰写</a></span>
+    <span class="pull-right"><a href="/v1/thread/new?id={{ .ProjectBean.Project.Uuid }}">完整撰写</a></span>
   </div>
   <div class="panel-body">
 
@@ -156,7 +156,7 @@
      
 
       {{/* 这是project的id提交 */}}
-      <input type="hidden" name="project_id" value="{{ .Project.Id }}" />
+      <input type="hidden" name="project_id" value="{{ .ProjectBean.Project.Id }}" />
       {{/* 这是post的id提交 */}}
       <input type="hidden" name="post_id" value="0" />
 
@@ -165,13 +165,13 @@
           <div class="radio">
             <label>
               <input type="radio" name="is_private" id="is_private" value="false" checked required />
-              以团队成员身份发言
+              以团队成员身份
             </label>
           </div>
           <div class="radio">
             <label>
               <input type="radio" name="is_private" id="is_private" value="true" required />
-              以家庭成员身份发言
+              以家庭成员身份
             </label>
           </div>
         </div>
@@ -179,7 +179,7 @@
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="team_id">支持团队</label>
+          <label for="team_id">选择团队</label>
           <select name="team_id" class="form-control" id="team_id" required>
             <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
             </option>
@@ -192,8 +192,8 @@
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="team_id">所属家庭</label>
-          <select name="team_id" class="form-control" id="team_id" required>
+          <label for="family_id">选择家庭</label>
+          <select name="family_id" class="form-control" id="family_id" required>
             <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
             </option>
             {{ range .SessUserSurvivalFamilies }}

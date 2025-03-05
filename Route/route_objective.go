@@ -95,7 +95,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
-	if family_id == 0 {
+	if family_id == DefaultFamilyId {
 		Report(w, r, "你好，茶博士查阅了天书黄页，四海为家的人今天不适宜创建茶话会，请稍后再试。")
 		return
 	}
@@ -119,12 +119,12 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//提交的茶团id,是family.id
+	// 检查提交的茶团id,是当前成员family.id
 	// check submit family_id is valid
 	family := data.Family{
-		Id: team_id,
+		Id: family_id,
 	}
-	is_f_member, _ := family.IsMember(s_u.Id)
+	is_f_member, err := family.IsMember(s_u.Id)
 	if !is_f_member {
 		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
 		Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
@@ -246,13 +246,13 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	default:
-		// 未知的茶话会属性
+		// 非法的茶话会属性
 		util.Warning(util.LogError(err), " Unknown objective class")
 		Report(w, r, "你好，茶博士还在研究茶话会的围字是不是有四种写法，忘记创建茶话会了，请稍后再试。")
 		return
 	}
 
-	// 创建一条友邻盲评,是否接纳 新茶的记录
+	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_ob.Id,
 		ObjectType: 1,
@@ -262,7 +262,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
-	// 发送盲评请求消息给两个在线用户
+	// 发送蒙评请求消息给两个在线用户
 	// 构造消息
 	mess := data.AcceptMessage{
 		FromUserId:     1,
@@ -307,7 +307,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 如果茶话会状态是草围（未经邻座盲评审核的草稿）,对其名称和描述内容局部进行随机遮盖处理。
+	// 如果茶话会状态是草围（未经邻座蒙评审核的草稿）,对其名称和描述内容局部进行随机遮盖处理。
 	// for i := range objective_slice {
 	// 	if objective_slice[i].Class == 10 || objective_slice[i].Class == 20 {
 	// 		// 随机遮盖50%处理
@@ -388,7 +388,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	case 1, 2:
 		break
 	case 10, 20:
-		Report(w, r, "你好，这个茶话会需要等待友邻盲评通过之后才能启用呢。")
+		Report(w, r, "你好，这个茶话会需要等待友邻蒙评通过之后才能启用呢。")
 		return
 	default:
 		Report(w, r, "你好，这个茶话会主人据说因为很cool，资料似乎被外星人看中带走了。")
@@ -401,7 +401,12 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//fetch public projects
-	project_slice, _ := oD.ObjectiveBean.Objective.GetPublicProjects()
+	project_slice, err := ob.GetPublicProjects()
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
+		return
+	}
 	oD.ProjectBeanSlice, err = FetchProjectBeanSlice(project_slice)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
@@ -413,7 +418,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//未登录！
 		// 准备页面数据
-		oD.ObjectiveBean.Objective.PageData.IsAuthor = false
+		oD.IsAuthor = false
 		oD.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
@@ -462,13 +467,13 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	if s_u.Id == oD.ObjectiveBean.Author.Id {
 		//是作者
 		//准备页面数据
-		oD.ObjectiveBean.Objective.PageData.IsAuthor = true
+		oD.IsAuthor = true
 		//配置私有导航条的茶话会详情页面
 		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")
 		return
 	} else {
 		//不是作者
-		oD.ObjectiveBean.Objective.PageData.IsAuthor = false
+		oD.IsAuthor = false
 
 		//配置私有导航条的茶话会详情页面
 		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")

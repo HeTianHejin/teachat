@@ -371,7 +371,8 @@ create table projects (
   edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   cover                  varchar(64),
   team_id                integer not null default 2,
-  is_private             boolean default false
+  is_private             boolean default false,
+  family_id              integer not null default 0
 );
 
 create table draft_threads (
@@ -385,7 +386,8 @@ create table draft_threads (
   type                   integer default 0,
   post_id                integer default 0,
   team_id                integer not null default 2,
-  is_private             boolean default false
+  is_private             boolean default false,
+  family_id              integer default 0
 );
 
 create table threads (
@@ -398,7 +400,7 @@ create table threads (
   title                  varchar(64),
   edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   project_id             integer references projects(id),
-  hit_count              integer default 0,
+  family_id              integer default 0,
   type                   integer default 0,
   post_id                integer default 0,
   team_id                integer not null default 2,
@@ -421,7 +423,8 @@ create table draft_posts (
   attitude               boolean,
   class                  integer default 0,
   team_id                integer not null default 2,
-  is_private             boolean default false
+  is_private             boolean default false,
+  family_id              integer default 0
 );
 
 create table posts (
@@ -433,9 +436,10 @@ create table posts (
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   attitude               boolean,
-  score                  integer default 60,
+  family_id              integer default 0,
   team_id                integer not null default 2,
-  is_private             boolean default false
+  is_private             boolean default false,
+  class                  integer default 1
 );
 
 create table administrators (

@@ -10,7 +10,7 @@ import (
 )
 
 // Handler /v1/office/polite
-// 通用友邻盲评页面，是否接受新茶语录
+// 通用友邻蒙评页面，是否接受新茶语录
 func Polite(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
@@ -66,7 +66,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 声明 1 友邻盲评 记录
+	// 声明 1 友邻蒙评 记录
 	newAcceptance := data.Acceptance{
 		AcceptObjectId: ao_id_int,
 		XAccept:        false,
@@ -100,7 +100,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，(摸摸头想了又想), 茴香豆的茴字真的有四种写法吗？")
 				return
 			}
-			// 友邻盲评审茶首次记录完成
+			// 友邻蒙评审茶首次记录完成
 			Report(w, r, "好茶香护有缘人，感谢你出手维护文明秩序！")
 			return
 		} else {
@@ -140,8 +140,8 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	// 检查新茶评审结果,如果任意一位友邻否定这是文明发言，就判断为不通过审核
 	if !oldAcceptance.XAccept || !oldAcceptance.YAccept {
 
-		//友邻盲评拒绝接纳这个茶语！Oh my...
-		// 通知茶语主人友邻盲评结果为：婉拒！---没有通知
+		//友邻蒙评拒绝接纳这个茶语！Oh my...
+		// 通知茶语主人友邻蒙评结果为：婉拒！---没有通知
 		// 根据对象类型处理
 		switch ao.ObjectType {
 		case 1:
@@ -157,7 +157,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			} else if ob.Class == 20 {
 				ob.Class = 32
 			}
-			// 更新茶话会，友邻盲评未通过！
+			// 更新茶话会，友邻蒙评未通过！
 			if err = ob.UpdateClass(); err != nil {
 				util.Warning(util.LogError(err), "Cannot update ob class")
 				Report(w, r, "你好，(摸摸头想了又想), 为什么踢足球的人都说临门一脚最麻烦呢？")
@@ -193,7 +193,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术,而是耐心。")
 				return
 			}
-			// 更新������，友邻盲评 已拒绝公开发布
+			// 更新������，友邻蒙评 已拒绝公开发布
 			if err = dThread.UpdateClass(2); err != nil {
 				util.Warning(util.LogError(err), "Cannot update thread class")
 				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
@@ -208,7 +208,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候 弄丢草稿的人不一定是诗人？")
 				return
 			}
-			if err = dPost.UpdateDraftPost(2); err != nil {
+			if err = dPost.UpdateClass(2); err != nil {
 				util.Danger(util.LogError(err), "Cannot update draft-post class")
 				Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
 				return
@@ -256,7 +256,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
-			// 更新茶话会，友邻盲评已通过！
+			// 更新茶话会，友邻蒙评已通过！
 			if err = ob.UpdateClass(); err != nil {
 				util.Warning(util.LogError(err), "Cannot update ob class")
 				Report(w, r, "你好，(摸摸头想了又想), 为什么踢足球的人都说临门一脚最麻烦呢？")
@@ -282,7 +282,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
-			// 更新茶台，友邻盲评已通过！
+			// 更新茶台，友邻蒙评已通过！
 			if err = pr.UpdateClass(); err != nil {
 				util.Warning(util.LogError(err), "Cannot update pr class")
 				Report(w, r, "你好，一畦春韭绿，十里稻花香。")
@@ -300,7 +300,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
 				return
 			}
-			// 更新茶议，友邻盲评已通过！
+			// 更新茶议，友邻蒙评已通过！
 			if err = dThread.UpdateClass(1); err != nil {
 				util.Warning(util.LogError(err), "Cannot update draft-thread class")
 				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
@@ -314,7 +314,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Class:     1,
 				Title:     dThread.Title,
 				ProjectId: dThread.ProjectId,
-				HitCount:  0,
+				FamilyId:  dThread.FamilyId,
 				Type:      dThread.Type,
 				PostId:    dThread.PostId,
 				TeamId:    dThread.TeamId,
@@ -336,19 +336,23 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，闪电考拉失魂鱼，竟然说有时候找资料的人不一定是外星人？")
 				return
 			}
-			if err = dPost.UpdateDraftPost(1); err != nil {
+			if err = dPost.UpdateClass(1); err != nil {
 				util.Danger(util.LogError(err), "Cannot update draft-post class")
 				Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
 				return
 			}
 			// 转为正式品味稿
-			post_author, err := data.GetUser(dPost.UserId)
-			if err != nil {
-				util.Danger(util.LogError(err), "Cannot get post_author given draftPost.user_id")
-				Report(w, r, "你好，绕堤柳借三篙翠。")
-				return
+			new_post := data.Post{
+				Body:      dPost.Body,
+				UserId:    dPost.UserId,
+				FamilyId:  dPost.Id,
+				TeamId:    dPost.TeamId,
+				ThreadId:  dPost.ThreadId,
+				IsPrivate: dPost.IsPrivate,
+				Attitude:  dPost.Attitude,
+				Class:     1,
 			}
-			if _, err = post_author.CreatePost(dPost.ThreadId, dPost.TeamId, dPost.Attitude, dPost.IsPrivate, dPost.Body); err != nil {
+			if err = new_post.Create(); err != nil {
 				util.Danger(util.LogError(err), "Cannot create post")
 				Report(w, r, "你好，品茶是一种艺术，一杯为品，二杯为解渴。")
 				return
@@ -367,7 +371,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			} else if team.Class == 20 {
 				team.Class = 2
 			}
-			// 更新团队属性，友邻盲评已通过！
+			// 更新团队属性，友邻蒙评已通过！
 			if err = team.UpdateClass(); err != nil {
 				util.Danger(util.LogError(err), "Cannot update team class")
 				Report(w, r, "你好，（摸摸头）考一考你，情中情因情感妹妹　错里错以错劝哥哥.是什么意思？")
@@ -447,7 +451,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get /v1/office/polite
-// 向用户返回“友邻盲评”审茶页面
+// 向用户返回“友邻蒙评”审茶页面
 func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
@@ -469,7 +473,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，换成int失败，评审的资料？")
 		return
 	}
-	// 友邻盲评对象
+	// 友邻蒙评对象
 	ao := data.AcceptObject{
 		Id: ob_id,
 	}
@@ -479,7 +483,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//读取友邻盲评邀请函
+	//读取友邻蒙评邀请函
 	var acceptMessage data.AcceptMessage
 	if err = acceptMessage.GetAccMesByUIdAndAOId(su.Id, ao.Id); err != nil {
 		util.Warning(util.LogError(err), "Cannot get accept-message invitation")
@@ -505,7 +509,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 		//aopd.Title = ob.Title
 		aopd.Body = ob.Title + "." + ob.Body
-		// 更新友邻盲评邀请函class为已读
+		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(util.LogError(err), "Cannot update ob accept-message class")
 		}
@@ -520,7 +524,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 		//aopd.Title = pr.Title
 		aopd.Body = pr.Title + "." + pr.Body
-		// 更新友邻盲评邀请函class为已读
+		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(util.LogError(err), "Cannot update pr accept-message class")
 		}
@@ -538,7 +542,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(util.LogError(err), "Cannot update draft-thread accept-message class")
 		}
-		// 更新友邻盲评邀请函class为已读
+		// 更新友邻蒙评邀请函class为已读
 		acceptMessage.Update(su.Id, dThread.Id)
 	case 4:
 		dPost := data.DraftPost{
@@ -550,7 +554,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		aopd.Body = dPost.Body
-		// 更新友邻盲评邀请函class为已读
+		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(util.LogError(err), "Cannot update po accept-message class")
 		}
@@ -563,7 +567,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 		//aopd.Title = team.Name
 		aopd.Body = team.Name + "." + team.Mission
-		// 更新友邻盲评邀请函class为已读
+		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
 			util.Warning(util.LogError(err), "Cannot update team accept-message class")
 		}

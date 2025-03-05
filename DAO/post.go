@@ -14,9 +14,10 @@ type Post struct {
 	CreatedAt time.Time
 	EditAt    time.Time
 	Attitude  bool
-	Score     int
+	FamilyId  int  //作者发帖时选择的家庭id
 	TeamId    int  //作者发帖时选择的成员所属茶团id（team/family）
 	IsPrivate bool //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
+	Class     int  //0:其他类型，1:已通过（友邻蒙评），2:（友邻蒙评）已拒绝
 
 	//仅页面渲染用
 	PageData PublicPData
@@ -39,9 +40,10 @@ type DraftPost struct {
 	ThreadId  int
 	CreatedAt time.Time
 	Attitude  bool
-	Class     int  //0：原始草稿，1:已通过（友邻盲评），2:（友邻盲评）已拒绝
+	Class     int  //0：原始草稿，1:已通过（友邻蒙评），2:（友邻蒙评）已拒绝
 	TeamId    int  //作者发帖时选择的成员所属茶团id（team/family）
 	IsPrivate bool //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
+	FamilyId  int  //作者发帖时选择的家庭id
 }
 
 var DraftPostStatus = map[int]string{
@@ -79,59 +81,67 @@ func (post *Post) UpdateBody(body string) (err error) {
 	return
 }
 
-// user create a new post to a thread
-// 用户初次发表跟帖（对主贴主张进行表态）
-func (user *User) CreatePost(thread_id, team_id int, attitude, is_private bool, body string) (post Post, err error) {
-	statement := "INSERT INTO posts (uuid, body, user_id, thread_id, created_at, edit_at, attitude, team_id, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid"
+// (post *Post) Create() 按照post的struct创建一个post
+func (post *Post) Create() (err error) {
+	statement := "INSERT INTO posts (uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	// use QueryRow to return a row and scan the returned id into the post struct
-	err = stmt.QueryRow(Random_UUID(), body, user.Id, thread_id, time.Now(), time.Now(), attitude, team_id, is_private).Scan(&post.Id, &post.Uuid)
+	err = stmt.QueryRow(Random_UUID(), post.Body, post.UserId, post.ThreadId, post.CreatedAt, post.EditAt, post.Attitude, post.FamilyId, post.TeamId, post.IsPrivate, post.Class).Scan(&post.Id, &post.Uuid)
 	return
 }
 
-// GetPostByUuid() gets a post by the UUID
-func GetPostByUuid(uuid string) (post Post, err error) {
-	post = Post{}
-	err = Db.QueryRow("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score, team_id, is_private FROM posts WHERE uuid = $1", uuid).
-		Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score, &post.TeamId, &post.IsPrivate)
+// user create a new post to a thread
+// 用户初次发表跟帖（对主贴主张进行表态）
+// (post *Post) Get()
+func (post *Post) Get() (err error) {
+	statement := "SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE id = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(post.Id).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.FamilyId, &post.TeamId, &post.IsPrivate, &post.Class)
 	return
 }
 
-// GetPostById() gets a post by the id
-func GetPostById(id int) (post Post, err error) {
-	post = Post{}
-	err = Db.QueryRow("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score, team_id, is_private FROM posts WHERE id = $1", id).
-		Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score, &post.TeamId, &post.IsPrivate)
+// (post *Post) GetByUuid() gets a post by the UUID
+func (post *Post) GetByUuid() (err error) {
+	statement := "SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE uuid = $1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(post.Uuid).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.FamilyId, &post.TeamId, &post.IsPrivate, &post.Class)
 	return
 }
 
 // update a post.score
-func (post *Post) UpdateScore(score int) (err error) {
-	statement := "UPDATE posts SET score = $2 WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(post.Id, score)
-	return
-}
+// func (post *Post) UpdateScore(score int) (err error) {
+// 	statement := "UPDATE posts SET score = $2 WHERE id = $1"
+// 	stmt, err := Db.Prepare(statement)
+// 	if err != nil {
+// 		return
+// 	}
+// 	defer stmt.Close()
+// 	_, err = stmt.Exec(post.Id, score)
+// 	return
+// }
 
 // get posts to a thread
-// 获取某个thread的全部posts,按照 .score DESC 排序
+// 获取某个thread的全部posts,按照  DESC 排序
 func (t *Thread) Posts() (posts []Post, err error) {
 	posts = []Post{}
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, score, team_id, is_private FROM posts WHERE thread_id = $1 ORDER BY score DESC", t.Id)
+	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE thread_id = $1", t.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		post := Post{}
-		if err = rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.Score, &post.TeamId, &post.IsPrivate); err != nil {
+		if err = rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt, &post.EditAt, &post.Attitude, &post.FamilyId, &post.TeamId, &post.IsPrivate, &post.Class); err != nil {
 			return
 		}
 		posts = append(posts, post)
@@ -141,53 +151,53 @@ func (t *Thread) Posts() (posts []Post, err error) {
 }
 
 // 统计某个thread的全部posts的.score总值，返回int
-func (t *Thread) PostsScore() (score int, err error) {
-	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1", t.Id).Scan(&score)
-	if err != nil {
-		return
-	}
-	return
-}
+// func (t *Thread) PostsScore() (score int, err error) {
+// 	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1", t.Id).Scan(&score)
+// 	if err != nil {
+// 		return
+// 	}
+// 	return
+// }
 
 // 统计某个thread的posts.attitude=true的.score总值，返回int
-func (t *Thread) PostsScoreSupport() (score int, err error) {
-	//first, check the posts table to see if there are any posts with attitude=true for this thread
-	//if there are none, return 0
-	//if there are some, sum the score for those posts
-	//return the sum
-	//check if there are any posts with attitude=true for this thread
-	var count int
-	err = Db.QueryRow("SELECT count(*) FROM posts WHERE thread_id = $1 AND attitude = true", t.Id).Scan(&count)
-	//if there are none, return 0
-	if err != nil {
-		return 0, err
-	}
-	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1 AND attitude = true", t.Id).Scan(&score)
-	if err != nil {
-		return
-	}
-	return
-}
+// func (t *Thread) PostsScoreSupport() (score int, err error) {
+// 	//first, check the posts table to see if there are any posts with attitude=true for this thread
+// 	//if there are none, return 0
+// 	//if there are some, sum the score for those posts
+// 	//return the sum
+// 	//check if there are any posts with attitude=true for this thread
+// 	var count int
+// 	err = Db.QueryRow("SELECT count(*) FROM posts WHERE thread_id = $1 AND attitude = true", t.Id).Scan(&count)
+// 	//if there are none, return 0
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1 AND attitude = true", t.Id).Scan(&score)
+// 	if err != nil {
+// 		return
+// 	}
+// 	return
+// }
 
 // 统计某个thread的posts.attitude=false的.score总值，返回int
-func (t *Thread) PostsScoreOppose() (score int, err error) {
-	//first, check the posts table to see if there are any posts with attitude=false for this thread
-	//if there are none, return 0
-	//if there are some, sum the score for those posts
-	//return the sum
-	//check if there are any posts with attitude=false for this thread
-	var count int
-	err = Db.QueryRow("SELECT count(*) FROM posts WHERE thread_id = $1 AND attitude = false", t.Id).Scan(&count)
-	//if there are none, return 0
-	if err != nil {
-		return 0, err
-	}
-	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1 AND attitude = false", t.Id).Scan(&score)
-	if err != nil {
-		return
-	}
-	return
-}
+// func (t *Thread) PostsScoreOppose() (score int, err error) {
+// 	//first, check the posts table to see if there are any posts with attitude=false for this thread
+// 	//if there are none, return 0
+// 	//if there are some, sum the score for those posts
+// 	//return the sum
+// 	//check if there are any posts with attitude=false for this thread
+// 	var count int
+// 	err = Db.QueryRow("SELECT count(*) FROM posts WHERE thread_id = $1 AND attitude = false", t.Id).Scan(&count)
+// 	//if there are none, return 0
+// 	if err != nil {
+// 		return 0, err
+// 	}
+// 	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1 AND attitude = false", t.Id).Scan(&score)
+// 	if err != nil {
+// 		return
+// 	}
+// 	return
+// }
 
 // NumReplies() returns the number of threads where Thread.PostId = Post.Id
 func (post *Post) NumReplies() (count int) {
@@ -199,43 +209,26 @@ func (post *Post) NumReplies() (count int) {
 }
 
 // Create() 创建一个新的DraftPost草稿
-func (user *User) CreateDraftPost(thread_id, team_id int, attitude, is_private bool, body string) (post DraftPost, err error) {
-	statement := "INSERT INTO draft_posts (user_id, thread_id, body, created_at, attitude, class, team_id, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+func (user *User) CreateDraftPost(thread_id, family_id, team_id int, attitude, is_private bool, body string) (post DraftPost, err error) {
+	statement := "INSERT INTO draft_posts (user_id, thread_id, body, created_at, attitude, class, team_id, is_private, family_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(user.Id, thread_id, body, time.Now(), attitude, 0, team_id, is_private).Scan(&post.Id)
+	err = stmt.QueryRow(user.Id, thread_id, body, time.Now(), attitude, 0, team_id, is_private, family_id).Scan(&post.Id)
 	return
 }
 
 // Get() 读取一个DraftPost品味（跟帖）稿
 func (draft_post *DraftPost) Get() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id FROM draft_posts WHERE id = $1", draft_post.Id).
-		Scan(&draft_post.Id, &draft_post.UserId, &draft_post.ThreadId, &draft_post.Body, &draft_post.CreatedAt, &draft_post.Attitude, &draft_post.Class, &draft_post.TeamId)
+	err = Db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id, is_private, family_id FROM draft_posts WHERE id = $1", draft_post.Id).
+		Scan(&draft_post.Id, &draft_post.UserId, &draft_post.ThreadId, &draft_post.Body, &draft_post.CreatedAt, &draft_post.Attitude, &draft_post.Class, &draft_post.TeamId, &draft_post.IsPrivate, &draft_post.FamilyId)
 	return
 }
 
-// GetDraftPostbyUserId() 读取��个用户的全部DraftPost品��（����）稿
-func GetDraftPostbyUserId(user_id int) (posts []DraftPost, err error) {
-	rows, err := Db.Query("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id FROM draft_posts WHERE user_id = $1", user_id)
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		post := DraftPost{}
-		if err = rows.Scan(&post.Id, &post.UserId, &post.ThreadId, &post.Body, &post.CreatedAt, &post.Attitude, &post.Class, &post.TeamId); err != nil {
-			return
-		}
-		posts = append(posts, post)
-	}
-	rows.Close()
-	return
-}
-
-// UpdateDraftPost() 更新一个DraftPost品��（����）稿
-func (post *DraftPost) UpdateDraftPost(class int) (err error) {
+// UpdateClass() 更新一个DraftPost品��（����）稿
+func (post *DraftPost) UpdateClass(class int) (err error) {
 	statement := "UPDATE draft_posts SET class = $2 WHERE id = $1"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {

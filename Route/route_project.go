@@ -55,6 +55,13 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
 		util.Warning(util.LogError(err), team_id, "Failed to convert team_id to int")
+		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		return
+	}
+	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
+	if err != nil {
+		util.Warning(util.LogError(err), "Failed to convert family_id to int")
+		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
 	//获取目标茶话会
@@ -80,38 +87,37 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 	//读取提交的is_private bool参数
 	is_private := r.PostFormValue("is_private") == "true"
-	if !is_private {
-		//提交的茶团id,是team.id
-		// check the given team_id is valid
-		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
-		if err != nil {
-			if err == sql.ErrNoRows {
-				//util.Info(util.LogError(err), " Cannot get member by team id and user id")
-				Report(w, r, "你好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")
-				return
-			} else {
-				util.Warning(util.LogError(err), " Cannot get member by team id and user id")
-				Report(w, r, "你好，茶博士眼镜失踪了，未能创建新茶台，请稍后再试。")
-				return
-			}
-		}
-	} else {
-		//提交的茶团id,是family.id
-		// check submit family_id is valid
-		family := data.Family{
-			Id: team_id,
-		}
-		is_member, err := family.IsMember(s_u.Id)
-		if err != nil {
-			util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
-			Report(w, r, "你好，茶博士眼镜失踪，未能创建新茶台，请稍后再试。")
+
+	//提交的茶团id,是team.id，检查是否成员
+	// check the given team_id is valid
+	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			//util.Info(util.LogError(err), " Cannot get member by team id and user id")
+			Report(w, r, "你好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")
+			return
+		} else {
+			util.Warning(util.LogError(err), " Cannot get member by team id and user id")
+			Report(w, r, "你好，茶博士眼镜失踪了，未能创建新茶台，请稍后再试。")
 			return
 		}
-		if !is_member {
-			util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
-			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-			return
-		}
+	}
+
+	//提交的茶团id,是family.id，检查是否家庭成员
+	// check submit family_id is valid
+	family := data.Family{
+		Id: team_id,
+	}
+	is_member, err := family.IsMember(s_u.Id)
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+		Report(w, r, "你好，茶博士眼镜失踪，未能创建新茶台，请稍后再试。")
+		return
+	}
+	if !is_member {
+		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+		Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+		return
 	}
 
 	place_uuid := r.PostFormValue("place_uuid")
@@ -142,12 +148,12 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		ObjectiveId: t_ob.Id,
 		Class:       class,
 		TeamId:      team_id,
-		UserId:      s_u.Id,
+		FamilyId:    family_id,
 		IsPrivate:   is_private,
 	}
 
 	// 根据茶话会属性判断
-	// 检查一下该茶话会是否草围（待盲评审核状态）
+	// 检查一下该茶话会是否草围（待蒙评审核状态）
 	switch t_ob.Class {
 	case 10, 20:
 		// 该茶话会是草围,尚未启用，不能新开茶台
@@ -166,7 +172,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			}
 
 		} else if class == 20 {
-			tIds_str := r.PostFormValue("invite_team_ids")
+			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !Verify_id_slice_Format(tIds_str) {
 				util.Info(util.LogError(err), " TeamId slice format is wrong")
@@ -178,7 +184,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
 			if len(team_ids_str) > int(util.Config.MaxInviteTeams) {
 				util.Info(util.LogError(err), " Too many team ids")
-				Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
+				Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，请确认后再试。")
 				return
 			}
 			team_id_slice := make([]int, 0, util.Config.MaxInviteTeams)
@@ -226,7 +232,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if class == 20 {
-			tIds_str := r.PostFormValue("invite_team_ids")
+			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !Verify_id_slice_Format(tIds_str) {
 				util.Info(util.LogError(err), " TeamId slice format is wrong")
@@ -285,7 +291,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建一条友邻盲评,是否接纳 新茶的记录
+	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_proj.Id,
 		ObjectType: 1,
@@ -295,7 +301,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
-	// 发送盲评请求消息给两个在线用户
+	// 发送蒙评请求消息给两个在线用户
 	// 构造消息
 	mess := data.AcceptMessage{
 		FromUserId:     1,
@@ -340,7 +346,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//根据会话从数据库中读取当前用户的团队,地方信息，
-	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		Report(w, r, "你好，三人行，必有大佬焉，请稍后再试。")
 		return
@@ -350,13 +356,15 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	// 填写页面数据
 	// 填写页面会话用户资料
 	oD.SessUser = s_u
+	oD.SessUserDefaultFamily = s_default_family
+	oD.SessUserSurvivalFamilies = s_survival_families
 	oD.SessUserDefaultTeam = s_default_team
 	oD.SessUserSurvivalTeams = s_survival_teams
 	oD.SessUserDefaultPlace = s_default_place
 	oD.SessUserBindPlaces = s_places
 	oD.ObjectiveBean, err = FetchObjectiveBean(o)
 	if err != nil {
-		Report(w, r, "你好，������失������，未能找到��台，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，未能找到茶围资料，请稍后再试。")
 		return
 	}
 
@@ -377,8 +385,8 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
 		ok, err := o.IsInvitedMember(s_u.Id)
 		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read project")
-			Report(w, r, "你好，������失������，未能找到��台，请稍后再试。")
+			util.Warning(util.LogError(err), " Cannot read objective Invited-list")
+			Report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
 			return
 		}
 		if ok {
@@ -407,47 +415,48 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	// 获取请求的茶台详情
-	pD.Project, err = data.GetProjectByUuid(uuid)
+	project, err := data.GetProjectByUuid(uuid)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read project")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
-	//检查project.Class=1 or 2,否则属于未经 友邻盲评 通过的草稿，不允许查看
-	if pD.Project.Class != 1 && pD.Project.Class != 2 {
+	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
+	if project.Class != 1 && project.Class != 2 {
 		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
 		return
 	}
 
-	pD.Master, err = pD.Project.User()
+	pD.ProjectBean, err = FetchProjectBean(project)
 	if err != nil {
-		util.Warning(util.LogError(err), pD.Project.Id, " Cannot read project user")
-		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
+		util.Warning(util.LogError(err), " Cannot read project")
+		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
 
-	pD.MasterFamily, err = pD.Master.GetLastDefaultFamily()
-	if err != nil {
-		util.Warning(util.LogError(err), pD.Master.Id, " Cannot read project master's default family")
-		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
-		return
-	}
+	// master_default_family, err := GetLastDefaultFamilyByUserId(pD.ProjectBean.Author.Id)
+	// if err != nil {
+	// 	util.Warning(util.LogError(err), " Cannot read family")
+	// 	Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
+	// 	return
+	// }
+	// pD.MasterDefaultFamily = master_default_family
 
-	pD.MasterTeam, err = data.GetTeam(pD.Project.TeamId)
-	if err != nil {
-		util.Warning(util.LogError(err), pD.Project.TeamId, " Cannot read project team")
-		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
-		return
-	}
+	// pD.MasterDefaultTeam, err = data.GetTeam(pD.ProjectBean.Project.TeamId)
+	// if err != nil {
+	// 	util.Warning(util.LogError(err), pD.ProjectBean.Project.TeamId, " Cannot read project team")
+	// 	Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
+	// 	return
+	// }
 
 	// 准备页面数据
-	if pD.Project.Class == 1 {
+	if pD.ProjectBean.Project.Class == 1 {
 		pD.Open = true
 	} else {
 		pD.Open = false
 	}
 
-	pD.QuoteObjective, err = pD.Project.Objective()
+	pD.QuoteObjective, err = pD.ProjectBean.Project.Objective()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read objective")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。")
@@ -461,12 +470,15 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，梨花满地不闻莺，请稍后再试。")
 		return
 	}
-	pD.QuoteObjectiveAuthorFamily, err = pD.QuoteObjectiveAuthor.GetLastDefaultFamily()
+
+	q_objective_author_family, err := GetFamilyByFamilyId(pD.QuoteObjective.FamilyId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read objective author family")
 		Report(w, r, "你好，茶博士满头大汗，唱花开花谢花漫天，请稍后再试。")
 		return
 	}
+	pD.QuoteObjectiveAuthorFamily = q_objective_author_family
+
 	pD.QuoteObjectiveAuthorTeam, err = data.GetTeam(pD.QuoteObjective.TeamId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read objective author team")
@@ -476,14 +488,14 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	var oabSlice []data.ThreadBean
 	// 读取全部茶议资料
-	threadslice, err := pD.Project.Threads()
+	thread_slice, err := pD.ProjectBean.Project.Threads()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read threads given project")
 		Report(w, r, "你好，满头大汗的茶博士说，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。")
 		return
 	}
 
-	len := len(threadslice)
+	len := len(thread_slice)
 	// .ThreadCount数量
 	pD.ThreadCount = len
 	// 检测pageData.ThreadSlice数量是否超过一打dozen
@@ -495,12 +507,12 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	// .ThreadIsApprovedCount数量
 	ta := data.ThreadApproved{
-		ProjectId: pD.Project.Id,
+		ProjectId: pD.ProjectBean.Project.Id,
 	}
 	pD.ThreadIsApprovedCount = ta.CountByProjectId()
 
 	// 获取茶议和作者相关资料荚
-	oabSlice, err = FetchThreadBeanSlice(threadslice)
+	oabSlice, err = FetchThreadBeanSlice(thread_slice)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read thread-bean slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中...")
@@ -509,7 +521,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.ThreadBeanSlice = oabSlice
 
 	// 获取茶台项目活动地方
-	pD.Place, err = pD.Project.Place()
+	pD.Place, err = pD.ProjectBean.Project.Place()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read project place")
 		Report(w, r, "你好，满头大汗的茶博士唱，过高花已妒，请稍后再试。")
@@ -521,7 +533,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 未登录，游客
 		// 填写页面数据
-		pD.Project.PageData.IsAuthor = false
+		pD.ProjectBean.Project.PageData.IsAuthor = false
 		pD.IsInput = false
 		pD.IsGuest = true
 		//标记为非台主
@@ -546,28 +558,35 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 已登陆用户
 	pD.IsGuest = false
 	//从会话查获当前浏览用户资料荚
-	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot get user-related data from session")
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
+	//把系统默认家庭资料加入s_survival_families
+	s_survival_families = append(s_survival_families, DefaultFamily)
+	//把系统默认团队资料加入s_survival_teams
+	s_survival_teams = append(s_survival_teams, FreelancerTeam)
+
 	pD.SessUser = s_u
+	pD.SessUserDefaultFamily = s_default_family
+	pD.SessUserSurvivalFamilies = s_survival_families
 	pD.SessUserDefaultTeam = s_default_team
 	pD.SessUserSurvivalTeams = s_survival_teams
 	pD.SessUserDefaultPlace = s_default_place
 	pD.SessUserBindPlaces = s_places
 
 	//如果这是class=2封闭式茶台，需要检查当前浏览用户是否可以创建新茶议
-	if pD.Project.Class == 2 {
+	if pD.ProjectBean.Project.Class == 2 {
 		// 是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
-		ok, err := pD.Project.IsInvitedMember(s_u.Id)
+		ok, err := pD.ProjectBean.Project.IsInvitedMember(s_u.Id)
 		if err != nil {
 			Report(w, r, "你好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 			return
 		}
 		if ok {
-			// 当前用户是��话会��请��队成员，可以新开茶议
+			// 当前用户是本茶话会邀请$团队成员，可以新开茶议
 			pD.IsInput = true
 		} else {
 			// 当前会话用户不是本茶话会邀请$团队成员，不能新开茶议
@@ -579,13 +598,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查是否台主，先默认为否
-	pD.Project.PageData.IsAuthor = false
+	pD.ProjectBean.Project.PageData.IsAuthor = false
 	for i := range pD.ThreadBeanSlice {
 		pD.ThreadBeanSlice[i].IsMaster = false
 	}
-	if s_u.Id == pD.Project.UserId {
+	if s_u.Id == pD.ProjectBean.Project.UserId {
 		// 标记茶台信息为台主
-		pD.Project.PageData.IsAuthor = true
+		pD.ProjectBean.Project.PageData.IsAuthor = true
 		//在每个茶议中标记是台主
 		for i := range pD.ThreadBeanSlice {
 			pD.ThreadBeanSlice[i].IsMaster = true
@@ -593,7 +612,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	// 查是否管理员
 	//获取团队核心成员名单
-	tcms, err := pD.MasterTeam.CoreMembers()
+	tcms, err := pD.MasterDefaultTeam.CoreMembers()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot get team-core-members")
 		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")

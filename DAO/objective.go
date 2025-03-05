@@ -188,19 +188,7 @@ func (objective *Objective) IsEdited() bool {
 
 // 创建封闭式茶话会的许可茶团号
 func (obLicenseTeam *ObjectiveInvitedTeam) Create() (err error) {
-	// 茶团号是否已存在
-	// var count int
-	// err = Db.QueryRow("SELECT COUNT(*) FROM objective_invited_teams WHERE objective_id = $1 AND team_id = $2", obLicenseTeam.ObjectiveId, obLicenseTeam.TeamId).Scan(&count)
-	// if err != nil {
-	// 	return
-	// }
-	// if count > 0 {
-	// 	_, err = Db.Exec("DELETE FROM objective_invited_teams WHERE objective_id = $1 AND team_id = $2", obLicenseTeam.ObjectiveId, obLicenseTeam.TeamId)
-	// 	if err != nil {
-	// 		return
-	// 	}
-	// }
-	// 保存入新的号
+
 	statement := "INSERT INTO objective_invited_teams (objective_id, team_id, created_at) VALUES ($1, $2, $3) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {

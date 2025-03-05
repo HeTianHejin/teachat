@@ -51,6 +51,7 @@
 {{ if .ThreadBean.Thread.PageData.IsAuthor }}
 {{/* 右danger（红）左primary（蓝）品味进度条 */}}
 <div class="progress">
+
   <div class="progress-bar progress-bar-primary progress-bar-striped active" aria-valuenow="{{.ProgressOppose}}"
     aria-valuemin="0" aria-valuemax="100" style="width: {{.ProgressOppose}}%;">
     <span class="sr-only">{{.ProgressOppose}}% 完成 (摇头)</span>
@@ -58,6 +59,7 @@
 
   <div class="progress-bar progress-bar-danger progress-bar-striped active" aria-valuenow="{{.ProgressSupport}}"
     aria-valuemin="0" aria-valuemax="100" style="width: {{.ProgressSupport}}%;">
+
     <span class="sr-only">{{.ProgressSupport}}% 完成 (颔首)</span>
   </div>
 
@@ -159,9 +161,9 @@
       </div>
 
       <div class="panel-footer">
-       <span style="margin-inline-end: 2rem;">个人 4</span>
-       <span style="margin-inline-end: 2rem;">团队 1</span>
-       <span style="margin-inline-end: 2rem;">家庭 3</span>
+        <span style="margin-inline-end: 2rem;">个人 4</span>
+        <span style="margin-inline-end: 2rem;">团队 1</span>
+        <span style="margin-inline-end: 2rem;">家庭 3</span>
       </div>
     </div>
 
@@ -220,7 +222,7 @@
       <div class="panel-footer">
         <span style="margin-inline-end: 30px;">
           <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
-          {{ .Post.Score }}
+          60
         </span>
 
         {{ if .Post.PageData.IsAuthor }}
@@ -319,7 +321,7 @@
       <div class="panel-footer">
         <span style="margin-inline-end: 30px;">
           <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
-          {{ .Post.Score }}
+          60
         </span>
 
         {{ if .Post.PageData.IsAuthor }}
@@ -531,10 +533,24 @@
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="team_id">选择团队</label>
           <select name="team_id" class="form-control" id="select" required>
             <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
             </option>
             {{ range .SessUserSurvivalTeams }}
+            <option value="{{ .Id }}">{{ .Name }}</option>
+            {{ end }}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="family_id">选择家庭</label>
+          <select name="family_id" class="form-control" id="family_id" required>
+            <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
+            </option>
+            {{ range .SessUserSurvivalFamilies }}
             <option value="{{ .Id }}">{{ .Name }}</option>
             {{ end }}
           </select>
@@ -625,7 +641,7 @@
       <div class="panel-footer">
         <span style="margin-inline-end: 30px;">
           <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
-          {{ .Post.Score }}
+          60
         </span>
         {{ if .Post.PageData.IsAuthor }}
 
@@ -714,7 +730,7 @@
         <div class="panel-footer">
           <span style="margin-inline-end: 30px;">
             <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
-            {{ .Post.Score }}
+            60
           </span>
 
           {{ if .Post.PageData.IsAuthor }}

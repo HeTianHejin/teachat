@@ -1,7 +1,6 @@
 package data
 
 import (
-	"database/sql"
 	"strconv"
 	"time"
 )
@@ -363,10 +362,7 @@ func (user *User) GetLastDefaultFamily() (family Family, err error) {
 	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open FROM user_default_families udf LEFT JOIN families f ON udf.family_id = f.id WHERE udf.user_id = $1 ORDER BY udf.created_at DESC"
 	err = Db.QueryRow(statement, user.Id).Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			//如果找不到设置记录，则返回id=0，表示“默认家庭=四海为家”
-			return Family{Id: 0, Uuid: "x", Name: "四海为家&", AuthorId: 1, Introduction: "一人吃饱饭，全家打饱嗝。盛世无饥馑，四海可为家。"}, nil
-		}
+
 		return family, err
 	}
 	return

@@ -36,11 +36,11 @@ type Team struct {
 	Name              string
 	Mission           string
 	FounderId         int //团队发起人茶友id
-	CreatedAt         time.Time
+	CreatedAt         *time.Time
 	Class             int    //0:"系统$事业茶团", 1: "开放式$事业茶团",2: "封闭式$事业茶团",10: "开放式草团",20: "封闭式草团"
 	Abbreviation      string // 队名简称
 	Logo              string // $事业茶团标志
-	UpdatedAt         time.Time
+	UpdatedAt         *time.Time
 	SuperiorTeamId    int // (默认直接管理，顶头上司)上级 $事业茶团id（high level team）superior
 	SubordinateTeamId int // （默认直接下属？如果有多个下属团队，则是队长集合？）下级 $事业茶团id（lower level team）Subordinate
 }
@@ -354,7 +354,8 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err 
 	return
 }
 
-// SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团,team.class = 1 or 2, team_members.class = 1
+// SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团,
+// team.class = 1 or 2, team_members.class = 1
 func (user *User) SurvivalTeams() ([]Team, error) {
 	query := `
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.superior_team_id, teams.subordinate_team_id

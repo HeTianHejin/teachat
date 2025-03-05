@@ -92,9 +92,14 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		//2.1 get user's default family
 		l_default_family, err := s_u.GetLastDefaultFamily()
 		if err != nil {
-			util.Warning(util.LogError(err), s_u.Id, "Cannot get user's default family")
-			Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
-			return
+			if err == sql.ErrNoRows {
+				l_default_family = DefaultFamily
+			} else {
+				util.Warning(util.LogError(err), s_u.Id, "Cannot get user's default family")
+				Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
+				return
+			}
+
 		}
 
 		for i, bean := range f_b_slice {
@@ -148,9 +153,10 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	// 2. get family
 	family_uuid := r.URL.Query().Get("id")
 
-	//用户如果没有设置默认家庭，则其uuid为x(数据库查找方法返回特殊值)，则报告无信息可供查看。
-	if family_uuid == "x" {
-		Report(w, r, "一人吃饱饭，全家都不饿。盛世无饥馑，四海可为家。")
+	//用户如果没有设置默认家庭，则其uuid为x.
+	//报告无信息可供查看。
+	if family_uuid == DefaultFamilyUuid {
+		Report(w, r, "盛世无饥馑，四海可为家。")
 		return
 	}
 
@@ -455,9 +461,13 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	//如果已经设置了默认首选家庭茶团，则不再设置
 	df, err := s_u.GetLastDefaultFamily()
 	if err != nil {
-		util.Warning(util.LogError(err), s_u.Email, "Cannot get user's default family")
-		Report(w, r, "你好，茶博士摸摸头，未能创建默认家庭茶团，请稍后再试。")
-		return
+		if err == sql.ErrNoRows {
+			df = DefaultFamily
+		} else {
+			util.Warning(util.LogError(err), s_u.Id, "Cannot get user's default family")
+			Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
+			return
+		}
 	}
 
 	if df.Id == 0 {

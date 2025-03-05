@@ -114,7 +114,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	family_uuid := r.PostFormValue("family_uuid")
 
 	// 如果family_uuid=“x“特殊值，这是虚值，报告错误
-	if family_uuid == "x" {
+	if family_uuid == DefaultFamilyUuid {
 		Report(w, r, "你好，茶博士认为你没有提及具体的家庭，或者提及的&家庭茶团还没有登记，请确认后再试。")
 		return
 	}

@@ -31,7 +31,7 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据会话读取当前用户的信息
-	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Danger(util.LogError(err), "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -46,12 +46,14 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 	if uuid == "" {
 		uuid = vals.Get("postid")
 		//读取品味资料
-		tD.QuotePost, err = data.GetPostByUuid(uuid)
-		if err != nil {
+		post := data.Post{Uuid: uuid}
+		if err = post.Get(); err != nil {
 			util.Warning(util.LogError(err), uuid, " Cannot read post given uuid")
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
+		tD.QuotePost = post
+
 		tD.QuotePostAuthor, err = tD.QuotePost.User()
 		if err != nil {
 			util.Warning(util.LogError(err), tD.QuotePost.Id, " Cannot read post user")
@@ -99,9 +101,9 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
 		return
 	}
-	tD.QuoteProjectAuthorFamily, err = tD.QuoteProjectAuthor.GetLastDefaultFamily()
+	tD.QuoteProjectAuthorFamily, err = GetFamilyByFamilyId(tD.QuoteProject.FamilyId)
 	if err != nil {
-		util.Warning(util.LogError(err), tD.QuoteProjectAuthor.Id, " Cannot read project user family")
+		util.Warning(util.LogError(err), tD.QuoteProject.Id, " Cannot read project user family")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见，梨花满地不闻莺。请稍后再试。")
 		return
 	}
@@ -112,6 +114,8 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tD.SessUser = s_u
+	tD.SessUserDefaultFamily = s_d_family
+	tD.SessUserSurvivalFamilies = s_survival_families
 	tD.SessUserDefaultTeam = s_default_team
 	tD.SessUserSurvivalTeams = s_survival_teams
 	tD.SessUserDefaultPlace = s_default_place
@@ -178,13 +182,13 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 	}
 	/// check submit post_id is valid, if not 0 表示属于“议中议”
 	if post_id > 0 {
-		_, err := data.GetPostById(post_id)
-		// 查post是否存在
-		if err != nil {
+		post := data.Post{Id: post_id}
+		if err = post.Get(); err != nil {
 			util.Warning(util.LogError(err), post_id, " Cannot get post given id")
-			Report(w, r, "你好，茶博士极速服务，然而无法识别提交的品味资料，请确认后再试。")
+			Report(w, r, "你好，闪电考拉极速服务，然而无法识别提交的品味资料，请确认后再试。")
 			return
 		}
+
 		// 检查提及的post和project是否匹配
 		// proje, err := post.Project()
 		// if err != nil {
@@ -352,7 +356,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
 		return
 	}
-	tD.QuoteProjectAuthorFamily, err = tD.QuoteProjectAuthor.GetLastDefaultFamily()
+	tD.QuoteProjectAuthorFamily, err = GetFamilyByFamilyId(tD.QuoteProject.FamilyId)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot read project author family")
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
@@ -375,12 +379,14 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	//检查品味的类型
 	if thread.PostId != 0 {
 		// 说明这是一个附加类型的,针对某个post发表的茶议(chat-in-chat，讲开又讲，延伸话题)
-		tD.QuotePost, err = data.GetPostById(thread.PostId)
-		if err != nil {
+		post := data.Post{Id: thread.PostId}
+		if err = post.Get(); err != nil {
 			util.Warning(util.LogError(err), " Cannot read post given post_id")
 			Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取品味资料。")
 			return
 		}
+		tD.QuotePost = post
+
 		// 截短body
 		tD.QuotePost.Body = Substr(tD.QuotePost.Body, 66)
 		tD.QuotePostAuthor, err = tD.QuotePost.User()
@@ -389,7 +395,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
 			return
 		}
-		tD.QuotePostAuthorFamily, err = tD.QuotePostAuthor.GetLastDefaultFamily()
+		tD.QuotePostAuthorFamily, err = GetFamilyByFamilyId(tD.QuotePost.FamilyId)
 		if err != nil {
 			util.Warning(util.LogError(err), " Cannot read post author family")
 			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
@@ -419,22 +425,24 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	tD.NumSupport = thread.NumSupport()
 	tD.NumOppose = thread.NumOppose()
 	//品味中颔首的合计得分与总得分的比值，取整数，用于客户端页面进度条设置，正反双方进展形势对比
-	n1, err := tD.ThreadBean.Thread.PostsScoreSupport()
-	if n1 != 0 && err != nil {
+	// n1, err := tD.ThreadBean.Thread.PostsScoreSupport()
+	// if n1 != 0 && err != nil {
 
-		util.Warning(util.LogError(err), " Cannot get posts score support")
-		Report(w, r, "你好，莫失莫忘，仙寿永昌，有些资料被黑风怪瓜州了。")
-		return
+	// 	util.Warning(util.LogError(err), " Cannot get posts score support")
+	// 	Report(w, r, "你好，莫失莫忘，仙寿永昌，有些资料被黑风怪瓜州了。")
+	// 	return
 
-	}
-	n2, err := tD.ThreadBean.Thread.PostsScore()
-	if n2 != 0 && err != nil {
+	// }
+	// n2, err := tD.ThreadBean.Thread.PostsScore()
+	// if n2 != 0 && err != nil {
 
-		util.Warning(util.LogError(err), " Cannot get posts score oppose")
-		Report(w, r, "你好，莫失莫忘，仙寿永昌，有些资料,被黑风怪瓜州了。")
-		return
+	// 	util.Warning(util.LogError(err), " Cannot get posts score oppose")
+	// 	Report(w, r, "你好，莫失莫忘，仙寿永昌，有些资料,被黑风怪瓜州了。")
+	// 	return
 
-	}
+	// }
+	n1 := 60  //测试临时值
+	n2 := 120 //测试临时值
 	tD.ProgressSupport = ProgressRound(n1, n2)
 	tD.ProgressOppose = 100 - tD.ProgressSupport
 	// 读取全部回复帖子（品味）
@@ -458,7 +466,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		// 检查茶议的级别状态
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//记录茶议被点击数
-			tD.ThreadBean.Thread.AddHitCount()
+			//tD.ThreadBean.Thread.AddHitCount()
 			// 填写页面数据
 			tD.ThreadBean.Thread.PageData.IsAuthor = false
 			tD.IsGuest = true
@@ -488,7 +496,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		//用户是登录状态,可以访问1和2级茶议
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//从会话查获当前浏览用户资料荚
-			s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+			s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 			if err != nil {
 				util.Warning(util.LogError(err), " Cannot get user-related data from session")
 				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
@@ -500,8 +508,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 			tD.SessUser = s_u
 			tD.IsGuest = false
+
+			tD.SessUserDefaultFamily = s_d_family
+			tD.SessUserSurvivalFamilies = s_survival_families
+
 			tD.SessUserDefaultTeam = s_default_team
 			tD.SessUserSurvivalTeams = s_survival_teams
+
 			tD.SessUserDefaultPlace = s_default_place
 			tD.SessUserBindPlaces = s_places
 
@@ -513,7 +526,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				// 提议作者不能自评品味，王婆卖瓜也不行？！
 				tD.IsInput = false
 				//点击数+1
-				tD.ThreadBean.Thread.AddHitCount()
+				//tD.ThreadBean.Thread.AddHitCount()
 				//记录用户阅读该帖子一次
 				data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
 				//迭代PostSlice，把其PageData.IsAuthor设置为false，页面渲染时检测布局用
@@ -529,7 +542,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				//记录用户阅读该帖子一次
 				data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
 				//记录茶议被点击数
-				tD.ThreadBean.Thread.AddHitCount()
+				//tD.ThreadBean.Thread.AddHitCount()
 				// 填写页面数据
 
 				tD.ThreadBean.Thread.PageData.IsAuthor = false

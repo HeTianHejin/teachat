@@ -128,7 +128,7 @@ func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/team/new
 // 显示创建新茶团的表单页面
-func NewTeam(w http.ResponseWriter, r *http.Request) {
+func NewTeamGet(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -147,7 +147,7 @@ func NewTeam(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/team/create
 // 创建新茶团
-func CreateTeam(w http.ResponseWriter, r *http.Request) {
+func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot parse form")
@@ -265,7 +265,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建一条友邻盲评,是否接纳 新茶团的记录
+	// 创建一条友邻蒙评,是否接纳 新茶团的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_team.Id,
 		ObjectType: 5,
@@ -275,7 +275,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 	}
 
-	// 发送盲评请求消息给两个在线用户
+	// 发送蒙评请求消息给两个在线用户
 	//构造消息
 	mess := data.AcceptMessage{
 		FromUserId:     1,
@@ -285,7 +285,7 @@ func CreateTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	//发送消息
 	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-		Report(w, r, "你好，茶博士迷路了，未能发送盲评请求消息。")
+		Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
 		return
 	}
 
@@ -471,8 +471,11 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var tD data.TeamDetail
+
 	tD.Team = team
+
 	tD.CreatedAtDate = team.CreatedAtDate()
+
 	founder, err := team.Founder()
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get team founder")
@@ -480,13 +483,26 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tD.Founder = founder
+
 	// 获取团队发起人默认&家庭茶团
-	founder_default_family, _ := founder.GetLastDefaultFamily()
+	founder_default_family, err := GetLastDefaultFamilyByUserId(founder.Id)
+	if err != nil {
+		util.Info(util.LogError(err), " Cannot get founder's default family")
+		Report(w, r, "你好，满头大汗的茶博士为你效劳中，请稍后再试。")
+		return
+	}
 	tD.FounderDefaultFamily = founder_default_family
-	// founder_default_team, _ := founder.GetLastDefaultTeam()
-	// tD.FounderTeam = founder_default_team
+
+	founder_default_team, err := founder.GetLastDefaultTeam()
+	if err != nil {
+		util.Info(util.LogError(err), " Cannot get founder's default team")
+		Report(w, r, "你好，满头大汗的茶博士为你效劳中，请稍后再试。")
+		return
+	}
+	tD.FounderTeam = founder_default_team
 
 	tD.TeamMemberCount = team.NumMembers()
+
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
 		util.Info(util.LogError(err), " Cannot get team core member")
@@ -499,11 +515,13 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
+
 	// 准备页面数据
 	var tc data.TeamMemberBean //核心成员资料荚
 	var tn data.TeamMemberBean //普通成员资料荚
 	var tcSlice []data.TeamMemberBean
 	var tnSlice []data.TeamMemberBean
+
 	//据teamMembers中的UserId获取User
 	for _, member := range teamCoreMembers {
 		cm_user, err := data.GetUser(member.UserId)
@@ -514,18 +532,21 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tc.Member = cm_user
-		tc.MemberDefaultFamily, err = cm_user.GetLastDefaultFamily()
+
+		tc.MemberDefaultFamily, err = GetLastDefaultFamilyByUserId(cm_user.Id)
 		if err != nil {
 			util.Info(util.LogError(err), " Cannot get user's default family")
 			Report(w, r, "你好，满头大汗的茶博士，开口唱蝶恋花，请稍后再试。")
 			return
 		}
+
 		tc.MemberDefaultTeam, err = cm_user.GetLastDefaultTeam()
 		if err != nil {
 			util.Info(util.LogError(err), " Cannot get user's default team")
 			Report(w, r, "你好，闪电茶博士为你效劳中，请稍后再试。")
 			return
 		}
+
 		tc.TeamMember = member
 		tc.CreatedAtDate = member.CreatedAtDate()
 		tcSlice = append(tcSlice, tc)
@@ -538,7 +559,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		tn.Member = tn_user
-		tn.MemberDefaultFamily, err = tn_user.GetLastDefaultFamily()
+		tn.MemberDefaultFamily, err = GetLastDefaultFamilyByUserId(tn_user.Id)
 		if err != nil {
 			util.Info(util.LogError(err), " Cannot get user's default family")
 			Report(w, r, "你好，满头大汗的茶博士说小生这边有礼了，请稍后再试。")

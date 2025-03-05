@@ -33,13 +33,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	var pD data.PostDetail
-	post, err := data.GetPostByUuid(uuid)
-	if err != nil {
+	t_post := data.Post{Uuid: uuid}
+	if err = t_post.GetByUuid(); err != nil {
 		util.Warning(util.LogError(err), " Cannot get post detail")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	post_bean, err := FetchPostBean(post)
+	post_bean, err := FetchPostBean(t_post)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot get post bean given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
@@ -47,7 +47,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	pD.PostBean = post_bean
 	// 读取此品味引用的茶议
-	pD.QuoteThread, err = post.Thread()
+	pD.QuoteThread, err = t_post.Thread()
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot get thread given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
@@ -70,9 +70,9 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 读取全部针对此品味的茶议
-	thread_slice, err := post.Threads()
+	thread_slice, err := t_post.Threads()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get thread_slice given post")
+		util.Warning(util.LogError(err), " Cannot get thread_slice given t_post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -86,13 +86,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	pD.QuoteProject, err = pD.QuoteThread.Project()
 	if err != nil {
 		util.Warning(util.LogError(err), pD.QuoteThread.Id, " Cannot get project given thread")
-		Report(w, r, "你好，������失������，未能读取专��资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	pD.QuoteObjective, err = pD.QuoteProject.Objective()
 	if err != nil {
 		util.Warning(util.LogError(err), pD.QuoteProject.Id, " Cannot get objective given project")
-		Report(w, r, "你好，������失������，未能读取专��资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 
@@ -144,7 +144,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	pD.SessUserBindPlaces = s_places
 
 	// 当前会话用户是否此品味作者？
-	if s_u.Id == post.UserId {
+	if s_u.Id == t_post.UserId {
 		pD.IsAuthor = true
 	} else {
 		pD.IsAuthor = false
@@ -209,32 +209,37 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	//change team_id to int
 	team_id, err := strconv.Atoi(tid)
 	if err != nil {
-		Report(w, r, "一年三百六十日，风刀霜剑严相逼")
+		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的团队编号。")
+		return
+	}
+	family_id_str := r.PostFormValue("family_id")
+	//change family_id to int
+	family_id, err := strconv.Atoi(family_id_str)
+	if err != nil {
+		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的家庭编号。")
 		return
 	}
 	//读取提交的is_private bool参数
 	is_private := r.PostFormValue("is_private") == "true"
 
-	if !is_private {
-		//提交的茶团id,是team.id
-		// check the given team_id is valid
-		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
-		if err != nil {
-			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
-			return
-		}
-	} else {
-		//提交的茶团id,是family.id
-		// check submit family_id is valid
-		family := data.Family{
-			Id: team_id,
-		}
-		is_member, _ := family.IsMember(s_u.Id)
-		if !is_member {
-			util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
-			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-			return
-		}
+	//提交的茶团id,是team.id
+	// check the given team_id is valid
+	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
+	if err != nil {
+		Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+		return
+	}
+
+	//提交的茶团id,是family.id
+	// check submit family_id is valid
+	family := data.Family{
+		Id: family_id,
+	}
+	is_member, _ := family.IsMember(s_u.Id)
+	if !is_member {
+		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+		Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+		return
 	}
 
 	//  检查茶议所在的茶台属性，
@@ -247,7 +252,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	switch t_proj.Class {
 	case 1:
 		// class=1可以品茶，
-		if dPost, err = s_u.CreateDraftPost(thread.Id, team_id, attitude, is_private, body); err != nil {
+		if dPost, err = s_u.CreateDraftPost(thread.Id, family_id, team_id, attitude, is_private, body); err != nil {
 			Report(w, r, "你好，茶博士摸摸头，记录品味失败。")
 			return
 		}
@@ -266,7 +271,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Can have tea
-		if dPost, err = s_u.CreateDraftPost(thread.Id, team_id, attitude, is_private, body); err != nil {
+		if dPost, err = s_u.CreateDraftPost(thread.Id, family_id, team_id, attitude, is_private, body); err != nil {
 			Report(w, r, "你好，茶博士摸摸头，竟然说没有墨水，记录品味失败。")
 			return
 		}
@@ -277,7 +282,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建一条友邻盲评,是否接纳 新茶的记录
+	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
 		ObjectId:   dPost.Id,
 		ObjectType: 4,
@@ -287,7 +292,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 		return
 	}
-	// 发送邻座盲评消息
+	// 发送邻座蒙评消息
 	mess := data.AcceptMessage{
 		FromUserId:     1,
 		Title:          "新茶语邻座评审邀请",
@@ -296,7 +301,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	// 发送消息
 	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-		Report(w, r, "你好，茶博士迷路了，未能发送盲评请求消息。")
+		Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
 		return
 	}
 	// 提示用户草稿保存成功
@@ -327,13 +332,14 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uuid := r.PostFormValue("uuid")
-	post, err := data.GetPostByUuid(uuid)
-	if err != nil {
-		util.Danger(util.LogError(err), " Cannot read given post")
-		Report(w, r, "茶博士失魂鱼，未能读取指定表态，请稍后再试。")
+	t_post := data.Post{Uuid: uuid}
+	if err = t_post.GetByUuid(); err != nil {
+		util.Warning(util.LogError(err), " Cannot get post detail")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	if post.UserId != user.Id {
+
+	if t_post.UserId != user.Id {
 		util.Danger(util.LogError(err), " Cannot edit other user's post")
 		Report(w, r, "茶博士提示，目前仅能补充自己的回复")
 		return
@@ -342,20 +348,20 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		body := r.PostFormValue("body")
 		if body != "" {
 			//检查补充内容是否有意义，rune 字数>17,总的post字数<456
-			if CnStrLen(body) > 17 && CnStrLen(post.Body)+CnStrLen(body) < 456 {
-				post.Body += body
+			if CnStrLen(body) > 17 && CnStrLen(t_post.Body)+CnStrLen(body) < 456 {
+				t_post.Body += body
 			} else {
 				//提示用户总字数或者本次提交补充内容超出字数限制
 				Report(w, r, "你好， 粗鲁的茶博士竟然说字数满了，纸条写不下您的品味。")
 				return
 			}
-			err = post.UpdateBody(body)
+			err = t_post.UpdateBody(body)
 			if err != nil {
 				util.Danger(util.LogError(err), " Cannot update post")
 				Report(w, r, "茶博士失魂鱼，未能更新专属资料，请稍后再试。")
 				return
 			}
-			thread, err := data.GetThreadById(post.ThreadId)
+			thread, err := data.GetThreadById(t_post.ThreadId)
 			if err != nil {
 				util.Danger(util.LogError(err), " Cannot read thread")
 				Report(w, r, "茶博士失魂鱼，未能读取专属资料，请稍后再试。")
@@ -389,14 +395,14 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 		}
 		vals := r.URL.Query()
 		uuid := vals.Get("id")
-		post, err := data.GetPostByUuid(uuid)
-		if err != nil {
-			util.Danger(util.LogError(err), " Cannot read post")
-			Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料，请稍后再试。")
+		t_post := data.Post{Uuid: uuid}
+		if err = t_post.GetByUuid(); err != nil {
+			util.Warning(util.LogError(err), " Cannot get post detail")
+			Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 			return
 		}
-		if post.UserId == user.Id {
-			RenderHTML(w, &post, "layout", "navbar.private", "post.edit")
+		if t_post.UserId == user.Id {
+			RenderHTML(w, &t_post, "layout", "navbar.private", "post.edit")
 		} else {
 			util.Danger(util.LogError(err), " Cannot edit other user's post")
 			Report(w, r, "茶博士提示，目前仅能补充自己的回复")
