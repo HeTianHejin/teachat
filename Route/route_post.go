@@ -47,28 +47,21 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	pD.PostBean = post_bean
 	// 读取此品味引用的茶议
-	pD.QuoteThread, err = t_post.Thread()
+	quote_thread, err := t_post.Thread()
+	if err != nil {
+		util.Warning(util.LogError(err), " Cannot get thread given post")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
+		return
+	}
+	pD.QuoteThreadBean, err = FetchThreadBean(quote_thread)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot get thread given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
 		return
 	}
 	// 截短此引用的茶议内容以方便展示
-	pD.QuoteThread.Body = Substr(pD.QuoteThread.Body, 66)
-	// 此品味针对的茶议作者资料
-	pD.QuoteThreadAuthor, err = pD.QuoteThread.User()
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get thread author given post")
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议主人资料。")
-		return
-	}
-	// 引用的茶议作者发帖时候选择的茶团
-	pD.QuoteThreadAuthorTeam, err = data.GetTeam(pD.QuoteThread.TeamId)
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get quote-thread-author-default-team given post")
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议主人资料。")
-		return
-	}
+	pD.QuoteThreadBean.Thread.Body = Substr(pD.QuoteThreadBean.Thread.Body, 66)
+
 	// 读取全部针对此品味的茶议
 	thread_slice, err := t_post.Threads()
 	if err != nil {
@@ -83,26 +76,42 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pD.QuoteProject, err = pD.QuoteThread.Project()
+	// 读取此品味的引用茶议（源自）引用茶台
+	quote_project, err := quote_thread.Project()
 	if err != nil {
-		util.Warning(util.LogError(err), pD.QuoteThread.Id, " Cannot get project given thread")
+		util.Warning(util.LogError(err), quote_thread.Id, " Cannot get project given thread")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	pD.QuoteObjective, err = pD.QuoteProject.Objective()
+	pD.QuoteProjectBean, err = FetchProjectBean(quote_project)
 	if err != nil {
-		util.Warning(util.LogError(err), pD.QuoteProject.Id, " Cannot get objective given project")
+		util.Warning(util.LogError(err), quote_project.Id, " Cannot get project given project")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 
-	// 读取会话
+	// 读取此品味的引用茶议（源自）引用茶台，引用的茶围
+	quote_objective, err := quote_project.Objective()
+	if err != nil {
+		util.Warning(util.LogError(err), quote_project.Id, " Cannot get objective given project")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		return
+	}
+	pD.QuoteObjectiveBean, err = FetchObjectiveBean(quote_objective)
+	if err != nil {
+		util.Warning(util.LogError(err), quote_objective.Id, " Cannot get objective given objective")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		return
+	}
+
 	// 检测pageData.ThreadSlice数量是否超过一打dozen
 	if len(thread_slice) > 12 {
 		pD.IsOverTwelve = true
 	} else {
 		pD.IsOverTwelve = false
 	}
+
+	// 读取会话
 	s, err := Session(r)
 	if err != nil {
 		// 未登录，游客
@@ -123,12 +132,17 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	s_u, _ := s.User()
 	pD.SessUser = s_u
 	// 从会话查获当前浏览用户资料荚
-	s_u, _, _, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
 		util.Warning(util.LogError(err), " Cannot get user-related data from session")
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
+	// 把系统默认家庭资料加入s_survival_families
+	s_survival_families = append(s_survival_families, DefaultFamily)
+	// 把系统默认团队资料加入s_survival_teams
+	s_survival_teams = append(s_survival_teams, FreelancerTeam)
+
 	// 用户足迹
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
@@ -136,8 +150,17 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	pD.SessUser = s_u
 	pD.IsGuest = false
 	pD.IsInput = true
+
+	// 默认家庭
+	pD.SessUserDefaultFamily = s_default_family
+	// 全部家庭
+	pD.SessUserSurvivalFamilies = s_survival_families
+
+	// 默认团队
 	pD.SessUserDefaultTeam = s_default_team
+	// 全部团队
 	pD.SessUserSurvivalTeams = s_survival_teams
+
 	// 默认地点
 	pD.SessUserDefaultPlace = s_default_place
 	// 全部绑定地点

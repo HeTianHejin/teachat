@@ -50,7 +50,7 @@ var FreelancerTeam = data.Team{
 	FounderId:         1, //表示系统预设的值
 	Class:             0,
 	Abbreviation:      "自由人",
-	Logo:              "teaSet",
+	Logo:              "teamLogo",
 	SuperiorTeamId:    0,
 	SubordinateTeamId: 0,
 }

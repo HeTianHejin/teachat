@@ -125,14 +125,14 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/thread/new
-// 处理提交的完整版新茶议草稿，待邻座盲审后转为正式茶议
+// 处理提交的完整版新茶议草稿，待邻座蒙评后转为正式茶议
 func PostNewThread(w http.ResponseWriter, r *http.Request) {
 	panic("unimplemented")
 }
 
 // POST /v1/thread/draft
-// 处理提交的简化版新茶议草稿，待邻座盲审后转为正式茶议
-func DraftThread(w http.ResponseWriter, r *http.Request) {
+// 处理提交的简化版新茶议草稿，待邻座蒙评后转为正式茶议
+func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -181,8 +181,9 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	/// check submit post_id is valid, if not 0 表示属于“议中议”
+	post := data.Post{Id: post_id}
+	proj := data.Project{Id: project_id}
 	if post_id > 0 {
-		post := data.Post{Id: post_id}
 		if err = post.Get(); err != nil {
 			util.Warning(util.LogError(err), post_id, " Cannot get post given id")
 			Report(w, r, "你好，闪电考拉极速服务，然而无法识别提交的品味资料，请确认后再试。")
@@ -190,17 +191,28 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 检查提及的post和project是否匹配
-		// proje, err := post.Project()
-		// if err != nil {
-		// 	util.Warning(util.LogError(err), " Cannot get project given post_id")
-		// 	Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有问题，请确认后再试一次")
-		// 	return
-		// }
-		// if proje.Id != project_id {
-		// 	util.Warning(project_id, "post_id and project_id do not match")
-		// 	Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有问题，请确认后再试一次。")
-		// 	return
-		// }
+		t_proj, err := post.Project()
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot get project given post_id")
+			Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有一些问题，请确认后再试一次")
+			return
+		}
+		if t_proj.Id != project_id {
+			util.Warning(project_id, "post_id and project_id do not match")
+			Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有一点点问题，请确认后再试一次。")
+			return
+		}
+	}
+	//检查该茶台是否存在，而且状态不是草台状态
+	if err = proj.Get(); err != nil {
+		util.Warning(util.LogError(err), " Cannot get project")
+		Report(w, r, "你好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
+		return
+	}
+	if proj.Class == 10 || proj.Class == 20 {
+		util.Warning(s_u.Email, "试图访问未盲评审核的茶台被阻止。")
+		Report(w, r, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
+		return
 	}
 
 	//读取提交的is_private bool参数
@@ -212,8 +224,15 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，此地无这个茶团，请确认后再试。")
 		return
 	}
-	if !is_private {
-		//提交的茶团id,是team.id
+	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
+	if err != nil {
+		util.Warning(util.LogError(err), "Failed to convert class to int")
+		Report(w, r, "你好，此地无这个茶团，请确认后再试。")
+		return
+	}
+
+	//提交的茶团id,是team.id
+	if team_id != 0 {
 		// check submit team_id is valid
 		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
 		if err != nil {
@@ -221,12 +240,12 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶团成员资格检查失败，请确认后再试。")
 			return
 		}
-
-	} else {
-		//提交的茶团id,是family.id
+	}
+	//提交的茶团id,是family.id
+	if family_id != 0 {
 		// check submit family_id is valid
 		family := data.Family{
-			Id: team_id,
+			Id: family_id,
 		}
 		is_member, _ := family.IsMember(s_u.Id)
 		if !is_member {
@@ -234,22 +253,6 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
 			return
 		}
-
-	}
-
-	//检查该茶台是否存在，而且状态不是草台状态
-	proj := data.Project{
-		Id: project_id,
-	}
-	if err = proj.Get(); err != nil {
-		util.Warning(util.LogError(err), " Cannot get project")
-		Report(w, r, "你好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
-		return
-	}
-	if proj.Class == 10 || proj.Class == 20 {
-		util.Warning(s_u.Email, "试图访问未盲评审核的茶台被阻止。")
-		Report(w, r, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
-		return
 	}
 
 	// 如果茶台class=1，存为开放式茶议草稿，
@@ -287,6 +290,7 @@ func DraftThread(w http.ResponseWriter, r *http.Request) {
 			PostId:    post_id,
 			TeamId:    team_id,
 			IsPrivate: is_private,
+			FamilyId:  family_id,
 		}
 		if err = draft_thread.Create(); err != nil {
 			util.Warning(util.LogError(err), " Cannot create thread draft")

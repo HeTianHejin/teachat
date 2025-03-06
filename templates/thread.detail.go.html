@@ -94,10 +94,10 @@
                 {{ else }}
                 <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
                 {{ end }}
-                （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}"
-                  style="color: black;">{{ .AuthorFamily.Name }}</a>，
-                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}"
-                  style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
+                （<a href="/v1/family/detail?id={{ .ThreadBean.AuthorFamily.Uuid }}"
+                  style="color: black;">{{ .ThreadBean.AuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}"
+                  style="color: black;">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>）
               </span>
             </span>
             </span>

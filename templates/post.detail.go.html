@@ -3,10 +3,10 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a
-      href="/v1/objective/detail?uuid={{ .QuoteObjective.Uuid }}">{{ .QuoteObjective.Title }} </a>@茶话会
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }} </a>@茶话会
   </li>
-  <li><a href="/v1/project/detail?id={{ .QuoteProject.Uuid }}">{{ .QuoteProject.Title }} </a>@茶台</li>
-  <li><a href="/v1/thread/detail?id={{ .QuoteThread.Uuid }}">{{ .QuoteThread.Title }} </a>@茶议</li>
+  <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台</li>
+  <li><a href="/v1/thread/detail?id={{ .QuoteThreadBean.Thread.Uuid }}">{{ .QuoteThreadBean.Thread.Title }} </a>@茶议</li>
   <li class="active">#{{ .PostBean.Post.Id }} @品味</li>
 </ol>
 
@@ -14,8 +14,8 @@
 
 <div class="media">
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .PostBean.Post.User.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .PostBean.Post.User.Avatar }}.jpeg" alt="个人头像">
+    <a href="/v1/user/biography?id={{ .PostBean.Author.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .PostBean.Author.Avatar }}.jpeg" alt="个人头像">
     </a>
   </div>
   <div class="media-body">
@@ -31,9 +31,9 @@
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
             {{ end }}
-            <span>
-              （<a href="/v1/family/detail?id={{ .PostBean.AuthorFamily.Uuid }}">{{ .PostBean.AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>）
+            <span style="font-size: smaller;">
+              (<a href="/v1/family/detail?id={{ .PostBean.AuthorFamily.Uuid }}">{{ .PostBean.AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>)
             </span>
           </div>
 
@@ -62,17 +62,17 @@
 
         <div class="panel panel-default">
           <div class="panel-body" style="font-size: small;">
-            <a href="/v1/thread/detail?id={{ .QuoteThread.Uuid }}"><span class="label label-default">引用</span></a>
-            <a href="/v1/user/biography?id={{ .QuoteThreadAuthor.Uuid }}">{{ .QuoteThreadAuthor.Name }}</a>
+            <a href="/v1/thread/detail?id={{ .QuoteThreadBean.Thread.Uuid }}"><span class="label label-default">引用</span></a>
+            <a href="/v1/user/biography?id={{ .QuoteThreadBean.Author.Uuid }}">{{ .QuoteThreadBean.Author.Name }}</a>
             <span style="margin-inline-end: 20px;">
-              （<a href="/v1/family/detail?id={{ .QuoteThreadAuthorFamily.Uuid }}">{{ .QuoteThreadAuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .QuoteThreadAuthorTeam.Uuid }}">{{ .QuoteThreadAuthorTeam.Abbreviation }}</a>）
+              （<a href="/v1/family/detail?id={{ .QuoteThreadBean.AuthorFamily.Uuid }}">{{ .QuoteThreadBean.AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .QuoteThreadBean.AuthorTeam.Uuid }}">{{ .QuoteThreadBean.AuthorTeam.Abbreviation }}</a>）
               
               </span>
             <span style="font-style: italic;">
-              {{ .QuoteThread.TypeStatus }}
-              : {{ .QuoteThread.Title }}
-              {{ .QuoteThread.Body }} ...
+              {{ .QuoteThreadBean.Thread.TypeStatus }}
+              : {{ .QuoteThreadBean.Thread.Title }}
+              {{ .QuoteThreadBean.Thread.Body }} ...
             </span>
           </div>
         </div>
@@ -153,14 +153,28 @@
           {{/* 这是对应的post的uuid提交 */}}
           <input type="hidden" name="post_id" value="{{ .PostBean.Post.Id }}" />
           {{/* 这是project的id提交 */}}
-          <input type="hidden" name="project_id" value="{{ .QuoteProject.Id }}" />
+          <input type="hidden" name="project_id" value="{{ .QuoteProjectBean.Project.Id }}" />
            
           <div class="form-group">
             <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <label for="team_id">选择团队</label>
               <select name="team_id" class="form-control" id="team_id" required>
                 <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
                 </option>
                 {{ range .SessUserSurvivalTeams }}
+                <option value="{{ .Id }}">{{ .Name }}</option>
+                {{ end }}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+              <label for="family_id">选择家庭</label>
+              <select name="family_id" class="form-control" id="family_id" required>
+                <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
+                </option>
+                {{ range .SessUserSurvivalFamilies }}
                 <option value="{{ .Id }}">{{ .Name }}</option>
                 {{ end }}
               </select>

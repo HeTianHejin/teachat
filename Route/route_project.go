@@ -89,35 +89,38 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	is_private := r.PostFormValue("is_private") == "true"
 
 	//提交的茶团id,是team.id，检查是否成员
-	// check the given team_id is valid
-	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			//util.Info(util.LogError(err), " Cannot get member by team id and user id")
-			Report(w, r, "你好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")
-			return
-		} else {
-			util.Warning(util.LogError(err), " Cannot get member by team id and user id")
-			Report(w, r, "你好，茶博士眼镜失踪了，未能创建新茶台，请稍后再试。")
-			return
+	if team_id != 0 {
+		// check the given team_id is valid
+		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				//util.Info(util.LogError(err), " Cannot get member by team id and user id")
+				Report(w, r, "你好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")
+				return
+			} else {
+				util.Warning(util.LogError(err), " Cannot get member by team id and user id")
+				Report(w, r, "你好，茶博士眼镜失踪了，未能创建新茶台，请稍后再试。")
+				return
+			}
 		}
 	}
-
 	//提交的茶团id,是family.id，检查是否家庭成员
 	// check submit family_id is valid
-	family := data.Family{
-		Id: team_id,
-	}
-	is_member, err := family.IsMember(s_u.Id)
-	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
-		Report(w, r, "你好，茶博士眼镜失踪，未能创建新茶台，请稍后再试。")
-		return
-	}
-	if !is_member {
-		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
-		Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-		return
+	if family_id != 0 {
+		family := data.Family{
+			Id: family_id,
+		}
+		is_member, err := family.IsMember(s_u.Id)
+		if err != nil {
+			util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+			Report(w, r, "你好，茶博士眼镜失踪，未能创建新茶台，请稍后再试。")
+			return
+		}
+		if !is_member {
+			util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+			return
+		}
 	}
 
 	place_uuid := r.PostFormValue("place_uuid")
@@ -557,6 +560,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	// 已登陆用户
 	pD.IsGuest = false
+
 	//从会话查获当前浏览用户资料荚
 	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {

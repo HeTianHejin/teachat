@@ -184,25 +184,24 @@ type ThreadBean struct {
 
 // 用于跟贴详情页面渲染
 type PostDetail struct {
-	SessUser              User // 当前会话用户
-	IsGuest               bool // 是否为游客
-	SessUserDefaultTeam   Team
-	SessUserSurvivalTeams []Team
-	SessUserDefaultPlace  Place
-	SessUserBindPlaces    []Place
-	IsAuthor              bool // 是否为品味作者
+	SessUser                 User     // 当前会话用户
+	IsGuest                  bool     // 是否为游客
+	SessUserDefaultFamily    Family   // 当前会话用户默认&家庭茶团
+	SessUserSurvivalFamilies []Family // 当前会话用户全部&家庭茶团
+	SessUserDefaultTeam      Team
+	SessUserSurvivalTeams    []Team
+	SessUserDefaultPlace     Place
+	SessUserBindPlaces       []Place
+	IsAuthor                 bool // 是否为品味作者
 
-	PostBean        PostBean
+	PostBean        PostBean     // 跟贴豆荚
 	ThreadBeanSlice []ThreadBean // 针对此品味的茶议队列
 
-	QuoteThread             Thread // 引用的茶议
-	QuoteThreadAuthor       User   // 引用茶议的作者
-	QuoteThreadAuthorFamily Family // 作者发帖时选择的家庭，或者默认&家庭茶团
-	QuoteThreadAuthorTeam   Team   // 作者创建发帖时选择的团队，或者默认$团队
+	QuoteThreadBean ThreadBean // 引用的茶议豆荚
 
-	QuoteProject Project // 引用的茶台
+	QuoteProjectBean ProjectBean // 引用的茶台豆荚
 
-	QuoteObjective Objective // 引用的茶围
+	QuoteObjectiveBean ObjectiveBean // 引用的茶围豆荚
 
 	IsInput      bool // 是否需要显示输入面板
 	IsOverTwelve bool // 是否超过12个
