@@ -26,14 +26,14 @@ func Polite(w http.ResponseWriter, r *http.Request) {
 func PolitePost(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
-		util.Danger(util.LogError(err), " Cannot get session")
+		util.PanicTea(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, _ := sess.User()
 	err = r.ParseForm()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot parse form")
+		util.PanicTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，(摸摸头想了又想),电脑去热带海岛度假了。")
 		return
 	}
@@ -43,7 +43,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	// 把准备审核的对象茶语id_str转成id_int
 	ao_id_int, err := strconv.Atoi(id_str)
 	if err != nil {
-		util.Danger(util.LogError(err), " Cannot get id")
+		util.PanicTea(util.LogError(err), " Cannot get id")
 		Report(w, r, "你好，(摸摸头想了又想), 你能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
 		return
 	}
@@ -53,7 +53,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	case "yes", "no":
 		break
 	default:
-		util.Danger(util.LogError(err), " Cannot get form value civilizer")
+		util.PanicTea(util.LogError(err), " Cannot get form value civilizer")
 		Report(w, r, "你好，(摸摸头想了又想),中文真是博大精深。")
 		return
 	}
@@ -61,7 +61,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	case "yes", "no":
 		break
 	default:
-		util.Danger(util.LogError(err), " Cannot get form value care")
+		util.PanicTea(util.LogError(err), " Cannot get form value care")
 		Report(w, r, "你好，(摸摸头想了又想),请问这是火星文吗？")
 		return
 	}
@@ -96,7 +96,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 创建初记录
 			if err = newAcceptance.Create(); err != nil {
-				util.Danger(util.LogError(err), " Cannot create acceptance")
+				util.PanicTea(util.LogError(err), " Cannot create acceptance")
 				Report(w, r, "你好，(摸摸头想了又想), 茴香豆的茴字真的有四种写法吗？")
 				return
 			}
@@ -104,7 +104,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "好茶香护有缘人，感谢你出手维护文明秩序！")
 			return
 		} else {
-			util.Danger(util.LogError(err), " Cannot check acceptance by ao_id")
+			util.PanicTea(util.LogError(err), " Cannot check acceptance by ao_id")
 			Report(w, r, "你好，(摸摸头想了又想)，去年今日此门中，人面桃花相映红。")
 			return
 		}
@@ -120,7 +120,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	oldAcceptance.YUserId = s_u.Id
 	oldAcceptance.YAcceptedAt = time.Now()
 	if err = oldAcceptance.Update(); err != nil {
-		util.Danger(util.LogError(err), " Cannot update acceptance")
+		util.PanicTea(util.LogError(err), " Cannot update acceptance")
 		Report(w, r, "你好，(摸摸头想了又想),隔岸花分一脉香。")
 		return
 	}
@@ -133,7 +133,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 读取这个审核对象（根据审核对象id）
 	if err = ao.Get(); err != nil {
-		util.Danger(util.LogError(err), "Cannot get accept-object")
+		util.PanicTea(util.LogError(err), "Cannot get accept-object")
 		Report(w, r, "你好，(茶博士摸摸头想了又想),居然说，得道多茶，失道寡茶。")
 		return
 	}
@@ -148,7 +148,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			ob := data.Objective{
 				Id: ao.ObjectId}
 			if err = ob.Get(); err != nil {
-				util.Danger(util.LogError(err), "Cannot get objective")
+				util.PanicTea(util.LogError(err), "Cannot get objective")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
 				return
 			}
@@ -159,7 +159,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新茶话会，友邻蒙评未通过！
 			if err = ob.UpdateClass(); err != nil {
-				util.Warning(util.LogError(err), "Cannot update ob class")
+				util.PanicTea(util.LogError(err), "Cannot update ob class")
 				Report(w, r, "你好，(摸摸头想了又想), 为什么踢足球的人都说临门一脚最麻烦呢？")
 				return
 			}
@@ -168,7 +168,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId,
 			}
 			if err = pr.Get(); err != nil {
-				util.Danger(util.LogError(err), "Cannot get project")
+				util.PanicTea(util.LogError(err), "Cannot get project")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
@@ -179,7 +179,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新����，
 			if err = pr.UpdateClass(); err != nil {
-				util.Warning(util.LogError(err), "Cannot update pr class")
+				util.PanicTea(util.LogError(err), "Cannot update pr class")
 				Report(w, r, "你好，一畦春韭绿，十里稻花香。")
 				return
 			}
@@ -189,13 +189,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err = dThread.Get(); err != nil {
-				util.Danger(util.LogError(err), "Cannot get dfart-thread")
+				util.PanicTea(util.LogError(err), "Cannot get dfart-thread")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术,而是耐心。")
 				return
 			}
 			// 更新������，友邻蒙评 已拒绝公开发布
 			if err = dThread.UpdateClass(2); err != nil {
-				util.Warning(util.LogError(err), "Cannot update thread class")
+				util.PanicTea(util.LogError(err), "Cannot update thread class")
 				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
 				return
 			}
@@ -204,19 +204,19 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId,
 			}
 			if err = dPost.Get(); err != nil {
-				util.Danger(util.LogError(err), "Cannot get draft-post")
+				util.PanicTea(util.LogError(err), "Cannot get draft-post")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候 弄丢草稿的人不一定是诗人？")
 				return
 			}
 			if err = dPost.UpdateClass(2); err != nil {
-				util.Danger(util.LogError(err), "Cannot update draft-post class")
+				util.PanicTea(util.LogError(err), "Cannot update draft-post class")
 				Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
 				return
 			}
 		case 5:
 			team, err := data.GetTeam(ao.ObjectId)
 			if err != nil {
-				util.Danger(util.LogError(err), "Cannot get team")
+				util.PanicTea(util.LogError(err), "Cannot get team")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚比刻苦奋斗更有用？")
 				return
 			}
@@ -226,7 +226,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				team.Class = 32
 			}
 			if err = team.UpdateClass(); err != nil {
-				util.Danger(util.LogError(err), "Cannot update team class")
+				util.PanicTea(util.LogError(err), "Cannot update team class")
 				Report(w, r, "你好，（摸摸头）考一考你，情中情因情感妹妹　错里错以错劝哥哥是什么茶品种？")
 				return
 			}
@@ -243,7 +243,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			ob := data.Objective{
 				Id: ao.ObjectId}
 			if err = ob.Get(); err != nil {
-				util.Danger(util.LogError(err), "Cannot get objective")
+				util.PanicTea(util.LogError(err), "Cannot get objective")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
 				return
 			}
@@ -258,7 +258,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新茶话会，友邻蒙评已通过！
 			if err = ob.UpdateClass(); err != nil {
-				util.Warning(util.LogError(err), "Cannot update ob class")
+				util.PanicTea(util.LogError(err), "Cannot update ob class")
 				Report(w, r, "你好，(摸摸头想了又想), 为什么踢足球的人都说临门一脚最麻烦呢？")
 				return
 			}
@@ -269,7 +269,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId,
 			}
 			if err = pr.Get(); err != nil {
-				util.Danger(util.LogError(err), "Cannot get project")
+				util.PanicTea(util.LogError(err), "Cannot get project")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
@@ -284,7 +284,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新茶台，友邻蒙评已通过！
 			if err = pr.UpdateClass(); err != nil {
-				util.Warning(util.LogError(err), "Cannot update pr class")
+				util.PanicTea(util.LogError(err), "Cannot update pr class")
 				Report(w, r, "你好，一畦春韭绿，十里稻花香。")
 				return
 			}
@@ -296,13 +296,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err = dThread.Get(); err != nil {
-				util.Danger(util.LogError(err), "Cannot get dfart-thread")
+				util.PanicTea(util.LogError(err), "Cannot get dfart-thread")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
 				return
 			}
 			// 更新茶议，友邻蒙评已通过！
 			if err = dThread.UpdateClass(1); err != nil {
-				util.Warning(util.LogError(err), "Cannot update draft-thread class")
+				util.PanicTea(util.LogError(err), "Cannot update draft-thread class")
 				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
 				return
 			}
@@ -321,7 +321,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				IsPrivate: dThread.IsPrivate,
 			}
 			if err = thread.Create(); err != nil {
-				util.Danger(util.LogError(err), "Cannot save thread")
+				util.PanicTea(util.LogError(err), "Cannot save thread")
 				Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 				return
 			}
@@ -332,12 +332,12 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId,
 			}
 			if err = dPost.Get(); err != nil {
-				util.Danger(util.LogError(err), "Cannot get draft-post given acceptObject.object_id")
+				util.PanicTea(util.LogError(err), "Cannot get draft-post given acceptObject.object_id")
 				Report(w, r, "你好，闪电考拉失魂鱼，竟然说有时候找资料的人不一定是外星人？")
 				return
 			}
 			if err = dPost.UpdateClass(1); err != nil {
-				util.Danger(util.LogError(err), "Cannot update draft-post class")
+				util.PanicTea(util.LogError(err), "Cannot update draft-post class")
 				Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
 				return
 			}
@@ -345,15 +345,16 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			new_post := data.Post{
 				Body:      dPost.Body,
 				UserId:    dPost.UserId,
-				FamilyId:  dPost.Id,
+				FamilyId:  dPost.FamilyId,
 				TeamId:    dPost.TeamId,
 				ThreadId:  dPost.ThreadId,
 				IsPrivate: dPost.IsPrivate,
 				Attitude:  dPost.Attitude,
 				Class:     1,
+				CreatedAt: time.Now(),
 			}
 			if err = new_post.Create(); err != nil {
-				util.Danger(util.LogError(err), "Cannot create post")
+				util.PanicTea(util.LogError(err), "Cannot create post")
 				Report(w, r, "你好，品茶是一种艺术，一杯为品，二杯为解渴。")
 				return
 			}
@@ -362,7 +363,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			//把草团转为正式$事业茶团
 			team, err := data.GetTeam(ao.ObjectId)
 			if err != nil {
-				util.Danger(util.LogError(err), "Cannot get team")
+				util.PanicTea(util.LogError(err), "Cannot get team")
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚，比刻苦奋斗有用？")
 				return
 			}
@@ -373,7 +374,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新团队属性，友邻蒙评已通过！
 			if err = team.UpdateClass(); err != nil {
-				util.Danger(util.LogError(err), "Cannot update team class")
+				util.PanicTea(util.LogError(err), "Cannot update team class")
 				Report(w, r, "你好，（摸摸头）考一考你，情中情因情感妹妹　错里错以错劝哥哥.是什么意思？")
 				return
 			}
@@ -385,21 +386,21 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Class:  1,
 			}
 			if err = teamMember.Create(); err != nil {
-				util.Danger(util.LogError(err), "Cannot create team-member")
+				util.PanicTea(util.LogError(err), "Cannot create team-member")
 				Report(w, r, "你好，花因喜洁难寻偶，人为悲秋易断魂。")
 				return
 			}
 			//检查团队发起人是否设置了默认$茶团，
 			t_founder, err := data.GetUser(team.FounderId)
 			if err != nil {
-				util.Danger(util.LogError(err), "Cannot get team founder")
+				util.PanicTea(util.LogError(err), "Cannot get team founder")
 				Report(w, r, "你好，茶博士失魂鱼，未能完成记录的任务，请稍后再试。")
 				return
 			}
 			//如果还没有设置，把这个新茶团设置为默认$茶团
 			old_default_team, err := t_founder.GetLastDefaultTeam()
 			if err != nil {
-				util.Danger(util.LogError(err), t_founder.Email, "Cannot get last default team")
+				util.PanicTea(util.LogError(err), t_founder.Email, "Cannot get last default team")
 				Report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
 				return
 			}
@@ -412,7 +413,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 					TeamId: team.Id,
 				}
 				if err := uDT.Create(); err != nil {
-					util.Danger(util.LogError(err), t_founder.Email, team.Id, "Cannot create default team")
+					util.PanicTea(util.LogError(err), t_founder.Email, team.Id, "Cannot create default team")
 					Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 					return
 				}
@@ -422,7 +423,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			//集团
 			group, err := data.GetGroup(ao.ObjectId)
 			if err != nil {
-				util.Danger(util.LogError(err), "Cannot get group")
+				util.PanicTea(util.LogError(err), "Cannot get group")
 				Report(w, r, "你好，满头大汗的茶博士请教你，错里错以错劝哥哥，是什么意思？")
 				return
 			}
@@ -433,13 +434,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新，友评已通过！
 			if err = group.Update(); err != nil {
-				util.Danger(util.LogError(err), "Cannot update group class")
+				util.PanicTea(util.LogError(err), "Cannot update group class")
 				Report(w, r, "你好，满头大汗的茶博士问，情中情因情感妹妹是么意思？")
 				return
 			}
 
 		default:
-			util.Danger(util.LogError(err), "Cannot get object")
+			util.PanicTea(util.LogError(err), "Cannot get object")
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候什么都不做,就能赢50%的竞争对手？")
 			return
 		}
@@ -455,7 +456,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
-		util.Danger(util.LogError(err), " Cannot get session")
+		util.PanicTea(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -469,7 +470,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	// 换成int
 	ob_id, err := strconv.Atoi(ob_id_str)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get id")
+		util.PanicTea(util.LogError(err), " Cannot get id")
 		Report(w, r, "你好，换成int失败，评审的资料？")
 		return
 	}
@@ -478,7 +479,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		Id: ob_id,
 	}
 	if err = ao.Get(); err != nil {
-		util.Danger(util.LogError(err), "Cannot get object")
+		util.PanicTea(util.LogError(err), "Cannot get object")
 		Report(w, r, "你好，茶博士都糊涂了，竟然唱问世间情为何物，直教人找不到对象？")
 		return
 	}
@@ -486,14 +487,14 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	//读取友邻蒙评邀请函
 	var acceptMessage data.AcceptMessage
 	if err = acceptMessage.GetAccMesByUIdAndAOId(su.Id, ao.Id); err != nil {
-		util.Warning(util.LogError(err), "Cannot get accept-message invitation")
+		util.PanicTea(util.LogError(err), "Cannot get accept-message invitation")
 		Report(w, r, "你好，茶博士莫名其妙，竟然说没有机票也可以登机有时候是合情合理的。")
 		return
 	}
 
 	// 检查用户是否受邀请的新茶评审官
 	if !su.CheckHasAcceptMessage(ao.Id) {
-		util.Danger(util.LogError(err), "Cannot get accept new tea")
+		util.PanicTea(util.LogError(err), "Cannot get accept new tea")
 		Report(w, r, "你好，莫名其妙的茶博士竟然强词夺理说，外星人不能评估新茶～")
 		return
 	}
@@ -503,7 +504,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		ob := data.Objective{
 			Id: ao.ObjectId}
 		if err = ob.Get(); err != nil {
-			util.Danger(util.LogError(err), "Cannot get objective")
+			util.PanicTea(util.LogError(err), "Cannot get objective")
 			Report(w, r, "你好，有时候找不到新茶评审的资料未必是外星人闹事。")
 			return
 		}
@@ -511,14 +512,14 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		aopd.Body = ob.Title + "." + ob.Body
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
-			util.Warning(util.LogError(err), "Cannot update ob accept-message class")
+			util.PanicTea(util.LogError(err), "Cannot update ob accept-message class")
 		}
 	case 2:
 		pr := data.Project{
 			Id: ao.ObjectId,
 		}
 		if err = pr.Get(); err != nil {
-			util.Danger(util.LogError(err), "Cannot get project")
+			util.PanicTea(util.LogError(err), "Cannot get project")
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修心养性的过程。")
 			return
 		}
@@ -526,21 +527,21 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		aopd.Body = pr.Title + "." + pr.Body
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
-			util.Warning(util.LogError(err), "Cannot update pr accept-message class")
+			util.PanicTea(util.LogError(err), "Cannot update pr accept-message class")
 		}
 	case 3:
 		dThread := data.DraftThread{
 			Id: ao.ObjectId,
 		}
 		if err = dThread.Get(); err != nil {
-			util.Danger(util.LogError(err), "Cannot get dfart-thread")
+			util.PanicTea(util.LogError(err), "Cannot get dfart-thread")
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
 			return
 		}
 
 		aopd.Body = dThread.Title + "." + dThread.Body
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
-			util.Warning(util.LogError(err), "Cannot update draft-thread accept-message class")
+			util.PanicTea(util.LogError(err), "Cannot update draft-thread accept-message class")
 		}
 		// 更新友邻蒙评邀请函class为已读
 		acceptMessage.Update(su.Id, dThread.Id)
@@ -549,19 +550,19 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 			Id: ao.ObjectId,
 		}
 		if err = dPost.Get(); err != nil {
-			util.Danger(util.LogError(err), "Cannot get post")
-			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料的人不一定是外星人？")
+			util.PanicTea(util.LogError(err), "Cannot get post")
+			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料的人也会迷路。")
 			return
 		}
 		aopd.Body = dPost.Body
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
-			util.Warning(util.LogError(err), "Cannot update po accept-message class")
+			util.PanicTea(util.LogError(err), "Cannot update po accept-message class")
 		}
 	case 5:
 		team, err := data.GetTeam(ao.ObjectId)
 		if err != nil {
-			util.Danger(util.LogError(err), "Cannot get team")
+			util.PanicTea(util.LogError(err), "Cannot get team")
 			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚比刻苦奋斗更有用？")
 			return
 		}
@@ -569,10 +570,10 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		aopd.Body = team.Name + "." + team.Mission
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(su.Id, ao.Id); err != nil {
-			util.Warning(util.LogError(err), "Cannot update team accept-message class")
+			util.PanicTea(util.LogError(err), "Cannot update team accept-message class")
 		}
 	default:
-		util.Danger(util.LogError(err), "Cannot get object")
+		util.PanicTea(util.LogError(err), "Cannot get object")
 		Report(w, r, "你好，茶博士失魂鱼，竟然说有时候什么都不做就能赢50%的竞争对手？")
 		return
 	}
@@ -582,7 +583,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 
 	// 减少1新消息小黑板用户消息记录
 	if err = data.SubtractUserMessageCount(su.Id); err != nil {
-		util.Warning(util.LogError(err), "Cannot subtract 1 user message")
+		util.PanicTea(util.LogError(err), "Cannot subtract 1 user message")
 	}
 
 	RenderHTML(w, &aopd, "layout", "navbar.private", "watch_your_language")

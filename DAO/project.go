@@ -31,7 +31,7 @@ type Project struct {
 
 // CountProjectByTitleObjectiveId() 统计某个茶围下相同名称的茶台数量
 func CountProjectByTitleObjectiveId(title string, objectiveId int) (count int, err error) {
-	err = Db.QueryRow("SELECT count(*) FROM project WHERE title = $1 AND objective_id = $2", title, objectiveId).Scan(&count)
+	err = Db.QueryRow("SELECT count(*) FROM projects WHERE title = $1 AND objective_id = $2", title, objectiveId).Scan(&count)
 	return
 }
 

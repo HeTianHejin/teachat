@@ -208,7 +208,7 @@ func (post *Post) NumReplies() (count int) {
 	return
 }
 
-// Create() 创建一个新的DraftPost草稿
+// Create() 创建一个新的品味（DraftPost）草稿
 func (user *User) CreateDraftPost(thread_id, family_id, team_id int, attitude, is_private bool, body string) (post DraftPost, err error) {
 	statement := "INSERT INTO draft_posts (user_id, thread_id, body, created_at, attitude, class, team_id, is_private, family_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
 	stmt, err := Db.Prepare(statement)
@@ -220,14 +220,14 @@ func (user *User) CreateDraftPost(thread_id, family_id, team_id int, attitude, i
 	return
 }
 
-// Get() 读取一个DraftPost品味（跟帖）稿
+// Get() 读取一个DraftPost品味（跟帖=DraftPost）草稿
 func (draft_post *DraftPost) Get() (err error) {
 	err = Db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id, is_private, family_id FROM draft_posts WHERE id = $1", draft_post.Id).
 		Scan(&draft_post.Id, &draft_post.UserId, &draft_post.ThreadId, &draft_post.Body, &draft_post.CreatedAt, &draft_post.Attitude, &draft_post.Class, &draft_post.TeamId, &draft_post.IsPrivate, &draft_post.FamilyId)
 	return
 }
 
-// UpdateClass() 更新一个DraftPost品��（����）稿
+// UpdateClass() 更新一个品味（DraftPost）草稿
 func (post *DraftPost) UpdateClass(class int) (err error) {
 	statement := "UPDATE draft_posts SET class = $2 WHERE id = $1"
 	stmt, err := Db.Prepare(statement)
