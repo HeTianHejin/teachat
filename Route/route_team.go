@@ -26,7 +26,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -37,7 +37,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	//查询目标茶团
 	team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
-		util.Danger(util.LogError(err), uuid, "Cannot get team by given uuid")
+		util.PanicTea(util.LogError(err), uuid, "Cannot get team by given uuid")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
@@ -48,7 +48,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士失魂鱼，你不是茶团成员，无法查看申请书。")
 			return
 		} else {
-			util.Danger(util.LogError(err), "Cannot get team member by team id and user id")
+			util.PanicTea(util.LogError(err), "Cannot get team member by team id and user id")
 			Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 			return
 		}
@@ -57,13 +57,13 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	//查询茶团全部新的加盟申请书，包含已查看但未处理的
 	applies, err := data.GetMemberApplicationByTeamIdAndStatus(team.Id)
 	if err != nil {
-		util.Danger(util.LogError(err), "Cannot get applys by team id")
+		util.PanicTea(util.LogError(err), "Cannot get applys by team id")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	apply_bean_slice, err := FetchMemberApplicationBeanSlice(applies)
 	if err != nil {
-		util.Danger(util.LogError(err), "Cannot get apply bean slice")
+		util.PanicTea(util.LogError(err), "Cannot get apply bean slice")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
@@ -94,20 +94,20 @@ func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	//查询用户全部加盟申请书
 	applies, err := data.GetMemberApplies(s_u.Id)
 	if err != nil {
-		util.Danger(util.LogError(err), "Cannot get applys by user id")
+		util.PanicTea(util.LogError(err), "Cannot get applys by user id")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	apply_bean_slice, err := FetchMemberApplicationBeanSlice(applies)
 	if err != nil {
-		util.Danger(util.LogError(err), "Cannot get apply bean slice")
+		util.PanicTea(util.LogError(err), "Cannot get apply bean slice")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
@@ -136,7 +136,7 @@ func NewTeamGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -150,7 +150,7 @@ func NewTeamGet(w http.ResponseWriter, r *http.Request) {
 func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot parse form")
+		util.PanicTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
 		return
 	}
@@ -168,7 +168,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	//统计当前用户已创建的茶团数量，如果>最大许可值，则不能再创建
 	count, err := s_u.CountTeamsByFounderId()
 	if err != nil {
-		util.Danger(util.LogError(err), "connot count teams given founder_id")
+		util.PanicTea(util.LogError(err), "connot count teams given founder_id")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -202,13 +202,13 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	}
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot convert class to int")
+		util.PanicTea(util.LogError(err), " Cannot convert class to int")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
 	// group_id, err := strconv.Atoi(r.PostFormValue("group_id"))
 	// if err != nil {
-	// 	util.Info(util.LogError(err), " Cannot convert group_id to int")
+	// 	util.PanicTea(util.LogError(err), " Cannot convert group_id to int")
 	// 	Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 	// 	return
 	// }
@@ -260,7 +260,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		SubordinateTeamId: 0,
 	}
 	if err := new_team.Create(); err != nil {
-		util.Info(util.LogError(err), " At create team")
+		util.PanicTea(util.LogError(err), " At create team")
 		Report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
 		return
 	}
@@ -271,7 +271,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		ObjectType: 5,
 	}
 	if err = aO.Create(); err != nil {
-		util.Warning(util.LogError(err), "Cannot create accept_object")
+		util.PanicTea(util.LogError(err), "Cannot create accept_object")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 	}
 
@@ -307,13 +307,13 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 
 	team_slice, err := data.GetOpenTeams()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get open teams")
+		util.PanicTea(util.LogError(err), " Cannot get open teams")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
 	tS.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean slice")
+		util.PanicTea(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -341,13 +341,13 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 
 	team_slice, err := data.GetClosedTeams()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get closed teams")
+		util.PanicTea(util.LogError(err), " Cannot get closed teams")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团详细信息，请稍后再试。")
 		return
 	}
 	tS.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean slice")
+		util.PanicTea(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -377,19 +377,19 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get user from session")
+		util.PanicTea(util.LogError(err), " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	var ts data.TeamSquare
 	team_slice, err := s_u.HoldTeams()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get hold teams")
+		util.PanicTea(util.LogError(err), " Cannot get hold teams")
 		return
 	}
 	ts.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean slice")
+		util.PanicTea(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -407,7 +407,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -416,13 +416,13 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 	tS.SessUser = s_u
 	team_slice, err := s_u.SurvivalTeams()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get joined teams")
+		util.PanicTea(util.LogError(err), " Cannot get joined teams")
 		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
 	tS.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean slice")
+		util.PanicTea(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -444,13 +444,13 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 	ts.SessUser = u
 	team_slice, err := u.CoreExecTeams()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get employed teams")
+		util.PanicTea(util.LogError(err), " Cannot get employed teams")
 		Report(w, r, "你好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
 		return
 	}
 	ts.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team bean slice")
+		util.PanicTea(util.LogError(err), " Cannot get team bean slice")
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
@@ -465,7 +465,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("id")
 	team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
-		util.Info(util.LogError(err), uuid, " Cannot get team given uuid.")
+		util.PanicTea(util.LogError(err), uuid, " Cannot get team given uuid.")
 		Report(w, r, "你好，满头大汗的茶博士未能帮忙查看这个茶团资料，请稍后再试。")
 		return
 	}
@@ -478,7 +478,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	founder, err := team.Founder()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team founder")
+		util.PanicTea(util.LogError(err), " Cannot get team founder")
 		Report(w, r, "你好，闪电考拉为你极速效劳中，请稍后再试。")
 		return
 	}
@@ -487,7 +487,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取团队发起人默认&家庭茶团
 	founder_default_family, err := GetLastDefaultFamilyByUserId(founder.Id)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get founder's default family")
+		util.PanicTea(util.LogError(err), " Cannot get founder's default family")
 		Report(w, r, "你好，满头大汗的茶博士为你效劳中，请稍后再试。")
 		return
 	}
@@ -495,7 +495,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	founder_default_team, err := founder.GetLastDefaultTeam()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get founder's default team")
+		util.PanicTea(util.LogError(err), " Cannot get founder's default team")
 		Report(w, r, "你好，满头大汗的茶博士为你效劳中，请稍后再试。")
 		return
 	}
@@ -505,13 +505,13 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team core member")
+		util.PanicTea(util.LogError(err), " Cannot get team core member")
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
 	teamNormalMembers, err := team.NormalMembers()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team normal member given team uuid")
+		util.PanicTea(util.LogError(err), " Cannot get team normal member given team uuid")
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
@@ -526,7 +526,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	for _, member := range teamCoreMembers {
 		cm_user, err := data.GetUser(member.UserId)
 		if err != nil {
-			util.Info(util.LogError(err), " Cannot get user")
+			util.PanicTea(util.LogError(err), " Cannot get user")
 			Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 			return
 		}
@@ -535,14 +535,14 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 		tc.MemberDefaultFamily, err = GetLastDefaultFamilyByUserId(cm_user.Id)
 		if err != nil {
-			util.Info(util.LogError(err), " Cannot get user's default family")
+			util.PanicTea(util.LogError(err), " Cannot get user's default family")
 			Report(w, r, "你好，满头大汗的茶博士，开口唱蝶恋花，请稍后再试。")
 			return
 		}
 
 		tc.MemberDefaultTeam, err = cm_user.GetLastDefaultTeam()
 		if err != nil {
-			util.Info(util.LogError(err), " Cannot get user's default team")
+			util.PanicTea(util.LogError(err), " Cannot get user's default team")
 			Report(w, r, "你好，闪电茶博士为你效劳中，请稍后再试。")
 			return
 		}
@@ -554,20 +554,20 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	for _, member := range teamNormalMembers {
 		tn_user, err := data.GetUser(member.UserId)
 		if err != nil {
-			util.Info(util.LogError(err), " Cannot get user")
+			util.PanicTea(util.LogError(err), " Cannot get user")
 			Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 			return
 		}
 		tn.Member = tn_user
 		tn.MemberDefaultFamily, err = GetLastDefaultFamilyByUserId(tn_user.Id)
 		if err != nil {
-			util.Info(util.LogError(err), " Cannot get user's default family")
+			util.PanicTea(util.LogError(err), " Cannot get user's default family")
 			Report(w, r, "你好，满头大汗的茶博士说小生这边有礼了，请稍后再试。")
 			return
 		}
 		tn.MemberDefaultTeam, err = tn_user.GetLastDefaultTeam()
 		if err != nil {
-			util.Info(util.LogError(err), " Cannot get user's default team")
+			util.PanicTea(util.LogError(err), " Cannot get user's default team")
 			Report(w, r, "你好，闪电考拉为你效劳，请稍后再试。")
 			return
 		}
@@ -601,7 +601,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get user from session")
+		util.PanicTea(util.LogError(err), " Cannot get user from session")
 		Report(w, r, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
@@ -621,7 +621,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		//茶团发起人也是核心成员？
 		f_teams, err := s_u.FounderTeams()
 		if err != nil {
-			util.Info(util.LogError(err), " Cannot get founderTeams given s_u")
+			util.PanicTea(util.LogError(err), " Cannot get founderTeams given s_u")
 			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 			return
 		}
@@ -650,7 +650,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		//检查茶团是否有待处理的加盟申请书
 		count, err := data.GetMemberApplicationByTeamIdAndStatusCount(tD.Team.Id)
 		if err != nil {
-			util.Info(util.LogError(err), "Cannot get member application count")
+			util.PanicTea(util.LogError(err), "Cannot get member application count")
 			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 			return
 		}
@@ -693,7 +693,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get user from session")
+		util.PanicTea(util.LogError(err), " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -704,7 +704,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	//这个茶团是否存在？
 	team, err := data.GetTeamByUUID(t_uuid)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get this team")
+		util.PanicTea(util.LogError(err), " Cannot get this team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
@@ -715,7 +715,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	//如果是创建人，那么就可以管理这个茶团
 	founder, err := team.Founder()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team founder")
+		util.PanicTea(util.LogError(err), " Cannot get team founder")
 		Report(w, r, "你好，闪电考拉为你极速效劳中，请稍后再试。")
 		return
 	}
@@ -724,7 +724,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	member_ceo, err := team.MemberCEO()
 	if err != nil {
 		//茶团已经设定了ceo，但是出现了其他错误
-		util.Info(util.LogError(err), " Cannot get ceo of this team")
+		util.PanicTea(util.LogError(err), " Cannot get ceo of this team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
@@ -757,7 +757,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	tD.Founder = founder
 	founder_default_team, err := founder.GetLastDefaultTeam()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get founder's default team")
+		util.PanicTea(util.LogError(err), "Cannot get founder's default team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
@@ -765,14 +765,14 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 
 	ceo, err := data.GetUser(member_ceo.UserId)
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get ceo given member.user_id")
+		util.PanicTea(util.LogError(err), "Cannot get ceo given member.user_id")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
 	tD.CEO = ceo
 	ceo_default_team, err := ceo.GetLastDefaultTeam()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get ceo's default team")
+		util.PanicTea(util.LogError(err), "Cannot get ceo's default team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
@@ -781,13 +781,13 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	tD.TeamMemberCount = team.NumMembers()
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team core member")
+		util.PanicTea(util.LogError(err), " Cannot get team core member")
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
 	teamNormalMembers, err := team.NormalMembers()
 	if err != nil {
-		util.Info(util.LogError(err), team.Id, " Cannot get team normal member")
+		util.PanicTea(util.LogError(err), team.Id, " Cannot get team normal member")
 		Report(w, r, "你好，闪电考拉为你效劳中，请稍后再试。")
 		return
 	}
@@ -797,13 +797,13 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 
 	tCMBSlice, err = FetchTeamMemberBeanSlice(teamCoreMembers)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get FetchTeamMemberBeanSlice()")
+		util.PanicTea(util.LogError(err), " Cannot get FetchTeamMemberBeanSlice()")
 		Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 		return
 	}
 	tNMBSlice, err = FetchTeamMemberBeanSlice(teamNormalMembers)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get FetchTeamMemberBeanSlice()")
+		util.PanicTea(util.LogError(err), " Cannot get FetchTeamMemberBeanSlice()")
 		Report(w, r, "你好，闪电考拉为你疯狂效劳中，请稍后再试。")
 		return
 	}
@@ -829,7 +829,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get user from session")
+		util.PanicTea(util.LogError(err), " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -838,14 +838,14 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 	//检查一下是否是茶团的ceo，如果是，那么就可以管理核心角色
 	team_id, err := strconv.Atoi(r.FormValue("team_id"))
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot strconv this team_id")
+		util.PanicTea(util.LogError(err), " Cannot strconv this team_id")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
 	//这个茶团是否存在？
 	team, err := data.GetTeam(team_id)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get ceo of this team")
+		util.PanicTea(util.LogError(err), " Cannot get ceo of this team")
 		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
@@ -859,7 +859,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			//茶团已经设定了ceo，但是出现了其他错误
-			util.Info(util.LogError(err), " Cannot get ceo of this team")
+			util.PanicTea(util.LogError(err), " Cannot get ceo of this team")
 			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 			return
 		}
@@ -873,7 +873,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 	//这个用户是否在这个茶团中？角色是否正确？
 	member_id, err := strconv.Atoi(r.FormValue("member_id"))
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot convert member_id to int")
+		util.PanicTea(util.LogError(err), " Cannot convert member_id to int")
 		Report(w, r, "茶博士失魂鱼，未能读取新泡茶议资料，请稍后再试。")
 		return
 	}
@@ -884,7 +884,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 	}
 	member, err := team.GetTeamMemberByRole(role)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get this team member")
+		util.PanicTea(util.LogError(err), " Cannot get this team member")
 		Report(w, r, "你好，茶博士未能找到此茶团成员资料，请确认后再试。")
 		return
 	}
@@ -929,7 +929,7 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -959,7 +959,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -986,13 +986,13 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := Session(r)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get session")
+		util.PanicTea(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1001,7 +1001,7 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 	tUid := v.Get("id")
 	team, err := data.GetTeamByUUID(tUid)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get team")
+		util.PanicTea(util.LogError(err), " Cannot get team")
 		Report(w, r, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
 		return
 	}
@@ -1014,7 +1014,7 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 	// 根据用户提交的Uuid，查询该茶团发送的全部邀请函
 	is, err := team.Invitations()
 	if err != nil {
-		util.Info(util.LogError(err), s_u.Email, " Cannot get invitations")
+		util.PanicTea(util.LogError(err), s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，茶博士正在努力的查找茶团发送的邀请函，请稍后再试。")
 		return
 	}
@@ -1028,7 +1028,7 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 	coreMembers, err := team.CoreMembers()
 	// 查err内容
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get core members")
+		util.PanicTea(util.LogError(err), " Cannot get core members")
 		Report(w, r, "你好，茶博士失魂鱼，居然说这个茶团是由外星人组织的，请确认后再试。")
 		return
 	}
@@ -1043,7 +1043,7 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 		//查询创建人资料
 		founder, err := team.Founder()
 		if err != nil {
-			util.Info(util.LogError(err), team.Id, " Cannot get team founder")
+			util.PanicTea(util.LogError(err), team.Id, " Cannot get team founder")
 			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 			return
 		}
@@ -1070,13 +1070,13 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := Session(r)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get session")
+		util.PanicTea(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1085,14 +1085,14 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 	i_uuid := v.Get("id")
 	in, err := data.GetInvitationByUuid(i_uuid)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get invitation")
+		util.PanicTea(util.LogError(err), " Cannot get invitation")
 		Report(w, r, "你好，茶博士失魂鱼，未能找到这个邀请函，请稍后再试。")
 		return
 	}
 	//目标茶团
 	team, err := in.Team()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get team given invitation")
+		util.PanicTea(util.LogError(err), " Cannot get team given invitation")
 		Report(w, r, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
 		return
 	}
@@ -1102,7 +1102,7 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 	iD.SessUser = s_u
 	i_b, err := FetchInvitationBean(in)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get invitation bean")
+		util.PanicTea(util.LogError(err), " Cannot get invitation bean")
 		Report(w, r, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
@@ -1116,7 +1116,7 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 	coreMembers, err := team.CoreMembers()
 	// 查err内容
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get core members")
+		util.PanicTea(util.LogError(err), " Cannot get core members")
 		Report(w, r, "你好，茶博士失魂鱼，居然说这个茶团是由外星人组织的，请确认后再试。")
 		return
 	}
@@ -1131,7 +1131,7 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 		//查询创建人资料
 		founder, err := team.Founder()
 		if err != nil {
-			util.Info(util.LogError(err), team.Id, " Cannot get team founder")
+			util.PanicTea(util.LogError(err), team.Id, " Cannot get team founder")
 			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 			return
 		}

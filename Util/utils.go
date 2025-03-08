@@ -89,6 +89,13 @@ func Danger(args ...interface{}) {
 	logger.Println(args...)
 }
 
+// PanicTea() 为了显示调试过程中错误信息，而不是终止程序,
+// 不记录到日志文件里
+func PanicTea(args ...interface{}) {
+	log.Println(args...)
+	//panic(args)
+}
+
 // Version
 func Version() string {
 	return "0.7"

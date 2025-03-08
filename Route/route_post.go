@@ -35,13 +35,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	var pD data.PostDetail
 	t_post := data.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
-		util.Warning(util.LogError(err), " Cannot get post detail")
+		util.PanicTea(util.LogError(err), " Cannot get post detail")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	post_bean, err := FetchPostBean(t_post)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get post bean given post")
+		util.PanicTea(util.LogError(err), " Cannot get post bean given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -49,13 +49,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取此品味引用的茶议
 	quote_thread, err := t_post.Thread()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get thread given post")
+		util.PanicTea(util.LogError(err), " Cannot get thread given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
 		return
 	}
 	pD.QuoteThreadBean, err = FetchThreadBean(quote_thread)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get thread given post")
+		util.PanicTea(util.LogError(err), " Cannot get thread given post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
 		return
 	}
@@ -65,13 +65,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取全部针对此品味的茶议
 	thread_slice, err := t_post.Threads()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get thread_slice given t_post")
+		util.PanicTea(util.LogError(err), " Cannot get thread_slice given t_post")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	pD.ThreadBeanSlice, err = FetchThreadBeanSlice(thread_slice)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get thread_bean_slice given thread_slice")
+		util.PanicTea(util.LogError(err), " Cannot get thread_bean_slice given thread_slice")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -79,13 +79,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取此品味的引用茶议（源自）引用茶台
 	quote_project, err := quote_thread.Project()
 	if err != nil {
-		util.Warning(util.LogError(err), quote_thread.Id, " Cannot get project given thread")
+		util.PanicTea(util.LogError(err), quote_thread.Id, " Cannot get project given thread")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	pD.QuoteProjectBean, err = FetchProjectBean(quote_project)
 	if err != nil {
-		util.Warning(util.LogError(err), quote_project.Id, " Cannot get project given project")
+		util.PanicTea(util.LogError(err), quote_project.Id, " Cannot get project given project")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -93,13 +93,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取此品味的引用茶议（源自）引用茶台，引用的茶围
 	quote_objective, err := quote_project.Objective()
 	if err != nil {
-		util.Warning(util.LogError(err), quote_project.Id, " Cannot get objective given project")
+		util.PanicTea(util.LogError(err), quote_project.Id, " Cannot get objective given project")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	pD.QuoteObjectiveBean, err = FetchObjectiveBean(quote_objective)
 	if err != nil {
-		util.Warning(util.LogError(err), quote_objective.Id, " Cannot get objective given objective")
+		util.PanicTea(util.LogError(err), quote_objective.Id, " Cannot get objective given objective")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -134,7 +134,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 从会话查获当前浏览用户资料荚
 	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get user-related data from session")
+		util.PanicTea(util.LogError(err), " Cannot get user-related data from session")
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -178,7 +178,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/post/draft
-// Create the post 创建品味（跟帖/回复）草稿
+// Create the post 创建品味（跟帖/回复）草稿 new
 func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
@@ -187,30 +187,20 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot parse form")
+		util.PanicTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，茶博士摸摸头，竟然说今天电脑去热带海岛潜水了。")
 		return
 	}
 
 	s_u, err := s.User()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot get user from session")
+		util.PanicTea(util.LogError(err), " Cannot get user from session")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 
 	//读取用户表态,立场是支持（true）或者反对(false)
-	var attitude bool
-	a := r.PostFormValue("attitude")
-	switch a {
-	case "true":
-		attitude = true
-	case "false":
-		attitude = false
-	default:
-		Report(w, r, "你好，茶博士失魂鱼，未能读懂您的表态内容。")
-		return
-	}
+	attitude := r.PostFormValue("attitude") == "true"
 
 	body := r.PostFormValue("body")
 	//检查body的长度，规则是不能少于刘姥姥评价老君眉的品味字数
@@ -258,9 +248,14 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	family := data.Family{
 		Id: family_id,
 	}
-	is_member, _ := family.IsMember(s_u.Id)
+	is_member, err := family.IsMember(s_u.Id)
+	if err != nil {
+		util.PanicTea(util.LogError(err), " Cannot get family member by family id and user id", family_id, s_u.Id)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取家庭成员资格资料。")
+		return
+	}
 	if !is_member {
-		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+		//util.PanicTea(util.LogError(err), " Cannot get family member by family id and user id")
 		Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
 		return
 	}
@@ -268,6 +263,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	//  检查茶议所在的茶台属性，
 	t_proj, err := thread.Project()
 	if err != nil {
+		util.PanicTea(util.LogError(err), " Cannot get project by project id", t_proj.Id)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 		return
 	}
@@ -276,7 +272,8 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	case 1:
 		// class=1可以品茶，
 		if dPost, err = s_u.CreateDraftPost(thread.Id, family_id, team_id, attitude, is_private, body); err != nil {
-			Report(w, r, "你好，茶博士摸摸头，记录品味失败。")
+			util.PanicTea(util.LogError(err), thread.Id, " Cannot create draft post")
+			Report(w, r, "你好，茶博士摸摸头，嘀咕笔头宝珠掉了，记录您的品味失败。")
 			return
 		}
 
@@ -284,6 +281,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		// 当前会话用户是否可以入席品茶？需要看台主指定了那些茶团成员可以品茶
 		ok, err := t_proj.IsInvitedMember(s_u.Id)
 		if err != nil {
+			util.PanicTea(util.LogError(err), " Cannot get project by project id", t_proj.Id)
 			Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 			return
 		}
@@ -295,6 +293,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 		// Can have tea
 		if dPost, err = s_u.CreateDraftPost(thread.Id, family_id, team_id, attitude, is_private, body); err != nil {
+			util.PanicTea(util.LogError(err), thread.Id, " Cannot create draft post")
 			Report(w, r, "你好，茶博士摸摸头，竟然说没有墨水，记录品味失败。")
 			return
 		}
@@ -311,7 +310,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		ObjectType: 4,
 	}
 	if err = aO.Create(); err != nil {
-		util.Warning(util.LogError(err), "Cannot create accept_object")
+		util.PanicTea(util.LogError(err), "Cannot create accept_object given draft_post_id", dPost.Id)
 		Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 		return
 	}
@@ -345,25 +344,25 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Danger(util.LogError(err), " Cannot parse form")
+		util.PanicTea(util.LogError(err), " Cannot parse form")
 	}
 	//从会话中读取用户资料
 	user, err := sess.User()
 	if err != nil {
-		util.Danger(util.LogError(err), " Cannot get user from session")
+		util.PanicTea(util.LogError(err), " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	uuid := r.PostFormValue("uuid")
 	t_post := data.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
-		util.Warning(util.LogError(err), " Cannot get post detail")
+		util.PanicTea(util.LogError(err), " Cannot get post detail")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 
 	if t_post.UserId != user.Id {
-		util.Danger(util.LogError(err), " Cannot edit other user's post")
+		util.PanicTea(util.LogError(err), " Cannot edit other user's post")
 		Report(w, r, "茶博士提示，目前仅能补充自己的回复")
 		return
 	} else {
@@ -380,13 +379,13 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 			}
 			err = t_post.UpdateBody(body)
 			if err != nil {
-				util.Danger(util.LogError(err), " Cannot update post")
+				util.PanicTea(util.LogError(err), " Cannot update post")
 				Report(w, r, "茶博士失魂鱼，未能更新专属资料，请稍后再试。")
 				return
 			}
 			thread, err := data.GetThreadById(t_post.ThreadId)
 			if err != nil {
-				util.Danger(util.LogError(err), " Cannot read thread")
+				util.PanicTea(util.LogError(err), " Cannot read thread")
 				Report(w, r, "茶博士失魂鱼，未能读取专属资料，请稍后再试。")
 			}
 			url := fmt.Sprint("/v1/thread/detail?id=", thread.Uuid)
@@ -412,7 +411,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 
 		user, err := sess.User()
 		if err != nil {
-			util.Danger(util.LogError(err), " Cannot get user from session")
+			util.PanicTea(util.LogError(err), " Cannot get user from session")
 			http.Redirect(w, r, "/v1/login", http.StatusFound)
 			return
 		}
@@ -420,14 +419,14 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 		uuid := vals.Get("id")
 		t_post := data.Post{Uuid: uuid}
 		if err = t_post.GetByUuid(); err != nil {
-			util.Warning(util.LogError(err), " Cannot get post detail")
+			util.PanicTea(util.LogError(err), " Cannot get post detail")
 			Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 			return
 		}
 		if t_post.UserId == user.Id {
 			RenderHTML(w, &t_post, "layout", "navbar.private", "post.edit")
 		} else {
-			util.Danger(util.LogError(err), " Cannot edit other user's post")
+			util.PanicTea(util.LogError(err), " Cannot edit other user's post")
 			Report(w, r, "茶博士提示，目前仅能补充自己的回复")
 		}
 

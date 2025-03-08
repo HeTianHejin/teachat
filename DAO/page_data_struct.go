@@ -102,8 +102,8 @@ type ProjectDetail struct {
 
 	ProjectBean ProjectBean //当前浏览茶台资料夹
 	//Master       User    //台主，作者，发起人
-	MasterDefaultFamily Family // 作者当前默认&家庭，
-	MasterDefaultTeam   Team   //作者当前默认$团队，
+	// MasterDefaultFamily Family // 作者当前默认&家庭，
+	// MasterDefaultTeam   Team   //作者当前默认$团队，
 
 	Place    Place //茶台(项目)，活动地方
 	Open     bool
@@ -111,13 +111,15 @@ type ProjectDetail struct {
 
 	QuoteObjective             Objective // 引用的茶围
 	QuoteObjectiveAuthor       User      // 引用的茶围作者
-	QuoteObjectiveAuthorFamily Family    // 引用的茶围作者作者发帖时选择的家庭，或者默认&家庭茶团
-	QuoteObjectiveAuthorTeam   Team      // 引用的茶围作者创建时作者发帖时选择的团队，或者默认团队
+	QuoteObjectiveAuthorFamily Family    // 引用的茶围作者作者发帖时选择的家庭，
+	QuoteObjectiveAuthorTeam   Team      // 引用的茶围作者创建时作者发帖时选择的团队，
 
-	ThreadBeanSlice       []ThreadBean // project下所有Threads和作者资料荚
-	ThreadCount           int          // project下所有Threads个数
-	ThreadIsApprovedCount int          //project（茶台）已采纳茶议数量
-	IsOverTwelve          bool         //是否超过12个
+	ThreadBeanSlice []ThreadBean // project下所有Threads和作者资料荚
+
+	ThreadCount           int // project下所有Threads个数
+	ThreadIsApprovedCount int //project（茶台）已采纳茶议数量
+
+	IsOverTwelve bool //是否超过12个
 
 }
 

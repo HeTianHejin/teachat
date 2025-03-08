@@ -37,7 +37,7 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	//根据会话读取当前用户的信息
 	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.Danger(util.LogError(err), "cannot fetch s_u s_teams given session")
+		util.PanicTea(util.LogError(err), "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -72,7 +72,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -83,7 +83,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	body := r.PostFormValue("description")
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
-		util.Warning(util.LogError(err), "Failed to convert class to int")
+		util.PanicTea(util.LogError(err), "Failed to convert class to int")
 		return
 	}
 
@@ -91,7 +91,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	is_private := r.PostFormValue("is_private") == "true"
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
-		util.Warning(util.LogError(err), "Failed to convert class to int")
+		util.PanicTea(util.LogError(err), "Failed to convert class to int")
 		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
@@ -101,7 +101,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
-		util.Warning(util.LogError(err), "Failed to convert class to int")
+		util.PanicTea(util.LogError(err), "Failed to convert class to int")
 		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
@@ -114,7 +114,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	// check the given team_id is valid
 	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
 	if err != nil {
-		util.Warning(util.LogError(err), "Cannot get team member by team id and user id")
+		util.PanicTea(util.LogError(err), "Cannot get team member by team id and user id")
 		Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
 		return
 	}
@@ -126,7 +126,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 	is_f_member, err := family.IsMember(s_u.Id)
 	if !is_f_member {
-		util.Warning(util.LogError(err), " Cannot get family member by family id and user id")
+		util.PanicTea(util.LogError(err), " Cannot get family member by family id and user id")
 		Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
 		return
 	}
@@ -144,7 +144,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 
 	count_title, err := obj.CountByTitle()
 	if err != nil {
-		util.Danger(util.LogError(err), " cannot get count given objective title")
+		util.PanicTea(util.LogError(err), " cannot get count given objective title")
 		Report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
 		return
 	}
@@ -155,7 +155,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 	count_team, err := obj.CountByTeamId()
 	if err != nil {
-		util.Danger(util.LogError(err), " cannot get count given objective team_id")
+		util.PanicTea(util.LogError(err), " cannot get count given objective team_id")
 		Report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
 		return
 	}
@@ -195,7 +195,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 			// 撤回（删除）发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
 			// 记录错误，提示用户新开茶话会未成功
-			util.Warning(util.LogError(err), " Cannot create objective")
+			util.PanicTea(util.LogError(err), " Cannot create objective")
 			Report(w, r, "你好，偷来梨蕊三分白，借得梅花一缕魂。")
 			return
 		}
@@ -207,7 +207,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 
 		//用正则表达式检测茶团号TeamIds，是否符合“整数，整数，整数...”的格式
 		if !Verify_id_slice_Format(tIds_str) {
-			util.Warning(util.LogError(err), " TeamId slice format is wrong")
+			util.PanicTea(util.LogError(err), " TeamId slice format is wrong")
 			Report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 			return
 		}
@@ -215,7 +215,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		t_ids_str := strings.Split(tIds_str, ",")
 		// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
 		if len(t_ids_str) > int(util.Config.MaxInviteTeams) {
-			util.Warning(util.LogError(err), " Too many team ids")
+			util.PanicTea(util.LogError(err), " Too many team ids")
 			Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，茶壶不够用，请确认后再试。")
 			return
 		}
@@ -228,7 +228,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		if err = new_ob.Create(); err != nil {
 			// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
-			util.Warning(util.LogError(err), " Cannot create objective")
+			util.PanicTea(util.LogError(err), " Cannot create objective")
 			Report(w, r, "你好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
 			return
 		}
@@ -242,12 +242,12 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 			if err = obInviTeams.Create(); err != nil {
 				// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
-				util.Warning(util.LogError(err), " Cannot create objectiveLicenseTeam")
+				util.PanicTea(util.LogError(err), " Cannot create objectiveLicenseTeam")
 			}
 		}
 	default:
 		// 非法的茶话会属性
-		util.Warning(util.LogError(err), " Unknown objective class")
+		util.PanicTea(util.LogError(err), " Unknown objective class")
 		Report(w, r, "你好，茶博士还在研究茶话会的围字是不是有四种写法，忘记创建茶话会了，请稍后再试。")
 		return
 	}
@@ -258,7 +258,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		ObjectType: 1,
 	}
 	if err = aO.Create(); err != nil {
-		util.Warning(util.LogError(err), "Cannot create accept_object")
+		util.PanicTea(util.LogError(err), "Cannot create accept_object")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
@@ -272,7 +272,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 发送消息给两个在线用户
 	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-		util.Warning(util.LogError(err), "Cannot send 2 acceptMessage")
+		util.PanicTea(util.LogError(err), "Cannot send 2 acceptMessage")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶，请稍后再试。")
 		return
 	}
@@ -297,7 +297,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	// test获取所有茶话会
 	objective_slice, err := data.GetPublicObjectives(24)
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get objectives")
+		util.PanicTea(util.LogError(err), " Cannot get objectives")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
 		return
 	}
@@ -318,7 +318,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 
 	oSpD.ObjectiveBeanSlice, err = FetchObjectiveBeanSlice(objective_slice)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
+		util.PanicTea(util.LogError(err), " Cannot read objective-bean slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
@@ -344,7 +344,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	//已登录
 	sUser, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), " Cannot get user from session")
+		util.PanicTea(util.LogError(err), " Cannot get user from session")
 		//跳转登录页面
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -396,20 +396,20 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	oD.ObjectiveBean, err = FetchObjectiveBean(ob)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
+		util.PanicTea(util.LogError(err), " Cannot read objective-bean slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
 	//fetch public projects
 	project_slice, err := ob.GetPublicProjects()
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
+		util.PanicTea(util.LogError(err), " Cannot read objective-bean slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
 	oD.ProjectBeanSlice, err = FetchProjectBeanSlice(project_slice)
 	if err != nil {
-		util.Warning(util.LogError(err), " Cannot read objective-bean slice")
+		util.PanicTea(util.LogError(err), " Cannot read objective-bean slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌奋斗着。")
 		return
 	}
@@ -438,14 +438,14 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	//已经登录！
 	s_u, err := s.User()
 	if err != nil {
-		util.Info(util.LogError(err), "Cannot get user from session")
+		util.PanicTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	oD.IsGuest = false
 	// 记录用户查询的资讯
 	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
-		util.Warning(util.LogError(err), s_u.Email, " Cannot record last query path")
+		util.PanicTea(util.LogError(err), s_u.Email, " Cannot record last query path")
 	}
 	// 用户足迹
 	s_u.Footprint = r.URL.Path
@@ -456,7 +456,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	if ob.Class == 2 {
 		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
-			util.Warning(util.LogError(err), " Cannot read objective-bean slice")
+			util.PanicTea(util.LogError(err), " Cannot read objective-bean slice")
 			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你时刻忙碌着。")
 			return
 		}

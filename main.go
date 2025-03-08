@@ -19,7 +19,10 @@ func main() {
 
 	// index
 	mux.HandleFunc("/", route.Index)
-	mux.HandleFunc("/v1/", route.Index)
+	//mux.HandleFunc("/v1/", route.Index)
+
+	//测试时使用
+	mux.HandleFunc("/v1/", route.ObjectiveSquare)
 
 	// search
 	mux.HandleFunc("/v1/search", route.HandleSearch)
