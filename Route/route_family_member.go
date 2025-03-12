@@ -39,7 +39,7 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 	// 欲声明为家庭成员的茶友资料
 	family_member_user, err := data.GetUserByUUID(family_member_user_uuid)
 	if err != nil {
-		util.PanicTea(util.LogError(err), "cannot get family by uuid")
+		util.ScaldingTea(util.LogError(err), "cannot get family by uuid")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -47,7 +47,7 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 	//读取当前会话用户的相关资料
 	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.PanicTea(util.LogError(err), "cannot fetch s_u s_teams given session")
+		util.ScaldingTea(util.LogError(err), "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -78,20 +78,20 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := Session(r)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get session")
+		util.ScaldingTea(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	// 解析表单内容，获取当前用户提交的内容
 	err = r.ParseForm()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot parse form")
+		util.ScaldingTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -105,7 +105,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	//读取声明增加的成员资料
 	t_user, err := data.GetUserByEmail(m_email)
 	if err != nil {
-		util.PanicTea(util.LogError(err), m_email, "Cannot get user by email")
+		util.ScaldingTea(util.LogError(err), m_email, "Cannot get user by email")
 		Report(w, r, "你好，茶博士正在无事忙之中，稍后再试。")
 		return
 	}
@@ -144,13 +144,13 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	isMember := false
 	// check if session user is member of family
 	if isMember, err = t_family.IsMember(s_u.Id); err != nil || !isMember {
-		util.PanicTea(util.LogError(err), s_u.Id, "Cannot check if user is member of family")
+		util.ScaldingTea(util.LogError(err), s_u.Id, "Cannot check if user is member of family")
 		Report(w, r, "你好，茶博士认为你不是这个家庭的成员，请确认后再试。")
 		return
 	}
 	// 检查提及的茶友是否已经是提及的家庭的成员
 	if isMember, err = t_family.IsMember(t_user.Id); isMember || err != nil {
-		util.PanicTea(util.LogError(err), t_user.Id, "Cannot check if user is member of family")
+		util.ScaldingTea(util.LogError(err), t_user.Id, "Cannot check if user is member of family")
 		Report(w, r, "你好，茶博士认为提及的茶友已经是家庭的成员，请确认后再试。")
 		return
 	}
@@ -158,7 +158,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	// 检查当前用户是否这个家庭的父母角色
 	parent_members, err := t_family.ParentMembers()
 	if err != nil {
-		util.PanicTea(util.LogError(err), t_family.Id, "Cannot get parent members of family")
+		util.ScaldingTea(util.LogError(err), t_family.Id, "Cannot get parent members of family")
 		Report(w, r, "你好，茶博士认为你不是这个家庭的主人成员，请确认后再试。")
 		return
 	}
@@ -265,7 +265,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// 保存新声明
 	if err = new_family_member_sign_in.Create(); err != nil {
-		util.PanicTea(util.LogError(err), "Cannot create family member sign in")
+		util.ScaldingTea(util.LogError(err), "Cannot create family member sign in")
 		Report(w, r, "你好，满头大汗的茶博士说，因为眼镜太模糊导致增加成员的声明保存失败，请确认后再试。")
 		return
 	}
@@ -296,13 +296,13 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := Session(r)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get session")
+		util.ScaldingTea(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get user")
+		util.ScaldingTea(util.LogError(err), " Cannot get user")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -313,7 +313,7 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 		Uuid: family_member_sign_in_uuid,
 	}
 	if err := family_member_sign_in.GetByUuid(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get family_member_sign_in given uuid")
+		util.ScaldingTea(util.LogError(err), " Cannot get family_member_sign_in given uuid")
 		Report(w, r, "读取声明书失误，请稍后再试一次。")
 		return
 	}
@@ -328,14 +328,14 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 	// 读取声明书详细资料
 	family_member_sign_in_bean, err := FetchFamilyMemberSignInBean(family_member_sign_in)
 	if err != nil {
-		util.PanicTea(util.LogError(err), family_member_sign_in.Id, " Cannot get family_member_sign_in_bean")
+		util.ScaldingTea(util.LogError(err), family_member_sign_in.Id, " Cannot get family_member_sign_in_bean")
 		Report(w, r, "读取声明书失误，请稍后再试一次。")
 		return
 	}
 	//更新声明书状态为已读
 	family_member_sign_in.Status = 1
 	if err := family_member_sign_in.Update(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot update family_member_sign_in")
+		util.ScaldingTea(util.LogError(err), " Cannot update family_member_sign_in")
 		Report(w, r, "更新声明书失误，请稍后再试一次。")
 		return
 	}
@@ -355,14 +355,14 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := Session(r)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get session")
+		util.ScaldingTea(util.LogError(err), " Cannot get session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	// 根据会话信息读取茶友资料
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), s.Email, "Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get user from session")
 		Report(w, r, "你好，满地梨花一片天，请稍后再试一次")
 		return
 	}
@@ -370,7 +370,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	//解析表单内容，获取茶友提交的参数
 	err = r.ParseForm()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot parse form")
+		util.ScaldingTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -388,7 +388,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		Uuid: family_member_sign_in_uuid,
 	}
 	if err = family_member_sign_in.GetByUuid(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get family_member_sign_in given uuid")
+		util.ScaldingTea(util.LogError(err), " Cannot get family_member_sign_in given uuid")
 		Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
 		return
 	}
@@ -420,7 +420,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		}
 		//保存家庭成员
 		if err = family_member.Create(); err != nil {
-			util.PanicTea(util.LogError(err), " Cannot create family_member")
+			util.ScaldingTea(util.LogError(err), " Cannot create family_member")
 			Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜失踪了，稍后再试。")
 			return
 		}
@@ -430,20 +430,20 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 				Id: family_member.FamilyId,
 			}
 			if err = family.Get(); err != nil {
-				util.PanicTea(util.LogError(err), family.Id, " Cannot get family given id")
+				util.ScaldingTea(util.LogError(err), family.Id, " Cannot get family given id")
 				Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
 				return
 			}
 			t_user, err := data.GetUser(family_member.UserId)
 			if err != nil {
-				util.PanicTea(util.LogError(err), t_user.Id, " Cannot get user given id")
+				util.ScaldingTea(util.LogError(err), t_user.Id, " Cannot get user given id")
 				Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜找不到，稍后再试。")
 				return
 			}
 			//更新家庭的名称：男主人名+女主人名
 			family.Name = family.Name + t_user.Name
 			if err = family.Update(); err != nil {
-				util.PanicTea(util.LogError(err), " Cannot update family")
+				util.ScaldingTea(util.LogError(err), " Cannot update family")
 				Report(w, r, "你好，茶博士正在忙碌，厚厚的眼镜不见了，稍后再试。")
 				return
 			}
@@ -452,7 +452,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		//更新声明书状态为"已确认“ 2
 		family_member_sign_in.Status = 2
 		if err = family_member_sign_in.Update(); err != nil {
-			util.PanicTea(util.LogError(err), " Cannot update family_member_sign_in")
+			util.ScaldingTea(util.LogError(err), " Cannot update family_member_sign_in")
 			Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
 			return
 		}
@@ -463,7 +463,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		//在声明书状态中更新为“已否认”
 		family_member_sign_in.Status = 3
 		if err = family_member_sign_in.Update(); err != nil {
-			util.PanicTea(util.LogError(err), " Cannot update family_member_sign_in")
+			util.ScaldingTea(util.LogError(err), " Cannot update family_member_sign_in")
 			Report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
 			return
 		}
@@ -472,7 +472,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	}
 	//保存家庭成员声明书答复
 	if err = family_member_sign_in_reply.Create(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot create family_member_sign_in_reply")
+		util.ScaldingTea(util.LogError(err), " Cannot create family_member_sign_in_reply")
 		Report(w, r, "你好，茶博士正在忙碌中，乱花渐欲迷人眼，请稍后再试。")
 		return
 	}
@@ -483,7 +483,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 			Id: family_member_sign_in.FamilyId,
 		}
 		if err = family.Get(); err != nil {
-			util.PanicTea(util.LogError(err), family.Id, " Cannot get family given id")
+			util.ScaldingTea(util.LogError(err), family.Id, " Cannot get family given id")
 			Report(w, r, "你好，茶博士正在忙碌中，乱花渐欲迷人眼，请稍后再试。")
 			return
 		}

@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -178,7 +179,7 @@ func (u *User) GetLastDefaultPlace() (place Place, err error) {
 	statement := "SELECT id, user_id, place_id, created_at FROM user_default_place WHERE user_id = $1 ORDER BY created_at DESC"
 	err = Db.QueryRow(statement, u.Id).Scan(&udp.Id, &udp.UserId, &udp.PlaceId, &udp.CreatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			//这是用户还没有设置默认品茶地方，统一返回虚设“星际茶棚”值
 			return Place{Id: 0, Uuid: "x", Name: "星际茶棚"}, nil
 		}

@@ -18,21 +18,21 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	// 读取最热的茶议
 	thread_slice, err := data.HotThreads(num)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read hot thread slice")
+		util.ScaldingTea(util.LogError(err), " Cannot read hot thread slice")
 		Report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
 	len := len(thread_slice)
 
 	if len == 0 {
-		util.PanicTea(util.LogError(err), " Cannot read hot thread slice")
+		util.ScaldingTea(util.LogError(err), " Cannot read hot thread slice")
 		Report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 
 	tb_slice, err = FetchThreadBeanSlice(thread_slice)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read thread and author slice")
+		util.ScaldingTea(util.LogError(err), " Cannot read thread and author slice")
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中。")
 		return
 	}
@@ -57,7 +57,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	//已登录
 	sUser, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read user info from session")
+		util.ScaldingTea(util.LogError(err), " Cannot read user info from session")
 		Report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
 		return
 	}

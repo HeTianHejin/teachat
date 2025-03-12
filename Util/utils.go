@@ -89,9 +89,9 @@ func Danger(args ...interface{}) {
 	logger.Println(args...)
 }
 
-// PanicTea() 为了显示调试过程中错误信息，而不是终止程序,
+// ScaldingTea() 为了显示调试过程中错误信息，而不是终止程序,
 // 不记录到日志文件里
-func PanicTea(args ...interface{}) {
+func ScaldingTea(args ...interface{}) {
 	log.Println(args...)
 	//panic(args)
 }

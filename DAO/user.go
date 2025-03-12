@@ -2,6 +2,7 @@ package data
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -212,7 +213,7 @@ func CheckWatchword(watchword string) (valid bool, err error) {
 	watchword_db := Watchword{}
 	err = Db.QueryRow("SELECT id, word FROM watchwords WHERE word = $1 ", watchword).Scan(&watchword_db.Id, &watchword_db.Word)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			valid = false
 			return valid, err
 		} else {

@@ -1,6 +1,8 @@
 package route
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -33,7 +35,7 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 	// 根据会话读取当前用户的信息
 	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.PanicTea(util.LogError(err), "cannot fetch s_u s_teams given session")
+		util.ScaldingTea(util.LogError(err), "cannot fetch s_u s_teams given session")
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -48,7 +50,7 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		//读取品味资料
 		post := data.Post{Uuid: uuid}
 		if err = post.Get(); err != nil {
-			util.PanicTea(util.LogError(err), uuid, " Cannot read post given uuid")
+			util.ScaldingTea(util.LogError(err), uuid, " Cannot read post given uuid")
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
@@ -56,14 +58,14 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 
 		tD.QuotePostAuthor, err = tD.QuotePost.User()
 		if err != nil {
-			util.PanicTea(util.LogError(err), tD.QuotePost.Id, " Cannot read post user")
+			util.ScaldingTea(util.LogError(err), tD.QuotePost.Id, " Cannot read post user")
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭见鹤，梨花满地不闻莺。请稍后再试。")
 			return
 		}
 
 		tD.QuotePostAuthorTeam, err = data.GetTeam(tD.QuotePost.TeamId)
 		if err != nil {
-			util.PanicTea(util.LogError(err), tD.QuotePost.TeamId, " Cannot read post team")
+			util.ScaldingTea(util.LogError(err), tD.QuotePost.TeamId, " Cannot read post team")
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 			return
 		}
@@ -72,7 +74,7 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		//读取茶台资料
 		tD.QuoteProject, err = tD.QuotePost.Project()
 		if err != nil {
-			util.PanicTea(util.LogError(err), uuid, " Cannot read project given uuid")
+			util.ScaldingTea(util.LogError(err), uuid, " Cannot read project given uuid")
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
@@ -81,14 +83,14 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		//读取茶台资料
 		tD.QuoteProject, err = data.GetProjectByUuid(uuid)
 		if err != nil {
-			util.PanicTea(util.LogError(err), uuid, " Cannot read project given uuid")
+			util.ScaldingTea(util.LogError(err), uuid, " Cannot read project given uuid")
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
 	}
 	//检查project.Class=1 or 2,否则属于未经 友邻盲评 通过的草稿，不允许查看
 	if tD.QuoteProject.Class != 1 && tD.QuoteProject.Class != 2 {
-		util.PanicTea(util.LogError(err), s_u.Id, "欲查看未经友邻盲评通过的茶台资料被阻止")
+		util.ScaldingTea(util.LogError(err), s_u.Id, "欲查看未经友邻盲评通过的茶台资料被阻止")
 		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
 		return
 	}
@@ -97,19 +99,19 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 
 	tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), tD.QuoteProject.Id, " Cannot read project user")
+		util.ScaldingTea(util.LogError(err), tD.QuoteProject.Id, " Cannot read project user")
 		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
 		return
 	}
 	tD.QuoteProjectAuthorFamily, err = GetFamilyByFamilyId(tD.QuoteProject.FamilyId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), tD.QuoteProject.Id, " Cannot read project user family")
+		util.ScaldingTea(util.LogError(err), tD.QuoteProject.Id, " Cannot read project user family")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见，梨花满地不闻莺。请稍后再试。")
 		return
 	}
 	tD.QuoteProjectAuthorTeam, err = data.GetTeam(tD.QuoteProject.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), tD.QuoteProject.TeamId, " Cannot read project team")
+		util.ScaldingTea(util.LogError(err), tD.QuoteProject.TeamId, " Cannot read project team")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 		return
 	}
@@ -140,20 +142,20 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot parse form")
+		util.ScaldingTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，闪电考拉为你极速服务但是迷路了，未能找到你想要的资料。")
 		return
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), sess.Email, " Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), sess.Email, " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	//读取表单数据
 	ty, err := strconv.Atoi(r.PostFormValue("type"))
 	if err != nil {
-		util.PanicTea(util.LogError(err), ty, "Failed to convert type to int")
+		util.ScaldingTea(util.LogError(err), ty, "Failed to convert type to int")
 		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
@@ -162,7 +164,7 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	case 0, 1:
 		break
 	default:
-		util.PanicTea("Invalid thread type value")
+		util.ScaldingTea("Invalid thread type value")
 		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
@@ -170,13 +172,13 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	project_id, err := strconv.Atoi(r.PostFormValue("project_id"))
 	if err != nil {
-		util.PanicTea(util.LogError(err), project_id, "Failed to convert project_id to int")
+		util.ScaldingTea(util.LogError(err), project_id, "Failed to convert project_id to int")
 		Report(w, r, "你好，闪电考拉极速查找茶台中，请确认后再试。")
 		return
 	}
 	post_id, err := strconv.Atoi(r.PostFormValue("post_id"))
 	if err != nil {
-		util.PanicTea(util.LogError(err), project_id, "Failed to convert post_id to int")
+		util.ScaldingTea(util.LogError(err), project_id, "Failed to convert post_id to int")
 		Report(w, r, "你好，闪电考拉极速服务，任然无法识别提交的品味资料，请确认后再试。")
 		return
 	}
@@ -185,7 +187,7 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	proj := data.Project{Id: project_id}
 	if post_id > 0 {
 		if err = post.Get(); err != nil {
-			util.PanicTea(util.LogError(err), post_id, " Cannot get post given id")
+			util.ScaldingTea(util.LogError(err), post_id, " Cannot get post given id")
 			Report(w, r, "你好，闪电考拉极速服务，然而无法识别提交的品味资料，请确认后再试。")
 			return
 		}
@@ -193,24 +195,24 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		// 检查提及的post和project是否匹配
 		t_proj, err := post.Project()
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot get project given post_id")
+			util.ScaldingTea(util.LogError(err), " Cannot get project given post_id")
 			Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有一些问题，请确认后再试一次")
 			return
 		}
 		if t_proj.Id != project_id {
-			util.PanicTea(project_id, "post_id and project_id do not match")
+			util.ScaldingTea(project_id, "post_id and project_id do not match")
 			Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有一点点问题，请确认后再试一次。")
 			return
 		}
 	}
 	//检查该茶台是否存在，而且状态不是草台状态
 	if err = proj.Get(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get project")
+		util.ScaldingTea(util.LogError(err), " Cannot get project")
 		Report(w, r, "你好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
 		return
 	}
 	if proj.Class == 10 || proj.Class == 20 {
-		util.PanicTea(s_u.Email, "试图访问未盲评审核的茶台被阻止。")
+		util.ScaldingTea(s_u.Email, "试图访问未盲评审核的茶台被阻止。")
 		Report(w, r, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
 		return
 	}
@@ -220,13 +222,13 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Failed to convert class to int")
+		util.ScaldingTea(util.LogError(err), "Failed to convert class to int")
 		Report(w, r, "你好，此地无这个茶团，请确认后再试。")
 		return
 	}
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Failed to convert class to int")
+		util.ScaldingTea(util.LogError(err), "Failed to convert class to int")
 		Report(w, r, "你好，此地无这个茶团，请确认后再试。")
 		return
 	}
@@ -236,7 +238,12 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		// check submit team_id is valid
 		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot get team member by team id and user id")
+			if errors.Is(err, sql.ErrNoRows) {
+				//util.ScaldingTea(util.LogError(err), " Cannot get team member by team id and user id")
+				Report(w, r, "你好，茶博士认为您不是这个茶团的成员，请确认后再试。")
+				return
+			}
+			util.ScaldingTea(util.LogError(err), " Cannot get team member by team id and user id")
 			Report(w, r, "你好，茶团成员资格检查失败，请确认后再试。")
 			return
 		}
@@ -247,9 +254,19 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		family := data.Family{
 			Id: family_id,
 		}
-		is_member, _ := family.IsMember(s_u.Id)
+		is_member, err := family.IsMember(s_u.Id)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				//util.ScaldingTea(util.LogError(err), " Cannot get family member by family id and user id")
+				Report(w, r, "你好，茶博士认为您不是这个茶团的成员，请确认后再试。")
+				return
+			}
+			util.ScaldingTea(util.LogError(err), " Cannot get family member by family id and user id")
+			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+			return
+		}
 		if !is_member {
-			util.PanicTea(util.LogError(err), " Cannot get family member by family id and user id")
+			util.ScaldingTea(util.LogError(err), " Cannot get family member by family id and user id")
 			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
 			return
 		}
@@ -293,7 +310,7 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 			FamilyId:  family_id,
 		}
 		if err = draft_thread.Create(); err != nil {
-			util.PanicTea(util.LogError(err), " Cannot create thread draft")
+			util.ScaldingTea(util.LogError(err), " Cannot create thread draft")
 			Report(w, r, "你好，茶博士没有墨水了，未能保存新茶议草稿。")
 			return
 		}
@@ -303,7 +320,7 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 			ObjectType: 3,
 		}
 		if err = aO.Create(); err != nil {
-			util.PanicTea(util.LogError(err), "Cannot create accept_object")
+			util.ScaldingTea(util.LogError(err), "Cannot create accept_object")
 			Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 			return
 		}
@@ -343,39 +360,39 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取茶议内容以填空
 	thread, err := data.ThreadByUUID(uuid)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read thread")
+		util.ScaldingTea(util.LogError(err), " Cannot read thread")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
 		return
 	}
 	//读取茶台资料
 	tD.QuoteProject, err = thread.Project()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read project")
+		util.ScaldingTea(util.LogError(err), " Cannot read project")
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
 		return
 	}
 	tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read project author")
+		util.ScaldingTea(util.LogError(err), " Cannot read project author")
 		Report(w, r, "你好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
 		return
 	}
 	tD.QuoteProjectAuthorFamily, err = GetFamilyByFamilyId(tD.QuoteProject.FamilyId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read project author family")
+		util.ScaldingTea(util.LogError(err), " Cannot read project author family")
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
 		return
 	}
 	tD.QuoteProjectAuthorTeam, err = data.GetTeam(tD.QuoteProject.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read project author team")
+		util.ScaldingTea(util.LogError(err), " Cannot read project author team")
 		Report(w, r, "你好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
 		return
 	}
 	//读取茶围资料
 	tD.QuoteObjective, err = tD.QuoteProject.Objective()
 	if err != nil {
-		util.PanicTea(util.LogError(err), tD.QuoteProject.Id, " Cannot read objective given project")
+		util.ScaldingTea(util.LogError(err), tD.QuoteProject.Id, " Cannot read objective given project")
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
@@ -385,7 +402,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		// 说明这是一个附加类型的,针对某个post发表的茶议(chat-in-chat，讲开又讲，延伸话题)
 		post := data.Post{Id: thread.PostId}
 		if err = post.Get(); err != nil {
-			util.PanicTea(util.LogError(err), " Cannot read post given post_id")
+			util.ScaldingTea(util.LogError(err), " Cannot read post given post_id")
 			Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取品味资料。")
 			return
 		}
@@ -395,19 +412,19 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		tD.QuotePost.Body = Substr(tD.QuotePost.Body, 66)
 		tD.QuotePostAuthor, err = tD.QuotePost.User()
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot read post author")
+			util.ScaldingTea(util.LogError(err), " Cannot read post author")
 			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
 			return
 		}
 		tD.QuotePostAuthorFamily, err = GetFamilyByFamilyId(tD.QuotePost.FamilyId)
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot read post author family")
+			util.ScaldingTea(util.LogError(err), " Cannot read post author family")
 			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
 			return
 		}
 		tD.QuotePostAuthorTeam, err = data.GetTeam(tD.QuotePost.TeamId)
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot read post author team")
+			util.ScaldingTea(util.LogError(err), " Cannot read post author team")
 			Report(w, r, "你好，花谢花飞飞满天，红消香断有谁怜？未能读取品味资料。")
 			return
 		}
@@ -422,7 +439,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取茶议资料荚
 	tD.ThreadBean, err = FetchThreadBean(thread)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read threadBean")
+		util.ScaldingTea(util.LogError(err), " Cannot read threadBean")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料荚。")
 		return
 	}
@@ -452,13 +469,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取全部回复帖子（品味）
 	post_slice, err := tD.ThreadBean.Thread.Posts()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read posts")
+		util.ScaldingTea(util.LogError(err), " Cannot read posts")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 	tD.PostBeanSlice, err = FetchPostBeanSlice(post_slice)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read posts")
+		util.ScaldingTea(util.LogError(err), " Cannot read posts")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
@@ -492,7 +509,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			//非法访问未开放的话题？
-			util.PanicTea(util.LogError(err), " 试图访问未公开的thread")
+			util.ScaldingTea(util.LogError(err), " 试图访问未公开的thread")
 			Report(w, r, "茶水温度太高了，不适合品味，请稍后再试。")
 			return
 		}
@@ -502,7 +519,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			//从会话查获当前浏览用户资料荚
 			s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 			if err != nil {
-				util.PanicTea(util.LogError(err), " Cannot get user-related data from session")
+				util.ScaldingTea(util.LogError(err), " Cannot get user-related data from session")
 				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
@@ -618,13 +635,13 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot parse form")
+		util.ScaldingTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，闪电考拉为了提高服务速度而迷路了，未能找到你想要的茶台。")
 		return
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), " Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -634,13 +651,13 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	//读取提及的茶议资料
 	thread, err := data.ThreadByUUID(uuid)
 	if err != nil {
-		util.PanicTea(util.LogError(err), uuid, " Cannot read thread given uuid")
+		util.ScaldingTea(util.LogError(err), uuid, " Cannot read thread given uuid")
 		Report(w, r, "你好，闪电考拉极速服务中，未能读取茶议资料，请稍后再试。")
 		return
 	}
 	proj, err := thread.Project()
 	if err != nil {
-		util.PanicTea(util.LogError(err), thread.Id, " Cannot read project given thread_id")
+		util.ScaldingTea(util.LogError(err), thread.Id, " Cannot read project given thread_id")
 		Report(w, r, "你好，闪电考拉极速服务中，未能读取��台资料，请稍后再试。")
 		return
 	}
@@ -648,14 +665,14 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	//检查用户是否有权限处理这个请求
 	team, err := data.GetTeam(proj.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), proj.TeamId, " Cannot get team given id")
+		util.ScaldingTea(util.LogError(err), proj.TeamId, " Cannot get team given id")
 		Report(w, r, "你好，闪电考拉极速服务中，未能读取��队资料，请稍后再试。")
 		return
 	}
 	//读取支持team核心成员资料
 	team_members, err := team.CoreMembers()
 	if err != nil {
-		util.PanicTea(util.LogError(err), team.Id, " Cannot get team core members given team")
+		util.ScaldingTea(util.LogError(err), team.Id, " Cannot get team core members given team")
 		Report(w, r, "你好，闪电考拉极速服务中，未能读取���队资料，请稍后再试。")
 		return
 	}
@@ -683,7 +700,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 			UserId:    s_u.Id,
 		}
 		if err = thread_approved.Create(); err != nil {
-			util.PanicTea(util.LogError(err), thread.Id, " Cannot create thread approved")
+			util.ScaldingTea(util.LogError(err), thread.Id, " Cannot create thread approved")
 			Report(w, r, "你好，闪电考拉极速服务中，未能处理你的请求，请稍后再试。")
 			return
 		}
@@ -724,7 +741,7 @@ func EditThread(w http.ResponseWriter, r *http.Request) {
 		// 读取当前访问用户资料
 		sUser, err := sess.User()
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot get user from session")
+			util.ScaldingTea(util.LogError(err), " Cannot get user from session")
 			Report(w, r, "你好，茶博士失魂鱼，未能读取会话用户资料。")
 			return
 		}
@@ -732,7 +749,7 @@ func EditThread(w http.ResponseWriter, r *http.Request) {
 		uuid := vals.Get("id")
 		thDPD.ThreadBean.Thread, err = data.ThreadByUUID(uuid)
 		if err != nil {
-			util.PanicTea("Cannot not read thread")
+			util.ScaldingTea("Cannot not read thread")
 			Report(w, r, "茶博士失魂鱼，未能读取茶议资料，请稍后再试。")
 			return
 		}
@@ -744,7 +761,7 @@ func EditThread(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		//不是作者，不能加水
-		util.PanicTea("Cannot edit other user's thread")
+		util.ScaldingTea("Cannot edit other user's thread")
 		Report(w, r, "茶博士提示，目前仅能给自己的茶杯加水呢，补充说明自己的茶议貌似是合理的。")
 		return
 
@@ -764,12 +781,12 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 	} else {
 		err = r.ParseForm()
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot parse form")
+			util.ScaldingTea(util.LogError(err), " Cannot parse form")
 			return
 		}
 		user, err := sess.User()
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot get user from session")
+			util.ScaldingTea(util.LogError(err), " Cannot get user from session")
 			Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 			return
 		}
@@ -779,7 +796,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 		//根据用户提供的uuid读取指定茶议
 		thread, err := data.ThreadByUUID(uuid)
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot read thread by uuid")
+			util.ScaldingTea(util.LogError(err), " Cannot read thread by uuid")
 			Report(w, r, "茶博士失魂鱼，未能读取专属茶议，请稍后再试。")
 			return
 		}
@@ -789,7 +806,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 			if CnStrLen(topi) >= 17 && CnStrLen(thread.Body+topi) < 456 {
 				thread.Body += topi
 			} else {
-				util.PanicTea("Cannot update thread")
+				util.ScaldingTea("Cannot update thread")
 				Report(w, r, "闪电考拉居然说字太少或者超过456字的茶议，无法记录，请确认后再试。")
 				return
 			}
@@ -797,7 +814,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 			thread.Class = 0
 			//许可修改自己的茶议
 			if err := thread.UpdateTopicAndClass(thread.Body, thread.Class); err != nil {
-				util.PanicTea(util.LogError(err), " Cannot update thread")
+				util.ScaldingTea(util.LogError(err), " Cannot update thread")
 				Report(w, r, "茶博士失魂鱼，未能更新专属茶议，请稍后再试。")
 				return
 			}
@@ -806,7 +823,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			//阻止修改别人的茶议
-			util.PanicTea("Cannot edit other user's thread")
+			util.ScaldingTea("Cannot edit other user's thread")
 			Report(w, r, "茶博士提示，粗鲁的茶博士竟然说，仅能对自己的茶杯加水（追加内容）。")
 			return
 		}

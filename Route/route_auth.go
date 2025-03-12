@@ -15,7 +15,7 @@ import (
 func LoginGet(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot parse form")
+		util.ScaldingTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，闪电考拉正在为你服务的路上极速行动，请稍安勿躁。")
 		return
 	}
@@ -50,7 +50,7 @@ func SignupGet(w http.ResponseWriter, r *http.Request) {
 func SignupPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot parse form")
+		util.ScaldingTea(util.LogError(err), " Cannot parse form")
 	}
 	// 读取用户提交的资料
 	name := r.PostFormValue("name")
@@ -91,7 +91,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 存储新用户（测试时不作邮箱有效性检查，直接激活账户）
 	if err := newU.Create(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot create user")
+		util.ScaldingTea(util.LogError(err), " Cannot create user")
 		Report(w, r, "你好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -106,7 +106,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		UpdatedAt: time.Now(),
 	}
 	if err = team_member.Create(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot create default_free team_member")
+		util.ScaldingTea(util.LogError(err), " Cannot create default_free team_member")
 		Report(w, r, "你好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -116,7 +116,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		TeamId: 2,
 	}
 	if err = udt.Create(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot create default team")
+		util.ScaldingTea(util.LogError(err), " Cannot create default team")
 		Report(w, r, "你好，满头大汗的茶博士因摸索不到近视眼镜，导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -138,7 +138,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 func Authenticate(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot parse form")
+		util.ScaldingTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，闪电考拉正在为你服务的路上极速行动，请稍安勿躁。")
 		return
 	}
@@ -187,7 +187,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			//创建新的会话
 			session, err := s_u.CreateSession()
 			if err != nil {
-				util.PanicTea(util.LogError(err), " Cannot create session")
+				util.ScaldingTea(util.LogError(err), " Cannot create session")
 				return
 			}
 			//设置cookie
@@ -211,7 +211,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		} else {
 			//密码和用户名不匹配?
 			//如果连续输错密码，需要采取一些防暴力冲击措施！！！
-			util.PanicTea(s_u.Email, "密码和用户名不匹配。")
+			util.ScaldingTea(s_u.Email, "密码和用户名不匹配。")
 			Report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 			return
 		}
@@ -239,14 +239,14 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 			//记录一下登出的用户邮箱
 			err = sess.Delete()
 			if err != nil {
-				util.PanicTea(util.LogError(err), sess.Email, "Failed to delete session")
+				util.ScaldingTea(util.LogError(err), sess.Email, "Failed to delete session")
 			}
 			// else {
 			//会话清除后的提示信息
 			//util.PanicTea(sess.Email, "Session deleted")
 			//}
 		} else {
-			util.PanicTea(util.LogError(err), sess.Email, " 登出时会话资料查询失败")
+			util.ScaldingTea(util.LogError(err), sess.Email, " 登出时会话资料查询失败")
 		}
 
 	}

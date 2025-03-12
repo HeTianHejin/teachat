@@ -19,7 +19,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " 根据会话未能读取用户信息")
+		util.ScaldingTea(util.LogError(err), " 根据会话未能读取用户信息")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
@@ -39,7 +39,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	}
 	uB, err = FetchUserBean(user)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " 未能读取用户信息！")
+		util.ScaldingTea(util.LogError(err), " 未能读取用户信息！")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
@@ -71,7 +71,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 	} else {
 		err = r.ParseForm()
 		if err != nil {
-			util.PanicTea(util.LogError(err), "解析表单错误！")
+			util.ScaldingTea(util.LogError(err), "解析表单错误！")
 		}
 		s_u, _ := s.User()
 
@@ -93,7 +93,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 
 		err = data.UpdateUserNameAndBiography(s_u.Id, s_u.Name, s_u.Biography)
 		if err != nil {
-			util.PanicTea(util.LogError(err), " 更新用户信息错误！")
+			util.ScaldingTea(util.LogError(err), " 更新用户信息错误！")
 			Report(w, r, "茶博士失魂鱼，花名或者简介修改失败！")
 			return
 		}
@@ -125,7 +125,7 @@ func SaveAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " 获取用户信息错误！")
+		util.ScaldingTea(util.LogError(err), " 获取用户信息错误！")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
@@ -148,7 +148,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " 获取用户信息错误！")
+		util.ScaldingTea(util.LogError(err), " 获取用户信息错误！")
 		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
@@ -190,7 +190,7 @@ func Friend(w http.ResponseWriter, r *http.Request) {
 	// 根据会话读取当前用户信息
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}

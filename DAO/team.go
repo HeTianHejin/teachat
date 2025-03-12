@@ -28,7 +28,8 @@ func GetTeamsByIds(team_id_slice []int) (teams []Team, err error) {
 	return
 }
 
-// $事业茶团=同事团队,拥有共同利益的非家族团队,
+// $事业茶团=同事团队,
+// 拥有共同爱好/信仰/利益的成员间非血缘关系团队,
 // 预算上来说team的人数上限是12人，1 dozen。
 type Team struct {
 	Id                int

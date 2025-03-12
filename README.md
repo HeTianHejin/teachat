@@ -72,7 +72,7 @@
 2、《红楼梦》里刘姥姥评价茶女皇妙玉泡的皇家贡茶老君眉原话：“好是好，就是淡些，再熬浓些更好了。”包括标点符号一共是17个rune字符。作为一个品味，不能比这更低了吧？
 
 
-## 都读到这里了，欢迎加座一起来品茶呀！
+## 都读到这里了，欢迎一起来品茶呀！
 
 # 感谢:
 !    <a href="https://golang.google.cn"></a>
@@ -80,4 +80,6 @@
      <a href="https://code.visualstudio.com/">VSCode</a>
      <a href="https://aws.amazon.com/q/">Amazon-Q</a>
      <a href="https://www.glyphicons.com/">Glyphicons</a>
-     <a href="https://icons.bootcss.com/">Bootstrap-icons</a>  
+     <a href="https://icons.bootcss.com/">Bootstrap-icons</a>
+     <a href="https://www.deepseek.com">DeepSeek</a>
+     <a href="https://cloud.tencent.com/product/acc">腾讯云AI代码助手</a>  

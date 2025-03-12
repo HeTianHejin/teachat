@@ -26,7 +26,7 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 
 		pilots, err := data.GetAdministrators()
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot get pilots")
+			util.ScaldingTea(util.LogError(err), " Cannot get pilots")
 			http.Redirect(w, r, "/v1/", http.StatusFound)
 		}
 		RenderHTML(w, &pilots, "layout", "navbar.private", "pilot.office")
@@ -61,7 +61,7 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 
 		err = r.ParseForm()
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot parse form")
+			util.ScaldingTea(util.LogError(err), " Cannot parse form")
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)
 			return
 		}
@@ -69,7 +69,7 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 		email := r.PostFormValue("email")
 		newPilot, err := data.GetUserByEmail(email)
 		if err != nil {
-			util.PanicTea(util.LogError(err), " Cannot find user by email")
+			util.ScaldingTea(util.LogError(err), " Cannot find user by email")
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)
 			return
 		}
@@ -82,7 +82,7 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 		}
 		//创建飞行员，并返回错误信息
 		if err := pilot.Create(); err != nil {
-			util.PanicTea(util.LogError(err), " Cannot create pilot")
+			util.ScaldingTea(util.LogError(err), " Cannot create pilot")
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)
 			return
 		}

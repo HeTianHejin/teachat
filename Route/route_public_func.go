@@ -67,7 +67,7 @@ func GetLastDefaultFamilyByUserId(user_id int) (family data.Family, err error) {
 	family, err = user.GetLastDefaultFamily()
 	if err != nil {
 		// 未设定默认家庭
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return DefaultFamily, nil
 		}
 		return
@@ -286,20 +286,20 @@ func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error)
 	//作者资料
 	author, err := thread.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read thread author")
+		util.ScaldingTea(util.LogError(err), " Cannot read thread author")
 		return
 	}
 	tB.Author = author
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
 	tB.AuthorFamily, err = GetFamilyByFamilyId(thread.FamilyId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read thread author family")
+		util.ScaldingTea(util.LogError(err), " Cannot read thread author family")
 		return
 	}
 
 	tB.AuthorTeam, err = data.GetTeam(thread.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read thread author team")
+		util.ScaldingTea(util.LogError(err), " Cannot read thread author team")
 		return
 	}
 
@@ -340,7 +340,7 @@ func FetchObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err
 	oB.CreatedAtDate = o.CreatedAtDate()
 	user, err := o.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read objective author")
+		util.ScaldingTea(util.LogError(err), " Cannot read objective author")
 		return
 	}
 	oB.Author = user
@@ -349,13 +349,13 @@ func FetchObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err
 
 	oB.AuthorFamily, err = GetFamilyByFamilyId(o.FamilyId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read objective author family")
+		util.ScaldingTea(util.LogError(err), " Cannot read objective author family")
 		return
 	}
 
 	oB.AuthorTeam, err = data.GetTeam(o.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read objective author team")
+		util.ScaldingTea(util.LogError(err), " Cannot read objective author team")
 		return
 	}
 
@@ -392,7 +392,7 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 	pb.CreatedAtDate = project.CreatedAtDate()
 	author, err := project.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read project author")
+		util.ScaldingTea(util.LogError(err), " Cannot read project author")
 		return
 	}
 	pb.Author = author
@@ -401,19 +401,19 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 
 	pb.AuthorFamily, err = GetFamilyByFamilyId(project.FamilyId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read project author family")
+		util.ScaldingTea(util.LogError(err), " Cannot read project author family")
 		return
 	}
 
 	pb.AuthorTeam, err = data.GetTeam(project.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read project author team")
+		util.ScaldingTea(util.LogError(err), " Cannot read project author team")
 		return
 	}
 
 	pb.Place, err = project.Place()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "cannot read project place")
+		util.ScaldingTea(util.LogError(err), "cannot read project place")
 		return pb, err
 	}
 	return pb, nil
@@ -439,7 +439,7 @@ func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 	PostBean.CreatedAtDate = post.CreatedAtDate()
 	author, err := post.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read post author")
+		util.ScaldingTea(util.LogError(err), " Cannot read post author")
 		return
 	}
 	PostBean.Author = author
@@ -448,14 +448,14 @@ func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 
 	family, err := GetFamilyByFamilyId(post.FamilyId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read post author family")
+		util.ScaldingTea(util.LogError(err), " Cannot read post author family")
 		return
 	}
 	PostBean.AuthorFamily = family
 
 	team, err := data.GetTeam(post.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read post author team")
+		util.ScaldingTea(util.LogError(err), " Cannot read post author team")
 		return
 	}
 	PostBean.AuthorTeam = team
@@ -475,21 +475,21 @@ func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 
 	founder, err := team.Founder()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read team founder")
+		util.ScaldingTea(util.LogError(err), " Cannot read team founder")
 		return
 	}
 	TeamBean.Founder = founder
 
 	founder_default_family, err := GetLastDefaultFamilyByUserId(founder.Id)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read team founder default family")
+		util.ScaldingTea(util.LogError(err), " Cannot read team founder default family")
 		return
 	}
 	TeamBean.FounderDefaultFamily = founder_default_family
 
 	TeamBean.FounderTeam, err = founder.GetLastDefaultTeam()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read team founder default team")
+		util.ScaldingTea(util.LogError(err), " Cannot read team founder default team")
 		return
 	}
 
@@ -516,18 +516,18 @@ func FetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error)
 	//登记人资料
 	FamilyBean.Founder, err = data.GetUser(family.AuthorId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.AuthorId, " Cannot read family founder")
+		util.ScaldingTea(util.LogError(err), family.AuthorId, " Cannot read family founder")
 		return FamilyBean, err
 	}
 	FamilyBean.FounderTeam, err = FamilyBean.Founder.GetLastDefaultTeam()
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.AuthorId, " Cannot read family founder default team")
+		util.ScaldingTea(util.LogError(err), family.AuthorId, " Cannot read family founder default team")
 		return FamilyBean, err
 	}
 
 	FamilyBean.Count, err = data.CountFamilyMembers(family.Id)
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.AuthorId, " Cannot read family member count")
+		util.ScaldingTea(util.LogError(err), family.AuthorId, " Cannot read family member count")
 		return FamilyBean, err
 	}
 	return
@@ -551,13 +551,13 @@ func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 
 	u, err := data.GetUser(fm.UserId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read user given FamilyMember")
+		util.ScaldingTea(util.LogError(err), " Cannot read user given FamilyMember")
 		return FMB, err
 	}
 	FMB.Member = u
 	default_team, err := u.GetLastDefaultTeam()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read user given FamilyMember")
+		util.ScaldingTea(util.LogError(err), " Cannot read user given FamilyMember")
 		return FMB, err
 	}
 	FMB.MemberDefaultTeam = default_team
@@ -567,7 +567,7 @@ func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 	//读取茶团的parent_members
 	family_parent_members, err := f.ParentMembers()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get family core member FetchFamilyMemberBean()")
+		util.ScaldingTea(util.LogError(err), " Cannot get family core member FetchFamilyMemberBean()")
 		return
 	}
 	FMB.IsParent = false
@@ -587,7 +587,7 @@ func FetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 
 	member_default_family, err := GetLastDefaultFamilyByUserId(fm.UserId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get GetLastDefaultFamily FetchFamilyMemberBean()")
+		util.ScaldingTea(util.LogError(err), " Cannot get GetLastDefaultFamily FetchFamilyMemberBean()")
 		return
 	}
 	FMB.MemberDefaultFamily = member_default_family
@@ -619,26 +619,26 @@ func FetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.Famil
 
 	family := data.Family{Id: fmsi.FamilyId}
 	if err = family.Get(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read family given FamilyMemberSignIn")
+		util.ScaldingTea(util.LogError(err), " Cannot read family given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 	FMSIB.Family = family
 
 	FMSIB.NewMember, err = data.GetUser(fmsi.UserId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read new member given FamilyMemberSignIn")
+		util.ScaldingTea(util.LogError(err), " Cannot read new member given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 
 	FMSIB.Author, err = data.GetUser(fmsi.AuthorUserId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read author given FamilyMemberSignIn")
+		util.ScaldingTea(util.LogError(err), " Cannot read author given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 
 	place := data.Place{Id: fmsi.PlaceId}
 	if err = place.Get(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read place given FamilyMemberSignIn")
+		util.ScaldingTea(util.LogError(err), " Cannot read place given FamilyMemberSignIn")
 		return FMSIB, err
 	}
 	FMSIB.Place = place
@@ -662,14 +662,14 @@ func FetchFamilyMemberSignInBeanSlice(fmsi_slice []data.FamilyMemberSignIn) (FMS
 func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error) {
 	u, err := data.GetUser(tm.UserId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read user given TeamMember")
+		util.ScaldingTea(util.LogError(err), " Cannot read user given TeamMember")
 		return TMB, err
 	}
 	TMB.Member = u
 
 	team, err := data.GetTeam(tm.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read team given team member")
+		util.ScaldingTea(util.LogError(err), " Cannot read team given team member")
 		return TMB, err
 	}
 
@@ -683,7 +683,7 @@ func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error
 	member_ceo, err := team.MemberCEO()
 	if err != nil {
 		//茶团已经设定了ceo，但是出现了其他错误
-		util.PanicTea(util.LogError(err), team.Id, " Cannot get ceo of this team")
+		util.ScaldingTea(util.LogError(err), team.Id, " Cannot get ceo of this team")
 		return
 	}
 	if member_ceo.UserId == u.Id {
@@ -694,7 +694,7 @@ func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error
 
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get team core member FetchTeamMemberBean()")
+		util.ScaldingTea(util.LogError(err), " Cannot get team core member FetchTeamMemberBean()")
 		return
 	}
 	for _, coreMember := range teamCoreMembers {
@@ -706,7 +706,7 @@ func FetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error
 
 	member_default_team, err := u.GetLastDefaultTeam()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot get GetLastDefaultTeam FetchTeamMemberBean()")
+		util.ScaldingTea(util.LogError(err), " Cannot get GetLastDefaultTeam FetchTeamMemberBean()")
 		return
 	}
 	TMB.MemberDefaultTeam = member_default_team
@@ -737,19 +737,19 @@ func FetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBea
 
 	team, err := data.GetTeam(ma.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read team given author")
+		util.ScaldingTea(util.LogError(err), " Cannot read team given author")
 		return MemberApplicationBean, err
 	}
 	MemberApplicationBean.Team = team
 
 	MemberApplicationBean.Author, err = data.GetUser(ma.UserId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read member application author")
+		util.ScaldingTea(util.LogError(err), " Cannot read member application author")
 		return MemberApplicationBean, err
 	}
 	MemberApplicationBean.AuthorTeam, err = MemberApplicationBean.Author.GetLastDefaultTeam()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read member application author default team")
+		util.ScaldingTea(util.LogError(err), " Cannot read member application author default team")
 		return MemberApplicationBean, err
 	}
 
@@ -773,19 +773,19 @@ func FetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error)
 
 	I_B.Team, err = i.Team()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read invitation default team")
+		util.ScaldingTea(util.LogError(err), " Cannot read invitation default team")
 		return I_B, err
 	}
 
 	I_B.AuthorCEO, err = i.AuthorCEO()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot fetch team CEO given invitation")
+		util.ScaldingTea(util.LogError(err), " Cannot fetch team CEO given invitation")
 		return I_B, err
 	}
 
 	I_B.InviteUser, err = i.ToUser()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read invitation invite user")
+		util.ScaldingTea(util.LogError(err), " Cannot read invitation invite user")
 		return I_B, err
 	}
 
@@ -811,29 +811,29 @@ func FetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean dat
 
 	tmrnBean.Team, err = data.GetTeam(tmrn.TeamId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read team given team member role notice")
+		util.ScaldingTea(util.LogError(err), " Cannot read team given team member role notice")
 		return tmrnBean, err
 	}
 
 	tmrnBean.CEO, err = data.GetUser(tmrn.CeoId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read ceo given team member role notice")
+		util.ScaldingTea(util.LogError(err), " Cannot read ceo given team member role notice")
 		return tmrnBean, err
 	}
 
 	tm := data.TeamMember{Id: tmrn.MemberId}
 	if err = tm.Get(); err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read team member given team member role notice")
+		util.ScaldingTea(util.LogError(err), " Cannot read team member given team member role notice")
 		return tmrnBean, err
 	}
 	tmrnBean.Member, err = data.GetUser(tm.UserId)
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read member given team member role notice")
+		util.ScaldingTea(util.LogError(err), " Cannot read member given team member role notice")
 		return tmrnBean, err
 	}
 	tmrnBean.MemberDefaultTeam, err = tmrnBean.Member.GetLastDefaultTeam()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read member default team given team member role notice")
+		util.ScaldingTea(util.LogError(err), " Cannot read member default team given team member role notice")
 		return tmrnBean, err
 	}
 
@@ -866,7 +866,7 @@ func FetchGroupBean(group data.Group) (GroupBean data.GroupBean, err error) {
 	gb.Founder = u
 	gb.FounderTeam, err = u.GetLastDefaultTeam()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot read team given founder")
+		util.ScaldingTea(util.LogError(err), " Cannot read team given founder")
 		return gb, err
 	}
 	gb.TeamsCount = data.GetTeamsCountByGroupId(gb.Group.Id)
@@ -932,7 +932,7 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	newFilePath := data.ImageDir + uuid + data.ImageExt
 	newFile, err := os.Create(newFilePath)
 	if err != nil {
-		util.PanicTea(util.LogError(err), "创建头像文件名失败")
+		util.ScaldingTea(util.LogError(err), "创建头像文件名失败")
 		Report(w, r, "创建头像文件失败，请稍后再试。")
 		return err
 	}
@@ -944,7 +944,7 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	buff.Write(fileBytes)
 	err = buff.Flush()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "fail to write avatar image")
+		util.ScaldingTea(util.LogError(err), "fail to write avatar image")
 		Report(w, r, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
 		return err
 	}
@@ -971,7 +971,7 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}

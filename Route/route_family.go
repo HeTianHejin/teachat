@@ -2,6 +2,7 @@ package route
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -20,7 +21,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -32,7 +33,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	//check family is valid
 	//fetch family
 	if err = t_family.GetByUuid(); err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get family by uuid")
+		util.ScaldingTea(util.LogError(err), "Cannot get family by uuid")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
 		return
 	}
@@ -42,7 +43,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 		FamilyId: t_family.Id,
 	}
 	if err = new_user_default_family.Create(); err != nil {
-		util.PanicTea(util.LogError(err), "Cannot create user default family")
+		util.ScaldingTea(util.LogError(err), "Cannot create user default family")
 		Report(w, r, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
 		return
 	}
@@ -62,21 +63,21 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	// 2. get user's family
 	family_slice, err := data.GetAllFamilies(s_u.Id)
 	if err != nil {
-		util.PanicTea(util.LogError(err), s_u.Id, "Cannot get user's family given id")
+		util.ScaldingTea(util.LogError(err), s_u.Id, "Cannot get user's family given id")
 		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
 
 	f_b_slice, err := FetchFamilyBeanSlice(family_slice)
 	if err != nil {
-		util.PanicTea(util.LogError(err), s_u.Id, "Cannot get user's family")
+		util.ScaldingTea(util.LogError(err), s_u.Id, "Cannot get user's family")
 		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
@@ -92,10 +93,10 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		//2.1 get user's default family
 		l_default_family, err := s_u.GetLastDefaultFamily()
 		if err != nil {
-			if err == sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				l_default_family = DefaultFamily
 			} else {
-				util.PanicTea(util.LogError(err), s_u.Id, "Cannot get user's default family")
+				util.ScaldingTea(util.LogError(err), s_u.Id, "Cannot get user's default family")
 				Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 				return
 			}
@@ -143,7 +144,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -164,7 +165,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		Uuid: family_uuid,
 	}
 	if err = family.GetByUuid(); err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get family by UUID")
+		util.ScaldingTea(util.LogError(err), "Cannot get family by UUID")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
@@ -174,7 +175,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	// 3. check user is member of family
 	isMember, err = family.IsMember(s_u.Id)
 	if err != nil {
-		util.PanicTea(util.LogError(err), s_u.Id, "Cannot check user is_member of family")
+		util.ScaldingTea(util.LogError(err), s_u.Id, "Cannot check user is_member of family")
 		Report(w, r, "你好，茶博士摸摸满头大汗，说因为外星人突然出现导致未能查看&家庭茶团详情。")
 		return
 	}
@@ -188,7 +189,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		if err = family_member_sign_in.GetByFamilyIdMemberUserId(); err != nil {
 			if err != sql.ErrNoRows {
 				//查询资料出现失误
-				util.PanicTea(util.LogError(err), "Cannot get family member sign in")
+				util.ScaldingTea(util.LogError(err), "Cannot get family member sign in")
 				Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 				return
 			}
@@ -214,7 +215,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	//读取目标家庭的资料夹
 	family_bean, err := FetchFamilyBean(family)
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.Id, "Cannot fetch bean given family")
+		util.ScaldingTea(util.LogError(err), family.Id, "Cannot fetch bean given family")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
@@ -223,38 +224,38 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	f_p_members, err := f.ParentMembers()
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.Id, "Cannot fetch family's parent members")
+		util.ScaldingTea(util.LogError(err), family.Id, "Cannot fetch family's parent members")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	parent_member_bean_slice, err := FetchFamilyMemberBeanSlice(f_p_members)
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.Id, "Cannot fetch family's parent members bean")
+		util.ScaldingTea(util.LogError(err), family.Id, "Cannot fetch family's parent members bean")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 
 	c_members, err := f.ChildMembers()
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.Id, "Cannot fetch family's child members")
+		util.ScaldingTea(util.LogError(err), family.Id, "Cannot fetch family's child members")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	child_member_bean_slice, err := FetchFamilyMemberBeanSlice(c_members)
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.Id, "Cannot fetch family's child members")
+		util.ScaldingTea(util.LogError(err), family.Id, "Cannot fetch family's child members")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	other_members, err := f.OtherMembers()
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.Id, "Cannot fetch family's other members")
+		util.ScaldingTea(util.LogError(err), family.Id, "Cannot fetch family's other members")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	other_member_bean_slice, err := FetchFamilyMemberBeanSlice(other_members)
 	if err != nil {
-		util.PanicTea(util.LogError(err), family.Id, "Cannot fetch family's other members bean")
+		util.ScaldingTea(util.LogError(err), family.Id, "Cannot fetch family's other members bean")
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
@@ -313,7 +314,7 @@ func HandleNewFamily(w http.ResponseWriter, r *http.Request) {
 func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.PanicTea(util.LogError(err), " Cannot parse form")
+		util.ScaldingTea(util.LogError(err), " Cannot parse form")
 		Report(w, r, "你好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
 		return
 	}
@@ -433,7 +434,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 
 	//保存到数据库中,返回新家庭茶团的id
 	if err := new_family.Create(); err != nil {
-		util.PanicTea(util.LogError(err), s_u.Email, "Cannot create new family")
+		util.ScaldingTea(util.LogError(err), s_u.Email, "Cannot create new family")
 		Report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
@@ -452,7 +453,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		author_member.Role = 2
 	}
 	if err := author_member.Create(); err != nil {
-		util.PanicTea(util.LogError(err), s_u.Email, "Cannot create author family member")
+		util.ScaldingTea(util.LogError(err), s_u.Email, "Cannot create author family member")
 		Report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
@@ -461,10 +462,10 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	//如果已经设置了默认首选家庭茶团，则不再设置
 	df, err := s_u.GetLastDefaultFamily()
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			df = DefaultFamily
 		} else {
-			util.PanicTea(util.LogError(err), s_u.Id, "Cannot get user's default family")
+			util.ScaldingTea(util.LogError(err), s_u.Id, "Cannot get user's default family")
 			Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 			return
 		}
@@ -478,7 +479,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		}
 		//把这个新家庭茶团设为默认
 		if err := udf.Create(); err != nil {
-			util.PanicTea(util.LogError(err), s_u.Email, "Cannot create user's default family")
+			util.ScaldingTea(util.LogError(err), s_u.Email, "Cannot create user's default family")
 			Report(w, r, "你好，茶博士摸摸头，未能创建默认家庭茶团，请稍后再试。")
 			return
 		}
@@ -504,7 +505,7 @@ func NewFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.PanicTea(util.LogError(err), "Cannot get user from session")
+		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}

@@ -2,6 +2,8 @@ package data
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -216,7 +218,7 @@ func (user *User) HasNewAcceptMessage() bool {
 }
 
 // 检查当前用户sUserId是否受邀请审茶，class = 0
-func (user *User) CheckHasAcceptMessage(accept_object_id int) bool {
+func (user *User) CheckHasAcceptMessage(accept_object_id int) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -225,13 +227,16 @@ func (user *User) CheckHasAcceptMessage(accept_object_id int) bool {
 	var count int
 	if err := row.Scan(&count); err != nil {
 		// Handle error
-		return false
+		return false, err
 	}
-	return count > 0
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	return count > 0, nil
 }
 
 // 检查当前用户sUserId是否曾经受邀请审茶，class = 1
-func (user *User) CheckHasReadAcceptMessage(accept_object_id int) bool {
+func (user *User) CheckHasReadAcceptMessage(accept_object_id int) (ok bool, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -240,7 +245,7 @@ func (user *User) CheckHasReadAcceptMessage(accept_object_id int) bool {
 	var exists bool
 	if err := row.Scan(&exists); err != nil {
 		// Handle error
-		return false
+		return false, err
 	}
-	return exists
+	return exists, nil
 }

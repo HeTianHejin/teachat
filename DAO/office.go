@@ -147,7 +147,7 @@ func (a *AcceptObject) Create() (err error) {
 	return nil
 }
 
-// Get() 据id获取������评对象
+// Get() 据id获取友邻蒙评对象
 func (a *AcceptObject) Get() (err error) {
 	err = Db.QueryRow(`SELECT id, object_type, object_id FROM accept_objects WHERE id = $1`, a.Id).Scan(&a.Id, &a.ObjectType, &a.ObjectId)
 	if err != nil {
