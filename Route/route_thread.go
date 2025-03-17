@@ -10,13 +10,13 @@ import (
 	util "teachat/Util"
 )
 
-// NewThreadHandle()
-func NewThreadHandle(w http.ResponseWriter, r *http.Request) {
+// NewDraftThreadHandle()
+func NewDraftThreadHandle(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		GetNewThread(w, r)
+		NewDraftThreadGet(w, r)
 	case "POST":
-		PostNewThread(w, r)
+		NewDraftThreadPost(w, r)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
@@ -25,7 +25,7 @@ func NewThreadHandle(w http.ResponseWriter, r *http.Request) {
 // GET /v1/thread/new?id=
 // GET /v1/thread/new?postid=
 // 处理提交的完整版新茶议草稿，索要表单请求
-func GetNewThread(w http.ResponseWriter, r *http.Request) {
+func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 	//尝试从http请求中读取用户会话信息
 	s, err := Session(r)
 	if err != nil {
@@ -39,6 +39,11 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
+	//把系统默认家庭资料加入s_survival_families
+	s_survival_families = append(s_survival_families, DefaultFamily)
+	//把系统默认团队资料加入s_survival_teams
+	s_survival_teams = append(s_survival_teams, FreelancerTeam)
+
 	var tD data.ThreadDetail
 
 	// 读取用户提交的茶台参数
@@ -126,15 +131,9 @@ func GetNewThread(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, &tD, "layout", "navbar.private", "thread.new")
 }
 
-// POST /v1/thread/new
-// 处理提交的完整版新茶议草稿，待邻座蒙评后转为正式茶议
-func PostNewThread(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
-}
-
 // POST /v1/thread/draft
 // 处理提交的简化版新茶议草稿，待邻座蒙评后转为正式茶议
-func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
+func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -350,27 +349,44 @@ func DraftThreadPost(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/thread/detail?id=
-// 显示茶议（议题）的详细信息，包括品味（回复帖子）和记录品味的表格
+// 显示需求uuid茶议（议题）的详细信息，包括品味（回复帖子）和记录品味的表格
 func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 
+	if uuid == "" {
+		Report(w, r, "你好，茶博士看不透您提交的茶议id。")
+		return
+	}
+
 	// 准备一个空白的表
 	var tD data.ThreadDetail
+
 	// 读取茶议内容以填空
 	thread, err := data.ThreadByUUID(uuid)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read thread")
+		if errors.Is(err, sql.ErrNoRows) {
+			Report(w, r, "你好，茶博士竟然说该茶议不存在，请确认后再试一次。")
+			return
+		}
+		util.ScaldingTea(util.LogError(err), " Cannot read thread given uuid", uuid)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
 		return
 	}
+
 	//读取茶台资料
 	tD.QuoteProject, err = thread.Project()
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			//	util.ScaldingTea(util.LogError(err), " Cannot read project given uuid", uuid)
+			Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个茶台不存在。")
+			return
+		}
 		util.ScaldingTea(util.LogError(err), " Cannot read project")
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
 		return
 	}
+
 	tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot read project author")
@@ -389,6 +405,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
 		return
 	}
+
 	//读取茶围资料
 	tD.QuoteObjective, err = tD.QuoteProject.Objective()
 	if err != nil {
@@ -484,6 +501,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		// 游客
+		tD.IsAuthor = false
 		// 检查茶议的级别状态
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//记录茶议被点击数
@@ -492,6 +510,9 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.ThreadBean.Thread.PageData.IsAuthor = false
 			tD.IsGuest = true
 			tD.IsInput = false
+			tD.IsAdmin = false
+			tD.IsMaster = false
+
 			tD.SessUser = data.User{
 				Id:   0,
 				Name: "游客",
@@ -509,17 +530,19 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		} else {
 			//非法访问未开放的话题？
-			util.ScaldingTea(util.LogError(err), " 试图访问未公开的thread")
+			util.ScaldingTea(util.LogError(err), " 试图访问未公开的thread", uuid)
 			Report(w, r, "茶水温度太高了，不适合品味，请稍后再试。")
 			return
 		}
 	} else {
 		//用户是登录状态,可以访问1和2级茶议
+		tD.IsGuest = false
+
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//从会话查获当前浏览用户资料荚
 			s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 			if err != nil {
-				util.ScaldingTea(util.LogError(err), " Cannot get user-related data from session")
+				util.ScaldingTea(util.LogError(err), " Cannot get user-related data from session", s_u.Id)
 				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
@@ -528,7 +551,6 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			s_u.Query = r.URL.RawQuery
 
 			tD.SessUser = s_u
-			tD.IsGuest = false
 
 			tD.SessUserDefaultFamily = s_d_family
 			tD.SessUserSurvivalFamilies = s_survival_families
@@ -542,6 +564,36 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			// 检测是否茶议作者
 			if s_u.Id == tD.ThreadBean.Thread.UserId {
 				// 是茶议作者！
+				tD.IsAuthor = true
+				ob_team, err := data.GetTeam(tD.QuoteProject.TeamId)
+				if err != nil {
+					util.ScaldingTea(util.LogError(err), " Cannot get team given team_id", tD.QuoteProject.TeamId)
+					Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+					return
+				}
+				tD.QuoteObjectiveAuthorTeam = ob_team
+				is_admin, err := ob_team.IsMember(s_u.Id)
+				if err != nil {
+					util.ScaldingTea(util.LogError(err), " Cannot check team membership", tD.QuoteObjectiveAuthorTeam.Id)
+					Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+					return
+				}
+				tD.IsAdmin = is_admin
+
+				pr_team, err := data.GetTeam(tD.QuoteProject.TeamId)
+				if err != nil {
+					util.ScaldingTea(util.LogError(err), " Cannot get team given team_id", tD.QuoteProject.TeamId)
+					Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+					return
+				}
+				tD.QuoteProjectAuthorTeam = pr_team
+				is_master, err := pr_team.IsMember(s_u.Id)
+				if err != nil {
+					util.ScaldingTea(util.LogError(err), " Cannot check team membership", tD.QuoteProjectAuthorTeam.Id)
+					Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+					return
+				}
+				tD.IsMaster = is_master
 				// 填写页面数据
 				tD.ThreadBean.Thread.PageData.IsAuthor = true
 				// 提议作者不能自评品味，王婆卖瓜也不行？！

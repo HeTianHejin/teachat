@@ -8,7 +8,6 @@ import (
 	"strconv"
 	data "teachat/DAO"
 	util "teachat/Util"
-	"time"
 )
 
 // HandleMemberResign() /v1/team_member/resign
@@ -128,7 +127,6 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 
 	//声明一份茶团成员退出声明书
 	tmqD := data.TeamMemberResignation{
-		Uuid:              data.Random_UUID(),
 		TeamId:            t_team.Id,
 		CeoUserId:         0,
 		CoreMemberUserId:  0,
@@ -138,7 +136,6 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 		Title:             titl,
 		Content:           cont,
 		Status:            0,
-		CreatedAt:         time.Now(),
 	}
 
 	//尝试保存退出声明
@@ -540,7 +537,6 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		//会话用户是CEO，可以调整非CEO成员角色
 		//创建一个新的团队成员角色变动公告
 		team_member_role_notice := data.TeamMemberRoleNotice{
-			Uuid:              data.Random_UUID(),
 			TeamId:            t_team.Id,
 			CeoId:             m_ceo.UserId,
 			MemberId:          member.Id,
@@ -549,7 +545,6 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 			Title:             title,
 			Content:           content,
 			Status:            0,
-			CreatedAt:         time.Now(),
 		}
 		if err = team_member_role_notice.Create(); err != nil {
 			util.ScaldingTea(util.LogError(err), team_member_role_notice, "Cannot create team_member_role_notice")
@@ -568,7 +563,6 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		//会话用户是创建人，可以调整CEO和非CEO成员角色
 		//创建一个新的团队成员角色变动公告
 		team_member_role_notice := data.TeamMemberRoleNotice{
-			Uuid:              data.Random_UUID(),
 			TeamId:            t_team.Id,
 			CeoId:             m_ceo.UserId,
 			MemberId:          member.Id,
@@ -577,7 +571,6 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 			Title:             title,
 			Content:           content,
 			Status:            0,
-			CreatedAt:         time.Now(),
 		}
 		if err = team_member_role_notice.Create(); err != nil {
 			util.ScaldingTea(util.LogError(err), team_member_role_notice, "Cannot create team_member_role_notice")
@@ -794,13 +787,10 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		//批准加盟
 		//创建一个新的茶团成员
 		team_member := data.TeamMember{
-			Uuid:      data.Random_UUID(),
-			TeamId:    team.Id,
-			UserId:    applicant.Id,
-			Role:      "taster",
-			CreatedAt: time.Now(),
-			Class:     1,
-			UpdatedAt: time.Now(),
+			TeamId: team.Id,
+			UserId: applicant.Id,
+			Role:   "taster",
+			Class:  1,
 		}
 		//将新的茶团成员写入数据库
 		if err = team_member.Create(); err != nil {
@@ -817,9 +807,8 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		if count == 0 {
 			user_default_team := data.UserDefaultTeam{
-				UserId:    applicant.Id,
-				TeamId:    team.Id,
-				CreatedAt: time.Now(),
+				UserId: applicant.Id,
+				TeamId: team.Id,
 			}
 			if err = user_default_team.Create(); err != nil {
 				util.ScaldingTea(util.LogError(err), applicant.Email, " Cannot create user_default_team")
@@ -842,7 +831,6 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 			UserId:              s_u.Id,
 			ReplyContent:        reply,
 			Status:              2,
-			CreatedAt:           time.Now(),
 		}
 		if err = application_reply.Create(); err != nil {
 			util.ScaldingTea(util.LogError(err), application_reply, "Cannot create application_reply")
@@ -868,7 +856,6 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 			UserId:              s_u.Id,
 			ReplyContent:        reply,
 			Status:              3,
-			CreatedAt:           time.Now(),
 		}
 		if err = application_reply.Create(); err != nil {
 			util.ScaldingTea(util.LogError(err), application_reply, "Cannot create application_reply")
@@ -987,7 +974,6 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 		TeamName:  team.Abbreviation,
 		Content:   fmt.Sprintf("查看了茶团 %s 的加盟申请书", team.Name),
 		ContentId: application.Id,
-		CreatedAt: time.Now(),
 	}
 	if err = footprint.Create(); err != nil {
 		util.ScaldingTea(util.LogError(err), "Cannot create footprint")
@@ -1064,11 +1050,10 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 
 	//创建茶团新茶友加盟申请书
 	ma := data.MemberApplication{
-		TeamId:    team.Id,
-		UserId:    app_user.Id,
-		Content:   content,
-		Status:    0,
-		CreatedAt: time.Now(),
+		TeamId:  team.Id,
+		UserId:  app_user.Id,
+		Content: content,
+		Status:  0,
 	}
 	//保存申请书
 	if err = ma.Create(); err != nil {
@@ -1257,23 +1242,37 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 
 		//检查受邀请的茶友团队核心角色是否已经被占用
 		switch invitation.Role {
-		case "CTO", "CMO", "CFO", "CEO":
+		case "CTO", "CMO", "CFO":
 			//检查teamMember.Role中是否已经存在
 			_, err = team.GetTeamMemberByRole(invitation.Role)
 			if err == nil {
+				util.ScaldingTea(util.LogError(err), s_u.Email, " Check team member given team_id and role failed")
 				Report(w, r, "你好，该团队已经存在所选择的核心角色，请确认所选择的角色是否恰当。")
 				return
-			} else if err != sql.ErrNoRows {
+			} else if errors.Is(err, sql.ErrNoRows) {
 				util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot search team member given team_id and role")
 				Report(w, r, "你好，茶博士在这个团队角色事情迷糊了，请确认后再试。")
 				return
 			}
-
+		case "CEO":
+			//检查teamMember.Role中是否已经存在
+			old_ceo_member, err := team.GetTeamMemberByRole(invitation.Role)
+			if err == nil {
+				//是否团队发起人首次指定CEO？
+				if team.FounderId == old_ceo_member.UserId {
+					//如果团队发起人首次指定CEO，则允许添加新成员
+					break
+				} else {
+					util.ScaldingTea(util.LogError(err), s_u.Email, " Check team member CEO given team_id and role failed")
+					Report(w, r, "你好，该团队已经存在所选择的核心角色，请确认所选择的角色是否恰当。")
+					return
+				}
+			}
 		case "taster":
 			// No additional validation needed for the "taster" role
 			break
 		default:
-			Report(w, r, "你好，请选择正确的角色。")
+			Report(w, r, "你好，请选择正确的团队角色。")
 			return
 		}
 		//接受邀请，则升级邀请函状态并保存答复话语和时间
@@ -1283,7 +1282,6 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			InvitationId: invitation_id,
 			UserId:       user_id,
 			ReplyWord:    reply_word,
-			CreatedAt:    time.Now(),
 		}
 		if err = repl.Create(); err != nil {
 			util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot create invitation_reply")
@@ -1292,13 +1290,10 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		// 准备将新成员添加进茶团所需的资料
 		team_member := data.TeamMember{
-			Uuid:      data.Random_UUID(),
-			TeamId:    invitation.TeamId,
-			UserId:    reply_user.Id,
-			Role:      invitation.Role,
-			CreatedAt: time.Now(),
-			Class:     1,
-			UpdatedAt: time.Now(),
+			TeamId: invitation.TeamId,
+			UserId: reply_user.Id,
+			Role:   invitation.Role,
+			Class:  1,
 		}
 
 		// 如果team_member.Role == "CEO",采取更换CEO方法
@@ -1327,9 +1322,8 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		if count == 0 {
 			user_default_team := data.UserDefaultTeam{
-				UserId:    reply_user.Id,
-				TeamId:    invitation.TeamId,
-				CreatedAt: time.Now(),
+				UserId: reply_user.Id,
+				TeamId: invitation.TeamId,
 			}
 			if err = user_default_team.Create(); err != nil {
 				util.ScaldingTea(util.LogError(err), reply_user.Email, " Cannot create user_default_team")
@@ -1350,7 +1344,6 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			InvitationId: invitation_id,
 			UserId:       user_id,
 			ReplyWord:    reply_word,
-			CreatedAt:    time.Now(),
 		}
 		err = repl.Create()
 		if err != nil {
@@ -1464,7 +1457,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			Report(w, r, "你好，该团队已经存在所选择的核心角色，请返回选择其他角色。")
 			return
-		} else if err != sql.ErrNoRows {
+		} else if !errors.Is(err, sql.ErrNoRows) {
 			util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot search team member given team_id and role")
 			Report(w, r, "你好，茶博士在这个团队角色事情迷糊了，请确认后再试。")
 			return
@@ -1501,13 +1494,11 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 				InviteEmail:  invite_user.Email,
 				Role:         role,
 				InviteWord:   i_word,
-				CreatedAt:    time.Now(),
 				Status:       0,
 				AuthorUserId: ceo_user.Id,
 			}
 			//存储邀请函
-			err = invi.Create()
-			if err != nil {
+			if err = invi.Create(); err != nil {
 				util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot create invitation")
 				Report(w, r, "你好，茶博士未能创建邀请函，请稍后再试。")
 				return

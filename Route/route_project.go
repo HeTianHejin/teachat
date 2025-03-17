@@ -75,7 +75,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 检查在此茶围下是否已经存在相同名字的茶台
 	count_title, err := data.CountProjectByTitleObjectiveId(title, t_ob.Id)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.ScaldingTea(util.LogError(err), " Cannot get count of project by title and objective id")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
@@ -412,7 +412,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/project/detail?id=
-// 展示指定的UUID茶台详情
+// 展示指定UUID茶台详情
 func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var pD data.ProjectDetail
@@ -420,39 +420,24 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	// 获取请求的茶台详情
-	project, err := data.GetProjectByUuid(uuid)
+	pr, err := data.GetProjectByUuid(uuid)
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot read project")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
 	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
-	if project.Class != 1 && project.Class != 2 {
+	if pr.Class != 1 && pr.Class != 2 {
 		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
 		return
 	}
 
-	pD.ProjectBean, err = FetchProjectBean(project)
+	pD.ProjectBean, err = FetchProjectBean(pr)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read project")
+		util.ScaldingTea(util.LogError(err), " Cannot read project", pr.Uuid)
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
-
-	// master_default_family, err := GetLastDefaultFamilyByUserId(pD.ProjectBean.Author.Id)
-	// if err != nil {
-	// 	util.PanicTea(util.LogError(err), " Cannot read family")
-	// 	Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
-	// 	return
-	// }
-	// pD.MasterDefaultFamily = master_default_family
-
-	// pD.MasterDefaultTeam, err = data.GetTeam(pD.ProjectBean.Project.TeamId)
-	// if err != nil {
-	// 	util.PanicTea(util.LogError(err), pD.ProjectBean.Project.TeamId, " Cannot read project team")
-	// 	Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
-	// 	return
-	// }
 
 	// 准备页面数据
 	if pD.ProjectBean.Project.Class == 1 {
@@ -461,35 +446,20 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		pD.Open = false
 	}
 
-	pD.QuoteObjective, err = pD.ProjectBean.Project.Objective()
+	ob, err := pD.ProjectBean.Project.Objective()
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot read objective")
+		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。")
+		return
+	}
+	pD.QuoteObjectiveBean, err = FetchObjectiveBean(ob)
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot read objective")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。")
 		return
 	}
 	// 截短此引用的茶围内容以方便展示
-	pD.QuoteObjective.Body = Substr(pD.QuoteObjective.Body, 168)
-	pD.QuoteObjectiveAuthor, err = pD.QuoteObjective.User()
-	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read objective author")
-		Report(w, r, "你好，梨花满地不闻莺，请稍后再试。")
-		return
-	}
-
-	q_objective_author_family, err := GetFamilyByFamilyId(pD.QuoteObjective.FamilyId)
-	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read objective author family")
-		Report(w, r, "你好，茶博士满头大汗，唱花开花谢花漫天，请稍后再试。")
-		return
-	}
-	pD.QuoteObjectiveAuthorFamily = q_objective_author_family
-
-	pD.QuoteObjectiveAuthorTeam, err = data.GetTeam(pD.QuoteObjective.TeamId)
-	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read objective author team")
-		Report(w, r, "你好，茶博士满头大汗，唱花开花谢花漫天，请稍后再试。")
-		return
-	}
+	pD.QuoteObjectiveBean.Objective.Body = Substr(pD.QuoteObjectiveBean.Objective.Body, 168)
 
 	var oabSlice []data.ThreadBean
 	// 读取全部茶议资料
@@ -541,14 +511,9 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		pD.ProjectBean.Project.PageData.IsAuthor = false
 		pD.IsInput = false
 		pD.IsGuest = true
-		//标记为非台主
-		for i := range pD.ThreadBeanSlice {
-			pD.ThreadBeanSlice[i].IsMaster = false
-		}
-		//标记为非管理员
-		for i := range pD.ThreadBeanSlice {
-			pD.ThreadBeanSlice[i].IsAdmin = false
-		}
+		pD.IsAdmin = false
+		pD.IsMaster = false
+
 		pD.SessUser = data.User{
 			Id:        0,
 			Name:      "游客",
@@ -603,49 +568,52 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsInput = true
 	}
 
-	// 检查是否台主，先默认为否
-	pD.ProjectBean.Project.PageData.IsAuthor = false
-	for i := range pD.ThreadBeanSlice {
-		pD.ThreadBeanSlice[i].IsMaster = false
-	}
-	if s_u.Id == pD.ProjectBean.Project.UserId {
-		// 标记茶台信息为台主
+	//会话用户是否是作者
+	if pD.ProjectBean.Project.UserId == s_u.Id {
+		// 是作者
 		pD.ProjectBean.Project.PageData.IsAuthor = true
-		//在每个茶议中标记是台主
-		for i := range pD.ThreadBeanSlice {
-			pD.ThreadBeanSlice[i].IsMaster = true
-		}
+	} else {
+		// 不是作者
+		pD.ProjectBean.Project.PageData.IsAuthor = false
 	}
-	// 查是否管理员
-	//获取团队核心成员名单
-	tcms, err := pD.ProjectBean.AuthorTeam.CoreMembers()
+
+	//读取茶台管理团队资料
+	pr_team, err := data.GetTeam(pr.TeamId)
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get team")
+		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		return
+	}
+	// 检查是否茶台管理员，
+	is_master, err := pr_team.IsMember(s_u.Id)
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot get team-core-members")
 		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
-	is_admin := false
-	for _, v := range tcms {
-		if v.UserId == s_u.Id {
-			//是管理员，
-			is_admin = true
-			break
-		}
+	//标记为管理员
+	pD.IsMaster = is_master
+
+	//获取管理这个茶围的团队
+	admin_team, err := data.GetTeam(ob.TeamId)
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get team")
+		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		return
 	}
-	if is_admin {
-		//在每个茶议中标记是管理员
-		for i := range pD.ThreadBeanSlice {
-			pD.ThreadBeanSlice[i].IsAdmin = true
-		}
-	} else {
-		//不是管理员
-		for i := range pD.ThreadBeanSlice {
-			pD.ThreadBeanSlice[i].IsAdmin = false
-		}
+	// 查是否茶围管理员
+	is_admin, err := admin_team.IsMember(s_u.Id)
+	if err != nil {
+
+		util.ScaldingTea(util.LogError(err), " Cannot get team-core-members")
+		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		return
 	}
+	pD.IsAdmin = is_admin
 
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path
 	pD.SessUser.Query = r.URL.RawQuery
+
 	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail")
 }

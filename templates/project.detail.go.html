@@ -2,7 +2,9 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjective.Uuid }}">{{ .QuoteObjective.Title }}</a> @茶话会</li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}</a>
+    @茶话会</li>
   <li class="active"> #{{ .ProjectBean.Project.Id }} @茶台</li>
 </ol>
 
@@ -15,8 +17,8 @@
 
   <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">个人 4</span>
   <span style="margin-inline-end: 2rem;">家庭 3</span>
-       <span style="margin-inline-end: 2rem;">团队 1</span>
-       <span style="margin-inline-end: 2rem;">叩击 404</span>
+  <span style="margin-inline-end: 2rem;">团队 1</span>
+  <span style="margin-inline-end: 2rem;">叩击 404</span>
 </div>
 
 <div class="media" style="margin-top: 20px;">
@@ -29,6 +31,10 @@
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             {{ .ProjectBean.Project.Title }}
 
+            {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
+            {{/* 这个主意已被台主或者管理员选中入围 */}}
+            <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+            {{/* 检查是否入围1 */}}{{ end }}
           </div>
 
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -37,11 +43,11 @@
               <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
               <span class="label label-info">开放式
               </span>
-                {{ else }}
-                <i class="bi-disc-fill" style="font-size: 2rem; color: black;"></i>
-                <span class="label label-default">封闭式
-                </span>
-                  {{ end }}
+              {{ else }}
+              <i class="bi-disc-fill" style="font-size: 2rem; color: black;"></i>
+              <span class="label label-default">封闭式
+              </span>
+              {{ end }}
               {{ .ProjectBean.CreatedAtDate }}
             </span>
           </div>
@@ -54,8 +60,10 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
-              （<a href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
-              <a href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
+              （<a
+                href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
+              <a
+                href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
 
             </span>
             </span>
@@ -69,31 +77,42 @@
         <p style="white-space: pre-wrap;">{{ .ProjectBean.Project.Body }}</p>
 
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/objective/detail?id={{ .QuoteObjective.Uuid }}">
+          <p style="font-size: small;"><a href="/v1/objective/detail?id={{ .QuoteObjectiveBean.Objective.Uuid }}">
               <span class="label label-default">引用</span></a><span
-              style="margin-inline-start: 1rem;">{{ .QuoteObjective.Body }} ...</span></p>
+              style="margin-inline-start: 1rem;">{{ .QuoteObjectiveBean.Objective.Body }} ...</span></p>
           <footer style="font-size: small;">
             <cite>
-              <a href="/v1/user/biography?id={{ .QuoteObjectiveAuthor.Uuid }}"
-                style="color: black;">{{ .QuoteObjectiveAuthor.Name }}</a>
+              <a href="/v1/user/biography?id={{ .QuoteObjectiveBean.Author.Uuid }}"
+                style="color: black;">{{ .QuoteObjectiveBean.Author.Name }}</a>
               <span style="margin-inline-end: 20px;">
-                （<a href="/v1/family/detail?id={{ .QuoteObjectiveAuthorFamily.Uuid }}"
-                  style="color: black;">{{ .QuoteObjectiveAuthorFamily.Name }}</a>，
-                <a href="/v1/team/detail?id={{ .QuoteObjectiveAuthorTeam.Uuid }}"
-                  style="color: black;">{{ .QuoteObjectiveAuthorTeam.Abbreviation }}</a>）
+                （<a href="/v1/family/detail?id={{ .QuoteObjectiveBean.AuthorFamily.Uuid }}"
+                  style="color: black;">{{ .QuoteObjectiveBean.AuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?id={{ .QuoteObjectiveBean.AuthorTeam.Uuid }}"
+                  style="color: black;">{{ .QuoteObjectiveBean.AuthorTeam.Abbreviation }}</a>）
               </span>
             </cite>
           </footer>
         </blockquote>
+
+        <p>
+          {{/* 检查是否未入围1 */}}{{if not .ProjectBean.IsApproved }}
+
+          {{/* 检查是否管理员1，如果是，显示入围按钮图标 */}}{{ if .IsAdmin }}
+          <form class="form" role="form" action="/v1/project/approve" method="post">
+            <input type="hidden" name="id" value="{{ .ProjectBean.Project.Uuid }}" />
+            <button type="submit" class="btn btn-default btn-sm">入围</button>
+          </form>
+          {{/* 检查是否管理员2 */}}{{ end }}
+
+          {{/* 检查是否未入围2 */}}{{ end }}
+        </p>
 
       </div>
       <div class="panel-footer">
         <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">惦记 14</span>
         <span style="margin-inline-end: 2rem;">电眼 22</span>
         <span style="margin-inline-end: 2rem;">白眼 13</span>
-      
-               
-                
+
         {{ if .IsEdited }}
 
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
@@ -152,8 +171,6 @@
             required></textarea>
         </div>
       </div>
-
-     
 
       {{/* 这是project的id提交 */}}
       <input type="hidden" name="project_id" value="{{ .ProjectBean.Project.Id }}" />
@@ -274,11 +291,9 @@
       <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
       {{ end }}
       <span style="margin-inline-end: 20px; font-size: smaller;">
-        （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}"
-          style="color: black;">{{ .AuthorFamily.Name }}</a>，
-        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}"
-          style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
-        </span>
+        （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}" style="color: black;">{{ .AuthorFamily.Name }}</a>，
+        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}" style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
+      </span>
 
       <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
       </span>
@@ -286,6 +301,7 @@
 
     <p>
       <mark>{{ .Thread.TypeStatus }}</mark>
+
       {{/* 检查是否被采纳1 */}}{{if .IsApproved }}
       {{/* 这个主意已被台主或者管理员采纳 */}}
       <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
@@ -295,27 +311,11 @@
         <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
       </span>
     </p>
-    <p>{{ .Thread.Body }} ...</p>
-    {{/* 检查是否未被采纳 */}}{{if not .IsApproved }}
-    {{/* 检查是出主意1 */}}{{ if .Thread.TypeStatus }}
 
-    {{/* 检查是否台主1 */}}{{ if .IsMaster }}
-    <form class="form" role="form" action="/v1/thread/approve" method="post">
-      <input type="hidden" name="id" value="{{ .Thread.Uuid }}" />
-      <button type="submit" class="btn btn-default btn-sm">采纳</button>
-    </form>
-    {{/* 检查是否台主2 */}}{{ else }}
-    {{/* 检查是否管理员1，如果是，显示采纳图标 */}}{{ if .IsAdmin }}
-    <form class="form" role="form" action="/v1/thread/approve" method="post">
-      <input type="hidden" name="id" value="{{ .Thread.Uuid }}" />
-      <button type="submit" class="btn btn-default btn-sm">采纳</button>
-    </form>
-    {{/* 检查是否管理员2 */}}{{ end }}
-    {{/* 检查是否台主3 */}}{{ end }}
-    {{/* 检查是出主意1 */}}{{ end }}
-    {{/* 检查是否未被采纳 */}}{{ end }}
+    <p>{{ .Thread.Body }} ...</p>
+
     <br />
-   
+
   </div>
 
 </div>

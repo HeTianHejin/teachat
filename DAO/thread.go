@@ -231,7 +231,7 @@ func (t *Thread) Create() (err error) {
 	return
 }
 
-// 批准，采纳，赞成某个主张/方案/观点
+// 批准，采纳，赞成某个茶议的主张/方案/观点
 type ThreadApproved struct {
 	Id        int
 	ProjectId int       //项目茶台id
@@ -249,12 +249,6 @@ func (threadApproved *ThreadApproved) Create() (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRow(threadApproved.ProjectId, threadApproved.ThreadId, threadApproved.UserId, time.Now()).Scan(&threadApproved.Id)
-	return
-}
-
-// thread_approved.GetByProjectIdAndThreadId()
-func (threadApproved *ThreadApproved) GetByProjectIdAndThreadId() (err error) {
-	err = Db.QueryRow("SELECT id, project_id, thread_id, user_id, created_at FROM thread_approved WHERE project_id = $1 AND thread_id = $2", threadApproved.ProjectId, threadApproved.ThreadId).Scan(&threadApproved.Id, &threadApproved.ProjectId, &threadApproved.ThreadId, &threadApproved.UserId, &threadApproved.CreatedAt)
 	return
 }
 

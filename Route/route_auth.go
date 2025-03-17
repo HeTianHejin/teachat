@@ -6,7 +6,6 @@ import (
 	"strconv"
 	data "teachat/DAO"
 	util "teachat/Util"
-	"time"
 )
 
 // GET /LoginGet?footprint=xxx&query=xxx
@@ -97,13 +96,10 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 将新成员添加进默认的自由人茶团
 	team_member := data.TeamMember{
-		Uuid:      data.Random_UUID(),
-		TeamId:    2,
-		UserId:    newU.Id,
-		Role:      "taster",
-		CreatedAt: time.Now(),
-		Class:     1,
-		UpdatedAt: time.Now(),
+		TeamId: 2,
+		UserId: newU.Id,
+		Role:   "taster",
+		Class:  1,
 	}
 	if err = team_member.Create(); err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot create default_free team_member")

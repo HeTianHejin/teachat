@@ -29,6 +29,54 @@ type Project struct {
 	PageData PublicPData
 }
 
+// 同意入围，许可某个茶台（项目）设立
+type ProjectApproved struct {
+	Id          int
+	UserId      int       //批准者id
+	ProjectId   int       //茶台id
+	ObjectiveId int       //茶围id
+	CreatedAt   time.Time //批准时间
+}
+
+// project_approved.Create()  ----【tencent AI协助】
+func (projectApproved *ProjectApproved) Create() (err error) {
+	statement := "INSERT INTO project_approved (user_id, project_id, objective_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(projectApproved.UserId, projectApproved.ProjectId, projectApproved.ObjectiveId, time.Now()).Scan(&projectApproved.Id)
+	return
+}
+
+// project_approved.GetByProjectId() ----【tencent AI协助】
+func (projectApproved *ProjectApproved) GetByProjectId() (err error) {
+	err = Db.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE project_id = $1", projectApproved.ProjectId).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
+	return
+}
+
+// project_approved.GetById() ----【tencent AI协助】
+func (projectApproved *ProjectApproved) GetById() (err error) {
+	err = Db.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE id = $1", projectApproved.Id).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
+	return
+}
+
+// project_approved.CountByObjectiveId() 统计某个茶围下许可/批准入围的茶台数量 --【tencent AI协助】
+func (projectApproved *ProjectApproved) CountByObjectiveId() (count int) {
+	err := Db.QueryRow("SELECT COUNT(*) FROM project_approved WHERE objective_id = $1", projectApproved.ObjectiveId).Scan(&count)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// project *Project.IsApproved() 判断某个茶台是否被批准（立项） --【tencent AI协助】
+func (project *Project) IsApproved() (approved bool, err error) {
+	err = Db.QueryRow("SELECT EXISTS(SELECT 1 FROM project_approved WHERE project_id = $1)", project.Id).Scan(&approved)
+	return
+}
+
 // CountProjectByTitleObjectiveId() 统计某个茶围下相同名称的茶台数量
 func CountProjectByTitleObjectiveId(title string, objectiveId int) (count int, err error) {
 	err = Db.QueryRow("SELECT count(*) FROM projects WHERE title = $1 AND objective_id = $2", title, objectiveId).Scan(&count)

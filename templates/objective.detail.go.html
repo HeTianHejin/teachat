@@ -147,11 +147,17 @@
 
       <div class="media-body">
         <p>
-          <a href="/v1/project/detail?id={{ .Project.Uuid }}">
-            <h5>
+          <h5>
+              <a href="/v1/project/detail?id={{ .Project.Uuid }}">
               {{ .Project.Title }}
+            </a>
               </h5>
-          </a>
+
+          {{/* 检查是否入围1 */}}{{if .IsApproved }}
+          {{/* 这个主意已被台主或者管理员选中入围 */}}
+          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+          {{/* 检查是否入围1 */}}{{ end }}
+
           {{ if .Open }}
           <span class="label label-success" style="margin-inline-end: 30px;font-size: smaller;">
             {{ .Status }}
@@ -181,6 +187,7 @@
             {{ .CreatedAtDate }}
           </span>
         </p>
+
         {{ .Project.Body }} ...
       </div>
 

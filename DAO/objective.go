@@ -38,11 +38,11 @@ func (objective *Objective) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), objective.Title, objective.Body, objective.CreatedAt, objective.UserId, objective.Class, objective.EditAt, objective.FamilyId, objective.Cover, objective.TeamId, objective.IsPrivate).Scan(&objective.Id, &objective.Uuid)
+	err = stmt.QueryRow(Random_UUID(), objective.Title, objective.Body, time.Now(), objective.UserId, objective.Class, time.Now(), objective.FamilyId, objective.Cover, objective.TeamId, objective.IsPrivate).Scan(&objective.Id, &objective.Uuid)
 	return
 }
 
-// objective.Update() Update the given objective struct{} ,add team_id!
+// objective.Update() Update the given objective struct{}
 func (objective *Objective) Update() (err error) {
 	statement := "UPDATE objectives SET title = $1, body = $2, edit_at = $3, family_id = $4, cover = $5, team_id = $6, is_private = $7 WHERE id = $8"
 	stmt, err := Db.Prepare(statement)
@@ -50,7 +50,7 @@ func (objective *Objective) Update() (err error) {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(objective.Title, objective.Body, objective.EditAt, objective.FamilyId, objective.Cover, objective.TeamId, objective.IsPrivate, objective.Id)
+	_, err = stmt.Exec(objective.Title, objective.Body, time.Now(), objective.FamilyId, objective.Cover, objective.TeamId, objective.IsPrivate, objective.Id)
 	return
 }
 

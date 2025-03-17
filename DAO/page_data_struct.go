@@ -38,7 +38,8 @@ type PublicPData struct {
 // 某个茶话会详情页面渲染
 type ObjectiveDetail struct {
 	SessUser  User // 当前会话用户
-	IsAuthor  bool
+	IsAuthor  bool // 是否为作者
+	IsAdmin   bool // 是否为管理员
 	IsGuest   bool // 是否为游客
 	IsInvited bool // 是否受邀请
 
@@ -55,7 +56,7 @@ type ObjectiveDetail struct {
 	SessUserDefaultPlace Place
 	SessUserBindPlaces   []Place
 
-	ObjectiveBean    ObjectiveBean
+	ObjectiveBean    ObjectiveBean // 该茶话会资料夹
 	ProjectBeanSlice []ProjectBean // objective下所有projects
 }
 
@@ -70,27 +71,33 @@ type ObjectiveBean struct {
 	Open          bool
 	CreatedAtDate string
 	Status        string
-	Count         int    // 附属对象茶台计数
 	Author        User   // 作者
-	AuthorFamily  Family // 作者发帖时选择的家庭，或者默认&家庭
-	AuthorTeam    Team   // 作者发帖时选择的团队，或者默认$团队
+	AuthorFamily  Family // 作者发帖时选择的家庭，
+	AuthorTeam    Team   // 作者发帖时选择的团队，
+
+	Count int // 附属对象茶台计数
 }
 type ProjectBean struct {
 	Project       Project
 	Open          bool
 	CreatedAtDate string
 	Status        string
-	Count         int    // 附属对象茶议计数
-	Author        User   // 作者
-	AuthorFamily  Family // 作者发帖时选择的家庭，
-	AuthorTeam    Team   // 作者发帖时选择的团队，
-	Place         Place  //项目发生的地方,地点
+
+	Author       User   // 作者
+	AuthorFamily Family // 作者发帖时选择的家庭，
+	AuthorTeam   Team   // 作者发帖时选择的团队，
+
+	Place Place //项目发生的地方,地点
+
+	IsApproved bool // 是否入围
+	Count      int  // 附属对象茶议计数
 }
 
 // 某个茶台详情页面渲染所需的动态数据
 type ProjectDetail struct {
 	SessUser                 User   // 当前会话用户
-	IsMaster                 bool   // 是否为茶台主人（创建者）
+	IsAdmin                  bool   // 是否为茶围管理员
+	IsMaster                 bool   // 是否为茶台管理员
 	IsGuest                  bool   // 是否为游客
 	IsInput                  bool   // 是否需要显示输入面板
 	SessUserDefaultFamily    Family //当前会话用户默认&家庭茶团
@@ -101,18 +108,12 @@ type ProjectDetail struct {
 	SessUserBindPlaces       []Place
 
 	ProjectBean ProjectBean //当前浏览茶台资料夹
-	//Master       User    //台主，作者，发起人
-	// MasterDefaultFamily Family // 作者当前默认&家庭，
-	// MasterDefaultTeam   Team   //作者当前默认$团队，
 
 	Place    Place //茶台(项目)，活动地方
 	Open     bool
 	IsEdited bool
 
-	QuoteObjective             Objective // 引用的茶围
-	QuoteObjectiveAuthor       User      // 引用的茶围作者
-	QuoteObjectiveAuthorFamily Family    // 引用的茶围作者作者发帖时选择的家庭，
-	QuoteObjectiveAuthorTeam   Team      // 引用的茶围作者创建时作者发帖时选择的团队，
+	QuoteObjectiveBean ObjectiveBean // 引用的茶围
 
 	ThreadBeanSlice []ThreadBean // project下所有Threads和作者资料荚
 
@@ -136,6 +137,9 @@ type DThreadDetail struct {
 type ThreadDetail struct {
 	SessUser                 User // 当前会话用户
 	IsGuest                  bool // 是否为游客
+	IsAdmin                  bool // 是否为茶围管理员
+	IsMaster                 bool // 是否为茶台管理员
+	IsAuthor                 bool // 是否为茶议作者
 	SessUserDefaultFamily    Family
 	SessUserSurvivalFamilies []Family
 	SessUserDefaultTeam      Team
@@ -151,12 +155,14 @@ type ThreadDetail struct {
 	ProgressOppose  int // 反对百分比整数
 	ProgressSupport int // 支持百分比整数
 
-	QuoteObjective Objective // 引用的茶围
+	QuoteObjective             Objective // 引用的茶围
+	QuoteObjectiveAuthorTeam   Team      // 引用的茶围作者创建发帖时选择的团队，
+	QuoteObjectiveAuthorFamily Family    // 引用的茶wei作者发帖时选择的家庭，
 
 	QuoteProject             Project // 引用的茶台
 	QuoteProjectAuthor       User
-	QuoteProjectAuthorFamily Family // 引用的茶台作者发帖时选择的家庭，或者默认&家庭茶团
-	QuoteProjectAuthorTeam   Team   // 引用的茶台作者创建发帖时选择的团队，或者默认团队
+	QuoteProjectAuthorFamily Family // 引用的茶台作者发帖时选择的家庭，
+	QuoteProjectAuthorTeam   Team   // 引用的茶台作者创建发帖时选择的团队，
 
 	ThreadBean    ThreadBean //茶议豆荚
 	PostBeanSlice []PostBean // 跟贴豆荚队列
@@ -177,9 +183,6 @@ type ThreadBean struct {
 	Author       User   // 作者
 	AuthorFamily Family //作者发帖时选择的家庭，或者默认&家庭茶团
 	AuthorTeam   Team   // 作者创建发帖时选择的团队，或者默认$团队
-
-	IsMaster bool // 是否为台主
-	IsAdmin  bool // 是否为管理员
 
 	IsApproved bool // 主张方案是否被采纳
 }
@@ -226,18 +229,20 @@ type TeamDetail struct {
 	IsCoreMember bool //是否核心成员（管理员）
 	IsMember     bool //是否成员
 
-	Team                  Team   //茶团
-	Founder               User   // 茶团发起人（创建者）
-	FounderDefaultFamily  Family //发起人默认&家庭茶团
-	FounderTeam           Team   // 发起人默认所在的团队
-	CEO                   User   // CEO
-	CEOTeam               Team   // CEO所在默认团队
-	CreatedAtDate         string
-	TeamMemberCount       int              //成员数量统计
+	Team                 Team   //茶团
+	Open                 bool   //是否开放式茶团
+	Founder              User   // 茶团发起人（创建者）
+	FounderDefaultFamily Family //发起人默认&家庭茶团
+	FounderTeam          Team   // 发起人默认所在的团队
+	CEO                  User   // CEO
+	CEOTeam              Team   // CEO所在默认团队
+	CreatedAtDate        string
+
+	TeamMemberCount int //成员数量统计
+
+	IsAuthor              bool
 	CoreMemberBeanSlice   []TeamMemberBean //核心成员资料夹
 	NormalMemberBeanSlice []TeamMemberBean //普通成员资料夹
-	IsAuthor              bool
-	Open                  bool //是否开放式茶团
 
 	HasApplication bool //是否有新的加盟申请书
 }

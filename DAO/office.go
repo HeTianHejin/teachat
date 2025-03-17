@@ -23,11 +23,11 @@ func (lq *LastQuery) Create() (err error) {
 		return err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(lq.UserId, lq.Path, lq.Query, lq.QueryAt).Scan(&lq.Id)
-	if err != nil {
-		return err
-	}
-	return nil
+	err = stmt.QueryRow(lq.UserId, lq.Path, lq.Query, time.Now()).Scan(&lq.Id)
+	// if err != nil {
+	// 	return err
+	// }
+	return
 }
 
 // Get() 读取一条 LastQuery记录
@@ -72,7 +72,7 @@ type Acceptance struct {
 	XAcceptedAt    time.Time
 	YAccept        bool
 	YUserId        int
-	YAcceptedAt    time.Time
+	YAcceptedAt    *time.Time
 }
 
 // Create() Acceptance新建一条 友邻蒙评 记录
@@ -83,11 +83,10 @@ func (a *Acceptance) Create() (err error) {
 		return err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(a.AcceptObjectId, a.XAccept, a.XUserId, a.XAcceptedAt, a.YAccept, a.YUserId, a.YAcceptedAt).Scan(&a.Id)
-	if err != nil {
-		return err
-	}
-	return nil
+
+	err = stmt.QueryRow(a.AcceptObjectId, a.XAccept, a.XUserId, time.Now(), a.YAccept, a.YUserId, a.YAcceptedAt).Scan(&a.Id)
+
+	return
 }
 
 // Update() 根据id更新一条友邻蒙评 Y记录

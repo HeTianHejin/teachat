@@ -89,7 +89,7 @@ func (post *Post) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), post.Body, post.UserId, post.ThreadId, post.CreatedAt, post.EditAt, post.Attitude, post.FamilyId, post.TeamId, post.IsPrivate, post.Class).Scan(&post.Id, &post.Uuid)
+	err = stmt.QueryRow(Random_UUID(), post.Body, post.UserId, post.ThreadId, time.Now(), time.Now(), post.Attitude, post.FamilyId, post.TeamId, post.IsPrivate, post.Class).Scan(&post.Id, &post.Uuid)
 	return
 }
 

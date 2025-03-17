@@ -30,7 +30,7 @@ func (footprint *Footprint) Create() (err error) {
 		footprint.TeamType,
 		footprint.Content,
 		footprint.ContentId,
-		footprint.CreatedAt)
+		time.Now())
 	return
 }
 

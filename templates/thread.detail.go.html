@@ -114,6 +114,26 @@
           {{ .ThreadBean.Thread.Title }}
         </h4>
         <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
+
+        {{/* 检查是否未被采纳 */}}{{if not .ThreadBean.IsApproved }}
+        {{/* 检查是出主意1 */}}{{ if .ThreadBean.Thread.TypeStatus }}
+    
+        {{/* 检查是否台主1 */}}{{ if .ThreadBean.IsMaster }}
+        <form class="form" role="form" action="/v1/thread/approve" method="post">
+          <input type="hidden" name="id" value="{{ .ThreadBean.Thread.Uuid }}" />
+          <button type="submit" class="btn btn-default btn-sm">采纳</button>
+        </form>
+        {{/* 检查是否台主2 */}}{{ else }}
+        {{/* 检查是否管理员1，如果是，显示采纳图标 */}}{{ if .ThreadBean.IsAdmin }}
+        <form class="form" role="form" action="/v1/thread/approve" method="post">
+          <input type="hidden" name="id" value="{{ .ThreadBean.Thread.Uuid }}" />
+          <button type="submit" class="btn btn-default btn-sm">采纳</button>
+        </form>
+        {{/* 检查是否管理员2 */}}{{ end }}
+        {{/* 检查是否台主3 */}}{{ end }}
+        {{/* 检查是出主意1 */}}{{ end }}
+        {{/* 检查是否未被采纳 */}}{{ end }}
+
         <hr />
 
         {{ if .ThreadBean.Thread.PostId }}

@@ -359,6 +359,7 @@ create table objectives (
   is_private             boolean default false
 );
 
+
 create table projects (
   id                     serial primary key,
   uuid                   varchar(64) not null unique,
@@ -373,6 +374,14 @@ create table projects (
   team_id                integer not null default 2,
   is_private             boolean default false,
   family_id              integer not null default 0
+);
+
+create table project_approved (
+  id                     serial primary key,
+  user_id                integer not null,
+  project_id             integer not null,
+  objective_id           integer not null,
+  created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 create table draft_threads (
@@ -549,13 +558,13 @@ CREATE TABLE accept_messages (
 
 CREATE TABLE acceptances (
   id                   SERIAL PRIMARY KEY,
-  accept_object_id     INTEGER references accept_objects(id),
+  accept_object_id     INTEGER,
   x_accept             BOOLEAN default false,
-  x_user_id            INTEGER references users(id),
+  x_user_id            INTEGER,
   x_accepted_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
   y_accept             BOOLEAN default false,
-  y_user_id            INTEGER references users(id),
-  y_accepted_at        TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  y_user_id            INTEGER default 0,
+  y_accepted_at        TIMESTAMP
 );
 
 create table accept_objects (

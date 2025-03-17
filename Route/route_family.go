@@ -187,7 +187,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 			UserId:   s_u.Id,
 		}
 		if err = family_member_sign_in.GetByFamilyIdMemberUserId(); err != nil {
-			if err != sql.ErrNoRows {
+			if !errors.Is(err, sql.ErrNoRows) {
 				//查询资料出现失误
 				util.ScaldingTea(util.LogError(err), "Cannot get family member sign in")
 				Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")

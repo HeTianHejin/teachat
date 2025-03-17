@@ -82,10 +82,8 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		AcceptObjectId: ao_id_int,
 		XAccept:        false,
 		XUserId:        s_u.Id,
-		XAcceptedAt:    time.Now(),
 		YAccept:        false,
-		YUserId:        1,
-		YAcceptedAt:    time.Now(),
+		YUserId:        0,
 	}
 
 	// 权限检查。。。
@@ -127,7 +125,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	// err==nil说明已经有记录，说明是第二位审核官的提交
+	// err==nil说明已经有记录，说明是第二位茶语审核官的提交
 	// update旧记录
 	if civilizer == "yes" && care == "yes" {
 		// ok
@@ -136,7 +134,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		oldAcceptance.YAccept = false
 	}
 	oldAcceptance.YUserId = s_u.Id
-	oldAcceptance.YAcceptedAt = time.Now()
+
+	now_time := time.Now() //DeepSeek教的方法
+	oldAcceptance.YAcceptedAt = &now_time
+
 	if err = oldAcceptance.Update(); err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot update acceptance")
 		Report(w, r, "你好，(摸摸头想了又想),隔岸花分一脉香。")
@@ -369,7 +370,6 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				IsPrivate: dPost.IsPrivate,
 				Attitude:  dPost.Attitude,
 				Class:     1,
-				CreatedAt: time.Now(),
 			}
 			if err = new_post.Create(); err != nil {
 				util.ScaldingTea(util.LogError(err), "Cannot create post")

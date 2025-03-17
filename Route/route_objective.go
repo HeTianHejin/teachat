@@ -1,6 +1,8 @@
 package route
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -41,6 +43,11 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
+	//把系统默认家庭资料加入s_survival_families
+	//s_survival_families = append(s_survival_families, DefaultFamily)
+	//把系统默认团队资料加入s_survival_teams
+	//s_survival_teams = append(s_survival_teams, FreelancerTeam)
+
 	// 填写页面数据
 	oD.SessUser = s_u
 
@@ -430,6 +437,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsGuest = true
 		// 是否受邀请团队成员？
 		oD.IsInvited = false
+		oD.IsAdmin = false
 
 		//配置公开导航条的茶话会详情页面
 		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail")
@@ -468,12 +476,41 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		//是作者
 		//准备页面数据
 		oD.IsAuthor = true
+		oD.IsAdmin = true
+		oD.IsGuest = false
+
+		oD.IsInvited = false
+
 		//配置私有导航条的茶话会详情页面
 		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")
 		return
 	} else {
-		//不是作者
+		//不是茶围的作者
 		oD.IsAuthor = false
+
+		//检测当前用户是否是这个茶话会所属团队的成员（管理员） --【DeepSeek 协助】
+		team, err := data.GetTeam(oD.ObjectiveBean.Objective.TeamId)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				// 团队不存在，用户不可能是管理员
+				oD.IsAdmin = false
+			} else {
+				// 其他错误（如数据库连接失败）
+				util.ScaldingTea(util.LogError(err), "Cannot get team information", oD.ObjectiveBean.Objective.TeamId)
+				oD.IsAdmin = false
+			}
+		} else {
+			// 团队存在，检查成员身份
+			is_admin, err := team.IsMember(s_u.Id)
+			if err != nil {
+				// 查询成员关系时出错（如数据库问题）
+				util.ScaldingTea(util.LogError(err), "Failed to check team membership", team.Id)
+				oD.IsAdmin = false
+			} else {
+				// 正常返回用户是否为管理员
+				oD.IsAdmin = is_admin
+			}
+		}
 
 		//配置私有导航条的茶话会详情页面
 		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")

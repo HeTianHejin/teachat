@@ -159,20 +159,20 @@ func (memberApplicationReply *MemberApplicationReply) CreatedAtDate() string {
 // AWS CodeWhisperer assist in writing
 func (memberApplication *MemberApplication) Create() (err error) {
 	statement := `INSERT INTO member_applications (uuid, team_id, user_id, content, status, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, uuid`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(
-		Random_UUID(),
+
+	err = stmt.QueryRow(Random_UUID(),
 		memberApplication.TeamId,
 		memberApplication.UserId,
 		memberApplication.Content,
 		memberApplication.Status,
-		memberApplication.CreatedAt,
-		memberApplication.UpdatedAt)
+		time.Now(),
+		time.Now()).Scan(&memberApplication.Id, &memberApplication.Uuid)
 	return
 }
 
@@ -250,8 +250,8 @@ func (memberApplicationReply *MemberApplicationReply) Create() (err error) {
 		memberApplicationReply.UserId,
 		memberApplicationReply.ReplyContent,
 		memberApplicationReply.Status,
-		memberApplicationReply.CreatedAt,
-		memberApplicationReply.UpdatedAt)
+		time.Now(),
+		time.Now())
 	return
 }
 
@@ -343,7 +343,7 @@ func (invitation *Invitation) Create() (err error) {
 		invitation.InviteEmail,
 		invitation.Role,
 		invitation.InviteWord,
-		invitation.CreatedAt,
+		time.Now(),
 		invitation.Status,
 		invitation.AuthorUserId)
 	return
@@ -447,7 +447,7 @@ func (invitationReply *InvitationReply) Create() (err error) {
 		invitationReply.InvitationId,
 		invitationReply.UserId,
 		invitationReply.ReplyWord,
-		invitationReply.CreatedAt)
+		time.Now())
 	return
 }
 

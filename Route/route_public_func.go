@@ -91,10 +91,9 @@ func GetFamilyByFamilyId(family_id int) (family data.Family, err error) {
 // 记录用户最后的查询路径和参数
 func RecordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
 	lq := data.LastQuery{
-		UserId:  sess_user_id,
-		Path:    path,
-		Query:   raw_query,
-		QueryAt: time.Now(),
+		UserId: sess_user_id,
+		Path:   path,
+		Query:  raw_query,
 	}
 	if err = lq.Create(); err != nil {
 		return err
@@ -180,7 +179,7 @@ func FetchUserBean(user data.User) (userbean data.UserBean, err error) {
 	}
 
 	default_place, err := user.GetLastDefaultPlace()
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return
 	}
 	userbean.DefaultPlace = default_place
@@ -236,7 +235,7 @@ func FetchUserRelatedData(sess data.Session) (s_u data.User, family data.Family,
 	}
 
 	default_place, err := s_u.GetLastDefaultPlace()
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return
 	}
 
@@ -416,6 +415,14 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 		util.ScaldingTea(util.LogError(err), "cannot read project place")
 		return pb, err
 	}
+
+	ok, err := project.IsApproved()
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), "cannot read project is approved", project.Id)
+		return pb, err
+	}
+	pb.IsApproved = ok
+
 	return pb, nil
 }
 

@@ -2,6 +2,7 @@ package route
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 	data "teachat/DAO"
@@ -116,7 +117,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		}
 		user, err := data.GetUser(keyword_int)
 		if err != nil {
-			if err != sql.ErrNoRows {
+			if errors.Is(err, sql.ErrNoRows) {
 				util.ScaldingTea(util.LogError(err), " Cannot get user by keyword_int id")
 			}
 		}
