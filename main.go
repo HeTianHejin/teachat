@@ -101,6 +101,7 @@ func main() {
 	//defined in route_project.go
 	mux.HandleFunc("/v1/project/new", route.HandleNewProject)
 	mux.HandleFunc("/v1/project/detail", route.ProjectDetail)
+	mux.HandleFunc("/v1/project/approve", route.ProjectApprove)
 
 	// defined in route_thread.go
 	mux.HandleFunc("/v1/thread/draft", route.NewDraftThreadHandle)

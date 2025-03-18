@@ -24,7 +24,7 @@ func NewDraftThreadHandle(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/thread/new?id=
 // GET /v1/thread/new?postid=
-// 处理提交的完整版新茶议草稿，索要表单请求
+// 处理提交的新茶议草稿，索要表单请求
 func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 	//尝试从http请求中读取用户会话信息
 	s, err := Session(r)
@@ -86,16 +86,17 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 	} else {
 		tD.ThreadBean.Thread.PostId = 0
 		//读取茶台资料
-		tD.QuoteProject, err = data.GetProjectByUuid(uuid)
-		if err != nil {
+		pr := data.Project{Uuid: uuid}
+		if err = pr.GetByUuid(); err != nil {
 			util.ScaldingTea(util.LogError(err), uuid, " Cannot read project given uuid")
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
+		tD.QuoteProject = pr
 	}
-	//检查project.Class=1 or 2,否则属于未经 友邻盲评 通过的草稿，不允许查看
+	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
 	if tD.QuoteProject.Class != 1 && tD.QuoteProject.Class != 2 {
-		util.ScaldingTea(util.LogError(err), s_u.Id, "欲查看未经友邻盲评通过的茶台资料被阻止")
+		util.ScaldingTea(util.LogError(err), s_u.Id, "欲查看未经友邻蒙评通过的茶台资料被阻止")
 		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
 		return
 	}
@@ -142,7 +143,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot parse form")
-		Report(w, r, "你好，闪电考拉为你极速服务但是迷路了，未能找到你想要的资料。")
+		Report(w, r, "你好，闪电茶博士为你极速服务但是迷路了，未能找到你想要的资料。")
 		return
 	}
 	s_u, err := sess.User()
@@ -172,13 +173,13 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	project_id, err := strconv.Atoi(r.PostFormValue("project_id"))
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), project_id, "Failed to convert project_id to int")
-		Report(w, r, "你好，闪电考拉极速查找茶台中，请确认后再试。")
+		Report(w, r, "你好，闪电茶博士极速查找茶台中，请确认后再试。")
 		return
 	}
 	post_id, err := strconv.Atoi(r.PostFormValue("post_id"))
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), project_id, "Failed to convert post_id to int")
-		Report(w, r, "你好，闪电考拉极速服务，任然无法识别提交的品味资料，请确认后再试。")
+		Report(w, r, "你好，闪电茶博士极速服务，任然无法识别提交的品味资料，请确认后再试。")
 		return
 	}
 	/// check submit post_id is valid, if not 0 表示属于“议中议”
@@ -187,7 +188,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	if post_id > 0 {
 		if err = post.Get(); err != nil {
 			util.ScaldingTea(util.LogError(err), post_id, " Cannot get post given id")
-			Report(w, r, "你好，闪电考拉极速服务，然而无法识别提交的品味资料，请确认后再试。")
+			Report(w, r, "你好，闪电茶博士极速服务，然而无法识别提交的品味资料，请确认后再试。")
 			return
 		}
 
@@ -195,12 +196,12 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		t_proj, err := post.Project()
 		if err != nil {
 			util.ScaldingTea(util.LogError(err), " Cannot get project given post_id")
-			Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有一些问题，请确认后再试一次")
+			Report(w, r, "你好，闪电茶博士极速服务后居然说这个茶台有一些问题，请确认后再试一次")
 			return
 		}
 		if t_proj.Id != project_id {
 			util.ScaldingTea(project_id, "post_id and project_id do not match")
-			Report(w, r, "你好，闪电考拉极速服务后居然说这个茶台有一点点问题，请确认后再试一次。")
+			Report(w, r, "你好，闪电茶博士极速服务后居然说这个茶台有一点点问题，请确认后再试一次。")
 			return
 		}
 	}
@@ -211,7 +212,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if proj.Class == 10 || proj.Class == 20 {
-		util.ScaldingTea(s_u.Email, "试图访问未盲评审核的茶台被阻止。")
+		util.ScaldingTea(s_u.Email, "试图访问未蒙评审核的茶台被阻止。")
 		Report(w, r, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
 		return
 	}
@@ -313,7 +314,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士没有墨水了，未能保存新茶议草稿。")
 			return
 		}
-		// 创建一条友邻盲评,是否接纳 新茶的记录
+		// 创建一条友邻蒙评,是否接纳 新茶的记录
 		aO := data.AcceptObject{
 			ObjectId:   draft_thread.Id,
 			ObjectType: 3,
@@ -323,7 +324,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 			return
 		}
-		// 发送盲评请求消息给两个在线用户
+		// 发送蒙评请求消息给两个在线用户
 		//构造消息
 		mess := data.AcceptMessage{
 			FromUserId:     1,
@@ -333,7 +334,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		}
 		//发送消息
 		if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-			Report(w, r, "你好，早知日后闲争气，岂肯今朝错读书！未能发送盲评请求消息。")
+			Report(w, r, "你好，早知日后闲争气，岂肯今朝错读书！未能发送蒙评请求消息。")
 			return
 		}
 
@@ -678,7 +679,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/thread/approve
-// 茶台管理，决定采纳（认可）某个goodidea（thread），被采纳的thread其花费茶叶和耗时会纳入统计
+// 茶台管理，决定采纳（认可）某个goodidea（thread），被采纳的thread被标识为“已采纳”approved
 func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
@@ -688,7 +689,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot parse form")
-		Report(w, r, "你好，闪电考拉为了提高服务速度而迷路了，未能找到你想要的茶台。")
+		Report(w, r, "你好，闪电茶博士为了提高服务速度而迷路了，未能找到你想要的茶台。")
 		return
 	}
 	s_u, err := sess.User()
@@ -699,18 +700,22 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	}
 	//读取表单数据
 	uuid := r.PostFormValue("id")
+	if uuid == "" {
+		Report(w, r, "你好，闪电茶博士极速服务中，未能读取茶议资料，请稍后再试。")
+		return
+	}
 
 	//读取提及的茶议资料
 	thread, err := data.ThreadByUUID(uuid)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), uuid, " Cannot read thread given uuid")
-		Report(w, r, "你好，闪电考拉极速服务中，未能读取茶议资料，请稍后再试。")
+		util.ScaldingTea(util.LogError(err), " Cannot read thread given uuid", uuid)
+		Report(w, r, "你好，闪电茶博士极速服务中，未能读取茶议资料，请稍后再试。")
 		return
 	}
 	proj, err := thread.Project()
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), thread.Id, " Cannot read project given thread_id")
-		Report(w, r, "你好，闪电考拉极速服务中，未能读取��台资料，请稍后再试。")
+		Report(w, r, "你好，闪电茶博士极速服务中，未能读取茶台资料，请稍后再试。")
 		return
 	}
 
@@ -718,14 +723,14 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeam(proj.TeamId)
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), proj.TeamId, " Cannot get team given id")
-		Report(w, r, "你好，闪电考拉极速服务中，未能读取��队资料，请稍后再试。")
+		Report(w, r, "你好，闪电茶博士极速服务中，未能读取团队资料，请稍后再试。")
 		return
 	}
 	//读取支持team核心成员资料
 	team_members, err := team.CoreMembers()
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), team.Id, " Cannot get team core members given team")
-		Report(w, r, "你好，闪电考拉极速服务中，未能读取���队资料，请稍后再试。")
+		Report(w, r, "你好，闪电茶博士极速服务中，未能读取团队管理成员资料，请稍后再试。")
 		return
 	}
 
@@ -753,16 +758,16 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = thread_approved.Create(); err != nil {
 			util.ScaldingTea(util.LogError(err), thread.Id, " Cannot create thread approved")
-			Report(w, r, "你好，闪电考拉极速服务中，未能处理你的请求，请稍后再试。")
+			Report(w, r, "你好，闪电茶博士极速服务中，未能处理你的请求，请稍后再试。")
 			return
 		}
 
 		//采纳（认可好主意）成功
-		Report(w, r, "你好，闪电考拉极速服务，采纳该主意操作成功，请返回，刷新页面查看。")
+		Report(w, r, "你好，闪电茶博士极速服务，采纳该主意操作成功，请返回，刷新页面查看。")
 		return
 	} else {
 		//没有权限处理请求
-		Report(w, r, "你好，闪电考拉极速服务，火星保安竟然说你没有权限处理该请求。")
+		Report(w, r, "你好，闪电茶博士极速服务，火星保安竟然说你没有权限处理该请求。")
 		return
 	}
 
@@ -859,7 +864,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 				thread.Body += topi
 			} else {
 				util.ScaldingTea("Cannot update thread")
-				Report(w, r, "闪电考拉居然说字太少或者超过456字的茶议，无法记录，请确认后再试。")
+				Report(w, r, "闪电茶博士居然说字太少或者超过456字的茶议，无法记录，请确认后再试。")
 				return
 			}
 			// 修改过的茶议,重置class=0,表示草稿状态，

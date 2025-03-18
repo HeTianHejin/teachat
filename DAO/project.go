@@ -207,9 +207,9 @@ func (project *Project) Get() (err error) {
 
 // 根据project的uuid,从projects表查询获取一个茶台对象信息
 // 返回一个茶台对象，如果查询失败，则返回err不为nil
-func GetProjectByUuid(uuid string) (project Project, err error) {
-	project = Project{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE uuid = $1", uuid).
+func (project *Project) GetByUuid() (err error) {
+
+	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE uuid = $1", project.Uuid).
 		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId)
 	return
 }

@@ -1164,7 +1164,7 @@ func CnStrLen(str string) int {
 	return utf8.RuneCountInString(str)
 }
 
-// 对未经盲评的草稿进行“火星文”遮盖隐秘处理，即用星号替换50%或者指定更高比例文字
+// 对未经蒙评的草稿进行“火星文”遮盖隐秘处理，即用星号替换50%或者指定更高比例文字
 func MarsString(str string, ratio int) string {
 	len := CnStrLen(str)
 	// 获取替换字符的下标队列

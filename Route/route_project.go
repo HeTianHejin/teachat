@@ -11,6 +11,81 @@ import (
 	util "teachat/Util"
 )
 
+// POST /v1/project/approve
+// 茶围管理员选择某个茶台入围，记录它 --【Tencent ai 协助】
+func ProjectApprove(w http.ResponseWriter, r *http.Request) {
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get user from session")
+		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), "Cannot parse form")
+		Report(w, r, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
+		return
+	}
+	uuid := r.PostFormValue("uuid")
+	if uuid == "" {
+		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
+		return
+	}
+
+	//获取目标茶台
+	pr := data.Project{Uuid: uuid}
+	if err = pr.GetByUuid(); err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get project", uuid)
+		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
+		return
+	}
+	//读取目标茶围
+	ob, err := pr.Objective()
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get objective", ob.Id)
+		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+		return
+	}
+	//检查用户是否有权限处理这个请求
+	admin_team, err := data.GetTeam(ob.TeamId)
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get team", ob.TeamId)
+		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的团队，请确认后再试。")
+		return
+	}
+	is_admin, err := admin_team.IsMember(s_u.Id)
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get team", ob.TeamId)
+		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的团队，请确认后再试。")
+		return
+	}
+	if !is_admin {
+		//不是茶围管理员，无权处理
+		Report(w, r, "你好，茶博士面无表情，说你没有权限处理这个入围操作，请确认。")
+		return
+	}
+
+	//记录入围的茶台
+	new_project_approved := data.ProjectApproved{
+		ObjectiveId: ob.Id,
+		ProjectId:   pr.Id,
+		UserId:      s_u.Id,
+	}
+	if err = new_project_approved.Create(); err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot create project approved")
+		Report(w, r, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
+		return
+	}
+
+	//返回成功
+	Report(w, r, "你好，茶博士微笑，已成功记录入围茶台，请稍后刷新页面查看。")
+}
+
 // 处理新建茶台的操作处理器
 func HandleNewProject(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
@@ -420,8 +495,9 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	// 获取请求的茶台详情
-	pr, err := data.GetProjectByUuid(uuid)
-	if err != nil {
+
+	pr := data.Project{Uuid: uuid}
+	if err = pr.GetByUuid(); err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot read project")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
