@@ -104,7 +104,7 @@ func (a *Acceptance) Update() (err error) {
 	return nil
 }
 
-// Get() ���id获取一条友����评记录
+// Get() 获取一条友友邻蒙评记录
 func (a *Acceptance) Get() (err error) {
 	err = Db.QueryRow(`SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at FROM acceptances WHERE id = $1`, a.Id).Scan(&a.Id, &a.AcceptObjectId, &a.XAccept, &a.XUserId, &a.XAcceptedAt, &a.YAccept, &a.YUserId, &a.YAcceptedAt)
 	if err != nil {
