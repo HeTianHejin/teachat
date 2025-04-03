@@ -724,5 +724,58 @@ type SeeSeekEvidence struct {
 	Category       int    //分类：1、图片，2、视频，3、音频，4、其他
 	Link           string // 储存链接（地址）
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
+}
+
+func (see_seek_evidence *SeeSeekEvidence) Create() (err error) {
+	statement := "INSERT INTO see_seek_evidences (uuid, see_seek_id, description, recorder_user_id, note, category, link, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, uuid"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), see_seek_evidence.SeeSeekId, see_seek_evidence.Description, see_seek_evidence.RecorderUserId, see_seek_evidence.Note, see_seek_evidence.Category, see_seek_evidence.Link, time.Now()).Scan(&see_seek_evidence.Id, &see_seek_evidence.Uuid)
+	if err != nil {
+		return
+	}
+	return
+}
+func (see_seek_evidence *SeeSeekEvidence) Update() (err error) {
+	statement := "UPDATE see_seek_evidences SET see_seek_id=$2, description=$3, recorder_user_id=$4, note=$5, category=$6, link=$7, updated_at=$8 WHERE id=$1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(see_seek_evidence.Id, see_seek_evidence.SeeSeekId, see_seek_evidence.Description, see_seek_evidence.RecorderUserId, see_seek_evidence.Note, see_seek_evidence.Category, see_seek_evidence.Link, time.Now())
+	if err != nil {
+		return
+	}
+	return
+}
+func (see_seek_evidence *SeeSeekEvidence) Get() (err error) {
+	statement := "SELECT id, uuid, see_seek_id, description, recorder_user_id, note, category, link, created_at, updated_at FROM see_seek_evidences WHERE id=$1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(see_seek_evidence.Id).Scan(&see_seek_evidence.Id, &see_seek_evidence.Uuid, &see_seek_evidence.SeeSeekId, &see_seek_evidence.Description, &see_seek_evidence.RecorderUserId, &see_seek_evidence.Note, &see_seek_evidence.Category, &see_seek_evidence.Link, &see_seek_evidence.CreatedAt, &see_seek_evidence.UpdatedAt)
+	if err != nil {
+		return
+	}
+	return
+}
+func (see_seek_evidence *SeeSeekEvidence) GetByUuid() (err error) {
+	statement := "SELECT id, uuid, see_seek_id, description, recorder_user_id, note, category, link, created_at, updated_at FROM see_seek_evidences WHERE uuid=$1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(see_seek_evidence.Uuid).Scan(&see_seek_evidence.Id, &see_seek_evidence.Uuid, &see_seek_evidence.SeeSeekId, &see_seek_evidence.Description, &see_seek_evidence.RecorderUserId, &see_seek_evidence.Note, &see_seek_evidence.Category, &see_seek_evidence.Link, &see_seek_evidence.CreatedAt, &see_seek_evidence.UpdatedAt)
+	if err != nil {
+		return
+	}
+	return
 }

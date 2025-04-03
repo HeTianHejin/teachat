@@ -66,6 +66,7 @@ drop table if exists see_seek_master_ask_and_answers;
 drop table if exists see_seek_master_touches;
 drop table if exists see_seek_master_examination_reports;
 drop table if exists see_seek_master_examination_report_items;
+drop table if exists see_seek_evidences;
 
 
 CREATE TABLE team_member_resignations (
@@ -871,4 +872,17 @@ CREATE TABLE see_seek_master_examination_report_items (
 
     created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at           TIMESTAMP
+);
+
+CREATE TABLE see_seek_evidences (
+    id            serial primary key,
+    uuid          varchar(64) not null unique,
+    see_seek_id   integer,
+    description   varchar(255),
+    recorder_user_id integer,
+    note          varchar(255),
+    category      integer,
+    link          varchar(255),
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP
 );

@@ -562,39 +562,40 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.SessUserDefaultPlace = s_default_place
 			tD.SessUserBindPlaces = s_places
 
+			ob_team, err := data.GetTeam(tD.QuoteObjective.TeamId)
+			if err != nil {
+				util.ScaldingTea(util.LogError(err), " Cannot get team given team_id", tD.QuoteProject.TeamId)
+				Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+				return
+			}
+			tD.QuoteObjectiveAuthorTeam = ob_team
+			is_admin, err := ob_team.IsMember(s_u.Id)
+			if err != nil {
+				util.ScaldingTea(util.LogError(err), " Cannot check team membership", tD.QuoteObjectiveAuthorTeam.Id)
+				Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+				return
+			}
+			tD.IsAdmin = is_admin
+
+			pr_team, err := data.GetTeam(tD.QuoteProject.TeamId)
+			if err != nil {
+				util.ScaldingTea(util.LogError(err), " Cannot get team given team_id", tD.QuoteProject.TeamId)
+				Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+				return
+			}
+			tD.QuoteProjectAuthorTeam = pr_team
+			is_master, err := pr_team.IsMember(s_u.Id)
+			if err != nil {
+				util.ScaldingTea(util.LogError(err), " Cannot check team membership", tD.QuoteProjectAuthorTeam.Id)
+				Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+				return
+			}
+			tD.IsMaster = is_master
+
 			// 检测是否茶议作者
 			if s_u.Id == tD.ThreadBean.Thread.UserId {
 				// 是茶议作者！
 				tD.IsAuthor = true
-				ob_team, err := data.GetTeam(tD.QuoteProject.TeamId)
-				if err != nil {
-					util.ScaldingTea(util.LogError(err), " Cannot get team given team_id", tD.QuoteProject.TeamId)
-					Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
-					return
-				}
-				tD.QuoteObjectiveAuthorTeam = ob_team
-				is_admin, err := ob_team.IsMember(s_u.Id)
-				if err != nil {
-					util.ScaldingTea(util.LogError(err), " Cannot check team membership", tD.QuoteObjectiveAuthorTeam.Id)
-					Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
-					return
-				}
-				tD.IsAdmin = is_admin
-
-				pr_team, err := data.GetTeam(tD.QuoteProject.TeamId)
-				if err != nil {
-					util.ScaldingTea(util.LogError(err), " Cannot get team given team_id", tD.QuoteProject.TeamId)
-					Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
-					return
-				}
-				tD.QuoteProjectAuthorTeam = pr_team
-				is_master, err := pr_team.IsMember(s_u.Id)
-				if err != nil {
-					util.ScaldingTea(util.LogError(err), " Cannot check team membership", tD.QuoteProjectAuthorTeam.Id)
-					Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
-					return
-				}
-				tD.IsMaster = is_master
 				// 填写页面数据
 				tD.ThreadBean.Thread.PageData.IsAuthor = true
 				// 提议作者不能自评品味，王婆卖瓜也不行？！
