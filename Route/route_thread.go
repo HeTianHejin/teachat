@@ -13,9 +13,9 @@ import (
 // NewDraftThreadHandle()
 func NewDraftThreadHandle(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		NewDraftThreadGet(w, r)
-	case "POST":
+	case http.MethodPost:
 		NewDraftThreadPost(w, r)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -719,58 +719,48 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，闪电茶博士极速服务中，未能读取茶台资料，请稍后再试。")
 		return
 	}
+	ob, err := proj.Objective()
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), proj.Id, " Cannot read objective given project")
+		Report(w, r, "你好，闪电茶博士极速服务中，未能读取茶台资料，请稍后再试。")
+		return
+	}
 
 	//检查用户是否有权限处理这个请求
-	team, err := data.GetTeam(proj.TeamId)
+	admin_team, err := data.GetTeam(ob.TeamId)
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), proj.TeamId, " Cannot get team given id")
 		Report(w, r, "你好，闪电茶博士极速服务中，未能读取团队资料，请稍后再试。")
 		return
 	}
-	//读取支持team核心成员资料
-	team_members, err := team.CoreMembers()
+	//检查是否支持team成员
+	is_admin, err := admin_team.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), team.Id, " Cannot get team core members given team")
-		Report(w, r, "你好，闪电茶博士极速服务中，未能读取团队管理成员资料，请稍后再试。")
+		util.ScaldingTea(util.LogError(err), admin_team.Id, " Cannot check team membership")
+		Report(w, r, "你好，闪电茶博士极速服务中，未能读取团队资料，请稍后再试。")
 		return
 	}
 
-	ok := false
-	//检查s_u 是否是茶台作者
-	if proj.UserId == s_u.Id {
-		//是台主，可以处理请求
-		ok = true
-	} else {
-		//不是台主，检查是否是team核心成员
-		for _, tm := range team_members {
-			if tm.UserId == s_u.Id {
-				//是team核心成员，可以处理请求
-				ok = true
-				break
-			}
-		}
-	}
-	if ok {
-		//处理采纳茶议请求
-		thread_approved := data.ThreadApproved{
-			ThreadId:  thread.Id,
-			ProjectId: proj.Id,
-			UserId:    s_u.Id,
-		}
-		if err = thread_approved.Create(); err != nil {
-			util.ScaldingTea(util.LogError(err), thread.Id, " Cannot create thread approved")
-			Report(w, r, "你好，闪电茶博士极速服务中，未能处理你的请求，请稍后再试。")
-			return
-		}
-
-		//采纳（认可好主意）成功
-		Report(w, r, "你好，闪电茶博士极速服务，采纳该主意操作成功，请返回，刷新页面查看。")
-		return
-	} else {
+	if !is_admin {
 		//没有权限处理请求
 		Report(w, r, "你好，闪电茶博士极速服务，火星保安竟然说你没有权限处理该请求。")
 		return
 	}
+	//处理采纳茶议请求
+	thread_approved := data.ThreadApproved{
+		ThreadId:  thread.Id,
+		ProjectId: proj.Id,
+		UserId:    s_u.Id,
+	}
+	if err = thread_approved.Create(); err != nil {
+		util.ScaldingTea(util.LogError(err), thread.Id, " Cannot create thread approved")
+		Report(w, r, "你好，闪电茶博士极速服务中，未能处理你的请求，请稍后再试。")
+		return
+	}
+
+	//采纳（认可好主意）成功,跳转茶议详情页面
+	http.Redirect(w, r, "/v1/thread/detail?id="+thread.Uuid, http.StatusFound)
+	//Report(w, r, "你好，闪电茶博士极速服务，采纳该主意操作成功，请刷新页面查看。")
 
 }
 

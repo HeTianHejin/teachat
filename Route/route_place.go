@@ -8,8 +8,8 @@ import (
 )
 
 // GET /v1/place/collect?id=xxx
-// func CollectPlace() 把指定id的place添加到茶友地点收藏本里
-func CollectPlace(w http.ResponseWriter, r *http.Request) {
+// func PlaceCollect() 把指定id的place添加到茶友地点收藏本里
+func PlaceCollect(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -140,7 +140,14 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，闪电考拉表示您已经提交了多得数不过来，就要爆表的地方，请确定后再试。")
 		return
 	}
-	r.ParseForm()
+	err = r.ParseForm()
+	// Check form data
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), s.Email, "Cannot parse form data")
+		//http.Redirect(w, r, "/v1/goods/new", http.StatusFound)
+		Report(w, r, "一脸蒙的茶博士，表示看不懂你提交的物资资料，请确认后再试一次。")
+		return
+	}
 	category_str := r.PostFormValue("category")
 	category_int, err := strconv.Atoi(category_str)
 	if err != nil {
@@ -156,8 +163,27 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士表示无法理解地方的类型，请确认后再试。")
 		return
 	}
+
+	le := len(r.PostFormValue("name"))
+	// Check name length
+	if le < 2 || le > 50 {
+		Report(w, r, "你好，茶博士表示地方名称长度不合法，请确认后再试。")
+		return
+	}
 	name := r.PostFormValue("name")
+	le = len(r.PostFormValue("nickname"))
+	// Check nickname length
+	if le < 2 || le > 50 {
+		Report(w, r, "你好，茶博士表示地方昵称长度不合法，请确认后再试。")
+		return
+	}
 	nickname := r.PostFormValue("nickname")
+	le = len(r.PostFormValue("description"))
+	// Check description length
+	if le < 2 || le > 500 {
+		Report(w, r, "你好，茶博士表示地方描述长度不合法，请确认后再试。")
+		return
+	}
 	description := r.PostFormValue("description")
 	is_public := r.PostFormValue("is_public") == "0"
 	place := data.Place{

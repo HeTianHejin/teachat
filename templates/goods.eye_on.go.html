@@ -1,0 +1,48 @@
+{{ define "content" }}
+
+{{/* 这是全部某个用户的全部收藏物资页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li class="active">{{ .SessUser.Name }}收藏的好东西</li>
+</ol>
+
+{{ range .GoodsSlice }}
+
+<hr />
+
+<div class="media">
+    <div class="media-left">
+        <a href="#">
+            <img class="media-object" src="/v1/static/bootstrap-icons/bag.svg" alt="goods photo" width="32" height="32">
+        </a>
+    </div>
+    <div class="media-body">
+        <h4 class="media-heading">{{ .Name }}</h4>
+        <h5>别名：{{ .Nickname }}</h5>
+        <p>编号：{{ .Id }}</p>
+        <p>用途：{{ .Applicability }}</p>
+        <p>描述：{{ .Describe }}</p>
+    </div>
+</div>
+
+{{ else }}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        茶博士
+    </div>
+    <div class="panel-body">
+        你好，目前没有收藏的物资记录。
+    </div>
+</div>
+{{ end }}
+
+<hr />
+
+<p class="text-center">
+    茶博士提示：家庭或者团队才能添加新物资哦。
+    <a href="#" onclick="history.back(); return false;">
+        返回</a>
+</p>
+
+{{ end }}

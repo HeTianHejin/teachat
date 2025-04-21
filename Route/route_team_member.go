@@ -14,9 +14,9 @@ import (
 // 处理某个茶团的某个成员退出茶团声明撰写和提交
 func HandleMemberResign(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		MemberResign(w, r)
-	case "POST":
+	case http.MethodPost:
 		MemberResignReply(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -597,10 +597,10 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 // 邀请一个指定的新茶友加入封闭式茶团
 func HandleInviteMember(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		//返回邀请团队新成员，即邀请函填写页面
 		InviteMemberNew(w, r)
-	case "POST":
+	case http.MethodPost:
 		//生成邀请函方法
 		InviteMemberReply(w, r)
 	default:
@@ -612,10 +612,10 @@ func HandleInviteMember(w http.ResponseWriter, r *http.Request) {
 // 处理茶团邀请新成员函
 func HandleMemberInvitation(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		//返回邀请函详情页面
 		MemberInvitationRead(w, r)
-	case "POST":
+	case http.MethodPost:
 		//设置邀请函回复方法
 		MemberInvitationReply(w, r)
 	default:
@@ -627,9 +627,9 @@ func HandleMemberInvitation(w http.ResponseWriter, r *http.Request) {
 // 申请加入一个开放式茶团
 func HandleNewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		NewMemberApplicationForm(w, r)
-	case "POST":
+	case http.MethodPost:
 
 		NewMemberApplication(w, r)
 	default:
@@ -641,9 +641,9 @@ func HandleNewMemberApplication(w http.ResponseWriter, r *http.Request) {
 // 审查，处理茶团加盟申请书
 func HandleMemberApplication(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		MemberApplicationReview(w, r)
-	case "POST":
+	case http.MethodPost:
 		MemberApplicationReply(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)

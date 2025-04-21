@@ -667,9 +667,9 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 // HandleManageTeam() /v1/team/manage
 func HandleManageTeam(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		ManageTeamGet(w, r)
-	case "POST":
+	case http.MethodPost:
 		ManageTeamPost(w, r)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -914,9 +914,9 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 // TeamAvatar() 处理茶团图标
 func TeamAvatar(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		TeamAvatarGet(w, r)
-	case "POST":
+	case http.MethodPost:
 		TeamAvatarPost(w, r)
 	}
 }

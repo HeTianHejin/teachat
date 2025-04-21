@@ -9,7 +9,13 @@
 </ol>
 
 {{ if .IsCoreMember }}
+
+{{ if .IsCEO }}{{/*  检查是否团队管理员开始  */}}
 <a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
+{{ else if .IsFounder }}
+<a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
+{{ end }} {{/*  检查是否团队管理员结束  */}}
+
 
 {{ if .HasApplication }}
 
@@ -123,6 +129,7 @@
         <li class="active"><a href="#">在座成员</a></li>
         <li><a href="/v1/team_member/role_changed?id={{ .Team.Uuid }}">角色变动</a></li>
         <li><a href="/v1/team_member/resigned?id={{ .Team.Uuid }}">离开成员</a></li>
+        <li><a href="/v1/goods/team?id={{ .Team.Uuid }}">装备物资</a></li>
       </ol>
     </div>
 

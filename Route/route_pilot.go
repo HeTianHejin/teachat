@@ -75,12 +75,11 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 		}
 		passw := r.PostFormValue("password")
 		pilot := data.Administrator{
-			UserId:        newPilot.Id,
-			Role:          "pilot",
-			Password:      passw,
-			InvalidReason: "?",
+			UserId:   newPilot.Id,
+			Role:     "pilot",
+			Password: passw,
 		}
-		//创建飞行员，并返回错误信息
+		//创建飞行员
 		if err := pilot.Create(); err != nil {
 			util.ScaldingTea(util.LogError(err), " Cannot create pilot")
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)

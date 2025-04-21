@@ -15,7 +15,7 @@ type Community struct {
 	EditedUserIdSet []int // 编辑过的用户id集合
 	StateIndex      int   // 状态指数
 	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	UpdatedAt       *time.Time
 	Flag            string // 旗帜图片
 }
 

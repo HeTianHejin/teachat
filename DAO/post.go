@@ -12,12 +12,12 @@ type Post struct {
 	UserId    int
 	ThreadId  int
 	CreatedAt time.Time
-	EditAt    time.Time
-	Attitude  bool
+	EditAt    *time.Time
+	Attitude  bool //表态：肯定（颔首）或者否定（摇头）
 	FamilyId  int  //作者发帖时选择的家庭id
 	TeamId    int  //作者发帖时选择的成员所属茶团id（team/family）
 	IsPrivate bool //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
-	Class     int  //0:其他类型，1:已通过（友邻蒙评），2:（友邻蒙评）已拒绝
+	Class     int  //发布级别（友邻蒙评已通过）：0、普通发布，1、管理团队（家庭）发布，2、飞行机组团队发布，3、
 
 	//仅页面渲染用
 	PageData PublicPData
@@ -40,7 +40,7 @@ type DraftPost struct {
 	ThreadId  int
 	CreatedAt time.Time
 	Attitude  bool
-	Class     int  //0：原始草稿，1:已通过（友邻蒙评），2:（友邻蒙评）已拒绝
+	Class     int  //发布级别：0、普通发布，1、管理团队（家庭）发布，2、飞行机组团队发布，3、监管部门发布，00:（友邻蒙评）已拒绝
 	TeamId    int  //作者发帖时选择的成员所属茶团id（team/family）
 	IsPrivate bool //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
 	FamilyId  int  //作者发帖时选择的家庭id
@@ -53,9 +53,9 @@ var DraftPostStatus = map[int]string{
 }
 
 // IsEdited() returns true if the post has been edited
-// 检测edit_at是否晚于created_at一秒以上
+// 检测edit_at是否晚于created_at 5秒以上
 func (post *Post) IsEdited() bool {
-	return post.CreatedAt.Sub(post.EditAt) >= time.Second
+	return post.EditAt != nil && post.EditAt.After(post.CreatedAt.Add(time.Second*5))
 }
 
 // format the CreatedAt date to display nicely on the screen
@@ -83,13 +83,13 @@ func (post *Post) UpdateBody(body string) (err error) {
 
 // (post *Post) Create() 按照post的struct创建一个post
 func (post *Post) Create() (err error) {
-	statement := "INSERT INTO posts (uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
+	statement := "INSERT INTO posts (uuid, body, user_id, thread_id, created_at, attitude, family_id, team_id, is_private, class) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), post.Body, post.UserId, post.ThreadId, time.Now(), time.Now(), post.Attitude, post.FamilyId, post.TeamId, post.IsPrivate, post.Class).Scan(&post.Id, &post.Uuid)
+	err = stmt.QueryRow(Random_UUID(), post.Body, post.UserId, post.ThreadId, time.Now(), post.Attitude, post.FamilyId, post.TeamId, post.IsPrivate, post.Class).Scan(&post.Id, &post.Uuid)
 	return
 }
 
@@ -119,18 +119,6 @@ func (post *Post) GetByUuid() (err error) {
 	return
 }
 
-// update a post.score
-// func (post *Post) UpdateScore(score int) (err error) {
-// 	statement := "UPDATE posts SET score = $2 WHERE id = $1"
-// 	stmt, err := Db.Prepare(statement)
-// 	if err != nil {
-// 		return
-// 	}
-// 	defer stmt.Close()
-// 	_, err = stmt.Exec(post.Id, score)
-// 	return
-// }
-
 // get posts to a thread
 // 获取某个thread的全部posts,按照  DESC 排序
 func (t *Thread) Posts() (posts []Post, err error) {
@@ -149,55 +137,6 @@ func (t *Thread) Posts() (posts []Post, err error) {
 	rows.Close()
 	return
 }
-
-// 统计某个thread的全部posts的.score总值，返回int
-// func (t *Thread) PostsScore() (score int, err error) {
-// 	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1", t.Id).Scan(&score)
-// 	if err != nil {
-// 		return
-// 	}
-// 	return
-// }
-
-// 统计某个thread的posts.attitude=true的.score总值，返回int
-// func (t *Thread) PostsScoreSupport() (score int, err error) {
-// 	//first, check the posts table to see if there are any posts with attitude=true for this thread
-// 	//if there are none, return 0
-// 	//if there are some, sum the score for those posts
-// 	//return the sum
-// 	//check if there are any posts with attitude=true for this thread
-// 	var count int
-// 	err = Db.QueryRow("SELECT count(*) FROM posts WHERE thread_id = $1 AND attitude = true", t.Id).Scan(&count)
-// 	//if there are none, return 0
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1 AND attitude = true", t.Id).Scan(&score)
-// 	if err != nil {
-// 		return
-// 	}
-// 	return
-// }
-
-// 统计某个thread的posts.attitude=false的.score总值，返回int
-// func (t *Thread) PostsScoreOppose() (score int, err error) {
-// 	//first, check the posts table to see if there are any posts with attitude=false for this thread
-// 	//if there are none, return 0
-// 	//if there are some, sum the score for those posts
-// 	//return the sum
-// 	//check if there are any posts with attitude=false for this thread
-// 	var count int
-// 	err = Db.QueryRow("SELECT count(*) FROM posts WHERE thread_id = $1 AND attitude = false", t.Id).Scan(&count)
-// 	//if there are none, return 0
-// 	if err != nil {
-// 		return 0, err
-// 	}
-// 	err = Db.QueryRow("SELECT sum(score) FROM posts WHERE thread_id = $1 AND attitude = false", t.Id).Scan(&score)
-// 	if err != nil {
-// 		return
-// 	}
-// 	return
-// }
 
 // NumReplies() returns the number of threads where Thread.PostId = Post.Id
 func (post *Post) NumReplies() (count int) {

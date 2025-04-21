@@ -13,9 +13,9 @@ import (
 // 加水 ，修改回复post的处理器
 func HandleEditPost(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		EditPost(w, r)
-	case "POST":
+	case http.MethodPost:
 		UpdatePost(w, r)
 	case "PUT":
 		//未开放的窗口

@@ -21,7 +21,7 @@ type Objective struct {
 	CreatedAt time.Time
 	UserId    int // 茶围发起人，围主，创建人，作者
 	Class     int //属性 0:  "修改待评草围",1:  "开放式茶话会",2:  "封闭式茶话会",10: "开放式草围",20: "封闭式草围",31: "友邻婉拒开围",32: "友邻婉拒闭围",
-	EditAt    time.Time
+	EditAt    *time.Time
 	FamilyId  int    //作者发帖时选择的家庭id(family_id)
 	Cover     string // 封面
 	TeamId    int    //作者创建茶围时选择的茶团id（team_id）,即是管理团队id
@@ -33,13 +33,13 @@ type Objective struct {
 
 // objective.Create() Create a new record based on the given objective struct{},return a new objective and error
 func (objective *Objective) Create() (err error) {
-	statement := "INSERT INTO objectives (uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id,uuid"
+	statement := "INSERT INTO objectives (uuid, title, body, created_at, user_id, class, family_id, cover, team_id, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id,uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), objective.Title, objective.Body, time.Now(), objective.UserId, objective.Class, time.Now(), objective.FamilyId, objective.Cover, objective.TeamId, objective.IsPrivate).Scan(&objective.Id, &objective.Uuid)
+	err = stmt.QueryRow(Random_UUID(), objective.Title, objective.Body, time.Now(), objective.UserId, objective.Class, objective.FamilyId, objective.Cover, objective.TeamId, objective.IsPrivate).Scan(&objective.Id, &objective.Uuid)
 	return
 }
 
@@ -182,9 +182,9 @@ type ObjectiveInvitedTeam struct {
 
 // 记录某个用户打开茶话会广场页面的次数，以决定展示那些19个未展示过的茶话会用户
 
-// IsEdited()通过比较Objective.CreatedAt和EditAt时间是否相差一秒钟以上，来判断是否编辑过内容为true，返回 bool
+// IsEdited()edit_at != nil &&通过比较Objective.CreatedAt和EditAt时间是否相差5秒钟以上，来判断是否编辑过内容为true，返回 bool
 func (objective *Objective) IsEdited() bool {
-	return objective.CreatedAt.Sub(objective.EditAt) >= time.Second
+	return objective.EditAt != nil && objective.EditAt.After(objective.CreatedAt.Add(5*time.Second))
 }
 
 // 创建封闭式茶话会的许可茶团号
@@ -351,8 +351,8 @@ func (objective *Objective) InvitedTeamIds() (team_id_slice []int, err error) {
 
 // UpdateClass() 通过ObjectiveId更新class属性
 func (ob *Objective) UpdateClass() (err error) {
-	statement := "UPDATE objectives SET class = $1 WHERE id = $2"
-	_, err = Db.Exec(statement, ob.Class, ob.Id)
+	statement := "UPDATE objectives SET class = $1, edit_at = $3 WHERE id = $2"
+	_, err = Db.Exec(statement, ob.Class, ob.Id, time.Now())
 	return
 }
 

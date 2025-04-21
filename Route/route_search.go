@@ -12,9 +12,9 @@ import (
 // HandleSearch() 查询窗口 /v1/search
 func HandleSearch(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		SearchGet(w, r)
-	case "POST":
+	case http.MethodPost:
 		SearchPost(w, r)
 	default:
 		//其他方法，不允许

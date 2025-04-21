@@ -108,9 +108,9 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 // 处理用户头像相片
 func UserAvatar(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		UploadAvatar(w, r)
-	case "POST":
+	case http.MethodPost:
 		SaveAvatar(w, r)
 	}
 }

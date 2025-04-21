@@ -111,6 +111,8 @@ func main() {
 	mux.HandleFunc("/v1/thread/approve", route.ThreadApprove)
 	//mux.HandleFunc("/v1/thread/plus", route.PlusThread)
 
+	// defined in route_see-seek.go
+
 	//定义在 route_post.go
 	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
 	mux.HandleFunc("/v1/post/edit", route.HandleEditPost)
@@ -135,13 +137,19 @@ func main() {
 	mux.HandleFunc("/v1/place/create", route.CreatePlace)
 	mux.HandleFunc("/v1/place/detail", route.PlaceDetail)
 	mux.HandleFunc("/v1/place/my", route.MyPlace)
-	mux.HandleFunc("/v1/place/collect", route.CollectPlace)
+	mux.HandleFunc("/v1/place/collect", route.PlaceCollect)
 
 	// defined in route_goods.go
-	mux.HandleFunc("/v1/goods/new", route.HandleNewGoods)
-	//mux.HandleFunc("/v1/goods/hold", route.HoldGoods)
-	//mux.HandleFunc("/v1/goods/detail", goodsDetail)
-	//mux.HandleFunc("/v1/goods/edit", route.EditGoods)
+	mux.HandleFunc("/v1/goods/family_new", route.HandleGoodsFamilyNew)
+	//mux.HandleFunc("/v1/goods/family", route.GoodsFamily)
+	mux.HandleFunc("/v1/goods/family_detail", route.GoodsTeamDetail)
+	mux.HandleFunc("/v1/goods/team_new", route.HandleGoodsTeamNew)
+	mux.HandleFunc("/v1/goods/team", route.GoodsTeam)
+	mux.HandleFunc("/v1/goods/team_detail", route.GoodsTeamDetail)
+	mux.HandleFunc("/v1/goods/team_update", route.HandleGoodsTeamUpdate)
+
+	mux.HandleFunc("/v1/goods/collect", route.GoodsCollect)
+	mux.HandleFunc("/v1/goods/eye_on", route.GoodsEyeOn)
 
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
@@ -158,7 +166,7 @@ func main() {
 		Handler:        mux,
 		ReadTimeout:    time.Duration(util.Config.ReadTimeout * int64(time.Second)),
 		WriteTimeout:   time.Duration(util.Config.WriteTimeout * int64(time.Second)),
-		MaxHeaderBytes: 1 << 20,
+		MaxHeaderBytes: 1 << 20, //是位运算，表示将数字1左移20位，即 2^20 = 1,048,576 字节 = 1MB.
 	}
 	server.ListenAndServe()
 

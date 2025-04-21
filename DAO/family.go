@@ -22,7 +22,7 @@ type Family struct {
 	WifeFromFamilyId    int    // 妻子来自的家庭id，in-laws,如果是0表示未登记
 	Status              int    // 状态指数，0、保密，1、单身，2、同居，3、已婚，4、分居，5、离婚，其他、未知
 	CreatedAt           time.Time
-	UpdatedAt           time.Time
+	UpdatedAt           *time.Time
 	Logo                string // 家庭标志图片名
 	IsOpen              bool   // 是否公开，公开的家庭可以被搜索到，不公开的家庭不可以被搜索到
 }
@@ -62,7 +62,7 @@ type FamilyMember struct {
 	Age              int    // 年龄,如果是0表示未知
 	OrderOfSeniority int    // 家中排行老几？孩子的年长先后顺序，1、2、3 ...,如果是0表示未知
 	CreatedAt        time.Time
-	UpdatedAt        time.Time
+	UpdatedAt        *time.Time
 }
 
 // FamilyMember.GetRole()
@@ -99,7 +99,7 @@ type FamilyMemberSignIn struct {
 	PlaceId      int    //“家庭茶团成员声明”所指向的地点id
 	Status       int    //状态：0、未读，1、已读， 2、已确认， 3、已否认，
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 	IsAdopted    bool //是否领养
 	AuthorUserId int  //声明书作者茶友id
 }
@@ -117,20 +117,20 @@ type FamilyMemberSignOut struct {
 	PlaceId      int    //“家庭茶团成员声明”所指向的地点id
 	Status       int    //状态：0、未读，1、已读， 2、已确认， 3、已否认，
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 	IsAdopted    bool //是否领养
 	AuthorUserId int  //声明书作者茶友id
 }
 
 // FamilyMemberSignOut.Create() 创建“离开&家庭茶团成员声明”
 func (fms *FamilyMemberSignOut) Create() (err error) {
-	statement := "INSERT INTO family_member_sign_outs (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id"
+	statement := "INSERT INTO family_member_sign_outs (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, is_adopted, author_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), time.Now(), fms.IsAdopted, fms.AuthorUserId).Scan(&fms.Id)
+	err = stmt.QueryRow(Random_UUID(), fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), fms.IsAdopted, fms.AuthorUserId).Scan(&fms.Id, &fms.Uuid)
 	if err != nil {
 		return
 	}
@@ -189,13 +189,13 @@ type FamilyMemberSignInReply struct {
 
 // FamilyMemberSignInReply.Create() 创建“家庭茶团成员声明回复”
 func (fmsr *FamilyMemberSignInReply) Create() (err error) {
-	statement := "INSERT INTO family_member_sign_in_replies (uuid, sign_in_id, user_id, is_confirm, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id"
+	statement := "INSERT INTO family_member_sign_in_replies (uuid, sign_in_id, user_id, is_confirm, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), fmsr.SignInId, fmsr.UserId, fmsr.IsConfirm, time.Now()).Scan(&fmsr.Id)
+	err = stmt.QueryRow(Random_UUID(), fmsr.SignInId, fmsr.UserId, fmsr.IsConfirm, time.Now()).Scan(&fmsr.Id, &fmsr.Uuid)
 	if err != nil {
 		return
 	}
@@ -259,13 +259,13 @@ func (fms *FamilyMemberSignIn) GetRole() string {
 
 // FamilyMemberSignIn.Create() 创建“家庭茶团成员声明”
 func (fms *FamilyMemberSignIn) Create() (err error) {
-	statement := "INSERT INTO family_member_sign_ins (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id"
+	statement := "INSERT INTO family_member_sign_ins (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, is_adopted, author_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), time.Now(), fms.IsAdopted, fms.AuthorUserId).Scan(&fms.Id)
+	err = stmt.QueryRow(Random_UUID(), fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), fms.IsAdopted, fms.AuthorUserId).Scan(&fms.Id, &fms.Uuid)
 	if err != nil {
 		return
 	}
@@ -535,13 +535,13 @@ func (f *Family) CreatedAtDate() string {
 
 // Family.Create() 创建家庭
 func (f *Family) Create() (err error) {
-	statement := "INSERT INTO families (uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id"
+	statement := "INSERT INTO families (uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, logo, is_open) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), f.AuthorId, f.Name, f.Introduction, f.IsMarried, f.HasChild, f.HusbandFromFamilyId, f.WifeFromFamilyId, f.Status, time.Now(), time.Now(), f.Logo, f.IsOpen).Scan(&f.Id)
+	err = stmt.QueryRow(Random_UUID(), f.AuthorId, f.Name, f.Introduction, f.IsMarried, f.HasChild, f.HusbandFromFamilyId, f.WifeFromFamilyId, f.Status, time.Now(), f.Logo, f.IsOpen).Scan(&f.Id, &f.Uuid)
 	if err != nil {
 		return
 	}
@@ -575,6 +575,13 @@ func (f *Family) Get() (err error) {
 	if err != nil {
 		return
 	}
+	return
+}
+
+// GetFamily(id int)
+func GetFamily(id int) (family Family, err error) {
+	err = Db.QueryRow("SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open FROM families WHERE id = $1", id).
+		Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
 	return
 }
 
@@ -690,13 +697,13 @@ func IsFamilyExist(user_id, partner_user_id int) (exist bool, err error) {
 
 // FamilyMember.Create() 创建家庭成员
 func (fm *FamilyMember) Create() (err error) {
-	statement := "INSERT INTO family_members (uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
+	statement := "INSERT INTO family_members (uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), fm.FamilyId, fm.UserId, fm.Role, fm.IsAdult, fm.NickName, fm.IsAdopted, fm.Age, fm.OrderOfSeniority, time.Now(), time.Now()).Scan(&fm.Id)
+	err = stmt.QueryRow(Random_UUID(), fm.FamilyId, fm.UserId, fm.Role, fm.IsAdult, fm.NickName, fm.IsAdopted, fm.Age, fm.OrderOfSeniority, time.Now()).Scan(&fm.Id, &fm.Uuid)
 	if err != nil {
 		return
 	}
@@ -750,7 +757,7 @@ func (fm *FamilyMember) GetByRoleFamilyId() (err error) {
 
 // FamilyMember.ParentMember() 获取家庭成员的父母成员,return parentMembers []FamilyMember,err error
 func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN (1, 2, 6, 7)", f.Id)
+	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN (1, 2)", f.Id)
 	if err != nil {
 		return
 	}

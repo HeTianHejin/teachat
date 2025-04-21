@@ -14,12 +14,12 @@ import (
 // 通用友邻蒙评页面，是否接受新茶语录
 func Polite(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		PoliteGet(w, r)
-	case "POST":
+	case http.MethodPost:
 		PolitePost(w, r)
 	default:
-		w.WriteHeader(http.StatusNotFound)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -227,7 +227,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候 弄丢草稿的人不一定是诗人？")
 				return
 			}
-			if err = dPost.UpdateClass(2); err != nil {
+			if err = dPost.UpdateClass(00); err != nil {
 				util.ScaldingTea(util.LogError(err), "Cannot update draft-post class")
 				Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
 				return
@@ -355,11 +355,11 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，闪电考拉失魂鱼，竟然说有时候找资料的人不一定是外星人？")
 				return
 			}
-			if err = dPost.UpdateClass(1); err != nil {
-				util.ScaldingTea(util.LogError(err), "Cannot update draft-post class")
-				Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
-				return
-			}
+			// if err = dPost.UpdateClass(1); err != nil {
+			// 	util.ScaldingTea(util.LogError(err), "Cannot update draft-post class")
+			// 	Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
+			// 	return
+			// }
 			// 转为正式品味稿
 			new_post := data.Post{
 				Body:      dPost.Body,
@@ -369,7 +369,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				ThreadId:  dPost.ThreadId,
 				IsPrivate: dPost.IsPrivate,
 				Attitude:  dPost.Attitude,
-				Class:     1,
+				Class:     dPost.Class,
 			}
 			if err = new_post.Create(); err != nil {
 				util.ScaldingTea(util.LogError(err), "Cannot create post")

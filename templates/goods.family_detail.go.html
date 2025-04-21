@@ -1,0 +1,84 @@
+{{ define "content" }}
+
+{{/* 这是家庭物资详情页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/goods/my">物资清单</a></li>
+    <li class="active">宝贝详情</li>
+  </ol>
+
+  <div class=" media">
+    <div class="media-left">
+      <a href="#">
+        <img class="media-object" src="/v1/static/bootstrap-icons/bag.svg" alt="goods photo" width="32" height="32">
+      </a>
+    </div>
+    <div class="media-body">
+      <h4 class="media-heading"><a href="/v1/goods/detail?id={{ .Uuid }}">
+          {{ .Name }}
+        </a></h4>
+
+      <table class="table table-bordered">
+        <colgroup>
+          <col class="col-xs-1">
+          <col class="col-xs-7">
+        </colgroup>
+       
+        <tbody>
+          <tr>
+            <th scope="row">
+               别名 
+            </th>
+            <td>{{ .Nickname }}</td>
+          </tr>
+          <tr>
+            <th scope="row">
+               用途 
+            </th>
+            <td>{{ .Applicability }}</td>
+          </tr>
+          <tr>
+            <th scope="row">
+               品牌 
+            </th>
+            <td>{{ .Brandname }}</td>
+          </tr>
+          <tr>
+            <th scope="row">
+               制造商 
+            </th>
+            <td>{{ .Manufacturer }}</td>
+          </tr>
+          <tr>
+            <th scope="row">
+               款式 
+            </th>
+            <td>{{ .Color }}</td>
+          </tr>
+          <tr>
+            <th scope="row">
+               型号 
+            </th>
+            <td>{{ .Model }}</td>
+          </tr>
+          <tr>
+            <th scope="row">
+               描述 
+            </th>
+            <td>{{ .Describe }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <p>
+    <a href="#">
+      <i class="bi-clipboard-plus" style="font-size: 2rem; color: cornflowerblue;"></i>
+       收藏这货资料
+    </a>
+  </p>
+
+{{ end }}

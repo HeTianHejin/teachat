@@ -120,10 +120,10 @@
         
         {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳2-1 */}}
 
-        <form class="form" role="form" action="/v1/thread/approve" method="post">
-       <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
-       <button type="submit" class="btn btn-default btn-sm">启动看看</button>
-     </form>
+     <p>
+       <a class="btn btn-default" href="/v1/see-seek/new?id={{ .ThreadBean.Thread.Uuid }}" role="button" style="margin-top: 1rem;">启动-茶看</a>
+     </p>
+
      {{ end }}{{/* 检查是否被采纳2-2 */}}
 
         <hr />
@@ -454,10 +454,10 @@
 
         {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳2-1 */}}
         {{ if .IsMaster }}{{/* 检查是否茶台管理员1-1 */}}
-        <form class="form" role="form" action="/v1/thread/approve" method="post">
-       <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
-       <button type="submit" class="btn btn-default btn-sm">启动茶看</button>
-     </form>
+      
+        <p>
+          <a class="btn btn-default" href="/v1/see-seek/new?id={{ .ThreadBean.Thread.Uuid }}" role="button" style="margin-top: 1rem;">启动-茶看</a>
+        </p>
        {{ end }}{{/* 检查是否茶台管理员1-2 */}}
        
        

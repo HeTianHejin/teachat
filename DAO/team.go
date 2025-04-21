@@ -38,7 +38,7 @@ type Team struct {
 	Name              string
 	Mission           string
 	FounderId         int //团队发起人茶友id
-	CreatedAt         *time.Time
+	CreatedAt         time.Time
 	Class             int    //0:"系统$事业茶团", 1: "开放式$事业茶团",2: "封闭式$事业茶团",10: "开放式草团",20: "封闭式草团"
 	Abbreviation      string // 队名简称
 	Logo              string // $事业茶团标志
@@ -56,7 +56,7 @@ type TeamMember struct {
 	Role      string // 角色，职务,分别为：CEO，CTO，CMO，CFO，taster
 	CreatedAt time.Time
 	Class     int // 状态指数：0、冰封，1、正常，2、暂停品茶，3、退出$事业茶团
-	UpdatedAt time.Time
+	UpdatedAt *time.Time
 }
 
 // TeamMember.GetClass()
@@ -88,7 +88,7 @@ type TeamMemberResignation struct {
 	Content           string //内容
 	Status            int    //声明状态： 0、未读，1、已读，2、已核对，3、已批准，4、挽留中(未批准)，5、强行退出
 	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	UpdatedAt         *time.Time
 }
 
 // TeamMemberResignation.GetStatus()
@@ -112,13 +112,13 @@ func (resignation *TeamMemberResignation) GetStatus() string {
 
 // TeamMemberResignation.Create()
 func (resignation *TeamMemberResignation) Create() (err error) {
-	statement := "INSERT INTO team_member_resignations (uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id"
+	statement := "INSERT INTO team_member_resignations (uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), resignation.TeamId, resignation.CeoUserId, resignation.CoreMemberUserId, resignation.MemberId, resignation.MemberUserId, resignation.MemberCurrentRole, resignation.Title, resignation.Content, resignation.Status, time.Now(), time.Now()).Scan(&resignation.Id)
+	err = stmt.QueryRow(Random_UUID(), resignation.TeamId, resignation.CeoUserId, resignation.CoreMemberUserId, resignation.MemberId, resignation.MemberUserId, resignation.MemberCurrentRole, resignation.Title, resignation.Content, resignation.Status, time.Now()).Scan(&resignation.Id, &resignation.Uuid)
 	return
 }
 
@@ -218,7 +218,7 @@ type TeamMemberRoleNotice struct {
 	Content           string //内容
 	Status            int    //声明状态 0:未读,1:已读,2:已处理
 	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	UpdatedAt         *time.Time
 }
 
 // TeamMemberRoleNotice.CreatedAtDate()
@@ -228,13 +228,13 @@ func (notice *TeamMemberRoleNotice) CreatedAtDate() string {
 
 // TeamMemberRoleNotice.Create()
 func (notice *TeamMemberRoleNotice) Create() (err error) {
-	statement := "INSERT INTO team_member_role_notices (uuid, team_id, ceo_id, member_id, member_current_role, new_role, title, content, status, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
+	statement := "INSERT INTO team_member_role_notices (uuid, team_id, ceo_id, member_id, member_current_role, new_role, title, content, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), notice.TeamId, notice.CeoId, notice.MemberId, notice.MemberCurrentRole, notice.NewRole, notice.Title, notice.Content, notice.Status, time.Now(), time.Now()).Scan(&notice.Id)
+	err = stmt.QueryRow(Random_UUID(), notice.TeamId, notice.CeoId, notice.MemberId, notice.MemberCurrentRole, notice.NewRole, notice.Title, notice.Content, notice.Status, time.Now()).Scan(&notice.Id, &notice.Uuid)
 	return
 }
 
@@ -534,13 +534,13 @@ func (team *Team) CreatedAtDate() string {
 
 // Team.Create()创建$事业茶团
 func (team *Team) Create() (err error) {
-	statement := "INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id"
+	statement := "INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, abbreviation, logo, superior_team_id, subordinate_team_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Abbreviation, team.Logo, time.Now(), team.SuperiorTeamId, team.SubordinateTeamId).Scan(&team.Id)
+	err = stmt.QueryRow(Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Abbreviation, team.Logo, team.SuperiorTeamId, team.SubordinateTeamId).Scan(&team.Id, &team.Uuid)
 	return
 }
 
@@ -717,14 +717,14 @@ func (team *Team) GetTeamMemberByRole(role string) (team_member TeamMember, err 
 // 根据team_member struct 生成Create()方法
 // AWS CodeWhisperer assist in writing
 func (tM *TeamMember) Create() (err error) {
-	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, class, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id,uuid,created_at`
+	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, class)
+	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id,uuid`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), tM.TeamId, tM.UserId, tM.Role, time.Now(), tM.Class, time.Now()).Scan(&tM.Id, &tM.Uuid, &tM.CreatedAt)
+	err = stmt.QueryRow(Random_UUID(), tM.TeamId, tM.UserId, tM.Role, time.Now(), tM.Class).Scan(&tM.Id, &tM.Uuid)
 
 	return
 }

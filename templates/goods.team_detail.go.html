@@ -1,0 +1,255 @@
+{{ define "content" }}
+{{/* 这是茶团物资详情页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li><a href="/v1/goods/team?id={{ .Team.Uuid }}">装备物资</a></li>
+    <li class="active">{{ .Goods.Name }} 详情</li>
+</ol>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <div class="media">
+            <div class="media-left">
+                <img class="media-object" src="/v1/static/bootstrap-icons/bag.svg" alt="goods photo" width="64" height="64">
+            </div>
+            <div class="media-body">
+                <h2>{{ .Goods.Name }}</h2>
+                <h4 class="text-muted">{{ .Goods.Nickname }}</h4>
+                {{ if eq .Goods.Features 0 }}
+                    <span class="label label-success">可交易</span>
+                {{ else }}
+                    <span class="label label-danger">不可交易</span>
+                {{ end }}
+                {{ if eq .Goods.Category 0 }}
+                    <span class="label label-info">虚拟物资</span>
+                {{ else }}
+                    <span class="label label-primary">实体物资</span>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+    
+    <div class="panel-body">
+        <div class="row">
+            <!-- 基本信息 -->
+            <div class="col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">基本信息</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-condensed">
+                            <tbody>
+                                <tr>
+                                    <th width="30%">物资ID</th>
+                                    <td>{{ .Goods.Id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>UUID</th>
+                                    <td><code>{{ .Goods.Uuid }}</code></td>
+                                </tr>
+                                <tr>
+                                    <th>状态</th>
+                                    <td>
+                                        {{ if eq .Goods.State "new" }}
+                                            <span class="label label-success">全新</span>
+                                        {{ else if eq .Goods.State "like_new" }}
+                                            <span class="label label-warning">九九新</span>
+                                        {{ else if eq .Goods.State "good" }}
+                                            <span class="label label-warning">良好</span>
+                                        {{ else if eq .Goods.State "used" }}
+                                            <span class="label label-warning">使用痕迹</span>
+                                        {{ else if eq .Goods.State "poor" }}
+                                            <span class="label label-warning">残旧</span>
+                                        {{ else if eq .Goods.State "lost" }}
+                                            <span class="label label-danger">报失</span>
+                                        {{ else if eq .Goods.State "scrapped" }}
+                                            <span class="label label-danger">已报废</span>
+                                        {{ else }}
+                                            {{ .Goods.State }}
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>设计者</th>
+                                    <td>{{ .Goods.Designer }}</td>
+                                </tr>
+                                <tr>
+                                    <th>价格</th>
+                                    <td>
+                                       
+                                            ¥{{ .Goods.Price }}
+                                       
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>登记时间</th>
+                                    <td>{{ .Goods.CreatedAt.Format "2006-01-02 15:04" }}</td>
+                                </tr>
+                                <tr>
+                                    <th>更新时间</th>
+                                    <td>
+                                        {{ if .Goods.UpdatedAt }}
+                                            {{ .Goods.UpdatedAt.Format "2006-01-02 15:04" }}
+                                        {{ else }}
+                                            <span class="text-muted">未更新</span>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 品牌与规格 -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">品牌与规格</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-condensed">
+                            <tbody>
+                                <tr>
+                                    <th width="30%">品牌</th>
+                                    <td>{{ .Goods.BrandName }}</td>
+                                </tr>
+                                <tr>
+                                    <th>型号</th>
+                                    <td>{{ .Goods.Model }}</td>
+                                </tr>
+                                <tr>
+                                    <th>规格</th>
+                                    <td>{{ .Goods.Specification }}</td>
+                                </tr>
+                                <tr>
+                                    <th>序列号</th>
+                                    <td>{{ .Goods.SerialNumber }}</td>
+                                </tr>
+                                <tr>
+                                    <th>颜色/款式</th>
+                                    <td>{{ .Goods.Color }}</td>
+                                </tr>
+                                <tr>
+                                    <th>尺寸（长X宽X高）</th>
+                                    <td>{{ .Goods.Dimensions }}</td>
+                                </tr>
+                                <tr>
+                                    <th>重量</th>
+                                    <td>
+                                       
+                                            {{ .Goods.Weight }} kg
+                                       
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 生产与用途 -->
+            <div class="col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">生产信息</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table class="table table-condensed">
+                            <tbody>
+                                <tr>
+                                    <th width="30%">生产商</th>
+                                    <td>{{ .Goods.Manufacturer }}</td>
+                                </tr>
+                                <tr>
+                                    <th>原产地</th>
+                                    <td>{{ .Goods.Origin }}</td>
+                                </tr>
+                                <tr>
+                                    <th>材质</th>
+                                    <td>{{ .Goods.Material }}</td>
+                                </tr>
+                                <tr>
+                                    <th>动力类型</th>
+                                    <td>{{ .Goods.EngineType }}</td>
+                                </tr>
+                                <tr>
+                                    <th>联网方式</th>
+                                    <td>
+                                      {{ if eq .Goods.NetworkConnectionType "wifi" }}
+                                            <span class="label label-primary">Wi-Fi</span>
+                                        {{ else if eq .Goods.NetworkConnectionType "bluetooth" }}
+                                            <span class="label label-primary">蓝牙</span>
+                                        {{ else if eq .Goods.NetworkConnectionType "cellular" }}
+                                            <span class="label label-primary">蜂窝网络</span>
+                                        {{ else if eq .Goods.NetworkConnectionType "cable" }}
+                                            <span class="label label-primary">有线电缆</span>
+                                        {{ else if eq .Goods.NetworkConnectionType "other" }}
+                                            <span class="label label-primary">其他网络</span>
+                                        {{ else if eq .Goods.NetworkConnectionType "none" }}
+                                            <span class="label label-default">无需联网</span>
+                                        
+                                        {{ else }}
+                                            {{ .Goods.NetworkConnectionType }}
+                                        {{ end }}
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>厂商链接</th>
+                                    <td>
+                                        {{ if .Goods.ManufacturerURL }}
+                                            <a href="{{ .Goods.ManufacturerURL }}" target="_blank">访问官网</a>
+                                        {{ else }}
+                                            <span class="text-muted">未提供</span>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>购买链接</th>
+                                    <td>
+                                        {{ if .Goods.PurchaseURL }}
+                                            <a href="{{ .Goods.PurchaseURL }}" target="_blank">前往购买</a>
+                                        {{ else }}
+                                            <span class="text-muted">未提供</span>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- 用途描述 -->
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">用途描述</h3>
+                    </div>
+                    <div class="panel-body">
+                        <h4>主要用途</h4>
+                        <p>{{ .Goods.Applicability }}</p>
+                        
+                        <h4>详细描述</h4>
+                        <p>{{ .Goods.Describe }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 操作按钮 -->
+        <div class="text-center" style="margin-top: 20px;">
+            <a href="/v1/goods/collect?id={{ .Goods.Uuid }}" class="btn btn-primary">
+                <i class="bi-clipboard-plus"></i>收藏宝贝
+            </a>
+            <a href="/v1/goods/team_edit?id={{ .Goods.Id }}&team_id={{ .Team.Id }}" class="btn btn-default">
+                <i class="bi-pencil"></i> 编辑信息
+            </a>
+           
+        </div>
+    </div>
+</div>
+
+
+
+{{ end }}

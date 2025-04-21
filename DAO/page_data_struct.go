@@ -413,16 +413,45 @@ type TeamMemberResign struct {
 }
 
 // 好东西，物资清单
-type GoodsSlice struct {
-	SessUser   User
+type GoodsTeamSlice struct {
+	SessUser User
+	IsAdmin  bool
+
+	Team Team
+
 	GoodsSlice []Goods
 }
 
-// 物资详情
-type GoodsDetail struct {
+// 茶团物资详情
+type GoodsTeamDetail struct {
 	SessUser User
-	Goods    Goods
-	IsAuthor bool
+	IsAdmin  bool
+
+	Team Team
+
+	Goods Goods
+}
+
+type GoodsFamilySlice struct {
+	SessUser User
+	IsAdmin  bool
+
+	Family Family
+
+	GoodsSlice []Goods
+}
+type GoodsFamilyDetail struct {
+	SessUser User
+	IsAdmin  bool
+
+	Family Family
+
+	Goods Goods
+}
+type GoodsUserSlice struct {
+	SessUser User
+
+	GoodsSlice []Goods
 }
 
 // 我的地盘我做主

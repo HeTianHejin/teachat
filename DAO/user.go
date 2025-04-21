@@ -18,7 +18,7 @@ type User struct {
 	Role      string
 	Gender    int // 0: "女",1: "男",
 	Avatar    string
-	UpdatedAt time.Time
+	UpdatedAt *time.Time
 	//Footprint 浏览页面足迹，不保存到数据库，
 	//用于临时记录点击‘登录’按钮时页面，以便登机成功后返回同一页面，提升用户体验
 	Footprint string
@@ -69,7 +69,7 @@ type Friend struct {
 	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
 	IsRival           bool   //是否竞争对手
 	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	UpdatedAt         *time.Time
 }
 
 // fans 粉丝
@@ -83,7 +83,7 @@ type Fan struct {
 	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
 	IsBlackSlice      bool   //是否黑名单
 	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	UpdatedAt         *time.Time
 }
 
 // follow 关注的
@@ -97,7 +97,7 @@ type Follow struct {
 	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
 	IsDisdain         bool   //是否鄙视，蔑视
 	CreatedAt         time.Time
-	UpdatedAt         time.Time
+	UpdatedAt         *time.Time
 }
 
 // 会话
@@ -119,7 +119,7 @@ type UserStar struct {
 	Type      int
 	ObjectId  int
 	CreatedAt time.Time
-	UpdatedAt time.Time
+	UpdatedAt *time.Time
 }
 
 // 根据UserStar.Type int反射object对象名称string,
@@ -274,7 +274,7 @@ func (user *User) Create() (err error) {
 	// you're always using a sequence.You need to use the RETURNING keyword in your insert to get this
 	// information from postgres.
 
-	statement := "INSERT INTO users (uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid, created_at"
+	statement := "INSERT INTO users (uuid, name, email, password, created_at, biography, role, gender, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -282,46 +282,46 @@ func (user *User) Create() (err error) {
 	defer stmt.Close()
 
 	// use QueryRow to return a row and scan the returned id into the User struct
-	err = stmt.QueryRow(Random_UUID(), user.Name, user.Email, Encrypt(user.Password), time.Now(), user.Biography, user.Role, user.Gender, user.Avatar, time.Now()).Scan(&user.Id, &user.Uuid, &user.CreatedAt)
+	err = stmt.QueryRow(Random_UUID(), user.Name, user.Email, Encrypt(user.Password), time.Now(), user.Biography, user.Role, user.Gender, user.Avatar).Scan(&user.Id, &user.Uuid)
 	return
 }
 
 // UpdateUserNameAndBiography user information in the database
 func UpdateUserNameAndBiography(user_id int, user_name string, user_biography string) (err error) {
-	statement := "UPDATE users SET name = $2, biography = $3 where id = $1"
+	statement := "UPDATE users SET name = $2, biography = $3, updated_at = $4 where id = $1"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(user_id, user_name, user_biography)
+	_, err = stmt.Exec(user_id, user_name, user_biography, time.Now())
 	return
 }
 
 // 修改数据库中用户身份（角色）
 func (user *User) UpdateRole() (err error) {
-	statement := "UPDATE users SET role = $2 where id = $1"
+	statement := "UPDATE users SET role = $2, updated_at = $3 where id = $1"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(user.Id, user.Role)
+	_, err = stmt.Exec(user.Id, user.Role, time.Now())
 	return
 }
 
 // Update user avatar in the database
 func (user *User) UpdateAvatar() (err error) {
-	statement := "UPDATE users SET avatar = $2 where id = $1"
+	statement := "UPDATE users SET avatar = $2, updated_at = $3 where id = $1"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(user.Id, user.Avatar)
+	_, err = stmt.Exec(user.Id, user.Avatar, time.Now())
 	return
 }
 

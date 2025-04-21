@@ -19,7 +19,7 @@ type Project struct {
 	UserId      int //开台人，台主，作者
 	CreatedAt   time.Time
 	Class       int // 属性 0:  "追加待评草台",1:  "开放式茶台",2:  "封闭式茶台",10: "开放式草台",20: "封闭式草台",31: "已婉拒开台",32: "已婉拒封台",
-	EditAt      time.Time
+	EditAt      *time.Time
 	Cover       string //封面图片文件名
 	TeamId      int    //作者发帖时选择的成员所属茶团id（team）
 	IsPrivate   bool   //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
@@ -140,9 +140,9 @@ var PrProperty = map[int]string{
 	32: "已婉拒封台",
 }
 
-// IsEdited() 通过比较Objective.CreatedAt和EditAt时间是否相差一秒钟以上，来判断是否编辑过内容，是为true，返回 bool
+// IsEdited()
 func (project *Project) IsEdited() bool {
-	return project.CreatedAt.Sub(project.EditAt) >= time.Second
+	return project.EditAt != nil && project.EditAt.After(project.CreatedAt.Add(time.Second*5))
 }
 
 // InvitedTeamIds() 获取一个封闭式茶台的全部受邀请茶团id
@@ -187,13 +187,13 @@ func (project *Project) EditAtDate() string {
 
 // Project.Create()  编写postgreSQL语句，插入新纪录，return （err error）
 func (project *Project) Create() (err error) {
-	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
+	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, cover, team_id, is_private, family_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), project.Title, project.Body, project.ObjectiveId, project.UserId, time.Now(), project.Class, time.Now(), project.Cover, project.TeamId, project.IsPrivate, project.FamilyId).
+	err = stmt.QueryRow(Random_UUID(), project.Title, project.Body, project.ObjectiveId, project.UserId, time.Now(), project.Class, project.Cover, project.TeamId, project.IsPrivate, project.FamilyId).
 		Scan(&project.Id, &project.Uuid)
 	return
 }

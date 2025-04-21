@@ -36,7 +36,7 @@ drop table if exists communities;
 drop table if exists administrators;
 drop table if exists monologues;
 drop table if exists goods;
-drop table if exists user_goods;
+drop table if exists goods_teams;
 drop table if exists handicrafts;
 drop table if exists inaugurations;
 drop table if exists tools;
@@ -52,7 +52,6 @@ drop table if exists user_address;
 drop table if exists user_default_address;
 drop table if exists project_place;
 drop table if exists thread_approved;
-drop table if exists thread_goods;
 drop table if exists member_applications;
 drop table if exists member_application_replies;
 drop table if exists team_member_resignations;
@@ -152,7 +151,6 @@ CREATE TABLE location_history (
     addr                 VARCHAR(255)  
 );
 
-
 CREATE TABLE places (
     id                   SERIAL PRIMARY KEY,
     uuid                 VARCHAR(36) NOT NULL,
@@ -170,6 +168,7 @@ CREATE TABLE places (
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE addresses (
     id                   SERIAL PRIMARY KEY,
     uuid                 VARCHAR(36) NOT NULL,
@@ -194,18 +193,21 @@ CREATE TABLE user_place (
     place_id             INTEGER REFERENCES places(id),
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE user_default_place (
     id                   SERIAL PRIMARY KEY,
     user_id              INTEGER REFERENCES users(id),
     place_id             INTEGER REFERENCES places(id),
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE user_address (
     id                   SERIAL PRIMARY KEY,
     user_id              INTEGER REFERENCES users(id),
     address_id           INTEGER REFERENCES addresses(id),
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
 CREATE TABLE user_default_address (
     id                   SERIAL PRIMARY KEY,
     user_id              INTEGER REFERENCES users(id),
@@ -213,17 +215,11 @@ CREATE TABLE user_default_address (
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-
-
-
-
-
 CREATE TABLE place_addresses (
     place_id             INTEGER REFERENCES places(id),
     address_id           INTEGER REFERENCES addresses(id),
                          PRIMARY KEY (place_id, address_id)
 );
-
 
 CREATE TABLE last_queries (
     id                         SERIAL PRIMARY KEY,
@@ -232,14 +228,6 @@ CREATE TABLE last_queries (
     query                      VARCHAR(255),
     query_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-
-create table user_goods (
-    id                           SERIAL PRIMARY KEY,
-    user_id                      INTEGER NOT NULL,
-    goods_id                     INTEGER NOT NULL,
-    created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 
 create table users (
   id                             serial primary key,
@@ -446,9 +434,7 @@ create table administrators (
   role                   varchar(64) not null,
   password               varchar(255) not null,
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  valid                  boolean default false,
-  invalidReason          text,
-  invalid_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  valid                  boolean default false
 );
 
 create table teams (
@@ -885,4 +871,43 @@ CREATE TABLE see_seek_evidences (
     link          varchar(255),
     created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at    TIMESTAMP
+);
+
+create table goods (
+    id                    serial primary key,
+    uuid                  varchar(64) not null unique,
+    recorder_user_id      integer,
+    name                  varchar(255),
+    nickname              varchar(255),
+    designer              varchar(255),
+    describe              text,
+    price                 float,
+    applicability         varchar(255),
+    category              integer,
+    specification         varchar(255),
+    brand_name            varchar(255),
+    model                 varchar(255),
+    weight                float,
+    dimensions            varchar(255),
+    material              varchar(255),
+    size                  varchar(255),
+    color                 varchar(255),
+    network_connection_type varchar(255),
+    features              integer,
+    serial_number         varchar(255),
+    state                 varchar(255),
+    origin                varchar(255),
+    manufacturer          varchar(255),
+    manufacturer_url      varchar(255),
+    engine_type           varchar(255),
+    purchase_url          varchar(255),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE goods_teams (
+    id            serial primary key,
+    team_id       integer,
+    goods_id      integer,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

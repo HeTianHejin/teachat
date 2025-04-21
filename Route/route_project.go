@@ -89,10 +89,10 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 // 处理新建茶台的操作处理器
 func HandleNewProject(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		//请求表单
 		NewProjectGet(w, r)
-	case "POST":
+	case http.MethodPost:
 		//处理表单
 		NewProjectPost(w, r)
 	default:

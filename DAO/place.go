@@ -25,7 +25,7 @@ type Place struct {
 	IsGovernment   bool   // 是否政府单位
 	UserId         int    // 登记者id
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
 }
 
 // 根据给出的关键词（keyword），查询相似的place.name，返回 []place, err
@@ -199,8 +199,7 @@ func (u *User) GetAllBindPlaces() (Places []Place, err error) {
 	}
 	for _, userPlace := range userPlaces {
 		place := Place{Id: userPlace.PlaceId}
-		err = place.Get()
-		if err != nil {
+		if err = place.Get(); err != nil {
 			return
 		}
 		Places = append(Places, place)
@@ -357,13 +356,13 @@ func (lh *LocationHistory) GetLocationHistoryByPlaceId() (locationHistory []Loca
 
 // place.Create() 保存1地方记录，用queryRow方法插入places表，返回id
 func (p *Place) Create() (err error) {
-	statement := "INSERT INTO places (uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id"
+	statement := "INSERT INTO places (uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), p.Name, p.Nickname, p.Description, p.Icon, p.OccupantUserId, p.OwnerUserId, p.Level, p.Category, p.IsPublic, p.IsGovernment, p.UserId, time.Now(), time.Now()).Scan(&p.Id)
+	err = stmt.QueryRow(Random_UUID(), p.Name, p.Nickname, p.Description, p.Icon, p.OccupantUserId, p.OwnerUserId, p.Level, p.Category, p.IsPublic, p.IsGovernment, p.UserId, time.Now()).Scan(&p.Id, &p.Uuid)
 	return
 }
 
@@ -442,18 +441,18 @@ type Address struct {
 	PostalCode   string // 邮政编码（邮政部门发布，末端是基层邮局）
 	Category     int    // 类别
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 }
 
 // address.Create() 保存1地址记录，用queryRow方法��入addresses表，返回id,
 func (a *Address) Create() (err error) {
-	statement := "INSERT INTO addresses (uuid, nation, province, city, district, town, village, street, building, unit, portal_number, postal_code, category, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id"
+	statement := "INSERT INTO addresses (uuid, nation, province, city, district, town, village, street, building, unit, portal_number, postal_code, category, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(a.Uuid, a.Nation, a.Province, a.City, a.District, a.Town, a.Village, a.Street, a.Building, a.Unit, a.PortalNumber, a.PostalCode, a.Category, time.Now(), time.Now()).Scan(&a.Id)
+	err = stmt.QueryRow(a.Uuid, a.Nation, a.Province, a.City, a.District, a.Town, a.Village, a.Street, a.Building, a.Unit, a.PortalNumber, a.PostalCode, a.Category, time.Now(), time.Now()).Scan(&a.Id, &a.Uuid)
 	return
 }
 

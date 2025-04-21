@@ -17,9 +17,9 @@ import (
 // 如果匹配到其他方式请求，返回404错误
 func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
-	case "GET":
+	case http.MethodGet:
 		NewObjectiveGet(w, r)
-	case "POST":
+	case http.MethodPost:
 		NewObjectivePost(w, r)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)

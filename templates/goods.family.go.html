@@ -1,0 +1,52 @@
+{{ define "content" }}
+
+{{/* 这是某个家庭的物资清单页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/goods/family?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>家庭物资</li>
+  <li class="active">清单</li>
+</ol>
+
+<hr />
+
+<p class="text-center">
+  <a href="/v1/goods/new">
+    <i class="bi-patch-plus" style="font-size: 2rem; color: black;"></i>
+      登记新物资</a>
+</p>
+
+{{ range .GoodsSlice }}
+
+<hr />
+<div class="media">
+  <div class="media-left">
+    <a href="#">
+      <img class="media-object" src="/v1/static/bootstrap-icons/bag.svg" alt="goods photo" width="32" height="32">
+    </a>
+  </div>
+  <div class="media-body">
+    <h4 class="media-heading">
+      <a href="/v1/goods/detail?id={{ .Uuid }}">{{ .Name }}</a>
+    </h4>
+    <h5>别名：{{ .Nickname }}</h5>
+    <p>编号：{{ .Id }}</p>
+    <p>描述：{{ .Describe }}</p>
+    <p>用途：{{ .Applicability }}</p>
+  </div>
+</div>
+
+
+
+      {{ else }}
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          茶博士
+        </div>
+        <div class="panel-body">
+          你好，目前没有登记的家庭物资记录。
+        </div>
+      </div>
+      {{ end }}
+
+      {{ end }}

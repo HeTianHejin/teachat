@@ -15,7 +15,7 @@ type Thread struct {
 	CreatedAt time.Time
 	Class     int    //状态0: "加水",1: "品茶",2: "定味",3: "展示",4: "已删除",
 	Title     string //标题
-	EditAt    time.Time
+	EditAt    *time.Time
 	ProjectId int  //茶台号
 	FamilyId  int  //作者发帖时选择的成员所属家庭id(family_id)
 	Type      int  //哪一种提法？0: "我觉得",1: "出主意"
@@ -203,13 +203,13 @@ func (t *Thread) UpdateTopicAndClass(body string, class int) (err error) {
 
 // UpdateClass() 根据Thread.Id更新class
 func (t *Thread) UpdateClass() (err error) {
-	statement := "UPDATE threads SET class = $1 WHERE id = $2"
+	statement := "UPDATE threads SET class = $1, edit_at = $2 WHERE id = $2"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(t.Class, t.Id)
+	_, err = stmt.Exec(t.Class, time.Now(), t.Id)
 	return
 }
 
@@ -218,13 +218,13 @@ func (t *Thread) UpdateClass() (err error) {
 // Create a new thread
 // 保存新的茶议
 func (t *Thread) Create() (err error) {
-	statement := "INSERT INTO threads (uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid"
+	statement := "INSERT INTO threads (uuid, body, user_id, created_at, class, title, project_id, family_id, type, post_id, team_id, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), t.Body, t.UserId, time.Now(), t.Class, t.Title, time.Now(), t.ProjectId, t.FamilyId, t.Type, t.PostId, t.TeamId, t.IsPrivate).Scan(&t.Id, &t.Uuid)
+	err = stmt.QueryRow(Random_UUID(), t.Body, t.UserId, time.Now(), t.Class, t.Title, t.ProjectId, t.FamilyId, t.Type, t.PostId, t.TeamId, t.IsPrivate).Scan(&t.Id, &t.Uuid)
 	if err != nil {
 		return
 	}
@@ -382,9 +382,9 @@ func (project *Project) Threads() (threads []Thread, err error) {
 	return
 }
 
-// 通过比较thread的EditAt和CreatedAt时间，如果前者等于后者，则是没有编辑过，如果前者晚于后者，说明曾经编辑过（补充内容）true，返回 bool
+// 检测edit_at是否不为空且晚于created_at 5秒以上
 func (t *Thread) IsEdited() bool {
-	return t.EditAt.After(t.CreatedAt)
+	return t.EditAt != nil && t.EditAt.After(t.CreatedAt.Add(time.Second*5))
 }
 
 // 获取thread的状态string
