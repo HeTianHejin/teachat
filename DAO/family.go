@@ -627,6 +627,7 @@ func (f *Family) Founder() (user User, err error) {
 
 // Family.IsMember() 根据id，检查用户是否是家庭成员
 func (f *Family) IsMember(user_id int) (isMember bool, err error) {
+
 	statement := "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND user_id=$2"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {

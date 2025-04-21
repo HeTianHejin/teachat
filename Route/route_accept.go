@@ -355,11 +355,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，闪电考拉失魂鱼，竟然说有时候找资料的人不一定是外星人？")
 				return
 			}
-			// if err = dPost.UpdateClass(1); err != nil {
-			// 	util.ScaldingTea(util.LogError(err), "Cannot update draft-post class")
-			// 	Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
-			// 	return
-			// }
+
 			// 转为正式品味稿
 			new_post := data.Post{
 				Body:      dPost.Body,

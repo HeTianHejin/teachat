@@ -47,349 +47,7 @@
   {{ .NumOppose }}
 </div>
 
-{{/* 检查是否茶议作者，以决定头像显示在哪一侧布局 */}}
-{{ if .ThreadBean.Thread.PageData.IsAuthor }}
-{{/* 右danger（红）左primary（蓝）品味进度条 */}}
-<div class="progress">
-
-  <div class="progress-bar progress-bar-primary progress-bar-striped active" aria-valuenow="{{.ProgressOppose}}"
-    aria-valuemin="0" aria-valuemax="100" style="width: {{.ProgressOppose}}%;">
-    <span class="sr-only">{{.ProgressOppose}}% 完成 (摇头)</span>
-  </div>
-
-  <div class="progress-bar progress-bar-danger progress-bar-striped active" aria-valuenow="{{.ProgressSupport}}"
-    aria-valuemin="0" aria-valuemax="100" style="width: {{.ProgressSupport}}%;">
-
-    <span class="sr-only">{{.ProgressSupport}}% 完成 (颔首)</span>
-  </div>
-
-</div>
-{{/* 右红左蓝进度条到此为止  */}}
-
-<div class="media">
-  {{/* [是茶议作者区域] 头像显示在右侧布局 */}}
-
-  <div class="media-body">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .ThreadBean.CreatedAtDate }}
-          </div>
-
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: center;">
-              <i class="bi bi-paint-bucket" style="font-size: large; color: red;"></i>
-
-            </span>
-            </span>
-
-          </div>
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block;text-align: right;">
-              <span style="font-size: smaller;">
-                {{ .ThreadBean.Author.Name }}
-                {{if .ThreadBean.Author.Gender }}
-                <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-                {{ else }}
-                <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-                {{ end }}
-                （<a href="/v1/family/detail?id={{ .ThreadBean.AuthorFamily.Uuid }}"
-                  style="color: black;">{{ .ThreadBean.AuthorFamily.Name }}</a>，
-                <a href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}"
-                  style="color: black;">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>）
-              </span>
-            </span>
-            </span>
-          </div>
-        </div>
-      </div>
-      <div class="panel-body">
-
-        <h4><mark>{{ .ThreadBean.Thread.TypeStatus }}</mark>
-          {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳1-1 */}}
-
-          {{/* 这个主意已被采纳 */}}
-          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
-          {{ end }} {{/* 检查是否被采纳1-2 */}}
-
-          {{ .ThreadBean.Thread.Title }}
-        </h4>
-        
-        <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
-        
-        {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳2-1 */}}
-
-     <p>
-       <a class="btn btn-default" href="/v1/see-seek/new?id={{ .ThreadBean.Thread.Uuid }}" role="button" style="margin-top: 1rem;">启动-茶看</a>
-     </p>
-
-     {{ end }}{{/* 检查是否被采纳2-2 */}}
-
-        <hr />
-
-        {{ if .ThreadBean.Thread.PostId }}
-        <blockquote>
-          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePost.Uuid }}"><span
-                class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...</p>
-          <footer style="font-size: small;">
-            <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}">{{ .QuotePostAuthor.Name }}</a>
-            {{if .QuotePostAuthor.Gender }}
-            <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-            {{ else }}
-            <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-            {{ end }}
-            <span style="margin-inline-end: 20px;">
-              （<a href="/v1/family/detail?id={{ .QuotePostAuthorFamily.Uuid }}"
-                style="color: black;">{{ .QuotePostAuthorFamily.Name }}</a>，
-              <a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}"
-                style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a>）
-            </span>
-          </footer>
-        </blockquote>
-
-        {{ else }}
-        <blockquote>
-          <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProject.Uuid }}"><span
-                class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
-          <footer style="font-size: small;">
-            <cite><a href="/v1/user/biography?id={{ .QuoteProjectAuthor.Uuid }}" style="color: black;">
-                <span>{{ .QuoteProjectAuthor.Name }}</span></a>
-              {{if .QuoteProjectAuthor.Gender }}
-              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-              {{ end }}
-              <span style="margin-inline-end: 20px;">
-                （<a href="/v1/family/detail?id={{ .QuoteProjectAuthorFamily.Uuid }}"
-                  style="color: black;">{{ .QuoteProjectAuthorFamily.Name }}</a>，
-                <a href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}"
-                  style="color: black;">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a>）
-              </span></cite>
-          </footer>
-        </blockquote>
-        {{ end }}
-
-      </div>
-
-      <div class="panel-footer">
-        <span style="margin-inline-end: 2rem;">个人 4</span>
-        <span style="margin-inline-end: 2rem;">团队 1</span>
-        <span style="margin-inline-end: 2rem;">家庭 3</span>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="media-right">
-    <a href="/v1/user/biography?id={{ .ThreadBean.Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .ThreadBean.Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
-  </div>
-
-</div>
-
-{{/* [是茶议作者区域] 展示其他用户的品味 */}}
-{{ range .PostBeanSlice }}
-{{/* [是茶议作者区域] 检查品味的立场以决定布局 */}}
-
-{{ if .Post.Attitude }}
-{{/* [是茶议作者区域] 品味是“颔首”表态，跟随作者，同样是右侧头像布局，寓意站位同一边 */}}
-<div class="media">
-
-  <div class="media-body">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .CreatedAtDate}}
-          </div>
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: center;">
-              <i class="bi-cup-hot" style="font-size: 2rem; color: red;"></i>
-              <span class="label label-danger">{{ .Attitude  }}</span>
-            </span>
-          </div>
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display:block;text-align: right;">
-              <span style="font-size: small;">
-                {{ .Author.Name }}
-                {{if .Author.Gender }}
-                <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-                {{ else }}
-                <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-                {{ end }}
-                （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
-            </span></span>
-            </span>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel-body">
-        {{ .Post.Body }}
-      </div>
-
-      <div class="panel-footer">
-        <span style="margin-inline-end: 30px;">
-          <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
-          60
-        </span>
-
-        {{ if .Post.PageData.IsAuthor }}
-        {{/* 这是作者 */}}
-        {{ if .Post.IsEdited }}
-        {{/* 这是有加水（编辑）过（即补充内容） */}}
-        <span style="font-size: smaller; margin-inline-end: 30px;">
-          <a href="/v1/post/edit?id={{ .Post.Uuid }}">
-            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-
-          </a> {{ .Post.EditAtDate }}
-        </span>
-        {{ else }}
-        {{/* 没有“加水”编辑过 */}}
-        <span style="font-size: smaller; margin-inline-end: 30px;">
-          <a href="/v1/post/edit?id={{ .Post.Uuid }}">
-            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-          </a>
-        </span>
-        {{ end }}
-        {{ else }}
-        {{/* 不是作者 */}}
-        {{ if .Post.IsEdited }}
-        {{/* 这是有编辑过 */}}
-
-        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 30px;">
-          {{ .Post.EditAtDate }}</span>
-        {{ else }}
-        {{/* 没有“追加”编辑过，留空白 */}}
-        {{ end }}
-        {{ end }}
-        <span style="margin-inline-end: 30px;">
-          <a href="/v1/post/detail?id={{ .Post.Uuid }}">
-            <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
-          </a>
-          {{ .Count }}
-        </span>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="media-right">
-    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
-  </div>
-
-</div>
-
-{{ else }}
-{{/* [是茶议作者区域] 品味是“摇头”表态，左侧头像布局，寓意站在对面  */}}
-<div class="media">
-
-  <div class="media-left">
-    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
-  </div>
-
-  <div class="media-body">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <div class="row">
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="font-size: small;">
-              {{ .Author.Name }}
-              {{if .Author.Gender }}
-              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-              {{ end }}
-              （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
-              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
-            </span>
-          </div>
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: center;">
-              <i class="bi-cup-hot-fill" style="font-size: 2rem; color: cornflowerblue;"></i>
-              <span class="label label-primary">{{ .Attitude }}</span>
-            </span>
-
-          </div>
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display:block;text-align: right;">{{ .CreatedAtDate }}</span>
-          </div>
-
-        </div>
-      </div>
-
-      <div class="panel-body">
-        {{ .Post.Body }}
-      </div>
-
-      <div class="panel-footer">
-        <span style="margin-inline-end: 30px;">
-          <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
-          60
-        </span>
-
-        {{ if .Post.PageData.IsAuthor }}
-        {{/* 这是作者 */}}
-        {{ if .Post.IsEdited }}
-        {{/* 这是有加水（编辑）过（即补充内容） */}}
-        <span style="font-size: smaller; margin-inline-end: 30px;">
-          <a href="/v1/post/edit?id={{ .Post.Uuid }}">
-            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-
-          </a> {{ .Post.EditAtDate }}
-        </span>
-        {{ else }}
-        {{/* 没有“加水”编辑过 */}}
-        <span style="font-size: smaller; margin-inline-end: 30px;">
-          <a href="/v1/post/edit?id={{ .Post.Uuid }}">
-            <span class="glyphicon glyphicon-edit" aria-hidden="true">
-            </span>
-          </a>
-        </span>
-        {{ end }}
-        {{ else }}
-        {{/* 不是作者 */}}
-        {{ if .Post.IsEdited }}
-        {{/* 这是有编辑过 */}}
-        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-        <span style="font-size: smaller; margin-inline-end: 30px;">
-          {{ .Post.EditAtDate }}</span>
-        {{ else }}
-        {{/* 没有“追加”编辑过，留空白 */}}
-        {{ end }}
-        {{ end }}
-        <span style="margin-inline-end: 30px;">
-          <a href="/v1/post/detail?id={{ .Post.Uuid }}">
-            <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
-          </a>
-          {{ .Count }}
-        </span>
-      </div>
-
-    </div>
-  </div>
-
-</div>
-
-{{ end }}
-{{/* [是茶议作者区域] 检测是否品味作者完成 */}}
-{{ end }}
-{{/* [是茶议作者区域] 展示品味并检查是否品味作者完成 */}}
-
-{{/* 是否茶议主人分割线在此   */}}
-
-{{ else }}
-{{/* 不是茶议作者区域在这行开始 */}}
-
-{{/* [不是茶议作者区域] 左danger（红）右primary（蓝）品味进度条 */}}
+{{/* 左danger（红）右primary（蓝）品味进度条 */}}
 <div class="progress">
   <div class="progress-bar progress-bar-danger progress-bar-striped active" aria-valuenow="{{.ProgressSupport}}"
     aria-valuemin="0" aria-valuemax="100" style="width: {{.ProgressSupport}}%;">
@@ -403,7 +61,7 @@
 </div>
 {{/* 左红右蓝进度条到此为止  */}}
 
-{{/* [不是茶议作者区域] 茶议头像位置显示在左侧布局 */}}
+{{/* 茶议头像位置显示在左侧布局 */}}
 <div class="media">
 
   <div class="media-left">
@@ -453,24 +111,18 @@
         {{ if .ThreadBean.Thread.TypeStatus }}{{/* 检查是出主意1-1 */}}
 
         {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳2-1 */}}
-        {{ if .IsMaster }}{{/* 检查是否茶台管理员1-1 */}}
-      
-        <p>
-          <a class="btn btn-default" href="/v1/see-seek/new?id={{ .ThreadBean.Thread.Uuid }}" role="button" style="margin-top: 1rem;">启动-茶看</a>
-        </p>
-       {{ end }}{{/* 检查是否茶台管理员1-2 */}}
-       
-       
-       {{ else }}{{/* 检查是否被采纳2-2，未采纳！   */}}
-       
-       {{ if .IsAdmin }}{{/* 检查是否茶围管理员1-1，如果是，显示采纳图标按钮 */}}
-       <form class="form" role="form" action="/v1/thread/approve" method="post">
+
+        {{ else }}{{/* 检查是否被采纳2-2，未采纳！   */}}
+
+        {{ if .IsAdmin }}{{/* 检查是否茶围管理员1-1，如果是，显示采纳图标按钮 */}}
+        <form class="form" role="form" action="/v1/thread/approve" method="post">
           <input type="hidden" name="id" value="{{ .ThreadBean.Thread.Uuid }}" />
           <button type="submit" class="btn btn-default btn-sm">采纳</button>
         </form>
         {{ end }}{{/* 检查是否茶围管理员1-2 */}}
-        
+
         {{ end }}{{/* 检查是否被采纳2-3 */}}
+
         {{ end }}{{/* 检查是出主意1-2 */}}
 
         <hr />
@@ -531,10 +183,10 @@
 
 </div>
 
-{{/* [不是茶议作者区域] 决定是否显示品味编辑区 */}}
+{{/* 决定是否显示品味编辑区 */}}
 {{ if .IsInput }}
 
-{{/* [不是茶议作者区域] 这是品味编辑区-撰写模版 开始 */}}
+{{/* 这是品味编辑区-撰写模版 开始 */}}
 <div class="panel panel-default">
 
   <div class="panel-body">
@@ -622,14 +274,15 @@
 {{ end }}
 <hr />
 {{ end }}
-{{/* [不是茶议作者区域] 品味编辑区结束 */}}
+{{/* 品味编辑区结束 */}}
 
 {{/* 展示其他用户的品味 */}}
-{{ range .PostBeanSlice }}
-{{/* [不是茶议作者区域] 检查品味的立场以决定左右侧布局 */}}
+
+{{ range .PostBeanAdminSlice }}
+{{/* 检查茶围管理员品味的立场以决定左右侧布局 */}}
 
 {{ if .Post.Attitude }}
-{{/* [不是茶议作者区域] 品味是“颔首”表态，左侧头像布局 */}}
+{{/* 品味是“颔首”表态，左侧头像布局 */}}
 <div class="media">
 
   <div class="media-left">
@@ -671,7 +324,11 @@
       </div>
 
       <div class="panel-body">
-        {{ .Post.Body }}
+        <p>{{ .Post.Body }}</p>
+        <p>
+          <a class="btn btn-default" href="/v1/see-seek/new?id={{ .Post.Uuid }}" role="button">启动-茶看</a>
+        </p>
+
       </div>
 
       <div class="panel-footer">
@@ -710,7 +367,7 @@
         {{ end }}
         {{ end }}
         <span style="margin-inline-end: 30px;">
-          <a href="/v1/post/detail?id={{ .Post.Uuid }}">
+          <a href="/v1/see-seek/new?id={{ .Post.Uuid }}">
             <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
           </a>
           {{ .Count }}
@@ -721,13 +378,14 @@
   </div>
 
 </div>
+
 {{ else }}
-{{/* [不是茶议作者区域] 品味是“摇头”表态，右侧头像布局 */}}
+{{/* 品味是“摇头”表态，右侧头像布局 */}}
 <div class="media">
   <div class="media-body">
 
     {{ if .Post.PageData.IsAuthor }}
-    {{/* [不是茶议作者区域] 特别注意⚠️以下两行是或者关系，共用一个</div>!!  */}}
+    {{/* 特别注意⚠️以下两行是或者关系，共用一个</div>!!  */}}
     <div class="panel panel-success">
       {{ else }}
       <div class="panel panel-default">
@@ -816,15 +474,209 @@
 
   </div>
   {{ end }}
-  {{/* [不是茶议作者区域] 检测是否品味作者完成 */}}
+  {{/* 检测是否品味作者完成 */}}
 
-  {{ end }}
-  {{/* [不是茶议作者区域] 展示全部品味完成 */}}
-  {{ end }}
-  {{/* 全局检查是否茶议作者，以决定头像位置布局结束 */}}
+  {{ end }}{{/* 展示全部管理员品味完成 */}}
+  <hr />
 
-  <div class="well">
-    <a href="#">更多相关茶议 >></a>
+  {{ range .PostBeanSlice }}
+  {{/* 检查品味的立场以决定左右侧布局 */}}
+
+  {{ if .Post.Attitude }}
+  {{/* 品味是“颔首”表态，左侧头像布局 */}}
+  <div class="media">
+
+    <div class="media-left">
+      <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+        <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
+      </a>
+    </div>
+
+    <div class="media-body">
+
+      <div class="panel panel-default">
+
+        <div class="panel-heading">
+          <div class="row">
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <span style="font-size: small;">
+                {{ .Author.Name }}
+                {{if .Author.Gender }}
+                <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+                {{ else }}
+                <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+                {{ end }}
+                （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
+              </span>
+            </div>
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <span style="display: block; text-align: center;">
+                <i class="bi-cup-hot" style="font-size: 2rem; color: red;"></i>
+                <span class="label label-danger">{{ .Attitude }}</span>
+              </span>
+            </div>
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+              <span style="display:block;text-align: right;">
+                {{ .CreatedAtDate }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-body">
+          {{ .Post.Body }}
+        </div>
+
+        <div class="panel-footer">
+          <span style="margin-inline-end: 30px;">
+            <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
+            60
+          </span>
+          {{ if .Post.PageData.IsAuthor }}
+
+          {{/* 这是品味作者 */}}
+          {{ if .Post.IsEdited }}
+          {{/* 这是有加水（编辑）过（即补充内容） */}}
+          <span style="font-size: smaller; margin-inline-end: 30px;">
+            <a href="/v1/post/edit?id={{ .Post.Uuid }}">
+              <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+            </a> {{ .Post.EditAtDate }}
+          </span>
+          {{ else }}
+          {{/* 没有“加水”编辑过 */}}
+          <span style="font-size: smaller; margin-inline-end: 30px;">
+            <a href="/v1/post/edit?id={{ .Post.Uuid }}">
+              <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+            </a>
+          </span>
+          {{ end }}
+          {{ else }}
+          {{/* 不是品味作者 */}}
+          {{ if .Post.IsEdited }}
+          {{/* 这是有编辑过 */}}
+
+          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+          <span style="font-size: smaller; margin-inline-end: 30px;">
+            {{ .EditAtDate }}</span>
+          {{ else }}
+          {{/* 没有“追加”编辑过，留空白 */}}
+          {{ end }}
+          {{ end }}
+          <span style="margin-inline-end: 30px;">
+            <a href="/v1/post/detail?id={{ .Post.Uuid }}">
+              <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+            </a>
+            {{ .Count }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+
   </div>
+  {{ else }}
+  {{/* 品味是“摇头”表态，右侧头像布局 */}}
+  <div class="media">
+    <div class="media-body">
 
-  {{ end }}
+      {{ if .Post.PageData.IsAuthor }}
+      {{/* 特别注意⚠️以下两行是或者关系，共用一个</div>!!  */}}
+      <div class="panel panel-success">
+        {{ else }}
+        <div class="panel panel-default">
+          {{ end }}
+          <div class="panel-heading">
+            <div class="row">
+              <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                {{ .CreatedAtDate }}
+              </div>
+              <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                <span style="display: block; text-align: center;">
+                  <i class="bi-cup-hot-fill" style="font-size: 2rem; color: cornflowerblue;"></i>
+                  <span class="label label-primary">{{ .Attitude }}</span>
+                </span>
+              </div>
+              <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                <span style="display:block;text-align: right;">
+                  <span style="font-size: small;">
+                    {{ .Author.Name }}
+                    {{if .Author.Gender }}
+                    <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+                    {{ else }}
+                    <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+                    {{ end }}
+                    （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                    <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
+                </span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel-body">
+            {{ .Post.Body }}
+          </div>
+
+          <div class="panel-footer">
+            <span style="margin-inline-end: 30px;">
+              <span class="glyphicon glyphicon-piggy-bank" aria-hidden="true"></span>
+              60
+            </span>
+
+            {{ if .Post.PageData.IsAuthor }}
+            {{/* 这是品味作者 */}}
+            {{ if .Post.IsEdited }}
+            {{/* 这是有加水（编辑）过（即补充内容） */}}
+            <span style="font-size: smaller; margin-inline-end: 30px;">
+              <a href="/v1/post/edit?id={{ .Post.Uuid }}">
+                <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+              </a> {{ .Post.EditAtDate }}
+            </span>
+            {{ else }}
+            {{/* 没有“加水”编辑过 */}}
+            <span style="margin-inline-end: 30px;">
+              <a href="/v1/post/edit?id={{ .Post.Uuid }}">
+                <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+              </a>
+            </span>
+            {{ end }}
+            {{ else }}
+            {{/* 不是品味作者 */}}
+            {{ if .Post.IsEdited }}
+            {{/* 这是有编辑过 */}}
+
+            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+            <span style="font-size: smaller; margin-inline-end: 30px;">
+              {{ .Post.EditAtDate }}</span>
+            {{ else }}
+            {{/* 没有“追加”编辑过，留空白 */}}
+            {{ end }}
+            {{ end }}
+            <span style="margin-inline-end: 30px;">
+              <a href="/v1/post/detail?id={{ .Post.Uuid }}">
+                <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
+              </a>
+              {{ .Count }}
+            </span>
+          </div>
+
+        </div>
+      </div>
+      <div class="media-right">
+        <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+          <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
+        </a>
+      </div>
+
+    </div>
+    {{ end }}
+    {{/* 检测是否品味作者完成 */}}
+
+    {{ end }}
+    {{/* 展示全部普通品味完成 */}}
+
+    <div class="well">
+      <a href="#">更多相关茶议 >></a>
+    </div>
+
+    {{ end }}

@@ -248,16 +248,18 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	//提交的茶团id,是team.id,team_id = 2是默认的初始自由人团队，无需检查
 	// check submit team_id is valid
 	if team_id != 2 {
-		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
+		team := data.Team{Id: team_id}
+		is_member, err := team.IsMember(s_u.Id)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				Report(w, r, "你好，茶博士认为您不是这个茶团成员，请确认后再试。")
-				return
-			}
-			util.ScaldingTea(util.LogError(err), " Cannot get family member by family id and user id", family_id, s_u.Id)
-			Report(w, r, "你好，茶团成员资格检查发生差错。")
+			util.ScaldingTea(util.LogError(err), " Cannot get family member by family id and user id")
+			Report(w, r, "你好，茶博士失魂鱼，未能读取茶团成员资格资料。")
 			return
 		}
+		if !is_member {
+			Report(w, r, "你好，茶团成员资格检查未通过，请确认后再试。")
+			return
+		}
+
 	}
 
 	//提交的茶团id,是family.id,检查提交者是否是家庭成员
@@ -283,20 +285,63 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//  检查茶议所在的茶台属性，
+	// dp_class_str := r.PostFormValue("dp_class")
+	// if dp_class_str == "" {
+	// 	Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的品味分类编号。")
+	// 	return
+	// }
+	//change dp_class to int
+	// dp_class, err := strconv.Atoi(dp_class_str)
+	// if err != nil {
+	// 	Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的品味分类编号。")
+	// 	return
+	// }
+
+	// 茶议所在的茶台，
 	t_proj, err := thread.Project()
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot get project by project id", t_proj.Id)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 		return
 	}
+	//所在的茶围
+	t_obje, err := t_proj.Objective()
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get objective by objective id", t_obje.Id)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
+		return
+	}
 
-	var dPost data.DraftPost
+	dp_class := 0
+
+	ob_team := data.Team{Id: t_obje.TeamId}
+	is_member, err := ob_team.IsMember(s_u.Id)
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot get family member by family id and user id")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶团成员资格资料。")
+		return
+	}
+	if is_member {
+		dp_class = 1
+	}
+
+	new_draft_post := data.DraftPost{
+		UserId:    s_u.Id,
+		ThreadId:  thread.Id,
+		FamilyId:  family_id,
+		TeamId:    team_id,
+		Attitude:  attitude,
+		IsPrivate: is_private,
+		Body:      body,
+		Class:     dp_class,
+	}
+
 	switch t_proj.Class {
 	case 1:
 		// class=1可以品茶，
-		if dPost, err = s_u.CreateDraftPost(thread.Id, family_id, team_id, attitude, is_private, body); err != nil {
-			util.ScaldingTea(util.LogError(err), thread.Id, " Cannot create draft post")
+
+		if err = new_draft_post.Create(); err != nil {
+			util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot create draft post")
 			Report(w, r, "你好，茶博士摸摸头，嘀咕笔头宝珠掉了，记录您的品味失败。")
 			return
 		}
@@ -316,9 +361,9 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Can have tea
-		if dPost, err = s_u.CreateDraftPost(thread.Id, family_id, team_id, attitude, is_private, body); err != nil {
-			util.ScaldingTea(util.LogError(err), thread.Id, " Cannot create draft post")
-			Report(w, r, "你好，茶博士摸摸头，竟然说没有墨水，记录品味失败。")
+		if err = new_draft_post.Create(); err != nil {
+			util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot create draft post")
+			Report(w, r, "你好，茶博士摸摸头，嘀咕笔头宝珠掉了，记录您的品味失败。")
 			return
 		}
 
@@ -330,11 +375,11 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
-		ObjectId:   dPost.Id,
+		ObjectId:   new_draft_post.Id,
 		ObjectType: 4,
 	}
 	if err = aO.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot create accept_object given draft_post_id", dPost.Id)
+		util.ScaldingTea(util.LogError(err), "Cannot create accept_object given draft_post_id", new_draft_post.Id)
 		Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 		return
 	}

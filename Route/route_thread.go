@@ -484,7 +484,21 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	n2 := 120 //测试临时值
 	tD.ProgressSupport = ProgressRound(n1, n2)
 	tD.ProgressOppose = 100 - tD.ProgressSupport
-	// 读取全部回复帖子（品味）
+
+	post_admi_slice, err := tD.ThreadBean.Thread.PostsAdmin()
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot read admin posts")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		return
+	}
+	tD.PostBeanAdminSlice, err = FetchPostBeanSlice(post_admi_slice)
+	if err != nil {
+		util.ScaldingTea(util.LogError(err), " Cannot read admin postbean")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		return
+	}
+
+	// 读取全部普通回复帖子（品味）
 	post_slice, err := tD.ThreadBean.Thread.Posts()
 	if err != nil {
 		util.ScaldingTea(util.LogError(err), " Cannot read posts")
@@ -631,10 +645,10 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 						return
 					}
 					if ok {
-						// 当前用户是��话会��请��队成员，可以新开茶议
+						// 当前用户是茶围邀请团队成员，可以新开茶议
 						tD.IsInput = true
 					} else {
-						// 当前用户不是��话会��请��队成员，不能新开茶议
+						// 当前用户不是茶围邀请团队成员，不能新开茶议
 						tD.IsInput = false
 					}
 				} else {

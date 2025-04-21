@@ -164,8 +164,10 @@ type ThreadDetail struct {
 	QuoteProjectAuthorFamily Family // 引用的茶台作者发帖时选择的家庭，
 	QuoteProjectAuthorTeam   Team   // 引用的茶台作者创建发帖时选择的团队，
 
-	ThreadBean    ThreadBean //茶议豆荚
-	PostBeanSlice []PostBean // 跟贴豆荚队列
+	ThreadBean ThreadBean //茶议豆荚
+
+	PostBeanAdminSlice []PostBean //茶围管理团队签署回复切片
+	PostBeanSlice      []PostBean // 普通跟贴豆荚队列
 
 	QuotePost             Post   //引用的品味
 	QuotePostAuthor       User   //引用的品味作者
