@@ -45,8 +45,8 @@ func (group *Group) Property() string {
 // Create() 根据Group{},在数据库中创建1新的group集团记录
 func (group *Group) Create() (err error) {
 	err = Db.QueryRow(
-		"INSERT INTO groups(uuid,name,mission,founder_id,first_team_id,created_at,class,abbreviation,logo,updated_at,ministry_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id",
-		group.Uuid, group.Name, group.Mission, group.FounderId, group.FirstTeamId, time.Now(), group.Class, group.Abbreviation, group.Logo, time.Now(), group.MinistryId).Scan(&group.Id)
+		"INSERT INTO groups(uuid,name,mission,founder_id,first_team_id,created_at,class,abbreviation,logo,ministry_id) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id",
+		group.Uuid, group.Name, group.Mission, group.FounderId, group.FirstTeamId, time.Now(), group.Class, group.Abbreviation, group.Logo, group.MinistryId).Scan(&group.Id)
 	return err
 }
 

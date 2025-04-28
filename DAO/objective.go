@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// 茶话会 teaParty，活动愿景Vision,小主题；
-// 别名茶围，objective,围炉夜话，一个小目标/需求
+// 茶话会 teaParty，活动愿景Vision,主题；
+// 别名茶围，objective,声明围炉品茶讨论范围：一个目标/需求？
 // 规则1：如果class=1为开放式，则下面的茶台可以是开放式class=1，也可以是封闭式class=2；
 // 规则2：如果class=2为封闭式，则下面的茶台都是封闭式class=2，仅限茶话会创建者指定团队成员可以创建茶议，实际上，由于品味可以被旁观者引用成为拓展茶议，所以封闭式也是相对而言的封闭。
 // 开放式茶台是任何注册用户都可以入座创建茶议，封闭式茶台是开台人（台主）指定团队成员可以创建茶议，
@@ -182,9 +182,12 @@ type ObjectiveInvitedTeam struct {
 
 // 记录某个用户打开茶话会广场页面的次数，以决定展示那些19个未展示过的茶话会用户
 
-// IsEdited()edit_at != nil &&通过比较Objective.CreatedAt和EditAt时间是否相差5秒钟以上，来判断是否编辑过内容为true，返回 bool
+// IsEdited() .edit_at != nil && 通过比较Objective.CreatedAt和EditAt时间是否相同，来判断是否编辑过内容为true，返回 bool
 func (objective *Objective) IsEdited() bool {
-	return objective.EditAt != nil && objective.EditAt.After(objective.CreatedAt.Add(5*time.Second))
+	if objective.EditAt == nil {
+		return false
+	}
+	return objective.EditAt.Sub(objective.CreatedAt) > 1*time.Second
 }
 
 // 创建封闭式茶话会的许可茶团号

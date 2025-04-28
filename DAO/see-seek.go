@@ -74,8 +74,6 @@ func (see_seek *SeeSeek) Update() (err error) {
 	return
 }
 
-//SeeSeek.Delete() // 删除一个SeeSeek
-
 // 与特定人举行一个结构化交流
 type SeeSeekMaster struct {
 	Id        int

@@ -142,7 +142,7 @@ var PrProperty = map[int]string{
 
 // IsEdited()
 func (project *Project) IsEdited() bool {
-	return project.EditAt != nil && project.EditAt.After(project.CreatedAt.Add(time.Second*5))
+	return project.EditAt != nil && !project.EditAt.Equal(project.CreatedAt)
 }
 
 // InvitedTeamIds() 获取一个封闭式茶台的全部受邀请茶团id

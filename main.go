@@ -112,6 +112,8 @@ func main() {
 	//mux.HandleFunc("/v1/thread/plus", route.PlusThread)
 
 	// defined in route_see-seek.go
+	mux.HandleFunc("/v1/see-seek/new", route.HandleNewSeeSeek)
+	//mux.HandleFunc("/v1/see-seek/detail", route.SeeSeekDetail)
 
 	//定义在 route_post.go
 	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)

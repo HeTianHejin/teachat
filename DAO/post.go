@@ -40,7 +40,7 @@ type DraftPost struct {
 	ThreadId  int
 	CreatedAt time.Time
 	Attitude  bool
-	Class     int  //发布级别：0、普通发布，1、管理团队（家庭）发布，2、飞行机组团队发布，3、监管部门发布，00:（友邻蒙评）已拒绝
+	Class     int  //发布级别：0、普通发布，1、管理团队（家庭）发布，2、飞行机组团队发布，3、监管部门发布，403:（友邻蒙评）已拒绝
 	TeamId    int  //作者发帖时选择的成员所属茶团id（team/family）
 	IsPrivate bool //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
 	FamilyId  int  //作者发帖时选择的家庭id
@@ -53,9 +53,8 @@ var DraftPostStatus = map[int]string{
 }
 
 // IsEdited() returns true if the post has been edited
-// 检测edit_at是否晚于created_at 5秒以上
 func (post *Post) IsEdited() bool {
-	return post.EditAt != nil && post.EditAt.After(post.CreatedAt.Add(time.Second*5))
+	return post.EditAt != nil && !post.EditAt.Equal(post.CreatedAt)
 }
 
 // format the CreatedAt date to display nicely on the screen

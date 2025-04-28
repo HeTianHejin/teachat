@@ -20,13 +20,13 @@ type Magic struct {
 
 // Magic.Create() 创建法力
 func (m *Magic) Create() (err error) {
-	statement := "INSERT INTO magics (uuid, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
+	statement := "INSERT INTO magics (uuid, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), m.Name, m.Nickname, m.Description, m.IntelligenceLevel, m.DifficultyLevel, m.Category, m.Level, time.Now(), time.Now()).Scan(&m.Id, &m.Uuid)
+	err = stmt.QueryRow(Random_UUID(), m.Name, m.Nickname, m.Description, m.IntelligenceLevel, m.DifficultyLevel, m.Category, m.Level, time.Now()).Scan(&m.Id, &m.Uuid)
 	if err != nil {
 		return
 	}
@@ -82,13 +82,13 @@ type Skill struct {
 
 // Skill.Create() 创建技能
 func (s *Skill) Create() (err error) {
-	statement := "INSERT INTO skills (uuid, name, nickname, description, strength_level, difficulty_level, category, level, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id"
+	statement := "INSERT INTO skills (uuid, name, nickname, description, strength_level, difficulty_level, category, level, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), s.Name, s.Nickname, s.Description, s.StrengthLevel, s.DifficultyLevel, s.Category, s.Level, time.Now(), time.Now()).Scan(&s.Id)
+	err = stmt.QueryRow(Random_UUID(), s.Name, s.Nickname, s.Description, s.StrengthLevel, s.DifficultyLevel, s.Category, s.Level, time.Now()).Scan(&s.Id)
 	if err != nil {
 		return
 	}

@@ -17,7 +17,7 @@ type AcceptMessage struct {
 	AcceptObjectId int // 蒙评接纳对象id
 	Class          int // 状态： 0未读，1已读,
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
 
 	//页面动态数据，不存储到数据库
 	//PageData AcceptMessagePageData
@@ -46,13 +46,13 @@ func (a *AcceptMessage) Invitee() (user User, err error) {
 
 // Create() 创建邻桌蒙评消息
 func (a *AcceptMessage) Create() (err error) {
-	statement := "INSERT INTO accept_messages (from_user_id, to_user_id, title, content, accept_object_id, class, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id"
+	statement := "INSERT INTO accept_messages (from_user_id, to_user_id, title, content, accept_object_id, class, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(&a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, time.Now(), time.Now()).Scan(&a.Id)
+	err = stmt.QueryRow(&a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, time.Now()).Scan(&a.Id)
 	return
 }
 

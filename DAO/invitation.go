@@ -158,8 +158,8 @@ func (memberApplicationReply *MemberApplicationReply) CreatedAtDate() string {
 // 创建一个加盟申请书
 // AWS CodeWhisperer assist in writing
 func (memberApplication *MemberApplication) Create() (err error) {
-	statement := `INSERT INTO member_applications (uuid, team_id, user_id, content, status, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, uuid`
+	statement := `INSERT INTO member_applications (uuid, team_id, user_id, content, status, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, uuid`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -171,7 +171,6 @@ func (memberApplication *MemberApplication) Create() (err error) {
 		memberApplication.UserId,
 		memberApplication.Content,
 		memberApplication.Status,
-		time.Now(),
 		time.Now()).Scan(&memberApplication.Id, &memberApplication.Uuid)
 	return
 }
@@ -236,8 +235,8 @@ func (memberApplication *MemberApplication) Update() (err error) {
 // 创建一个加盟申请书答复
 // AWS CodeWhisperer assist in writing
 func (memberApplicationReply *MemberApplicationReply) Create() (err error) {
-	statement := `INSERT INTO member_application_replies (uuid, member_application_id, team_id, user_id, reply_content, status, created_at, updated_at)
-	VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+	statement := `INSERT INTO member_application_replies (uuid, member_application_id, team_id, user_id, reply_content, status, created_at)
+	VALUES ($1, $2, $3, $4, $5, $6, $7)`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -250,7 +249,6 @@ func (memberApplicationReply *MemberApplicationReply) Create() (err error) {
 		memberApplicationReply.UserId,
 		memberApplicationReply.ReplyContent,
 		memberApplicationReply.Status,
-		time.Now(),
 		time.Now())
 	return
 }
@@ -351,7 +349,7 @@ func (invitation *Invitation) Create() (err error) {
 
 // update Invitation
 // AWS CodeWhisperer assist in writing
-func (invitation *Invitation) Update() (err error) {
+func (invitation *Invitation) UpdateStatus() (err error) {
 	statement := `UPDATE invitations SET status = $1 WHERE id = $2`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {

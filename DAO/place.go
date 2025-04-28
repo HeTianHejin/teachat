@@ -356,7 +356,7 @@ func (lh *LocationHistory) GetLocationHistoryByPlaceId() (locationHistory []Loca
 
 // place.Create() 保存1地方记录，用queryRow方法插入places表，返回id
 func (p *Place) Create() (err error) {
-	statement := "INSERT INTO places (uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid"
+	statement := "INSERT INTO places (uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -452,7 +452,7 @@ func (a *Address) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(a.Uuid, a.Nation, a.Province, a.City, a.District, a.Town, a.Village, a.Street, a.Building, a.Unit, a.PortalNumber, a.PostalCode, a.Category, time.Now(), time.Now()).Scan(&a.Id, &a.Uuid)
+	err = stmt.QueryRow(a.Uuid, a.Nation, a.Province, a.City, a.District, a.Town, a.Village, a.Street, a.Building, a.Unit, a.PortalNumber, a.PostalCode, a.Category, time.Now()).Scan(&a.Id, &a.Uuid)
 	return
 }
 

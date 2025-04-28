@@ -31,7 +31,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -59,13 +59,13 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	team, err := data.GetTeam(team_id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team from database")
+		util.Error(s.Email, "Cannot get team from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team member from database")
+		util.Error(s.Email, "Cannot get team member from database")
 		Report(w, r, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
 		return
 	}
@@ -75,13 +75,13 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team goods from database")
+		util.Error(s.Email, "Cannot get team goods from database")
 		Report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
 	g := data.Goods{Id: g_id}
 	if err = g.Get(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get goods from database")
+		util.Error(s.Email, "Cannot get goods from database")
 		Report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
 	}
@@ -344,7 +344,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		PurchaseURL:           goods_purchase_url_str,
 	}
 	if err := o_goods.Update(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot update goods from database")
+		util.Error(s.Email, "Cannot update goods from database")
 		Report(w, r, "一脸蒙的茶博士，表示无法更新物资，请确认后再试一次。")
 		return
 	}
@@ -362,7 +362,7 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -390,13 +390,13 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	team, err := data.GetTeam(team_id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team from database")
+		util.Error(s.Email, "Cannot get team from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team member from database")
+		util.Error(s.Email, "Cannot get team member from database")
 		Report(w, r, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
 		return
 	}
@@ -406,13 +406,13 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team goods from database")
+		util.Error(s.Email, "Cannot get team goods from database")
 		Report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
 	g := data.Goods{Id: g_id}
 	if err = g.Get(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get goods from database")
+		util.Error(s.Email, "Cannot get goods from database")
 		Report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
 	}
@@ -437,7 +437,7 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -470,7 +470,7 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	team, err := data.GetTeam(team_id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team from database")
+		util.Error(s.Email, "Cannot get team from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
@@ -485,13 +485,13 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team goods from database")
+		util.Error(s.Email, "Cannot get team goods from database")
 		Report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
 	g := data.Goods{Id: g_id}
 	if err = g.Get(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get goods from database")
+		util.Error(s.Email, "Cannot get goods from database")
 		Report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
 	}
@@ -516,7 +516,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -529,7 +529,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team from database")
+		util.Error(s.Email, "Cannot get team from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
@@ -540,7 +540,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team member from database")
+		util.Error(s.Email, "Cannot get team member from database")
 		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
@@ -553,7 +553,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	t_g := data.GoodsTeam{TeamId: team.Id}
 	t_goods_slice, err := t_g.GetAllGoodsByTeamId()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get goods from database")
+		util.Error(s.Email, "Cannot get goods from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
@@ -603,7 +603,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -612,7 +612,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	// Check form data
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot parse form data")
+		util.Error(s.Email, "Cannot parse form data")
 		//http.Redirect(w, r, "/v1/goods/new", http.StatusFound)
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你提交的物资资料，请确认后再试一次。")
 		return
@@ -636,7 +636,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	team, err := data.GetTeam(team_id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team from database")
+		util.Error(s.Email, "Cannot get team from database")
 		Report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
 		return
 	}
@@ -644,7 +644,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//check team member
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team member from database")
+		util.Error(s.Email, "Cannot get team member from database")
 		Report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
 		return
 	}
@@ -657,7 +657,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	goods_teams := data.GoodsTeam{TeamId: team.Id}
 	count_teams_goods, err := goods_teams.CountByTeamId()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team goods from database")
+		util.Error(s.Email, "Cannot get team goods from database")
 		Report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
 		return
 	}
@@ -923,7 +923,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		PurchaseURL:           goods_purchase_url_str,
 	}
 	if err := new_goods.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot create new goods")
+		util.Error(s.Email, "Cannot create new goods")
 		Report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return
 	}
@@ -934,7 +934,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		GoodsId: new_goods.Id,
 	}
 	if err := tg.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot create team goods")
+		util.Error(s.Email, "Cannot create team goods")
 		Report(w, r, "一脸蒙的茶博士，表示无法绑定团队物资，请确认后再试一次。")
 		return
 	}
@@ -952,7 +952,7 @@ func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
 
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get user from session")
+		util.Error(s.Email, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -966,14 +966,14 @@ func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
 
 	team, err := data.GetTeam(team_id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team from database")
+		util.Error(s.Email, "Cannot get team from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	//check if user is member of the team
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get team member from database")
+		util.Error(s.Email, "Cannot get team member from database")
 		Report(w, r, "茶博士耸耸肩说，你无权处理茶团物资的资料，请确认后再试一次。")
 		return
 	}
@@ -1002,7 +1002,7 @@ func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
 
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get user from session")
+		util.Error(s.Email, "Cannot get user from session")
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1021,14 +1021,14 @@ func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
 
 	family, err := data.GetFamily(family_id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get family from database")
+		util.Error(s.Email, "Cannot get family from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认。")
 		return
 	}
 	//check if user is member of the family
 	is_member, err := family.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get family member from database")
+		util.Error(s.Email, "Cannot get family member from database")
 		Report(w, r, "茶博士耸耸肩说，你无权处理家庭物资的资料，请确认后再试一次。")
 		return
 	}
@@ -1054,7 +1054,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1065,7 +1065,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	// Check form data
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot parse form data")
+		util.Error(s.Email, "Cannot parse form data")
 		//http.Redirect(w, r, "/v1/goods/new", http.StatusFound)
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你提交的物资资料，请确认后再试一次。")
 		return
@@ -1365,7 +1365,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		PurchaseURL:           goods_purchase_url_str,
 	}
 	if err := new_goods.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot create new goods")
+		util.Error(s.Email, "Cannot create new goods")
 		Report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return
 	}
@@ -1375,7 +1375,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		GoodsId:  new_goods.Id,
 	}
 	if err := fg.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot create new goods family")
+		util.Error(s.Email, "Cannot create new goods family")
 		Report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return
 	}
@@ -1393,7 +1393,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1403,7 +1403,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	t_goods := data.Goods{Uuid: goods_uuid}
 
 	if err = t_goods.GetByUuid(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get goods from database")
+		util.Error(s.Email, "Cannot get goods from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
@@ -1416,7 +1416,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	}
 	exist, err := t_goods_user.CheckUserGoodsExist()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot check goods user from database")
+		util.Error(s.Email, "Cannot check goods user from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
@@ -1429,7 +1429,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	//count
 	count, err := t_goods_user.CountByUserId()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot count goods user from database")
+		util.Error(s.Email, "Cannot count goods user from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
@@ -1439,7 +1439,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	}
 	//insert
 	if err = t_goods_user.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot create goods user from database")
+		util.Error(s.Email, "Cannot create goods user from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
@@ -1456,14 +1456,14 @@ func GoodsEyeOn(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	gu := data.GoodsUser{UserId: s_u.Id}
 	goods_slice, err := gu.GetGoodsByUserId()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s.Email, "Cannot get goods from database")
+		util.Error(s.Email, "Cannot get goods from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}

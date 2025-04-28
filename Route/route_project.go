@@ -21,13 +21,13 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get user from session")
+		util.Error(" Cannot get user from session", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot parse form")
+		util.Error("Cannot parse form", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
 		return
 	}
@@ -40,27 +40,27 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	//获取目标茶台
 	pr := data.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get project", uuid)
+		util.Error(" Cannot get project", uuid)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
 		return
 	}
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get objective", ob.Id)
+		util.Error(" Cannot get objective", ob.Id)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
 	//检查用户是否有权限处理这个请求
 	admin_team, err := data.GetTeam(ob.TeamId)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get team", ob.TeamId)
+		util.Error(" Cannot get team", ob.TeamId)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的团队，请确认后再试。")
 		return
 	}
 	is_admin, err := admin_team.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get team", ob.TeamId)
+		util.Error(" Cannot get team", ob.TeamId)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的团队，请确认后再试。")
 		return
 	}
@@ -77,7 +77,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 		UserId:      s_u.Id,
 	}
 	if err = new_project_approved.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot create project approved")
+		util.Error(" Cannot create project approved", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
 		return
 	}
@@ -110,7 +110,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get user from session")
+		util.Error(" Cannot get user from session", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
@@ -125,18 +125,18 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	ob_uuid := r.PostFormValue("ob_uuid")
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Failed to convert class to int")
+		util.Error("Failed to convert class to int", err)
 		return
 	}
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), team_id, "Failed to convert team_id to int")
+		util.Error(team_id, "Failed to convert team_id to int")
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Failed to convert family_id to int")
+		util.Error("Failed to convert family_id to int", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
@@ -144,14 +144,14 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	t_ob := data.Objective{
 		Uuid: ob_uuid}
 	if err = t_ob.GetByUuid(); err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get objective")
+		util.Error(" Cannot get objective", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
 	// 检查在此茶围下是否已经存在相同名字的茶台
 	count_title, err := data.CountProjectByTitleObjectiveId(title, t_ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		util.ScaldingTea(util.LogError(err), " Cannot get count of project by title and objective id")
+		util.Error(" Cannot get count of project by title and objective id", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
@@ -174,7 +174,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")
 				return
 			} else {
-				util.ScaldingTea(util.LogError(err), " Cannot get member by team id and user id")
+				util.Error(" Cannot get member by team id and user id", err)
 				Report(w, r, "你好，茶博士眼镜失踪了，未能创建新茶台，请稍后再试。")
 				return
 			}
@@ -188,12 +188,12 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		}
 		is_member, err := family.IsMember(s_u.Id)
 		if err != nil {
-			util.ScaldingTea(util.LogError(err), " Cannot get family member by family id and user id")
+			util.Error(" Cannot get family member by family id and user id", err)
 			Report(w, r, "你好，茶博士眼镜失踪，未能创建新茶台，请稍后再试。")
 			return
 		}
 		if !is_member {
-			util.ScaldingTea(util.LogError(err), " Cannot get family member by family id and user id")
+			util.Error(" Cannot get family member by family id and user id", err)
 			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
 			return
 		}
@@ -202,7 +202,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	place_uuid := r.PostFormValue("place_uuid")
 	place := data.Place{Uuid: place_uuid}
 	if err = place.GetByUuid(); err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get place")
+		util.Error(" Cannot get place", err)
 		Report(w, r, "你好，茶博士服务中，眼镜都模糊了，也未能找到你提交的活动地方资料，请确认后再试。")
 		return
 	}
@@ -210,12 +210,12 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 检测一下name是否>2中文字，desc是否在17-456中文字，
 	// 如果不是，返回错误信息
 	if CnStrLen(title) < 2 || CnStrLen(title) > 36 {
-		util.ScaldingTea(util.LogError(err), "Project name is too short")
+		util.Error("Project name is too short", err)
 		Report(w, r, "你好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
 	if CnStrLen(body) < 17 || CnStrLen(body) > 456 {
-		util.ScaldingTea(util.LogError(err), " Project description is too long or too short")
+		util.Error(" Project description is too long or too short", err)
 		Report(w, r, "你好，茶博士傻眼了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return
 	}
@@ -246,7 +246,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		if class == 10 {
 			// 创建开放式草台
 			if err = new_proj.Create(); err != nil {
-				util.ScaldingTea(util.LogError(err), " Cannot create open project")
+				util.Error(" Cannot create open project", err)
 				Report(w, r, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -255,7 +255,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !Verify_id_slice_Format(tIds_str) {
-				util.ScaldingTea(util.LogError(err), " TeamId slice format is wrong")
+				util.Error(" TeamId slice format is wrong", err)
 				Report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 				return
 			}
@@ -263,7 +263,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			team_ids_str := strings.Split(tIds_str, ",")
 			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
 			if len(team_ids_str) > int(util.Config.MaxInviteTeams) {
-				util.ScaldingTea(util.LogError(err), " Too many team ids")
+				util.Error(" Too many team ids", err)
 				Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，请确认后再试。")
 				return
 			}
@@ -275,7 +275,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 			//创建封闭式草台
 			if err = new_proj.Create(); err != nil {
-				util.ScaldingTea(util.LogError(err), " Cannot create close project")
+				util.Error(" Cannot create close project", err)
 				Report(w, r, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -286,7 +286,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 					TeamId:    team_id,
 				}
 				if err = poInviTeams.Create(); err != nil {
-					util.ScaldingTea(util.LogError(err), " Cannot save invited teams")
+					util.Error(" Cannot save invited teams", err)
 					Report(w, r, "你好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
 				}
@@ -302,7 +302,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		ok, err := t_ob.IsInvitedMember(s_u.Id)
 		if !ok {
 			// 当前用户不是茶话会邀请团队成员，不能新开茶台
-			util.ScaldingTea(util.LogError(err), " Cannot create project")
+			util.Error(" Cannot create project", err)
 			Report(w, r, "你好，茶博士惊讶地说，不是此茶话会邀请团队成员不能开新茶台，请确认。")
 			return
 		}
@@ -315,7 +315,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !Verify_id_slice_Format(tIds_str) {
-				util.ScaldingTea(util.LogError(err), " TeamId slice format is wrong")
+				util.Error(" TeamId slice format is wrong", err)
 				Report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 				return
 			}
@@ -323,7 +323,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			team_ids_str := strings.Split(tIds_str, ",")
 			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
 			if len(team_ids_str) > int(util.Config.MaxInviteTeams) {
-				util.ScaldingTea(util.LogError(err), " Too many team ids")
+				util.Error(" Too many team ids", err)
 				Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
 				return
 			}
@@ -335,7 +335,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 			//创建茶台
 			if err = new_proj.Create(); err != nil {
-				util.ScaldingTea(util.LogError(err), " Cannot create project")
+				util.Error("Cannot create project", err)
 				Report(w, r, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -346,7 +346,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 					TeamId:    team_id,
 				}
 				if err = poInviTeams.Create(); err != nil {
-					util.ScaldingTea(util.LogError(err), " Cannot save invited teams")
+					util.Error(" Cannot save invited teams", err)
 					Report(w, r, "你好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
 				}
@@ -355,7 +355,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		// 该茶话会属性不合法
-		util.ScaldingTea(util.LogError(err), " Project class is not valid")
+		util.Error(" Project class is not valid", err)
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个茶话会被外星人霸占了，请确认后再试。")
 		return
 	}
@@ -366,8 +366,8 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		PlaceId:   place.Id}
 
 	if err = pp.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot create project place")
-		Report(w, r, "你好，闪电考拉抹了抹汗，竟然说茶台地方保存失败，请确认后再试。")
+		util.Error(" Cannot create project place", err)
+		Report(w, r, "你好，茶博士抹了抹汗，竟然说茶台地方保存失败，请确认后再试。")
 		return
 	}
 
@@ -377,7 +377,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		ObjectType: 2,
 	}
 	if err = accept_object.Create(); err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot create accept_object")
+		util.Error("Cannot create accept_object", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
@@ -392,7 +392,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 发送消息给两个在线用户
 	err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot send message")
+		util.Error(" Cannot send message", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
@@ -421,7 +421,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	o := data.Objective{
 		Uuid: uuid}
 	if err = o.GetByUuid(); err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read project")
+		util.Error(" Cannot read project", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到茶台，请稍后再试。")
 		return
 	}
@@ -431,6 +431,8 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，三人行，必有大佬焉，请稍后再试。")
 		return
 	}
+	s_survival_families = append(s_survival_families, DefaultFamily)
+	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 	//默认和常用地方
 
 	// 填写页面数据
@@ -465,7 +467,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
 		ok, err := o.IsInvitedMember(s_u.Id)
 		if err != nil {
-			util.ScaldingTea(util.LogError(err), " Cannot read objective Invited-list")
+			util.Error(" Cannot read objective Invited-list", err)
 			Report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
 			return
 		}
@@ -498,7 +500,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pr := data.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read project")
+		util.Error(" Cannot read project", err)
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
@@ -510,7 +512,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pD.ProjectBean, err = FetchProjectBean(pr)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read project", pr.Uuid)
+		util.Error(" Cannot read project", pr.Uuid)
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
@@ -524,13 +526,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	ob, err := pD.ProjectBean.Project.Objective()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read objective")
+		util.Error(" Cannot read objective", err)
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。")
 		return
 	}
 	pD.QuoteObjectiveBean, err = FetchObjectiveBean(ob)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read objective")
+		util.Error(" Cannot read objective", err)
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。")
 		return
 	}
@@ -541,7 +543,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取全部茶议资料
 	thread_slice, err := pD.ProjectBean.Project.Threads()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read threads given project")
+		util.Error(" Cannot read threads given project", err)
 		Report(w, r, "你好，满头大汗的茶博士说，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。")
 		return
 	}
@@ -565,8 +567,8 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取茶议和作者相关资料荚
 	oabSlice, err = FetchThreadBeanSlice(thread_slice)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read thread-bean slice")
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。闪电考拉为你忙碌中...")
+		util.Error(" Cannot read thread-bean slice", err)
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中...")
 		return
 	}
 	pD.ThreadBeanSlice = oabSlice
@@ -574,7 +576,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取茶台项目活动地方
 	pD.Place, err = pD.ProjectBean.Project.Place()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot read project place")
+		util.Error(" Cannot read project place", err)
 		Report(w, r, "你好，满头大汗的茶博士唱，过高花已妒，请稍后再试。")
 		return
 	}
@@ -607,7 +609,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	//从会话查获当前浏览用户资料荚
 	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get user-related data from session")
+		util.Error(" Cannot get user-related data from session", err)
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -656,14 +658,14 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	//读取茶台管理团队资料
 	pr_team, err := data.GetTeam(pr.TeamId)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get team")
+		util.Error(" Cannot get team", err)
 		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	// 检查是否茶台管理员，
 	is_master, err := pr_team.IsMember(s_u.Id)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get team-core-members")
+		util.Error(" Cannot get team-core-members", err)
 		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
@@ -673,7 +675,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	//获取管理这个茶围的团队
 	admin_team, err := data.GetTeam(ob.TeamId)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get team")
+		util.Error(" Cannot get team", err)
 		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
@@ -681,7 +683,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	is_admin, err := admin_team.IsMember(s_u.Id)
 	if err != nil {
 
-		util.ScaldingTea(util.LogError(err), " Cannot get team-core-members")
+		util.Error(" Cannot get team-core-members", err)
 		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}

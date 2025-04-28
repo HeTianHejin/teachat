@@ -698,7 +698,7 @@ func IsFamilyExist(user_id, partner_user_id int) (exist bool, err error) {
 
 // FamilyMember.Create() 创建家庭成员
 func (fm *FamilyMember) Create() (err error) {
-	statement := "INSERT INTO family_members (uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
+	statement := "INSERT INTO family_members (uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return

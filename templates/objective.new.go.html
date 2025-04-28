@@ -70,7 +70,7 @@
       </div>
 
       <div class="form-group">
-        <label for="description">选择团队</label>
+        <label for="description">选择管理团队</label>
           <select name="team_id" class="form-control" id="team_id" required>
             <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
             </option>
@@ -81,7 +81,7 @@
       </div>
       
       <div class="form-group">
-        <label for="description">选择家庭</label>
+        <label for="description">选择所属家庭</label>
           <select name="family_id" class="form-control" id="family_id" required>
             <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
             </option>

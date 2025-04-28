@@ -1,0 +1,3 @@
+ERROR 2025/04/28 16:34:18 utils.go:127: route_auth.go:215 - [jiabaoyu@storetravels.com 密码和用户名不匹配。]
+INFO 2025/04/28 16:54:13 utils.go:127: route_auth.go:247 - [niumowang@myth.com Session deleted]
+INFO 2025/04/28 17:19:21 utils.go:127: route_auth.go:280 - [handler.Logout 用户登出成功 uuid d38ed64b-bd7c-4b27-66e6-0bdaaff20a0e]

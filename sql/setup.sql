@@ -81,7 +81,7 @@ CREATE TABLE team_member_resignations (
     content              TEXT,
     status               SMALLINT,
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at           TIMESTAMP
 );
 
 CREATE TABLE footprints (
@@ -103,7 +103,7 @@ CREATE TABLE member_applications (
     content               TEXT,
     status                SMALLINT NOT NULL DEFAULT 0,
     created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at            TIMESTAMP
 );
 
 CREATE TABLE member_application_replies (
@@ -115,7 +115,7 @@ CREATE TABLE member_application_replies (
     reply_content                     VARCHAR(255),
     status                            SMALLINT NOT NULL DEFAULT 0,
     created_at                        TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at                        TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at                        TIMESTAMP
 );
 
 CREATE TABLE thread_approved (
@@ -166,7 +166,7 @@ CREATE TABLE places (
     is_government        BOOLEAN DEFAULT false,
     user_id              INTEGER,
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at           TIMESTAMP
 );
 
 CREATE TABLE addresses (
@@ -185,7 +185,7 @@ CREATE TABLE addresses (
     postal_code          VARCHAR(20) DEFAULT 0,
     category             INTEGER DEFAULT 0,
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at           TIMESTAMP
 );
 CREATE TABLE user_place (
     id                   SERIAL PRIMARY KEY,
@@ -240,7 +240,7 @@ create table users (
   role                           varchar(64),
   gender                         integer,
   avatar                         varchar(255),
-  updated_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at                     TIMESTAMP
 );
 
 CREATE TABLE follows (
@@ -253,7 +253,7 @@ CREATE TABLE follows (
     relationship_level           INT, 
     is_disdain                   boolean,
     created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at                   TIMESTAMP
 );
 
 CREATE TABLE friends (
@@ -266,7 +266,7 @@ CREATE TABLE friends (
     relationship_level           INT, 
     is_rival                     BOOLEAN,
     created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at                   TIMESTAMP
 );
 
 CREATE TABLE fans (
@@ -279,7 +279,7 @@ CREATE TABLE fans (
     relationship_level           INT, 
     is_black_slice                BOOLEAN,
     created_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at                   TIMESTAMP
 );
 
 create table user_stars (
@@ -296,7 +296,7 @@ create table user_default_teams (
   user_id                        integer references users(id),
   team_id                        integer references teams(id),
   created_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at                     TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at                     TIMESTAMP
 );
 
 create table administrators (
@@ -328,7 +328,7 @@ create table objectives (
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   user_id                integer NOT NULL,
   class                  integer NOT NULL,
-  edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  edit_at                TIMESTAMP,
   family_id              integer default 0,
   cover                  varchar(64),
   team_id                integer not null default 2,
@@ -345,7 +345,7 @@ create table projects (
   user_id                integer,
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   class                  integer,
-  edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  edit_at                TIMESTAMP,
   cover                  varchar(64) default 'default-pr-cover',
   team_id                integer not null default 2,
   is_private             boolean default false,
@@ -383,7 +383,7 @@ create table threads (
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   class                  integer default 10,
   title                  varchar(64),
-  edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  edit_at                TIMESTAMP,
   project_id             integer references projects(id),
   family_id              integer default 0,
   type                   integer default 0,
@@ -419,7 +419,7 @@ create table posts (
   user_id                integer,
   thread_id              integer,
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  edit_at                TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  edit_at                TIMESTAMP,
   attitude               boolean,
   family_id              integer default 0,
   team_id                integer not null default 2,
@@ -447,7 +447,7 @@ create table teams (
   class                  integer,
   abbreviation           integer,
   logo                   varchar(255),
-  updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at             TIMESTAMP,
   superior_team_id       integer default 0,
   subordinate_team_id    integer default 0
 );
@@ -460,7 +460,7 @@ create table team_members (
   role                   varchar(255), 
   created_at             timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   class                  integer default 1,
-  updated_at             timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at             timestamp
 );
 
 
@@ -476,7 +476,7 @@ create table team_member_role_notices (
   content                text,
   status                 integer,
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at             TIMESTAMP
 );
 
 create table project_invited_teams (
@@ -484,7 +484,7 @@ create table project_invited_teams (
   project_id             integer references projects(id),
   team_id                integer references teams(id),
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at             TIMESTAMP
 );
 
 create table objective_invited_teams (
@@ -492,7 +492,7 @@ create table objective_invited_teams (
   objective_id           integer references objectives(id),
   team_id                integer references teams(id),
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at             TIMESTAMP
 );
 
 
@@ -512,8 +512,8 @@ create table invitations (
 CREATE TABLE invitation_replies (
   id                   SERIAL PRIMARY KEY,
   uuid                 VARCHAR(50) NOT NULL,
-  invitation_id        INT references invitations(id), 
-  user_id              integer references users(id),
+  invitation_id        INTEGER, 
+  user_id              integer,
   reply_word           text NOT NULL,
   created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -527,7 +527,7 @@ CREATE TABLE accept_messages (
   accept_object_id     integer references accept_objects(id),
   class                integer default 0,
   created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  updated_at           TIMESTAMP
 );
 
 CREATE TABLE acceptances (
@@ -565,7 +565,7 @@ CREATE TABLE families (
     wife_from_family_id                   INTEGER default 0,
     status                                 INTEGER default 1,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                            TIMESTAMP,
     logo                                  VARCHAR(255),
     is_open                               BOOLEAN default true
 );
@@ -582,7 +582,7 @@ CREATE TABLE family_members (
     age                                   INTEGER default 0,
     order_of_seniority                    INTEGER default 0,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at                            TIMESTAMP
 );
 
 CREATE TABLE family_member_sign_ins (
@@ -597,7 +597,7 @@ CREATE TABLE family_member_sign_ins (
     place_id                              INTEGER default 0,
     status                                INTEGER default 0,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                            TIMESTAMP,
     is_adopted                            BOOLEAN default false
 );
 
@@ -622,7 +622,7 @@ CREATE TABLE family_member_sign_outs (
     place_id                              INTEGER default 0,
     status                                INTEGER default 0,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                            TIMESTAMP,
     is_adopted                            BOOLEAN default false,
     author_user_id                        INTEGER
 );
@@ -647,7 +647,7 @@ CREATE TABLE communities (
     edited_user_id_set                    INTEGER[],
     class                                 INTEGER default 0,
     created_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at                            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                            TIMESTAMP,
     flag                                   VARCHAR(255)
 );
 

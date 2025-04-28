@@ -130,7 +130,7 @@
         {{ if .ThreadBean.Thread.PostId }}
         <blockquote>
           <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePost.Uuid }}"
-              style="margin-inline-end: 1rem;"><span class="label label-default">引用</span></a>{{ .QuotePost.Body }} ...
+              style="margin-inline-end: 1rem;"><span class="label label-default">品味</span></a>{{ .QuotePost.Body }} ...
           </p>
           <footer style="font-size: small;">
             <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}"
@@ -152,7 +152,7 @@
         {{ else }}
         <blockquote>
           <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProject.Uuid }}"><span
-                class="label label-default">引用</span></a>{{ .QuoteProject.Body }} ...</p>
+                class="label label-default">茶台</span></a>{{ .QuoteProject.Body }} ...</p>
           <footer style="font-size: small;">
 
             <cite title="Source Title"> <a

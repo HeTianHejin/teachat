@@ -29,7 +29,7 @@ func HandleSearch(w http.ResponseWriter, r *http.Request) {
 func SearchPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot parse form")
+		util.Error(" Cannot parse form", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能理解你的话语，请稍后再试。")
 		return
 	}
@@ -40,7 +40,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -50,7 +50,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	//转换class_str为int
 	class_int, err := strconv.Atoi(class_str)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot convert class_str to int")
+		util.Error("Cannot convert class_str to int", err)
 		Report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
@@ -78,13 +78,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if ok := IsEmail(keyword); ok {
 			user, err := data.GetUserByEmail(keyword)
 			if err != nil {
-				util.ScaldingTea(util.LogError(err), keyword, " Cannot search user by keyword")
+				util.Error(keyword, " Cannot search user by keyword")
 			}
 			//如果user是非空
 			if user.Id > 0 {
 				user_bean, err := FetchUserBean(user)
 				if err != nil {
-					util.ScaldingTea(util.LogError(err), "cannot get user-bean given user")
+					util.Error("cannot get user-bean given user", err)
 				} else {
 					fPD.UserBeanSlice = append(fPD.UserBeanSlice, user_bean)
 					fPD.IsEmpty = false
@@ -94,13 +94,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 			user_slice, err := data.SearchUserByNameKeyword(keyword)
 			if err != nil {
-				util.ScaldingTea(util.LogError(err), keyword, " Cannot search user by keyword")
+				util.Error(keyword, " Cannot search user by keyword")
 			}
 
 			if len(user_slice) >= 1 {
 				fPD.UserBeanSlice, err = FetchUserBeanSlice(user_slice)
 				if err != nil {
-					util.ScaldingTea(util.LogError(err), " Cannot fetch user bean slice given user_slice")
+					util.Error(" Cannot fetch user bean slice given user_slice", err)
 				}
 				if len(fPD.UserBeanSlice) >= 1 {
 					fPD.IsEmpty = false
@@ -118,7 +118,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		user, err := data.GetUser(keyword_int)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				util.ScaldingTea(util.LogError(err), " Cannot get user by keyword_int id")
+				//				util.Error(" Cannot get user by keyword_int id", err)
 			}
 		}
 
@@ -126,7 +126,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if user.Id > 0 {
 			userbean, err := FetchUserBean(user)
 			if err != nil {
-				util.ScaldingTea(util.LogError(err), "cannot get user-bean given user")
+				util.Error("cannot get user-bean given user", err)
 			} else {
 				fPD.UserBeanSlice = append(fPD.UserBeanSlice, userbean)
 				fPD.IsEmpty = false
@@ -137,13 +137,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询，茶团简称，team.abbreviation
 		team_slice, err := data.SearchTeamByAbbreviation(keyword)
 		if err != nil {
-			util.ScaldingTea(util.LogError(err), " Cannot search team by abbreviation")
+			util.Error(" Cannot search team by abbreviation", err)
 		}
 
 		if len(team_slice) >= 1 {
 			t_b_slice, err := FetchTeamBeanSlice(team_slice)
 			if err != nil {
-				util.ScaldingTea(util.LogError(err), " Cannot fetch team bean slice given team_slice")
+				util.Error(" Cannot fetch team bean slice given team_slice", err)
 			}
 			if len(t_b_slice) >= 1 {
 				fPD.Count = len(t_b_slice)
@@ -155,7 +155,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询品茶地点 place
 		place_slice, err := data.FindPlaceByName(keyword)
 		if err != nil {
-			util.ScaldingTea(util.LogError(err), " Cannot search place by keyword")
+			util.Error(" Cannot search place by keyword", err)
 		}
 		if len(place_slice) >= 1 {
 			fPD.Count = len(place_slice)
@@ -182,7 +182,7 @@ func SearchGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), "Cannot get user from session")
+		util.Error("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}

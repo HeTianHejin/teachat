@@ -3,6 +3,7 @@ package data
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -274,7 +275,7 @@ func (user *User) Create() (err error) {
 	// you're always using a sequence.You need to use the RETURNING keyword in your insert to get this
 	// information from postgres.
 
-	statement := "INSERT INTO users (uuid, name, email, password, created_at, biography, role, gender, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
+	statement := "INSERT INTO users (uuid, name, email, password, created_at, biography, role, gender, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -333,18 +334,20 @@ func GetUserByEmail(email string) (user User, err error) {
 	return
 }
 
-// 根据给出的邮箱地址，通过快速计数法QueryRow检查user是否已经存在注册记录，存在记录则返回true，否则为false
+// 根据给出的邮箱地址，通过快速计数法QueryRow检查user是否已经存在注册记录
+// 返回: exist - 是否存在, err - 错误信息(包含原始SQL错误和上下文)
 func UserExistByEmail(email string) (exist bool, err error) {
+	const query = "SELECT count(*) FROM users WHERE email = $1"
 	var count int
-	err = Db.QueryRow("SELECT count(*) FROM users WHERE email = $1", email).Scan(&count)
+
+	// 执行查询并捕获错误
+	err = Db.QueryRow(query, email).Scan(&count)
 	if err != nil {
-		return false, err
+		// 包装原始错误，添加更多上下文信息
+		return false, fmt.Errorf("查询邮箱存在性失败: %v, 查询: %q, 参数: %s", err, query, email)
 	}
-	if count > 0 {
-		exist = true
-		return
-	}
-	return false, err
+
+	return count > 0, nil
 }
 
 // Get a single user given the ID

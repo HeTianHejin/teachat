@@ -12,13 +12,13 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := Session(r)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get session")
+		util.Error(" Cannot get session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get user")
+		util.Error(" Cannot get user", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -27,13 +27,13 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 
 	i_slice, err := s_u.Invitations()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot get invitations")
+		util.Error(s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，满头大汗的茶博士在努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 	i_b_slice, err := FetchInvitationBeanSlice(i_slice)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot get invitations bean slice")
+		util.Error(s_u.Email, " Cannot get invitations bean slice")
 		Report(w, r, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
 		return
 	}
@@ -52,13 +52,13 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	sess, err := Session(r)
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get session")
+		util.Error(" Cannot get session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), " Cannot get user")
+		util.Error(" Cannot get user", err)
 		Report(w, r, "你好，满头大汗的茶博士在努力中，请稍后再试。")
 		return
 	}
@@ -67,7 +67,7 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	amPD.SessUser = s_u
 	amPD.AcceptMessageSlice, err = s_u.UnreadAcceptMessages()
 	if err != nil {
-		util.ScaldingTea(util.LogError(err), s_u.Email, " Cannot get invitations")
+		util.Error(s_u.Email, " Cannot get invitations")
 		Report(w, r, "你好，满头大汗的茶博士在加倍努力查找您的资料中，请稍后再试。")
 		return
 	}

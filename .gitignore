@@ -11,12 +11,21 @@
 # Test binary, built with `go test -c`
 *.test
 
+# 日志文件
+*.log
+teachatWeb.log
 # 鹤田河津- debug 
-__debug_bin??????????
+__debug_*
 __debug_bin?????????
 __debug_bin*
-*.log
 *.jpeg
+*.jpg
+*.png
+*.gif
+*.zip
+*.tar
+*.tar.gz
+*.tgz
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out

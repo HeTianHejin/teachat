@@ -3,8 +3,19 @@ package data
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+
 	util "teachat/Util"
 	"time"
+)
+
+// $事业茶团角色
+const (
+	RoleCEO    = "CEO"
+	RoleCTO    = "CTO"
+	RoleCMO    = "CMO"
+	RoleCFO    = "CFO"
+	RoleTaster = "taster"
 )
 
 // 根据$事业茶团team_id_slice，获取全部申请加盟的$事业茶团[]team
@@ -228,7 +239,7 @@ func (notice *TeamMemberRoleNotice) CreatedAtDate() string {
 
 // TeamMemberRoleNotice.Create()
 func (notice *TeamMemberRoleNotice) Create() (err error) {
-	statement := "INSERT INTO team_member_role_notices (uuid, team_id, ceo_id, member_id, member_current_role, new_role, title, content, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
+	statement := "INSERT INTO team_member_role_notices (uuid, team_id, ceo_id, member_id, member_current_role, new_role, title, content, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -641,7 +652,7 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 // coreMember() 返回$事业茶团核心成员,teamMember.Role = “CEO” and “CTO” and “CMO” and “CFO”
 // AWS CodeWhisperer assist in writing
 func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5)", team.Id, "CEO", "CTO", "CMO", "CFO")
+	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5)", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO)
 	if err != nil {
 		return
 	}
@@ -700,13 +711,12 @@ func (team *Team) IsMember(user_id int) (is_member bool, err error) {
 // AWS CodeWhisperer assist in writing
 func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 	team_member = TeamMember{}
-	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "CEO").
+	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, RoleCEO).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Class, &team_member.UpdatedAt)
 	return
 }
 
 // GetTeamMemberByRole() 根据角色查找$事业茶团成员资料。用于检查$事业茶团拟邀请的新成员角色是否已经被占用
-// AWS CodeWhisperer assist in writing
 func (team *Team) GetTeamMemberByRole(role string) (team_member TeamMember, err error) {
 	team_member = TeamMember{}
 	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
@@ -714,11 +724,49 @@ func (team *Team) GetTeamMemberByRole(role string) (team_member TeamMember, err 
 	return
 }
 
+// CheckTeamMemberByRole 根据角色查找团队成员
+// 参数:
+//   - role: 要查询的角色名称
+//
+// 返回:
+//   - *TeamMember: 如果找到返回成员指针，否则返回nil
+//   - error: 如果查询出错返回错误，未找到不视为错误
+func (team *Team) CheckTeamMemberByRole(role string) (*TeamMember, error) {
+	if team == nil || team.Id == 0 || team.Id == 2 {
+		return nil, errors.New("invalid team")
+	}
+
+	if role == "" {
+		return nil, errors.New("role cannot be empty")
+	}
+
+	teamMember := &TeamMember{}
+	err := Db.QueryRow(
+		"SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at "+
+			"FROM team_members WHERE team_id = $1 AND role = $2",
+		team.Id, role,
+	).Scan(
+		&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId,
+		&teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt,
+		&teamMember.Class, &teamMember.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// 未找到记录不算错误
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to query team member: %w", err)
+	}
+
+	return teamMember, nil
+}
+
 // 根据team_member struct 生成Create()方法
 // AWS CodeWhisperer assist in writing
 func (tM *TeamMember) Create() (err error) {
 	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, class)
-	VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id,uuid`
+	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id,uuid`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
@@ -753,13 +801,13 @@ func (teamMember *TeamMember) UpdateRoleClass() (err error) {
 
 // 更换$事业茶团默认CEO的方法，Update team_members记录中role=CEO的行 user_id 为当前user_id
 func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
-	statement := `UPDATE team_members SET user_id = $1, created_at = $2, updated_at = $3 WHERE team_id = $4 AND role = $5`
+	statement := `UPDATE team_members SET user_id = $1, updated_at = $2 WHERE team_id = $3 AND role = $4`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(user_id, time.Now(), time.Now(), teamMember.TeamId, "CEO")
+	_, err = stmt.Exec(user_id, time.Now(), teamMember.TeamId, RoleCEO)
 	return
 }
 

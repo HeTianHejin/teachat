@@ -77,14 +77,14 @@ type Acceptance struct {
 
 // Create() Acceptance新建一条 友邻蒙评 记录
 func (a *Acceptance) Create() (err error) {
-	statement := `INSERT INTO acceptances (accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	statement := `INSERT INTO acceptances (accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRow(a.AcceptObjectId, a.XAccept, a.XUserId, time.Now(), a.YAccept, a.YUserId, a.YAcceptedAt).Scan(&a.Id)
+	err = stmt.QueryRow(a.AcceptObjectId, a.XAccept, a.XUserId, time.Now(), a.YAccept, a.YUserId).Scan(&a.Id)
 
 	return
 }

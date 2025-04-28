@@ -60,7 +60,7 @@ var TypeStatus = map[int]string{
 
 var ThreadStatus = map[int]string{
 	0: "加水",
-	1: "品茶",
+	1: "温热",
 	2: "定味",
 	3: "展示",
 	4: "已删除",
@@ -382,9 +382,9 @@ func (project *Project) Threads() (threads []Thread, err error) {
 	return
 }
 
-// 检测edit_at是否不为空且晚于created_at 5秒以上
 func (t *Thread) IsEdited() bool {
-	return t.EditAt != nil && t.EditAt.After(t.CreatedAt.Add(time.Second*5))
+
+	return t.EditAt != nil && !t.EditAt.Equal(t.CreatedAt)
 }
 
 // 获取thread的状态string
