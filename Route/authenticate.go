@@ -14,11 +14,11 @@ import (
 func LoginGet(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.Error(" Cannot parse form", err)
+		util.Debug(" Cannot parse form", err)
 		Report(w, r, "你好，茶博士正在为你服务的路上极速行动，请稍安勿躁。")
 		return
 	}
-	// 读取用户提交的，点击‘登机’时所在页面资料，以便checkin成功时回到原页面，改善体验
+	// 读取用户提交的，点击‘登船’时所在页面资料，以便checkin成功时回到原页面，改善体验
 	footprint := r.FormValue("footprint")
 	query := r.FormValue("query")
 	var aopD data.AcceptObjectPageData
@@ -49,7 +49,7 @@ func SignupGet(w http.ResponseWriter, r *http.Request) {
 func SignupPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.Error(" Cannot parse form", err)
+		util.Debug(" Cannot parse form", err)
 	}
 	// 读取用户提交的资料
 	name := r.PostFormValue("name")
@@ -84,18 +84,18 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	// 检查提交的邮箱是否已经注册过了
 	exist, err := data.UserExistByEmail(newU.Email)
 	if err != nil {
-		util.Error((fmt.Errorf("检查邮箱存在性时出错: %v, 邮箱: %s", err, newU.Email)), "数据库查询错误")
+		util.Debug((fmt.Errorf("检查邮箱存在性时出错: %v, 邮箱: %s", err, newU.Email)), "数据库查询错误")
 		Report(w, r, "你好，茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
 	if exist {
-		util.Info((fmt.Errorf("重复注册尝试: 邮箱 %s 已注册", newU.Email)), "重复注册")
+		util.Debug((fmt.Errorf("重复注册尝试: 邮箱 %s 已注册", newU.Email)), "重复注册")
 		Report(w, r, "你好，提交注册的邮箱地址已经注册,请确认后再试。")
 		return
 	}
 	// 存储新用户（测试时不作邮箱有效性检查，直接激活账户）
 	if err := newU.Create(); err != nil {
-		util.Error(" Cannot create user", err)
+		util.Debug(" Cannot create user", err)
 		Report(w, r, "你好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -107,7 +107,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		Class:  1,
 	}
 	if err = team_member.Create(); err != nil {
-		util.Error(" Cannot create default_free team_member", err)
+		util.Debug(" Cannot create default_free team_member", err)
 		Report(w, r, "你好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -117,18 +117,18 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		TeamId: 2,
 	}
 	if err = udt.Create(); err != nil {
-		util.Error(" Cannot create default team", err)
+		util.Debug(" Cannot create default team", err)
 		Report(w, r, "你好，茶博士因摸不到超高度近视眼镜，导致注册失败，请确认情况后重试。")
 		return
 	}
 
-	util.Info(newU.Email, "注册新账号ok")
+	util.Debug(newU.Email, "注册新账号ok")
 
 	t := ""
 	if newU.Gender == 0 {
-		t = fmt.Sprintf("%s 女士，你好，注册成功！请登机，祝愿你拥有美好品茶时光。", newU.Name)
+		t = fmt.Sprintf("%s 女士，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
 	} else {
-		t = fmt.Sprintf("%s 先生，你好，注册成功！请登机，祝愿你拥有美好品茶时光。", newU.Name)
+		t = fmt.Sprintf("%s 先生，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
 	}
 	Report(w, r, t)
 
@@ -140,13 +140,12 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 func Authenticate(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.Error(" Cannot parse form", err)
+		util.Debug(" Cannot parse form", err)
 		Report(w, r, "你好，茶博士正在为你服务的路上努力，请稍安勿躁。")
 		return
 	}
 	// 读取用户提交的资料
-	footprint := r.FormValue("footprint")
-	query := r.FormValue("query")
+
 	watchword := r.PostFormValue("watchword")
 	pw := r.PostFormValue("password")
 
@@ -187,8 +186,8 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			//创建新的会话
 			session, err := s_u.CreateSession()
 			if err != nil {
-				util.Error(" Cannot create session", err)
-				Report(w, r, "你好，茶博士因找不到笔导致登机验证失败，请确认情况后重试。")
+				util.Debug(" Cannot create session", err)
+				Report(w, r, "你好，茶博士因找不到笔导致登船验证失败，请确认情况后重试。")
 				return
 			}
 			//设置cookie
@@ -203,20 +202,20 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 			http.SetCookie(w, &cookie)
 
-			//读取足迹，以决定返回那一个页面
-			if footprint == "" {
-				footprint = "/v1/"
-			} else {
-				footprint = footprint + "?" + query
-			}
-
+			// 安全重定向
+			footprint := sanitizeRedirectPath(r.FormValue("footprint")) // 避免开放重定向漏洞
 			http.Redirect(w, r, footprint, http.StatusFound)
 			return
 
 		} else {
 			//密码和用户名不匹配?
 			//如果连续输错密码，需要采取一些防暴力冲击措施？
-			util.Error(s_u.Email, "密码和用户名不匹配。")
+			// 使用限流中间件（如github.com/ulule/limiter）
+			// rate := limiter.Rate{
+			//     Limit:  5,               // 每分钟5次尝试
+			//     Period: 1 * time.Minute,
+			// }
+			util.Debug(s_u.Email, "密码和用户名不匹配。")
 			Report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 			return
 		}
@@ -239,7 +238,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("_cookie")
 	if err != nil {
 		if err != http.ErrNoCookie {
-			util.Error(operation, "获取Cookie失败", err)
+			util.Debug(operation, "获取Cookie失败", err)
 		}
 		// 无Cookie直接重定向
 		http.Redirect(w, r, "/v1/", http.StatusFound)
@@ -256,7 +255,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	sess := data.Session{Uuid: cookie.Value}
 	valid, err := sess.Check()
 	if err != nil {
-		util.Error(operation, "检查会话失败", "uuid", cookie.Value, "error", err)
+		util.Debug(operation, "检查会话失败", "uuid", cookie.Value, "error", err)
 		Report(w, r, "你好，茶博士因找不到资料导致登出失败，请确认情况后重试。")
 		return
 	}
@@ -270,14 +269,14 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	// 3. 删除会话
 	if err := sess.Delete(); err != nil {
-		util.Error(operation, "删除会话失败", "uuid", cookie.Value, "error", err)
+		util.Debug(operation, "删除会话失败", "uuid", cookie.Value, "error", err)
 		Report(w, r, "你好，茶博士因找不到笔导致登出失败，请确认情况后重试。")
 		return
 	}
 
 	// 4. 清除客户端Cookie并重定向
 	clearSessionCookie(w)
-	util.Info(operation, "用户登出成功", "uuid", cookie.Value)
+	util.Debug(operation, "用户登出成功", "uuid", cookie.Value)
 	http.Redirect(w, r, "/v1/", http.StatusFound)
 }
 

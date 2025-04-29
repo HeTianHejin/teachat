@@ -24,7 +24,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	//读取当前用户的相关资料
 	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.Error(" Cannot fetch user related data", err)
+		util.Debug(" Cannot fetch user related data", err)
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -32,7 +32,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	user_uuid := r.FormValue("id")
 	invi_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
-		util.Error(" Cannot get user by uuid", err)
+		util.Debug(" Cannot get user by uuid", err)
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -82,24 +82,24 @@ func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error 
 	// 	} else {
 	if user_ids, err = data.Get2RandomUserId(); err != nil {
 		//test status
-		util.Error(" Cannot get 2 random user id", err)
+		util.Debug(" Cannot get 2 random user id", err)
 		return err
 	}
 	// 	}
 	// }
 	if len(user_ids) != 2 {
-		util.Error(" Cannot get 2 random-user-ids", err)
+		util.Debug(" Cannot get 2 random-user-ids", err)
 		return err
 	}
 	// 发送“是否接纳”消息
 	if err = mess.Send(user_ids); err != nil {
-		util.Error(" Cannot send accept message", err)
+		util.Debug(" Cannot send accept message", err)
 		return err
 	}
 	// 记录用户有1新消息
 	for _, u_id := range user_ids {
 		if err = data.AddUserMessageCount(u_id); err != nil {
-			util.Error(" Cannot add random user new-message-count", err)
+			util.Debug(" Cannot add random user new-message-count", err)
 			return err
 		}
 	}
@@ -111,12 +111,12 @@ func PilotAcceptMessageSend(u_id int, mess data.AcceptMessage) error {
 
 	// 发送友����评结果通知消息
 	if err := mess.Send([]int{u_id}); err != nil {
-		util.Error(" Cannot send accept message", err)
+		util.Debug(" Cannot send accept message", err)
 		return err
 	}
 	// ��录用户有1新消息
 	if err := data.AddUserMessageCount(u_id); err != nil {
-		util.Error(" Cannot add user new-message-count", err)
+		util.Debug(" Cannot add user new-message-count", err)
 		return err
 	}
 	return nil

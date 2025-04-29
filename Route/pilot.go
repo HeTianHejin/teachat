@@ -26,7 +26,7 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 
 		pilots, err := data.GetAdministrators()
 		if err != nil {
-			util.Error(" Cannot get pilots", err)
+			util.Debug(" Cannot get pilots", err)
 			http.Redirect(w, r, "/v1/", http.StatusFound)
 		}
 		RenderHTML(w, &pilots, "layout", "navbar.private", "pilot.office")
@@ -61,7 +61,7 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 
 		err = r.ParseForm()
 		if err != nil {
-			util.Error(" Cannot parse form", err)
+			util.Debug(" Cannot parse form", err)
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)
 			return
 		}
@@ -69,7 +69,7 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 		email := r.PostFormValue("email")
 		newPilot, err := data.GetUserByEmail(email)
 		if err != nil {
-			util.Error(" Cannot find user by email", err)
+			util.Debug(" Cannot find user by email", err)
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)
 			return
 		}
@@ -81,7 +81,7 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 		}
 		//创建飞行员
 		if err := pilot.Create(); err != nil {
-			util.Error(" Cannot create pilot", err)
+			util.Debug(" Cannot create pilot", err)
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)
 			return
 		}

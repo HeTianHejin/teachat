@@ -49,12 +49,12 @@ func init() {
 		dbhost, dbport, dbuser, dbpassword, dbname, dbsslmode, dbTimeZone)
 	Db, err = sql.Open(dbdriver, psqlInfo)
 	if err != nil {
-		util.Fatal("星际迷失->茶棚数据库打开时",err)
+		util.Fatal("星际迷失->茶棚数据库打开时", err)
 	}
 	//测试数据库连接是否成功
 	err = Db.Ping()
 	if err != nil {
-		util.Fatal("ping teachat database failure - 测试链接茶话会数据库失败~~~",err)
+		util.Fatal("ping teachat database failure - 测试链接茶话会数据库失败~~~", err)
 	}
 
 	//ok
