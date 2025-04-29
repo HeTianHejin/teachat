@@ -512,7 +512,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pD.ProjectBean, err = FetchProjectBean(pr)
 	if err != nil {
-		util.Error(" Cannot read project", pr.Uuid)
+		util.Error(" Cannot read project", pr.Uuid, err)
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
@@ -539,7 +539,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 截短此引用的茶围内容以方便展示
 	pD.QuoteObjectiveBean.Objective.Body = Substr(pD.QuoteObjectiveBean.Objective.Body, 168)
 
-	var oabSlice []data.ThreadBean
+	var tb_slice []data.ThreadBean
 	// 读取全部茶议资料
 	thread_slice, err := pD.ProjectBean.Project.Threads()
 	if err != nil {
@@ -565,13 +565,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.ThreadIsApprovedCount = ta.CountByProjectId()
 
 	// 获取茶议和作者相关资料荚
-	oabSlice, err = FetchThreadBeanSlice(thread_slice)
+	tb_slice, err = FetchThreadBeanSlice(thread_slice)
 	if err != nil {
 		util.Error(" Cannot read thread-bean slice", err)
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中...")
 		return
 	}
-	pD.ThreadBeanSlice = oabSlice
+	pD.ThreadBeanSlice = tb_slice
 
 	// 获取茶台项目活动地方
 	pD.Place, err = pD.ProjectBean.Project.Place()
@@ -609,7 +609,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	//从会话查获当前浏览用户资料荚
 	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
 	if err != nil {
-		util.Error(" Cannot get user-related data from session", err)
+		util.Error(" Cannot get user-related data from session", s.Email, err)
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -655,36 +655,22 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		pD.ProjectBean.Project.PageData.IsAuthor = false
 	}
 
-	//读取茶台管理团队资料
-	pr_team, err := data.GetTeam(pr.TeamId)
+	is_master, err := checkProjectPermission(&pr, s_u.Id)
 	if err != nil {
-		util.Error(" Cannot get team", err)
-		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		util.Error("Permission check failed", "user", s_u.Id, "error", err)
+		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
-	// 检查是否茶台管理员，
-	is_master, err := pr_team.IsMember(s_u.Id)
-	if err != nil {
-		util.Error(" Cannot get team-core-members", err)
-		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
-		return
-	}
-	//标记为管理员
 	pD.IsMaster = is_master
 
-	//获取管理这个茶围的团队
-	admin_team, err := data.GetTeam(ob.TeamId)
+	is_admin, err := checkObjectivePermission(&ob, s_u.Id)
 	if err != nil {
-		util.Error(" Cannot get team", err)
-		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
-		return
-	}
-	// 查是否茶围管理员
-	is_admin, err := admin_team.IsMember(s_u.Id)
-	if err != nil {
-
-		util.Error(" Cannot get team-core-members", err)
-		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		util.Error("Admin permission check failed",
+			"userId", s_u.Id,
+			"objectiveId", ob.Id,
+			"error", err,
+		)
+		Report(w, r, "你好，茶博士说：玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	pD.IsAdmin = is_admin

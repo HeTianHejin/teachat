@@ -625,10 +625,27 @@ func (f *Family) Founder() (user User, err error) {
 	return
 }
 
-// Family.IsMember() 根据id，检查用户是否是家庭成员
+// Family.IsMember() 根据user_id，检查用户是否是家庭成员
 func (f *Family) IsMember(user_id int) (isMember bool, err error) {
 
 	statement := "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND user_id=$2"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return false, err
+	}
+	defer stmt.Close()
+	var count int
+	err = stmt.QueryRow(f.Id, user_id).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+// Family.IsParentMember() 根据user_id，检查用户是否是家庭男女主人(父母)成员
+func (f *Family) IsParentMember(user_id int) (isMember bool, err error) {
+	statement := "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND user_id=$2 AND role IN (1, 2)"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return false, err

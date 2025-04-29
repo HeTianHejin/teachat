@@ -53,7 +53,7 @@ var DefaultFamily = data.Family{
 var FreelancerTeam = data.Team{
 	Id:                2,
 	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
-	Name:              "特立独行的自由人",
+	Name:              "自由人",
 	Mission:           "星际旅行特立独行的自由人，不属于任何私有$茶团。",
 	FounderId:         1, //表示系统预设的值
 	Class:             0,
@@ -61,6 +61,47 @@ var FreelancerTeam = data.Team{
 	Logo:              "teamLogo",
 	SuperiorTeamId:    0,
 	SubordinateTeamId: 0,
+}
+
+const (
+	NoTeamId         = 0
+	SpaceshipCrewId  = 1
+	FreelancerTeamId = 2
+)
+
+func checkObjectivePermission(ob *data.Objective, userID int) (bool, error) {
+	// 家庭管理的茶围
+	if ob.TeamId == FreelancerTeamId || ob.TeamId == NoTeamId {
+		family, err := data.GetFamily(ob.FamilyId)
+		if err != nil {
+			return false, fmt.Errorf("failed to get family (ID: %d): %v", ob.FamilyId, err)
+		}
+		return family.IsParentMember(userID)
+	}
+
+	// 团队管理的茶围
+	team, err := data.GetTeam(ob.TeamId)
+	if err != nil {
+		return false, fmt.Errorf("failed to get team (ID: %d): %v", ob.TeamId, err)
+	}
+	return team.IsMember(userID)
+}
+
+// 检查茶台管理权限
+func checkProjectPermission(pr *data.Project, user_id int) (bool, error) {
+	if pr.TeamId == NoTeamId || pr.TeamId == SpaceshipCrewId || pr.TeamId == FreelancerTeamId {
+		pr_family, err := data.GetFamily(pr.FamilyId)
+		if err != nil {
+			return false, fmt.Errorf("failed to get family %d: %v", pr.FamilyId, err)
+		}
+		return pr_family.IsParentMember(user_id)
+	}
+
+	pr_team, err := data.GetTeam(pr.TeamId)
+	if err != nil {
+		return false, fmt.Errorf("failed to get team %d: %v", pr.TeamId, err)
+	}
+	return pr_team.IsMember(user_id)
 }
 
 // 获取用户最后一次设定的“默认家庭”

@@ -95,16 +95,15 @@
         </blockquote>
 
         <p>
-          {{/* 检查是否未入围1 */}}{{if not .ProjectBean.IsApproved }}
-
           {{/* 检查是否管理员1，如果是，显示入围按钮图标 */}}{{ if .IsAdmin }}
+          {{/* 检查是否未入围1 */}}{{if not .ProjectBean.IsApproved }}
           <form class="form" role="form" action="/v1/project/approve" method="post">
             <input type="hidden" name="uuid" value="{{ .ProjectBean.Project.Uuid }}" />
             <button type="submit" class="btn btn-default btn-sm">入围</button>
           </form>
-          {{/* 检查是否管理员2 */}}{{ end }}
-
-          {{/* 检查是否未入围2 */}}{{ end }}
+          
+          {{/* 检查是否未入围1 */}}{{ end }}
+          {{/* 检查是否管理员1 */}}{{ end }}
         </p>
 
       </div>
