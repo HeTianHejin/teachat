@@ -431,7 +431,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，三人行，必有大佬焉，请稍后再试。")
 		return
 	}
-	s_survival_families = append(s_survival_families, DefaultFamily)
+	s_survival_families = append(s_survival_families, UnknownFamily)
 	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 	//默认和常用地方
 
@@ -614,7 +614,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//把系统默认家庭资料加入s_survival_families
-	s_survival_families = append(s_survival_families, DefaultFamily)
+	s_survival_families = append(s_survival_families, UnknownFamily)
 	//把系统默认团队资料加入s_survival_teams
 	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 

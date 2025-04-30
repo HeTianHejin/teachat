@@ -34,27 +34,27 @@ const (
 	RoleTaster = "taster"
 )
 
-// 默认家庭ID常量，默认家庭ID为0
-const DefaultFamilyId = 0
-const DefaultFamilyUuid = "x"
+// 未知的家庭ID常量，家庭ID为0
+const UnknownFamilyId = 0
+const UnknownFamilyUuid = "x"
 
-// 默认未明确资料的家庭="四海为家",id=0
+// 未明确资料的家庭="四海为家",id=0
 // 任何人均是来自某个家庭，但是单独的个体，即使成年，属于一个未来家庭的成员之一，不能视为一个家庭。
-var DefaultFamily = data.Family{
-	Id:           DefaultFamilyId,
-	Uuid:         DefaultFamilyUuid, //代表未知数
+var UnknownFamily = data.Family{
+	Id:           UnknownFamilyId,
+	Uuid:         UnknownFamilyUuid, //代表未知数
 	Name:         "四海为家",
 	AuthorId:     1, //表示系统预设的值
 	Introduction: "存在但未明确资料的家庭",
 }
 
 // 默认的系统“自由人”$事业茶团
-// 刚注册或者没有加入任何$团队的用户，属于基础$事业茶团
+// 刚注册或者没有加入任何$事业团队的茶友，属于未确定的$事业茶团
 var FreelancerTeam = data.Team{
 	Id:                2,
 	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
 	Name:              "自由人",
-	Mission:           "星际旅行特立独行的自由人，不属于任何私有$茶团。",
+	Mission:           "星际旅行特立独行的自由人，不属于任何$事业茶团。",
 	FounderId:         1, //表示系统预设的值
 	Class:             0,
 	Abbreviation:      "自由人",
@@ -117,7 +117,7 @@ func GetLastDefaultFamilyByUserId(user_id int) (family data.Family, err error) {
 	if err != nil {
 		// 未设定默认家庭
 		if errors.Is(err, sql.ErrNoRows) {
-			return DefaultFamily, nil
+			return UnknownFamily, nil
 		}
 		return
 	}
@@ -127,7 +127,7 @@ func GetLastDefaultFamilyByUserId(user_id int) (family data.Family, err error) {
 // 根据茶语中登记的家庭ID，获取某个茶语(茶围、茶台、茶议和品味)发布时选择的家庭
 func GetFamilyByFamilyId(family_id int) (family data.Family, err error) {
 	if family_id == 0 {
-		return DefaultFamily, nil
+		return UnknownFamily, nil
 	}
 	family = data.Family{Id: family_id}
 	if err = family.Get(); err != nil {

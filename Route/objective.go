@@ -45,7 +45,7 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	}
 	//把系统默认家庭资料加入s_survival_families
 	//把系统默认团队资料加入s_survival_teams
-	s_survival_families = append(s_survival_families, DefaultFamily)
+	s_survival_families = append(s_survival_families, UnknownFamily)
 	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 
 	// 填写页面数据
@@ -98,12 +98,8 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	is_private := r.PostFormValue("is_private") == "true"
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
-		util.Debug("Failed to convert class to int", err)
+		util.Debug("Failed to convert family_id to int", err)
 		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
-		return
-	}
-	if family_id == DefaultFamilyId {
-		Report(w, r, "你好，茶博士查阅了天书黄页，四海为家的人今天不适宜创建茶话会，请稍后再试。")
 		return
 	}
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
@@ -112,30 +108,83 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
-	if team_id == 0 {
-		Report(w, r, "你好，茶博士查阅了天书黄页，无拘无束自由人明天才适宜创建茶话会，请稍后再试。")
+
+	if team_id < FreelancerTeamId {
+		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 
-	//提交的茶团id,是team.id
-	// check the given team_id is valid
-	_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
-	if err != nil {
-		util.Debug("Cannot get team member by team id and user id", err)
-		Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+	if family_id == UnknownFamilyId && team_id == NoTeamId {
+		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 
-	// 检查提交的茶团id,是当前成员family.id
-	// check submit family_id is valid
-	family := data.Family{
-		Id: family_id,
-	}
-	is_f_member, err := family.IsMember(s_u.Id)
-	if !is_f_member {
-		util.Debug(" Cannot get family member by family id and user id", err)
-		Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+	// 添加对同时有团队和家庭ID的情况的检查 --DS
+	if family_id != UnknownFamilyId && team_id != NoTeamId && team_id != FreelancerTeamId {
+		Report(w, r, "茶话会只能属于一个团队或一个家庭，不能同时指定两者。")
 		return
+	}
+	// 明确拒绝保留团队编号
+	if team_id == 0 || team_id == 1 {
+		Report(w, r, "指定的团队编号是保留编号，不能使用。")
+		return
+	}
+
+	// 修改原有的团队ID最小值检查
+	if team_id < 0 || family_id < 0 { // 如果可能有负数ID
+		Report(w, r, "团队ID不合法。")
+		return
+	}
+	if family_id == UnknownFamilyId {
+		if team_id <= FreelancerTeamId {
+			Report(w, r, "你好，茶博士查阅了天书黄页，昨天可以创建茶会，明天也可以，但是今天不适宜创建茶话会。")
+			return
+		}
+
+		team := data.Team{Id: team_id}
+		//提交的茶团id,是对应已注册的普通$事业团队
+		// check the given team_id is valid
+		if err = team.Get(); err != nil {
+			util.Debug("Cannot get team by team id", err)
+			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+			return
+		}
+		is_member, err := team.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug("Cannot check team member by team id and user id", err)
+			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+			return
+		}
+		if !is_member {
+			util.Debug("Cannot check team member by team id and user id", err)
+			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+			return
+		}
+
+	}
+
+	if team_id == FreelancerTeamId {
+		if family_id != UnknownFamilyId {
+			family := data.Family{Id: family_id}
+			//提交的茶团id,是对应已注册的普通家庭
+			// check the given family_id is valid
+			if err = family.Get(); err != nil {
+				util.Debug("Cannot get family by family id", err)
+				Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+				return
+			}
+			is_member, err := family.IsMember(s_u.Id)
+			if err != nil {
+				util.Debug("Cannot check family member by family id and user id", err)
+				Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+				return
+			}
+			if !is_member {
+				util.Debug("Cannot check family member by family id and user id", err)
+				Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+				return
+			}
+		}
 	}
 
 	// 检查是否已经存在相同名字的茶话会
