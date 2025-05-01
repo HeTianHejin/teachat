@@ -33,6 +33,10 @@ const (
 	RoleCFO    = "CFO"
 	RoleTaster = "taster"
 )
+const (
+	OpenProject   = 1 // 开放式茶台
+	ClosedProject = 2 // 封闭式茶台
+)
 
 // 未知的家庭ID常量，家庭ID为0
 const UnknownFamilyId = 0
@@ -69,7 +73,78 @@ const (
 	FreelancerTeamId = 2
 )
 
-func checkObjectivePermission(ob *data.Objective, userID int) (bool, error) {
+// validateTeamAndFamilyParams 验证团队和家庭ID参数的合法性
+// 返回: (是否有效, 错误)
+func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id int, family_id int, currentUserID int) (bool, error) {
+	// 基本参数检查（这些检查不涉及数据库操作）
+	if team_id < FreelancerTeamId {
+		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		return false, nil
+	}
+
+	if family_id == UnknownFamilyId && team_id == NoTeamId {
+		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		return false, nil
+	}
+
+	if family_id != UnknownFamilyId && team_id != NoTeamId && team_id != FreelancerTeamId {
+		Report(w, r, "茶话会只能属于一个团队或一个家庭，不能同时指定两者。")
+		return false, nil
+	}
+
+	if team_id == 0 || team_id == 1 {
+		Report(w, r, "指定的团队编号是保留编号，不能使用。")
+		return false, nil
+	}
+
+	if team_id < 0 || family_id < 0 {
+		Report(w, r, "团队ID不合法。")
+		return false, nil
+	}
+
+	// 团队ID检查（涉及数据库操作）
+	if family_id == UnknownFamilyId {
+		if team_id <= FreelancerTeamId {
+			Report(w, r, "你好，茶博士查阅了天书黄页，昨天可以创建茶会，明天也可以，但是今天不适宜创建茶话会。")
+			return false, nil
+		}
+
+		team := data.Team{Id: team_id}
+		if err := team.Get(); err != nil {
+			return false, err // 数据库错误，返回error
+		}
+
+		is_member, err := team.IsMember(currentUserID)
+		if err != nil {
+			return false, err // 数据库错误，返回error
+		}
+		if !is_member {
+			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+			return false, nil
+		}
+	}
+
+	// 自由职业者团队检查（涉及数据库操作）
+	if team_id == FreelancerTeamId && family_id != UnknownFamilyId {
+		family := data.Family{Id: family_id}
+		if err := family.Get(); err != nil {
+			return false, err // 数据库错误，返回error
+		}
+
+		is_member, err := family.IsMember(currentUserID)
+		if err != nil {
+			return false, err // 数据库错误，返回error
+		}
+		if !is_member {
+			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+func checkObjectiveAdminPermission(ob *data.Objective, userID int) (bool, error) {
 	// 家庭管理的茶围
 	if ob.TeamId == FreelancerTeamId || ob.TeamId == NoTeamId {
 		family, err := data.GetFamily(ob.FamilyId)
@@ -1009,10 +1084,10 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	return nil
 }
 
-// 茶博士向茶客报告信息的方法，包括但不限于意外事件和通知、感谢等等提示。
 // 茶博士——古时专指陆羽。陆羽著《茶经》，唐德宗李适曾当面称陆羽为“茶博士”。
 // 茶博士-teaOffice，是古代中华传统文化对茶馆工作人员的昵称，如：富家宴会，犹有专供茶事之人，谓之茶博士。——唐代《西湖志馀》
 // 现在多指精通茶艺的师傅，尤其是四川的长嘴壶茶艺，茶博士个个都是身怀绝技的“高手”。
+// 茶博士向茶客报告信息的方法，包括但不限于意外事件和通知、感谢等等提示。
 func Report(w http.ResponseWriter, r *http.Request, msg string) {
 	var userBPD data.UserBean
 	userBPD.Message = msg
@@ -1033,10 +1108,6 @@ func Report(w http.ResponseWriter, r *http.Request, msg string) {
 	}
 	userBPD.SessUser = s_u
 
-	// 记录用户最后查询的资讯
-	// if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
-	// 	util.PanicTea(util.LogError(err), s_u.Id, " Cannot record last query path")
-	// }
 	RenderHTML(w, &userBPD, "layout", "navbar.private", "feedback")
 }
 

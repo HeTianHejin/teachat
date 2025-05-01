@@ -142,3 +142,13 @@ func DefaultAvatar(uuid string) {
 	// 写入硬盘
 	buff.Flush()
 }
+
+// contains 检查切片中是否包含特定元素
+func contains(slice []int, item int) bool {
+	for _, v := range slice {
+		if v == item {
+			return true
+		}
+	}
+	return false
+}

@@ -153,14 +153,14 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取表单数据
-	ty, err := strconv.Atoi(r.PostFormValue("type"))
+	thre_type, err := strconv.Atoi(r.PostFormValue("type"))
 	if err != nil {
-		util.Debug(ty, "Failed to convert type to int")
+		util.Debug(thre_type, "Failed to convert type to int")
 		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
 	// 检查ty值是否 0、1
-	switch ty {
+	switch thre_type {
 	case 0, 1:
 		break
 	default:
@@ -233,48 +233,20 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//提交的茶团id,是team.id
-	if team_id != 0 {
-		// check submit team_id is valid
-		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				//util.Debug(" Cannot get team member by team id and user id", err)
-				Report(w, r, "你好，茶博士认为您不是这个茶团的成员，请确认后再试。")
-				return
-			}
-			util.Debug(" Cannot get team member by team id and user id", err)
-			Report(w, r, "你好，茶团成员资格检查失败，请确认后再试。")
-			return
-		}
+	valid, err := validateTeamAndFamilyParams(w, r, team_id, family_id, s_u.Id)
+	if !valid && err == nil {
+		return // 参数不合法，已经处理了错误
 	}
-	//提交的茶团id,是family.id
-	if family_id != 0 {
-		// check submit family_id is valid
-		family := data.Family{
-			Id: family_id,
-		}
-		is_member, err := family.IsMember(s_u.Id)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				//util.Debug(" Cannot get family member by family id and user id", err)
-				Report(w, r, "你好，茶博士认为您不是这个茶团的成员，请确认后再试。")
-				return
-			}
-			util.Debug(" Cannot get family member by family id and user id", err)
-			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-			return
-		}
-		if !is_member {
-			util.Debug(" Cannot get family member by family id and user id", err)
-			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-			return
-		}
+	if err != nil {
+		// 处理数据库错误
+		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+		Report(w, r, "你好，成员资格检查失败，请确认后再试。")
+		return
 	}
 
 	// 如果茶台class=1，存为开放式茶议草稿，
 	// 如果茶台class=2， 存为封闭式茶议草稿
-	if proj.Class == 1 || proj.Class == 2 {
+	if proj.Class == OpenProject || proj.Class == ClosedProject {
 		//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<456
 		if CnStrLen(title) < 1 {
 			Report(w, r, "你好，茶博士竟然说该茶议标题为空，请确认后再试一次。")
@@ -303,7 +275,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 			Title:     title,
 			Body:      body,
 			Class:     proj.Class,
-			Type:      ty,
+			Type:      thre_type,
 			PostId:    post_id,
 			TeamId:    team_id,
 			IsPrivate: is_private,

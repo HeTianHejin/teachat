@@ -204,7 +204,8 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 			// 安全重定向
 			footprint := sanitizeRedirectPath(r.FormValue("footprint")) // 避免开放重定向漏洞
-			http.Redirect(w, r, footprint, http.StatusFound)
+			query := r.FormValue("query")                               //⚠️本站查询参数
+			http.Redirect(w, r, footprint+"?"+query, http.StatusFound)
 			return
 
 		} else {

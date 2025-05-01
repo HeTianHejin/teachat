@@ -109,106 +109,32 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if team_id < FreelancerTeamId {
-		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+	valid, err := validateTeamAndFamilyParams(w, r, team_id, family_id, s_u.Id)
+	if !valid && err == nil {
+		return // 参数不合法，已经处理了错误
+	}
+	if err != nil {
+		// 处理数据库错误
+		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+		Report(w, r, "你好，成员资格检查失败，请确认后再试。")
 		return
-	}
-
-	if family_id == UnknownFamilyId && team_id == NoTeamId {
-		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
-		return
-	}
-
-	// 添加对同时有团队和家庭ID的情况的检查 --DS
-	if family_id != UnknownFamilyId && team_id != NoTeamId && team_id != FreelancerTeamId {
-		Report(w, r, "茶话会只能属于一个团队或一个家庭，不能同时指定两者。")
-		return
-	}
-	// 明确拒绝保留团队编号
-	if team_id == 0 || team_id == 1 {
-		Report(w, r, "指定的团队编号是保留编号，不能使用。")
-		return
-	}
-
-	// 修改原有的团队ID最小值检查
-	if team_id < 0 || family_id < 0 { // 如果可能有负数ID
-		Report(w, r, "团队ID不合法。")
-		return
-	}
-	if family_id == UnknownFamilyId {
-		if team_id <= FreelancerTeamId {
-			Report(w, r, "你好，茶博士查阅了天书黄页，昨天可以创建茶会，明天也可以，但是今天不适宜创建茶话会。")
-			return
-		}
-
-		team := data.Team{Id: team_id}
-		//提交的茶团id,是对应已注册的普通$事业团队
-		// check the given team_id is valid
-		if err = team.Get(); err != nil {
-			util.Debug("Cannot get team by team id", err)
-			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
-			return
-		}
-		is_member, err := team.IsMember(s_u.Id)
-		if err != nil {
-			util.Debug("Cannot check team member by team id and user id", err)
-			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
-			return
-		}
-		if !is_member {
-			util.Debug("Cannot check team member by team id and user id", err)
-			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
-			return
-		}
-
-	}
-
-	if team_id == FreelancerTeamId {
-		if family_id != UnknownFamilyId {
-			family := data.Family{Id: family_id}
-			//提交的茶团id,是对应已注册的普通家庭
-			// check the given family_id is valid
-			if err = family.Get(); err != nil {
-				util.Debug("Cannot get family by family id", err)
-				Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-				return
-			}
-			is_member, err := family.IsMember(s_u.Id)
-			if err != nil {
-				util.Debug("Cannot check family member by family id and user id", err)
-				Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-				return
-			}
-			if !is_member {
-				util.Debug("Cannot check family member by family id and user id", err)
-				Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-				return
-			}
-		}
 	}
 
 	// 检查是否已经存在相同名字的茶话会
 	obj := data.Objective{
 		Title: title,
 	}
-	err = obj.GetByTitleClass()
+	t_ob, err := obj.GetByTitle()
 	if err == nil {
 		// 已经存在相同名字且状态正常的茶话会
-		Report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复无法辨雌雄哦，请确认后再试。")
+		Report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复哦，请确认后再试。")
 		return
 	}
-
-	count_title, err := obj.CountByTitle()
-	if err != nil {
-		util.Debug(" cannot get count given objective title", err)
-		Report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
-		return
-	}
-	// 最大可创建 相同名称 茶话会数量
-	if count_title > 1 {
+	if len(t_ob) >= 1 {
 		Report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会相同名称仅能使用1次，请确认后再试。")
 		return
 	}
+
 	count_team, err := obj.CountByTeamId()
 	if err != nil {
 		util.Debug(" cannot get count given objective team_id", err)
@@ -216,7 +142,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 最大团队可以创建 茶话会 数量
-	if count_team >= int(util.Config.MaxInviteTeams) {
+	if count_team > int(util.Config.MaxInviteTeams) {
 		Report(w, r, "你好，编新不如述旧，一个茶团最多可以开的茶话会数量是有限的，请确认后再试。")
 		return
 	}
@@ -257,7 +183,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 	case 20:
-		//如果class=20封闭式茶话会草围，需要读取指定茶团号TeamIds列表
+		//如果class=20封闭式茶话会(草围)，需要读取指定茶团号TeamIds列表
 
 		tIds_str := r.PostFormValue("invite_ids")
 
@@ -290,21 +216,21 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 迭代t_id_slice，尝试保存新封闭式茶话会草围邀请的茶团
-		for _, t_id := range t_id_slice {
+		for _, te_id := range t_id_slice {
 			obInviTeams := data.ObjectiveInvitedTeam{
 				ObjectiveId: new_ob.Id,
-				TeamId:      t_id,
+				TeamId:      te_id,
 			}
 			if err = obInviTeams.Create(); err != nil {
 				// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
 
-				util.Debug(" Cannot create objectiveLicenseTeam", err)
+				util.Debug(" Cannot create objective License Team", err)
 			}
 		}
 	default:
 		// 非法的茶话会属性
 		util.Debug(" Unknown objective class", err)
-		Report(w, r, "你好，茶博士还在研究茶话会的围字是不是有四种写法，忘记创建茶话会了，请稍后再试。")
+		Report(w, r, "你好，身前有余勿伸手，眼前无路请回头，请稍后再试。")
 		return
 	}
 

@@ -1,7 +1,7 @@
 package data
 
 import (
-	"errors"
+	"fmt"
 	"time"
 )
 
@@ -22,7 +22,7 @@ type Project struct {
 	EditAt      *time.Time
 	Cover       string //封面图片文件名
 	TeamId      int    //作者发帖时选择的成员所属茶团id（team）
-	IsPrivate   bool   //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
+	IsPrivate   bool   //公私类型，代表&家庭（family）=true，代表$事业团队（team）=false。默认是false
 	FamilyId    int    //作者发帖时选择的成员所属家庭id(family_id)
 
 	// 仅用于页面渲染，不保存到数据库
@@ -317,59 +317,52 @@ func (project_invited_teams *ProjectInvitedTeam) Delete() (err error) {
 	return
 }
 
-// UpdateClass() 通过project的id,更新��台的class
+// UpdateClass() 通过project的id,更新茶台的class
 func (project *Project) UpdateClass() (err error) {
 	_, err = Db.Exec("UPDATE projects SET class = $1 WHERE id = $2", project.Class, project.Id)
 	return
 }
 
-// 通过id，检查当前用户是否是茶台邀请茶团（$team/&family）成员,
-// 是成员的话，返回 true，nil
-func (proj *Project) IsInvitedMember(user_id int) (ok bool, err error) {
-	count, err := proj.InvitedTeamsCount()
-	if err != nil {
-		return false, errors.New("this tea-table lost invited any teams to drink tea")
-	}
-	if count == 0 {
-		return false, errors.New("this tea-table  host has not invited any teams to drink")
-	}
+// IsInvitedMember 检查用户是否是茶台邀请的团队或家庭成员
+func (proj *Project) IsInvitedMember(user_id int) (bool, error) {
 	team_ids, err := proj.InvitedTeamIds()
 	if err != nil {
-		return false, errors.New("cannot read project invited team ids")
+		return false, fmt.Errorf("读取邀请团队ID失败: %v", err)
 	}
-	if len(team_ids) < 1 {
-		return false, errors.New("this objective host has not invited any teams to drink tea")
+	if len(team_ids) == 0 {
+		return false, nil // 没有邀请任何团队/家庭
 	}
 
 	if !proj.IsPrivate {
-		// 被邀请的对象是$事业团队 []Team.Id
-		// 迭代team_ids,用data.GetMemberUserIdsByTeamId()获取全部user_ids；
-		// 以UserId == u.Id？检查当前用户是否是茶话会邀请团队成员
-		for _, team_id := range team_ids {
-			user_ids, _ := GetAllMemberUserIdsByTeamId(team_id)
-			for _, u_id := range user_ids {
-				if u_id == user_id {
-					return true, nil
-				}
-			}
-		}
+		return isUserInAnyTeam(user_id, team_ids)
+	}
+	return isUserInAnyFamily(user_id, team_ids)
+}
 
-	} else {
-		// 被邀请的对象是&家庭 []Family.Id
-		for _, family_id := range team_ids {
-			// 迭代team_ids,读取每个家庭的全部成员id
-			member_user_ids, err := GetAllMembersUserIdsByFamilyId(family_id)
-			if err != nil {
-				return false, err
-			}
-			for _, u_id := range member_user_ids {
-				// 检查是否家庭成员
-				if u_id == user_id {
-					return true, nil
-				}
-			}
+// isUserInAnyTeam 检查用户是否在任一团队中
+func isUserInAnyTeam(user_id int, team_ids []int) (bool, error) {
+	for _, team_id := range team_ids {
+		members, err := GetAllMemberUserIdsByTeamId(team_id)
+		if err != nil {
+			return false, fmt.Errorf("获取团队%d成员失败: %v", team_id, err)
+		}
+		if contains(members, user_id) {
+			return true, nil
 		}
 	}
+	return false, nil
+}
 
-	return
+// isUserInAnyFamily 检查用户是否在任一家庭中
+func isUserInAnyFamily(user_id int, family_ids []int) (bool, error) {
+	for _, family_id := range family_ids {
+		members, err := GetAllMembersUserIdsByFamilyId(family_id)
+		if err != nil {
+			return false, fmt.Errorf("获取家庭%d成员失败: %v", family_id, err)
+		}
+		if contains(members, user_id) {
+			return true, nil
+		}
+	}
+	return false, nil
 }

@@ -11,6 +11,81 @@ import (
 	util "teachat/Util"
 )
 
+// 准备用户相关数据
+func prepareUserData(sess *data.Session) (*UserData, error) {
+	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := FetchUserRelatedData(*sess)
+	if err != nil {
+		return nil, err
+	}
+
+	// 添加特殊选项
+	survivalFamilies = append(survivalFamilies, UnknownFamily)
+	survivalTeams = append(survivalTeams, FreelancerTeam)
+
+	return &UserData{
+		User:             user,
+		DefaultFamily:    defaultFamily,
+		SurvivalFamilies: survivalFamilies,
+		DefaultTeam:      defaultTeam,
+		SurvivalTeams:    survivalTeams,
+		DefaultPlace:     defaultPlace,
+		BindPlaces:       places,
+	}, nil
+}
+
+// 准备页面数据
+func preparePageData(objective data.Objective, userData *UserData) (*data.ObjectiveDetail, error) {
+	objectiveBean, err := FetchObjectiveBean(objective)
+	if err != nil {
+		return nil, err
+	}
+
+	return &data.ObjectiveDetail{
+		SessUser:                 userData.User,
+		SessUserDefaultFamily:    userData.DefaultFamily,
+		SessUserSurvivalFamilies: userData.SurvivalFamilies,
+		SessUserDefaultTeam:      userData.DefaultTeam,
+		SessUserSurvivalTeams:    userData.SurvivalTeams,
+		SessUserDefaultPlace:     userData.DefaultPlace,
+		SessUserBindPlaces:       userData.BindPlaces,
+		ObjectiveBean:            objectiveBean,
+	}, nil
+}
+
+// 检查茶台创建权限
+func checkCreateProjectPermission(objective data.Objective, userId int, w http.ResponseWriter, r *http.Request) bool {
+	switch objective.Class {
+	case 1: // 开放式茶话会
+		return true
+	case 2: // 封闭式茶话会
+		isInvited, err := objective.IsInvitedMember(userId)
+		if err != nil {
+			util.Debug("检查邀请名单失败", "error", err)
+			Report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
+			return false
+		}
+		if !isInvited {
+			Report(w, r, "你好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
+			return false
+		}
+		return true
+	default:
+		Report(w, r, "你好，茶博士失魂鱼，竟然说受邀请品茶名单失踪了，请稍后再试。")
+		return false
+	}
+}
+
+// 用户数据结构
+type UserData struct {
+	User             data.User
+	DefaultFamily    data.Family
+	SurvivalFamilies []data.Family
+	DefaultTeam      data.Team
+	SurvivalTeams    []data.Team
+	DefaultPlace     data.Place
+	BindPlaces       []data.Place
+}
+
 // POST /v1/project/approve
 // 茶围管理员选择某个茶台入围，记录它 --【Tencent ai 协助】
 func ProjectApprove(w http.ResponseWriter, r *http.Request) {
@@ -140,12 +215,26 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
+	valid, err := validateTeamAndFamilyParams(w, r, team_id, family_id, s_u.Id)
+	if !valid && err == nil {
+		return // 参数不合法，已经处理了错误
+	}
+	if err != nil {
+		// 处理数据库错误
+		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+		Report(w, r, "你好，成员资格检查失败，请确认后再试。")
+		return
+	}
 	//获取目标茶话会
-	t_ob := data.Objective{
-		Uuid: ob_uuid}
+	t_ob := data.Objective{Uuid: ob_uuid}
 	if err = t_ob.GetByUuid(); err != nil {
-		util.Debug(" Cannot get objective", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+		if errors.Is(err, sql.ErrNoRows) {
+			util.Debug("茶话会不存在", ob_uuid, err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+		} else {
+			util.Debug("获取茶话会失败", ob_uuid, err)
+			Report(w, r, "你好，茶博士失魂鱼，系统繁忙，请稍后再试。")
+		}
 		return
 	}
 	// 检查在此茶围下是否已经存在相同名字的茶台
@@ -163,41 +252,6 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 	//读取提交的is_private bool参数
 	is_private := r.PostFormValue("is_private") == "true"
-
-	//提交的茶团id,是team.id，检查是否成员
-	if team_id != 0 {
-		// check the given team_id is valid
-		_, err = data.GetMemberByTeamIdUserId(team_id, s_u.Id)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				//util.PanicTea(util.LogError(err), " Cannot get member by team id and user id")
-				Report(w, r, "你好，如果你不是团中人，就不能以该团成员身份入围开台呢，未能创建新茶台，请稍后再试。")
-				return
-			} else {
-				util.Debug(" Cannot get member by team id and user id", err)
-				Report(w, r, "你好，茶博士眼镜失踪了，未能创建新茶台，请稍后再试。")
-				return
-			}
-		}
-	}
-	//提交的茶团id,是family.id，检查是否家庭成员
-	// check submit family_id is valid
-	if family_id != 0 {
-		family := data.Family{
-			Id: family_id,
-		}
-		is_member, err := family.IsMember(s_u.Id)
-		if err != nil {
-			util.Debug(" Cannot get family member by family id and user id", err)
-			Report(w, r, "你好，茶博士眼镜失踪，未能创建新茶台，请稍后再试。")
-			return
-		}
-		if !is_member {
-			util.Debug(" Cannot get family member by family id and user id", err)
-			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-			return
-		}
-	}
 
 	place_uuid := r.PostFormValue("place_uuid")
 	place := data.Place{Uuid: place_uuid}
@@ -407,85 +461,55 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 // GET /v1/project/new?uuid=xxx
 // 渲染创建新茶台表单页面
 func NewProjectGet(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	// 1. 检查用户会话
+	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 
-	// 读取提交的数据，确定是哪一个茶话会需求新开茶台
-	vals := r.URL.Query()
-	uuid := vals.Get("uuid")
-	var oD data.ObjectiveDetail
-	// 获取指定的目标茶话会
-	o := data.Objective{
-		Uuid: uuid}
-	if err = o.GetByUuid(); err != nil {
-		util.Debug(" Cannot read project", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能找到茶台，请稍后再试。")
+	// 2. 获取并验证茶话会UUID
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		Report(w, r, "你好，茶博士失魂鱼，请指定要加入的茶话会。")
 		return
 	}
-	//根据会话从数据库中读取当前用户的团队,地方信息，
-	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+
+	// 3. 获取茶话会详情
+	objective := data.Objective{Uuid: uuid}
+	if err := objective.GetByUuid(); err != nil {
+		util.Debug("获取茶话会失败", "uuid", uuid, "error", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			Report(w, r, "你好，茶博士失魂鱼，未能找到您指定的茶话会。")
+		} else {
+			Report(w, r, "你好，茶博士失魂鱼，系统繁忙，请稍后再试。")
+		}
+		return
+	}
+
+	// 4. 获取用户相关数据
+	sessUserData, err := prepareUserData(&sess)
 	if err != nil {
+		util.Debug("准备用户数据失败", "error", err)
 		Report(w, r, "你好，三人行，必有大佬焉，请稍后再试。")
 		return
 	}
-	s_survival_families = append(s_survival_families, UnknownFamily)
-	s_survival_teams = append(s_survival_teams, FreelancerTeam)
-	//默认和常用地方
 
-	// 填写页面数据
-	// 填写页面会话用户资料
-	oD.SessUser = s_u
-	oD.SessUserDefaultFamily = s_default_family
-	oD.SessUserSurvivalFamilies = s_survival_families
-	oD.SessUserDefaultTeam = s_default_team
-	oD.SessUserSurvivalTeams = s_survival_teams
-	oD.SessUserDefaultPlace = s_default_place
-	oD.SessUserBindPlaces = s_places
-	oD.ObjectiveBean, err = FetchObjectiveBean(o)
+	// 5. 准备页面数据
+	pageData, err := preparePageData(objective, sessUserData)
 	if err != nil {
+		util.Debug("准备页面数据失败", "error", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到茶围资料，请稍后再试。")
 		return
 	}
 
-	// 检查当前用户是否可以在此茶话会下新开茶台
-	// 首先检查茶话会属性，class=1开放式，class=2封闭式，
-	// 如果是开放式，则可以在茶话会下新开茶台
-	// 如果是封闭式，则需要看围主指定了那些茶团成员可以开新茶台，如果围主没有指定，则不能新开茶台
-	switch o.Class {
-	case 1:
-		// 开放式茶话会，可以在茶话会下新开茶台
-		// 向用户返回添加指定的茶台的表单页面
-		RenderHTML(w, &oD, "layout", "navbar.private", "project.new")
-		return
-	case 2:
-		// 封闭式茶话会，需要看围主指定了那些茶团成员可以开新茶台，如果围主没有指定，则不能新开茶台
-		//检查team_ids是否为空
-		// 围主没有指定茶团成员，不能新开茶台
-		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		ok, err := o.IsInvitedMember(s_u.Id)
-		if err != nil {
-			util.Debug(" Cannot read objective Invited-list", err)
-			Report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
-			return
-		}
-		if ok {
-			RenderHTML(w, &oD, "layout", "navbar.private", "project.new")
-			return
-		} else {
-			// 当前用户不是茶话会邀请团队成员，不能新开茶台
-			Report(w, r, "你好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
-			return
-		}
-
-		// 非法茶话会属性，不能新开茶台
-	default:
-		Report(w, r, "你好，茶博士失魂鱼，竟然说受邀请品茶名单被外星人霸占了，请稍后再试。")
+	// 6. 检查茶台创建权限
+	if !checkCreateProjectPermission(objective, sessUserData.User.Id, w, r) {
 		return
 	}
 
+	// 7. 渲染创建表单
+	RenderHTML(w, pageData, "layout", "navbar.private", "project.new")
 }
 
 // GET /v1/project/detail?id=
@@ -663,7 +687,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	pD.IsMaster = is_master
 
-	is_admin, err := checkObjectivePermission(&ob, s_u.Id)
+	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
 	if err != nil {
 		util.Debug("Admin permission check failed",
 			"userId", s_u.Id,

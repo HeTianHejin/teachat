@@ -155,7 +155,7 @@ func (objective *Objective) CountByTeamId() (count int, err error) {
 	return count, nil
 }
 
-// objective.GetByTitle() Get the given objective by title ,where class=1 or 2,return 1 objective
+// objective.GetByTitleClass() Get the given objective by title ,where class=1 or 2,return 1 objective
 func (objective *Objective) GetByTitleClass() (err error) {
 	err = Db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE title = $1 AND class in (1,2)", objective.Title).Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.FamilyId, &objective.Cover, &objective.TeamId, &objective.IsPrivate)
 	return

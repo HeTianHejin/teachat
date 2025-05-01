@@ -1,8 +1,6 @@
 package route
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -225,94 +223,72 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 		return
 	}
-	tid_string := r.PostFormValue("team_id")
-	if tid_string == "" {
-		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的团队编号。")
-		return
-	}
+	//读取提交的is_private bool参数
+	is_private := r.PostFormValue("is_private") == "true"
+
+	te_id_str := r.PostFormValue("team_id")
 	//change team_id to int
-	team_id, err := strconv.Atoi(tid_string)
+	team_id, err := strconv.Atoi(te_id_str)
 	if err != nil {
+		util.Debug(" Cannot change team_id to int", te_id_str, err)
 		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的团队编号。")
 		return
 	}
 	family_id_str := r.PostFormValue("family_id")
-	if family_id_str == "" {
-		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的家庭编号。")
-		return
-	}
 	//change family_id to int
 	family_id, err := strconv.Atoi(family_id_str)
 	if err != nil {
+		util.Debug(" Cannot change family_id to int", family_id_str, err)
 		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的家庭编号。")
 		return
 	}
-	//读取提交的is_private bool参数
-	is_private := r.PostFormValue("is_private") == "true"
 
-	//提交的茶团id,是team.id,team_id = 2是默认的初始自由人团队，无需检查
-	// check submit team_id is valid
-	if team_id != 2 {
-		team := data.Team{Id: team_id}
-		is_member, err := team.IsMember(s_u.Id)
-		if err != nil {
-			util.Debug(" Cannot get family member by family id and user id", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能读取茶团成员资格资料。")
-			return
-		}
-		if !is_member {
-			Report(w, r, "你好，茶团成员资格检查未通过，请确认后再试。")
-			return
-		}
-
+	valid, err := validateTeamAndFamilyParams(w, r, team_id, family_id, s_u.Id)
+	if !valid && err == nil {
+		return // 参数不合法，已经处理了错误
 	}
-
-	//提交的茶团id,是family.id,检查提交者是否是家庭成员
-	// check submit family_id is valid
-	if family_id != 0 {
-
-		family := data.Family{Id: family_id}
-		is_member, err := family.IsMember(s_u.Id)
-		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				//util.PanicTea(util.LogError(err), " Cannot get family member by family id and user id")
-				Report(w, r, "你好，茶博士认为您不是这个家庭成员，请确认后再试。")
-				return
-			}
-			util.Debug(" Cannot get family member by family id and user id", family_id, s_u.Id)
-			Report(w, r, "你好，茶博士失魂鱼，未能读取家庭成员资格资料。")
-			return
-		}
-		if !is_member {
-			//util.PanicTea(util.LogError(err), " Cannot get family member by family id and user id")
-			Report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
-			return
-		}
+	if err != nil {
+		// 处理数据库错误
+		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+		Report(w, r, "你好，成员资格检查失败，请确认后再试。")
+		return
 	}
-
-	// dp_class_str := r.PostFormValue("dp_class")
-	// if dp_class_str == "" {
-	// 	Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的品味分类编号。")
-	// 	return
-	// }
-	//change dp_class to int
-	// dp_class, err := strconv.Atoi(dp_class_str)
-	// if err != nil {
-	// 	Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的品味分类编号。")
-	// 	return
-	// }
 
 	// 茶议所在的茶台，
 	t_proj, err := thread.Project()
 	if err != nil {
-		util.Debug(" Cannot get project by project id", t_proj.Id)
+		util.Debug(" Cannot get project by project id", t_proj.Id, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 		return
 	}
+
+	switch t_proj.Class {
+	case OpenProject:
+		// 开放式茶台，任何人可以品茶
+		// 直接继续创建流程
+
+	case ClosedProject:
+		// 封闭式茶台，检查邀请状态
+		ok, err := t_proj.IsInvitedMember(s_u.Id)
+		if err != nil {
+			util.Debug("Cannot check is invited member by project id", t_proj.Id, err)
+			Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
+			return
+		}
+		if !ok {
+			Report(w, r, "你好，陛下您的大名竟然不在邀请品茶名单上。")
+			return
+		}
+
+	default:
+		Report(w, r, "你好，茶博士满头大汗说，这个茶台状态异常无法使用。")
+		return
+	}
+
 	//所在的茶围
 	t_obje, err := t_proj.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective by objective id", t_obje.Id)
+		util.Debug(" Cannot get objective by objective id", t_obje.Id, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 		return
 	}
@@ -340,41 +316,10 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Body:      body,
 		Class:     dp_class,
 	}
-
-	switch t_proj.Class {
-	case 1:
-		// class=1可以品茶，
-
-		if err = new_draft_post.Create(); err != nil {
-			util.Debug(s_u.Email, " Cannot create draft post")
-			Report(w, r, "你好，茶博士摸摸头，嘀咕笔头宝珠掉了，记录您的品味失败。")
-			return
-		}
-
-	case 2:
-		// 当前会话用户是否可以入席品茶？需要看台主指定了那些茶团成员可以品茶
-		ok, err := t_proj.IsInvitedMember(s_u.Id)
-		if err != nil {
-			util.Debug(" Cannot get project by project id", t_proj.Id)
-			Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
-			return
-		}
-		if !ok {
-			// Cannot have tea
-			Report(w, r, "你好，你的大名竟然不在邀请品茶名单上。")
-			return
-		}
-
-		// Can have tea
-		if err = new_draft_post.Create(); err != nil {
-			util.Debug(s_u.Email, " Cannot create draft post")
-			Report(w, r, "你好，茶博士摸摸头，嘀咕笔头宝珠掉了，记录您的品味失败。")
-			return
-		}
-
-	default:
-		// 异常状态的茶台
-		Report(w, r, "你好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
+	// 公共的创建逻辑
+	if err = new_draft_post.Create(); err != nil {
+		util.Debug("Cannot create draft post", s_u.Email, err)
+		Report(w, r, "你好，茶博士摸摸头，嘀咕笔头宝珠掉了，记录您的品味失败。")
 		return
 	}
 
