@@ -23,6 +23,17 @@ type UserBean struct {
 	Message string // 给目标茶友的通知消息
 }
 
+// 用户数据结构
+type UserData struct {
+	User             User
+	DefaultFamily    Family
+	SurvivalFamilies []Family
+	DefaultTeam      Team
+	SurvivalTeams    []Team
+	DefaultPlace     Place
+	BindPlaces       []Place
+}
+
 // 个人独白，独角戏资料
 type MonologueBean struct {
 	Monologue Monologue

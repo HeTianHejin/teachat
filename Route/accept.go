@@ -486,10 +486,15 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	// 读取提交的ID参数
 	vals := r.URL.Query()
 	ob_id_str := vals.Get("id")
+	if ob_id_str == "" {
+		util.Debug("ID parameter is missing")
+		Report(w, r, "你好，缺少编号参数，茶博士找不到评审的资料")
+		return
+	}
 	// 换成int
 	ob_id, err := strconv.Atoi(ob_id_str)
 	if err != nil {
-		util.Debug(" Cannot get id", err)
+		util.Debug("Cannot convert id to integer", err)
 		Report(w, r, "你好，转换编号失败，茶博士找不到评审的资料")
 		return
 	}

@@ -1,18 +1,16 @@
 {{ define "content" }}
 
 <ol class="breadcrumb">
-
   <li><a href="/v1/">大堂</a></li>
   <li><a
       href="/v1/objective/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}">{{ .ObjectiveBean.Objective.Title }}@茶话会</a>
   </li>
   <li class="active">新开茶台</li>
-
 </ol>
 
 <div class="panel panel-default">
   <div class="panel-body" style="font-size: small;">
-    <a href="/v1/thread/detail?id={{ .ObjectiveBean.Objective.Uuid }}"><span class="label label-default">引用</span></a>
+    <a href="/v1/thread/detail?id={{ .ObjectiveBean.Objective.Uuid }}"><span class="label label-default">茶围</span></a>
     <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
     <span style="margin-inline-end: 1rem;">@<a
         href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a></span>
@@ -35,12 +33,14 @@
 
       <div class="form-group">
           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <input type="radio" name="class" id="open" style="width: fit-content;" value=10 required />
+            <input type="radio" name="class" id="open" style="width: fit-content;" value=10 required checked 
+                   onchange="toggleInviteIdsInput(false)"/>
             <label for="open">开放式-所有人都可以品茶</label>
           </div>
 
           <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <input type="radio" name="class" id="close_project" style="width: fit-content;" value=20 required />
+            <input type="radio" name="class" id="close_project" style="width: fit-content;" value=20 required 
+                   onchange="toggleInviteIdsInput(true)"/>
             <label for="close_project">封闭式-仅受邀团队可以品茶</label>
           </div> 
       </div>
@@ -108,9 +108,9 @@
           </select>
       </div>
       
-      <div class="form-group">
-        <label for="name">封闭式茶会指定邀请的茶团号，以逗号分隔。</label>
-        <input type="text" class="form-control" name="invite_ids" maxlength="456" placeholder="开放式茶会请留白"/>
+      <div class="form-group" id="inviteIdsGroup" style="display:none;">
+        <label for="invite_ids">封闭式茶会指定邀请的茶团号，以逗号分隔。</label>
+        <input type="text" class="form-control" name="invite_ids" id="invite_ids" maxlength="456" placeholder="例如: 1,2,3"/>
       </div>
 
       <input type="hidden" name="ob_uuid" id="ob_uuid" value="{{ .ObjectiveBean.Objective.Uuid }}">
@@ -119,7 +119,6 @@
         <button type="submit" class="btn btn-default">开台</button>
       </div>
       
-
     </form>
 
   </div>
@@ -131,5 +130,12 @@
 
 </div>
 
-{{ end }}
+<script>
+function toggleInviteIdsInput(show) {
+    document.getElementById('inviteIdsGroup').style.display = show ? 'block' : 'none';
+    // 如果需要，可以在这里清空输入框的值
+    // if (!show) document.getElementById('invite_ids').value = '';
+}
+</script>
 
+{{ end }}

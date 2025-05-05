@@ -37,6 +37,8 @@ drop table if exists administrators;
 drop table if exists monologues;
 drop table if exists goods;
 drop table if exists goods_teams;
+drop table if exists goods_users;
+drop table if exists goods_families;
 drop table if exists handicrafts;
 drop table if exists inaugurations;
 drop table if exists tools;
@@ -908,6 +910,20 @@ create table goods (
 CREATE TABLE goods_teams (
     id            serial primary key,
     team_id       integer,
+    goods_id      integer,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE goods_users (
+    id            serial primary key,
+    user_id       integer,
+    goods_id      integer,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE goods_families (
+    id            serial primary key,
+    user_id       integer,
     goods_id      integer,
     created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

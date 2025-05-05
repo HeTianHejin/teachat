@@ -12,7 +12,7 @@ import (
 )
 
 // 准备用户相关数据
-func prepareUserData(sess *data.Session) (*UserData, error) {
+func prepareUserData(sess *data.Session) (*data.UserData, error) {
 	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := FetchUserRelatedData(*sess)
 	if err != nil {
 		return nil, err
@@ -22,7 +22,7 @@ func prepareUserData(sess *data.Session) (*UserData, error) {
 	survivalFamilies = append(survivalFamilies, UnknownFamily)
 	survivalTeams = append(survivalTeams, FreelancerTeam)
 
-	return &UserData{
+	return &data.UserData{
 		User:             user,
 		DefaultFamily:    defaultFamily,
 		SurvivalFamilies: survivalFamilies,
@@ -33,8 +33,8 @@ func prepareUserData(sess *data.Session) (*UserData, error) {
 	}, nil
 }
 
-// 准备页面数据
-func preparePageData(objective data.Objective, userData *UserData) (*data.ObjectiveDetail, error) {
+// 准备茶围页面数据
+func prepareObjectivePageData(objective data.Objective, userData *data.UserData) (*data.ObjectiveDetail, error) {
 	objectiveBean, err := FetchObjectiveBean(objective)
 	if err != nil {
 		return nil, err
@@ -50,40 +50,6 @@ func preparePageData(objective data.Objective, userData *UserData) (*data.Object
 		SessUserBindPlaces:       userData.BindPlaces,
 		ObjectiveBean:            objectiveBean,
 	}, nil
-}
-
-// 检查茶台创建权限
-func checkCreateProjectPermission(objective data.Objective, userId int, w http.ResponseWriter, r *http.Request) bool {
-	switch objective.Class {
-	case 1: // 开放式茶话会
-		return true
-	case 2: // 封闭式茶话会
-		isInvited, err := objective.IsInvitedMember(userId)
-		if err != nil {
-			util.Debug("检查邀请名单失败", "error", err)
-			Report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
-			return false
-		}
-		if !isInvited {
-			Report(w, r, "你好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
-			return false
-		}
-		return true
-	default:
-		Report(w, r, "你好，茶博士失魂鱼，竟然说受邀请品茶名单失踪了，请稍后再试。")
-		return false
-	}
-}
-
-// 用户数据结构
-type UserData struct {
-	User             data.User
-	DefaultFamily    data.Family
-	SurvivalFamilies []data.Family
-	DefaultTeam      data.Team
-	SurvivalTeams    []data.Team
-	DefaultPlace     data.Place
-	BindPlaces       []data.Place
 }
 
 // POST /v1/project/approve
@@ -496,7 +462,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 5. 准备页面数据
-	pageData, err := preparePageData(objective, sessUserData)
+	pageData, err := prepareObjectivePageData(objective, sessUserData)
 	if err != nil {
 		util.Debug("准备页面数据失败", "error", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到茶围资料，请稍后再试。")
@@ -509,7 +475,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 7. 渲染创建表单
-	RenderHTML(w, pageData, "layout", "navbar.private", "project.new")
+	RenderHTML(w, &pageData, "layout", "navbar.private", "project.new")
 }
 
 // GET /v1/project/detail?id=
@@ -679,7 +645,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		pD.ProjectBean.Project.PageData.IsAuthor = false
 	}
 
-	is_master, err := checkProjectPermission(&pr, s_u.Id)
+	is_master, err := checkProjectAdminPermission(&pr, s_u.Id)
 	if err != nil {
 		util.Debug("Permission check failed", "user", s_u.Id, "error", err)
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")

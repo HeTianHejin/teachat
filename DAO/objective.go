@@ -25,7 +25,7 @@ type Objective struct {
 	FamilyId  int    //作者发帖时选择的家庭id(family_id)
 	Cover     string // 封面
 	TeamId    int    //作者创建茶围时选择的茶团id（team_id）,即是管理团队id
-	IsPrivate bool   //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
+	IsPrivate bool   //私有或者公有类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
 
 	// 仅用于页面渲染，不保存到数据库
 	PageData PublicPData

@@ -1,6 +1,10 @@
 package data
 
-import "time"
+import (
+	"database/sql"
+	"fmt"
+	"time"
+)
 
 // 好东西，举办茶话会活动需要的物资。包括装备、物品和材料等.
 // 通常是可以交易的商品，例如车辆、工具、食物、耗材...
@@ -49,9 +53,9 @@ func (g *Goods) Create() (err error) {
 }
 
 // Goods.GetById() 根据id获取1物资记录
-func (g *Goods) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, state, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_at, updated_at FROM goods WHERE id = $1", g.Id).
-		Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer, &g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName, &g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color, &g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.State, &g.Origin, &g.Manufacturer, &g.ManufacturerURL, &g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt)
+func (goods *Goods) Get() (err error) {
+	err = Db.QueryRow("SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, state, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_at, updated_at FROM goods WHERE id = $1", goods.Id).
+		Scan(&goods.Id, &goods.Uuid, &goods.RecorderUserId, &goods.Name, &goods.Nickname, &goods.Designer, &goods.Describe, &goods.Price, &goods.Applicability, &goods.Category, &goods.Specification, &goods.BrandName, &goods.Model, &goods.Weight, &goods.Dimensions, &goods.Material, &goods.Size, &goods.Color, &goods.NetworkConnectionType, &goods.Features, &goods.SerialNumber, &goods.State, &goods.Origin, &goods.Manufacturer, &goods.ManufacturerURL, &goods.EngineType, &goods.PurchaseURL, &goods.CreatedAt, &goods.UpdatedAt)
 	return
 }
 
@@ -371,33 +375,49 @@ func (ug *GoodsUser) GetAllByUserId() (goodsUserSlice []GoodsUser, err error) {
 }
 
 // GoodsUser.CountByUserId()  获取用户收集的物资记录数量
-func (ug *GoodsUser) CountByUserId() (count int, err error) {
-	err = Db.QueryRow("SELECT COUNT(*) FROM goods_users WHERE user_id = $1", ug.UserId).Scan(&count)
+func (gu *GoodsUser) CountByUserId() (count int, err error) {
+	err = Db.QueryRow("SELECT COUNT(*) FROM goods_users WHERE user_id = $1", gu.UserId).Scan(&count)
 	return
 }
 
-// GoodsUser.GetGoodsByUserId()  获取用户收集的物资记录
-func (ug *GoodsUser) GetGoodsByUserId() (goodsSlice []Goods, err error) {
-	rows, err := Db.Query("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1", ug.UserId)
+// GetGoodsByUserId 获取用户收集的物资记录 [经DeepSeek优化]
+// 返回:
+//   - 物资切片(可能为空)
+//   - 错误(包括sql.ErrNoRows当用户无物资时)
+func (gu *GoodsUser) GetGoodsByUserId() ([]Goods, error) {
+	// 使用JOIN一次性获取所有数据，避免N+1查询
+	query := `
+        SELECT g.id, g.uuid, g.recorder_user_id, g.name, g.nickname, g.designer, g.describe, g.price, g.applicability, g.category, g.specification, g.brand_name, g.model, g.weight, g.dimensions, g.material, g.size, g.color, g.network_connection_type, g.features, g.serial_number, g.state, g.origin, g.manufacturer, g.manufacturer_url, g.engine_type, g.purchase_url, g.created_at, g.updated_at
+        FROM goods g
+        JOIN goods_users gu ON g.id = gu.goods_id
+        WHERE gu.user_id = $1
+    `
+
+	rows, err := Db.Query(query, gu.UserId)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("query failed: %w", err)
 	}
 	defer rows.Close()
+
+	var goodsSlice []Goods
 	for rows.Next() {
-		var goodsUser GoodsUser
-		err = rows.Scan(&goodsUser.Id, &goodsUser.UserId, &goodsUser.GoodsId, &goodsUser.CreatedAt)
-		if err != nil {
-			return
-		}
 		var goods Goods
-		goods.Id = goodsUser.GoodsId
-		err = goods.Get()
-		if err != nil {
-			return
+		if err := rows.Scan(&goods.Id, &goods.Uuid, &goods.RecorderUserId, &goods.Name, &goods.Nickname, &goods.Designer, &goods.Describe, &goods.Price, &goods.Applicability, &goods.Category, &goods.Specification, &goods.BrandName, &goods.Model, &goods.Weight, &goods.Dimensions, &goods.Material, &goods.Size, &goods.Color, &goods.NetworkConnectionType, &goods.Features, &goods.SerialNumber, &goods.State, &goods.Origin, &goods.Manufacturer, &goods.ManufacturerURL, &goods.EngineType, &goods.PurchaseURL, &goods.CreatedAt, &goods.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scan row failed: %w", err)
 		}
 		goodsSlice = append(goodsSlice, goods)
 	}
-	return
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration failed: %w", err)
+	}
+
+	// 如果没有任何记录，返回ErrNoRows
+	if len(goodsSlice) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	return goodsSlice, nil
 }
 
 // CheckUserGoodsExist() 检查用户是否收藏了该物资

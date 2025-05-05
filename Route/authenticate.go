@@ -202,10 +202,14 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 			http.SetCookie(w, &cookie)
 
-			// 安全重定向
+			// 安全重定向⚠️本站
 			footprint := sanitizeRedirectPath(r.FormValue("footprint")) // 避免开放重定向漏洞
-			query := r.FormValue("query")                               //⚠️本站查询参数
-			http.Redirect(w, r, footprint+"?"+query, http.StatusFound)
+			//http.Redirect(w, r, footprint, http.StatusFound)
+
+			//下面是测试
+			query := r.FormValue("query") //查询参数
+			path := footprint + "?" + query
+			http.Redirect(w, r, path, http.StatusFound)
 			return
 
 		} else {
@@ -277,7 +281,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	// 4. 清除客户端Cookie并重定向
 	clearSessionCookie(w)
-	util.Debug(operation, "用户登出成功", "uuid", cookie.Value)
+	util.Debug(operation, "用户登出顺利", "uuid", cookie.Value)
 	http.Redirect(w, r, "/v1/", http.StatusFound)
 }
 

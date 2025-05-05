@@ -144,7 +144,7 @@ func main() {
 	// defined in route_goods.go
 	mux.HandleFunc("/v1/goods/family_new", route.HandleGoodsFamilyNew)
 	//mux.HandleFunc("/v1/goods/family", route.GoodsFamily)
-	mux.HandleFunc("/v1/goods/family_detail", route.GoodsTeamDetail)
+	//mux.HandleFunc("/v1/goods/family_detail", route.GoodsFamilyDetail)
 	mux.HandleFunc("/v1/goods/team_new", route.HandleGoodsTeamNew)
 	mux.HandleFunc("/v1/goods/team", route.GoodsTeam)
 	mux.HandleFunc("/v1/goods/team_detail", route.GoodsTeamDetail)

@@ -1,6 +1,8 @@
 package route
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 	data "teachat/DAO"
@@ -95,14 +97,14 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	// Get goods name
 	le := len(r.PostFormValue("goods_name"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_name := r.PostFormValue("goods_name")
 	//nickname
 	le = len(r.PostFormValue("nickname"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
 		return
 	}
@@ -119,7 +121,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	goods_designer := r.PostFormValue("designer")
 	le = len(goods_designer)
-	if le > 45 || le < 1 {
+	if le > 45 {
 		Report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
 		return
 	}
@@ -127,14 +129,14 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	// Get goods description
 	describe := r.PostFormValue("describe")
 	le = len(describe)
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
 
 	//applicability
 	le = len(r.PostFormValue("applicability"))
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
@@ -142,7 +144,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	//brandname
 	le = len(r.PostFormValue("brandname"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
 		return
 	}
@@ -150,7 +152,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	//model
 	le = len(r.PostFormValue("model"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
 		return
 	}
@@ -158,7 +160,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	//color
 	le = len(r.PostFormValue("color"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -166,7 +168,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	//specification
 	le = len(r.PostFormValue("specification"))
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -174,7 +176,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	//manufacturer
 	le = len(r.PostFormValue("manufacturer"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
 		return
 	}
@@ -182,7 +184,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	//origin
 	le = len(r.PostFormValue("origin"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
 		return
 	}
@@ -190,51 +192,43 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	goods_price_str := r.PostFormValue("price")
 	// Check goods price
-	if goods_price_str == "" {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
-		return
-	}
-	// Convert goods price to float64
-	goods_price, err := strconv.ParseFloat(goods_price_str, 64)
-	// Check goods price
-	if err != nil {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
-		return
+	goods_price := 0.0
+	if goods_price_str != "" {
+		// Convert goods price to float64
+		goods_price, err = strconv.ParseFloat(goods_price_str, 64)
+		if err != nil {
+			Report(w, r, "你好，茶博士表示物资的价格转换失败，请确认后再试。")
+			return
+		}
 	}
 	//0<goods_price<100,000,000
 	if goods_price < 0 || goods_price > 100000000 {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
+		Report(w, r, "你好，茶博士表示物资的价格异常，请确认后再试。")
 		return
 	}
 
 	goods_weight_str := r.PostFormValue("weight")
 	// Check goods weight
-	if goods_weight_str == "" {
-		Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
-		return
+	goods_weight := 0.0
+	if goods_weight_str != "" {
+		// Convert goods weight to float64
+		goods_weight, err = strconv.ParseFloat(goods_weight_str, 64)
+		if err != nil {
+			Report(w, r, "你好，茶博士表示物资的重量转换失败，请确认后再试。")
+			return
+		}
 	}
-	// Convert goods weight to float64
-	goods_weight, err := strconv.ParseFloat(goods_weight_str, 64)
-	// Check goods weight
-	if err != nil {
-		Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
-		return
-	}
-
 	goods_dimensions_str := r.PostFormValue("dimensions")
-	if goods_dimensions_str == "" {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
-		return
+	if goods_dimensions_str != "" {
+		le = len(goods_dimensions_str)
+		if le > 50 {
+			Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+			return
+		}
 	}
-	le = len(goods_dimensions_str)
-	if le > 50 || le < 1 {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
-		return
-	}
-
 	goods_material := r.PostFormValue("material")
 	le = len(goods_material)
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
 		return
 	}
@@ -523,7 +517,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 
 	team_uuid := r.URL.Query().Get("id")
 	if team_uuid == "" {
-		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
+		Report(w, r, "你好，请确认提交的团队ID资料。")
 		return
 	}
 
@@ -533,7 +527,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	if team.Id == 0 || team.Id == 2 {
+	if team.Id == NoTeamId || team.Id == FreelancerTeamId || team.Id == SpaceshipCrewId {
 		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
@@ -541,7 +535,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team member from database")
-		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
+		Report(w, r, "茶博士耸耸肩说，成员资格检查未通过，请确认后再试一次。")
 		return
 	}
 	if !is_member {
@@ -552,7 +546,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	// Get []goods from database
 	t_g := data.GoodsTeam{TeamId: team.Id}
 	t_goods_slice, err := t_g.GetAllGoodsByTeamId()
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug(s.Email, "Cannot get goods from database")
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
@@ -675,14 +669,14 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// Get goods name
 	le := len(r.PostFormValue("goods_name"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_name := r.PostFormValue("goods_name")
 	//nickname
 	le = len(r.PostFormValue("nickname"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
 		return
 	}
@@ -699,14 +693,14 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	goods_designer := r.PostFormValue("designer")
 	le = len(goods_designer)
-	if le > 45 || le < 1 {
+	if le > 45 {
 		Report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
 		return
 	}
 
 	// Get goods description
 	le = len(r.PostFormValue("describe"))
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -714,7 +708,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//applicability
 	le = len(r.PostFormValue("applicability"))
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
@@ -722,7 +716,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//brandname
 	le = len(r.PostFormValue("brandname"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
 		return
 	}
@@ -730,7 +724,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//model
 	le = len(r.PostFormValue("model"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
 		return
 	}
@@ -738,7 +732,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//color
 	le = len(r.PostFormValue("color"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -746,7 +740,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//specification
 	le = len(r.PostFormValue("specification"))
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -754,7 +748,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//manufacturer
 	le = len(r.PostFormValue("manufacturer"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
 		return
 	}
@@ -762,7 +756,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//origin
 	le = len(r.PostFormValue("origin"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
 		return
 	}
@@ -770,16 +764,15 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	goods_price_str := r.PostFormValue("price")
 	// Check goods price
-	if goods_price_str == "" {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
-		return
-	}
-	// Convert goods price to float64
-	goods_price, err := strconv.ParseFloat(goods_price_str, 64)
-	// Check goods price
-	if err != nil {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
-		return
+	goods_price := 0.0
+	if goods_price_str != "" {
+		// Convert goods price to float64
+		goods_price, err = strconv.ParseFloat(goods_price_str, 64)
+		// Check goods price
+		if err != nil {
+			Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
+			return
+		}
 	}
 	//0<goods_price<100,000,000
 	if goods_price < 0 || goods_price > 100000000 {
@@ -789,32 +782,29 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	goods_weight_str := r.PostFormValue("weight")
 	// Check goods weight
-	if goods_weight_str == "" {
-		Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
-		return
-	}
-	// Convert goods weight to float64
-	goods_weight, err := strconv.ParseFloat(goods_weight_str, 64)
-	// Check goods weight
-	if err != nil {
-		Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
-		return
+	goods_weight := 0.0
+	if goods_weight_str != "" {
+		// Convert goods weight to float64
+		goods_weight, err = strconv.ParseFloat(goods_weight_str, 64)
+		// Check goods weight
+		if err != nil {
+			Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
+			return
+		}
 	}
 
 	goods_dimensions_str := r.PostFormValue("dimensions")
-	if goods_dimensions_str == "" {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
-		return
-	}
-	le = len(goods_dimensions_str)
-	if le > 50 || le < 1 {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
-		return
+	if goods_dimensions_str != "" {
+		le = len(goods_dimensions_str)
+		if le > 50 {
+			Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+			return
+		}
 	}
 
 	goods_material := r.PostFormValue("material")
 	le = len(goods_material)
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
 		return
 	}
@@ -1117,14 +1107,14 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// Get goods name
 	le := len(r.PostFormValue("goods_name"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_name := r.PostFormValue("goods_name")
 	//nickname
 	le = len(r.PostFormValue("nickname"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
 		return
 	}
@@ -1141,7 +1131,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	goods_designer := r.PostFormValue("designer")
 	le = len(goods_designer)
-	if le > 45 || le < 1 {
+	if le > 45 {
 		Report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
 		return
 	}
@@ -1149,14 +1139,14 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	// Get goods description
 	describe := r.PostFormValue("describe")
 	le = len(describe)
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
 
 	//applicability
 	le = len(r.PostFormValue("applicability"))
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
@@ -1164,7 +1154,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//brandname
 	le = len(r.PostFormValue("brandname"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
 		return
 	}
@@ -1172,7 +1162,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//model
 	le = len(r.PostFormValue("model"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
 		return
 	}
@@ -1180,7 +1170,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//color
 	le = len(r.PostFormValue("color"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -1188,7 +1178,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//specification
 	le = len(r.PostFormValue("specification"))
-	if le > 456 || le < 1 {
+	if le > 456 {
 		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -1196,7 +1186,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//manufacturer
 	le = len(r.PostFormValue("manufacturer"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
 		return
 	}
@@ -1204,7 +1194,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//origin
 	le = len(r.PostFormValue("origin"))
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
 		return
 	}
@@ -1212,16 +1202,15 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	goods_price_str := r.PostFormValue("price")
 	// Check goods price
-	if goods_price_str == "" {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
-		return
-	}
-	// Convert goods price to float64
-	goods_price, err := strconv.ParseFloat(goods_price_str, 64)
-	// Check goods price
-	if err != nil {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
-		return
+	goods_price := 0.0
+	if goods_price_str != "" {
+		// Convert goods price to float64
+		goods_price, err = strconv.ParseFloat(goods_price_str, 64)
+		// Check goods price
+		if err != nil {
+			Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
+			return
+		}
 	}
 	//0<goods_price<100,000,000
 	if goods_price < 0 || goods_price > 100000000 {
@@ -1231,32 +1220,29 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	goods_weight_str := r.PostFormValue("weight")
 	// Check goods weight
-	if goods_weight_str == "" {
-		Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
-		return
-	}
-	// Convert goods weight to float64
-	goods_weight, err := strconv.ParseFloat(goods_weight_str, 64)
-	// Check goods weight
-	if err != nil {
-		Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
-		return
+	goods_weight := 0.0
+	if goods_weight_str != "" {
+		// Convert goods weight to float64
+		goods_weight, err = strconv.ParseFloat(goods_weight_str, 64)
+		// Check goods weight
+		if err != nil {
+			Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
+			return
+		}
 	}
 
 	goods_dimensions_str := r.PostFormValue("dimensions")
-	if goods_dimensions_str == "" {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
-		return
-	}
-	le = len(goods_dimensions_str)
-	if le > 50 || le < 1 {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
-		return
+	if goods_dimensions_str != "" {
+		le = len(goods_dimensions_str)
+		if le > 50 {
+			Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+			return
+		}
 	}
 
 	goods_material := r.PostFormValue("material")
 	le = len(goods_material)
-	if le > 50 || le < 1 {
+	if le > 50 {
 		Report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
 		return
 	}
@@ -1460,14 +1446,20 @@ func GoodsEyeOn(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
+
 	gu := data.GoodsUser{UserId: s_u.Id}
 	goods_slice, err := gu.GetGoodsByUserId()
 	if err != nil {
-		util.Debug(s.Email, "Cannot get goods from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
-		return
+		if errors.Is(err, sql.ErrNoRows) {
+			// 无物资是正常情况
+			goods_slice = []data.Goods{} // 明确初始化空切片
+		} else {
+			// 处理真实错误
+			util.Debug("数据库错误", "error", err)
+			Report(w, r, "你好，云空未必空，查询物资陷泥潭。")
+			return
+		}
 	}
-
 	gL := data.GoodsUserSlice{
 		SessUser:   s_u,
 		GoodsSlice: goods_slice,

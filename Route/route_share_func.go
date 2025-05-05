@@ -23,7 +23,6 @@ import (
 
 /*
    存放各个路由文件共享的一些方法,常量
-   // DeepSeek建议使用
 */
 // $事业茶团角色
 const (
@@ -38,7 +37,7 @@ const (
 	ClosedProject = 2 // 封闭式茶台
 )
 
-// 未知的家庭ID常量，家庭ID为0
+// 未知的家庭ID常量，=="四海为家"，家庭ID为0
 const UnknownFamilyId = 0
 const UnknownFamilyUuid = "x"
 
@@ -53,7 +52,8 @@ var UnknownFamily = data.Family{
 }
 
 // 默认的系统“自由人”$事业茶团
-// 刚注册或者没有加入任何$事业团队的茶友，属于未确定的$事业茶团
+// 刚注册或者没有声明加入任何$事业团队的茶友，属于未确定的$事业茶团
+// 自由职业者集合也是一个“团队”
 var FreelancerTeam = data.Team{
 	Id:                2,
 	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
@@ -87,10 +87,11 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 		return false, nil
 	}
 
-	if family_id != UnknownFamilyId && team_id != NoTeamId && team_id != FreelancerTeamId {
-		Report(w, r, "茶话会只能属于一个团队或一个家庭，不能同时指定两者。")
-		return false, nil
-	}
+	// 茶语管理权限归属是.IsPrivate 属性声明的，所以可以同时指定两者,符合任何人必然有某个家庭背景的实际情况
+	// if family_id != UnknownFamilyId && team_id != NoTeamId && team_id != FreelancerTeamId {
+	// 	Report(w, r, "茶话会只能属于一个团队或一个家庭，不能同时指定两者。")
+	// 	return false, nil
+	// }
 
 	if team_id == 0 || team_id == 1 {
 		Report(w, r, "指定的团队编号是保留编号，不能使用。")
@@ -104,8 +105,11 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 
 	// 团队ID检查（涉及数据库操作）
 	if family_id == UnknownFamilyId {
-		if team_id <= FreelancerTeamId {
-			Report(w, r, "你好，茶博士查阅了天书黄页，昨天可以创建茶会，明天也可以，但是今天不适宜创建茶话会。")
+		//声明是四海为家【与家庭背景（责任）无关】
+		if team_id == FreelancerTeamId {
+			//既隐藏家庭背景，也不声明团队愿景的“独狼”
+			// 违背了“慎独”原则
+			Report(w, r, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜创建茶话会。")
 			return false, nil
 		}
 
@@ -119,7 +123,7 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 			return false, err // 数据库错误，返回error
 		}
 		if !is_member {
-			Report(w, r, "你好，眼前无路想回头，什么团成员？什么茶话会？请稍后再试。")
+			Report(w, r, "你好，眼前无路想回头，您是什么团成员？什么茶话会？请稍后再试。")
 			return false, nil
 		}
 	}
@@ -129,6 +133,17 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 		family := data.Family{Id: family_id}
 		if err := family.Get(); err != nil {
 			return false, err // 数据库错误，返回error
+		}
+
+		isOnlyOne, err := family.IsOnlyOneMember()
+		if err != nil {
+			util.Debug("Cannot count family member given id", family.Id, err)
+			Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+			return false, err
+		}
+		if isOnlyOne {
+			Report(w, r, "根据“慎独”约定，单独成员家庭目前暂时不能品茶噢，请向船长抗议。")
+			return false, nil
 		}
 
 		is_member, err := family.IsMember(currentUserID)
@@ -144,9 +159,11 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 	return true, nil
 }
 
+// 检查茶围管理权限
 func checkObjectiveAdminPermission(ob *data.Objective, userID int) (bool, error) {
 	// 家庭管理的茶围
-	if ob.TeamId == FreelancerTeamId || ob.TeamId == NoTeamId {
+	//if ob.TeamId == FreelancerTeamId || ob.TeamId == NoTeamId {
+	if ob.IsPrivate {
 		family, err := data.GetFamily(ob.FamilyId)
 		if err != nil {
 			return false, fmt.Errorf("failed to get family (ID: %d): %v", ob.FamilyId, err)
@@ -163,20 +180,44 @@ func checkObjectiveAdminPermission(ob *data.Objective, userID int) (bool, error)
 }
 
 // 检查茶台管理权限
-func checkProjectPermission(pr *data.Project, user_id int) (bool, error) {
-	if pr.TeamId == NoTeamId || pr.TeamId == SpaceshipCrewId || pr.TeamId == FreelancerTeamId {
+func checkProjectAdminPermission(pr *data.Project, user_id int) (bool, error) {
+	//if pr.TeamId == NoTeamId || pr.TeamId == SpaceshipCrewId || pr.TeamId == FreelancerTeamId {
+	if pr.IsPrivate {
 		pr_family, err := data.GetFamily(pr.FamilyId)
 		if err != nil {
 			return false, fmt.Errorf("failed to get family %d: %v", pr.FamilyId, err)
 		}
 		return pr_family.IsParentMember(user_id)
 	}
-
+	// 团队管理的
 	pr_team, err := data.GetTeam(pr.TeamId)
 	if err != nil {
 		return false, fmt.Errorf("failed to get team %d: %v", pr.TeamId, err)
 	}
 	return pr_team.IsMember(user_id)
+}
+
+// 检查茶台创建权限
+func checkCreateProjectPermission(objective data.Objective, userId int, w http.ResponseWriter, r *http.Request) bool {
+	switch objective.Class {
+	case 1: // 开放式茶话会
+		return true
+	case 2: // 封闭式茶话会
+		isInvited, err := objective.IsInvitedMember(userId)
+		if err != nil {
+			util.Debug("检查邀请名单失败", "error", err)
+			Report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
+			return false
+		}
+		if !isInvited {
+			Report(w, r, "你好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
+			return false
+		}
+		return true
+	default:
+		Report(w, r, "你好，茶博士失魂鱼，竟然说受邀请品茶名单失踪了，请稍后再试。")
+		return false
+	}
 }
 
 // 获取用户最后一次设定的“默认家庭”
@@ -1088,9 +1129,9 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 // 茶博士-teaOffice，是古代中华传统文化对茶馆工作人员的昵称，如：富家宴会，犹有专供茶事之人，谓之茶博士。——唐代《西湖志馀》
 // 现在多指精通茶艺的师傅，尤其是四川的长嘴壶茶艺，茶博士个个都是身怀绝技的“高手”。
 // 茶博士向茶客报告信息的方法，包括但不限于意外事件和通知、感谢等等提示。
-func Report(w http.ResponseWriter, r *http.Request, msg string) {
+func Report(w http.ResponseWriter, r *http.Request, msg ...interface{}) {
 	var userBPD data.UserBean
-	userBPD.Message = msg
+	userBPD.Message = fmt.Sprint(msg...)
 	s, err := Session(r)
 	if err != nil {
 		userBPD.SessUser = data.User{

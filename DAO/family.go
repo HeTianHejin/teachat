@@ -840,3 +840,12 @@ func CountFamilyMembers(familyId int) (count int, err error) {
 	}
 	return
 }
+
+// Family.IsOnlyOneMember() 检查家庭是否只有一个成员
+func (f *Family) IsOnlyOneMember() (isOnlyOne bool, err error) {
+	count, err := CountFamilyMembers(f.Id)
+	if err != nil {
+		return
+	}
+	return count == 1, nil
+}
