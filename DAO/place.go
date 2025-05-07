@@ -3,6 +3,7 @@ package data
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -19,13 +20,37 @@ type Place struct {
 	Icon           string // 图标
 	OccupantUserId int    // 洞主，物业使用者（负责人）ID，如：贾宝玉
 	OwnerUserId    int    // 物业产权登记所有者 如：贾政
-	Level          int    // 等级： 1：特级（普京的城堡），2：一级（别墅）飞机，3:独栋，4联排，5公寓楼，6保用十年以上亭棚，7保用十年以下棚，8帐篷等临时遮蔽物业
+	Level          int    // 等级：0:系统保留, 1：特级（普京的城堡），2：一级（别墅）飞机，3:独栋，4联排，5公寓楼，6保用十年以上亭棚，7保用十年以下棚，8帐篷等临时遮蔽物业
 	Category       int    // 类型 ：0:虚拟空间， 1:私人住宅，2:公共建筑空间，3:户外，4:机舱，5:酒店或商业租赁场所，6:野外
 	IsPublic       bool   // 是否公开
 	IsGovernment   bool   // 是否政府单位
 	UserId         int    // 登记者id
 	CreatedAt      time.Time
 	UpdatedAt      *time.Time
+}
+
+const (
+	PlaceIdNone              = 0
+	PlaceIdSpaceshipTeabar   = 1
+	PlaceUuidSpaceshipTeabar = "x"
+)
+
+// 本地点：星际茶棚
+var Place_SpaceshipTeabar = Place{
+	Id:             PlaceIdSpaceshipTeabar,
+	Uuid:           PlaceUuidSpaceshipTeabar,
+	Name:           "星际茶棚",
+	Nickname:       "Spaceship Teabar",
+	Description:    "星际茶棚",
+	Icon:           "spaceship-teabar",
+	OccupantUserId: UserId_SpaceshipCaptain,
+	OwnerUserId:    UserId_SpaceshipCaptain,
+	Level:          0,
+	Category:       0,
+	IsPublic:       true,
+	IsGovernment:   false,
+	UserId:         UserId_SpaceshipCaptain,
+	CreatedAt:      time.Date(2025, time.May, 7, 17, 17, 7, 17, time.UTC),
 }
 
 // 根据给出的关键词（keyword），查询相似的place.name，返回 []place, err
@@ -180,8 +205,8 @@ func (u *User) GetLastDefaultPlace() (place Place, err error) {
 	err = Db.QueryRow(statement, u.Id).Scan(&udp.Id, &udp.UserId, &udp.PlaceId, &udp.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			//这是用户还没有设置默认品茶地方，统一返回虚设“星际茶棚”值
-			return Place{Id: 0, Uuid: "x", Name: "星际茶棚"}, nil
+			//这是用户还没有设置默认品茶地方，统一返回“星际茶棚”
+			return Place_SpaceshipTeabar, nil
 		}
 		return place, err
 	}
@@ -368,6 +393,13 @@ func (p *Place) Create() (err error) {
 
 // place.GetById() 根据id获取1地方记录
 func (p *Place) Get() (err error) {
+	if p.Id == PlaceIdNone {
+		return fmt.Errorf("invalid place ID: %d", PlaceIdNone)
+	}
+	if p.Id == PlaceIdSpaceshipTeabar {
+		*p = Place_SpaceshipTeabar
+		return nil
+	}
 	err = Db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE id = $1", p.Id).
 		Scan(&p.Id, &p.Uuid, &p.Name, &p.Nickname, &p.Description, &p.Icon, &p.OccupantUserId, &p.OwnerUserId, &p.Level, &p.Category, &p.IsPublic, &p.IsGovernment, &p.UserId, &p.CreatedAt, &p.UpdatedAt)
 	return
@@ -393,6 +425,13 @@ func (u *User) GetAllRecordPlaces() (places []Place, err error) {
 
 // place.GetByUuid() 根据uuid获取1地方记录
 func (p *Place) GetByUuid() (err error) {
+	if p.Uuid == "" {
+		return fmt.Errorf("invalid place UUID: %s", p.Uuid)
+	}
+	if p.Uuid == PlaceUuidSpaceshipTeabar {
+		*p = Place_SpaceshipTeabar
+		return nil
+	}
 	err = Db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE uuid = $1", p.Uuid).
 		Scan(&p.Id, &p.Uuid, &p.Name, &p.Nickname, &p.Description, &p.Icon, &p.OccupantUserId, &p.OwnerUserId, &p.Level, &p.Category, &p.IsPublic, &p.IsGovernment, &p.UserId, &p.CreatedAt, &p.UpdatedAt)
 	return
@@ -400,6 +439,12 @@ func (p *Place) GetByUuid() (err error) {
 
 // place.Update() 更新1地方记录
 func (p *Place) Update() (err error) {
+	if p.Id == PlaceIdNone {
+		return fmt.Errorf("invalid place ID: %d", PlaceIdNone)
+	}
+	if p.Id == PlaceIdSpaceshipTeabar {
+		return fmt.Errorf("cannot update spaceshipTeabar place ID: %d", PlaceIdSpaceshipTeabar)
+	}
 	statement := "UPDATE places SET name = $2, nickname = $3, description = $4, icon = $5, occupant_user_id = $6, owner_user_id = $7, level = $8, category = $9, is_public = $10, is_government = $11, user_id = $12, updated_at = $13 WHERE id = $1"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
