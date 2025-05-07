@@ -144,7 +144,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 把系统默认家庭资料加入s_survival_families
-	s_survival_families = append(s_survival_families, UnknownFamily)
+	s_survival_families = append(s_survival_families, data.UnknownFamily)
 	// 把系统默认团队资料加入s_survival_teams
 	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 

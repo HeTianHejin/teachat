@@ -37,20 +37,6 @@ const (
 	ClosedProject = 2 // 封闭式茶台
 )
 
-// 未知的家庭ID常量，=="四海为家"，家庭ID为0
-const UnknownFamilyId = 0
-const UnknownFamilyUuid = "x"
-
-// 未明确资料的家庭="四海为家",id=0
-// 任何人均是来自某个家庭，但是单独的个体，即使成年，属于一个未来家庭的成员之一，不能视为一个家庭。
-var UnknownFamily = data.Family{
-	Id:           UnknownFamilyId,
-	Uuid:         UnknownFamilyUuid, //代表未知数
-	Name:         "四海为家",
-	AuthorId:     1, //表示系统预设的值
-	Introduction: "存在但未明确资料的家庭",
-}
-
 // 默认的系统“自由人”$事业茶团
 // 刚注册或者没有声明加入任何$事业团队的茶友，属于未确定的$事业茶团
 // 自由职业者集合也是一个“团队”
@@ -82,7 +68,7 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 		return false, nil
 	}
 
-	if family_id == UnknownFamilyId && team_id == NoTeamId {
+	if family_id == data.UnknownFamilyId && team_id == NoTeamId {
 		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return false, nil
 	}
@@ -104,7 +90,7 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 	}
 
 	// 团队ID检查（涉及数据库操作）
-	if family_id == UnknownFamilyId {
+	if family_id == data.UnknownFamilyId {
 		//声明是四海为家【与家庭背景（责任）无关】
 		if team_id == FreelancerTeamId {
 			//既隐藏家庭背景，也不声明团队愿景的“独狼”
@@ -129,7 +115,7 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 	}
 
 	// 自由职业者团队检查（涉及数据库操作）
-	if team_id == FreelancerTeamId && family_id != UnknownFamilyId {
+	if team_id == FreelancerTeamId && family_id != data.UnknownFamilyId {
 		family := data.Family{Id: family_id}
 		if err := family.Get(); err != nil {
 			return false, err // 数据库错误，返回error
@@ -221,36 +207,23 @@ func checkCreateProjectPermission(objective data.Objective, userId int, w http.R
 }
 
 // 获取用户最后一次设定的“默认家庭”
-// 如果用户没有设定默认家庭，则返回默认id=0，名称为“四海为家”家庭
-func GetLastDefaultFamilyByUserId(user_id int) (family data.Family, err error) {
-	family = data.Family{}
-	user, err := data.GetUser(user_id)
+// 如果用户没有设定默认家庭，则返回名称为“四海为家”(未知)家庭
+// route/family.go
+func GetLastDefaultFamilyByUserId(userID int) (data.Family, error) {
+	user, err := data.GetUser(userID)
 	if err != nil {
-		return
+		return data.Family{}, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	family, err = user.GetLastDefaultFamily()
-	if err != nil {
-		// 未设定默认家庭
-		if errors.Is(err, sql.ErrNoRows) {
-			return UnknownFamily, nil
-		}
-		return
+	family, err := user.GetLastDefaultFamily()
+	switch {
+	case err == nil:
+		return family, nil
+	case errors.Is(err, sql.ErrNoRows):
+		return data.UnknownFamily, nil
+	default:
+		return data.Family{}, fmt.Errorf("failed to get default family: %w", err)
 	}
-	return
-}
-
-// 根据茶语中登记的家庭ID，获取某个茶语(茶围、茶台、茶议和品味)发布时选择的家庭
-func GetFamilyByFamilyId(family_id int) (family data.Family, err error) {
-	if family_id == 0 {
-		return UnknownFamily, nil
-	}
-	family = data.Family{Id: family_id}
-	if err = family.Get(); err != nil {
-		return
-	}
-
-	return
 }
 
 // 记录用户最后的查询路径和参数
@@ -455,7 +428,7 @@ func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error)
 	}
 	tB.Author = author
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
-	tB.AuthorFamily, err = GetFamilyByFamilyId(thread.FamilyId)
+	tB.AuthorFamily, err = data.GetFamily(thread.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read thread author family", err)
 		return
@@ -511,7 +484,7 @@ func FetchObjectiveBean(o data.Objective) (ObjectiveBean data.ObjectiveBean, err
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
 
-	oB.AuthorFamily, err = GetFamilyByFamilyId(o.FamilyId)
+	oB.AuthorFamily, err = data.GetFamily(o.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read objective author family", err)
 		return
@@ -563,7 +536,7 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
 
-	pb.AuthorFamily, err = GetFamilyByFamilyId(project.FamilyId)
+	pb.AuthorFamily, err = data.GetFamily(project.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read project author family", err)
 		return
@@ -618,7 +591,7 @@ func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
 
-	family, err := GetFamilyByFamilyId(post.FamilyId)
+	family, err := data.GetFamily(post.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read post author family", err)
 		return
@@ -637,12 +610,16 @@ func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 
 // 据给出的team参数，去获取对应的茶团资料，是否开放，成员计数，发起日期，发起人（Founder）及其默认团队，然后按结构拼装返回。
 func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
-	TeamBean.Team = team
-	if team.Class == 1 {
+	if team.Id == data.TeamIdNone {
+		return TeamBean, fmt.Errorf("team id is none")
+	}
+
+	if team.Class == 1 || team.Class == 0 {
 		TeamBean.Open = true
 	} else {
 		TeamBean.Open = false
 	}
+	TeamBean.Team = team
 	TeamBean.CreatedAtDate = team.CreatedAtDate()
 
 	founder, err := team.Founder()
@@ -652,12 +629,11 @@ func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 	}
 	TeamBean.Founder = founder
 
-	founder_default_family, err := GetLastDefaultFamilyByUserId(founder.Id)
+	TeamBean.FounderDefaultFamily, err = GetLastDefaultFamilyByUserId(founder.Id)
 	if err != nil {
 		util.Debug(" Cannot read team founder default family", err)
 		return
 	}
-	TeamBean.FounderDefaultFamily = founder_default_family
 
 	TeamBean.FounderTeam, err = founder.GetLastDefaultTeam()
 	if err != nil {
@@ -666,6 +642,36 @@ func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 	}
 
 	TeamBean.Count = team.NumMembers()
+
+	if team.Id == data.TeamIdFreelancer {
+		//茶友的默认团队还是“自由人”的情况
+		TeamBean.CEO = founder
+		TeamBean.CEOTeam = TeamBean.FounderTeam
+		TeamBean.CEODefaultFamily = TeamBean.FounderDefaultFamily
+		return TeamBean, nil
+	}
+
+	member_ceo, err := team.MemberCEO()
+	if err != nil {
+		util.Debug(" Cannot read team member ceo given team_id: ", team.Id, err)
+		return
+	}
+	ceo, err := data.GetUser(member_ceo.UserId)
+	if err != nil {
+		util.Debug(" Cannot read team ceo given team_id: ", team.Id, err)
+		return
+	}
+	TeamBean.CEO = ceo
+	TeamBean.CEOTeam, err = ceo.GetLastDefaultTeam()
+	if err != nil {
+		util.Debug(" Cannot read team ceo default team", ceo.Id, err)
+		return
+	}
+	TeamBean.CEODefaultFamily, err = GetLastDefaultFamilyByUserId(ceo.Id)
+	if err != nil {
+		util.Debug(" Cannot read team ceo default family", ceo.Id, err)
+		return
+	}
 
 	return TeamBean, nil
 }

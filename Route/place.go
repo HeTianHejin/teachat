@@ -89,7 +89,7 @@ func PlaceCollect(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = udp.Create(); err != nil {
 			util.Debug("Cannot create user default place", err)
-			Report(w, r, "你好，茶博士表示无法收藏地方，请稍后再试。")
+			Report(w, r, "你好，茶博士表示收藏地方失误，请稍后再试。")
 			return
 		}
 

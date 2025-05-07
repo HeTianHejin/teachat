@@ -234,24 +234,34 @@ type PostBean struct {
 	AuthorTeam    Team   // 作者创建发帖时选择的团队，或者默认$团队
 }
 
+// 用于茶团队列页面渲染
+type TeamSquare struct {
+	SessUser      User
+	TeamBeanSlice []TeamBean
+}
+type TeamBean struct {
+	Team                 Team
+	CreatedAtDate        string
+	Open                 bool
+	Founder              User
+	FounderDefaultFamily Family //发起人默认&家庭茶团
+	FounderTeam          Team   // 发起人默认所在的团队
+	CEO                  User   // CEO
+	CEOTeam              Team   // CEO所在默认团队
+	CEODefaultFamily     Family // CEO默认&家庭茶团
+
+	Count int //成员计数
+}
+
 // 用于某个茶团详情页面渲染
 type TeamDetail struct {
 	SessUser     User //当前访问用户
 	IsFounder    bool //是否为创建者
 	IsCEO        bool //是否CEO
-	IsCoreMember bool //是否核心成员（管理员）
+	IsCoreMember bool //是否核心成员
 	IsMember     bool //是否成员
 
-	Team                 Team   //茶团
-	Open                 bool   //是否开放式茶团
-	Founder              User   // 茶团发起人（创建者）
-	FounderDefaultFamily Family //发起人默认&家庭茶团
-	FounderTeam          Team   // 发起人默认所在的团队
-	CEO                  User   // CEO
-	CEOTeam              Team   // CEO所在默认团队
-	CreatedAtDate        string
-
-	TeamMemberCount int //成员数量统计
+	TeamBean TeamBean //$事业茶团资料夹
 
 	IsAuthor              bool
 	CoreMemberBeanSlice   []TeamMemberBean //核心成员资料夹
@@ -292,21 +302,6 @@ type GroupBean struct {
 	FounderTeam   Team // 发起人默认所在的团队
 	TeamsCount    int  // 下属团队计数
 	Count         int  // 集团总成员计数，包括全部附属团队的人员数
-}
-
-// 用于茶团队列页面渲染
-type TeamSquare struct {
-	SessUser      User
-	TeamBeanSlice []TeamBean
-}
-type TeamBean struct {
-	Team                 Team
-	CreatedAtDate        string
-	Open                 bool
-	Founder              User
-	FounderDefaultFamily Family //发起人默认&家庭茶团
-	FounderTeam          Team   // 发起人默认所在的团队
-	Count                int    //成员计数
 }
 
 // 用于家庭茶团资料集合页面渲染

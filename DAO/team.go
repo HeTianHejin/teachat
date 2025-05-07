@@ -17,6 +17,82 @@ const (
 	RoleCFO    = "CFO"
 	RoleTaster = "taster"
 )
+const (
+	TeamIdNone          = iota // 0
+	TeamIdSpaceshipCrew        // 1
+	TeamIdFreelancer           // 2
+)
+
+// 默认的系统“自由人”$事业茶团
+// 刚注册或者没有声明加入任何$事业团队的茶友，属于未确定的$事业茶团
+// 自由职业者集合也是一个“团队”
+var FreelancerTeam = Team{
+	Id:                2,
+	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
+	Name:              "自由人",
+	Mission:           "星际旅行特立独行的自由人，不属于任何$事业茶团。",
+	FounderId:         1, //表示系统预设的值
+	Class:             0,
+	Abbreviation:      "自由人",
+	Logo:              "teamLogo",
+	SuperiorTeamId:    0,
+	SubordinateTeamId: 0,
+}
+
+var (
+	freelancerTeamUUID = "72c06442-2b60-418a-6493-a91bd03ae4k8"
+)
+
+// GetTeam retrieves team by ID
+func GetTeam(teamID int) (Team, error) {
+	switch teamID {
+	case TeamIdNone:
+		return Team{}, fmt.Errorf("team ID not set")
+	case TeamIdFreelancer:
+		return getFreelancerTeam(), nil
+	default:
+		return queryTeamFromDB(teamID)
+	}
+}
+
+func getFreelancerTeam() Team {
+	return Team{
+		Id:                TeamIdFreelancer,
+		Uuid:              freelancerTeamUUID,
+		Name:              "自由人",
+		Mission:           "星际旅行特立独行的自由人，不属于任何$事业茶团。",
+		FounderId:         1,
+		Class:             0,
+		Abbreviation:      "自由人",
+		Logo:              "teamLogo",
+		SuperiorTeamId:    0,
+		SubordinateTeamId: 0,
+	}
+}
+
+func queryTeamFromDB(teamID int) (Team, error) {
+	const query = `SELECT id, uuid, name, mission, founder_id, 
+                  created_at, class, abbreviation, logo, updated_at, 
+                  superior_team_id, subordinate_team_id 
+                  FROM teams WHERE id = $1`
+
+	var team Team
+	err := Db.QueryRow(query, teamID).Scan(
+		&team.Id, &team.Uuid, &team.Name, &team.Mission,
+		&team.FounderId, &team.CreatedAt, &team.Class,
+		&team.Abbreviation, &team.Logo, &team.UpdatedAt,
+		&team.SuperiorTeamId, &team.SubordinateTeamId,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Team{}, fmt.Errorf("team not found with id: %d", teamID)
+		}
+		return Team{}, fmt.Errorf("failed to query team: %w", err)
+	}
+
+	return team, nil
+}
 
 // 根据$事业茶团team_id_slice，获取全部申请加盟的$事业茶团[]team
 func GetTeamsByIds(team_id_slice []int) (teams []Team, err error) {
@@ -358,6 +434,10 @@ func (udteam *UserDefaultTeam) Create() (err error) {
 func (user *User) GetLastDefaultTeam() (team Team, err error) {
 	team = Team{}
 	err = Db.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.superior_team_id, teams.subordinate_team_id FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
+	if errors.Is(err, sql.ErrNoRows) {
+		team = FreelancerTeam
+		err = nil
+	}
 	return
 }
 
@@ -615,26 +695,24 @@ func GetTeamByUUID(uuid string) (team Team, err error) {
 	return
 }
 
-// 根据用户提交的Id获取一个$事业茶团
-// AWS CodeWhisperer assist in writing
-func GetTeam(id int) (team Team, err error) {
-	team = Team{}
-	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE id = $1", id).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
-	return
-}
-
 // Team.Get() 根据$事业茶团Id获取$事业茶团
 func (team *Team) Get() (err error) {
+	if team.Id == 0 {
+		return fmt.Errorf("team not found with id: %d", team.Id)
+	}
+
 	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE id = $1", team.Id).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
 	return
 }
 
-// 获取$事业茶团，每次查询最多24位普通成员，role=“品茶师”（taster）的方法
-// AWS CodeWhisperer assist in writing
+// 获取$事业茶团，查询普通成员，role=“品茶师”（taster）的方法
 func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2 LIMIT 24", team.Id, "taster")
+
+	if team.Id == 0 {
+		return nil, fmt.Errorf("team not found with id: %d", team.Id)
+	}
+	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "taster")
 	if err != nil {
 		return
 	}
@@ -650,8 +728,10 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 }
 
 // coreMember() 返回$事业茶团核心成员,teamMember.Role = “CEO” and “CTO” and “CMO” and “CFO”
-// AWS CodeWhisperer assist in writing
 func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
+	if team.Id == 0 {
+		return nil, fmt.Errorf("team not found with id: %d", team.Id)
+	}
 	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, class, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5)", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO)
 	if err != nil {
 		return
@@ -669,6 +749,9 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 
 // GetAllMemberUserIdsByTeamId() 从TeamMember获取某个茶团，全部状态正常的成员User_ids，返回 []user_id, err
 func GetAllMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
+	if team_id == 0 {
+		return nil, fmt.Errorf("team not found with id: %d", team_id)
+	}
 	rows, err := Db.Query("SELECT user_id FROM team_members WHERE team_id = $1 AND class = 1", team_id)
 	if err != nil {
 		return

@@ -39,7 +39,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	}
 	uB, err = FetchUserBean(user)
 	if err != nil {
-		util.Debug(" 未能读取用户信息！", err)
+		util.Debug("Cannot get user Bean given id", user.Id, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}

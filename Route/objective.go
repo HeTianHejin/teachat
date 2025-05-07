@@ -45,7 +45,7 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	}
 	//把系统默认家庭资料加入s_survival_families
 	//把系统默认团队资料加入s_survival_teams
-	s_survival_families = append(s_survival_families, UnknownFamily)
+	s_survival_families = append(s_survival_families, data.UnknownFamily)
 	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 
 	// 填写页面数据

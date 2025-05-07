@@ -11,7 +11,7 @@ type MemberApplication struct {
 	Content   string //申请书正文内容
 	Status    int    //0: "待处理",1: "已查看",2: "已批准",3: "已婉拒",4: "已过期",
 	CreatedAt time.Time
-	UpdatedAt time.Time
+	UpdatedAt *time.Time
 }
 
 // 申请书状态map

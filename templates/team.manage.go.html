@@ -2,10 +2,11 @@
 
 {{/* 这是某个茶团管理首页，默认“调整角色”tab标签页，内容是展示全部成员列表，以便调整成员角色及移除离队成员，html页面 */}}
 
+{{ with .TeamBean }}{{/*  检测Teambean非空 --开始  */}}
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/office">茶团写字台</a></li>
-    <li class="active">{{ .Team.Abbreviation }} 管理团队事务</li>
+    <li><a href="/v1/team/office">茶团管理</a></li>
+    <li class="active">{{ .Team.Abbreviation }}</li>
   </ol>
 
 
@@ -20,6 +21,9 @@
         <li><a href="#">冰封团队</a></li>
     </ol>
   </div>
+
+  {{ end }}{{/*  检测Teambean非空 --结束  */}}
+
 
   <div class="well">
      说明：CEO仅能由茶团创建人指定和撤销；CEO可以指定和撤销CTO，CMO，CFO，每个核心角色只能指定一人担任，

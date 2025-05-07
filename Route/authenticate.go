@@ -101,7 +101,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 将新成员添加进默认的自由人茶团
 	team_member := data.TeamMember{
-		TeamId: 2,
+		TeamId: data.TeamIdFreelancer,
 		UserId: newU.Id,
 		Role:   "taster",
 		Class:  1,

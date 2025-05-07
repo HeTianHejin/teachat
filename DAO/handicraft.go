@@ -77,7 +77,7 @@ type Skill struct {
 	Category        int    // 分类，
 	Level           int    // 等级，
 	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	UpdatedAt       *time.Time
 }
 
 // Skill.Create() 创建技能
@@ -142,7 +142,7 @@ type Handicraft struct {
 	Category  int // 类型，0:日常普通作业，1:非物质文化遗产？
 	Status    int // 状态
 	CreatedAt time.Time
-	UpdatedAt time.Time
+	UpdatedAt *time.Time
 }
 
 // 手工艺作业成品，
@@ -153,7 +153,7 @@ type HandicraftProduct struct {
 	HandicraftId int
 	GoodsId      int
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 }
 
 // MagicSlice 手工艺作业的法力集合id
@@ -162,7 +162,7 @@ type HandicraftMagic struct {
 	HandicraftId int
 	MagicId      int
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 }
 
 // SkillSlice 手工艺作业的技能集合id
@@ -171,7 +171,7 @@ type HandicraftSkill struct {
 	HandicraftId int
 	SkillId      int
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 }
 
 // ToolSlice  手工艺作业的装备或工具（短期租赁的商品）清单单号，完成这个部分作业，可能需要多个工具（装备），例如写一首古诗，需要毛笔、墨、纸、砚台和水，书桌等
@@ -180,7 +180,7 @@ type HandicraftTool struct {
 	HandicraftId int
 	ToolId       int
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 }
 
 // GoodsSlice 手工艺作业的消耗品，材料，（货物）商品清单单号
@@ -189,7 +189,7 @@ type HandicraftGoods struct {
 	HandicraftId int
 	GoodsId      int
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 }
 
 // EvidenceSlice  手工艺作业的音视频等视觉证据，默认值为 0，表示没有
@@ -198,7 +198,7 @@ type HandicraftEvidence struct {
 	HandicraftId int
 	EvidenceId   int
 	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 }
 
 type StrengthLevel int
@@ -244,7 +244,7 @@ type Inauguration struct {
 	EvidenceId     int    // 音视频等视觉证据，默认值为 0，表示没有
 	Status         int    // 状态
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
 }
 
 type Tool struct {
@@ -258,7 +258,7 @@ type Tool struct {
 	Class          int    //分类
 	Level          int    //等级
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
 }
 
 // 收尾，手工艺作业结束仪式，离手（场）快照。
@@ -274,7 +274,7 @@ type Ending struct {
 	EvidenceId     int    // 默认值为 0，表示没有
 	Status         int    // 状态。0:失败作业，1:已完成作业，2:需要延期作业
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
 }
 
 // 凭据，依据，指音视频等视觉证据，证明手工艺作业符合描述的资料,
@@ -289,5 +289,5 @@ type Evidence struct {
 	Category       int    //分类：1、图片，2、视频，3、音频，4、其他
 	Link           string // 储存链接（地址）
 	CreatedAt      time.Time
-	UpdatedAt      time.Time
+	UpdatedAt      *time.Time
 }

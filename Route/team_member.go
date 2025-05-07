@@ -272,7 +272,7 @@ func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// MemberRoleChange() GET /v1/team_member/role?id=XXX&m_email=XXX
+// GET /v1/team_member/role?id=XXX&m_email=XXX
 // 取出一张空白茶团成员角色任命书
 func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	// 读取会话
@@ -1130,7 +1130,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 
 	var tD data.TeamDetail
 	tD.SessUser = s_u
-	tD.Team = team
+	tD.TeamBean.Team = team
 	//渲染页面
 	RenderHTML(w, &tD, "layout", "navbar.private", "member.application_new")
 

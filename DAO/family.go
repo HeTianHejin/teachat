@@ -1,6 +1,9 @@
 package data
 
 import (
+	"database/sql"
+	"errors"
+	"fmt"
 	"strconv"
 	"time"
 )
@@ -26,6 +29,20 @@ type Family struct {
 	Logo                string // 家庭标志图片名
 	IsOpen              bool   // 是否公开，公开的家庭可以被搜索到，不公开的家庭不可以被搜索到
 }
+
+// 未明确资料的家庭="四海为家",id=0
+// 任何人均是来自某个家庭，但是单独的个体，即使成年，属于一个未来家庭的成员之一，不能视为一个家庭。
+var UnknownFamily = Family{
+	Id:           UnknownFamilyId,
+	Uuid:         UnknownFamilyUuid,
+	Name:         "四海为家",
+	AuthorId:     1, //表示系统预设的值
+	Introduction: "存在但未明确资料的家庭",
+}
+
+// 未知的家庭ID常量，=="四海为家"，家庭ID为0
+const UnknownFamilyId = 0
+const UnknownFamilyUuid = "x" //代表未知数
 
 // Family.GetStatus()
 func (f *Family) GetStatus() string {
@@ -360,15 +377,36 @@ func (udf *UserDefaultFamily) Create() (err error) {
 }
 
 // (user *User) GetLastDefaultFamily() 根据user.Id从user_default_families和families，获取用户最后一次设定的“默认家庭”，return (family Family, err error)
-func (user *User) GetLastDefaultFamily() (family Family, err error) {
-	family = Family{}
-	statement := "SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open FROM user_default_families udf LEFT JOIN families f ON udf.family_id = f.id WHERE udf.user_id = $1 ORDER BY udf.created_at DESC"
-	err = Db.QueryRow(statement, user.Id).Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
-	if err != nil {
+// --DeepSeek优化
+func (user *User) GetLastDefaultFamily() (Family, error) {
+	const query = `
+        SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, 
+               f.is_married, f.has_child, f.husband_from_family_id, 
+               f.wife_from_family_id, f.status, f.created_at, 
+               f.updated_at, f.logo, f.is_open 
+        FROM user_default_families udf 
+        JOIN families f ON udf.family_id = f.id 
+        WHERE udf.user_id = $1 
+        ORDER BY udf.created_at DESC 
+        LIMIT 1`
 
-		return family, err
+	var family Family
+	err := Db.QueryRow(query, user.Id).Scan(
+		&family.Id, &family.Uuid, &family.AuthorId, &family.Name,
+		&family.Introduction, &family.IsMarried, &family.HasChild,
+		&family.HusbandFromFamilyId, &family.WifeFromFamilyId,
+		&family.Status, &family.CreatedAt, &family.UpdatedAt,
+		&family.Logo, &family.IsOpen,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Family{}, err
+		}
+		return Family{}, fmt.Errorf("failed to query default family: %w", err)
 	}
-	return
+
+	return family, nil
 }
 
 // ParentMemberFamilies() 用户user担任核心（男、女主人）父母角色的全部&家庭茶团，
@@ -565,24 +603,42 @@ func (f *Family) Update() (err error) {
 
 // Family.Get() 根据id获取家庭
 func (f *Family) Get() (err error) {
+	if f.Id == 0 {
+		return fmt.Errorf("family not found with id: %d", f.Id)
+	}
 	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open FROM families WHERE id=$1"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(f.Id).Scan(&f.Id, &f.Uuid, &f.AuthorId, &f.Name, &f.Introduction, &f.IsMarried, &f.HasChild, &f.HusbandFromFamilyId, &f.WifeFromFamilyId, &f.Status, &f.CreatedAt, &f.UpdatedAt, &f.Logo, &f.IsOpen)
-	if err != nil {
-		return
+
+	if err = stmt.QueryRow(f.Id).Scan(&f.Id, &f.Uuid, &f.AuthorId, &f.Name, &f.Introduction, &f.IsMarried, &f.HasChild, &f.HusbandFromFamilyId, &f.WifeFromFamilyId, &f.Status, &f.CreatedAt, &f.UpdatedAt, &f.Logo, &f.IsOpen); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return fmt.Errorf("family not found with id: %d", f.Id)
+		}
+		return fmt.Errorf("failed to query family: %w", err)
 	}
 	return
 }
 
-// GetFamily(id int)
-func GetFamily(id int) (family Family, err error) {
-	err = Db.QueryRow("SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open FROM families WHERE id = $1", id).
-		Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction, &family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId, &family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen)
-	return
+// GetFamily retrieves family information by family ID.
+// Returns UnknownFamily (with nil error) when family_id is 0.
+// Returns error when family not found or database operation fails.
+func GetFamily(family_id int) (family Family, err error) {
+	if family_id == 0 {
+		return UnknownFamily, nil
+	}
+
+	family = Family{Id: family_id}
+	if err = family.Get(); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Family{}, fmt.Errorf("family not found with id: %d", family_id)
+		}
+		return Family{}, fmt.Errorf("failed to get family: %w", err)
+	}
+
+	return family, nil
 }
 
 // GetFamiliesByAuthorId() 根据author_id获取家庭列表

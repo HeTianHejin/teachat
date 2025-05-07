@@ -473,36 +473,19 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	var tD data.TeamDetail
 
-	tD.Team = team
-
-	tD.CreatedAtDate = team.CreatedAtDate()
-
-	founder, err := team.Founder()
+	teamBean, err := FetchTeamBean(team)
 	if err != nil {
-		util.Debug(" Cannot get team founder", err)
-		Report(w, r, "你好，茶博士为你极速效劳中，请稍后再试。")
+		util.Debug(" Cannot get team bean", err)
+		Report(w, r, "你好，茶博士未能帮忙查看这个茶团资料，请稍后再试。")
 		return
 	}
-	tD.Founder = founder
+	tD.TeamBean = teamBean
 
-	// 获取团队发起人默认&家庭茶团
-	founder_default_family, err := GetLastDefaultFamilyByUserId(founder.Id)
-	if err != nil {
-		util.Debug(" Cannot get founder's default family", err)
-		Report(w, r, "你好，满头大汗的茶博士为你效劳中，请稍后再试。")
-		return
-	}
-	tD.FounderDefaultFamily = founder_default_family
-
-	founder_default_team, err := founder.GetLastDefaultTeam()
-	if err != nil {
-		util.Debug(" Cannot get founder's default team", err)
-		Report(w, r, "你好，满头大汗的茶博士为你效劳中，请稍后再试。")
-		return
-	}
-	tD.FounderTeam = founder_default_team
-
-	tD.TeamMemberCount = team.NumMembers()
+	// 准备页面数据
+	var tc data.TeamMemberBean //核心成员资料荚
+	var tn data.TeamMemberBean //普通成员资料荚
+	var tcSlice []data.TeamMemberBean
+	var tnSlice []data.TeamMemberBean
 
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
@@ -516,12 +499,6 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士为你效劳中，请稍后再试。")
 		return
 	}
-
-	// 准备页面数据
-	var tc data.TeamMemberBean //核心成员资料荚
-	var tn data.TeamMemberBean //普通成员资料荚
-	var tcSlice []data.TeamMemberBean
-	var tnSlice []data.TeamMemberBean
 
 	//据teamMembers中的UserId获取User
 	for _, member := range teamCoreMembers {
@@ -579,10 +556,10 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	tD.CoreMemberBeanSlice = tcSlice
 	tD.NormalMemberBeanSlice = tnSlice
 
-	if tD.Team.Class == 1 {
-		tD.Open = true
+	if tD.TeamBean.Team.Class == 1 {
+		tD.TeamBean.Open = true
 	} else {
-		tD.Open = false
+		tD.TeamBean.Open = false
 	}
 
 	tD.IsCoreMember = false
@@ -610,36 +587,27 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
 	tD.SessUser = s_u
+
 	//检查当前用户是否核心成员
-	for _, member := range tD.CoreMemberBeanSlice {
-		if member.Member.Id == s_u.Id {
+	for _, member_bean := range tD.CoreMemberBeanSlice {
+		if member_bean.Member.Id == s_u.Id {
 			tD.IsCoreMember = true
 			tD.IsMember = true
 			break
 		}
 	}
 	if !tD.IsCoreMember {
-		//茶团发起人也是核心成员？
-		f_teams, err := s_u.FounderTeams()
-		if err != nil {
-			util.Debug(" Cannot get founderTeams given s_u", err)
-			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
-			return
-		}
-		//检查当前用户是否核心成员
-		for _, team := range f_teams {
-			if team.Id == tD.Team.Id {
-				tD.IsCoreMember = true
-				tD.IsMember = true
-				break
-			}
+		//茶团发起人也是核心成员
+		if teamBean.Founder.Id == s_u.Id {
+			tD.IsCoreMember = true
+			tD.IsMember = true
 		}
 	}
 
 	if !tD.IsMember {
 		//检查当前用户是否普通成员
-		for _, member := range tD.NormalMemberBeanSlice {
-			if member.Member.Id == s_u.Id {
+		for _, member_bean := range tD.NormalMemberBeanSlice {
+			if member_bean.Member.Id == s_u.Id {
 				tD.IsMember = true
 				break
 			}
@@ -647,9 +615,18 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tD.HasApplication = false
+	tD.IsCEO = false
+	tD.IsFounder = false
 	if tD.IsCoreMember {
+		//检查是否CEO
+		if s_u.Id == teamBean.CEO.Id {
+			tD.IsCEO = true
+		}
+		if s_u.Id == teamBean.Founder.Id {
+			tD.IsFounder = true
+		}
 		//检查茶团是否有待处理的加盟申请书
-		count, err := data.GetMemberApplicationByTeamIdAndStatusCount(tD.Team.Id)
+		count, err := data.GetMemberApplicationByTeamIdAndStatusCount(tD.TeamBean.Team.Id)
 		if err != nil {
 			util.Debug("Cannot get member application count", err)
 			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
@@ -702,7 +679,6 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	t_uuid := vals.Get("id")
 	//一次管理一个茶团，根据提交的team.Uuid来确定
-	//这个茶团是否存在？
 	team, err := data.GetTeamByUUID(t_uuid)
 	if err != nil {
 		util.Debug(" Cannot get this team", err)
@@ -714,72 +690,43 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	//检查一下当前用户是否有权管理这个茶团？即teamMember中Role为"ceo".或者是茶团创建人
 	is_manager := false
 	//如果是创建人，那么就可以管理这个茶团
-	founder, err := team.Founder()
-	if err != nil {
-		util.Debug(" Cannot get team founder", err)
-		Report(w, r, "你好，茶博士为你极速效劳中，请稍后再试。")
-		return
-	}
-
-	//读取茶团的member_ceo
-	member_ceo, err := team.MemberCEO()
-	if err != nil {
-		//茶团已经设定了ceo，但是出现了其他错误
-		util.Debug(" Cannot get ceo of this team", err)
-		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
-		return
-	}
-
-	if member_ceo.UserId == s_u.Id {
-		//是茶团的ceo，可以管理这个茶团
+	if s_u.Id == team.FounderId {
 		is_manager = true
-		tD.IsCEO = true
-		tD.IsFounder = false
-		tD.IsCoreMember = true
-		tD.IsMember = true
-	} else if founder.Id == s_u.Id {
-		//是创建人,可以管理这个茶团
-		is_manager = true
-		tD.IsFounder = true
 		tD.IsCEO = false
-		tD.IsCoreMember = true
-		tD.IsMember = true
+		tD.IsFounder = true
+	} else {
+		//检查当前用户是否是ceo
+		member_ceo, err := team.MemberCEO()
+		if err != nil {
+			util.Debug(" Cannot get ceo of this team", err)
+			Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
+			return
+		}
+		if member_ceo.UserId == s_u.Id {
+			//是茶团的ceo，可以管理这个茶团
+			is_manager = true
+			tD.IsCEO = true
+			tD.IsFounder = false
+		}
 	}
 
-	if !is_manager {
-		Report(w, r, "你好，您无权管理此茶团。")
+	if is_manager {
+		//是茶团的ceo或者创建人，可以管理这个茶团
+		tD.IsCoreMember = true
+		tD.IsMember = true
+	} else {
+		Report(w, r, "你好，茶博士认为，您今天无权管理此茶团。")
 		return
 	}
 
 	// 填写页面数据
-	tD.Team = team
-	tD.CreatedAtDate = team.CreatedAtDate()
-
-	tD.Founder = founder
-	founder_default_team, err := founder.GetLastDefaultTeam()
+	tD.TeamBean, err = FetchTeamBean(team)
 	if err != nil {
-		util.Debug("Cannot get founder's default team", err)
-		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
+		util.Debug(" Cannot get team bean", err)
+		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
-	tD.FounderTeam = founder_default_team
 
-	ceo, err := data.GetUser(member_ceo.UserId)
-	if err != nil {
-		util.Debug("Cannot get ceo given member.user_id", err)
-		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
-		return
-	}
-	tD.CEO = ceo
-	ceo_default_team, err := ceo.GetLastDefaultTeam()
-	if err != nil {
-		util.Debug("Cannot get ceo's default team", err)
-		Report(w, r, "你好，茶博士未能找到此茶团资料，请确认后再试。")
-		return
-	}
-	tD.CEOTeam = ceo_default_team
-
-	tD.TeamMemberCount = team.NumMembers()
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
 		util.Debug(" Cannot get team core member", err)

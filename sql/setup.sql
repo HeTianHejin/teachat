@@ -191,15 +191,15 @@ CREATE TABLE addresses (
 );
 CREATE TABLE user_place (
     id                   SERIAL PRIMARY KEY,
-    user_id              INTEGER REFERENCES users(id),
-    place_id             INTEGER REFERENCES places(id),
+    user_id              INTEGER,
+    place_id             INTEGER,
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE user_default_place (
     id                   SERIAL PRIMARY KEY,
-    user_id              INTEGER REFERENCES users(id),
-    place_id             INTEGER REFERENCES places(id),
+    user_id              INTEGER,
+    place_id             INTEGER,
     created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

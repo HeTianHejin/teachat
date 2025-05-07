@@ -17,7 +17,7 @@ type Group struct {
 	Class        int    // 1: "开放式集团",2: "封闭式集团",10: "开放式草集团",20: "封闭式草集团"
 	Abbreviation string // 集团简称
 	Logo         string // 集团标志
-	UpdatedAt    time.Time
+	UpdatedAt    *time.Time
 	MinistryId   int //（预留）默认值 0，上级单位（协会/部委）id
 }
 

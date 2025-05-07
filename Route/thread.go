@@ -40,7 +40,7 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//把系统默认家庭资料加入s_survival_families
-	s_survival_families = append(s_survival_families, UnknownFamily)
+	s_survival_families = append(s_survival_families, data.UnknownFamily)
 	//把系统默认团队资料加入s_survival_teams
 	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 
@@ -109,7 +109,7 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
 		return
 	}
-	tD.QuoteProjectAuthorFamily, err = GetFamilyByFamilyId(tD.QuoteProject.FamilyId)
+	tD.QuoteProjectAuthorFamily, err = data.GetFamily(tD.QuoteProject.FamilyId)
 	if err != nil {
 		util.Debug(tD.QuoteProject.Id, " Cannot read project user family")
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见，梨花满地不闻莺。请稍后再试。")
@@ -366,7 +366,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
 		return
 	}
-	tD.QuoteProjectAuthorFamily, err = GetFamilyByFamilyId(tD.QuoteProject.FamilyId)
+	tD.QuoteProjectAuthorFamily, err = data.GetFamily(tD.QuoteProject.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read project author family", err)
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
@@ -406,7 +406,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
 			return
 		}
-		tD.QuotePostAuthorFamily, err = GetFamilyByFamilyId(tD.QuotePost.FamilyId)
+		tD.QuotePostAuthorFamily, err = data.GetFamily(tD.QuotePost.FamilyId)
 		if err != nil {
 			util.Debug(" Cannot read post author family", err)
 			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")

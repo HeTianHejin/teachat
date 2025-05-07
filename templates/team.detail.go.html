@@ -2,22 +2,23 @@
 
 {{/*  这是指定茶团详情展示页面-面包屑导航栏  */}}
 
+{{ with .TeamBean }}{{/*  检测Teambean非空 --开始  */}}
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="#">{{ .Team.Name }}</a></li>
-  <li class="=active">详情</li>
+  <li>$事业茶团详情</li>
+  <li class="=active"><a href="#">{{ .Team.Name }}</a></li>
 </ol>
 
-{{ if .IsCoreMember }}
+{{ if $.IsCoreMember }}
 
-{{ if .IsCEO }}{{/*  检查是否团队管理员开始  */}}
+{{ if $.IsCEO }}{{/*  检查是否团队管理员开始  */}}
 <a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
-{{ else if .IsFounder }}
+{{ else if $.IsFounder }}
 <a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
 {{ end }} {{/*  检查是否团队管理员结束  */}}
 
 
-{{ if .HasApplication }}
+{{ if $.HasApplication }}
 
 <div class="alert alert-info" role="alert" style="margin-top: 1rem;">你好，有待处理的加盟申请书！
   <i class="bi bi-envelope"></i>
@@ -29,8 +30,8 @@
 
 <hr />
 {{ if .Open }}
-{{ if .IsMember }}
-{{ if .IsCoreMember }}
+{{ if $.IsMember }}
+{{ if $.IsCoreMember }}
 <p class="text-center">
   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
   茶博士提示： 邀请茶友加入团队的方法：先 <strong><a href="/v1/search">查找</a></strong> 该茶友，然后在其个人页面点击“邀请加盟”按钮。
@@ -117,7 +118,7 @@
 
         <span style="margin-inline-end: 20px;" title="成员数">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-          {{ .TeamMemberCount }}
+          {{ .Count }}
         </span>
 
       </div>
@@ -133,6 +134,8 @@
       </ol>
     </div>
 
+
+    {{ end }}{{/*  检测Teambean非空 --结束  */}}
 
     {{/*  这是茶团核心成员展示页面  */}}
     {{ range .CoreMemberBeanSlice }}
