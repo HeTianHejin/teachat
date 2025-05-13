@@ -74,7 +74,7 @@ func (see_seek *SeeSeek) Update() (err error) {
 	return
 }
 
-// 与特定人举行一个结构化交流
+// 与特定团队举行一个结构化交流
 type SeeSeekMaster struct {
 	Id        int
 	Uuid      string
@@ -85,77 +85,18 @@ type SeeSeekMaster struct {
 	UserId         int
 	Status         int
 
-	RequestTitle   string
-	RequestContent string
-	RequestHistory string
-	RequestRemark  string //特殊情况表述
+	RequesterTitle   string
+	RequesterContent string
+	RequesterHistory string
+	RequesterRemark  string //特殊情况表述
 
 	MasterTitle   string
 	MasterContent string
 	MasterHistory string
+	MasterRemark  string //特殊情况表述
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
-}
-
-// SeeSeekMaster.Create() // 创建一个SeeSeekMaster
-func (see_seek_master *SeeSeekMaster) Create() (err error) {
-	statement := "INSERT INTO see_seek_masters (uuid, see_seek_id, classify, recorder_user_id, user_id, status, request_title, request_content, request_history, requst_remark, master_title, master_content, master_history, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), see_seek_master.SeeSeekId, see_seek_master.Classify, see_seek_master.RecorderUserId, see_seek_master.UserId, see_seek_master.Status, see_seek_master.RequestTitle, see_seek_master.RequestContent, see_seek_master.RequestHistory, see_seek_master.RequestRemark, see_seek_master.MasterTitle, see_seek_master.MasterContent, see_seek_master.MasterHistory, time.Now()).Scan(&see_seek_master.Id, &see_seek_master.Uuid)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// SeeSeekMaster.Get() // 读取一个SeeSeekMaster
-func (see_seek_master *SeeSeekMaster) Get() (err error) {
-	statement := "SELECT id, uuid, see_seek_id, classify, recorder_user_id, user_id, status, request_title, request_content, request_history, requst_remark, master_title, master_content, master_history, created_at, updated_at FROM see_seek_masters WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master.Id).Scan(&see_seek_master.Id, &see_seek_master.Uuid, &see_seek_master.SeeSeekId, &see_seek_master.Classify, &see_seek_master.RecorderUserId, &see_seek_master.UserId, &see_seek_master.Status, &see_seek_master.RequestTitle, &see_seek_master.RequestContent, &see_seek_master.RequestHistory, &see_seek_master.RequestRemark, &see_seek_master.MasterTitle, &see_seek_master.MasterContent, &see_seek_master.MasterHistory, &see_seek_master.CreatedAt, &see_seek_master.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// SeeSeekMaster.GetByUuid() // 读取一个SeeSeekMaster
-func (see_seek_master *SeeSeekMaster) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, see_seek_id, classify, recorder_user_id, user_id, status, request_title, request_content, request_history, requst_remark, master_title, master_content, master_history, created_at, updated_at FROM see_seek_masters WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master.Uuid).Scan(&see_seek_master.Id, &see_seek_master.Uuid, &see_seek_master.SeeSeekId, &see_seek_master.Classify, &see_seek_master.RecorderUserId, &see_seek_master.UserId, &see_seek_master.Status, &see_seek_master.RequestTitle, &see_seek_master.RequestContent, &see_seek_master.RequestHistory, &see_seek_master.RequestRemark, &see_seek_master.MasterTitle, &see_seek_master.MasterContent, &see_seek_master.MasterHistory, &see_seek_master.CreatedAt, &see_seek_master.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// SeeSeekMaster.Update() // 更新一个SeeSeekMaster
-func (see_seek_master *SeeSeekMaster) Update() (err error) {
-	statement := "UPDATE see_seek_masters SET see_seek_id=$2, classify=$3, recorder_user_id=$4, user_id=$5, status=$6, request_title=$7, request_content=$8, request_history=$9, requst_remark=$10, master_title=$11, master_content=$12, master_history=$13, updated_at=$14 WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(see_seek_master.Id, see_seek_master.SeeSeekId, see_seek_master.Classify, see_seek_master.RecorderUserId, see_seek_master.UserId, see_seek_master.Status, see_seek_master.RequestTitle, see_seek_master.RequestContent, see_seek_master.RequestHistory, see_seek_master.RequestRemark, see_seek_master.MasterTitle, see_seek_master.MasterContent, see_seek_master.MasterHistory, time.Now())
-	if err != nil {
-		return
-	}
-	return
 }
 
 // 望，观察
@@ -167,81 +108,15 @@ type SeeSeekMasterLook struct {
 	Status          int
 
 	RequestOutline     string //外形轮廓
-	IsDeform           bool
+	IsDeform           bool   //是否变形
 	RequestSkin        string //表面皮肤
-	IsGraze            bool
+	IsGraze            bool   //是否破损
 	RequestColor       string //颜色
-	IsChange           bool
-	RequestLookHistory string
-
-	MasterOutline     string
-	MasterIsDeform    bool
-	MasterSkin        string
-	MasterIsGraze     bool
-	MasterColor       string
-	MasterIsChange    bool
-	MasterLookHistory string
+	IsChange           bool   //是否变色
+	RequestLookHistory string //过往历史
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
-}
-
-// SeeSeekMasterLook.Create() // 创建一个SeeSeekMasterLook
-func (see_seek_master_look *SeeSeekMasterLook) Create() (err error) {
-	statement := "INSERT INTO see_seek_master_looks (uuid, see_seek_master_id, classify, status, request_outline, is_deform, request_skin, is_graze, request_color, is_change, request_look_history, master_outline, master_is_deform, master_skin, master_is_graze, master_color, master_is_change, master_look_history, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), see_seek_master_look.SeeSeekMasterId, see_seek_master_look.Classify, see_seek_master_look.Status, see_seek_master_look.RequestOutline, see_seek_master_look.IsDeform, see_seek_master_look.RequestSkin, see_seek_master_look.IsGraze, see_seek_master_look.RequestColor, see_seek_master_look.IsChange, see_seek_master_look.RequestLookHistory, see_seek_master_look.MasterOutline, see_seek_master_look.MasterIsDeform, see_seek_master_look.MasterSkin, see_seek_master_look.MasterIsGraze, see_seek_master_look.MasterColor, see_seek_master_look.MasterIsChange, see_seek_master_look.MasterLookHistory, time.Now()).Scan(&see_seek_master_look.Id, &see_seek_master_look.Uuid)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// SeeSeekMasterLook.Get() // 读取一个SeeSeekMasterLook
-func (see_seek_master_look *SeeSeekMasterLook) Get() (err error) {
-	statement := "SELECT id, uuid, see_seek_master_id, classify, status, request_outline, is_deform, request_skin, is_graze, request_color, is_change, request_look_history, master_outline, master_is_deform, master_skin, master_is_graze, master_color, master_is_change, master_look_history, created_at, updated_at FROM see_seek_master_looks WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master_look.Id).Scan(&see_seek_master_look.Id, &see_seek_master_look.Uuid, &see_seek_master_look.SeeSeekMasterId, &see_seek_master_look.Classify, &see_seek_master_look.Status, &see_seek_master_look.RequestOutline, &see_seek_master_look.IsDeform, &see_seek_master_look.RequestSkin, &see_seek_master_look.IsGraze, &see_seek_master_look.RequestColor, &see_seek_master_look.IsChange, &see_seek_master_look.RequestLookHistory, &see_seek_master_look.MasterOutline, &see_seek_master_look.MasterIsDeform, &see_seek_master_look.MasterSkin, &see_seek_master_look.MasterIsGraze, &see_seek_master_look.MasterColor, &see_seek_master_look.MasterIsChange, &see_seek_master_look.MasterLookHistory, &see_seek_master_look.CreatedAt, &see_seek_master_look.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_look *SeeSeekMasterLook) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, see_seek_master_id, classify, status, request_outline, is_deform, request_skin, is_graze, request_color, is_change, request_look_history, master_outline, master_is_deform, master_skin, master_is_graze, master_color, master_is_change, master_look_history, created_at, updated_at FROM see_seek_master_looks WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master_look.Uuid).Scan(&see_seek_master_look.Id, &see_seek_master_look.Uuid, &see_seek_master_look.SeeSeekMasterId, &see_seek_master_look.Classify, &see_seek_master_look.Status, &see_seek_master_look.RequestOutline, &see_seek_master_look.IsDeform, &see_seek_master_look.RequestSkin, &see_seek_master_look.IsGraze, &see_seek_master_look.RequestColor, &see_seek_master_look.IsChange, &see_seek_master_look.RequestLookHistory, &see_seek_master_look.MasterOutline, &see_seek_master_look.MasterIsDeform, &see_seek_master_look.MasterSkin, &see_seek_master_look.MasterIsGraze, &see_seek_master_look.MasterColor, &see_seek_master_look.MasterIsChange, &see_seek_master_look.MasterLookHistory, &see_seek_master_look.CreatedAt, &see_seek_master_look.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// SeeSeekMasterLook.Update() // 更新一个SeeSeekMasterLook
-func (see_seek_master_look *SeeSeekMasterLook) Update() (err error) {
-	statement := "UPDATE see_seek_master_looks SET see_seek_master_id=$2, classify=$3, status=$4, request_outline=$5, is_deform=$6, request_skin=$7, is_graze=$8, request_color=$9, is_change=$10, request_look_history=$11, master_outline=$12, master_is_deform=$13, master_skin=$14, master_is_graze=$15, master_color=$16, master_is_change=$17, master_look_history=$18, updated_at=$19 WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(see_seek_master_look.Id, see_seek_master_look.SeeSeekMasterId, see_seek_master_look.Classify, see_seek_master_look.Status, see_seek_master_look.RequestOutline, see_seek_master_look.IsDeform, see_seek_master_look.RequestSkin, see_seek_master_look.IsGraze, see_seek_master_look.RequestColor, see_seek_master_look.IsChange, see_seek_master_look.RequestLookHistory, see_seek_master_look.MasterOutline, see_seek_master_look.MasterIsDeform, see_seek_master_look.MasterSkin, see_seek_master_look.MasterIsGraze, see_seek_master_look.MasterColor, see_seek_master_look.MasterIsChange, see_seek_master_look.MasterLookHistory, time.Now())
-	if err != nil {
-		return
-	}
-	return
 }
 
 // 听，声音
@@ -252,69 +127,12 @@ type SeeSeekMasterListen struct {
 	Classify        int
 	Status          int
 
-	RequestSound        string
-	IsAbnormal          bool
+	RequestSound        string //声音
+	IsAbnormal          bool   //是否有异常声音
 	RequestSoundHistory string
-
-	MasterSound        string
-	MasterIsAbnormal   bool
-	MasterSoundHistory string
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
-}
-
-func (see_seek_master_listen *SeeSeekMasterListen) Create() (err error) {
-	statement := "INSERT INTO see_seek_master_listens (uuid, see_seek_master_id, classify, status, request_sound, is_abnormal, request_sound_history, master_sound, master_is_abnormal, master_sound_history, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), see_seek_master_listen.SeeSeekMasterId, see_seek_master_listen.Classify, see_seek_master_listen.Status, see_seek_master_listen.RequestSound, see_seek_master_listen.IsAbnormal, see_seek_master_listen.RequestSoundHistory, see_seek_master_listen.MasterSound, see_seek_master_listen.MasterIsAbnormal, see_seek_master_listen.MasterSoundHistory, time.Now()).Scan(&see_seek_master_listen.Id, &see_seek_master_listen.Uuid)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_listen *SeeSeekMasterListen) Get() (err error) {
-	statement := "SELECT id, uuid, see_seek_master_id, classify, status, request_sound, is_abnormal, request_sound_history, master_sound, master_is_abnormal, master_sound_history, created_at, updated_at FROM see_seek_master_listens WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master_listen.Id).Scan(&see_seek_master_listen.Id, &see_seek_master_listen.Uuid, &see_seek_master_listen.SeeSeekMasterId, &see_seek_master_listen.Classify, &see_seek_master_listen.Status, &see_seek_master_listen.RequestSound, &see_seek_master_listen.IsAbnormal, &see_seek_master_listen.RequestSoundHistory, &see_seek_master_listen.MasterSound, &see_seek_master_listen.MasterIsAbnormal, &see_seek_master_listen.MasterSoundHistory, &see_seek_master_listen.CreatedAt, &see_seek_master_listen.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_listen *SeeSeekMasterListen) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, see_seek_master_id, classify, status, request_sound, is_abnormal, request_sound_history, master_sound, master_is_abnormal, master_sound_history, created_at, updated_at FROM see_seek_master_listens WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master_listen.Uuid).Scan(&see_seek_master_listen.Id, &see_seek_master_listen.Uuid, &see_seek_master_listen.SeeSeekMasterId, &see_seek_master_listen.Classify, &see_seek_master_listen.Status, &see_seek_master_listen.RequestSound, &see_seek_master_listen.IsAbnormal, &see_seek_master_listen.RequestSoundHistory, &see_seek_master_listen.MasterSound, &see_seek_master_listen.MasterIsAbnormal, &see_seek_master_listen.MasterSoundHistory, &see_seek_master_listen.CreatedAt, &see_seek_master_listen.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_listen *SeeSeekMasterListen) Update() (err error) {
-	statement := "UPDATE see_seek_master_listens SET see_seek_master_id=$2, classify=$3, status=$4, request_sound=$5, is_abnormal=$6, request_sound_history=$7, master_sound=$8, master_is_abnormal=$9, master_sound_history=$10, updated_at=$11 WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(see_seek_master_listen.Id, see_seek_master_listen.SeeSeekMasterId, see_seek_master_listen.Classify, see_seek_master_listen.Status, see_seek_master_listen.RequestSound, see_seek_master_listen.IsAbnormal, see_seek_master_listen.RequestSoundHistory, see_seek_master_listen.MasterSound, see_seek_master_listen.MasterIsAbnormal, see_seek_master_listen.MasterSoundHistory, time.Now())
-	if err != nil {
-		return
-	}
-	return
 }
 
 // 嗅，气味
@@ -325,69 +143,12 @@ type SeeSeekMasterSmell struct {
 	Classify        int
 	Status          int
 
-	RequestOdour        string
-	IsFoulOdour         bool
+	RequestOdour        string //气味
+	IsFoulOdour         bool   //是否异味
 	RequestOdourHistory string
-
-	MasterOdour        string
-	MasterIsFoulOdour  bool
-	MasterOdourHistory string
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
-}
-
-func (see_seek_master_smell *SeeSeekMasterSmell) Create() (err error) {
-	statement := "INSERT INTO see_seek_master_smells (uuid, see_seek_master_id, classify, status, request_odour, is_foul_odour, request_odour_history, master_odour, master_is_foul_odour, master_odour_history, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), see_seek_master_smell.SeeSeekMasterId, see_seek_master_smell.Classify, see_seek_master_smell.Status, see_seek_master_smell.RequestOdour, see_seek_master_smell.IsFoulOdour, see_seek_master_smell.RequestOdourHistory, see_seek_master_smell.MasterOdour, see_seek_master_smell.MasterIsFoulOdour, see_seek_master_smell.MasterOdourHistory, time.Now()).Scan(&see_seek_master_smell.Id, &see_seek_master_smell.Uuid)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_smell *SeeSeekMasterSmell) Get() (err error) {
-	statement := "SELECT id, uuid, see_seek_master_id, classify, status, request_odour, is_foul_odour, request_odour_history, master_odour, master_is_foul_odour, master_odour_history, created_at, updated_at FROM see_seek_master_smells WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master_smell.Id).Scan(&see_seek_master_smell.Id, &see_seek_master_smell.Uuid, &see_seek_master_smell.SeeSeekMasterId, &see_seek_master_smell.Classify, &see_seek_master_smell.Status, &see_seek_master_smell.RequestOdour, &see_seek_master_smell.IsFoulOdour, &see_seek_master_smell.RequestOdourHistory, &see_seek_master_smell.MasterOdour, &see_seek_master_smell.MasterIsFoulOdour, &see_seek_master_smell.MasterOdourHistory, &see_seek_master_smell.CreatedAt, &see_seek_master_smell.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_smell *SeeSeekMasterSmell) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, see_seek_master_id, classify, status, request_odour, is_foul_odour, request_odour_history, master_odour, master_is_foul_odour, master_odour_history, created_at, updated_at FROM see_seek_master_smells WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master_smell.Uuid).Scan(&see_seek_master_smell.Id, &see_seek_master_smell.Uuid, &see_seek_master_smell.SeeSeekMasterId, &see_seek_master_smell.Classify, &see_seek_master_smell.Status, &see_seek_master_smell.RequestOdour, &see_seek_master_smell.IsFoulOdour, &see_seek_master_smell.RequestOdourHistory, &see_seek_master_smell.MasterOdour, &see_seek_master_smell.MasterIsFoulOdour, &see_seek_master_smell.MasterOdourHistory, &see_seek_master_smell.CreatedAt, &see_seek_master_smell.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_smell *SeeSeekMasterSmell) Update() (err error) {
-	statement := "UPDATE see_seek_master_smells SET see_seek_master_id=$2, classify=$3, status=$4, request_odour=$5, is_foul_odour=$6, request_odour_history=$7, master_odour=$8, master_is_foul_odour=$9, master_odour_history=$10, updated_at=$11 WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(see_seek_master_smell.Id, see_seek_master_smell.SeeSeekMasterId, see_seek_master_smell.Classify, see_seek_master_smell.Status, see_seek_master_smell.RequestOdour, see_seek_master_smell.IsFoulOdour, see_seek_master_smell.RequestOdourHistory, see_seek_master_smell.MasterOdour, see_seek_master_smell.MasterIsFoulOdour, see_seek_master_smell.MasterOdourHistory, time.Now())
-	if err != nil {
-		return
-	}
-	return
 }
 
 // 触摸，
@@ -399,77 +160,16 @@ type SeeSeekMasterTouch struct {
 
 	Status int
 
-	RequestTemperature  string
-	IsFever             bool
-	RequestStretch      string
-	IsStiff             bool
-	RequestShake        string
-	IsShake             bool
+	RequestTemperature  string //温度
+	IsFever             bool   //是否异常发热
+	RequestStretch      string //弹性
+	IsStiff             bool   //是否僵硬
+	RequestShake        string //震动
+	IsShake             bool   //是否震动
 	RequestTouchHistory string
-
-	MasterTemperature  string
-	MasterIsFever      bool
-	MasterStretch      string
-	MasterIsStiff      bool
-	MasterShake        string
-	MasterIsShake      bool
-	MasterTouchHistory string
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
-}
-
-func (see_seek_master_touch *SeeSeekMasterTouch) Create() (err error) {
-	statement := "INSERT INTO see_seek_master_touches (uuid, see_seek_master_id, classify, status, request_temperature, is_fever, request_stretch, is_stiff, request_shake, is_shake, request_touch_history, master_temperature, master_is_fever, master_stretch, master_is_stiff, master_shake, master_is_shake, master_touch_history, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), see_seek_master_touch.SeeSeekMasterId, see_seek_master_touch.Classify, see_seek_master_touch.Status, see_seek_master_touch.RequestTemperature, see_seek_master_touch.IsFever, see_seek_master_touch.RequestStretch, see_seek_master_touch.IsStiff, see_seek_master_touch.RequestShake, see_seek_master_touch.IsShake, see_seek_master_touch.RequestTouchHistory, see_seek_master_touch.MasterTemperature, see_seek_master_touch.MasterIsFever, see_seek_master_touch.MasterStretch, see_seek_master_touch.MasterIsStiff, see_seek_master_touch.MasterShake, see_seek_master_touch.MasterIsShake, see_seek_master_touch.MasterTouchHistory, time.Now()).Scan(&see_seek_master_touch.Id, &see_seek_master_touch.Uuid)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_touch *SeeSeekMasterTouch) Get() (err error) {
-	statement := "SELECT id, uuid, see_seek_master_id, classify, status, request_temperature, is_fever, request_stretch, is_stiff, request_shake, is_shake, request_touch_history, master_temperature, master_is_fever, master_stretch, master_is_stiff, master_shake, master_is_shake, master_touch_history, created_at, updated_at FROM see_seek_master_touches WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master_touch.Id).Scan(&see_seek_master_touch.Id, &see_seek_master_touch.Uuid, &see_seek_master_touch.SeeSeekMasterId, &see_seek_master_touch.Classify, &see_seek_master_touch.Status, &see_seek_master_touch.RequestTemperature, &see_seek_master_touch.IsFever, &see_seek_master_touch.RequestStretch, &see_seek_master_touch.IsStiff, &see_seek_master_touch.RequestShake, &see_seek_master_touch.IsShake, &see_seek_master_touch.RequestTouchHistory, &see_seek_master_touch.MasterTemperature, &see_seek_master_touch.MasterIsFever, &see_seek_master_touch.MasterStretch, &see_seek_master_touch.MasterIsStiff, &see_seek_master_touch.MasterShake, &see_seek_master_touch.MasterIsShake, &see_seek_master_touch.MasterTouchHistory, &see_seek_master_touch.CreatedAt, &see_seek_master_touch.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_touch *SeeSeekMasterTouch) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, see_seek_master_id, classify, status, request_temperature, is_fever, request_stretch, is_stiff, request_shake, is_shake, request_touch_history, master_temperature, master_is_fever, master_stretch, master_is_stiff, master_shake, master_is_shake, master_touch_history, created_at, updated_at FROM see_seek_master_touches WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_master_touch.Uuid).Scan(&see_seek_master_touch.Id, &see_seek_master_touch.Uuid, &see_seek_master_touch.SeeSeekMasterId, &see_seek_master_touch.Classify, &see_seek_master_touch.Status, &see_seek_master_touch.RequestTemperature, &see_seek_master_touch.IsFever, &see_seek_master_touch.RequestStretch, &see_seek_master_touch.IsStiff, &see_seek_master_touch.RequestShake, &see_seek_master_touch.IsShake, &see_seek_master_touch.RequestTouchHistory, &see_seek_master_touch.MasterTemperature, &see_seek_master_touch.MasterIsFever, &see_seek_master_touch.MasterStretch, &see_seek_master_touch.MasterIsStiff, &see_seek_master_touch.MasterShake, &see_seek_master_touch.MasterIsShake, &see_seek_master_touch.MasterTouchHistory, &see_seek_master_touch.CreatedAt, &see_seek_master_touch.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_master_touch *SeeSeekMasterTouch) Update() (err error) {
-	statement := "UPDATE see_seek_master_touches SET see_seek_master_id=$2, classify=$3, status=$4, request_temperature=$5, is_fever=$6, request_stretch=$7, is_stiff=$8, request_shake=$9, is_shake=$10, request_touch_history=$11, master_temperature=$12, master_is_fever=$13, master_stretch=$14, master_is_stiff=$15, master_shake=$16, master_is_shake=$17, master_touch_history=$18, updated_at=$19 WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(see_seek_master_touch.Id, see_seek_master_touch.SeeSeekMasterId, see_seek_master_touch.Classify, see_seek_master_touch.Status, see_seek_master_touch.RequestTemperature, see_seek_master_touch.IsFever, see_seek_master_touch.RequestStretch, see_seek_master_touch.IsStiff, see_seek_master_touch.RequestShake, see_seek_master_touch.IsShake, see_seek_master_touch.RequestTouchHistory, see_seek_master_touch.MasterTemperature, see_seek_master_touch.MasterIsFever, see_seek_master_touch.MasterStretch, see_seek_master_touch.MasterIsStiff, see_seek_master_touch.MasterShake, see_seek_master_touch.MasterIsShake, see_seek_master_touch.MasterTouchHistory, time.Now())
-	if err != nil {
-		return
-	}
-	return
 }
 
 // 问答

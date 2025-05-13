@@ -18,14 +18,14 @@ type Objective struct {
 	Uuid      string
 	Title     string //标题
 	Body      string //内容，茶话会活动主题，讨论涉及范围说明
-	CreatedAt time.Time
-	UserId    int // 茶围发起人，围主，创建人，作者
-	Class     int //属性 0:  "修改待评草围",1:  "开放式茶话会",2:  "封闭式茶话会",10: "开放式草围",20: "封闭式草围",31: "友邻婉拒开围",32: "友邻婉拒闭围",
-	EditAt    *time.Time
+	UserId    int    // 茶围发起人，围主，创建人，作者
+	Class     int    //属性 0:  "修改待评草围",1:  "开放式茶话会",2:  "封闭式茶话会",10: "开放式草围",20: "封闭式草围",31: "友邻婉拒开围",32: "友邻婉拒闭围",
 	FamilyId  int    //作者发帖时选择的家庭id(family_id)
-	Cover     string // 封面
 	TeamId    int    //作者创建茶围时选择的茶团id（team_id）,即是管理团队id
 	IsPrivate bool   //私有或者公有类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
+	Cover     string // 封面
+	CreatedAt time.Time
+	EditAt    *time.Time
 
 	// 仅用于页面渲染，不保存到数据库
 	PageData PublicPData

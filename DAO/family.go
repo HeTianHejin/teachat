@@ -30,19 +30,19 @@ type Family struct {
 	IsOpen              bool   // 是否公开，公开的家庭可以被搜索到，不公开的家庭不可以被搜索到
 }
 
-// 未明确资料的家庭="四海为家",id=0
-// 任何人均是来自某个家庭，但是单独的个体，即使成年，属于一个未来家庭的成员之一，不能视为一个家庭。
+// 未明确家庭资料的茶友，其家庭资料统一虚拟为"四海为家",id=0
+// 任何生物人均是来自某个家庭，但是单独的个体，即使成年，属于一个未来家庭的成员之一，不能视为一个家庭。
 var UnknownFamily = Family{
-	Id:           UnknownFamilyId,
-	Uuid:         UnknownFamilyUuid,
+	Id:           FamilyIdUnknown,
+	Uuid:         FamilyUuidUnknown,
 	Name:         "四海为家",
 	AuthorId:     1, //表示系统预设的值
 	Introduction: "存在但未明确资料的家庭",
 }
 
 // 未知的家庭ID常量，=="四海为家"，家庭ID为0
-const UnknownFamilyId = 0
-const UnknownFamilyUuid = "x" //代表未知数
+const FamilyIdUnknown = 0
+const FamilyUuidUnknown = "x" //代表未知数
 
 // Family.GetStatus()
 func (f *Family) GetStatus() string {

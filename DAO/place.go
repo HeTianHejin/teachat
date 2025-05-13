@@ -405,6 +405,20 @@ func (p *Place) Get() (err error) {
 	return
 }
 
+// place.GetByUuid() 根据uuid获取1地方记录
+func (p *Place) GetByUuid() (err error) {
+	if p.Uuid == "" {
+		return fmt.Errorf("invalid place UUID: %s", p.Uuid)
+	}
+	if p.Uuid == PlaceUuidSpaceshipTeabar {
+		*p = Place_SpaceshipTeabar
+		return nil
+	}
+	err = Db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE uuid = $1", p.Uuid).
+		Scan(&p.Id, &p.Uuid, &p.Name, &p.Nickname, &p.Description, &p.Icon, &p.OccupantUserId, &p.OwnerUserId, &p.Level, &p.Category, &p.IsPublic, &p.IsGovernment, &p.UserId, &p.CreatedAt, &p.UpdatedAt)
+	return
+}
+
 // user.GetAllRecordPlaces 根据登记者user_id获取全部登记地方
 func (u *User) GetAllRecordPlaces() (places []Place, err error) {
 	rows, err := Db.Query("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE user_id = $1", u.Id)
@@ -420,20 +434,6 @@ func (u *User) GetAllRecordPlaces() (places []Place, err error) {
 		places = append(places, place)
 	}
 	rows.Close()
-	return
-}
-
-// place.GetByUuid() 根据uuid获取1地方记录
-func (p *Place) GetByUuid() (err error) {
-	if p.Uuid == "" {
-		return fmt.Errorf("invalid place UUID: %s", p.Uuid)
-	}
-	if p.Uuid == PlaceUuidSpaceshipTeabar {
-		*p = Place_SpaceshipTeabar
-		return nil
-	}
-	err = Db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE uuid = $1", p.Uuid).
-		Scan(&p.Id, &p.Uuid, &p.Name, &p.Nickname, &p.Description, &p.Icon, &p.OccupantUserId, &p.OwnerUserId, &p.Level, &p.Category, &p.IsPublic, &p.IsGovernment, &p.UserId, &p.CreatedAt, &p.UpdatedAt)
 	return
 }
 

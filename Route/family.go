@@ -156,7 +156,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 
 	//用户如果没有设置默认家庭，则其uuid为x.
 	//报告无信息可供查看。
-	if family_uuid == data.UnknownFamilyUuid {
+	if family_uuid == data.FamilyUuidUnknown {
 		Report(w, r, "盛世无饥馑，四海可为家。")
 		return
 	}

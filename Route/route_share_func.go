@@ -68,7 +68,7 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 		return false, nil
 	}
 
-	if family_id == data.UnknownFamilyId && team_id == NoTeamId {
+	if family_id == data.FamilyIdUnknown && team_id == NoTeamId {
 		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return false, nil
 	}
@@ -90,7 +90,7 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 	}
 
 	// 团队ID检查（涉及数据库操作）
-	if family_id == data.UnknownFamilyId {
+	if family_id == data.FamilyIdUnknown {
 		//声明是四海为家【与家庭背景（责任）无关】
 		if team_id == FreelancerTeamId {
 			//既隐藏家庭背景，也不声明团队愿景的“独狼”
@@ -115,7 +115,7 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 	}
 
 	// 自由职业者团队检查（涉及数据库操作）
-	if team_id == FreelancerTeamId && family_id != data.UnknownFamilyId {
+	if team_id == FreelancerTeamId && family_id != data.FamilyIdUnknown {
 		family := data.Family{Id: family_id}
 		if err := family.Get(); err != nil {
 			return false, err // 数据库错误，返回error

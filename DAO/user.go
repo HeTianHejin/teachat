@@ -31,6 +31,19 @@ const (
 	UserId_SpaceshipCaptain = 1
 )
 
+var UserRole = map[string]string{
+	"traveller":    "太空旅客",
+	"hijacker":     "劫机者",
+	"zebra":        "莽撞者",
+	"troublemaker": "捣乱者",
+	"UFO":          "外星人",
+}
+
+var UserGender = map[int]string{
+	0: "天仙女",
+	1: "山大王",
+}
+
 // SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users.name模糊查询用户，WHERE column LIKE 'keyword%',返回[]User,err
 func SearchUserByNameKeyword(keyword string) ([]User, error) {
 	rows, err := Db.Query("SELECT * FROM users WHERE name LIKE $1 Limit 9", "%"+keyword+"%")
@@ -141,18 +154,6 @@ var ObjectName = map[int]string{
 	7: "magic",
 	8: "treasure",
 	9: "?",
-}
-var UserRole = map[string]string{
-	"traveller":    "太空旅客",
-	"hijacker":     "劫机者",
-	"zebra":        "莽撞者",
-	"troublemaker": "捣乱者",
-	"UFO":          "外星人",
-}
-
-var UserGender = map[int]string{
-	0: "天仙女",
-	1: "山大王",
 }
 
 // Create a new session for an existing user
