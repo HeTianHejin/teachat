@@ -281,7 +281,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	// 4. 清除客户端Cookie并重定向
 	clearSessionCookie(w)
-	util.Debug(operation, "用户登出顺利", "uuid", cookie.Value)
+	//	util.Debug(operation, "用户登出顺利", "uuid", cookie.Value)
 	http.Redirect(w, r, "/v1/", http.StatusFound)
 }
 

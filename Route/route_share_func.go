@@ -95,7 +95,7 @@ func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id
 		if team_id == FreelancerTeamId {
 			//既隐藏家庭背景，也不声明团队愿景的“独狼”
 			// 违背了“慎独”原则
-			Report(w, r, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜创建茶话会。")
+			Report(w, r, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜发表茶话。")
 			return false, nil
 		}
 
@@ -150,36 +150,40 @@ func checkObjectiveAdminPermission(ob *data.Objective, userID int) (bool, error)
 	// 家庭管理的茶围
 	//if ob.TeamId == FreelancerTeamId || ob.TeamId == NoTeamId {
 	if ob.IsPrivate {
-		family, err := data.GetFamily(ob.FamilyId)
-		if err != nil {
-			return false, fmt.Errorf("failed to get family (ID: %d): %v", ob.FamilyId, err)
-		}
+		// family, err := data.GetFamily(ob.FamilyId)
+		// if err != nil {
+		// 	return false, fmt.Errorf("failed to get family (ID: %d): %v", ob.FamilyId, err)
+		// }
+		family := data.Family{Id: ob.FamilyId}
 		return family.IsParentMember(userID)
 	}
 
 	// 团队管理的茶围
-	team, err := data.GetTeam(ob.TeamId)
-	if err != nil {
-		return false, fmt.Errorf("failed to get team (ID: %d): %v", ob.TeamId, err)
-	}
+	// team, err := data.GetTeam(ob.TeamId)
+	// if err != nil {
+	// 	return false, fmt.Errorf("failed to get team (ID: %d): %v", ob.TeamId, err)
+	// }
+	team := data.Team{Id: ob.TeamId}
 	return team.IsMember(userID)
 }
 
 // 检查茶台管理权限
-func checkProjectAdminPermission(pr *data.Project, user_id int) (bool, error) {
+func checkProjectMasterPermission(pr *data.Project, user_id int) (bool, error) {
 	//if pr.TeamId == NoTeamId || pr.TeamId == SpaceshipCrewId || pr.TeamId == FreelancerTeamId {
 	if pr.IsPrivate {
-		pr_family, err := data.GetFamily(pr.FamilyId)
-		if err != nil {
-			return false, fmt.Errorf("failed to get family %d: %v", pr.FamilyId, err)
-		}
+		// pr_family, err := data.GetFamily(pr.FamilyId)
+		// if err != nil {
+		// 	return false, fmt.Errorf("failed to get family %d: %v", pr.FamilyId, err)
+		// }
+		pr_family := data.Family{Id: pr.FamilyId}
 		return pr_family.IsParentMember(user_id)
 	}
 	// 团队管理的
-	pr_team, err := data.GetTeam(pr.TeamId)
-	if err != nil {
-		return false, fmt.Errorf("failed to get team %d: %v", pr.TeamId, err)
-	}
+	// pr_team, err := data.GetTeam(pr.TeamId)
+	// if err != nil {
+	// 	return false, fmt.Errorf("failed to get team %d: %v", pr.TeamId, err)
+	// }
+	pr_team := data.Team{Id: pr.TeamId}
 	return pr_team.IsMember(user_id)
 }
 
@@ -196,7 +200,30 @@ func checkCreateProjectPermission(objective data.Objective, userId int, w http.R
 			return false
 		}
 		if !isInvited {
-			Report(w, r, "你好，茶博士满头大汗说，陛下你的大名竟然不在邀请品茶名单上。")
+			Report(w, r, "你好，茶博士无比惊讶说，陛下你的大名竟然不在邀请品茶名单上。")
+			return false
+		}
+		return true
+	default:
+		Report(w, r, "你好，茶博士失魂鱼，竟然说受邀请品茶名单失踪了，请稍后再试。")
+		return false
+	}
+}
+
+// 检查茶议（thread）创建权限
+func checkCreateThreadPermission(project data.Project, userId int, w http.ResponseWriter, r *http.Request) bool {
+	switch project.Class {
+	case 1: // 开放式茶话会
+		return true
+	case 2: // 封闭式茶话会
+		isInvited, err := project.IsInvitedMember(userId)
+		if err != nil {
+			util.Debug("检查邀请名单失败", "error", err)
+			Report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
+			return false
+		}
+		if !isInvited {
+			Report(w, r, "你好，茶博士无比惊讶说，陛下你的大名竟然不在邀请品茶名单上。")
 			return false
 		}
 		return true
@@ -338,7 +365,7 @@ func FetchUserBeanSlice(user_slice []data.User) (userbean_slice []data.UserBean,
 }
 
 // Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队
-func FetchUserRelatedData(sess data.Session) (s_u data.User, family data.Family, families []data.Family, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
+func FetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.Family, families []data.Family, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
 	// 读取已登陆用户资料
 	s_u, err = sess.User()
 	if err != nil {

@@ -48,7 +48,7 @@
                      </a>
                  </li>
                 {{ if .HasUnreadMessage }}
-                <li role="presentation"><a href="/v1/message/letterbox">
+                <li role="presentation"><a href="/v1/message/accept">
                     <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
                     <span class="badge">{{ .GetNewMessageCount }}</span></a></li>
                 {{ else }}

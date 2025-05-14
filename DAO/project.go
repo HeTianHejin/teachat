@@ -21,8 +21,8 @@ type Project struct {
 	Class       int // 属性 0:  "追加待评草台",1:  "开放式茶台",2:  "封闭式茶台",10: "开放式草台",20: "封闭式草台",31: "已婉拒开台",32: "已婉拒封台",
 	EditAt      *time.Time
 	Cover       string //封面图片文件名
-	TeamId      int    //作者发帖时选择的成员所属茶团id（team）
 	IsPrivate   bool   //公私类型，代表&家庭（family）=true，代表$事业团队（team）=false。默认是false
+	TeamId      int    //作者发帖时选择的成员所属茶团id（team）
 	FamilyId    int    //作者发帖时选择的成员所属家庭id(family_id)
 
 	// 仅用于页面渲染，不保存到数据库

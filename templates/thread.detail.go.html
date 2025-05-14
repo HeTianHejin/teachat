@@ -4,9 +4,9 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjective.Uuid }}">{{ .QuoteObjective.Title }} </a>@茶话会
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }} </a>@茶话会
   </li>
-  <li><a href="/v1/project/detail?id={{ .QuoteProject.Uuid }}">{{ .QuoteProject.Title }} </a>@茶台
+  <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
   </li>
   <li>#{{ .ThreadBean.Thread.Id }}</li> @茶议
 
@@ -108,7 +108,7 @@
         </h4>
         <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
 
-        {{ if .ThreadBean.Thread.TypeStatus }}{{/* 检查是出主意1-1 */}}
+        {{ if .ThreadBean.Thread.Type }}{{/* 检查是否是出主意1-1 */}}
 
         {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳2-1 */}}
 
@@ -129,44 +129,44 @@
 
         {{ if .ThreadBean.Thread.PostId }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePost.Uuid }}"
-              style="margin-inline-end: 1rem;"><span class="label label-default">品味</span></a>{{ .QuotePost.Body }} ...
+          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePostBean.Post.Uuid }}"
+              style="margin-inline-end: 1rem;"><span class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
           </p>
           <footer style="font-size: small;">
-            <a href="/v1/user/biography?id={{ .QuotePostAuthor.Uuid }}"
-              style="color: black;">{{ .QuotePostAuthor.Name }}</a>
-            {{if .QuotePostAuthor.Gender }}
+            <a href="/v1/user/biography?id={{ .QuotePostBean.Author.Uuid }}"
+              style="color: black;">{{ .QuotePostBean.Author.Name }}</a>
+            {{if .QuotePostBean.Author.Gender }}
             <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
             {{ end }}
             <span style="margin-inline-end: 20px;">
-              （<a href="/v1/family/detail?id={{ .QuotePostAuthorFamily.Uuid }}"
-                style="color: black;">{{ .QuotePostAuthorFamily.Name }}</a>，
-              <a href="/v1/team/detail?id={{ .QuotePostAuthorTeam.Uuid }}"
-                style="color: black;">{{ .QuotePostAuthorTeam.Abbreviation }}</a>）
+              （<a href="/v1/family/detail?id={{ .QuotePostBean.AuthorFamily.Uuid }}"
+                style="color: black;">{{ .QuotePostBean.AuthorFamily.Name }}</a>，
+              <a href="/v1/team/detail?id={{ .QuotePostBean.AuthorTeam.Uuid }}"
+                style="color: black;">{{ .QuotePostBean.AuthorTeam.Abbreviation }}</a>）
             </span>
           </footer>
         </blockquote>
 
         {{ else }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProject.Uuid }}"><span
-                class="label label-default">茶台</span></a>{{ .QuoteProject.Body }} ...</p>
+          <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}"><span
+                class="label label-default">茶台</span></a>{{ .QuoteProjectBean.Project.Body }} ...</p>
           <footer style="font-size: small;">
 
             <cite title="Source Title"> <a
-                href="/v1/user/biography?id={{ .QuoteProjectAuthor.Uuid }}">{{ .QuoteProjectAuthor.Name }}</a>
-              {{if .QuoteProjectAuthor.Gender }}
+                href="/v1/user/biography?id={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
+              {{if .QuoteProjectBean.Author.Gender }}
               <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
               {{ end }}
               <span style="margin-inline-end: 20px;">
                 （<a
-                  href="/v1/family/detail?id={{ .QuoteProjectAuthorFamily.Uuid }}">{{ .QuoteProjectAuthorFamily.Name }}</a>，
+                  href="/v1/family/detail?id={{ .QuoteProjectBean.AuthorFamily.Uuid }}">{{ .QuoteProjectBean.AuthorFamily.Name }}</a>，
                 <a
-                  href="/v1/team/detail?id={{ .QuoteProjectAuthorTeam.Uuid }}">{{ .QuoteProjectAuthorTeam.Abbreviation }}</a>）
+                  href="/v1/team/detail?id={{ .QuoteProjectBean.AuthorTeam.Uuid }}">{{ .QuoteProjectBean.AuthorTeam.Abbreviation }}</a>）
               </span></cite>
           </footer>
         </blockquote>

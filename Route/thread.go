@@ -33,7 +33,7 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据会话读取当前用户的信息
-	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug("cannot fetch s_u s_teams given session", err)
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -55,31 +55,27 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 		//读取品味资料
 		post := data.Post{Uuid: uuid}
 		if err = post.Get(); err != nil {
-			util.Debug(uuid, " Cannot read post given uuid")
+			util.Debug(" Cannot read post given uuid", err)
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
-		tD.QuotePost = post
-
-		tD.QuotePostAuthor, err = tD.QuotePost.User()
+		tD.QuotePostBean, err = FetchPostBean(post)
 		if err != nil {
-			util.Debug(tD.QuotePost.Id, " Cannot read post user")
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭见鹤，梨花满地不闻莺。请稍后再试。")
+			util.Debug(" Cannot read post given uuid", err)
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
-
-		tD.QuotePostAuthorTeam, err = data.GetTeam(tD.QuotePost.TeamId)
-		if err != nil {
-			util.Debug(tD.QuotePost.TeamId, " Cannot read post team")
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
-			return
-		}
-		tD.ThreadBean.Thread.PostId = tD.QuotePost.Id
 
 		//读取茶台资料
-		tD.QuoteProject, err = tD.QuotePost.Project()
+		project, err := post.Project()
 		if err != nil {
-			util.Debug(uuid, " Cannot read project given uuid")
+			util.Debug(" Cannot read project given post", err)
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
+			return
+		}
+		tD.QuoteProjectBean, err = FetchProjectBean(project)
+		if err != nil {
+			util.Debug(" Cannot read project given uuid", err)
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
@@ -88,14 +84,19 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 		//读取茶台资料
 		pr := data.Project{Uuid: uuid}
 		if err = pr.GetByUuid(); err != nil {
-			util.Debug(uuid, " Cannot read project given uuid")
+			util.Debug(" Cannot read project given uuid", err)
 			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 			return
 		}
-		tD.QuoteProject = pr
+		tD.QuoteProjectBean, err = FetchProjectBean(pr)
+		if err != nil {
+			util.Debug(" Cannot read project given uuid", err)
+			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
+			return
+		}
 	}
 	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
-	if tD.QuoteProject.Class != 1 && tD.QuoteProject.Class != 2 {
+	if tD.QuoteProjectBean.Project.Class != 1 && tD.QuoteProjectBean.Project.Class != 2 {
 		util.Debug(s_u.Id, "欲查看未经友邻蒙评通过的茶台资料被阻止")
 		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
 		return
@@ -103,24 +104,6 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 
 	// 填写页面数据
 
-	tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
-	if err != nil {
-		util.Debug(tD.QuoteProject.Id, " Cannot read project user")
-		Report(w, r, "你好，霁月难逢，彩云易散。请稍后再试。")
-		return
-	}
-	tD.QuoteProjectAuthorFamily, err = data.GetFamily(tD.QuoteProject.FamilyId)
-	if err != nil {
-		util.Debug(tD.QuoteProject.Id, " Cannot read project user family")
-		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见，梨花满地不闻莺。请稍后再试。")
-		return
-	}
-	tD.QuoteProjectAuthorTeam, err = data.GetTeam(tD.QuoteProject.TeamId)
-	if err != nil {
-		util.Debug(tD.QuoteProject.TeamId, " Cannot read project team")
-		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
-		return
-	}
 	tD.SessUser = s_u
 	tD.SessUserDefaultFamily = s_d_family
 	tD.SessUserSurvivalFamilies = s_survival_families
@@ -148,14 +131,14 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(sess.Email, " Cannot get user from session")
+		util.Debug(" Cannot get user from session", sess.Email, err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	//读取表单数据
 	thre_type, err := strconv.Atoi(r.PostFormValue("type"))
 	if err != nil {
-		util.Debug(thre_type, "Failed to convert type to int")
+		util.Debug("Failed to convert type to int", thre_type, err)
 		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
@@ -172,39 +155,19 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	project_id, err := strconv.Atoi(r.PostFormValue("project_id"))
 	if err != nil {
-		util.Debug(project_id, "Failed to convert project_id to int")
+		util.Debug("Failed to convert project_id to int", project_id, err)
 		Report(w, r, "你好，闪电茶博士极速查找茶台中，请确认后再试。")
 		return
 	}
 	post_id, err := strconv.Atoi(r.PostFormValue("post_id"))
 	if err != nil {
-		util.Debug(project_id, "Failed to convert post_id to int")
+		util.Debug("Failed to convert post_id to int", project_id, err)
 		Report(w, r, "你好，闪电茶博士极速服务，任然无法识别提交的品味资料，请确认后再试。")
 		return
 	}
 	/// check submit post_id is valid, if not 0 表示属于“议中议”
 	post := data.Post{Id: post_id}
 	proj := data.Project{Id: project_id}
-	if post_id > 0 {
-		if err = post.Get(); err != nil {
-			util.Debug(post_id, " Cannot get post given id")
-			Report(w, r, "你好，闪电茶博士极速服务，然而无法识别提交的品味资料，请确认后再试。")
-			return
-		}
-
-		// 检查提及的post和project是否匹配
-		t_proj, err := post.Project()
-		if err != nil {
-			util.Debug(" Cannot get project given post_id", err)
-			Report(w, r, "你好，闪电茶博士极速服务后居然说这个茶台有一些问题，请确认后再试一次")
-			return
-		}
-		if t_proj.Id != project_id {
-			util.Debug(project_id, "post_id and project_id do not match")
-			Report(w, r, "你好，闪电茶博士极速服务后居然说这个茶台有一点点问题，请确认后再试一次。")
-			return
-		}
-	}
 	//检查该茶台是否存在，而且状态不是草台状态
 	if err = proj.Get(); err != nil {
 		util.Debug(" Cannot get project", err)
@@ -212,8 +175,33 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if proj.Class == 10 || proj.Class == 20 {
-		util.Debug(s_u.Email, "试图访问未蒙评审核的茶台被阻止。")
+		util.Debug("试图访问未蒙评审核的茶台被阻止。", s_u.Email, err)
 		Report(w, r, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
+		return
+	}
+	if post_id > 0 {
+		if err = post.Get(); err != nil {
+			util.Debug(" Cannot get post given id", post_id, err)
+			Report(w, r, "你好，闪电茶博士极速服务，然而无法识别提交的品味资料，请确认后再试。")
+			return
+		}
+		test_proj, err := post.Project()
+		if err != nil {
+			util.Debug(" Cannot get post given id", post_id, err)
+			Report(w, r, "你好，闪电茶博士极速服务，然而无法识别提交的品味资料，请确认后再试。")
+			return
+		}
+		// 检查提及的post和project是否匹配
+		if proj.Id != test_proj.Id {
+			util.Debug(project_id, "post_id and project_id do not match")
+			Report(w, r, "你好，茶博士居然说这个茶台有一点点问题，请确认后再试一次。")
+			return
+		}
+	}
+
+	// 检查茶议（thread）创建权限
+	if ok := checkCreateThreadPermission(proj, s_u.Id, w, r); !ok {
+		//Report(w, r, "你好，茶博士居然说,陛下您的大名竟然不在邀请名单上，请确认后再试一次。")
 		return
 	}
 
@@ -347,8 +335,14 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//读取茶台资料
-	tD.QuoteProject, err = thread.Project()
+	//读取所在的茶台资料
+	project, err := thread.Project()
+	if err != nil {
+		util.Debug(" Cannot read project given thread", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶台资料。")
+		return
+	}
+	tD.QuoteProjectBean, err = FetchProjectBean(project)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			//	util.Debug(" Cannot read project given uuid", uuid)
@@ -360,29 +354,16 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tD.QuoteProjectAuthor, err = tD.QuoteProject.User()
-	if err != nil {
-		util.Debug(" Cannot read project author", err)
-		Report(w, r, "你好，静夜不眠因酒渴，沉烟重拨索烹茶。未能读取茶台资料。")
-		return
-	}
-	tD.QuoteProjectAuthorFamily, err = data.GetFamily(tD.QuoteProject.FamilyId)
-	if err != nil {
-		util.Debug(" Cannot read project author family", err)
-		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
-		return
-	}
-	tD.QuoteProjectAuthorTeam, err = data.GetTeam(tD.QuoteProject.TeamId)
-	if err != nil {
-		util.Debug(" Cannot read project author team", err)
-		Report(w, r, "你好，绛芸轩里绝喧哗，桂魄流光浸茜纱。未能读取茶台资料。")
-		return
-	}
-
 	//读取茶围资料
-	tD.QuoteObjective, err = tD.QuoteProject.Objective()
+	objective, err := project.Objective()
 	if err != nil {
-		util.Debug(tD.QuoteProject.Id, " Cannot read objective given project")
+		util.Debug(" Cannot read objective given project", err)
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶围资料。")
+		return
+	}
+	tD.QuoteObjectiveBean, err = FetchObjectiveBean(objective)
+	if err != nil {
+		util.Debug(" Cannot read objective given project", project.Id, err)
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
@@ -396,33 +377,20 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取品味资料。")
 			return
 		}
-		tD.QuotePost = post
+		tD.QuotePostBean, err = FetchPostBean(post)
+		if err != nil {
+			util.Debug(" Cannot fetch postBean given post", post.Id, err)
+			Report(w, r, "你好，茶博士失魂鱼，未能读取品味资料。")
+			return
+		}
 
 		// 截短body
-		tD.QuotePost.Body = Substr(tD.QuotePost.Body, 66)
-		tD.QuotePostAuthor, err = tD.QuotePost.User()
-		if err != nil {
-			util.Debug(" Cannot read post author", err)
-			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
-			return
-		}
-		tD.QuotePostAuthorFamily, err = data.GetFamily(tD.QuotePost.FamilyId)
-		if err != nil {
-			util.Debug(" Cannot read post author family", err)
-			Report(w, r, "你好，呜咽一声犹未了，落花满地鸟惊飞。未能读取品味资料。")
-			return
-		}
-		tD.QuotePostAuthorTeam, err = data.GetTeam(tD.QuotePost.TeamId)
-		if err != nil {
-			util.Debug(" Cannot read post author team", err)
-			Report(w, r, "你好，花谢花飞飞满天，红消香断有谁怜？未能读取品味资料。")
-			return
-		}
+		tD.QuotePostBean.Post.Body = Substr(tD.QuotePostBean.Post.Body, 66)
 
 	} else {
 		// 是一个普通的茶议
 		// 截短body
-		tD.QuoteProject.Body = Substr(tD.QuoteProject.Body, 66)
+		tD.QuoteProjectBean.Project.Body = Substr(tD.QuoteProjectBean.Project.Body, 66)
 
 	}
 
@@ -527,7 +495,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//从会话查获当前浏览用户资料荚
-			s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+			s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
 			if err != nil {
 				util.Debug(" Cannot get user-related data from session", s_u.Id)
 				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
@@ -548,35 +516,19 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.SessUserDefaultPlace = s_default_place
 			tD.SessUserBindPlaces = s_places
 
-			ob_team, err := data.GetTeam(tD.QuoteObjective.TeamId)
+			tD.IsAdmin, err = checkObjectiveAdminPermission(&objective, s_u.Id)
 			if err != nil {
-				util.Debug(" Cannot get team given team_id", tD.QuoteProject.TeamId)
-				Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+				util.Debug(" Cannot check objective admin permission", err)
+				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
-			tD.QuoteObjectiveAuthorTeam = ob_team
-			is_admin, err := ob_team.IsMember(s_u.Id)
-			if err != nil {
-				util.Debug(" Cannot check team membership", tD.QuoteObjectiveAuthorTeam.Id)
-				Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
-				return
-			}
-			tD.IsAdmin = is_admin
 
-			pr_team, err := data.GetTeam(tD.QuoteProject.TeamId)
+			tD.IsMaster, err = checkProjectMasterPermission(&project, s_u.Id)
 			if err != nil {
-				util.Debug(" Cannot get team given team_id", tD.QuoteProject.TeamId)
-				Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
+				util.Debug(" Cannot check project master permission", err)
+				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
-			tD.QuoteProjectAuthorTeam = pr_team
-			is_master, err := pr_team.IsMember(s_u.Id)
-			if err != nil {
-				util.Debug(" Cannot check team membership", tD.QuoteProjectAuthorTeam.Id)
-				Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个团队不存在。")
-				return
-			}
-			tD.IsMaster = is_master
 
 			// 检测是否茶议作者
 			if s_u.Id == tD.ThreadBean.Thread.UserId {
@@ -588,8 +540,10 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				tD.IsInput = false
 				//点击数+1
 				//tD.ThreadBean.Thread.AddHitCount()
+
 				//记录用户阅读该帖子一次
-				data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
+				//data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
+
 				//迭代PostSlice，把其PageData.IsAuthor设置为false，页面渲染时检测布局用
 				for i := range tD.PostBeanSlice {
 					tD.PostBeanSlice[i].Post.PageData.IsAuthor = false
@@ -600,8 +554,10 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				//不是茶议作者
+
 				//记录用户阅读该帖子一次
-				data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
+				//data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
+
 				//记录茶议被点击数
 				//tD.ThreadBean.Thread.AddHitCount()
 				// 填写页面数据
@@ -609,9 +565,9 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				tD.ThreadBean.Thread.PageData.IsAuthor = false
 
 				//检查是否封闭式茶台
-				if tD.QuoteProject.Class == 2 {
+				if tD.QuoteProjectBean.Project.Class == 2 {
 					//是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
-					ok, err := tD.QuoteProject.IsInvitedMember(s_u.Id)
+					ok, err := tD.QuoteProjectBean.Project.IsInvitedMember(s_u.Id)
 					if err != nil {
 						Report(w, r, "你好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 						return

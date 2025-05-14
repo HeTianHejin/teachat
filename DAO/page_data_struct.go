@@ -147,43 +147,36 @@ type DThreadDetail struct {
 // 用于茶议详情页面渲染
 type ThreadDetail struct {
 	SessUser                 User // 当前会话用户
-	IsGuest                  bool // 是否为游客
-	IsAdmin                  bool // 是否为茶围管理员
-	IsMaster                 bool // 是否为茶台管理员
-	IsAuthor                 bool // 是否为茶议作者
 	SessUserDefaultFamily    Family
 	SessUserSurvivalFamilies []Family
 	SessUserDefaultTeam      Team
 	SessUserSurvivalTeams    []Team
 	SessUserDefaultPlace     Place
 	SessUserBindPlaces       []Place
-	IsInput                  bool // 是否需要显示输入面板
+	IsGuest                  bool // 是否为游客
+	IsAdmin                  bool // 是否为茶围（服务发起/需求）管理成员
+	IsMaster                 bool // 是否为茶台（服务提供/响应）管理成员
+	IsAuthor                 bool // 是否为茶议作者
+	IsInput                  bool // 是否需要显示新茶议输入面板
 	IsPostExist              bool // 是否已经回复过了
 
 	NumSupport int // 支持人数
 	NumOppose  int // 反对人数
 
-	ProgressOppose  int // 反对百分比整数
-	ProgressSupport int // 支持百分比整数
+	ProgressSupport int // 支持率（百分比整数）
+	ProgressOppose  int // 反对率（百分比整数）
 
-	QuoteObjective             Objective // 引用的茶围
-	QuoteObjectiveAuthorTeam   Team      // 引用的茶围作者创建发帖时选择的团队，
-	QuoteObjectiveAuthorFamily Family    // 引用的茶wei作者发帖时选择的家庭，
+	QuoteObjectiveBean ObjectiveBean // 引用的茶围（愿景）豆荚
 
-	QuoteProject             Project // 引用的茶台
-	QuoteProjectAuthor       User
-	QuoteProjectAuthorFamily Family // 引用的茶台作者发帖时选择的家庭，
-	QuoteProjectAuthorTeam   Team   // 引用的茶台作者创建发帖时选择的团队，
+	QuoteProjectBean ProjectBean // 引用的茶台豆荚（实现茶围愿景所需的项目or节点之一）
+	QuotePostBean    PostBean    // 引用的品味豆荚（议中议）
 
-	ThreadBean ThreadBean //茶议豆荚
+	ThreadBean ThreadBean // 当前茶议豆荚
+
+	PostBeanSlice []PostBean // 普通跟贴豆荚队列
 
 	PostBeanAdminSlice []PostBean //茶围管理团队签署回复切片
-	PostBeanSlice      []PostBean // 普通跟贴豆荚队列
 
-	QuotePost             Post   //引用的品味
-	QuotePostAuthor       User   //引用的品味作者
-	QuotePostAuthorFamily Family //作者发帖时选择的家庭，或者默认&家庭茶团
-	QuotePostAuthorTeam   Team   //作者创建发帖时选择的团队，或者默认团队
 }
 
 // 茶议对象和作者资料荚（豆荚一样有许多个单元）
@@ -203,13 +196,13 @@ type ThreadBean struct {
 // 用于跟贴详情页面渲染
 type PostDetail struct {
 	SessUser                 User     // 当前会话用户
-	IsGuest                  bool     // 是否为游客
 	SessUserDefaultFamily    Family   // 当前会话用户默认&家庭茶团
 	SessUserSurvivalFamilies []Family // 当前会话用户全部&家庭茶团
 	SessUserDefaultTeam      Team
 	SessUserSurvivalTeams    []Team
 	SessUserDefaultPlace     Place
 	SessUserBindPlaces       []Place
+	IsGuest                  bool // 是否为游客
 	IsAuthor                 bool // 是否为品味作者
 
 	PostBean        PostBean     // 跟贴豆荚

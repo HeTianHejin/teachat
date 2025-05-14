@@ -13,7 +13,7 @@ import (
 
 // 准备用户相关数据
 func prepareUserData(sess *data.Session) (*data.UserData, error) {
-	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := FetchUserRelatedData(*sess)
+	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := FetchSessionUserRelatedData(*sess)
 	if err != nil {
 		return nil, err
 	}
@@ -597,7 +597,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.IsGuest = false
 
 	//从会话查获当前浏览用户资料荚
-	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchUserRelatedData(s)
+	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug(" Cannot get user-related data from session", s.Email, err)
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
@@ -645,7 +645,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		pD.ProjectBean.Project.PageData.IsAuthor = false
 	}
 
-	is_master, err := checkProjectAdminPermission(&pr, s_u.Id)
+	is_master, err := checkProjectMasterPermission(&pr, s_u.Id)
 	if err != nil {
 		util.Debug("Permission check failed", "user", s_u.Id, "error", err)
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
