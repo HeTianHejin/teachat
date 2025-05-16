@@ -26,8 +26,18 @@
 
 
 
+{{ if .IsEmpty }}
+{{/*  显示没有已加入的茶团  */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+      <span class="lead">茶博士</span>
+  </div>
 
-
+  <div class="panel-body">
+      你好，没有已加入的其他茶团。
+  </div>
+{{ else }}
+{{/*  显示已加入的茶团  */}}
 {{/* template "teams_public" .TeamBeanSlice */}}
 {{ range .TeamBeanSlice }}
 
@@ -139,6 +149,8 @@
   </div>
 
 </div>
+
+{{ end }}
 
 {{ end }}
 

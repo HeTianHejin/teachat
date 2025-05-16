@@ -68,6 +68,7 @@ func GetTeam(teamID int) (Team, error) {
 	}
 }
 
+// 获取系统预设的“自由人”$事业茶团,这是未加入任何团队的状态
 func getFreelancerTeam() Team {
 	return Team{
 		Id:                TeamIdFreelancer,
@@ -83,6 +84,7 @@ func getFreelancerTeam() Team {
 	}
 }
 
+// 从数据库查询获取团队
 func queryTeamFromDB(teamID int) (Team, error) {
 	const query = `SELECT id, uuid, name, mission, founder_id, 
                   created_at, class, abbreviation, logo, updated_at, 
@@ -169,15 +171,17 @@ type TeamMember struct {
 func (member *TeamMember) GetStatus() string {
 	switch member.Status {
 	case 0:
-		return "冰封"
+		return "黑名单（禁止参与）"
 	case 1:
 		return "正常品茶"
 	case 2:
 		return "暂停品茶"
 	case 3:
 		return "退出茶团"
+	case 4:
+		return "待审核"
 	}
-	return ""
+	return "未知"
 }
 
 // 成员“退出$事业茶团声明书”（相当于辞职信？）
@@ -473,12 +477,13 @@ func (user *User) SurvivalTeams() ([]Team, error) {
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.superior_team_id, teams.subordinate_team_id
         FROM teams
         JOIN team_members ON teams.id = team_members.team_id
-        WHERE teams.class IN (1, 2) AND team_members.user_id = $1 AND team_members.status = 1`
+        WHERE teams.class IN ($1, $2) AND team_members.user_id = $3 AND team_members.status = $4`
 
 	estimatedCapacity := util.Config.MaxSurvivalTeams //设定用户最大允许活跃$事业茶团数值
 	teams := make([]Team, 0, estimatedCapacity)
 
-	rows, err := Db.Query(query, user.Id)
+	query += ` LIMIT $5` // 限制最大团队数
+	rows, err := Db.Query(query, TeamClassOpen, TeamClassClose, user.Id, MemberStatusActive, estimatedCapacity)
 	if err != nil {
 		return nil, err
 	}
@@ -505,11 +510,11 @@ func (user *User) SurvivalTeamsCount() (count int, err error) {
         SELECT COUNT(DISTINCT teams.id)
         FROM teams
         JOIN team_members ON teams.id = team_members.team_id
-        WHERE teams.class IN (1, 2) AND team_members.user_id = $1 AND team_members.status = 1`
+        WHERE teams.class IN ($1, $2) AND team_members.user_id = $3 AND team_members.status = $4`
 
-	err = Db.QueryRow(query, user.Id).Scan(&count)
+	err = Db.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, MemberStatusActive).Scan(&count)
 	//减记自由人$事业茶团计数
-	count = count - 1
+	//count = count - 1
 	return
 }
 
