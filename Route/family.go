@@ -27,10 +27,14 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	// 2. get family id
 	family_uuid := r.URL.Query().Get("id")
+	//check family is valid
+	if family_uuid == data.FamilyUuidUnknown {
+		Report(w, r, "你好，茶博士摸摸头竟然说，陛下这个特殊家庭茶团不允许私用呢。")
+		return
+	}
 	t_family := data.Family{
 		Uuid: family_uuid,
 	}
-	//check family is valid
 	//fetch family
 	if err = t_family.GetByUuid(); err != nil {
 		util.Debug("Cannot get family by uuid", err)
@@ -46,8 +50,26 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	//if not member
 	if !ok {
-		Report(w, r, "你好，茶博士摸摸头，竟然说陛下你和这个家庭茶团没有关系。")
+		Report(w, r, "你好，茶博士摸摸头竟然说，陛下真的和这个家庭茶团有关系吗？")
 		return
+	}
+
+	//检查这个新的默认家庭茶团是否已经设置，避免重复记录
+	//fetch user default family
+	lastDefaultFamily, err := s_u.GetLastDefaultFamily()
+	if err != nil {
+		util.Debug("Cannot get user's last default family", err)
+		Report(w, r, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
+		return
+	}
+	//if last default family is not Unknown
+	if lastDefaultFamily.Id > data.FamilyIdUnknown {
+		//if last default family is  equal to the new default family
+		if lastDefaultFamily.Id == t_family.Id {
+			Report(w, r, "你好，茶博士竟然说,请勿重复设置默认家庭茶团。")
+			return
+		}
+
 	}
 
 	// set default family

@@ -29,18 +29,28 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 	//获取参数
 	uuid := r.URL.Query().Get("id")
 
+	//检查是否将特殊茶团作为默认茶团
+	if uuid == data.TeamUUIDFreelancer || uuid == data.TeamUUIDSpaceshipCrew {
+		Report(w, r, "你好，茶博士竟然说，陛下你不能将特殊茶团作为默认茶团，请确认。")
+		return
+	}
 	//查询目标茶团是否存在
-	team, err := data.GetTeamByUUID(uuid)
+	t_team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get team by given uuid", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
 		return
 	}
 
+	if t_team.Id == data.TeamIdFreelancer {
+		Report(w, r, "你好，茶博士竟然说，陛下你不能将特殊茶团作为默认茶团，请确认。")
+		return
+	}
+
 	//检查用户是否茶团成员，非成员不能设置默认茶团
-	ok, err := team.IsMember(s_u.Id)
+	ok, err := t_team.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check user is member of team", team.Id, err)
+		util.Debug("Cannot check user is member of team", t_team.Id, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
 		return
 	}
@@ -49,10 +59,24 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//检查是否重复设置默认事业茶团
+	lastDefaultTeam, err := s_u.GetLastDefaultTeam()
+	if err != nil {
+		util.Debug("Cannot get last default team", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
+		return
+	}
+	if lastDefaultTeam.Id > data.TeamIdFreelancer {
+		if lastDefaultTeam.Id == t_team.Id {
+			Report(w, r, "你好，茶博士竟然说，陛下你已经设置过这个默认$事业茶团了，请确认。")
+			return
+		}
+	}
+
 	//设置默认茶团
 	new_default_team := data.UserDefaultTeam{
 		UserId: s_u.Id,
-		TeamId: team.Id,
+		TeamId: t_team.Id,
 	}
 	if err = new_default_team.Create(); err != nil {
 		util.Debug("Cannot set default team", err)
@@ -87,29 +111,37 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 
 	//获取参数
 	uuid := r.URL.Query().Get("id")
+	if uuid == "" {
+		Report(w, r, "你好，茶博士竟然说，陛下你没有给我茶团的uuid，请确认。")
+		return
+	}
+
+	if uuid == data.TeamUUIDFreelancer {
+		Report(w, r, "你好，茶博士竟然说，陛下你不能查看特殊茶团的加盟申请，请确认。")
+		return
+	}
 
 	//查询目标茶团
-	team, err := data.GetTeamByUUID(uuid)
+	t_team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Debug(uuid, "Cannot get team by given uuid")
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	//检查用户是否茶团成员，非成员不能查看加盟申请书
-	_, err = data.GetMemberByTeamIdUserId(team.Id, s_u.Id)
+	ok, err := t_team.IsMember(s_u.Id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			Report(w, r, "你好，茶博士失魂鱼，你不是茶团成员，无法查看申请书。")
-			return
-		} else {
-			util.Debug("Cannot get team member by team id and user id", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
-			return
-		}
+		util.Debug("Cannot check user is member of team", t_team.Id, err)
+		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		return
+	}
+	if !ok {
+		Report(w, r, "你好，茶博士竟然说，陛下你似乎不是这个茶团成员，请确认。")
+		return
 	}
 
 	//查询茶团全部新的加盟申请书，包含已查看但未处理的
-	applies, err := data.GetMemberApplicationByTeamIdAndStatus(team.Id)
+	applies, err := data.GetMemberApplicationByTeamIdAndStatus(t_team.Id)
 	if err != nil {
 		util.Debug("Cannot get applys by team id", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
@@ -130,7 +162,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	var mAL data.MemberApplicationSlice
 	//填写页面数据
 	mAL.SessUser = s_u
-	mAL.Team = team
+	mAL.Team = t_team
 	mAL.MemberApplicationBeanSlice = apply_bean_slice
 
 	// 渲染页面
@@ -467,18 +499,39 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var tS data.TeamSquare
+
 	tS.SessUser = s_u
-	team_slice, err := s_u.SurvivalTeams()
+
+	survival_team_slice, err := s_u.SurvivalTeams()
 	if err != nil {
 		util.Debug(" Cannot get joined teams", err)
 		Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
-	tS.TeamBeanSlice, err = FetchTeamBeanSlice(team_slice)
-	if err != nil {
-		util.Debug(" Cannot get team bean slice", err)
-		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
-		return
+	if len(survival_team_slice) == 0 {
+		tS.IsEmpty = true
+	} else {
+		tS.IsEmpty = false
+		teamBeanSlice, err := FetchTeamBeanSlice(survival_team_slice)
+		if err != nil {
+			util.Debug(" Cannot get team bean slice", err)
+			Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+			return
+		}
+		last_default_team, err := s_u.GetLastDefaultTeam()
+		if err != nil {
+			util.Debug(" Cannot get last default team", err)
+			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+			return
+		}
+		//置顶默认团队
+		tbs, err := moveDefaultTeamToFront(teamBeanSlice, last_default_team.Id)
+		if err != nil {
+			util.Debug(" Cannot move default team to front", err)
+			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+			return
+		}
+		tS.TeamBeanSlice = tbs
 	}
 
 	RenderHTML(w, &tS, "layout", "navbar.private", "teams.joined", "teams.public")

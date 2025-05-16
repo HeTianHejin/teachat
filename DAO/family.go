@@ -661,6 +661,10 @@ func GetFamiliesByAuthorId(authorId int) (families []Family, err error) {
 
 // Family.GetByUuid() 根据uuid获取家庭
 func (f *Family) GetByUuid() (err error) {
+	if f.Uuid == FamilyUuidUnknown {
+		*f = UnknownFamily
+		return nil
+	}
 	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open FROM families WHERE uuid=$1"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
@@ -683,7 +687,9 @@ func (f *Family) Founder() (user User, err error) {
 
 // Family.IsMember() 根据user_id，检查用户是否是家庭成员
 func (f *Family) IsMember(user_id int) (isMember bool, err error) {
-
+	if f.Id == FamilyIdUnknown {
+		return false, fmt.Errorf("family not found with id: %d", f.Id)
+	}
 	statement := "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND user_id=$2"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {

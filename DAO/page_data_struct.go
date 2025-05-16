@@ -229,7 +229,10 @@ type PostBean struct {
 
 // 用于茶团队列页面渲染
 type TeamSquare struct {
-	SessUser      User
+	SessUser User
+
+	IsEmpty bool //是否没有加入任何茶团
+
 	TeamBeanSlice []TeamBean
 }
 type TeamBean struct {

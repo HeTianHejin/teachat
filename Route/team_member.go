@@ -790,7 +790,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 			TeamId: team.Id,
 			UserId: applicant.Id,
 			Role:   "taster",
-			Class:  1,
+			Status: 1,
 		}
 		//将新的茶团成员写入数据库
 		if err = team_member.Create(); err != nil {
@@ -1313,7 +1313,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			TeamId: invitation.TeamId,
 			UserId: reply_user.Id,
 			Role:   invitation.Role,
-			Class:  1,
+			Status: 1,
 		}
 
 		// 如果team_member.Role == "CEO",采取更换CEO方法

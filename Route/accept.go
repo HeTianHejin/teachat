@@ -397,7 +397,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				TeamId: team.Id,
 				UserId: team.FounderId,
 				Role:   RoleCEO,
-				Class:  1,
+				Status: 1,
 			}
 			if err = teamMember.Create(); err != nil {
 				util.Debug("Cannot create team-member", err)

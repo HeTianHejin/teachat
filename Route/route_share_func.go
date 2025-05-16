@@ -59,6 +59,27 @@ const (
 	FreelancerTeamId = 2
 )
 
+func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]data.TeamBean, error) {
+	newSlice := make([]data.TeamBean, 0, len(teamSlice))
+	var defaultTeam *data.TeamBean
+
+	// 分离默认团队和其他团队
+	for _, tb := range teamSlice {
+		if tb.Team.Id == defaultTeamID {
+			defaultTeam = &tb
+			continue
+		}
+		newSlice = append(newSlice, tb)
+	}
+
+	if defaultTeam == nil {
+		return nil, fmt.Errorf("默认团队 %d 未找到", defaultTeamID)
+	}
+
+	// 合并结果（默认团队在前）
+	return append([]data.TeamBean{*defaultTeam}, newSlice...), nil
+}
+
 // validateTeamAndFamilyParams 验证团队和家庭ID参数的合法性
 // 返回: (是否有效, 错误)
 func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id int, family_id int, currentUserID int) (bool, error) {
