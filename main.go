@@ -57,6 +57,7 @@ func main() {
 
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
 	mux.HandleFunc("/v1/team/core_manage", route.CoreManage)
+	mux.HandleFunc("/v1/team/default", route.SetDefaultTeam)
 
 	mux.HandleFunc("/v1/teams/open", route.OpenTeams)
 	mux.HandleFunc("/v1/teams/closed", route.ClosedTeams)

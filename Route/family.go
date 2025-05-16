@@ -11,7 +11,7 @@ import (
 )
 
 // GET /v1/family/default?id=
-// 设置默认家庭茶团
+// 设置某个茶友的默认家庭茶团
 func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	// 1. get session
 	s, err := Session(r)
@@ -37,7 +37,20 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
 		return
 	}
-	// 3. set default family
+	//check user is family member
+	ok, err := t_family.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug("Cannot check user is family member", err)
+		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
+		return
+	}
+	//if not member
+	if !ok {
+		Report(w, r, "你好，茶博士摸摸头，竟然说陛下你和这个家庭茶团没有关系。")
+		return
+	}
+
+	// set default family
 	new_user_default_family := data.UserDefaultFamily{
 		UserId:   s_u.Id,
 		FamilyId: t_family.Id,
@@ -48,7 +61,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. redirect
+	// redirect
 	http.Redirect(w, r, "/v1/families/home", http.StatusFound)
 }
 

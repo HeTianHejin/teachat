@@ -11,6 +11,59 @@ import (
 	util "teachat/Util"
 )
 
+// GET /v1/team/default?id=
+// 设置某个茶友的默认$事业茶团
+func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	//获取参数
+	uuid := r.URL.Query().Get("id")
+
+	//查询目标茶团是否存在
+	team, err := data.GetTeamByUUID(uuid)
+	if err != nil {
+		util.Debug("Cannot get team by given uuid", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
+		return
+	}
+
+	//检查用户是否茶团成员，非成员不能设置默认茶团
+	ok, err := team.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug("Cannot check user is member of team", team.Id, err)
+		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
+		return
+	}
+	if !ok {
+		Report(w, r, "你好，茶博士竟然说，陛下你似乎不是这个茶团成员，请确认。")
+		return
+	}
+
+	//设置默认茶团
+	new_default_team := data.UserDefaultTeam{
+		UserId: s_u.Id,
+		TeamId: team.Id,
+	}
+	if err = new_default_team.Create(); err != nil {
+		util.Debug("Cannot set default team", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能设置默认茶团，请稍后再试。")
+		return
+	}
+
+	//跳转“已加盟茶团”页面
+	http.Redirect(w, r, "/v1/teams/joined", http.StatusFound)
+}
+
 // GET /v1/team/members/fired
 // 显示被开除的成员的表单页面
 func MemberFired(w http.ResponseWriter, r *http.Request) {
