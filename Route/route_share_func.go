@@ -402,7 +402,14 @@ func FetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 	if err != nil {
 		return
 	}
-	// 把系统默认家庭资料加入families
+	//remove member_default_family from member_all_families
+	for i, family := range member_all_families {
+		if family.Id == member_default_family.Id {
+			member_all_families = append(member_all_families[:i], member_all_families[i+1:]...)
+			break
+		}
+	}
+	// 把系统默认的“自由人”家庭资料加入families
 	member_all_families = append(member_all_families, data.UnknownFamily)
 	defaultTeam, err := s_u.GetLastDefaultTeam()
 	if err != nil {

@@ -325,9 +325,13 @@
 
       <div class="panel-body">
         <p>{{ .Post.Body }}</p>
+
+        {{ if $.IsMaster }}
         <p>
           <a class="btn btn-default" href="/v1/see-seek/new?id={{ .Post.Uuid }}" role="button">启动-茶看</a>
         </p>
+       
+        {{ end }}
 
       </div>
 
@@ -366,12 +370,17 @@
         {{/* 没有“追加”编辑过，留空白 */}}
         {{ end }}
         {{ end }}
+
+        {{ if $.IsMaster }}
         <span style="margin-inline-end: 30px;">
           <a href="/v1/see-seek/new?id={{ .Post.Uuid }}">
             <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
           </a>
           {{ .Count }}
         </span>
+        {{ end }}
+
+
       </div>
 
     </div>

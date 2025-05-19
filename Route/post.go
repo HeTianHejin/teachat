@@ -16,13 +16,12 @@ func HandleEditPost(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		UpdatePost(w, r)
 	case "PUT":
-		//未开放的窗口
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		//未允许的方法
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
 	case "DELETE":
 		//未开放的窗口
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
@@ -117,6 +116,9 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		// 未登录，游客
 		pD.IsAuthor = false
 		pD.IsInput = false
+		pD.IsGuest = true
+		pD.IsAdmin = false
+		pD.IsMaster = false
 		// 填写页面数据
 		pD.SessUser = data.User{
 			Id:   0,
@@ -137,16 +139,12 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	pD.SessUser = s_u
 	// 从会话查获当前浏览用户资料荚
-	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
+	s_u, s_default_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug(" Cannot get user-related data from session", err)
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
-	// 把系统默认家庭资料加入s_survival_families
-	s_survival_families = append(s_survival_families, data.UnknownFamily)
-	// 把系统默认团队资料加入s_survival_teams
-	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 
 	// 用户足迹
 	s_u.Footprint = r.URL.Path
@@ -156,10 +154,24 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	pD.IsGuest = false
 	pD.IsInput = true
 
+	pD.IsAdmin, err = checkObjectiveAdminPermission(&quote_objective, s_u.Id)
+	if err != nil {
+		util.Debug(" Cannot check objective admin permission", err)
+		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	pD.IsMaster, err = checkProjectMasterPermission(&quote_project, s_u.Id)
+	if err != nil {
+		util.Debug(" Cannot check project master permission", err)
+		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
 	// 默认家庭
 	pD.SessUserDefaultFamily = s_default_family
 	// 全部家庭
-	pD.SessUserSurvivalFamilies = s_survival_families
+	pD.SessUserSurvivalFamilies = s_all_families
 
 	// 默认团队
 	pD.SessUserDefaultTeam = s_default_team

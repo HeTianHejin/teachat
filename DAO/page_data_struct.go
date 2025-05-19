@@ -196,14 +196,16 @@ type ThreadBean struct {
 // 用于跟贴详情页面渲染
 type PostDetail struct {
 	SessUser                 User     // 当前会话用户
+	IsGuest                  bool     // 是否为游客
+	IsAuthor                 bool     // 是否为品味作者
+	IsAdmin                  bool     // 是否为茶围管理成员
+	IsMaster                 bool     // 是否为茶台管理成员
 	SessUserDefaultFamily    Family   // 当前会话用户默认&家庭茶团
 	SessUserSurvivalFamilies []Family // 当前会话用户全部&家庭茶团
 	SessUserDefaultTeam      Team
 	SessUserSurvivalTeams    []Team
 	SessUserDefaultPlace     Place
 	SessUserBindPlaces       []Place
-	IsGuest                  bool // 是否为游客
-	IsAuthor                 bool // 是否为品味作者
 
 	PostBean        PostBean     // 跟贴豆荚
 	ThreadBeanSlice []ThreadBean // 针对此品味的茶议队列

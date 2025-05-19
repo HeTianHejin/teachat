@@ -319,7 +319,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	// 准备一个空白的表
 	var tD data.ThreadDetail
 
-	// 读取茶议内容以填空
+	// 读取茶议内容
 	thread, err := data.GetThreadByUUID(uuid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -491,7 +491,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//从会话查获当前浏览用户资料荚
-			s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
+			s_u, s_d_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
 			if err != nil {
 				util.Debug(" Cannot get user-related data from session", s_u.Id)
 				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
@@ -504,7 +504,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.SessUser = s_u
 
 			tD.SessUserDefaultFamily = s_d_family
-			tD.SessUserSurvivalFamilies = s_survival_families
+			tD.SessUserSurvivalFamilies = s_all_families
 
 			tD.SessUserDefaultTeam = s_default_team
 			tD.SessUserSurvivalTeams = s_survival_teams

@@ -24,11 +24,11 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/see-seek/new?id=xxx
 func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
-	var err error
+
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
 	t_post := data.Post{Uuid: uuid}
-	if err = t_post.GetByUuid(); err != nil {
+	if err := t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
@@ -51,7 +51,13 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	master_team, err := data.GetTeam(t_thread.TeamId)
+	t_proj, err := t_thread.Project()
+	if err != nil {
+		util.Debug(" Cannot get project from thread", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		return
+	}
+	master_team, err := data.GetTeam(t_proj.TeamId)
 	if err != nil {
 		util.Debug(" Cannot get master team", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
@@ -59,7 +65,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	is_member, err := master_team.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check master-team-member given team_id,s_u.Email", master_team.Id, s_u.Email)
+		util.Debug(" Cannot check master-team-member given team_id,s_u.Email", master_team.Id, s_u.Email, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议团队会员资格资料。")
 		return
 	}
