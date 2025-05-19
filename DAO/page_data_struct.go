@@ -259,7 +259,7 @@ type TeamDetail struct {
 
 	TeamBean TeamBean //$事业茶团资料夹
 
-	IsAuthor              bool
+	//IsAuthor              bool
 	CoreMemberBeanSlice   []TeamMemberBean //核心成员资料夹
 	NormalMemberBeanSlice []TeamMemberBean //普通成员资料夹
 

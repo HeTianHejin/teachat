@@ -81,27 +81,27 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	//获取目标茶台
 	pr := data.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project", uuid)
+		util.Debug(" Cannot get project", uuid, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
 		return
 	}
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective", ob.Id)
+		util.Debug(" Cannot get objective", ob.Id, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
 	//检查用户是否有权限处理这个请求
 	admin_team, err := data.GetTeam(ob.TeamId)
 	if err != nil {
-		util.Debug(" Cannot get team", ob.TeamId)
+		util.Debug(" Cannot get team", ob.TeamId, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的团队，请确认后再试。")
 		return
 	}
 	is_admin, err := admin_team.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot get team", ob.TeamId)
+		util.Debug(" Cannot get team", ob.TeamId, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的团队，请确认后再试。")
 		return
 	}
@@ -117,14 +117,20 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 		ProjectId:   pr.Id,
 		UserId:      s_u.Id,
 	}
+	//检查是否已经入围过了
+	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
+		Report(w, r, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
+		return
+	}
 	if err = new_project_approved.Create(); err != nil {
 		util.Debug(" Cannot create project approved", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
 		return
 	}
 
-	//返回成功
-	Report(w, r, "你好，茶博士微笑，已成功记录入围茶台，请稍后刷新页面查看。")
+	//报告入围操作成功
+	//Report(w, r, "你好，茶博士微笑，已成功记录入围茶台，请返回页面查看。")
+	http.Redirect(w, r, "/v1/project/detail?uuid="+uuid, http.StatusFound)
 }
 
 // 处理新建茶台的操作处理器

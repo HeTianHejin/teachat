@@ -1091,7 +1091,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	// 读取茶团资料
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(team_uuid, "Cannot get team given uuid")
+		util.Debug("Cannot get team given uuid", team_uuid, err)
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -1103,7 +1103,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 		case sql.ErrNoRows:
 			break
 		default:
-			util.Debug(s_u.Email, " when checking member_application")
+			util.Debug(" when checking member_application", s_u.Email, err)
 			Report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
@@ -1113,18 +1113,15 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查这个茶团是否已经存在该茶友
-	_, err = data.GetMemberByTeamIdUserId(team.Id, s_u.Id)
+	ok, err := team.IsMember(s_u.Id)
 	if err != nil {
-		switch err {
-		case sql.ErrNoRows:
-			break
-		default:
-			util.Debug(s_u.Email, " when checking team_member")
-			Report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
-			return
-		}
-	} else {
-		Report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？")
+		util.Debug("Cannot check team member", err)
+		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	if ok {
+		Report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
 		return
 	}
 

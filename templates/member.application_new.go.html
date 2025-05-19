@@ -2,6 +2,8 @@
 
 {{/* 这是 撰写新的茶团申请书 页面 */}}
 
+
+{{ with .TeamBean }}{{/* 这是 teamBeam非空检查-开始 */}}
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
     <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
@@ -59,7 +61,7 @@
                     </div>
                     
                     <input type="hidden" name="team_uuid" id="team_uuid" value="{{ .Team.Uuid }}">
-                    <input type="hidden" name="user_uuid" id="user_uuid" value="{{ .SessUser.Uuid }}">
+                    <input type="hidden" name="user_uuid" id="user_uuid" value="{{ $.SessUser.Uuid }}">
                     
                     <div class="form-group">
                         <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
@@ -78,6 +80,7 @@
     </div>
 </div>
 
+{{ end }}{{/* 这是 teamBeam非空检查-结束 */}}
 
 
 {{ end }}

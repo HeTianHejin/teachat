@@ -33,16 +33,12 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据会话读取当前用户的信息
-	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
+	s_u, s_default_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_all_places, err := FetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug("cannot fetch s_u s_teams given session", err)
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	//把系统默认家庭资料加入s_survival_families
-	s_survival_families = append(s_survival_families, data.UnknownFamily)
-	//把系统默认团队资料加入s_survival_teams
-	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 
 	var tD data.ThreadDetail
 
@@ -105,12 +101,12 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 	// 填写页面数据
 
 	tD.SessUser = s_u
-	tD.SessUserDefaultFamily = s_d_family
-	tD.SessUserSurvivalFamilies = s_survival_families
+	tD.SessUserDefaultFamily = s_default_family
+	tD.SessUserSurvivalFamilies = s_all_families
 	tD.SessUserDefaultTeam = s_default_team
 	tD.SessUserSurvivalTeams = s_survival_teams
 	tD.SessUserDefaultPlace = s_default_place
-	tD.SessUserBindPlaces = s_places
+	tD.SessUserBindPlaces = s_all_places
 	// 给请求用户返回新建完整版茶议表单页面
 	RenderHTML(w, &tD, "layout", "navbar.private", "thread.new")
 }
@@ -324,13 +320,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	var tD data.ThreadDetail
 
 	// 读取茶议内容以填空
-	thread, err := data.ThreadByUUID(uuid)
+	thread, err := data.GetThreadByUUID(uuid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			Report(w, r, "你好，茶博士竟然说该茶议不存在，请确认后再试一次。")
 			return
 		}
-		util.Debug(" Cannot read thread given uuid", uuid)
+		util.Debug(" Cannot read thread given uuid", uuid, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
 		return
 	}
@@ -649,7 +645,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取提及的茶议资料
-	thread, err := data.ThreadByUUID(uuid)
+	thread, err := data.GetThreadByUUID(uuid)
 	if err != nil {
 		util.Debug(" Cannot read thread given uuid", uuid)
 		Report(w, r, "你好，闪电茶博士极速服务中，未能读取茶议资料，请稍后再试。")
@@ -689,12 +685,17 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//处理采纳茶议请求
-	thread_approved := data.ThreadApproved{
+	new_thread_approved := data.ThreadApproved{
 		ThreadId:  thread.Id,
 		ProjectId: proj.Id,
 		UserId:    s_u.Id,
 	}
-	if err = thread_approved.Create(); err != nil {
+	//检查是否已经采纳
+	if err = new_thread_approved.GetByThreadId(); err == nil {
+		Report(w, r, "你好，闪电茶博士极速服务，该茶议已被采纳，请刷新页面查看。")
+		return
+	}
+	if err = new_thread_approved.Create(); err != nil {
 		util.Debug(thread.Id, " Cannot create thread approved")
 		Report(w, r, "你好，闪电茶博士极速服务中，未能处理你的请求，请稍后再试。")
 		return
@@ -737,7 +738,7 @@ func EditThread(w http.ResponseWriter, r *http.Request) {
 		}
 		vals := r.URL.Query()
 		uuid := vals.Get("id")
-		thDPD.ThreadBean.Thread, err = data.ThreadByUUID(uuid)
+		thDPD.ThreadBean.Thread, err = data.GetThreadByUUID(uuid)
 		if err != nil {
 			util.Debug("Cannot not read thread", err)
 			Report(w, r, "茶博士失魂鱼，未能读取茶议资料，请稍后再试。")
@@ -784,7 +785,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 		//title := r.PostFormValue("title")
 		topi := r.PostFormValue("additional")
 		//根据用户提供的uuid读取指定茶议
-		thread, err := data.ThreadByUUID(uuid)
+		thread, err := data.GetThreadByUUID(uuid)
 		if err != nil {
 			util.Debug(" Cannot read thread by uuid", err)
 			Report(w, r, "茶博士失魂鱼，未能读取专属茶议，请稍后再试。")

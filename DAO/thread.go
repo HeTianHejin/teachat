@@ -340,7 +340,7 @@ func HotThreads(limit int) (threads []Thread, err error) {
 }
 
 // Get a thread by the UUID
-func ThreadByUUID(uuid string) (thread Thread, err error) {
+func GetThreadByUUID(uuid string) (thread Thread, err error) {
 	thread = Thread{}
 	err = Db.QueryRow("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private FROM threads WHERE uuid = $1", uuid).
 		Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate)

@@ -51,8 +51,8 @@ func (projectApproved *ProjectApproved) Create() (err error) {
 }
 
 // project_approved.GetByProjectId() ----【tencent AI协助】
-func (projectApproved *ProjectApproved) GetByProjectId() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE project_id = $1", projectApproved.ProjectId).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
+func (projectApproved *ProjectApproved) GetByObjectiveIdProjectId() (err error) {
+	err = Db.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE objective_id=$1 and project_id = $2", projectApproved.ObjectiveId, projectApproved.ProjectId).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
 	return
 }
 

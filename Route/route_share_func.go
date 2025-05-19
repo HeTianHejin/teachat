@@ -402,7 +402,8 @@ func FetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 	if err != nil {
 		return
 	}
-
+	// 把系统默认家庭资料加入families
+	member_all_families = append(member_all_families, data.UnknownFamily)
 	defaultTeam, err := s_u.GetLastDefaultTeam()
 	if err != nil {
 		return
@@ -412,13 +413,14 @@ func FetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 	if err != nil {
 		return
 	}
-
 	for i, team := range survivalTeams {
 		if team.Id == defaultTeam.Id {
 			survivalTeams = append(survivalTeams[:i], survivalTeams[i+1:]...)
 			break
 		}
 	}
+	// 把系统默认团队资料加入teams
+	survivalTeams = append(survivalTeams, FreelancerTeam)
 
 	default_place, err := s_u.GetLastDefaultPlace()
 	if err != nil && errors.Is(err, sql.ErrNoRows) {

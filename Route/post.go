@@ -218,7 +218,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	uuid := r.PostFormValue("uuid")
 	//检查uuid是否有效
-	thread, err := data.ThreadByUUID(uuid)
+	thread, err := data.GetThreadByUUID(uuid)
 	if err != nil {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 		return
