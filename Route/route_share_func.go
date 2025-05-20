@@ -81,7 +81,7 @@ func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]dat
 }
 
 // validateTeamAndFamilyParams 验证团队和家庭ID参数的合法性
-// 返回: (是否有效, 错误)
+// 返回: (是否有效, 错误) ---deepseek协助优化
 func validateTeamAndFamilyParams(w http.ResponseWriter, r *http.Request, team_id int, family_id int, currentUserID int) (bool, error) {
 	// 基本参数检查（这些检查不涉及数据库操作）
 	if team_id < FreelancerTeamId {

@@ -8,24 +8,7 @@ import (
 	util "teachat/Util"
 )
 
-// 加水 ，修改回复post的处理器
-func HandleEditPost(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		EditPost(w, r)
-	case http.MethodPost:
-		UpdatePost(w, r)
-	case "PUT":
-		//未允许的方法
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-
-	case "DELETE":
-		//未开放的窗口
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-	}
-}
-
-// get /v1/post/detail?id=
+// GET /v1/post/detail?id=
 // 品味的详情
 func PostDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
@@ -197,18 +180,17 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 // POST /v1/post/draft
 // Create the post 创建品味（跟帖/回复）草稿 new
 func NewPostDraft(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	err = r.ParseForm()
+	err := r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
 		Report(w, r, "你好，茶博士摸摸头，竟然说今天电脑去热带海岛潜水了。")
 		return
 	}
-
+	s, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
@@ -217,7 +199,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取用户表态,立场是支持（true）或者反对(false)
-	attitude := r.PostFormValue("attitude") == "true"
+	post_attitude := r.PostFormValue("attitude") == "true"
 
 	body := r.PostFormValue("body")
 	//检查body的长度，规则是不能少于刘姥姥评价老君眉的品味字数
@@ -228,15 +210,15 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，彬彬有礼戴着厚厚眼镜片的茶博士居然说，内容太多，茶叶蛋壳都用光了也写不完呀。")
 		return
 	}
-	uuid := r.PostFormValue("uuid")
+	thre_uuid := r.PostFormValue("uuid")
 	//检查uuid是否有效
-	thread, err := data.GetThreadByUUID(uuid)
+	thread, err := data.GetThreadByUUID(thre_uuid)
 	if err != nil {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 		return
 	}
-	//读取提交的is_private bool参数
-	is_private := r.PostFormValue("is_private") == "true"
+	//读取提交的post_is_private bool参数
+	post_is_private := r.PostFormValue("is_private") == "true"
 
 	te_id_str := r.PostFormValue("team_id")
 	//change team_id to int
@@ -266,7 +248,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 茶议所在的茶台，
+	// 茶议所在的茶台
 	t_proj, err := thread.Project()
 	if err != nil {
 		util.Debug(" Cannot get project by project id", t_proj.Id, err)
@@ -288,7 +270,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !ok {
-			Report(w, r, "你好，陛下您的大名竟然不在邀请品茶名单上。")
+			Report(w, r, "你好，难以置信，陛下的大名竟然不在邀请品茶名单上！")
 			return
 		}
 
@@ -323,8 +305,8 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		ThreadId:  thread.Id,
 		FamilyId:  family_id,
 		TeamId:    team_id,
-		Attitude:  attitude,
-		IsPrivate: is_private,
+		Attitude:  post_attitude,
+		IsPrivate: post_is_private,
 		Body:      body,
 		Class:     dp_class,
 	}
@@ -361,6 +343,23 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	t := fmt.Sprintf("你好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", thread.Title)
 	// 提示用户草稿保存成功
 	Report(w, r, t)
+}
+
+// 修改post的处理器
+func HandleEditPost(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		EditPost(w, r)
+	case http.MethodPost:
+		UpdatePost(w, r)
+	case "PUT":
+		//未允许的方法
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
+	case "DELETE":
+		//未开放的窗口
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 // POST /post/edit

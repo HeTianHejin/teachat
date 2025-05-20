@@ -11,17 +11,32 @@ type Post struct {
 	Body      string
 	UserId    int
 	ThreadId  int
-	CreatedAt time.Time
-	EditAt    *time.Time
 	Attitude  bool //表态：肯定（颔首）或者否定（摇头）
 	FamilyId  int  //作者发帖时选择的家庭id
 	TeamId    int  //作者发帖时选择的成员所属茶团id（team/family）
 	IsPrivate bool //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
-	Class     int  //发布级别（友邻蒙评已通过）：0、普通发布，1、管理团队or家庭发布，2、飞行机组团队发布，3、
+	CreatedAt time.Time
+	EditAt    *time.Time
+
+	//发布级别（友邻蒙评已通过）：
+	// 0,Regular post (by passerby) 路人发布
+	//1 Official post (by team/family admin) 管理方发布(团队/家庭)
+	//2 Post by spaceship crew 飞船机组团队发布
+	//3 Post by regulatory department 监管部门发布
+	//4 Post rejected by neighbor review 友邻评审已拒绝
+	Class int
 
 	//仅页面渲染用
 	PageData PublicPData
 }
+
+const (
+	PostClassNormal             = iota // Regular post (by passerby) 路人发布
+	PostClassAdmin                     // Official post (by team/family admin) 管理方发布(团队/家庭)
+	PostClassSpaceShipTeam             // Post by spaceship crew 飞船机组团队发布
+	PostClassGov                       // Post by regulatory department 监管部门发布
+	PostClassRejectedByNeighbor        // Post rejected by neighbor review 友邻评审已拒绝
+)
 
 // 对表态中的attitude进行转换，true为颔首，false为摇头
 func (post *Post) Atti() string {
@@ -40,10 +55,17 @@ type DraftPost struct {
 	ThreadId  int
 	CreatedAt time.Time
 	Attitude  bool
-	Class     int  //发布级别：0、普通发布，1、管理方发布（团队或者家庭），2、飞行机组团队发布，3、监管部门发布，403:（友邻蒙评）已拒绝
 	TeamId    int  //作者发帖时选择的成员所属茶团id（team/family）
 	IsPrivate bool //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
 	FamilyId  int  //作者发帖时选择的家庭id
+
+	//发布级别（友邻蒙评已通过）：
+	// 0,Regular post (by passerby) 路人发布
+	//1 Official post (by team/family admin) 管理方发布(团队/家庭)
+	//2 Post by spaceship crew 飞船机组团队发布
+	//3 Post by regulatory department 监管部门发布
+	//4 Post rejected by neighbor review 友邻评审已拒绝
+	Class int
 }
 
 var DraftPostStatus = map[int]string{
