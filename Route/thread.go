@@ -217,7 +217,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valid, err := validateTeamAndFamilyParams(w, r, team_id, family_id, s_u.Id)
+	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id,w, r)
 	if !valid && err == nil {
 		return // 参数不合法，已经处理了错误
 	}
@@ -230,7 +230,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 
 	// 如果茶台class=1，存为开放式茶议草稿，
 	// 如果茶台class=2， 存为封闭式茶议草稿
-	if proj.Class == OpenProject || proj.Class == ClosedProject {
+	if proj.Class == data.ClassOpenTeaTable || proj.Class == data.ClassClosedTeaTable {
 		//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<456
 		if CnStrLen(title) < 1 {
 			Report(w, r, "你好，茶博士竟然说该茶议标题为空，请确认后再试一次。")
@@ -273,7 +273,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		// 创建一条友邻蒙评,是否接纳 新茶的记录
 		aO := data.AcceptObject{
 			ObjectId:   draft_thread.Id,
-			ObjectType: 3,
+			ObjectType: data.AcceptObjectTypeTeaProposal,
 		}
 		if err = aO.Create(); err != nil {
 			util.Debug("Cannot create accept_object", err)
@@ -283,7 +283,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		// 发送蒙评请求消息给两个在线用户
 		//构造消息
 		mess := data.AcceptMessage{
-			FromUserId:     1,
+			FromUserId:     data.UserId_SpaceshipCaptain,
 			Title:          "新茶语邻座评审邀请",
 			Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 			AcceptObjectId: aO.Id,
@@ -561,10 +561,11 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				tD.ThreadBean.Thread.PageData.IsAuthor = false
 
 				//检查是否封闭式茶台
-				if tD.QuoteProjectBean.Project.Class == 2 {
+				if tD.QuoteProjectBean.Project.Class == data.ClassClosedTeaTable {
 					//是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
 					ok, err := tD.QuoteProjectBean.Project.IsInvitedMember(s_u.Id)
 					if err != nil {
+						util.Debug(" Cannot check project invited member", err)
 						Report(w, r, "你好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 						return
 					}

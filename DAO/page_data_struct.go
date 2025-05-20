@@ -24,7 +24,7 @@ type UserBean struct {
 }
 
 // 用户数据结构
-type UserData struct {
+type UserPageData struct {
 	User             User
 	DefaultFamily    Family
 	SurvivalFamilies []Family

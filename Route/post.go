@@ -212,13 +212,13 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	thre_uuid := r.PostFormValue("uuid")
 	//检查uuid是否有效
-	thread, err := data.GetThreadByUUID(thre_uuid)
+	t_thread, err := data.GetThreadByUUID(thre_uuid)
 	if err != nil {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 		return
 	}
-	//读取提交的post_is_private bool参数
-	post_is_private := r.PostFormValue("is_private") == "true"
+	//读取提交的is_private bool参数
+	is_private := r.PostFormValue("is_private") == "true"
 
 	te_id_str := r.PostFormValue("team_id")
 	//change team_id to int
@@ -237,7 +237,8 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valid, err := validateTeamAndFamilyParams(w, r, team_id, family_id, s_u.Id)
+	//验证团队和家庭ID参数的组合是否合法
+	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id, w, r)
 	if !valid && err == nil {
 		return // 参数不合法，已经处理了错误
 	}
@@ -249,7 +250,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 茶议所在的茶台
-	t_proj, err := thread.Project()
+	t_proj, err := t_thread.Project()
 	if err != nil {
 		util.Debug(" Cannot get project by project id", t_proj.Id, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
@@ -257,11 +258,11 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch t_proj.Class {
-	case OpenProject:
+	case data.ClassOpenTeaTable:
 		// 开放式茶台，任何人可以品茶
 		// 直接继续创建流程
 
-	case ClosedProject:
+	case data.ClassClosedTeaTable:
 		// 封闭式茶台，检查邀请状态
 		ok, err := t_proj.IsInvitedMember(s_u.Id)
 		if err != nil {
@@ -287,30 +288,40 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dp_class := 0
-
-	ob_team := data.Team{Id: t_obje.TeamId}
-	is_member, err := ob_team.IsMember(s_u.Id)
-	if err != nil {
-		util.Debug(" Cannot get family member by family id and user id", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶团成员资格资料。")
-		return
+	//检查是哪一种级别发布
+	dp_class := data.PostClassNormal
+	is_member := false
+	if is_private {
+		ob_family := data.Family{Id: family_id}
+		is_member, err = ob_family.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot get family member by family id and user id", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能读取茶团成员资格资料。")
+			return
+		}
+	} else {
+		ob_team := data.Team{Id: t_obje.TeamId}
+		is_member, err = ob_team.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot get family member by family id and user id", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能读取茶团成员资格资料。")
+			return
+		}
 	}
 	if is_member {
-		dp_class = 1
+		dp_class = data.PostClassAdmin
 	}
 
 	new_draft_post := data.DraftPost{
 		UserId:    s_u.Id,
-		ThreadId:  thread.Id,
+		ThreadId:  t_thread.Id,
 		FamilyId:  family_id,
 		TeamId:    team_id,
 		Attitude:  post_attitude,
-		IsPrivate: post_is_private,
+		IsPrivate: is_private,
 		Body:      body,
 		Class:     dp_class,
 	}
-	// 公共的创建逻辑
 	if err = new_draft_post.Create(); err != nil {
 		util.Debug("Cannot create draft post", s_u.Email, err)
 		Report(w, r, "你好，茶博士摸摸头，嘀咕笔头宝珠掉了，记录您的品味失败。")
@@ -320,7 +331,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_draft_post.Id,
-		ObjectType: 4,
+		ObjectType: data.AcceptObjectTypeTeaTaste,
 	}
 	if err = aO.Create(); err != nil {
 		util.Debug("Cannot create accept_object given draft_post_id", new_draft_post.Id)
@@ -329,7 +340,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	// 发送邻座蒙评消息
 	mess := data.AcceptMessage{
-		FromUserId:     1,
+		FromUserId:     data.UserId_SpaceshipCaptain,
 		Title:          "新茶语邻座评审邀请",
 		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: aO.Id,
@@ -340,7 +351,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 提示用户草稿保存成功
-	t := fmt.Sprintf("你好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", thread.Title)
+	t := fmt.Sprintf("你好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", t_thread.Title)
 	// 提示用户草稿保存成功
 	Report(w, r, t)
 }
@@ -428,7 +439,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, url, http.StatusFound)
 		} else {
 			//空白或者一个字被认为是无意义追加内容
-			Report(w, r, "你好，请勿提供小于17个字的品味补充")
+			Report(w, r, "你好，陛下英明，请勿提供小于17个字的品味补充")
 			return
 		}
 

@@ -742,6 +742,9 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdNone {
 		return nil, fmt.Errorf("team not found with id: %d", team.Id)
 	}
+	if team.Id == TeamIdFreelancer {
+		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
+	}
 	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "taster")
 	if err != nil {
 		return
@@ -761,6 +764,9 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdNone {
 		return nil, fmt.Errorf("team not found with id: %d", team.Id)
+	}
+	if team.Id == TeamIdFreelancer {
+		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
 	rows, err := Db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5)", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO)
 	if err != nil {
@@ -782,7 +788,10 @@ func GetAllMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
 	if team_id == TeamIdNone {
 		return nil, fmt.Errorf("team not found with id: %d", team_id)
 	}
-	rows, err := Db.Query("SELECT user_id FROM team_members WHERE team_id = $1 AND class = 1", team_id)
+	if team_id == TeamIdFreelancer {
+		return nil, fmt.Errorf("team member cannot find with id: %d", team_id)
+	}
+	rows, err := Db.Query("SELECT user_id FROM team_members WHERE team_id = $1 AND status = 1", team_id)
 	if err != nil {
 		return
 	}
@@ -800,6 +809,12 @@ func GetAllMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
 // 根据用户id，检查当前用户是否$事业茶团成员；team中是否存在某个teamMember
 func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err error) {
 	team_member = TeamMember{}
+	if team_id == TeamIdNone {
+		return team_member, fmt.Errorf("team not found with id: %d", team_id)
+	}
+	if team_id == TeamIdFreelancer {
+		return team_member, fmt.Errorf("team member cannot find with id: %d", team_id)
+	}
 	err = Db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
 	return
@@ -809,6 +824,9 @@ func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err 
 func (team *Team) IsMember(user_id int) (is_member bool, err error) {
 	if team.Id == TeamIdNone {
 		return false, fmt.Errorf("team not found with id: %d", team.Id)
+	}
+	if team.Id == TeamIdFreelancer {
+		return true, nil
 	}
 	team_member, err := GetMemberByTeamIdUserId(team.Id, user_id)
 	if err != nil {

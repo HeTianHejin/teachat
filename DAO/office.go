@@ -55,6 +55,14 @@ type AcceptObject struct {
 	// PageData AcceptObjectPageData
 }
 
+const (
+	AcceptObjectTypeTeaTalk     = 1 //objective
+	AcceptObjectTypeTeaTable    = 2 //project
+	AcceptObjectTypeTeaProposal = 3 //thread
+	AcceptObjectTypeTeaTaste    = 4 //post
+	AcceptObjectTypeTeaTeam     = 5 //team
+)
+
 // 用户新消息统计
 type NewMessageCount struct {
 	Id     int

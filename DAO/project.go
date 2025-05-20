@@ -18,16 +18,39 @@ type Project struct {
 	ObjectiveId int //茶围
 	UserId      int //开台人，台主，作者
 	CreatedAt   time.Time
-	Class       int // 属性 0:  "追加待评草台",1:  "开放式茶台",2:  "封闭式茶台",10: "开放式草台",20: "封闭式草台",31: "已婉拒开台",32: "已婉拒封台",
 	EditAt      *time.Time
 	Cover       string //封面图片文件名
 	IsPrivate   bool   //公私类型，代表&家庭（family）=true，代表$事业团队（team）=false。默认是false
 	TeamId      int    //作者发帖时选择的成员所属茶团id（team）
 	FamilyId    int    //作者发帖时选择的成员所属家庭id(family_id)
 
+	// 0: 追加待评草台 (Pending append review)
+	// 1: 开放式茶台 (Open tea table)
+	// 2: 封闭式茶台 (Closed tea table)
+	// 跳过 3-9
+	// 10: 开放式草台 (Open straw table)
+	// 跳过 11-19
+	// 20: 封闭式草台 (Closed straw table)
+	// 跳过 21-30
+	// 31: 已婉拒开放式茶台 (Rejected open table)
+	// 32: 已婉拒封闭式茶台 (Rejected close table)
+	Class int
 	// 仅用于页面渲染，不保存到数据库
 	PageData PublicPData
 }
+
+const (
+	ClassPendingAppendReview int  = iota // 0: 追加待评草台 (Pending append review)
+	ClassOpenTeaTable                    // 1: 开放式茶台 (Open tea table)
+	ClassClosedTeaTable                  // 2: 封闭式茶台 (Closed tea table)
+	_                                    // 跳过 3-9
+	ClassOpenStrawTable      = 10        // 10: 开放式草台 (Open straw table)
+	_                                    // 跳过 11-19
+	ClassClosedStrawTable    = 20        // 20: 封闭式草台 (Closed straw table)
+	_                                    // 跳过 21-30
+	ClassRejectedOpenTable   = 31        // 31: 已婉拒开放式茶台 (Rejected open table)
+	ClassRejectedCloseTable  = 32        // 32: 已婉拒封闭式茶台 (Rejected close table)
+)
 
 // 同意入围，许可某个茶台（项目）设立
 type ProjectApproved struct {
@@ -344,7 +367,7 @@ func isUserInAnyTeam(user_id int, team_ids []int) (bool, error) {
 	for _, team_id := range team_ids {
 		members, err := GetAllMemberUserIdsByTeamId(team_id)
 		if err != nil {
-			return false, fmt.Errorf("获取团队%d成员失败: %v", team_id, err)
+			return false, fmt.Errorf("获取团队 #%d 全部成员失败: %v", team_id, err)
 		}
 		if contains(members, user_id) {
 			return true, nil

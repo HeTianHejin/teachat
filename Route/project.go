@@ -11,47 +11,6 @@ import (
 	util "teachat/Util"
 )
 
-// 准备用户相关数据
-func prepareUserData(sess *data.Session) (*data.UserData, error) {
-	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := FetchSessionUserRelatedData(*sess)
-	if err != nil {
-		return nil, err
-	}
-
-	// 添加特殊选项
-	survivalFamilies = append(survivalFamilies, data.UnknownFamily)
-	survivalTeams = append(survivalTeams, FreelancerTeam)
-
-	return &data.UserData{
-		User:             user,
-		DefaultFamily:    defaultFamily,
-		SurvivalFamilies: survivalFamilies,
-		DefaultTeam:      defaultTeam,
-		SurvivalTeams:    survivalTeams,
-		DefaultPlace:     defaultPlace,
-		BindPlaces:       places,
-	}, nil
-}
-
-// 准备茶围页面数据
-func prepareObjectivePageData(objective data.Objective, userData *data.UserData) (*data.ObjectiveDetail, error) {
-	objectiveBean, err := FetchObjectiveBean(objective)
-	if err != nil {
-		return nil, err
-	}
-
-	return &data.ObjectiveDetail{
-		SessUser:                 userData.User,
-		SessUserDefaultFamily:    userData.DefaultFamily,
-		SessUserSurvivalFamilies: userData.SurvivalFamilies,
-		SessUserDefaultTeam:      userData.DefaultTeam,
-		SessUserSurvivalTeams:    userData.SurvivalTeams,
-		SessUserDefaultPlace:     userData.DefaultPlace,
-		SessUserBindPlaces:       userData.BindPlaces,
-		ObjectiveBean:            objectiveBean,
-	}, nil
-}
-
 // POST /v1/project/approve
 // 茶围管理员选择某个茶台入围，记录它 --【Tencent ai 协助】
 func ProjectApprove(w http.ResponseWriter, r *http.Request) {
@@ -187,7 +146,11 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
 		return
 	}
-	valid, err := validateTeamAndFamilyParams(w, r, team_id, family_id, s_u.Id)
+
+	//读取提交的is_private bool参数
+	is_private := r.PostFormValue("is_private") == "true"
+
+	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id, w, r)
 	if !valid && err == nil {
 		return // 参数不合法，已经处理了错误
 	}
@@ -221,9 +184,6 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，已经存在相同名字的茶台，请更换一个名称后再试。")
 		return
 	}
-
-	//读取提交的is_private bool参数
-	is_private := r.PostFormValue("is_private") == "true"
 
 	place_uuid := r.PostFormValue("place_uuid")
 	place := data.Place{Uuid: place_uuid}
@@ -400,7 +360,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	accept_object := data.AcceptObject{
 		ObjectId:   new_proj.Id,
-		ObjectType: 2,
+		ObjectType: data.AcceptObjectTypeTeaTable,
 	}
 	if err = accept_object.Create(); err != nil {
 		util.Debug("Cannot create accept_object", err)
@@ -410,7 +370,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 发送蒙评请求消息给两个在线用户
 	// 构造消息
 	mess := data.AcceptMessage{
-		FromUserId:     1,
+		FromUserId:     data.UserId_SpaceshipCaptain,
 		Title:          "新茶语邻座评审邀请",
 		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: accept_object.Id,
@@ -460,7 +420,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. 获取用户相关数据
-	sessUserData, err := prepareUserData(&sess)
+	sessUserData, err := prepareUserPageData(&sess)
 	if err != nil {
 		util.Debug("准备用户数据失败", "error", err)
 		Report(w, r, "你好，三人行，必有大佬焉，请稍后再试。")
@@ -501,7 +461,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
-	if pr.Class != 1 && pr.Class != 2 {
+	if pr.Class != data.ClassOpenTeaTable && pr.Class != data.ClassClosedTeaTable {
 		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
 		return
 	}
@@ -514,7 +474,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	if pD.ProjectBean.Project.Class == 1 {
+	if pD.ProjectBean.Project.Class == data.ClassOpenTeaTable {
 		pD.Open = true
 	} else {
 		pD.Open = false
@@ -589,7 +549,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsMaster = false
 
 		pD.SessUser = data.User{
-			Id:        0,
+			Id:        data.UserId_None,
 			Name:      "游客",
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
@@ -609,10 +569,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
-	//把系统默认家庭资料加入s_survival_families
-	s_survival_families = append(s_survival_families, data.UnknownFamily)
-	//把系统默认团队资料加入s_survival_teams
-	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 
 	pD.SessUser = s_u
 	pD.SessUserDefaultFamily = s_default_family
@@ -623,10 +579,11 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.SessUserBindPlaces = s_places
 
 	//如果这是class=2封闭式茶台，需要检查当前浏览用户是否可以创建新茶议
-	if pD.ProjectBean.Project.Class == 2 {
+	if pD.ProjectBean.Project.Class == data.ClassClosedTeaTable {
 		// 是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
 		ok, err := pD.ProjectBean.Project.IsInvitedMember(s_u.Id)
 		if err != nil {
+			util.Debug(" Cannot check invited member", err)
 			Report(w, r, "你好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 			return
 		}

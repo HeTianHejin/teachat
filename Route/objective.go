@@ -1,8 +1,6 @@
 package route
 
 import (
-	"database/sql"
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -43,10 +41,6 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	//把系统默认家庭资料加入s_survival_families
-	//把系统默认团队资料加入s_survival_teams
-	s_survival_families = append(s_survival_families, data.UnknownFamily)
-	s_survival_teams = append(s_survival_teams, FreelancerTeam)
 
 	// 填写页面数据
 	oD.SessUser = s_u
@@ -109,7 +103,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valid, err := validateTeamAndFamilyParams(w, r, team_id, family_id, s_u.Id)
+	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id, w, r)
 	if !valid && err == nil {
 		return // 参数不合法，已经处理了错误
 	}
@@ -237,7 +231,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_ob.Id,
-		ObjectType: 1,
+		ObjectType: data.AcceptObjectTypeTeaTalk,
 	}
 	if err = aO.Create(); err != nil {
 		util.Debug("Cannot create accept_object", err)
@@ -247,7 +241,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	// 发送蒙评请求消息给两个在线用户
 	// 构造消息
 	mess := data.AcceptMessage{
-		FromUserId:     1,
+		FromUserId:     data.UserId_SpaceshipCaptain,
 		Title:          "新茶语邻座评审邀请",
 		Content:        "你好，茶博士隆重宣布：您被选中为新茶语评茶官啦，请及时处理。",
 		AcceptObjectId: aO.Id,
@@ -426,17 +420,18 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	oD.IsGuest = false
+	oD.IsInvited = false
 	// 记录用户查询的资讯
-	if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
-		util.Debug(s_u.Email, " Cannot record last query path")
-	}
+	// if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
+	// 	util.Debug(s_u.Email, " Cannot record last query path")
+	// }
 	// 用户足迹
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
 	oD.SessUser = s_u
 
 	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
-	if ob.Class == 2 {
+	if ob.Class == data.ClassClosedTeaTalk {
 		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot read objective-bean slice", err)
@@ -446,15 +441,11 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsInvited = ok
 	}
 
-	//检测u.Id == o.UserId是否这个茶话会主人（作者）
+	//检测u.Id == o.UserId是否这个茶话会作者
 	if s_u.Id == oD.ObjectiveBean.Author.Id {
 		//是作者
-		//准备页面数据
 		oD.IsAuthor = true
 		oD.IsAdmin = true
-		oD.IsGuest = false
-
-		oD.IsInvited = false
 
 		//配置私有导航条的茶话会详情页面
 		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")
@@ -463,29 +454,14 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		//不是茶围的作者
 		oD.IsAuthor = false
 
-		//检测当前用户是否是这个茶话会所属团队的成员（管理员） --【DeepSeek 协助】
-		team, err := data.GetTeam(oD.ObjectiveBean.Objective.TeamId)
+		//检测当前用户是否是管理员 =这个茶话会所属团队or家庭的成员
+		is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
 		if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-				// 团队不存在，用户不可能是管理员
-				oD.IsAdmin = false
-			} else {
-				// 其他错误（如数据库连接失败）
-				util.Debug("Cannot get team information", oD.ObjectiveBean.Objective.TeamId)
-				oD.IsAdmin = false
-			}
-		} else {
-			// 团队存在，检查成员身份
-			is_admin, err := team.IsMember(s_u.Id)
-			if err != nil {
-				// 查询成员关系时出错（如数据库问题）
-				util.Debug("Failed to check team membership", team.Id)
-				oD.IsAdmin = false
-			} else {
-				// 正常返回用户是否为管理员
-				oD.IsAdmin = is_admin
-			}
+			util.Debug(" Cannot read objective-bean slice", err)
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌着。")
+			return
 		}
+		oD.IsAdmin = is_admin
 
 		//配置私有导航条的茶话会详情页面
 		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")

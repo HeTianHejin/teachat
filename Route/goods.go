@@ -527,7 +527,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	if team.Id == NoTeamId || team.Id == FreelancerTeamId || team.Id == SpaceshipCrewId {
+	if team.Id == data.TeamIdNone || team.Id == data.TeamIdFreelancer || team.Id == data.TeamIdSpaceshipCrew {
 		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}

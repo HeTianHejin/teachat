@@ -342,8 +342,8 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		Logo:              logo,
 		Class:             class,
 		FounderId:         s_u.Id,
-		SuperiorTeamId:    1,
-		SubordinateTeamId: 0,
+		SuperiorTeamId:    data.TeamIdSpaceshipCrew,
+		SubordinateTeamId: data.TeamIdNone,
 	}
 	if err := new_team.Create(); err != nil {
 		util.Debug(" At create team", err)
@@ -354,7 +354,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	// 创建一条友邻蒙评,是否接纳 新茶团的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_team.Id,
-		ObjectType: 5,
+		ObjectType: data.AcceptObjectTypeTeaTeam,
 	}
 	if err = aO.Create(); err != nil {
 		util.Debug("Cannot create accept_object", err)
@@ -364,7 +364,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	// 发送蒙评请求消息给两个在线用户
 	//构造消息
 	mess := data.AcceptMessage{
-		FromUserId:     1,
+		FromUserId:     data.UserId_SpaceshipCaptain,
 		Title:          "新茶语邻座评审邀请",
 		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
 		AcceptObjectId: aO.Id,
