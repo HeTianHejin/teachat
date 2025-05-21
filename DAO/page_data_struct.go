@@ -181,14 +181,12 @@ type ThreadDetail struct {
 
 // 茶议对象和作者资料荚（豆荚一样有许多个单元）
 type ThreadBean struct {
-	Thread        Thread
-	Count         int // 附属对象计数
-	Status        string
-	CreatedAtDate string
+	Thread Thread
+	Count  int // 附属对象计数
 
 	Author       User   // 作者
-	AuthorFamily Family //作者发帖时选择的家庭，或者默认&家庭茶团
-	AuthorTeam   Team   // 作者创建发帖时选择的团队，或者默认$团队
+	AuthorFamily Family //作者发帖时选择的&家庭茶团
+	AuthorTeam   Team   // 作者创建发帖时选择的$团队
 
 	IsApproved bool // 主张方案是否被采纳
 }
