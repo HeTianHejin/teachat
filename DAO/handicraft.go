@@ -164,6 +164,7 @@ type HandicraftProduct struct {
 // MagicSlice 手工艺作业的法力集合id
 type HandicraftMagic struct {
 	Id           int
+	Uuid         string
 	HandicraftId int
 	MagicId      int
 	CreatedAt    time.Time
@@ -173,6 +174,7 @@ type HandicraftMagic struct {
 // SkillSlice 手工艺作业的技能集合id
 type HandicraftSkill struct {
 	Id           int
+	Uuid         string
 	HandicraftId int
 	SkillId      int
 	CreatedAt    time.Time
@@ -182,6 +184,7 @@ type HandicraftSkill struct {
 // ToolSlice  手工艺作业的装备或工具（短期租赁的商品）清单单号，完成这个部分作业，可能需要多个工具（装备），例如写一首古诗，需要毛笔、墨、纸、砚台和水，书桌等
 type HandicraftTool struct {
 	Id           int
+	Uuid         string
 	HandicraftId int
 	ToolId       int
 	CreatedAt    time.Time
@@ -191,15 +194,17 @@ type HandicraftTool struct {
 // GoodsSlice 手工艺作业的消耗品，材料，（货物）商品清单单号
 type HandicraftGoods struct {
 	Id           int
+	Uuid         string
 	HandicraftId int
 	GoodsId      int
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
 }
 
-// 手工艺作业场所环境条件，如：温度，湿度，扬尘，光照，风力，流速……
+// 手工艺作业场所自然（物理）环境条件，如：温度，湿度，扬尘，光照，风力，流速……
 type HandicraftEnvironment struct {
 	Id            int
+	Uuid          string
 	HandicraftId  int
 	EnvironmentId int
 	CreatedAt     time.Time
@@ -207,7 +212,7 @@ type HandicraftEnvironment struct {
 }
 
 // 对作业环境模糊（口头）记录，用于茶话会交流
-// 手工艺作业环境属性
+// 作业环境属性
 type Environment struct {
 	Id      int
 	Uuid    string
@@ -231,7 +236,7 @@ type Environment struct {
 	UpdatedAt *time.Time
 }
 
-// 手工艺作业环境属性分级映射
+// 作业环境属性分级映射
 var LevelMaps = map[string]map[int]string{
 	// 异味
 	"Odor": {
@@ -354,6 +359,7 @@ func GetLevelDescription(field string, level int) string {
 // 手工艺作业场所安全隐患，风险因素，例如高空堕落、机械挤压、电击、化学腐蚀……
 type HandicraftSafetyHazard struct {
 	Id             int
+	Uuid           string
 	HandicraftId   int
 	SafetyHazardId int
 	CreatedAt      time.Time
@@ -380,6 +386,7 @@ type SafetyHazard struct {
 // 手工艺作业场所安全措施，例如：断电，隔离，上锁……
 type HandicraftSafetyMeasure struct {
 	Id              int
+	Uuid            string
 	HandicraftId    int
 	SafetyMeasureId int
 	CreatedAt       time.Time
@@ -389,6 +396,7 @@ type HandicraftSafetyMeasure struct {
 // EvidenceSlice  手工艺作业的音视频等视觉证据，默认值为 0，表示没有
 type HandicraftEvidence struct {
 	Id           int
+	Uuid         string
 	HandicraftId int
 	EvidenceId   int
 	CreatedAt    time.Time
