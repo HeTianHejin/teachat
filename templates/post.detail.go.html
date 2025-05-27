@@ -70,7 +70,7 @@
               
               </span>
             <span style="font-style: italic;">
-              {{ .QuoteThreadBean.Thread.TypeStatus }}
+              {{ .QuoteThreadBean.Thread.ThreadType }}
               : {{ .QuoteThreadBean.Thread.Title }}
               {{ .QuoteThreadBean.Thread.Body }} ...
             </span>
@@ -226,16 +226,16 @@
         @（<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
                 <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
 
-      <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
+      <span style="margin-inline-end: 20px;font-size: smaller;">{{ .Thread.CreatedAtDate }}</span>
       
     </p>
 
     <h5>
-      <mark>{{ .Thread.TypeStatus }}</mark>
+      <mark>{{ .Thread.ThreadType }}</mark>
       <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
     </h5>
     <span style="font-size: small; margin-inline-start: 40px;">
-      <span class="label label-default" style="margin-inline-end: 20px;">{{ .Status }}</span>
+      
       {{ .Thread.Body }} ...
   </div>
 </div>

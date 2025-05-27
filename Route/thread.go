@@ -112,7 +112,7 @@ func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/thread/draft
-// 处理提交的简化版新茶议草稿，待邻座蒙评后转为正式茶议
+// 处理提交的新茶议草稿，待邻座蒙评后转为正式茶议
 func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
@@ -131,16 +131,16 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//读取表单数据
+	//读取茶议类型
 	thre_type, err := strconv.Atoi(r.PostFormValue("type"))
 	if err != nil {
 		util.Debug("Failed to convert type to int", thre_type, err)
 		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
-	// 检查ty值是否 0、1
+	// 检查ty值是否合法
 	switch thre_type {
-	case 0, 1:
+	case data.ThreadTypeIthink, data.ThreadTypeIdea:
 		break
 	default:
 		util.Debug("Invalid thread type value", err)
@@ -164,14 +164,14 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	/// check submit post_id is valid, if not 0 表示属于“议中议”
 	post := data.Post{Id: post_id}
 	proj := data.Project{Id: project_id}
-	//检查该茶台是否存在，而且状态不是草台状态
+	//检查该茶台是否存在，而且状态不是待友邻蒙评审查草台状态
 	if err = proj.Get(); err != nil {
 		util.Debug(" Cannot get project", err)
 		Report(w, r, "你好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
 		return
 	}
-	if proj.Class == 10 || proj.Class == 20 {
-		util.Debug("试图访问未蒙评审核的茶台被阻止。", s_u.Email, err)
+	if proj.Class != data.ClassOpenTeaTable && proj.Class != data.ClassClosedTeaTable {
+		//util.Debug("试图访问未蒙评审核的茶台被阻止。", s_u.Email, err)
 		Report(w, r, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
 		return
 	}
@@ -217,7 +217,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id,w, r)
+	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id, w, r)
 	if !valid && err == nil {
 		return // 参数不合法，已经处理了错误
 	}

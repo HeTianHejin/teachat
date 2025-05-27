@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	util "teachat/Util"
 	"time"
 )
 
@@ -30,6 +31,7 @@ const (
 	UserId_None             = 0
 	UserId_SpaceshipCaptain = 1
 )
+const sessionDuration = 7 * 24 * time.Hour
 
 var UserRole = map[string]string{
 	"traveller":    "太空旅客",
@@ -192,27 +194,33 @@ func (user *User) DeleteSession() (err error) {
 }
 
 // Check if session is valid in the database
-func (session *Session) Check() (valid bool, err error) {
-	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, gender FROM sessions WHERE uuid = $1", session.Uuid).
-		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
+func (session *Session) Check() (bool, error) {
+	err := Db.QueryRow(
+		"SELECT id, uuid, email, user_id, created_at, gender FROM sessions WHERE uuid = $1",
+		session.Uuid,
+	).Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
+
 	if err != nil {
-		//查不到资料，表示没有预留可以验证的印记
-		valid = false
-		return valid, err
-	}
-	if session.Id != 0 {
-		//查到资料,检查是否过期
-		if time.Since(session.CreatedAt) < 7*24*time.Hour {
-			// 这个绿豆饼印创建时间到现在，是<7天，设valid=true，没过期
-			valid = true
-		} else {
-			// 是过期的点心，返回false，删除过期的session
-			session.Delete()
-			valid = false
+		if err == sql.ErrNoRows {
+			return false, nil // 会话不存在不算错误
 		}
-		return valid, err
+		return false, fmt.Errorf("database query failed: %w", err)
 	}
-	return false, err
+
+	if session.Id == 0 {
+		return false, nil
+	}
+
+	expiryTime := session.CreatedAt.Add(sessionDuration)
+	if time.Now().Before(expiryTime) {
+		return true, nil
+	}
+
+	// 会话过期
+	if err := session.Delete(); err != nil {
+		util.Debug("failed to delete expired session: %v", err)
+	}
+	return false, nil
 }
 
 // 检查登录口令是否正确

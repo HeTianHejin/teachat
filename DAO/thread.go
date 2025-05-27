@@ -5,27 +5,37 @@ import (
 )
 
 // 茶议 teaThread
-// 议程，主张或者方案，或者观点，论题...
-// 茶议的开放性是跟随茶台的class，如果茶台是开放式，则茶议是开放式，否则是封闭式，
+// 一个想法（ithink）或者方案(idea)，或者观点，论题...
+// 茶议的开放or封闭性是跟随茶台的class，如果茶台是开放式，则茶议是开放式，否则是封闭式，
 type Thread struct {
 	Id        int
 	Uuid      string
-	Body      string //内容
 	UserId    int    //作者
-	CreatedAt time.Time
-	Class     int    //状态0: "加水",1: "品茶",2: "定味",3: "展示",4: "已删除",
+	Type      int    //哪一种提法？0: "我觉得",1: "出主意"
 	Title     string //标题
+	Body      string //内容
+	CreatedAt time.Time
 	EditAt    *time.Time
-	ProjectId int  //茶台号
+	Class     int  //1: "开放式",2: "封闭式"
+	ProjectId int  //所属茶台号
+	IsPrivate bool // 指定管理权属类型，属于&家庭管理（family）=true，属于$团队管理（team）=false。默认是false
 	FamilyId  int  //作者发帖时选择的成员所属家庭id(family_id)
-	Type      int  //哪一种提法？0: "我觉得",1: "出主意"
-	PostId    int  //针对那一个品味？默认0为针对茶台项目
-	TeamId    int  //作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
-	IsPrivate bool // 代表类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
+	TeamId    int  //作者发帖时选择的成员身份所属茶团，$事业团队id。换句话说就是选择那个团队负责？（注意个人身份发言是代表“自由职业者”虚拟茶团）
+	PostId    int  //是否针对某一个品味？默认=0，普通类型针对茶台（project）发布；如果有>0值，则是该品味（post）的ID，是议中议类型。
 
 	//仅用于页面渲染，不保存到数据库
 	PageData PublicPData
 }
+
+const (
+	ThreadTypeIthink = iota //我觉得
+	ThreadTypeIdea          //出主意（解决方案）
+)
+const (
+	ThreadClassPending = iota //待审查
+	ThreadClassOpen           //开放式
+	ThreadClassClosed         //封闭式
+)
 
 // 记录敲杯（阅读）数
 type Read struct {
@@ -39,36 +49,44 @@ type Read struct {
 type DraftThread struct {
 	Id        int
 	UserId    int    //作者
-	ProjectId int    //茶台号
+	Type      int    //哪一种提法？0: "我觉得",1: "出主意",
 	Title     string //标题
-	Body      string //提议？话题？
-	Class     int    //分类//0：原始草稿，1:已通过（友邻蒙评），2:（友邻蒙评）已拒绝
+	Body      string //内容
+	Class     int    //1：开放式茶议，2：封闭式茶议，
+	Status    int    //0:草稿，1:接纳，2:婉拒
+	IsPrivate bool   // 管理类型：&家庭（family）管理=true，$团队（team）管理=false，默认是false
+	TeamId    int    //作者发帖时选择的成员身份所属茶团，$事业团队（team）
+	FamilyId  int    //作者发帖时选择的成员所属，&家庭(family)
+	ProjectId int    //茶台号
+	PostId    int    //是否针对某一个品味？默认=0，普通类型针对茶台（project）发布；如果有>0值，则是该品味（post）的ID，是议中议类型。
 	CreatedAt time.Time
-	Type      int  //哪一种提法？0: "我觉得",1: "出主意",
-	PostId    int  //针对那一个品味？默认为 0 是普通茶议
-	TeamId    int  //作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说话？
-	IsPrivate bool // 代表类型，代表&家庭（family）=true，代表$团队（team）=false。默认是true
-	FamilyId  int  //作者发帖时选择的成员所属家庭id(family_id)
-
 }
 
 // 根据type属性的int值，返回方便阅读的自然语字符
-var TypeStatus = map[int]string{
+var ThreadType = map[int]string{
 	0: "我觉得",
 	1: "出主意",
 }
 
-var ThreadStatus = map[int]string{
-	0: "加水",
-	1: "温热",
-	2: "定味",
-	3: "展示",
-	4: "已删除",
+func (t *Thread) ThreadType() string {
+	return ThreadType[t.Type]
 }
+
+//	var ThreadStatus = map[int]string{
+//		0: "加水",
+//		1: "温热",
+//		2: "定味",
+//		3: "展示",
+//		4: "已删除",
+//	}
 var DraftThreadStatus = map[int]string{
 	0: "草稿",
 	1: "接纳",
-	2: "退回",
+	2: "婉拒",
+}
+
+func (dT *DraftThread) DraftThreadStatus() string {
+	return DraftThreadStatus[dT.Status]
 }
 
 // 获取针对此post的全部threads。
@@ -385,19 +403,4 @@ func (project *Project) Threads() (threads []Thread, err error) {
 func (t *Thread) IsEdited() bool {
 
 	return t.EditAt != nil && !t.EditAt.Equal(t.CreatedAt)
-}
-
-// 获取thread的状态string
-func (t *Thread) Status() string {
-	return ThreadStatus[t.Class]
-}
-
-// 获取draftThread的状态string
-func (d *DraftThread) Status() string {
-	return DraftThreadStatus[d.Class]
-}
-
-// 获取thread的type的状态string
-func (t *Thread) TypeStatus() string {
-	return TypeStatus[t.Type]
 }

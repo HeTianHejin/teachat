@@ -3,7 +3,7 @@ package data
 // UserBeanPagedata 个人主页，渲染所需数据
 type UserBean struct {
 	SessUser User //会话茶友
-	IsAuthor bool //是否作者
+	IsAuthor bool //是否本人
 
 	User User // 目标茶友
 
@@ -35,11 +35,11 @@ type UserPageData struct {
 }
 
 // 个人独白，独角戏资料
-type MonologueBean struct {
-	Monologue Monologue
-	Author    User
-	Team      Team
-}
+// type MonologueBean struct {
+// 	Monologue Monologue
+// 	Author    User
+// 	Team      Team
+// }
 
 // 某个茶话页面渲染所需的动态数据
 type PublicPData struct {
@@ -583,4 +583,53 @@ type SearchPageData struct {
 	TeamBeanSlice []TeamBean //茶团资料夹队列
 	//ThreadBeanSlice   []ThreadBean
 	PlaceSlice []Place //品茶地点集合
+}
+
+// 新建“看看”页面数据
+// “看看”详情页面数据
+type SeeSeekDetailPageData struct {
+	SessUser User
+	//IsAuthor bool
+	IsAdmin   bool
+	IsMaster  bool
+	IsGuest   bool
+	IsInvited bool
+
+	SessUserDefaultFamily    Family
+	SessUserSurvivalFamilies []Family
+	// SessUserParentMemberFamilySlice []Family
+
+	SessUserDefaultTeam   Team
+	SessUserSurvivalTeams []Team
+
+	SessUserDefaultPlace Place
+	SessUserBindPlaces   []Place
+
+	SeeSeekBean SeeSeekBean
+
+	ObjectiveBean ObjectiveBean
+	ProjectBean   ProjectBean
+}
+type SeeSeekBean struct {
+	SeeSeek SeeSeek
+	IsOpen  bool
+
+	Verifier                 User
+	VerifierBeneficialFamily Family
+	VerifierBeneficialTeam   Team
+
+	Requester                 User
+	RequesterBeneficialFamily Family
+	RequesterBeneficialTeam   Team
+
+	Provider                 User
+	ProviderBeneficialFamily Family
+	ProviderBeneficialTeam   Team
+
+	Place       Place
+	Environment Environment
+
+	RiskLevel int //风险等级
+	RiskCount int //风险计数
+
 }

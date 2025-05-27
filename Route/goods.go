@@ -614,17 +614,17 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	team_id_str := r.PostFormValue("team_id")
 	// Check team_id
-	if team_id_str == "" {
-		Report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
-		return
-	}
-	if team_id_str == "0" || team_id_str == "2" {
+	if team_id_str == "" || team_id_str == "0" {
 		Report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
 		return
 	}
 	team_id, err := strconv.Atoi(team_id_str)
 	if err != nil {
 		Report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
+		return
+	}
+	if team_id == data.TeamIdFreelancer || team_id == data.TeamIdSpaceshipCrew {
+		Report(w, r, "你好，茶博士表示特殊团队的物资今天无法处理，请确认后再试。")
 		return
 	}
 
@@ -954,6 +954,10 @@ func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if team_id == data.TeamIdFreelancer || team_id == data.TeamIdSpaceshipCrew {
+		Report(w, r, "一脸蒙的茶博士，表示任何人都不能处理特殊团队的物资资料，请确认后再试一次。")
+		return
+	}
 	team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team from database")
@@ -1004,7 +1008,7 @@ func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if family_id == 0 {
+	if family_id == data.FamilyIdUnknown {
 		Report(w, r, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认后再试一次。")
 		return
 	}

@@ -104,7 +104,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsMaster = false
 		// 填写页面数据
 		pD.SessUser = data.User{
-			Id:   0,
+			Id:   data.UserId_None,
 			Name: "游客",
 			// 用户足迹
 			Footprint: r.URL.Path,
@@ -210,6 +210,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，彬彬有礼戴着厚厚眼镜片的茶博士居然说，内容太多，茶叶蛋壳都用光了也写不完呀。")
 		return
 	}
+	//读取针对的目标茶议
 	thre_uuid := r.PostFormValue("uuid")
 	//检查uuid是否有效
 	t_thread, err := data.GetThreadByUUID(thre_uuid)

@@ -15,7 +15,7 @@ type Project struct {
 	Uuid        string
 	Title       string
 	Body        string
-	ObjectiveId int //茶围
+	ObjectiveId int //所属茶围
 	UserId      int //开台人，台主，作者
 	CreatedAt   time.Time
 	EditAt      *time.Time
@@ -170,6 +170,9 @@ func (project *Project) IsEdited() bool {
 
 // InvitedTeamIds() 获取一个封闭式茶台的全部受邀请茶团id
 func (project *Project) InvitedTeamIds() (team_id_slice []int, err error) {
+	if project.Class != ClassClosedTeaTable {
+		return nil, fmt.Errorf("project.Class != ClassClosedTeaTable")
+	}
 	rows, err := Db.Query("SELECT team_id FROM project_invited_teams WHERE project_id = $1", project.Id)
 	if err != nil {
 		return
@@ -346,8 +349,11 @@ func (project *Project) UpdateClass() (err error) {
 	return
 }
 
-// IsInvitedMember 检查用户是否是茶台邀请的团队或家庭成员
+// IsInvitedMember 检查用户是否是封闭式茶台邀请的团队或家庭成员
 func (proj *Project) IsInvitedMember(user_id int) (bool, error) {
+	if proj.Class != ClassClosedTeaTable {
+		return false, fmt.Errorf("茶台类型不是封闭式茶台,不存在邀请名单")
+	}
 	team_ids, err := proj.InvitedTeamIds()
 	if err != nil {
 		return false, fmt.Errorf("读取邀请团队ID失败: %v", err)

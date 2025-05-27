@@ -126,6 +126,15 @@
   </div>
 </div>
 
+{{/* 检查是否入围 */}}{{if .ProjectBean.IsApproved }}
+{{ if .IsMaster }}
+        <p>
+          <a class="btn btn-default" href="/v1/see-seek/new?id={{ .ProjectBean.Project.Uuid }}" role="button">启动-茶看</a>
+        </p>
+       
+{{ end }}
+{{ end }}
+
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
 {{ if .IsInput }}
 {{/* 这是新茶议 简化板 撰写模版 */}}
@@ -292,12 +301,12 @@
         <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}" style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
       </span>
 
-      <span style="margin-inline-end: 20px;font-size: smaller;">{{ .CreatedAtDate }}</span>
+      <span style="margin-inline-end: 20px;font-size: smaller;">{{ .Thread.CreatedAtDate }}</span>
       </span>
     </p>
 
     <p>
-      <mark>{{ .Thread.TypeStatus }}</mark>
+      <mark>{{ .Thread.ThreadType }}</mark>
 
       {{/* 检查是否被采纳1 */}}{{if .IsApproved }}
       {{/* 这个主意已被台主或者管理员采纳 */}}

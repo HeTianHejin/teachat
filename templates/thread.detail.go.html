@@ -94,12 +94,12 @@
             </span>
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: right;">{{ .ThreadBean.CreatedAtDate }}</span>
+            <span style="display: block; text-align: right;">{{ .ThreadBean.Thread.CreatedAtDate }}</span>
           </div>
         </div>
       </div>
       <div class="panel-body">
-        <h4><mark>{{ .ThreadBean.Thread.TypeStatus }}</mark>
+        <h4><mark>{{ .ThreadBean.Thread.ThreadType }}</mark>
           {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳1-1 */}}
           {{/* 这个主意已被茶围管理员采纳 */}}
           <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
@@ -326,13 +326,6 @@
       <div class="panel-body">
         <p>{{ .Post.Body }}</p>
 
-        {{ if $.IsMaster }}
-        <p>
-          <a class="btn btn-default" href="/v1/see-seek/new?id={{ .Post.Uuid }}" role="button">启动-茶看</a>
-        </p>
-       
-        {{ end }}
-
       </div>
 
       <div class="panel-footer">
@@ -373,7 +366,7 @@
 
         {{ if $.IsMaster }}
         <span style="margin-inline-end: 30px;">
-          <a href="/v1/see-seek/new?id={{ .Post.Uuid }}">
+          <a href="/v1/post/detail?id={{ .Post.Uuid }}">
             <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span>
           </a>
           {{ .Count }}

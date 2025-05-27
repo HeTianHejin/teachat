@@ -428,7 +428,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 5. 准备页面数据
-	pageData, err := prepareObjectivePageData(objective, sessUserData)
+	obPageData, err := prepareObjectivePageData(objective, sessUserData)
 	if err != nil {
 		util.Debug("准备页面数据失败", "error", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能找到茶围资料，请稍后再试。")
@@ -441,7 +441,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 7. 渲染创建表单
-	RenderHTML(w, &pageData, "layout", "navbar.private", "project.new")
+	RenderHTML(w, &obPageData, "layout", "navbar.private", "project.new")
 }
 
 // GET /v1/project/detail?id=

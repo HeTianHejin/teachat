@@ -245,9 +245,9 @@ func checkCreateProjectPermission(objective data.Objective, userId int, w http.R
 // 检查茶议（thread）创建权限
 func checkCreateThreadPermission(project data.Project, userId int, w http.ResponseWriter, r *http.Request) bool {
 	switch project.Class {
-	case 1: // 开放式茶话会
+	case data.ClassOpenTeaTable: // 开放式茶台
 		return true
-	case 2: // 封闭式茶话会
+	case data.ClassClosedTeaTable: // 封闭式茶台
 		isInvited, err := project.IsInvitedMember(userId)
 		if err != nil {
 			util.Debug("检查邀请名单失败", "error", err)
@@ -522,9 +522,8 @@ func FetchThreadBeanSlice(thread_slice []data.Thread) (ThreadBeanSlice []data.Th
 func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
 	var tB data.ThreadBean
 	tB.Thread = thread
-	tB.Status = thread.Status()
+
 	tB.Count = thread.NumReplies()
-	tB.CreatedAtDate = thread.CreatedAtDate()
 	//作者资料
 	author, err := thread.User()
 	if err != nil {
@@ -1264,16 +1263,22 @@ func Report(w http.ResponseWriter, r *http.Request, msg ...interface{}) {
 }
 
 // Checks if the user is logged in and has a Session, if not err is not nil
-func Session(r *http.Request) (sess data.Session, err error) {
+func Session(r *http.Request) (data.Session, error) {
 	cookie, err := r.Cookie("_cookie")
-	if err == nil {
-		sess = data.Session{Uuid: cookie.Value}
-		if ok, _ := sess.Check(); !ok {
-			err = errors.New("invalid session")
-		}
+	if err != nil {
+		return data.Session{}, fmt.Errorf("cookie not found: %w", err)
 	}
-	return
 
+	sess := data.Session{Uuid: cookie.Value}
+	ok, checkErr := sess.Check()
+	if checkErr != nil {
+		return data.Session{}, fmt.Errorf("session check failed: %w", checkErr)
+	}
+	if !ok {
+		return data.Session{}, errors.New("invalid or expired session")
+	}
+
+	return sess, nil
 }
 
 // parse HTML templates
