@@ -598,17 +598,27 @@ type SeeSeekDetailPageData struct {
 	SessUserDefaultFamily    Family
 	SessUserSurvivalFamilies []Family
 	// SessUserParentMemberFamilySlice []Family
-
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
+	SessUserDefaultPlace  Place
+	SessUserBindPlaces    []Place
 
-	SessUserDefaultPlace Place
-	SessUserBindPlaces   []Place
+	Admin                 User
+	AdminDefaultFamily    Family
+	AdminSurvivalFamilies []Family
+	AdminDefaultTeam      Team
+	AdminSurvivalTeams    []Team
+
+	Master                 User
+	MasterDefaultFamily    Family
+	MasterSurvivalFamilies []Family
+	MasterDefaultTeam      Team
+	MasterSurvivalTeams    []Team
 
 	SeeSeekBean SeeSeekBean
 
-	ObjectiveBean ObjectiveBean
 	ProjectBean   ProjectBean
+	ObjectiveBean ObjectiveBean
 }
 type SeeSeekBean struct {
 	SeeSeek SeeSeek

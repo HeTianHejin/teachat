@@ -1,80 +1,160 @@
 package data
 
-import "time"
+import (
+	"context"
+	"errors"
+	util "teachat/Util"
+	"time"
+)
 
 // 看看，睇睇，
+// 例如一个“问诊设备故障”的交流会谈记录
 type SeeSeek struct {
 	Id          int
 	Uuid        string
 	Name        string
 	Nickname    string
 	Description string
-	Category    int
-	Status      int
-	CreatedAt   time.Time
-	UpdatedAt   *time.Time
+
+	RequesterId       int // 需求方茶团代表人ID（直接负责人），注意需求方是家庭&团队组合
+	RequesterFamilyId int // 需求方家庭id【如果需要声明与家庭无关，选ID=UnknownFamilyID（0）】
+	RequesterTeamId   int // 需求方团队Id【如果需要声明与团队无关，选id=TeamIdFreelancer（2）】
+
+	ProviderId       int // 服务方茶团代表人ID（直接负责人），注意服务方是家庭&团队组合
+	ProviderFamilyId int // 服务方家庭id【如果需要声明与家庭无关，选ID=UnknownFamilyID（0）】
+	ProviderTeamId   int //服务方团队Id【如果需要声明与团队无关，选id=TeamIdFreelancer（2）】
+
+	VerifierId       int // 监护、见证，审核人,监护方代表id（直接负责人）
+	VerifierFamilyId int // 监护方家庭id【如果需要声明与家庭无关，选ID=UnknownFamilyID（0）】
+	VerifierTeamId   int // 监护方团队Id【如果需要声明与团队无关，选id=TeamIdFreelancer（2）】
+
+	PlaceId           int // 事发地点ID
+	EnvironmentId     int //看看环境条件Id
+	RiskSeverityLevel int //看看风险等级
+
+	Category  int //分类：0、公开，1、保密，仅当事家庭/团队可见内容
+	Status    int //状态：0、未开始，1、进行中，2、暂停，3、已终止，4、已结束
+	CreatedAt time.Time
+	UpdatedAt *time.Time
 }
 
 // SeeSeek.Create() // 创建一个SeeSeek
 // 编写postgreSQL语句，插入新纪录，return （err error）
-func (see_seek *SeeSeek) Create() (err error) {
-	statement := "INSERT INTO see_seeks (uuid, name, nickname, description, category, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, uuid"
+func (ss *SeeSeek) Create(ctx context.Context) (err error) {
+	// 设置一个 5 秒的超时
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel() // 确保在函数退出时取消上下文
+
+	statement := `INSERT INTO see_seek (uuid, name, nickname, description, requester_id, requester_family_id, requester_team_id, provider_id, provider_family_id, provider_team_id, verifier_id, verifier_family_id, verifier_team_id, place_id, environment_id, risk_severity_level, category, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING id, uuid`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), see_seek.Name, see_seek.Nickname, see_seek.Description, see_seek.Category, see_seek.Status, time.Now()).Scan(&see_seek.Id, &see_seek.Uuid)
-
+	err = stmt.QueryRowContext(ctx, Random_UUID(), ss.Name, ss.Nickname, ss.Description, ss.RequesterId, ss.RequesterFamilyId, ss.RequesterTeamId, ss.ProviderId, ss.ProviderFamilyId, ss.ProviderTeamId, ss.VerifierId, ss.VerifierFamilyId, ss.VerifierTeamId, ss.PlaceId, ss.EnvironmentId, ss.RiskSeverityLevel, ss.Category, ss.Status, time.Now()).Scan(&ss.Id, &ss.Uuid)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			util.Debug("Query timed out")
+		}
+		return
+	}
 	return
 }
+func (ss *SeeSeek) Get(ctx context.Context) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel() // 确保在函数退出时取消上下文
 
-// SeeSeek.Get() // 读取一个SeeSeek
-func (see_seek *SeeSeek) Get() (err error) {
-	statement := "SELECT id, uuid, name, nickname, description, category, status, created_at, updated_at FROM see_seeks WHERE id=$1"
+	statement := `SELECT id, uuid, name, nickname, description, requester_id, requester_family_id, requester_team_id, provider_id, provider_family_id, provider_team_id, verifier_id, verifier_family_id, verifier_team_id, place_id, environment_id, risk_severity_level, category, status, created_at, updated_at FROM see_seek WHERE id = $1`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(see_seek.Id).Scan(&see_seek.Id, &see_seek.Uuid, &see_seek.Name, &see_seek.Nickname, &see_seek.Description, &see_seek.Category, &see_seek.Status, &see_seek.CreatedAt, &see_seek.UpdatedAt)
+	err = stmt.QueryRowContext(ctx, ss.Id).Scan(&ss.Id, &ss.Uuid, &ss.Name, &ss.Nickname, &ss.Description, &ss.RequesterId, &ss.RequesterFamilyId, &ss.RequesterTeamId, &ss.ProviderId, &ss.ProviderFamilyId, &ss.ProviderTeamId, &ss.VerifierId, &ss.VerifierFamilyId, &ss.VerifierTeamId, &ss.PlaceId, &ss.EnvironmentId, &ss.RiskSeverityLevel, &ss.Category, &ss.Status, &ss.CreatedAt, &ss.UpdatedAt)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			util.Debug("Query timed out")
+		}
 		return
 	}
 	return
 }
+func (ss *SeeSeek) Update(ctx context.Context) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel() // 确保在函数退出时取消上下文
 
-// SeeSeek.GetByUuid() // 读取一个SeeSeek
-func (see_seek *SeeSeek) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, name, nickname, description, category, status, created_at, updated_at FROM see_seeks WHERE uuid=$1"
+	statement := `UPDATE see_seek SET name = $1, nickname = $2, description = $3, requester_id = $4, requester_family_id = $5, requester_team_id = $6, provider_id = $7, provider_family_id = $8, provider_team_id = $9, verifier_id = $10, verifier_family_id = $11, verifier_team_id = $12, place_id = $13, environment_id = $14, risk_severity_level = $15, category = $16, status = $17, updated_at = $18 WHERE id = $19`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(see_seek.Uuid).Scan(&see_seek.Id, &see_seek.Uuid, &see_seek.Name, &see_seek.Nickname, &see_seek.Description, &see_seek.Category, &see_seek.Status, &see_seek.CreatedAt, &see_seek.UpdatedAt)
+	_, err = stmt.ExecContext(ctx, ss.Name, ss.Nickname, ss.Description, ss.RequesterId, ss.RequesterFamilyId, ss.RequesterTeamId, ss.ProviderId, ss.ProviderFamilyId, ss.ProviderTeamId, ss.VerifierId, ss.VerifierFamilyId, ss.VerifierTeamId, ss.PlaceId, ss.EnvironmentId, ss.RiskSeverityLevel, ss.Category, ss.Status, time.Now(), ss.Id)
 	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			util.Debug("Query timed out")
+		}
 		return
 	}
 	return
 }
 
-// SeeSeek.Update() // 更新一个SeeSeek
-func (see_seek *SeeSeek) Update() (err error) {
-	statement := "UPDATE see_seeks SET name=$2, nickname=$3, description=$4, category=$5, status=$6, updated_at=$7 WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(see_seek.Id, see_seek.Name, see_seek.Nickname, see_seek.Description, see_seek.Category, see_seek.Status, time.Now())
-	if err != nil {
-		return
-	}
-	return
+// SeeSeek.CreateAtDate() string
+func (ss *SeeSeek) CreatedDateTime() string {
+	return ss.CreatedAt.Format(FMT_DATE_TIME_CN)
 }
 
-// 与特定团队举行一个结构化交流
+const (
+	SeeSeekCategoryPublic = iota // 公开
+	SeeSeekCategorySecret        // 保密
+)
+
+const (
+	SeeSeekStatusNotStarted = iota // 未开始
+	SeeSeekStatusInProgress        // 进行中
+	SeeSeekStatusPaused            // 已暂停
+	SeeSeekStatusAborted           // 已半途终止（异常）
+	SeeSeekStatusCompleted         // 已完成（顺利结束）
+)
+
+func (see_seek *SeeSeek) StatusString() string {
+	switch see_seek.Status {
+	case SeeSeekStatusNotStarted:
+		return "未开始"
+	case SeeSeekStatusInProgress:
+		return "进行中"
+	case SeeSeekStatusPaused:
+		return "已暂停"
+	case SeeSeekStatusAborted:
+		return "已半途终止"
+	case SeeSeekStatusCompleted:
+		return "已完成"
+	default:
+		return "未知状态"
+	}
+}
+
+// “看看”作业自然（物理）环境条件
+type SeeSeekEnvironment struct {
+	Id            int
+	Uuid          string
+	SeeSeekId     int
+	EnvironmentId int
+	CreatedAt     time.Time
+	UpdatedAt     *time.Time
+}
+
+// “看看”作业场所安全风险，风险因素
+type SeeSeekRisk struct {
+	Id        int
+	Uuid      string
+	SeeSeekId int
+	RiskId    int
+	CreatedAt time.Time
+	UpdatedAt *time.Time
+}
+
+// 团队or家庭与特定团队举行一个结构化交流
 type SeeSeekMaster struct {
 	Id        int
 	Uuid      string
