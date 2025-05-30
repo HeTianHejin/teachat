@@ -33,32 +33,73 @@ const (
 	RoleTaster = "taster"
 )
 
-// const (
-// 	OpenProject   = 1 // 开放式茶台
-// 	ClosedProject = 2 // 封闭式茶台
-// )
+func FetchSeeSeekBean(ss data.SeeSeek) (data.SeeSeekBean, error) {
+	ssb := data.SeeSeekBean{SeeSeek: ss}
 
-// 默认的系统“自由人”$事业茶团
-// 刚注册或者没有声明加入任何$事业团队的茶友，属于未确定的$事业茶团
-// 自由职业者集合也是一个“团队”
-// var FreelancerTeam = data.Team{
-// 	Id:                2,
-// 	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
-// 	Name:              "自由人",
-// 	Mission:           "星际旅行特立独行的自由人，不属于任何$事业茶团。",
-// 	FounderId:         1, //表示系统预设的值
-// 	Class:             0,
-// 	Abbreviation:      "自由人",
-// 	Logo:              "teamLogo",
-// 	SuperiorTeamId:    0,
-// 	SubordinateTeamId: 0,
-// }
+	ssb.IsOpen = ss.Category == data.SeeSeekCategoryPublic
 
-// const (
-// 	data.TeamIdNone         = 0
-// 	SpaceshipCrewId  = 1
-// 	data.TeamIdFreelancer = 2
-// )
+	verifier, err := data.GetUser(ss.VerifierId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.Verifier = verifier
+	verifier_beneficial_family, err := data.GetFamily(ss.VerifierFamilyId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.VerifierBeneficialFamily = verifier_beneficial_family
+	verifier_beneficial_team, err := data.GetTeam(ss.VerifierTeamId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.VerifierBeneficialTeam = verifier_beneficial_team
+
+	requester, err := data.GetUser(ss.RequesterId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.Requester = requester
+	requester_beneficial_family, err := data.GetFamily(ss.RequesterFamilyId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.RequesterBeneficialFamily = requester_beneficial_family
+	requester_beneficial_team, err := data.GetTeam(ss.RequesterTeamId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.RequesterBeneficialTeam = requester_beneficial_team
+
+	provider, err := data.GetUser(ss.ProviderId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.Provider = provider
+	provider_beneficial_family, err := data.GetFamily(ss.ProviderFamilyId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.ProviderBeneficialFamily = provider_beneficial_family
+	provider_beneficial_team, err := data.GetTeam(ss.ProviderTeamId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.ProviderBeneficialTeam = provider_beneficial_team
+
+	place, err := data.GetPlace(ss.PlaceId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.Place = place
+
+	environment, err := data.GetEnvironment(ss.EnvironmentId)
+	if err != nil {
+		return ssb, err
+	}
+	ssb.Environment = environment
+
+	return ssb, nil
+}
 
 func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]data.TeamBean, error) {
 	newSlice := make([]data.TeamBean, 0, len(teamSlice))
@@ -403,6 +444,68 @@ func FetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 	if err != nil {
 		return
 	}
+
+	member_default_family, err := GetLastDefaultFamilyByUserId(s_u.Id)
+	if err != nil {
+		return
+	}
+
+	member_all_families, err := data.GetAllFamilies(s_u.Id)
+	if err != nil {
+		return
+	}
+	//remove member_default_family from member_all_families
+	for i, family := range member_all_families {
+		if family.Id == member_default_family.Id {
+			member_all_families = append(member_all_families[:i], member_all_families[i+1:]...)
+			break
+		}
+	}
+	// 把系统默认的“自由人”家庭资料加入families
+	member_all_families = append(member_all_families, data.UnknownFamily)
+	defaultTeam, err := s_u.GetLastDefaultTeam()
+	if err != nil {
+		return
+	}
+
+	survivalTeams, err := s_u.SurvivalTeams()
+	if err != nil {
+		return
+	}
+	for i, team := range survivalTeams {
+		if team.Id == defaultTeam.Id {
+			survivalTeams = append(survivalTeams[:i], survivalTeams[i+1:]...)
+			break
+		}
+	}
+	// 把系统默认团队资料加入teams
+	survivalTeams = append(survivalTeams, data.FreelancerTeam)
+
+	default_place, err := s_u.GetLastDefaultPlace()
+	if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return
+	}
+
+	places, err = s_u.GetAllBindPlaces()
+	if err != nil {
+		return
+	}
+	if len(places) > 0 {
+		//移除默认地方
+		for i, place := range places {
+			if place.Id == default_place.Id {
+				places = append(places[:i], places[i+1:]...)
+				break
+			}
+		}
+	}
+
+	return s_u, member_default_family, member_all_families, defaultTeam, survivalTeams, default_place, places, nil
+}
+
+func fetchUserRelatedData(user data.User) (s_u data.User, family data.Family, families []data.Family, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
+	// 读取用户资料
+	s_u = user
 
 	member_default_family, err := GetLastDefaultFamilyByUserId(s_u.Id)
 	if err != nil {

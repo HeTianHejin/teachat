@@ -305,7 +305,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		//未登录！游客
 		//准备页面数据
 		oSpD.SessUser = data.User{
-			Id:   0,
+			Id:   data.UserId_None,
 			Name: "游客",
 		}
 		//迭代茶话会队列，把作者属性设置为false
@@ -361,9 +361,9 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch ob.Class {
-	case 1, 2:
+	case data.ClassOpenTeaTalk, data.ClassClosedTeaTalk:
 		break
-	case 10, 20:
+	case data.ClassOpenStrawRing, data.ClassClosedStrawRing:
 		Report(w, r, "你好，这个茶话会需要等待友邻蒙评通过之后才能启用呢。")
 		return
 	default:
@@ -396,7 +396,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		// 准备页面数据
 		oD.IsAuthor = false
 		oD.SessUser = data.User{
-			Id:   0,
+			Id:   data.UserId_None,
 			Name: "游客",
 			// 用户足迹
 			Footprint: r.URL.Path,

@@ -12,7 +12,7 @@ import (
 )
 
 // POST /v1/project/approve
-// 茶围管理员选择某个茶台入围，记录它 --【Tencent ai 协助】
+// 茶话会(茶围)管理员选择某个茶台入围，记录它 --【Tencent ai 协助】
 func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
@@ -66,7 +66,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	}
 	if !is_admin {
 		//不是茶围管理员，无权处理
-		Report(w, r, "你好，茶博士面无表情，说你没有权限处理这个入围操作，请确认。")
+		Report(w, r, "你好，茶博士面无表情，说没有权限处理这个入围操作，请确认。")
 		return
 	}
 
@@ -221,15 +221,15 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 根据茶话会属性判断
 	// 检查一下该茶话会是否草围（待蒙评审核状态）
 	switch t_ob.Class {
-	case 10, 20:
+	case data.ClassOpenStrawRing, data.ClassClosedStrawRing:
 		// 该茶话会是草围,尚未启用，不能新开茶台
 		Report(w, r, "你好，这个茶话会尚未启用。")
 		return
 
-	case 1:
+	case data.ClassOpenTeaTalk:
 		// 该茶话会是开放式茶话会，可以新开茶台
 		// 检查提交的class值是否有效，必须为10或者20
-		if class == 10 {
+		if class == data.ClassOpenStrawRing {
 			// 创建开放式草台
 			if err = new_proj.Create(); err != nil {
 				util.Debug(" Cannot create open project", err)
@@ -237,7 +237,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		} else if class == 20 {
+		} else if class == data.ClassClosedStrawRing {
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !Verify_id_slice_Format(tIds_str) {
@@ -282,7 +282,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case 2:
+	case data.ClassClosedTeaTalk:
 		// 封闭式茶话会
 		// 检查用户是否可以在此茶话会下新开茶台
 		ok, err := t_ob.IsInvitedMember(s_u.Id)
@@ -293,11 +293,11 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		if class == 10 {
+		if class == data.ClassOpenStrawRing {
 			Report(w, r, "你好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
 			return
 		}
-		if class == 20 {
+		if class == data.ClassClosedStrawRing {
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !Verify_id_slice_Format(tIds_str) {
