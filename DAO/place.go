@@ -21,13 +21,37 @@ type Place struct {
 	OccupantUserId int    // 洞主，物业使用者（负责人）ID，如：贾宝玉
 	OwnerUserId    int    // 物业产权登记所有者 如：贾政
 	Level          int    // 等级：0:系统保留, 1：特级（普京的城堡），2：一级（别墅）飞机，3:独栋，4联排，5公寓楼，6保用十年以上亭棚，7保用十年以下棚，8帐篷等临时遮蔽物业
-	Category       int    // 类型 ：0:虚拟空间， 1:私人住宅，2:公共建筑空间，3:户外，4:机舱，5:酒店或商业租赁场所，6:野外
+	Category       int    // // 茶会空间类型 (Tea Gathering Space Categories)0:虚拟空间， 1:私人住宅，2:公共建筑空间，3:户外，4:机舱，5:酒店或商业租赁场所，6:野外
 	IsPublic       bool   // 是否公开
 	IsGovernment   bool   // 是否政府单位
 	UserId         int    // 登记者id
 	CreatedAt      time.Time
 	UpdatedAt      *time.Time
 }
+
+// 场所等级分类 (Place Classification Levels)
+const (
+	PlaceLevelSystemReserved   = iota // 0: 系统保留 | System Reserved
+	PlaceLevelImperial                // 1: 特级（帝王级场所）| Imperial (e.g. royal castles)
+	PlaceLevelLuxury                  // 2: 一级（豪华场所）| Luxury (villas, first-class cabins)
+	PlaceLevelDetached                // 3: 二级（独栋建筑）| Detached Buildings
+	PlaceLevelTownhouse               // 4: 三级（联排建筑）| Townhouses
+	PlaceLevelApartment               // 5: 四级（公寓楼） | Apartment Complexes
+	PlaceLevelPermanentShelter        // 6: 五级（永久性棚亭）| Permanent Shelters (>10yrs)
+	PlaceLevelTemporaryShelter        // 7: 六级（临时棚亭） | Temporary Shelters (<10yrs)
+	PlaceLevelMobile                  // 8: 七级（可移动遮蔽物）| Mobile Shelters (tents etc.)
+)
+
+const (
+	PlaceCategoryVirtual    = iota // 0: 虚拟空间（线上茶会）| Virtual Space
+	PlaceCategoryPrivate           // 1: 私人场所 | Private Residence
+	PlaceCategoryPublic            // 2: 公共空间 | Public Venue
+	PlaceCategoryOutdoor           // 3: 户外自然场所 | Outdoor Natural Space
+	PlaceCategoryTransport         // 4: 交通工具内 | Transport Vehicle
+	PlaceCategoryCommercial        // 5: 商业场所 | Commercial Venue
+	PlaceCategorySpecial           // 6: 特殊场所（洞穴/临时设施）| Special Space
+	PlaceCategorySacred            // 7: 宗教/精神场所（可选扩展）| Sacred Space
+)
 
 const (
 	PlaceIdNone              = 0
@@ -45,8 +69,8 @@ var Place_SpaceshipTeabar = Place{
 	Icon:           "spaceship-teabar",
 	OccupantUserId: UserId_SpaceshipCaptain,
 	OwnerUserId:    UserId_SpaceshipCaptain,
-	Level:          0,
-	Category:       0,
+	Level:          PlaceLevelSystemReserved,
+	Category:       PlaceCategoryVirtual,
 	IsPublic:       true,
 	IsGovernment:   false,
 	UserId:         UserId_SpaceshipCaptain,
@@ -402,6 +426,11 @@ func (p *Place) Get() (err error) {
 	}
 	err = Db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE id = $1", p.Id).
 		Scan(&p.Id, &p.Uuid, &p.Name, &p.Nickname, &p.Description, &p.Icon, &p.OccupantUserId, &p.OwnerUserId, &p.Level, &p.Category, &p.IsPublic, &p.IsGovernment, &p.UserId, &p.CreatedAt, &p.UpdatedAt)
+	return
+}
+func GetPlace(id int) (place Place, err error) {
+	place = Place{Id: id}
+	err = place.Get()
 	return
 }
 
