@@ -12,7 +12,7 @@ import (
 )
 
 // POST /v1/project/approve
-// 茶话会(茶围)管理员选择某个茶台入围，记录它 --【Tencent ai 协助】
+// 茶话会(茶围)管理员选择某个茶台入围，
 func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
@@ -52,18 +52,35 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查用户是否有权限处理这个请求
-	admin_team, err := data.GetTeam(ob.TeamId)
-	if err != nil {
-		util.Debug(" Cannot get team", ob.TeamId, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的团队，请确认后再试。")
-		return
+	is_admin := false
+	if ob.IsPrivate {
+		admin_family, err := data.GetFamily(ob.FamilyId)
+		if err != nil {
+			util.Debug(" Cannot get family", ob.FamilyId, err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶话会举办方，请确认后再试。")
+			return
+		}
+		is_admin, err = admin_family.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot get family member", ob.FamilyId, err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶话会管理成员，请确认后再试。")
+			return
+		}
+	} else {
+		admin_team, err := data.GetTeam(ob.TeamId)
+		if err != nil {
+			util.Debug(" Cannot get team", ob.TeamId, err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+			return
+		}
+		is_admin, err = admin_team.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot get team", ob.TeamId, err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+			return
+		}
 	}
-	is_admin, err := admin_team.IsMember(s_u.Id)
-	if err != nil {
-		util.Debug(" Cannot get team", ob.TeamId, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能找到指定的团队，请确认后再试。")
-		return
-	}
+
 	if !is_admin {
 		//不是茶围管理员，无权处理
 		Report(w, r, "你好，茶博士面无表情，说没有权限处理这个入围操作，请确认。")
@@ -87,9 +104,15 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//报告入围操作成功
-	//Report(w, r, "你好，茶博士微笑，已成功记录入围茶台，请返回页面查看。")
-	http.Redirect(w, r, "/v1/project/detail?uuid="+uuid, http.StatusFound)
+	// 预填充约茶...5部曲
+	if err = data.CreateRequiredThreads(&ob, &pr, &s_u); err != nil {
+		util.Debug(" Cannot create required threads", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
+		return
+	}
+
+	//跳转入围的茶台详情页面
+	http.Redirect(w, r, "/v1/project/detail?id="+uuid, http.StatusFound)
 }
 
 // 处理新建茶台的操作处理器
@@ -631,6 +654,12 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path
 	pD.SessUser.Query = r.URL.RawQuery
+
+	// if is_master {
+	// 	// 茶台管理成员，项目乙方，服务提供商团队成员
+	// 	RenderHTML(w, &pD, "layout", "navbar.private", "project.master")
+	// 	return
+	// }
 
 	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail")
 }

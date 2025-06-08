@@ -14,101 +14,12 @@ import (
 func NewDraftThreadHandle(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		NewDraftThreadGet(w, r)
+		//NewDraftThreadGet(w, r)
 	case http.MethodPost:
 		NewDraftThreadPost(w, r)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
-}
-
-// GET /v1/thread/new?id=
-// GET /v1/thread/new?postid=
-// 处理提交的新茶议草稿，索要表单请求
-func NewDraftThreadGet(w http.ResponseWriter, r *http.Request) {
-	//尝试从http请求中读取用户会话信息
-	s, err := Session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	// 根据会话读取当前用户的信息
-	s_u, s_default_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_all_places, err := FetchSessionUserRelatedData(s)
-	if err != nil {
-		util.Debug("cannot fetch s_u s_teams given session", err)
-		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
-		return
-	}
-
-	var tD data.ThreadDetail
-
-	// 读取用户提交的茶台参数
-	vals := r.URL.Query()
-	uuid := vals.Get("id")
-
-	if uuid == "" {
-		uuid = vals.Get("postid")
-		//读取品味资料
-		post := data.Post{Uuid: uuid}
-		if err = post.Get(); err != nil {
-			util.Debug(" Cannot read post given uuid", err)
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
-			return
-		}
-		tD.QuotePostBean, err = FetchPostBean(post)
-		if err != nil {
-			util.Debug(" Cannot read post given uuid", err)
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
-			return
-		}
-
-		//读取茶台资料
-		project, err := post.Project()
-		if err != nil {
-			util.Debug(" Cannot read project given post", err)
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
-			return
-		}
-		tD.QuoteProjectBean, err = FetchProjectBean(project)
-		if err != nil {
-			util.Debug(" Cannot read project given uuid", err)
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
-			return
-		}
-	} else {
-		tD.ThreadBean.Thread.PostId = 0
-		//读取茶台资料
-		pr := data.Project{Uuid: uuid}
-		if err = pr.GetByUuid(); err != nil {
-			util.Debug(" Cannot read project given uuid", err)
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
-			return
-		}
-		tD.QuoteProjectBean, err = FetchProjectBean(pr)
-		if err != nil {
-			util.Debug(" Cannot read project given uuid", err)
-			Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
-			return
-		}
-	}
-	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
-	if tD.QuoteProjectBean.Project.Class != 1 && tD.QuoteProjectBean.Project.Class != 2 {
-		util.Debug(s_u.Id, "欲查看未经友邻蒙评通过的茶台资料被阻止")
-		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
-		return
-	}
-
-	// 填写页面数据
-
-	tD.SessUser = s_u
-	tD.SessUserDefaultFamily = s_default_family
-	tD.SessUserSurvivalFamilies = s_all_families
-	tD.SessUserDefaultTeam = s_default_team
-	tD.SessUserSurvivalTeams = s_survival_teams
-	tD.SessUserDefaultPlace = s_default_place
-	tD.SessUserBindPlaces = s_all_places
-	// 给请求用户返回新建完整版茶议表单页面
-	RenderHTML(w, &tD, "layout", "navbar.private", "thread.new")
 }
 
 // POST /v1/thread/draft
@@ -122,7 +33,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，闪电茶博士为你极速服务但是迷路了，未能找到你想要的资料。")
+		Report(w, r, "你好，茶博士迷路了，未能找到你想要的资料。")
 		return
 	}
 	s_u, err := sess.User()
@@ -131,13 +42,15 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//读取茶议类型
+
+	//读取茶议表达
 	thre_type, err := strconv.Atoi(r.PostFormValue("type"))
 	if err != nil {
 		util.Debug("Failed to convert type to int", thre_type, err)
 		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
+
 	// 检查ty值是否合法
 	switch thre_type {
 	case data.ThreadTypeIthink, data.ThreadTypeIdea:
@@ -197,7 +110,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 
 	// 检查茶议（thread）创建权限
 	if ok := checkCreateThreadPermission(proj, s_u.Id, w, r); !ok {
-		//Report(w, r, "你好，茶博士居然说,陛下您的大名竟然不在邀请名单上，请确认后再试一次。")
+		Report(w, r, "你好，茶博士居然说,陛下您的大名竟然不在邀请名单上，请确认后再试一次。")
 		return
 	}
 
@@ -264,6 +177,9 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 			TeamId:    team_id,
 			IsPrivate: is_private,
 			FamilyId:  family_id,
+		}
+		if post_id > 0 {
+			draft_thread.Category = data.ThreadCategoryNested
 		}
 		if err = draft_thread.Create(); err != nil {
 			util.Debug(" Cannot create thread draft", err)
@@ -805,7 +721,7 @@ func UpdateThread(w http.ResponseWriter, r *http.Request) {
 			// 修改过的茶议,重置class=0,表示草稿状态，
 			thread.Class = 0
 			//许可修改自己的茶议
-			if err := thread.UpdateTopicAndClass(thread.Body, thread.Class); err != nil {
+			if err := thread.UpdateBodyAndClass(thread.Body, thread.Class); err != nil {
 				util.Debug(" Cannot update thread", err)
 				Report(w, r, "茶博士失魂鱼，未能更新专属茶议，请稍后再试。")
 				return

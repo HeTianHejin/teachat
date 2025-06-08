@@ -338,6 +338,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				PostId:    dThread.PostId,
 				TeamId:    dThread.TeamId,
 				IsPrivate: dThread.IsPrivate,
+				Category:  dThread.Category,
 			}
 			if err = thread.Create(); err != nil {
 				util.Debug("Cannot save thread", err)

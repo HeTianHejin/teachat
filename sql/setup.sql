@@ -374,7 +374,8 @@ create table draft_threads (
   post_id                integer default 0,
   team_id                integer not null default 2,
   is_private             boolean default false,
-  family_id              integer default 0
+  family_id              integer default 0,
+  category               integer default 0
 );
 
 create table threads (
@@ -391,7 +392,8 @@ create table threads (
   type                   integer default 0,
   post_id                integer default 0,
   team_id                integer not null default 2,
-  is_private             boolean default false
+  is_private             boolean default false,
+  category               integer default 0
 );
 
 create table reads (

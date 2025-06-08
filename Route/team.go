@@ -570,6 +570,17 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	//获取茶团资料
 	vals := r.URL.Query()
 	uuid := vals.Get("id")
+
+	if uuid == "" {
+		Report(w, r, "你好，请提交有效的茶团编号，请稍后再试。")
+		return
+	}
+
+	if uuid == data.TeamUUIDFreelancer {
+		Report(w, r, "转会自由人，星际旅行特立独行的自由职业者大集合，不属于任何$事业茶团。")
+		return
+	}
+
 	team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Debug(uuid, " Cannot get team given uuid.")
