@@ -2,7 +2,7 @@
 
 <nav class="navbar navbar-default navbar-fixed-top">
     <div class="container">
-        {{/*  Brand and toggle get grouped for better mobile display  */}}
+        {{/* Brand and toggle get grouped for better mobile display  */}}
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
                 aria-expanded="false">
@@ -14,11 +14,11 @@
             <a class="navbar-brand" href="/v1/">星际茶棚</a>
         </div>
 
-         {{/*  Collect the nav links, forms, and other content for toggling  */}}
+        {{/* Collect the nav links, forms, and other content for toggling  */}}
         <div id="navbar" class="collapse navbar-collapse">
 
             <ul class="nav navbar-nav">
-                
+
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                         aria-expanded="false">我的<span class="caret"></span></a>
@@ -33,26 +33,30 @@
                         <li><a href="/v1/goods/eye_on">宝贝</a></li>
                         <li><a href="/v1/place/my">地盘</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><a href="/v1/user/biography?id={{ .Uuid }}">资料</a></li>
+                        <li><a href="/v1/user/biography?id={{  .Uuid }}">资料</a></li>
                         <li><a href="/v1/logout">退出登录</a></li>
                     </ul>
                 </li>
-                <li><a href="/v1/user/biography?id={{ .Uuid }}">
-                    <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-                    {{ .Name }}
-                    {{if .Gender }}
-                    <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-                    {{ else }}
-                    <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-                    {{ end }}
-                     </a>
-                 </li>
-                {{ if .HasUnreadMessage }}
+
+                <li>
+                    <a href="/v1/user/biography?id={{  .Uuid }}">
+                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+                        {{ .Name }}
+                        {{if .Gender }}
+                        <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+                        {{ else }}
+                        <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+                        {{ end }}
+                    </a>
+                </li>
+                {{ if  .HasUnreadMessage }}
                 <li role="presentation"><a href="/v1/message/accept">
-                    <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
-                    <span class="badge">{{ .GetNewMessageCount }}</span></a></li>
+                        <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+                        <span class="badge">{{ .GetNewMessageCount }}</span></a>
+                </li>
                 {{ else }}
-                {{ end }}
+                {{ end }}       
+         
             </ul>
 
             <div>
@@ -64,11 +68,8 @@
             </div>
 
         </div>{{/* /.nav-collapse  */}}
-    </div>{{/*  /.container */}}
-    
+    </div>{{/* /.container */}}
+
 </nav>
 
 {{ end }}
-
-
-

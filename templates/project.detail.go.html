@@ -6,6 +6,16 @@
       href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}</a>
     @茶话会</li>
   <li class="active"> #{{ .ProjectBean.Project.Id }} @茶台</li>
+  {{ if .IsAdmin }}
+  <li>
+    <span class="label label-info">围主</span>
+  </li>
+    {{ else if .IsMaster }}
+    <li>
+    <span class="label label-warning">台主</span>
+    </li>
+  {{ end }}
+
 </ol>
 
 {{/* 这是某个茶台（项目）的详情页 */}}
@@ -32,7 +42,7 @@
             {{ .ProjectBean.Project.Title }}
 
             {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
-            {{/* 这个主意已被台主或者管理员选中入围 */}}
+            {{/* 这个茶台已被茶围管理员选中入围 */}}
             <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
             {{/* 检查是否入围1 */}}{{ end }}
           </div>
@@ -66,7 +76,6 @@
                 href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
 
             </span>
-            </span>
 
           </div>
         </div>
@@ -95,15 +104,13 @@
         </blockquote>
 
         <p>
-          {{/* 检查是否管理员1，如果是，显示入围按钮图标 */}}{{ if .IsAdmin }}
-          {{/* 检查是否未入围1 */}}{{if not .ProjectBean.IsApproved }}
-          <form class="form" role="form" action="/v1/project/approve" method="post">
+          {{/* 先检查是否茶围管理员，如果是，继续检查是否为未入围，否则显示入围按钮图标 */}}
+          {{ if and .IsAdmin (not .IsApproved) }}
+          <form class="form-inline" action="/v1/project/approve" method="post">
             <input type="hidden" name="uuid" value="{{ .ProjectBean.Project.Uuid }}" />
             <button type="submit" class="btn btn-default btn-sm">入围</button>
           </form>
-          
-          {{/* 检查是否未入围1 */}}{{ end }}
-          {{/* 检查是否管理员1 */}}{{ end }}
+          {{ end }}
         </p>
 
       </div>
@@ -126,86 +133,62 @@
   </div>
 </div>
 
-{{/* 检查是否入围 */}}{{if .ProjectBean.IsApproved }}
-{{ if .IsMaster }}
-        <p>
-          <a class="btn btn-default" href="/v1/see-seek/new?id={{ .ProjectBean.Project.Uuid }}" role="button">启动-茶看</a>
-        </p>
-       
-{{ end }}
-{{ end }}
-
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
 {{ if .IsInput }}
-{{/* 这是新茶议 简化板 撰写模版 */}}
+{{/* 这是新茶议 撰写模版 */}}
 <div class="panel panel-default">
   <div class="panel-heading">
     <i class="bi bi-paint-bucket" style="font-size: 1.5rem;"> 新茶议 </i>
   </div>
   <div class="panel-body">
 
-    <form class="form-horizontal" role="form" action="/v1/thread/draft" method="post">
+    <form class="form-horizontal" action="/v1/thread/draft" method="post">
 
       <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <div class="radio">
-            <label>
-              <input type="radio" name="type" id="ithink" value="0" required />
-              我觉得
-            </label>
-          </div>
-          <div class="radio">
-            <label>
-              <input type="radio" name="type" id="idea" value="1" required />
-              出主意
-            </label>
-          </div>
+        <label class="col-sm-2 control-label">表达</label>
+        <div class="col-sm-10">
+          <label class="radio">
+            <input type="radio" name="type" value="0" required> 我觉得
+          </label>
+          <label class="radio">
+            <input type="radio" name="type" value="1" required> 出主意
+          </label>
         </div>
       </div>
 
       <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="title">标题（2～36字）</label>
-          <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="42" required />
+        <label for="title" class="col-sm-2 control-label">标题</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" name="title" id="title" placeholder="2～36字" minlength="3"
+            maxlength="42" required>
         </div>
       </div>
 
       <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="topic">内容（17～456字）</label>
-          <textarea class="form-control" name="topic" id="topic" rows="3" minlength="17" maxlength="567"
-            required></textarea>
-        </div>
-      </div>
-
-      {{/* 这是project的id提交 */}}
-      <input type="hidden" name="project_id" value="{{ .ProjectBean.Project.Id }}" />
-      {{/* 这是post的id提交 */}}
-      <input type="hidden" name="post_id" value="0" />
-
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <div class="radio">
-            <label>
-              <input type="radio" name="is_private" id="is_private" value="false" checked required />
-              以团队成员身份
-            </label>
-          </div>
-          <div class="radio">
-            <label>
-              <input type="radio" name="is_private" id="is_private" value="true" required />
-              以家庭成员身份
-            </label>
-          </div>
+        <label for="topic" class="col-sm-2 control-label">内容</label>
+        <div class="col-sm-10">
+          <textarea class="form-control" name="topic" id="topic" rows="3" placeholder="17～456字" minlength="17"
+            maxlength="567" required></textarea>
         </div>
       </div>
 
       <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="team_id">选择团队</label>
-          <select name="team_id" class="form-control" id="team_id" required>
-            <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
-            </option>
+        <label class="col-sm-2 control-label">身份</label>
+        <div class="col-sm-10">
+          <label class="radio">
+            <input type="radio" name="is_private" value="false" checked required> 团队成员身份
+          </label>
+          <label class="radio">
+            <input type="radio" name="is_private" value="true" required> 家庭成员身份
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="team_id" class="col-sm-2 control-label">团队</label>
+        <div class="col-sm-10">
+          <select class="form-control" name="team_id" id="team_id" required>
+            <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}</option>
             {{ range .SessUserSurvivalTeams }}
             <option value="{{ .Id }}">{{ .Name }}</option>
             {{ end }}
@@ -214,11 +197,10 @@
       </div>
 
       <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="family_id">选择家庭</label>
-          <select name="family_id" class="form-control" id="family_id" required>
-            <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
-            </option>
+        <label for="family_id" class="col-sm-2 control-label">家庭</label>
+        <div class="col-sm-10">
+          <select class="form-control" name="family_id" id="family_id" required>
+            <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}</option>
             {{ range .SessUserSurvivalFamilies }}
             <option value="{{ .Id }}">{{ .Name }}</option>
             {{ end }}
@@ -226,8 +208,13 @@
         </div>
       </div>
 
-      <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
-        <button type="submit" class="btn btn-default">提交</button>
+      <input type="hidden" name="project_id" value="{{ .ProjectBean.Project.Id }}">
+      <input type="hidden" name="post_id" value="0">
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-default">提交</button>
+        </div>
       </div>
     </form>
   </div>
@@ -276,58 +263,15 @@
 
 </div>
 
-{{/* 以下是此茶台的全部茶议展示 */}}
+{{ if .IsApproved }}
+{{/* 以下是此茶台的“5步茶”茶议展示 */}}
+{{ template "thread_bean_approved" $.ApprovedFiveThreads }}
+{{ end }}
+
+{{/* 以下是此茶台的全部普通茶议展示 */}}
 {{ range .ThreadBeanSlice }}
-<div class="media">
-  <div class="media-left">
-    {{ if .Count }}
-    <span class="badge">{{ .Count }}</span>
-    {{ else }}
-    {{ end }}
-    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
-  </div>
-  <div class="media-body">
-    <p>
-      {{ .Author.Name }}
-      {{if .Author.Gender }}
-      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-      {{ else }}
-      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-      {{ end }}
-      <span style="margin-inline-end: 20px; font-size: smaller;">
-        （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}" style="color: black;">{{ .AuthorFamily.Name }}</a>，
-        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}" style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
-      </span>
-
-      <span style="margin-inline-end: 20px;font-size: smaller;">{{ .Thread.CreatedAtDate }}</span>
-      </span>
-    </p>
-
-    <p>
-      <mark>{{ .Thread.ThreadType }}</mark>
-
-      {{/* 检查是否被采纳1 */}}{{if .IsApproved }}
-      {{/* 这个主意已被台主或者管理员采纳 */}}
-      <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
-      {{/* 检查是否被采纳1 */}}{{ end }}
-
-      <span style="margin-inline-start: 1rem;margin-inline-end: 1rem;">
-        <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
-      </span>
-    </p>
-
-    <p>{{ .Thread.Body }} ...</p>
-
-    <br />
-
-  </div>
-
-</div>
-
+{{ template "thread_bean" . }}
 <hr />
-
 {{ end }}
 
 {{ if .IsOverTwelve }}

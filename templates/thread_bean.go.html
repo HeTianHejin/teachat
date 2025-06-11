@@ -1,0 +1,48 @@
+{{/* 通用茶议展示组件 */}}
+{{ define "thread_bean" }}
+
+<div class="media">
+  <div class="media-left">
+    {{ if .Count }}
+    <span class="badge">{{ .Count }}</span>
+    {{ end }}
+    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
+    </a>
+  </div>
+  <div class="media-body">
+    <p>
+      {{ .Author.Name }}
+      {{if .Author.Gender }}
+      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+      {{ end }}
+      <span style="margin-inline-end: 20px; font-size: smaller;">
+        （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}" style="color: black;">{{ .AuthorFamily.Name }}</a>，
+        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}" style="color: black;">{{ .AuthorTeam.Abbreviation }}</a>）
+      </span>
+      <span style="margin-inline-end: 20px;font-size: smaller;">{{ .Thread.CreatedAtDate }}</span>
+    </p>
+    <p>
+      <mark>{{ .Thread.TypeString }}</mark>
+
+      {{ if .IsApproved }}
+      <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
+      {{ end }}
+
+      <span style="margin-inline-start: 1rem;margin-inline-end: 1rem;">
+
+        <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
+
+        {{ if .IsCompleted }}
+        <span class="label label-success">已完成</span>
+        {{ end }}
+      </span>
+    </p>
+    <p>{{ .Thread.Body }} ...</p>
+    <br />
+  </div>
+</div>
+
+{{ end }}

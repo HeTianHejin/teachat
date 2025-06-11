@@ -14,9 +14,8 @@
 # 日志文件
 *.log
 teachatWeb.log
-# 鹤田河津- debug 
+# 鹤田河津- debug 调试临时文件
 __debug_*
-__debug_bin?????????
 __debug_bin*
 *.jpeg
 *.jpg

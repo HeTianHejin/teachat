@@ -8,6 +8,15 @@
   <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台</li>
   <li><a href="/v1/thread/detail?id={{ .QuoteThreadBean.Thread.Uuid }}">{{ .QuoteThreadBean.Thread.Title }} </a>@茶议</li>
   <li class="active">#{{ .PostBean.Post.Id }} @品味</li>
+   {{ if .IsAdmin }}
+  <li>
+    <span class="label label-info">围主</span>
+  </li>
+    {{ else if .IsMaster }}
+    <li>
+    <span class="label label-warning">台主</span>
+    </li>
+  {{ end }}
 </ol>
 
 {{/* 这是某个 品味 的详情页 */}}
@@ -70,7 +79,7 @@
               
               </span>
             <span style="font-style: italic;">
-              {{ .QuoteThreadBean.Thread.ThreadType }}
+              {{ .QuoteThreadBean.Thread.TypeString }}
               : {{ .QuoteThreadBean.Thread.Title }}
               {{ .QuoteThreadBean.Thread.Body }} ...
             </span>
@@ -231,7 +240,7 @@
     </p>
 
     <h5>
-      <mark>{{ .Thread.ThreadType }}</mark>
+      <mark>{{ .Thread.TypeString }}</mark>
       <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
     </h5>
     <span style="font-size: small; margin-inline-start: 40px;">

@@ -5,6 +5,11 @@
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/objective/square">茶话会</a></li>
   <li class="active">#{{ .ObjectiveBean.Objective.Id }} @茶话会</li>
+  {{ if .IsAdmin }}
+  <li>
+    <span class="label label-info">围主</span>
+  </li>
+  {{ end }}
 </ol>
 
 

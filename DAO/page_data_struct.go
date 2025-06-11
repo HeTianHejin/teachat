@@ -118,7 +118,9 @@ type ProjectDetail struct {
 	SessUserDefaultPlace     Place
 	SessUserBindPlaces       []Place
 
-	ProjectBean ProjectBean //当前浏览茶台资料夹
+	ProjectBean         ProjectBean                //当前浏览茶台资料夹
+	IsApproved          bool                       //是否入围
+	ApprovedFiveThreads ProjectApprovedFiveThreads //入围茶台必备5茶议
 
 	Place    Place //茶台(项目)，活动地方
 	Open     bool
@@ -126,13 +128,21 @@ type ProjectDetail struct {
 
 	QuoteObjectiveBean ObjectiveBean // 引用的茶围
 
-	ThreadBeanSlice []ThreadBean // project下所有Threads和作者资料荚
+	ThreadBeanSlice []ThreadBean // project下普通Threads和作者资料荚
 
 	ThreadCount           int // project下所有Threads个数
 	ThreadIsApprovedCount int //project（茶台）已采纳茶议数量
 
 	IsOverTwelve bool //是否超过12个
+}
 
+// 入围茶台必备5茶议
+type ProjectApprovedFiveThreads struct {
+	ThreadBeanAppointment     ThreadBean
+	ThreadBeanSeeSeekSlice    []ThreadBean
+	ThreadBeanSuggestionSlice []ThreadBean
+	ThreadBeanGoodsSlice      []ThreadBean
+	ThreadBeanHandcraftSlice  []ThreadBean
 }
 
 // 茶议草稿页面渲染数据
@@ -185,10 +195,12 @@ type ThreadBean struct {
 	Count  int // 附属对象计数
 
 	Author       User   // 作者
-	AuthorFamily Family //作者发帖时选择的&家庭茶团
-	AuthorTeam   Team   // 作者创建发帖时选择的$团队
+	AuthorFamily Family //作者发帖时选择的&受益家庭
+	AuthorTeam   Team   // 作者创建发帖时选择的$责任团队
 
 	IsApproved bool // 主张方案是否被采纳
+
+	IsCompleted bool // 主张方案是否完成
 }
 
 // 用于跟贴详情页面渲染
@@ -638,8 +650,4 @@ type SeeSeekBean struct {
 
 	Place       Place
 	Environment Environment
-
-	RiskLevel int //风险等级
-	RiskCount int //风险计数
-
 }
