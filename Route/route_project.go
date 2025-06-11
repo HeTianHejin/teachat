@@ -479,7 +479,12 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pr := data.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.Debug(" Cannot read project", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			util.Debug("Project not found by uuid: ", uuid)
+			Report(w, r, "你好，茶博士说：茶台不存在，请检查茶台ID。")
+			return
+		}
+		util.Debug(" Cannot read project by uuid: ", uuid, ", error: ", err)
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
@@ -491,7 +496,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pD.ProjectBean, err = FetchProjectBean(pr)
 	if err != nil {
-		util.Debug(" Cannot read project", pr.Uuid, err)
+		util.Debug(" Cannot read projectbean by project:", pr.Uuid, err)
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
@@ -518,24 +523,24 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 截短此引用的茶围内容以方便展示
 	pD.QuoteObjectiveBean.Objective.Body = Substr(pD.QuoteObjectiveBean.Objective.Body, 168)
 
-	var tb_slice []data.ThreadBean
-	// 读取全部茶议资料
-	thread_slice, err := pD.ProjectBean.Project.Threads()
+	var tb_normal_slice []data.ThreadBean
+	ctx := r.Context()
+	// 读取普通茶议资料
+	thread_normal_slice, err := pD.ProjectBean.Project.ThreadsNormal(ctx)
 	if err != nil {
 		util.Debug(" Cannot read threads given project", err)
 		Report(w, r, "你好，满头大汗的茶博士说，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。")
 		return
 	}
 
-	len := len(thread_slice)
 	// .ThreadCount数量
-	pD.ThreadCount = len
+	pD.ThreadCount = pr.NumReplies()
 	// 检测pageData.ThreadSlice数量是否超过一打dozen
-	if len > 12 {
+	if pD.ThreadCount > 12 {
 		pD.IsOverTwelve = true
 	} else {
 		//测试时都设为true显示效果 🐶🐶🐶
-		pD.IsOverTwelve = true
+		pD.IsOverTwelve = false
 	}
 	// .ThreadIsApprovedCount数量
 	ta := data.ThreadApproved{
@@ -544,13 +549,85 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.ThreadIsApprovedCount = ta.CountByProjectId()
 
 	// 获取茶议和作者相关资料荚
-	tb_slice, err = FetchThreadBeanSlice(thread_slice)
+	tb_normal_slice, err = FetchThreadBeanSlice(thread_normal_slice)
 	if err != nil {
 		util.Debug(" Cannot read thread-bean slice", err)
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中...")
 		return
 	}
-	pD.ThreadBeanSlice = tb_slice
+	pD.ThreadBeanSlice = tb_normal_slice
+
+	pD.IsApproved = pD.ProjectBean.IsApproved
+
+	//如果入围，读取入围必备5threads
+	if pD.IsApproved {
+		threadAppointment, err := pr.ThreadAppointment(ctx)
+		if err != nil {
+			util.Debug(" Cannot read thread appointment", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议预约信息，请稍后再试。")
+			return
+		}
+		threadAppointmentBean, err := FetchThreadBean(threadAppointment)
+		if err != nil {
+			util.Debug(" Cannot read thread appointment bean", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议预约信息，请稍后再试。")
+			return
+		}
+		pD.ApprovedFiveThreads.ThreadBeanAppointment = threadAppointmentBean
+		threadSeeSeek_slice, err := pr.ThreadSeeSeek(ctx)
+		if err != nil {
+			util.Debug(" Cannot read thread see seek", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议看看信息，请稍后再试。")
+			return
+		}
+		threadSeeSeekBean_slice, err := FetchThreadBeanSlice(threadSeeSeek_slice)
+		if err != nil {
+			util.Debug(" Cannot read thread see seek bean slice", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议看看信息，请稍后再试。")
+			return
+		}
+		pD.ApprovedFiveThreads.ThreadBeanSeeSeekSlice = threadSeeSeekBean_slice
+		threadSuggestion, err := pr.ThreadSuggestion(ctx)
+		if err != nil {
+			util.Debug(" Cannot read thread suggestion", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议建议信息，请稍后再试。")
+			return
+		}
+		threadSuggestionBean_slice, err := FetchThreadBeanSlice(threadSuggestion)
+		if err != nil {
+			util.Debug(" Cannot read thread suggestion bean slice", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议建议信息，请稍后再试。")
+			return
+		}
+		pD.ApprovedFiveThreads.ThreadBeanSuggestionSlice = threadSuggestionBean_slice
+		threadGoods_slice, err := pr.ThreadGoods(ctx)
+		if err != nil {
+			util.Debug(" Cannot read thread goods", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议物资信息，请稍后再试。")
+			return
+		}
+		threadGoodsBean_slice, err := FetchThreadBeanSlice(threadGoods_slice)
+		if err != nil {
+			util.Debug(" Cannot read thread goods bean slice", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议物资信息，请稍后再试。")
+			return
+		}
+		pD.ApprovedFiveThreads.ThreadBeanGoodsSlice = threadGoodsBean_slice
+		threadHandcraft_slice, err := pr.ThreadHandcraft(ctx)
+		if err != nil {
+			util.Debug(" Cannot read thread handcraft", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议手艺信息，请稍后再试。")
+			return
+		}
+		threadHandcraftBean_slice, err := FetchThreadBeanSlice(threadHandcraft_slice)
+		if err != nil {
+			util.Debug(" Cannot read thread handcraft bean slice", err)
+			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议手艺信息，请稍后再试。")
+			return
+		}
+		pD.ApprovedFiveThreads.ThreadBeanHandcraftSlice = threadHandcraftBean_slice
+
+	}
 
 	// 获取茶台项目活动地方
 	pD.Place, err = pD.ProjectBean.Project.Place()
@@ -566,8 +643,9 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		// 未登录，游客
 		// 填写页面数据
 		pD.ProjectBean.Project.PageData.IsAuthor = false
-		pD.IsInput = false
+
 		pD.IsGuest = true
+		pD.IsInput = false
 		pD.IsAdmin = false
 		pD.IsMaster = false
 
@@ -578,7 +656,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.RawQuery,
 		}
 		// 返回给浏览者茶台详情页面
-		RenderHTML(w, &pD, "layout", "navbar.public", "project.detail")
+		RenderHTML(w, &pD, "layout", "navbar.public", "project.detail", "thread_bean_approved", "thread_bean")
 		return
 	}
 
@@ -661,5 +739,5 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail")
+	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail", "thread_bean_approved", "thread_bean")
 }

@@ -375,6 +375,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			//tD.ThreadBean.Thread.AddHitCount()
 			// 填写页面数据
 			tD.ThreadBean.Thread.PageData.IsAuthor = false
+
 			tD.IsGuest = true
 			tD.IsInput = false
 			tD.IsAdmin = false
@@ -390,6 +391,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			//迭代postSlice,标记非品味作者
 			for i := range tD.PostBeanSlice {
 				tD.PostBeanSlice[i].Post.PageData.IsAuthor = false
+
 			}
 
 			//show the thread and the posts展示页面
@@ -430,14 +432,14 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 			tD.IsAdmin, err = checkObjectiveAdminPermission(&objective, s_u.Id)
 			if err != nil {
-				util.Debug(" Cannot check objective admin permission", err)
+				util.Debug(" Cannot check objective admin permission", objective.Id, err)
 				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
 
 			tD.IsMaster, err = checkProjectMasterPermission(&project, s_u.Id)
 			if err != nil {
-				util.Debug(" Cannot check project master permission", err)
+				util.Debug(" Cannot check project master permission", project.Id, err)
 				Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}

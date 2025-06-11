@@ -9,7 +9,15 @@
   <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
   </li>
   <li>#{{ .ThreadBean.Thread.Id }}</li> @茶议
-
+{{ if .IsAdmin }}
+  <li>
+    <span class="label label-info">围主</span>
+  </li>
+    {{ else if .IsMaster }}
+    <li>
+    <span class="label label-warning">台主</span>
+    </li>
+  {{ end }}
 </ol>
 
 {{/* 这是关注这个茶议的总人数 显示 */}}
@@ -99,7 +107,7 @@
         </div>
       </div>
       <div class="panel-body">
-        <h4><mark>{{ .ThreadBean.Thread.ThreadType }}</mark>
+        <h4><mark>{{ .ThreadBean.Thread.TypeString }}</mark>
           {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳1-1 */}}
           {{/* 这个主意已被茶围管理员采纳 */}}
           <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>

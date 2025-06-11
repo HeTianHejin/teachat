@@ -25,7 +25,7 @@ type Thread struct {
 	FamilyId  int  //作者发帖时选择的成员所属家庭id(family_id)
 	TeamId    int  //作者发帖时选择的成员身份所属茶团，$事业团队id。换句话说就是选择那个团队负责？（注意个人身份发言是代表“自由职业者”虚拟茶团）
 	PostId    int  //是否针对某一个品味？默认=0，普通类型针对茶台（project）发布；如果有>0值，则是该品味（post）的ID，是议中议类型。
-	Category  int  //茶议的分类
+	Category  int  //茶议的分类 0:普通，1:嵌套，2:约茶，3:看看，4:建议，5:宝贝，6:手艺
 
 	//仅用于页面渲染，不保存到数据库
 	PageData PublicPData
@@ -366,21 +366,171 @@ func (post *Post) Thread() (thread Thread, err error) {
 	return
 }
 
-// 获取茶台的全部茶议
-func (project *Project) Threads() (threads []Thread, err error) {
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title ,edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = 0 AND project_id = $1 order by edit_at ASC", project.Id)
+// 获取茶台的普通茶议（category=ThreadCategoryNormal）
+func (project *Project) ThreadsNormal(ctx context.Context) ([]Thread, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	const query = `
+        SELECT 
+            id, uuid, body, user_id, created_at, 
+            class, title, edit_at, project_id, 
+            family_id, type, post_id, team_id, 
+            is_private, category
+        FROM threads 
+        WHERE post_id = $1 
+          AND category = $2 
+          AND project_id = $3
+        ORDER BY created_at DESC`
+
+	// 使用预编译语句提高性能
+	stmt, err := Db.Prepare(query)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("准备查询语句失败: %w", err)
 	}
+	defer stmt.Close()
+
+	rows, err := stmt.QueryContext(ctx, PostIdForThread, ThreadCategoryNormal, project.Id)
+	if err != nil {
+		return nil, fmt.Errorf("查询执行失败: %w", err)
+	}
+	defer rows.Close() // 确保在任何情况下都会关闭
+
+	var threads []Thread
 	for rows.Next() {
-		thread := Thread{}
-		if err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category); err != nil {
-			return
+		var thread Thread
+		err := rows.Scan(
+			&thread.Id, &thread.Uuid, &thread.Body,
+			&thread.UserId, &thread.CreatedAt, &thread.Class,
+			&thread.Title, &thread.EditAt, &thread.ProjectId,
+			&thread.FamilyId, &thread.Type, &thread.PostId,
+			&thread.TeamId, &thread.IsPrivate, &thread.Category,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("数据扫描失败: %w", err)
 		}
 		threads = append(threads, thread)
 	}
-	rows.Close()
+
+	// 检查遍历过程中是否出错
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("行遍历出错: %w", err)
+	}
+
+	return threads, nil
+}
+
+// 获取茶台的“约茶”茶议(category=ThreadCategoryAppointment), return (thread Thread, err error)
+func (project *Project) ThreadAppointment(ctx context.Context) (thread Thread, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	err = Db.QueryRowContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryAppointment, project.Id).
+		Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
+
 	return
+}
+
+// 获取茶台的“看看”茶议(category=ThreadCategorySeeSeek), return ([]Thread,error)
+func (project *Project) ThreadSeeSeek(ctx context.Context) (threads []Thread, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategorySeeSeek, project.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var thread Thread
+		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
+		if err != nil {
+			return nil, err
+		}
+		threads = append(threads, thread)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return threads, nil
+}
+
+// 获取茶台的“建议”茶议(category=ThreadCategorySuggestion), return ([]Thread, error)
+func (project *Project) ThreadSuggestion(ctx context.Context) (threads []Thread, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategorySuggestion, project.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var thread Thread
+		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
+		if err != nil {
+			return nil, err
+		}
+		threads = append(threads, thread)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return threads, nil
+}
+
+// 获取茶台的“物资”茶议(category=ThreadCategoryGoods), return ([]Thread, error)
+func (project *Project) ThreadGoods(ctx context.Context) (threads []Thread, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryGoods, project.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var thread Thread
+		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
+		if err != nil {
+			return nil, err
+		}
+		threads = append(threads, thread)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return threads, nil
+}
+
+// 获取茶台的“手艺”茶议(category=ThreadCategoryHandcraft), return ([]Thread, error)
+func (project *Project) ThreadHandcraft(ctx context.Context) (threads []Thread, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryHandcraft, project.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var thread Thread
+		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
+		if err != nil {
+			return nil, err
+		}
+		threads = append(threads, thread)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return threads, nil
 }
 
 func (t *Thread) IsEdited() bool {

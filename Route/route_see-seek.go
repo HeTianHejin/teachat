@@ -129,7 +129,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	is_member, err = admin_team.IsMember(admin_id_int)
 	if err != nil {
 		util.Debug(" Cannot check admin-team-member given team_id, admin_id", admin_team.Id, admin_id_int, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议团队会员资格资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议管理团队会员资格资料。")
 		return
 	}
 	// if not member, return
