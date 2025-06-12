@@ -10,15 +10,13 @@
   <li>
     <span class="label label-info">围主</span>
   </li>
-    {{ else if .IsMaster }}
-    <li>
+  {{ else if .IsMaster }}
+  <li>
     <span class="label label-warning">台主</span>
-    </li>
+  </li>
   {{ end }}
 
 </ol>
-
-{{/* 这是某个茶台（项目）的详情页 */}}
 
 {{/* 这是某个茶台（项目）的地址显示 */}}
 <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;">
@@ -31,65 +29,76 @@
   <span style="margin-inline-end: 2rem;">叩击 404</span>
 </div>
 
+{{/* 这是某个茶台（项目）的详情页 */}}
 <div class="media" style="margin-top: 20px;">
+
+  <div class="media-left">
+    <a href="/v1/user/biography?id={{ .ProjectBean.Author.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .ProjectBean.Author.Avatar }}.jpeg" alt="个人头像">
+    </a>
+    <div style="text-align: center; margin-top: 10px;">
+      <a href="/v1/user/biography?id={{ .ProjectBean.Author.Uuid }}">{{ .ProjectBean.Author.Name }}</a>
+      {{if .ProjectBean.Author.Gender }}
+      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+      {{ end }}
+
+    </div>
+  </div>
 
   <div class="media-body">
 
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="row">
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .ProjectBean.Project.Title }}
 
-            {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
-            {{/* 这个茶台已被茶围管理员选中入围 */}}
-            <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
-            {{/* 检查是否入围1 */}}{{ end }}
-          </div>
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
 
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block;text-align: center;font-size: smaller;">
-              {{ if .Open }}
-              <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
-              <span class="label label-info">开放式
-              </span>
-              {{ else }}
-              <i class="bi-disc-fill" style="font-size: 2rem; color: black;"></i>
-              <span class="label label-default">封闭式
-              </span>
-              {{ end }}
-              {{ .ProjectBean.CreatedAtDate }}
-            </span>
-          </div>
+            <span style="font-size: smaller;">
 
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: right; font-size: smaller;">
-              <a href="/v1/user/biography?id={{ .ProjectBean.Author.Uuid }}">{{ .ProjectBean.Author.Name }}</a>
-              {{if .ProjectBean.Author.Gender }}
-              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-              {{ end }}
               （<a
                 href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
               <a
                 href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
 
             </span>
+          </div>
 
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+            <span>
+              {{ if .Open }}
+              <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
+              <span class="label label-info">开放式茶台</span>
+              {{ else }}
+              <i class="bi-disc-fill" style="font-size: 2rem; color: black;"></i>
+              <span class="label label-default">封闭式茶台</span>
+              {{ end }}
+            </span>
+
+            <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ProjectBean.CreatedAtDate }}</span>
           </div>
         </div>
       </div>
 
       <div class="panel-body">
+        <h4>
+          {{ .ProjectBean.Project.Title }}
 
-        <p style="white-space: pre-wrap;">{{ .ProjectBean.Project.Body }}</p>
+          {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
+          {{/* 这个茶台已被茶围管理员选中入围 */}}
+          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+          {{/* 检查是否入围1 */}}{{ end }}
+        </h4>
+        <p style="white-space: pre-wrap;">
+          {{ .ProjectBean.Project.Body }}
+        </p>
 
-        <blockquote>
-          <p style="font-size: small;"><a href="/v1/objective/detail?id={{ .QuoteObjectiveBean.Objective.Uuid }}">
+        <blockquote style="font-size: xx-small;">
+          <p><a href="/v1/objective/detail?id={{ .QuoteObjectiveBean.Objective.Uuid }}">
               <span class="label label-default">茶围</span></a><span
               style="margin-inline-start: 1rem;">{{ .QuoteObjectiveBean.Objective.Body }} ...</span></p>
-          <footer style="font-size: small;">
+          <footer>
             <cite>
               <a href="/v1/user/biography?id={{ .QuoteObjectiveBean.Author.Uuid }}"
                 style="color: black;">{{ .QuoteObjectiveBean.Author.Name }}</a>
@@ -114,6 +123,7 @@
         </p>
 
       </div>
+
       <div class="panel-footer">
         <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">惦记 14</span>
         <span style="margin-inline-end: 2rem;">电眼 22</span>

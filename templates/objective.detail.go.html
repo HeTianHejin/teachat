@@ -1,6 +1,5 @@
 {{ define "content" }}
 
-
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/objective/square">茶话会</a></li>
@@ -12,84 +11,74 @@
   {{ end }}
 </ol>
 
+{{/* 这是某个茶围的详情页 */}}
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">
+      <img class="img-circle" src="/v1/static/image/{{ .ObjectiveBean.Author.Avatar }}.jpeg" alt="个人头像">
+    </a>
+    <div style="text-align: center; margin-top: 10px;">
+      <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
+      {{if .ObjectiveBean.Author.Gender }}
+      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+      {{ end }}
 
-{{/* 这是某个茶话会的详情页 */}}
-
-
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <div class="row">
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        {{ .ObjectiveBean.Objective.Title }}
-      </div>
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <p class="text-center">
-          
-          {{ if .ObjectiveBean.Open }}
-          <i class="bi-egg" style="font-size: 1rem;"></i>
-          
-          <span class="label label-success" style="margin-inline-end: 1rem;">开放式
-            {{ else }}
-            <i class="bi-egg-fill" style="font-size: 2rem;"></i>
-            
-            <span class="label label-default" style="margin-inline-end: 1rem;">封闭式
-              {{ end }}
-            </span>
-            
-            {{ .ObjectiveBean.CreatedAtDate }}
-        </p>
-      </div>
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <span style="display: block; text-align: right; font-size: smaller;">
-         
-         
-          <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
-          {{if .ObjectiveBean.Author.Gender }}
-          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-          {{ else }}
-          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-          {{ end }}
-          <span style="font-size: smaller;">
-          （<a href="/v1/family/detail?id={{ .ObjectiveBean.AuthorFamily.Uuid }}">
-              {{ .ObjectiveBean.AuthorFamily.Name }}</a>，
-          <a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}">
-              {{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a>）
-            </span>
-        </span>
-      </div>
     </div>
   </div>
-  <div class="panel-body">
-    <p style="white-space: pre-wrap;">
-      {{ .ObjectiveBean.Objective.Body }}
-    </p>
-  </div>
-  <div class="panel-footer">
-    {{/* 这是面板注脚 */}}
-    {{/* 这是面板注脚中的茶台计数 */}}
-    <i class="bi-disc" style="font-size: 2rem;"> {{ .ObjectiveBean.Count }}</i>
-    
-    {{ if .ObjectiveBean.Objective.IsEdited }}
-    {{/* 编辑过（补充内容），显示编辑时间  */}}
-    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-    <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .ObjectiveBean.Objective.EditAtDate }} </span>
-    {{ else }}
-    {{/* 没有编辑过（补充内容）则留空白 */}}
-    {{ end }}
-    <div class="pull-right">
-      <a href="#"></a>
+
+  <div class="media-body">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="font-size: smaller;">
+            （<a href="/v1/family/detail?id={{ .ObjectiveBean.AuthorFamily.Uuid }}">
+              {{ .ObjectiveBean.AuthorFamily.Name }}</a>，
+            <a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}">
+              {{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a>）
+          </div>
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="font-size: smaller;">
+            {{ if .ObjectiveBean.Open }}
+            <i class="bi-egg" style="font-size: 1.5rem;"></i>
+            <span class="label label-success">开放式茶围</span>
+            {{ else }}
+            <i class="bi-egg-fill" style="font-size: 1.5rem;"></i>
+            <span class="label label-default">封闭式茶围</span>
+            {{ end }}
+           
+              <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ObjectiveBean.CreatedAtDate }}</span>
+           
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <h4>{{ .ObjectiveBean.Objective.Title }}</h4>
+
+        <p style="white-space: pre-wrap;">
+          {{ .ObjectiveBean.Objective.Body }}
+        </p>
+
+      </div>
+      <div class="panel-footer">
+        <i class="bi-disc" style="font-size: 1.5rem;"> {{ .ObjectiveBean.Count }}</i>
+
+        {{ if .ObjectiveBean.Objective.IsEdited }}
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .ObjectiveBean.Objective.EditAtDate }} </span>
+        {{ end }}
+      </div>
     </div>
   </div>
 </div>
-
-
 
 <hr />
 {{/* 检查当前浏览用户是否可以创建新茶台-开始 */}}
 {{ if .IsGuest }}
 <p class="text text-center">
   <a href="/v1/login?footprint={{ .SessUser.Footprint }}&query={{ .SessUser.Query }}">
-  <i class="bi-airplane" style="font-size: 2rem; color: black;"></i>
+    <i class="bi-airplane" style="font-size: 2rem; color: black;"></i>
     登船</a> 以开始聊天品茶 </p>
 {{ else }}
 
@@ -119,9 +108,6 @@
 {{/* 检查当前浏览用户是否可以创建新茶台-结束 */}}
 <hr />
 
-
-
-
 {{/* 这个茶话会的全部茶台逐一展示 */}}
 {{ range .ProjectBeanSlice }}
 
@@ -141,22 +127,22 @@
         <a href="/v1/project/detail?id={{ .Project.Uuid }}">
           <img class="media-object" src="/v1/static/bootstrap-icons/disc-fill.svg" alt="茶台封面" width=40 height=40>
         </a>
-       {{ end }}
+        {{ end }}
 
-       {{/* 这是某个茶台（项目）的地址显示 */}}
-              
-                <i class="bi-geo" style="font-size: 1rem; color: black;"></i><span style="font-size: smaller;">{{ .Place.Name }}</span>
-              
+        {{/* 这是某个茶台（项目）的地址显示 */}}
+
+        <i class="bi-geo" style="font-size: 1rem; color: black;"></i><span
+          style="font-size: smaller;">{{ .Place.Name }}</span>
+
       </div>
-
 
       <div class="media-body">
         <p>
           <h5>
-              <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+            <a href="/v1/project/detail?id={{ .Project.Uuid }}">
               {{ .Project.Title }}
             </a>
-              </h5>
+          </h5>
 
           {{/* 检查是否入围1 */}}{{if .IsApproved }}
           {{/* 这个主意已被台主或者管理员选中入围 */}}
@@ -184,7 +170,7 @@
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
               （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）
+              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）
             </span>
           </span>
 
