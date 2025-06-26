@@ -63,15 +63,15 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//根据查询类型操作
 	var fPD data.SearchPageData
 
 	//初始化获取结果为零记录
 	fPD.IsEmpty = true
 
+	//根据查询类型操作
 	switch class_int {
-	case 0:
-		//查找茶友，user
+	case data.SearchTypeUserNameOrEmail:
+		//按花名或者邮箱查找茶友，user
 
 		//用户可能提交了一个电子邮箱地址，如果是，我们需要先通过电子邮箱地址查找用户
 		//检查keyword是否是电子邮箱地址
@@ -91,7 +91,6 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-
 			user_slice, err := data.SearchUserByNameKeyword(keyword)
 			if err != nil {
 				util.Debug(keyword, " Cannot search user by keyword")
@@ -108,7 +107,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-	case 10:
+	case data.SearchTypeUserId:
 		//按user_id查询茶友
 		keyword_int, err := strconv.Atoi(keyword)
 		if err != nil {
@@ -133,7 +132,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-	case 1:
+	case data.SearchTypeTeamAbbr:
 		//查询，茶团简称，team.abbreviation
 		team_slice, err := data.SearchTeamByAbbreviation(keyword)
 		if err != nil {
@@ -151,7 +150,55 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.IsEmpty = false
 			}
 		}
-	case 5:
+	case data.SearchTypeThreadTitle:
+		//查询，茶话标题，thread.title
+		thread_slice, err := data.SearchThreadByTitle(keyword)
+		if err != nil {
+			util.Debug(" Cannot search thread by title", err)
+		}
+		if len(thread_slice) >= 1 {
+			thread_bean_slice, err := FetchThreadBeanSlice(thread_slice)
+			if err != nil {
+				util.Debug(" Cannot fetch thread bean slice given thread_slice", err)
+			}
+			fPD.Count = len(thread_slice)
+			fPD.ThreadBeanSlice = thread_bean_slice
+			fPD.IsEmpty = false
+		}
+
+	case data.SearchTypeObjectiveTitle:
+		//查询，茶话会标题，objective.title
+		objective_slice, err := data.SearchObjectiveByTitle(keyword, 9)
+		if err != nil {
+			util.Debug(" Cannot search objective by title", err)
+		}
+		if len(objective_slice) >= 1 {
+			objective_bean_slice, err := FetchObjectiveBeanSlice(objective_slice)
+			if err != nil {
+				util.Debug(" Cannot fetch objective bean slice given objective_slice", err)
+			}
+			fPD.Count = len(objective_slice)
+			fPD.ObjectiveBeanSlice = objective_bean_slice
+			fPD.IsEmpty = false
+		}
+
+	case data.SearchTypeProjectTitle:
+		//按茶台标题查询
+		project_slice, err := data.SearchProjectByTitle(keyword, 9)
+		if err != nil {
+			util.Debug(" Cannot search project by title", err)
+		}
+		if len(project_slice) >= 1 {
+			project_bean_slice, err := FetchProjectBeanSlice(project_slice)
+			if err != nil {
+				util.Debug(" Cannot fetch project bean slice given project_slice", err)
+			}
+			fPD.Count = len(project_slice)
+			fPD.ProjectBeanSlice = project_bean_slice
+			fPD.IsEmpty = false
+		}
+
+	case data.SearchTypePlaceName:
 		//查询品茶地点 place
 		place_slice, err := data.FindPlaceByName(keyword)
 		if err != nil {
