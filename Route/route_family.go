@@ -449,11 +449,12 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	}
 
 	child := r.PostFormValue("child")
-	if child == "yes" {
+	switch child {
+	case "yes":
 		new_family.HasChild = true
-	} else if child == "no" {
+	case "no":
 		new_family.HasChild = false
-	} else {
+	default:
 		Report(w, r, "你好，茶博士摸摸头，&家庭茶团是否有孩子？看不懂提交内容，未能创建新茶团。")
 		return
 	}

@@ -48,11 +48,13 @@ type PublicPData struct {
 
 // 某个茶话会详情页面渲染
 type ObjectiveDetail struct {
-	SessUser  User // 当前会话用户
-	IsAuthor  bool // 是否为作者
-	IsAdmin   bool // 是否为管理员
-	IsGuest   bool // 是否为游客
-	IsInvited bool // 是否受邀请
+	SessUser User // 当前会话用户
+	//IsAuthor   bool // 是否为作者
+	IsAdmin    bool // 是否为管理员
+	IsMaster   bool // 是否为管理员
+	IsVerifier bool // 是否为见证员
+	IsGuest    bool // 是否为游客
+	IsInvited  bool // 是否受邀请茶友
 
 	SessUserDefaultFamily    Family
 	SessUserSurvivalFamilies []Family
@@ -67,6 +69,7 @@ type ObjectiveDetail struct {
 	SessUserDefaultPlace Place
 	SessUserBindPlaces   []Place
 
+	Author           User          // 作者
 	ObjectiveBean    ObjectiveBean // 该茶话会资料夹
 	ProjectBeanSlice []ProjectBean // objective下所有projects
 }
@@ -109,6 +112,7 @@ type ProjectDetail struct {
 	SessUser                 User   // 当前会话用户
 	IsAdmin                  bool   // 是否为茶围管理员
 	IsMaster                 bool   // 是否为茶台管理员
+	IsVerifier               bool   // 是否为见证员
 	IsGuest                  bool   // 是否为游客
 	IsInput                  bool   // 是否需要显示输入面板
 	SessUserDefaultFamily    Family //当前会话用户默认&家庭茶团
@@ -119,6 +123,7 @@ type ProjectDetail struct {
 	SessUserBindPlaces       []Place
 
 	ProjectBean         ProjectBean                //当前浏览茶台资料夹
+	Author              User                       // 作者
 	IsApproved          bool                       //是否入围
 	ApprovedFiveThreads ProjectApprovedFiveThreads //入围茶台必备5茶议
 
@@ -587,14 +592,14 @@ type SearchPageData struct {
 	SessUser User
 
 	IsEmpty bool //查询结果为空
+	Count   int  //查询结果个数
 
-	Count int //查询结果个数
-
-	UserBeanSlice []UserBean //茶友（用户）资料夹队列
-
-	TeamBeanSlice []TeamBean //茶团资料夹队列
-	//ThreadBeanSlice   []ThreadBean
-	PlaceSlice []Place //品茶地点集合
+	UserBeanSlice      []UserBean //茶友（用户）资料夹队列
+	TeamBeanSlice      []TeamBean //茶团资料夹队列
+	ThreadBeanSlice    []ThreadBean
+	ObjectiveBeanSlice []ObjectiveBean
+	ProjectBeanSlice   []ProjectBean
+	PlaceSlice         []Place //品茶地点集合
 }
 
 // 新建“看看”页面数据

@@ -171,9 +171,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
 				return
 			}
-			if ob.Class == 10 {
+			switch ob.Class {
+			case 10:
 				ob.Class = 31
-			} else if ob.Class == 20 {
+			case 20:
 				ob.Class = 32
 			}
 			// 更新茶话会，友邻蒙评未通过！
@@ -191,9 +192,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
-			if pr.Class == 10 {
+			switch pr.Class {
+			case 10:
 				pr.Class = 31
-			} else if pr.Class == 20 {
+			case 20:
 				pr.Class = 32
 			}
 			// 更新茶台属性，
@@ -239,9 +241,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚比刻苦奋斗更有用？")
 				return
 			}
-			if team.Class == 10 {
+			switch team.Class {
+			case 10:
 				team.Class = 31
-			} else if team.Class == 20 {
+			case 20:
 				team.Class = 32
 			}
 			if err = team.UpdateClass(); err != nil {
@@ -266,11 +269,12 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
 				return
 			}
-			if ob.Class == 10 {
+			switch ob.Class {
+			case 10:
 				ob.Class = 1
-			} else if ob.Class == 20 {
+			case 20:
 				ob.Class = 2
-			} else {
+			default:
 				//非法class值
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
@@ -292,11 +296,12 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
 			}
-			if pr.Class == 10 {
+			switch pr.Class {
+			case 10:
 				pr.Class = 1
-			} else if pr.Class == 20 {
+			case 20:
 				pr.Class = 2
-			} else {
+			default:
 				//非法class值
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
 				return
@@ -330,7 +335,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			thread := data.Thread{
 				Body:      dThread.Body,
 				UserId:    dThread.UserId,
-				Class:     1,
+				Class:     dThread.Class,
 				Title:     dThread.Title,
 				ProjectId: dThread.ProjectId,
 				FamilyId:  dThread.FamilyId,
@@ -382,9 +387,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚，比刻苦奋斗有用？")
 				return
 			}
-			if team.Class == 10 {
+			switch team.Class {
+			case 10:
 				team.Class = 1
-			} else if team.Class == 20 {
+			case 20:
 				team.Class = 2
 			}
 			// 更新团队属性，友邻蒙评已通过！
@@ -442,9 +448,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，满头大汗的茶博士请教你，错里错以错劝哥哥，是什么意思？")
 				return
 			}
-			if group.Class == 10 {
+			switch group.Class {
+			case 10:
 				group.Class = 1
-			} else if group.Class == 20 {
+			case 20:
 				group.Class = 2
 			}
 			// 更新，友评已通过！

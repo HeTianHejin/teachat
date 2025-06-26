@@ -330,3 +330,14 @@ func SubtractUserMessageCount(user_id int) error {
 	return mesC.Update()
 
 }
+
+// 查询类型常量
+const (
+	SearchTypeUserNameOrEmail = 0  // 按用户名查询
+	SearchTypeTeamAbbr        = 1  // 按团队简称查询
+	SearchTypeThreadTitle     = 2  // 按茶议标题查询
+	SearchTypeObjectiveTitle  = 3  // 按茶围名称查询
+	SearchTypeProjectTitle    = 4  // 按茶台名称查询
+	SearchTypePlaceName       = 5  // 按茶室地方名称查询
+	SearchTypeUserId          = 10 // 按用户id查询
+)

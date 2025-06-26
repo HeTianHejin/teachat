@@ -107,8 +107,7 @@ func main() {
 	// defined in route_thread.go
 	mux.HandleFunc("/v1/thread/draft", route.NewDraftThreadHandle)
 	mux.HandleFunc("/v1/thread/detail", route.ThreadDetail)
-	mux.HandleFunc("/v1/thread/edit", route.EditThread)
-	mux.HandleFunc("/v1/thread/update", route.UpdateThread)
+	mux.HandleFunc("/v1/thread/supplement", route.HandleThreadSupplement)
 	mux.HandleFunc("/v1/thread/approve", route.ThreadApprove)
 	//mux.HandleFunc("/v1/thread/plus", route.PlusThread)
 

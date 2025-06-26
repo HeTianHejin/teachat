@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// 茶约
 type ThreadAppointment struct {
 	ID              int
 	ProjectID       int

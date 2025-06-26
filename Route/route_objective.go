@@ -376,6 +376,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
+	oD.Author = oD.ObjectiveBean.Author
 	//fetch public projects
 	project_slice, err := ob.GetPublicProjects()
 	if err != nil {
@@ -394,7 +395,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//未登录！
 		// 准备页面数据
-		oD.IsAuthor = false
+		//oD.IsAuthor = false
 		oD.SessUser = data.User{
 			Id:   data.UserId_None,
 			Name: "游客",
@@ -409,7 +410,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsAdmin = false
 
 		//配置公开导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail")
+		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "avatar_name_gender", "sess_capacity")
 		return
 	}
 	//已经登录！
@@ -444,15 +445,15 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	//检测u.Id == o.UserId是否这个茶话会作者
 	if s_u.Id == oD.ObjectiveBean.Author.Id {
 		//是作者
-		oD.IsAuthor = true
+		//oD.IsAuthor = true
 		oD.IsAdmin = true
 
 		//配置私有导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")
+		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "avatar_name_gender", "sess_capacity")
 		return
 	} else {
 		//不是茶围的作者
-		oD.IsAuthor = false
+		//oD.IsAuthor = false
 
 		//检测当前用户是否是管理员 =这个茶话会所属团队or家庭的成员
 		is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
@@ -464,7 +465,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsAdmin = is_admin
 
 		//配置私有导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail")
+		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "avatar_name_gender", "sess_capacity")
 		return
 	}
 

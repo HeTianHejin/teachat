@@ -431,3 +431,20 @@ func (ob *Objective) IsInvitedMember(user_id int) (ok bool, err error) {
 
 	return
 }
+
+// SearchObjectiveByTitle(keyword) 通过标题搜索茶话会,返回 []Objective, 限量limit个
+func SearchObjectiveByTitle(keyword string, limit int) (objectives []Objective, err error) {
+	rows, err := Db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE title LIKE $1 ORDER BY created_at DESC LIMIT $2", "%"+keyword+"%", limit)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		objective := Objective{}
+		if err = rows.Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.FamilyId, &objective.Cover, &objective.TeamId, &objective.IsPrivate); err != nil {
+			return
+		}
+		objectives = append(objectives, objective)
+	}
+	rows.Close()
+	return
+}

@@ -260,7 +260,7 @@ func (t *Thread) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), t.Body, t.UserId, time.Now(), t.Class, t.Title, t.ProjectId, t.FamilyId, t.Type, t.PostId, t.TeamId, t.IsPrivate).Scan(&t.Id, &t.Uuid, &t.CreatedAt)
+	err = stmt.QueryRow(Random_UUID(), t.Body, t.UserId, time.Now(), t.Class, t.Title, t.ProjectId, t.FamilyId, t.Type, t.PostId, t.TeamId, t.IsPrivate, t.Category).Scan(&t.Id, &t.Uuid, &t.CreatedAt)
 	if err != nil {
 		return
 	}
@@ -342,6 +342,10 @@ func HotThreads(limit int) (threads []Thread, err error) {
 
 // Get a thread by the UUID
 func GetThreadByUUID(uuid string) (thread Thread, err error) {
+	if uuid == "" {
+		err = fmt.Errorf("uuid is empty")
+		return
+	}
 	thread = Thread{}
 	err = Db.QueryRow("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE uuid = $1", uuid).
 		Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
@@ -610,4 +614,21 @@ func (t *Thread) CreateInTx(tx *sql.Tx) error {
 		return fmt.Errorf("数据库事务创建Thread失败: %w", err)
 	}
 	return nil
+}
+
+// SearchThreadByTitle(keyword) 根据关键字搜索茶议，返回 []Thread，限制limit条数9
+func SearchThreadByTitle(keyword string) (threads []Thread, err error) {
+	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE title LIKE $1 ORDER BY created_at DESC LIMIT 9", "%"+keyword+"%")
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		var thread Thread
+		if err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category); err != nil {
+			return
+		}
+		threads = append(threads, thread)
+	}
+	rows.Close()
+	return
 }

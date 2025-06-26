@@ -423,7 +423,7 @@ var TeamProperty = map[int]string{
 	32: "已婉拒闭团",
 }
 
-// 根据给出的关键词（keyword），查询相似的team.Abbreviation，返回 []team,err
+// 根据给出的团队简称关键词（keyword），查询相似的team.Abbreviation，返回 []team,err，限制返回结果数量为9
 func SearchTeamByAbbreviation(keyword string) ([]Team, error) {
 	teams := []Team{}
 	rows, err := Db.Query("SELECT * FROM teams WHERE abbreviation LIKE $1 LIMIT 9", "%"+keyword+"%")
@@ -455,6 +455,14 @@ func (udteam *UserDefaultTeam) Create() (err error) {
 
 // GetLastDefaultTeam() 根据user.Id从user_default_teams表和teams表，获取用户最后记录的1个team
 func (user *User) GetLastDefaultTeam() (team Team, err error) {
+	// 如果用户没有设置默认$事业茶团，则返回系统预设的“自由人”$事业茶团
+	count, err := user.SurvivalTeamsCount()
+	if err != nil {
+		return Team{}, err
+	}
+	if count == 0 {
+		return FreelancerTeam, nil
+	}
 	team = Team{}
 	err = Db.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.superior_team_id, teams.subordinate_team_id FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -473,6 +481,14 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err 
 // SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团,
 // team.class = 1 or 2, team_members.status = 1
 func (user *User) SurvivalTeams() ([]Team, error) {
+	count, err := user.SurvivalTeamsCount()
+	if err != nil {
+		return nil, err
+	}
+	if count == 0 {
+		return []Team{}, nil
+	}
+
 	query := `
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.superior_team_id, teams.subordinate_team_id
         FROM teams
@@ -513,8 +529,7 @@ func (user *User) SurvivalTeamsCount() (count int, err error) {
         WHERE teams.class IN ($1, $2) AND team_members.user_id = $3 AND team_members.status = $4`
 
 	err = Db.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, MemberStatusActive).Scan(&count)
-	//减记自由人$事业茶团计数
-	//count = count - 1
+
 	return
 }
 
