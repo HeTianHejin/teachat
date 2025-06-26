@@ -4,19 +4,21 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }} </a>@茶话会
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
+    </a>@茶话会
   </li>
   <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
   </li>
   <li>#{{ .ThreadBean.Thread.Id }}</li> @茶议
-{{ if .IsAdmin }}
+  {{ if .IsAdmin }}
   <li>
     <span class="label label-info">围主</span>
   </li>
-    {{ else if .IsMaster }}
-    <li>
+  {{ else if .IsMaster }}
+  <li>
     <span class="label label-warning">台主</span>
-    </li>
+  </li>
   {{ end }}
 </ol>
 
@@ -33,15 +35,11 @@
         {{ .ThreadBean.Count }}</i>
     </a>
   </span>
-  {{ if .ThreadBean.Thread.IsEdited }}
-  {{/* 这是有编辑过 */}}
-  <span style="margin-inline-start: 2rem;">
-    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-    {{ .ThreadBean.Thread.EditAtDate }}
-  </span>
-  {{ else }}
-  {{/* 没有“追加”编辑过，留空白 */}}
-  {{ end }}
+
+  <span style="margin-inline-end: 2rem;">个人 4</span>
+  <span style="margin-inline-end: 2rem;">团队 1</span>
+  <span style="margin-inline-end: 2rem;">家庭 3</span>
+
 </div>
 
 {{/* 左右侧立场的人数比较 */}}
@@ -76,6 +74,12 @@
     <a href="/v1/user/biography?id={{ .ThreadBean.Author.Uuid }}">
       <img class="img-circle" src="/v1/static/image/{{ .ThreadBean.Author.Avatar }}.jpeg" alt="个人头像">
     </a>
+     {{ .ThreadBean.Author.Name }}
+            {{if .ThreadBean.Author.Gender }}
+            <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+            {{ end }}
   </div>
 
   <div class="media-body">
@@ -83,12 +87,7 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .ThreadBean.Author.Name }}
-            {{if .ThreadBean.Author.Gender }}
-            <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-            {{ else }}
-            <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-            {{ end }}
+           
             <span style="font-size: smaller;">
               （<a
                 href="/v1/family/detail?id={{ .ThreadBean.AuthorFamily.Uuid }}">{{ .ThreadBean.AuthorFamily.Name }}</a>，
@@ -107,14 +106,16 @@
         </div>
       </div>
       <div class="panel-body">
-        <h4><mark>{{ .ThreadBean.Thread.TypeString }}</mark>
+        <mark>{{ .ThreadBean.Thread.TypeString }}</mark>
+
+        <h4>
           {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳1-1 */}}
           {{/* 这个主意已被茶围管理员采纳 */}}
           <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
           {{ end }}{{/* 检查是否被采纳1-2 */}}
           {{ .ThreadBean.Thread.Title }}
         </h4>
-        <span style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</span>
+        <p style="white-space: pre-wrap;">{{ .ThreadBean.Thread.Body }}</p>
 
         {{ if .ThreadBean.Thread.Type }}{{/* 检查是否是出主意1-1 */}}
 
@@ -137,10 +138,11 @@
 
         {{ if .ThreadBean.Thread.PostId }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePostBean.Post.Uuid }}"
-              style="margin-inline-end: 1rem;"><span class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
+          <p style="font-size: xx-small;"><a href="/v1/post/detail?id={{ .QuotePostBean.Post.Uuid }}"
+              style="margin-inline-end: 1rem;"><span
+                class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
           </p>
-          <footer style="font-size: small;">
+          <footer style="font-size: xx-small;">
             <a href="/v1/user/biography?id={{ .QuotePostBean.Author.Uuid }}"
               style="color: black;">{{ .QuotePostBean.Author.Name }}</a>
             {{if .QuotePostBean.Author.Gender }}
@@ -159,11 +161,12 @@
 
         {{ else }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}"><span
+          <p style="font-size: xx-small;"><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}"><span
                 class="label label-default">茶台</span></a>{{ .QuoteProjectBean.Project.Body }} ...</p>
-          <footer style="font-size: small;">
+          <footer style="font-size: xx-small;">
 
-            <cite title="Source Title"> <a
+            <cite title="Source Title">
+              <a
                 href="/v1/user/biography?id={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
               {{if .QuoteProjectBean.Author.Gender }}
               <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
@@ -175,16 +178,31 @@
                   href="/v1/family/detail?id={{ .QuoteProjectBean.AuthorFamily.Uuid }}">{{ .QuoteProjectBean.AuthorFamily.Name }}</a>，
                 <a
                   href="/v1/team/detail?id={{ .QuoteProjectBean.AuthorTeam.Uuid }}">{{ .QuoteProjectBean.AuthorTeam.Abbreviation }}</a>）
-              </span></cite>
+              </span>
+            </cite>
           </footer>
         </blockquote>
         {{ end }}
       </div>
 
       <div class="panel-footer">
-        <span style="margin-inline-end: 2rem;">个人 4</span>
-        <span style="margin-inline-end: 2rem;">团队 1</span>
-        <span style="margin-inline-end: 2rem;">家庭 3</span>
+        {{ if .ThreadBean.Thread.IsEdited }}
+        {{/* 这是有编辑过 */}}
+        <span style="margin-inline-start: 2rem;">
+          <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+          {{ .ThreadBean.Thread.EditAtDate }}
+        </span>
+        {{ else }}
+        {{/* 没有“追加”编辑过，留空白 */}}
+        {{ if .IsAdmin }}{{/* 检查是否茶围管理员2-1，如果是，显示编辑图标链接 */}}
+         <span style="font-size: normal; margin-inline-end: 30px;">
+          <a href="/v1/thread/update?id={{ .ThreadBean.Thread.Uuid }}">
+            <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+            加水
+          </a>
+        </span>
+        {{ end }}{{/* 检查是否茶围管理员2-2 */}}
+        {{ end }}
       </div>
     </div>
   </div>
@@ -297,6 +315,12 @@
     <a href="/v1/user/biography?id={{ .Author.Uuid }}">
       <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
     </a>
+    {{ .Author.Name }}
+    {{if .Author.Gender }}
+    <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+    {{ else }}
+    <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+    {{ end }}
   </div>
 
   <div class="media-body">
@@ -306,13 +330,7 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="font-size: small;">
-              {{ .Author.Name }}
-              {{if .Author.Gender }}
-              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-              {{ end }}
+            <span style="font-size: x-small;">
               （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
               <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
             </span>
@@ -352,7 +370,7 @@
           </a> {{ .Post.EditAtDate }}
         </span>
         {{ else }}
-        {{/* 没有“加水”编辑过 */}}
+        {{/* 没有“加水”编辑过,显示“加水”编辑图标 */}}
         <span style="font-size: smaller; margin-inline-end: 30px;">
           <a href="/v1/post/edit?id={{ .Post.Uuid }}">
             <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
@@ -380,7 +398,6 @@
           {{ .Count }}
         </span>
         {{ end }}
-
 
       </div>
 
@@ -500,6 +517,12 @@
       <a href="/v1/user/biography?id={{ .Author.Uuid }}">
         <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
       </a>
+      {{ .Author.Name }}
+      {{if .Author.Gender }}
+      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+      {{ end }}
     </div>
 
     <div class="media-body">
@@ -510,12 +533,7 @@
           <div class="row">
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
               <span style="font-size: small;">
-                {{ .Author.Name }}
-                {{if .Author.Gender }}
-                <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-                {{ else }}
-                <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-                {{ end }}
+
                 （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
                 <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
               </span>

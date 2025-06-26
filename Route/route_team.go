@@ -518,20 +518,22 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 			return
 		}
-		last_default_team, err := s_u.GetLastDefaultTeam()
-		if err != nil {
-			util.Debug(" Cannot get last default team", err)
-			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
-			return
+		if len(teamBeanSlice) > 1 {
+			//置顶默认团队
+			last_default_team, err := s_u.GetLastDefaultTeam()
+			if err != nil {
+				util.Debug(" Cannot get last default team", err)
+				Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+				return
+			}
+			teamBeanSlice, err = moveDefaultTeamToFront(teamBeanSlice, last_default_team.Id)
+			if err != nil {
+				util.Debug(" Cannot move default team to front", err)
+				Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+				return
+			}
 		}
-		//置顶默认团队
-		tbs, err := moveDefaultTeamToFront(teamBeanSlice, last_default_team.Id)
-		if err != nil {
-			util.Debug(" Cannot move default team to front", err)
-			Report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
-			return
-		}
-		tS.TeamBeanSlice = tbs
+		tS.TeamBeanSlice = teamBeanSlice
 	}
 
 	RenderHTML(w, &tS, "layout", "navbar.private", "teams.joined", "teams.public")

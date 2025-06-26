@@ -252,7 +252,8 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	case data.ClassOpenTeaTalk:
 		// 该茶话会是开放式茶话会，可以新开茶台
 		// 检查提交的class值是否有效，必须为10或者20
-		if class == data.ClassOpenStrawRing {
+		switch class {
+		case data.ClassOpenStrawRing:
 			// 创建开放式草台
 			if err = new_proj.Create(); err != nil {
 				util.Debug(" Cannot create open project", err)
@@ -260,7 +261,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		} else if class == data.ClassClosedStrawRing {
+		case data.ClassClosedStrawRing:
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !Verify_id_slice_Format(tIds_str) {
@@ -300,7 +301,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
-		} else {
+		default:
 			Report(w, r, "你好，茶博士摸摸头，说看不懂拟开新茶台是否封闭式，请确认。")
 			return
 		}
@@ -500,6 +501,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
+	pD.Author = pD.ProjectBean.Author
 
 	// 准备页面数据
 	if pD.ProjectBean.Project.Class == data.ClassOpenTeaTable {
@@ -656,7 +658,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.RawQuery,
 		}
 		// 返回给浏览者茶台详情页面
-		RenderHTML(w, &pD, "layout", "navbar.public", "project.detail", "thread_bean_approved", "thread_bean")
+		RenderHTML(w, &pD, "layout", "navbar.public", "project.detail", "thread_bean_approved", "thread_bean", "avatar_name_gender", "sess_capacity")
 		return
 	}
 
@@ -739,5 +741,5 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail", "thread_bean_approved", "thread_bean")
+	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail", "thread_bean_approved", "thread_bean", "avatar_name_gender", "sess_capacity")
 }

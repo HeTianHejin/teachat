@@ -1,0 +1,17 @@
+{{ define "sess_capacity" }}
+
+{{/* 会话身份 */}}
+{{ if and (not .IsMaster) (not .IsVerifier) (not .IsAdmin) }}
+      <span class="label label-default">茶友</span>
+      {{ else }}
+          {{ if .IsAdmin }}
+          <span class="label label-warning">围主</span>
+          {{ else if .IsMaster }}
+          <span class="label label-warning">台主</span>
+          {{ else if .IsVerifier }}
+          <span class="label label-warning">见证</span>
+          {{ end }}
+
+      {{ end }}
+
+{{ end }}

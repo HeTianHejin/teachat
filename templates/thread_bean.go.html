@@ -9,12 +9,19 @@
     <a href="/v1/user/biography?id={{ .Author.Uuid }}">
       <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
     </a>
-    {{ .Author.Name }}
-    {{if .Author.Gender }}
-    <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-    {{ else }}
-    <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-    {{ end }}
+
+    <div style="text-align: center; margin-top: 10px;">
+      <a href="/v1/user/biography?id={{ .Author.Uuid }}">
+        {{ .Author.Name }}
+      </a>
+      {{if .Author.Gender }}
+      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+      {{ else }}
+      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+      {{ end }}
+
+    </div>
+
   </div>
   <div class="media-body">
     <p>

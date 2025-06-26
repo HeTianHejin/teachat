@@ -4,28 +4,19 @@
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/objective/square">茶话会</a></li>
   <li class="active">#{{ .ObjectiveBean.Objective.Id }} @茶话会</li>
-  {{ if .IsAdmin }}
   <li>
-    <span class="label label-info">围主</span>
+    {{ template "sess_capacity" . }}
   </li>
-  {{ end }}
 </ol>
 
 {{/* 这是某个茶围的详情页 */}}
 <div class="media">
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .ObjectiveBean.Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
-    <div style="text-align: center; margin-top: 10px;">
-      <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
-      {{if .ObjectiveBean.Author.Gender }}
-      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-      {{ else }}
-      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-      {{ end }}
 
-    </div>
+    {{/* 个人头像和名字和性别 */}}
+    {{ template "avatar_name_gender" . }}
+
+
   </div>
 
   <div class="media-body">
@@ -46,9 +37,9 @@
             <i class="bi-egg-fill" style="font-size: 1.5rem;"></i>
             <span class="label label-default">封闭式茶围</span>
             {{ end }}
-           
-              <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ObjectiveBean.CreatedAtDate }}</span>
-           
+
+            <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ObjectiveBean.CreatedAtDate }}</span>
+
           </div>
         </div>
       </div>
@@ -130,9 +121,14 @@
         {{ end }}
 
         {{/* 这是某个茶台（项目）的地址显示 */}}
+        <div style="text-align: center; margin-top: 10px;">
 
-        <i class="bi-geo" style="font-size: 1rem; color: black;"></i><span
-          style="font-size: smaller;">{{ .Place.Name }}</span>
+          <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
+          <span style="font-size: smaller;">
+            <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
+
+          </span>
+        </div>
 
       </div>
 
