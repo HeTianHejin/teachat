@@ -1,0 +1,31 @@
+
+{{ define "component_thread_bean_approved" }}
+
+{{/* 这个模版专用于已入围的茶议5部曲展示 */}}
+
+  {{ with .ThreadBeanAppointment }}
+    {{ template "component_thread_bean" . }}
+    {{ end }}
+    <hr />
+
+  {{ range .ThreadBeanSeeSeekSlice }}
+    {{ template "component_thread_bean" . }}
+    <hr />
+  {{ end }}
+
+  {{ range .ThreadBeanSuggestionSlice }}
+    {{ template "component_thread_bean" . }}
+    <hr />
+  {{ end }}
+
+  {{ range .ThreadBeanGoodsSlice }}
+    {{ template "component_thread_bean" . }}
+    <hr />
+  {{ end }}
+
+  {{ range .ThreadBeanHandcraftSlice }}
+    {{ template "component_thread_bean" . }}
+    <hr />
+  {{ end }}
+
+{{ end }}

@@ -168,7 +168,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.ThreadBeanSlice = thread_bean_slice
 			fPD.IsEmpty = false
 		}
-		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "thread_bean")
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_thread_bean")
 		return
 
 	case data.SearchTypeObjectiveTitle:
@@ -214,7 +214,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.PlaceSlice = place_slice
 			fPD.IsEmpty = false
 		}
-		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "place.media-object")
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_place")
 		return
 
 	default:

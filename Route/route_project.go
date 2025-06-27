@@ -658,7 +658,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.RawQuery,
 		}
 		// 返回给浏览者茶台详情页面
-		RenderHTML(w, &pD, "layout", "navbar.public", "project.detail", "thread_bean_approved", "thread_bean", "avatar_name_gender", "sess_capacity")
+		RenderHTML(w, &pD, "layout", "navbar.public", "project.detail", "component_thread_bean_approved", "component_thread_bean", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
 
@@ -741,5 +741,5 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail", "thread_bean_approved", "thread_bean", "avatar_name_gender", "sess_capacity")
+	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail", "component_thread_bean_approved", "component_thread_bean", "component_avatar_name_gender", "component_sess_capacity")
 }

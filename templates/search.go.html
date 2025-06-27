@@ -98,21 +98,21 @@
 
 {{ range .TeamBeanSlice }}
 {{/* 这是查找茶团（团队）结果展示 */}}
-{{ template "team.media-object" . }}
+{{ template "component_team" . }}
 <hr />
 {{ end }}{{/* 这是查找到的茶团结果队列迭代结束 */}}
 
 
 {{/* 以下是查询结果，茶台的简要展示 */}}
 {{ range .ThreadBeanSlice }}
-{{ template "thread_bean" . }}
+{{ template "component_thread_bean" . }}
 <hr />
 {{ end }}{{/* 这是查找到的茶台结果队列迭代结束 */}}
 
 
 {{ range .PlaceSlice }}{{/* 这是查找到的 品茶地点 结果队列迭代-开始 */}}
 <hr />
-{{ template "place.media-object" . }}
+{{ template "component_place" . }}
 <div style="margin: 1rem;">
   {{/* 显示收藏功能按钮  */}}
   <a class="btn btn-default" href="/v1/place/collect?id={{ .Id }}" role="button">

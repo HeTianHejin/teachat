@@ -5,7 +5,7 @@
   <li><a href="/v1/objective/square">茶话会</a></li>
   <li class="active">#{{ .ObjectiveBean.Objective.Id }} @茶话会</li>
   <li>
-    {{ template "sess_capacity" . }}
+    {{ template "component_sess_capacity" . }}
   </li>
 </ol>
 
@@ -14,7 +14,7 @@
   <div class="media-left">
 
     {{/* 个人头像和名字和性别 */}}
-    {{ template "avatar_name_gender" . }}
+    {{ template "component_avatar_name_gender" . }}
 
 
   </div>

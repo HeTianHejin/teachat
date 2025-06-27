@@ -410,7 +410,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsAdmin = false
 
 		//配置公开导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "avatar_name_gender", "sess_capacity")
+		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
 	//已经登录！
@@ -449,7 +449,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsAdmin = true
 
 		//配置私有导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "avatar_name_gender", "sess_capacity")
+		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	} else {
 		//不是茶围的作者
@@ -465,7 +465,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsAdmin = is_admin
 
 		//配置私有导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "avatar_name_gender", "sess_capacity")
+		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
 

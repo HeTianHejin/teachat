@@ -250,7 +250,7 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 	}
 	pL.PlaceSlice = places
 	pL.SessUser = s_u
-	RenderHTML(w, &pL, "layout", "navbar.private", "places.my", "place.media-object")
+	RenderHTML(w, &pL, "layout", "navbar.private", "places.my", "component_place")
 }
 
 // GET  /v1/place/detail?id=
@@ -296,5 +296,5 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		pD.IsAuthor = false
 	}
-	RenderHTML(w, &pD, "layout", "navbar.private", "place.detail", "place.media-object")
+	RenderHTML(w, &pD, "layout", "navbar.private", "place.detail", "component_place")
 }

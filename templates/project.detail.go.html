@@ -7,7 +7,7 @@
     @茶话会</li>
   <li class="active"> #{{ .ProjectBean.Project.Id }} @茶台</li>
   <li>
-    {{ template "sess_capacity" . }}
+    {{ template "component_sess_capacity" . }}
   </li>
   
 
@@ -28,7 +28,7 @@
 <div class="media" style="margin-top: 20px;">
 
   <div class="media-left">
-   {{ template "avatar_name_gender" . }}
+   {{ template "component_avatar_name_gender" . }}
   </div>
 
   <div class="media-body">
@@ -259,12 +259,12 @@
 
 {{ if .IsApproved }}
 {{/* 以下是此茶台的“5步茶”茶议展示 */}}
-{{ template "thread_bean_approved" $.ApprovedFiveThreads }}
+{{ template "component_thread_bean_approved" $.ApprovedFiveThreads }}
 {{ end }}
 
 {{/* 以下是此茶台的全部普通茶议展示 */}}
 {{ range .ThreadBeanSlice }}
-{{ template "thread_bean" . }}
+{{ template "component_thread_bean" . }}
 <hr />
 {{ end }}
 
