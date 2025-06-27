@@ -410,12 +410,12 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		RenderHTML(w, &tS, "layout", "navbar.public", "teams.open", "teams.public")
+		RenderHTML(w, &tS, "layout", "navbar.public", "teams.open", "component_teams_public")
 		return
 	}
 	sUser, _ := s.User()
 	tS.SessUser = sUser
-	RenderHTML(w, &tS, "layout", "navbar.private", "teams.open", "teams.public")
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.open", "component_teams_public")
 
 }
 
@@ -444,12 +444,12 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		RenderHTML(w, &tS, "layout", "navbar.public", "teams.closed", "teams.public")
+		RenderHTML(w, &tS, "layout", "navbar.public", "teams.closed", "component_teams_public")
 		return
 	}
 	tS.SessUser = u
 
-	RenderHTML(w, &tS, "layout", "navbar.private", "teams.closed", "teams.public")
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.closed", "component_teams_public")
 
 }
 
@@ -480,7 +480,7 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ts.SessUser = s_u
-	RenderHTML(w, &ts, "layout", "navbar.private", "teams.hold", "teams.public")
+	RenderHTML(w, &ts, "layout", "navbar.private", "teams.hold", "component_teams_public")
 }
 
 // GET /v1/teams/joined
@@ -536,7 +536,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		tS.TeamBeanSlice = teamBeanSlice
 	}
 
-	RenderHTML(w, &tS, "layout", "navbar.private", "teams.joined", "teams.public", "team.media-object")
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.joined", "component_teams_public", "component_team")
 }
 
 // GET /v1/teams/employed
@@ -563,7 +563,7 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
-	RenderHTML(w, &ts, "layout", "navbar.private", "teams.employed", "teams.public", "team.media-object")
+	RenderHTML(w, &ts, "layout", "navbar.private", "teams.employed", "component_teams_public", "component_team")
 }
 
 // GET /v1/team/detail?id=

@@ -150,7 +150,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.IsEmpty = false
 			}
 		}
-		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "team.media-object")
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_team")
 		return
 
 	case data.SearchTypeThreadTitle:

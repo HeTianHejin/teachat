@@ -395,7 +395,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			}
 
 			//show the thread and the posts展示页面
-			RenderHTML(w, &tD, "layout", "navbar.public", "thread.detail")
+			RenderHTML(w, &tD, "layout", "navbar.public", "thread.detail", "component_post_left", "component_post_right")
 			return
 		} else {
 			//非法访问未开放的话题？
@@ -461,7 +461,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				}
 
 				//展示撰写者视角茶议详情页面
-				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail")
+				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_post_left", "component_post_right")
 				return
 			} else {
 				//不是茶议撰写者
@@ -512,7 +512,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				}
 
 				//展示非撰写者视角茶议详情页面
-				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail")
+				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_post_left", "component_post_right")
 				return
 			}
 		} else {
