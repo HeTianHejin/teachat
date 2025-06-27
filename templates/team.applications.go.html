@@ -25,36 +25,7 @@
 
 <hr />
 
-<div class="media">
-    <div class="media-left">
-      <a href="/v1/user/biography?id={{ .Author.Uuid }}">
-        <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
-      </a>
-    </div>
-
-    <div class="media-body">
-    <h5 class="media-heading">
-      {{ .Author.Name }}
-        <span  style="font-size: small;">
-          {{if .Author.Gender }}
-          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-          {{ else }}
-          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-          {{ end }}
-      </span>
-      
-      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a></span>
-
-      <span style="font-style: italic;">< {{ .Author.Email }} ></span>
-    </h5>
-     <p>正文预览：</p>
-    <p>{{ .MemberApplication.Content }}...</p>
-    <p>时间：{{ .CreatedAtDate }}</p>
-    
-    <p><strong>状态：{{ .Status }}</strong>
-      <a href="/v1/team_member/application/review?id={{ .MemberApplication.Uuid }}"> 审查 >></a></p>
-    </div>
-  </div>
+{{template "team.media-object" . }}
 
   <hr />
 

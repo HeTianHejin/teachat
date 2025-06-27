@@ -250,7 +250,7 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 	}
 	pL.PlaceSlice = places
 	pL.SessUser = s_u
-	RenderHTML(w, &pL, "layout", "navbar.private", "places.my")
+	RenderHTML(w, &pL, "layout", "navbar.private", "places.my", "place.media-object")
 }
 
 // GET  /v1/place/detail?id=
@@ -260,7 +260,7 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	place_uuid := r.FormValue("id")
 
 	//如果uuid为茶棚系统值"x",这是一个占位值，跳转首页
-	if place_uuid == "x" {
+	if place_uuid == data.PlaceUuidSpaceshipTeabar {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}
@@ -296,5 +296,5 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		pD.IsAuthor = false
 	}
-	RenderHTML(w, &pD, "layout", "navbar.private", "place.detail")
+	RenderHTML(w, &pD, "layout", "navbar.private", "place.detail", "place.media-object")
 }

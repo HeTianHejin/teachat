@@ -536,7 +536,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		tS.TeamBeanSlice = teamBeanSlice
 	}
 
-	RenderHTML(w, &tS, "layout", "navbar.private", "teams.joined", "teams.public")
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.joined", "teams.public", "team.media-object")
 }
 
 // GET /v1/teams/employed
@@ -563,7 +563,7 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
-	RenderHTML(w, &ts, "layout", "navbar.private", "teams.employed", "teams.public")
+	RenderHTML(w, &ts, "layout", "navbar.private", "teams.employed", "teams.public", "team.media-object")
 }
 
 // GET /v1/team/detail?id=

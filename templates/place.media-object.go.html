@@ -1,0 +1,21 @@
+{{ define "place.media-object"}}
+{{/* 显示茶会地方的媒体对象 */}}
+<div class="media">
+  <div class="media-left">
+    <a href="#">
+      <img class="media-object" src="/v1/static/{{ .Icon }}" alt="place photo" width="32" height="32">
+    </a>
+  </div>
+  <div class="media-body">
+    <h4 class="media-heading">
+    <a href="/v1/place/detail?id={{ .Id }}">
+      {{ .Name }}
+    </a>
+    </h4>
+    <h5>别名：{{ .Nickname }}</h5>
+    <p>编号：{{ .Id }}</p>
+    <p>描述：{{ .Description }}</p>
+  </div>
+</div>
+
+{{ end }}

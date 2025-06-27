@@ -16,7 +16,7 @@
       <fieldset id="radio">
         <input type="radio" name="class" id="user_id" style="width: fit-content;" value="10" checked required />
         <label for="user_id">茶友茶号</label>
-        
+
         <input type="radio" name="class" id="user" style="width: fit-content;" value="0" required />
         <label for="user">茶友花名</label>
 
@@ -26,10 +26,10 @@
         <input type="radio" name="class" id="thread" style="width: fit-content;" value="2" required />
         <label for="thread">茶议标题</label>
 
-        <input type="radio" name="class" id="objective" style="width: fit-content;" value="3" required />
+        <input type="radio" name="class" id="objective" style="width: fit-content;" value="3" disabled />
         <label for="objective">茶话会名</label>
 
-        <input type="radio" name="class" id="project" style="width: fit-content;" value="4" required />
+        <input type="radio" name="class" id="project" style="width: fit-content;" value="4" disabled />
         <label for="project">茶台名称</label>
 
         <input type="radio" name="class" id="place" style="width: fit-content;" value="5" required />
@@ -60,7 +60,8 @@
 <hr />
 <p>查到 0 个记录。</p>
 <hr />
-{{ else }}{{/* 这是查找结果非零 */}}
+
+{{ else }}{{/* 以下是查找结果非零 */}}
 
 {{ range .UserBeanSlice }}{{/* 这是查找用户（茶友）结果展示 */}}
 
@@ -86,52 +87,8 @@
         <a href="/v1/team/detail?id={{ .DefaultTeamBean.Team.Uuid }}">{{ .DefaultTeamBean.Team.Abbreviation }}</a>）
       </span>
     </p>
-    <p>茶油号：{{ .User.Id }}</p>
-
-    <p>所在茶团</p>
-
-    <p>核心成员</p>
-    {{ range .ManageTeamBeanSlice }}
-
-    <table class="table table-bordered table-hover">
-      <thead>
-        <tr>
-          <th>茶团号</th>
-          <th>简称</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>{{ .Team.Id }}</td>
-          <td><a href="#">{{ .Team.Abbreviation }}</a></td>
-        </tr>
-      </tbody>
-    </table>
-
-    {{ else }}
-    <p>没有相关记录。</p>
-    {{ end }}{{/* 这是迭代用户核心成员茶团结束 */}}
-
-    <p>普通成员</p>
-    {{ range .JoinTeamBeanSlice }}
-    <table class="table table-bordered table-hover">
-      <thead>
-        <tr>
-          <th>茶团号</th>
-          <th>简称</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>{{ .Team.Id }}</td>
-          <td><a href="#">{{ .Team.Abbreviation }}</a></td>
-        </tr>
-      </tbody>
-    </table>
-
-    {{ else }}
-    <p>没有相关记录。</p>
-    {{ end }}{{/* 这是迭代用户核心成员茶团结束 */}}
+    <p>茶友号：{{ .User.Id }}</p>
+    <p>邮 箱：{{ .User.Email }}</p>
 
   </div>
 </div>
@@ -141,110 +98,27 @@
 
 {{ range .TeamBeanSlice }}
 {{/* 这是查找茶团（团队）结果展示 */}}
-<div class="media">
-  <div class="media-left">
-    <a href="/v1/team/detail?id={{ .Team.Uuid }}">
-      {{ if .Open }}
-      <img class="media-object" src="/v1/static/bootstrap-icons/people.svg" alt="茶团旗帜" height="32" width="32">
-      {{ else }}
-      <img class="media-object" src="/v1/static/bootstrap-icons/people-fill.svg" alt="茶团旗帜" height="32" width="32">
-      {{ end }}
-    </a>
-  </div>
-  <div class="media-body">
-    <div class="panel panel-default">
-
-      <div class="panel-heading">
-        <div class="row">
-
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
-          </div>
-
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: center;">
-
-              {{ if .Open }}
-
-              <span class="label label-success">{{ .Team.TeamProperty }}
-                {{ else }}
-                <span class="label label-default">{{ .Team.TeamProperty }}
-                  {{ end }}
-                </span>
-              </span>
-
-            </span>
-          </div>
-
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <div class="pull-right" style="font-size: small;">
-              {{if .Founder.Gender }}
-              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-              {{ end }}
-              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
-              @<span><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
-
-              {{ .CreatedAtDate }}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="panel-body">
-
-        {{ .Team.Mission }} ...
-      </div>
-
-      <div class="panel-footer">
-        <span style="margin-inline-end: 20px;" title="团号">
-          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
-          {{ .Team.Id }}
-        </span>
-
-        <span style="margin-inline-end: 20px;">
-          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-          {{ .Count }}
-        </span>
-        <div class="pull-right">
-          <a href="/v1/team/detail?id={{ .Team.Uuid }}">
-            <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
-          </a>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
+{{ template "team.media-object" . }}
 <hr />
 {{ end }}{{/* 这是查找到的茶团结果队列迭代结束 */}}
 
-{{ range .PlaceSlice }}{{/* 这是查找到的 品茶地点 结果队列迭代-开始 */}}
 
+{{/* 以下是查询结果，茶台的简要展示 */}}
+{{ range .ThreadBeanSlice }}
+{{ template "thread_bean" . }}
 <hr />
+{{ end }}{{/* 这是查找到的茶台结果队列迭代结束 */}}
 
-<div class="media">
-  <div class="media-left">
-    <a href="#">
-      <img class="media-object" src="/v1/static/{{ .Icon }}" alt="place photo" width="32" height="32">
-    </a>
-  </div>
-  <div class="media-body">
-    <h4 class="media-heading">{{ .Name }}</h4>
-    <h5>地方别名：{{ .Nickname }}</h5>
-    <p>地点编号：{{ .Id }}</p>
-    <p>地点描述：{{ .Description }}</p>
 
-  </div>
-</div>
-
+{{ range .PlaceSlice }}{{/* 这是查找到的 品茶地点 结果队列迭代-开始 */}}
+<hr />
+{{ template "place.media-object" . }}
 <div style="margin: 1rem;">
   {{/* 显示收藏功能按钮  */}}
   <a class="btn btn-default" href="/v1/place/collect?id={{ .Id }}" role="button">
     <i class="bi-pencil-square" style="font-size: 1.5rem; color: green;"></i>
     一键收藏</a>
 </div>
-
 {{ end }}{{/* 这是查找到的 品茶地点 结果队列迭代-结束 */}}
 
 {{ end }}{{/* 这是查找结果非零 结束*/}}

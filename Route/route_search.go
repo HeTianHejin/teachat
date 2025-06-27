@@ -64,7 +64,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var fPD data.SearchPageData
-
+	fPD.SessUser = s_u
 	//初始化获取结果为零记录
 	fPD.IsEmpty = true
 
@@ -150,6 +150,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.IsEmpty = false
 			}
 		}
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "team.media-object")
+		return
+
 	case data.SearchTypeThreadTitle:
 		//查询，茶话标题，thread.title
 		thread_slice, err := data.SearchThreadByTitle(keyword)
@@ -165,6 +168,8 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.ThreadBeanSlice = thread_bean_slice
 			fPD.IsEmpty = false
 		}
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "thread_bean")
+		return
 
 	case data.SearchTypeObjectiveTitle:
 		//查询，茶话会标题，objective.title
@@ -209,13 +214,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.PlaceSlice = place_slice
 			fPD.IsEmpty = false
 		}
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "place.media-object")
+		return
 
 	default:
 		Report(w, r, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
 		return
 	}
-	fPD.SessUser = s_u
-
 	RenderHTML(w, &fPD, "layout", "navbar.private", "search")
 }
 
