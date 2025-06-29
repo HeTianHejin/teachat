@@ -4,7 +4,9 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }} </a>@茶话会
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
+    </a>@茶话会
   </li>
   <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
   </li>
@@ -62,12 +64,10 @@
 {{/* 左红右蓝进度条到此为止  */}}
 
 {{/* 茶议头像位置显示在左侧布局 */}}
-<div class="media">
+<div class="media" style="margin-top: 20px;">
 
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .ThreadBean.Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .ThreadBean.Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
+    {{ template "component_avatar_name_gender" .ThreadBean.Author }}
   </div>
 
   <div class="media-body">
@@ -75,12 +75,6 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .ThreadBean.Author.Name }}
-            {{if .ThreadBean.Author.Gender }}
-            <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-            {{ else }}
-            <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-            {{ end }}
             <span style="font-size: smaller;">
               （<a
                 href="/v1/family/detail?id={{ .ThreadBean.AuthorFamily.Uuid }}">{{ .ThreadBean.AuthorFamily.Name }}</a>，
@@ -130,7 +124,8 @@
         {{ if .ThreadBean.Thread.PostId }}
         <blockquote>
           <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePostBean.Post.Uuid }}"
-              style="margin-inline-end: 1rem;"><span class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
+              style="margin-inline-end: 1rem;"><span
+                class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
           </p>
           <footer style="font-size: small;">
             <a href="/v1/user/biography?id={{ .QuotePostBean.Author.Uuid }}"
@@ -273,50 +268,50 @@
 {{ end }}
 {{ end }}
 <hr />
-{{ end }}
-{{/* 品味编辑区结束 */}}
-
-
-
+{{ end }}{{/* 品味编辑区结束 */}}
 
 {{/* 展示全部管理员品味 */}}
 {{ range .PostBeanAdminSlice }}
-{{/* 检查茶围管理员品味的立场以决定左右侧布局 */}}
 
+{{/* 检查茶围管理员品味的立场以决定左右侧布局 */}}
 {{ if .Post.Attitude }}
 {{/* 品味是“颔首”表态，左侧头像布局 */}}
 
 {{ template "component_post_left" . }}
 
 {{ else }}
+
 {{/* 品味是“摇头”表态，右侧头像布局 */}}
 {{template "component_post_right" . }}
-{{ end }}
-{{/* 检测是否品味作者完成 */}}
+
+{{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
 
 {{ end }}{{/* 展示全部管理员品味完成 */}}
-  <hr />
 
-  {{/* 展示其他用户的品味 */}}
-  {{ range .PostBeanSlice }}
-  
-  {{/* 检查品味的立场以决定左右侧布局 */}}
-  {{ if .Post.Attitude }}
-  {{/* 品味是“颔首”表态，左侧头像布局 */}}
-  {{ template "component_post_left" . }}
-  
-  {{ else }}
+<hr />
 
-  {{/* 品味是“摇头”表态，右侧头像布局 */}}
-  {{template "component_post_right" . }}
-    {{ end }}
-    {{/* 检测是否品味作者完成 */}}
+{{/* 展示其他用户的品味 */}}
+{{ range .PostBeanSlice }}
 
-    {{ end }}
-    {{/* 展示全部普通品味完成 */}}
+{{/* 检查品味的立场以决定左右侧布局 */}}
+{{ if .Post.Attitude }}
 
-    <div class="well">
-      <a href="#">更多相关茶议 >></a>
-    </div>
+{{/* 品味是“颔首”表态，左侧头像布局 */}}
+{{ template "component_post_left" . }}
 
-    {{ end }}
+{{ else }}
+
+{{/* 品味是“摇头”表态，右侧头像布局 */}}
+{{template "component_post_right" . }}
+
+
+{{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
+
+{{ end }}{{/* 展示全部其他用户品味完成 */}}
+
+
+<div class="well">
+  <a href="#">更多相关茶议 >></a>
+</div>
+
+{{ end }}

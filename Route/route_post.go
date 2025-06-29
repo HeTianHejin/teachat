@@ -110,7 +110,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-		RenderHTML(w, &pD, "layout", "navbar.public", "post.detail")
+		RenderHTML(w, &pD, "layout", "navbar.public", "post.detail", "component_avatar_name_gender")
 		return
 	}
 	// 读取已登陆用户资料
@@ -173,7 +173,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsAuthor = false
 	}
 
-	RenderHTML(w, &pD, "layout", "navbar.private", "post.detail")
+	RenderHTML(w, &pD, "layout", "navbar.private", "post.detail", "component_avatar_name_gender")
 
 }
 
@@ -218,8 +218,6 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 		return
 	}
-	//读取提交的is_private bool参数
-	is_private := r.PostFormValue("is_private") == "true"
 
 	te_id_str := r.PostFormValue("team_id")
 	//change team_id to int
@@ -237,17 +235,10 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的家庭编号。")
 		return
 	}
-
-	//验证团队和家庭ID参数的组合是否合法
-	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id, w, r)
-	if !valid && err == nil {
-		return // 参数不合法，已经处理了错误
-	}
-	if err != nil {
-		// 处理数据库错误
-		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
-		Report(w, r, "你好，成员资格检查失败，请确认后再试。")
-		return
+	is_private := false
+	if family_id > data.FamilyIdUnknown && team_id == data.TeamIdFreelancer {
+		//默认是团队负责，soso
+		is_private = true
 	}
 
 	// 茶议所在的茶台
@@ -281,6 +272,16 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//确定品味发布者身份
+	is_admin := false
+	is_master := false
+
+	is_master, err = checkProjectMasterPermission(&t_proj, s_u.Id)
+	if err != nil {
+		util.Debug(" Cannot check project master permission", t_proj.Id, err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
+		return
+	}
 	//所在的茶围
 	t_obje, err := t_proj.Objective()
 	if err != nil {
@@ -288,28 +289,45 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 		return
 	}
-
-	//检查是哪一种级别发布
-	dp_class := data.PostClassNormal
-	is_member := false
-	if is_private {
-		ob_family := data.Family{Id: family_id}
-		is_member, err = ob_family.IsMember(s_u.Id)
+	if !is_master {
+		is_admin, err = checkObjectiveAdminPermission(&t_obje, s_u.Id)
 		if err != nil {
-			util.Debug(" Cannot get family member by family id and user id", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能读取茶团成员资格资料。")
-			return
-		}
-	} else {
-		ob_team := data.Team{Id: t_obje.TeamId}
-		is_member, err = ob_team.IsMember(s_u.Id)
-		if err != nil {
-			util.Debug(" Cannot get family member by family id and user id", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能读取茶团成员资格资料。")
+			util.Debug(" Cannot check objective admin permission", t_obje.Id, err)
+			Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 			return
 		}
 	}
-	if is_member {
+	if is_admin {
+		is_private = t_obje.IsPrivate
+		family_id = t_obje.FamilyId
+		team_id = t_obje.TeamId
+	} else if is_master {
+		is_private = t_proj.IsPrivate
+		family_id = t_proj.FamilyId
+		team_id = t_proj.TeamId
+	}
+
+	// 检查参数组合是否合法
+	// OK, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id, w, r)
+	// if err != nil {
+	// 	util.Debug("Cannot validate team and family params", is_private, team_id, family_id, s_u.Id, err)
+	// 	Report(w, r, "你好，茶博士失魂鱼，嘀咕笔头宝珠掉了，记录您的品味失败。")
+	// 	return
+	// }
+	// if !OK {
+	// 	Report(w, r, "你好，茶博士失魂鱼，嘀咕笔头宝珠掉了，记录您的品味失败。")
+	// 	return
+	// }
+
+	//检查body的长度，规则是不能少于刘姥姥评价老君眉的品味字数
+	if CnStrLen(body) < 17 {
+		Report(w, r, "你好，茶博士竟然说品味字太少不值得动笔，记录您的品味失败。")
+		return
+	}
+
+	//确定是哪一种级别发布
+	dp_class := data.PostClassNormal
+	if is_admin || is_master {
 		dp_class = data.PostClassAdmin
 	}
 

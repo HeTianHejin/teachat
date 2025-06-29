@@ -693,7 +693,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-		RenderHTML(w, &tD, "layout", "navbar.public", "team.detail")
+		RenderHTML(w, &tD, "layout", "navbar.public", "team.detail", "component_avatar_name_gender")
 		return
 	}
 	s_u, err := s.User()
@@ -756,7 +756,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	RenderHTML(w, &tD, "layout", "navbar.private", "team.detail")
+	RenderHTML(w, &tD, "layout", "navbar.private", "team.detail", "component_avatar_name_gender")
 
 }
 

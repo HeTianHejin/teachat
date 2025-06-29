@@ -142,20 +142,11 @@
 
     <div class="media">
       <div class="media-left">
-        <a href="/v1/user/biography?id={{ .Member.Uuid }}">
-          <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
-        </a>
+         {{ template "component_avatar_name_gender" .Member }}
       </div>
       <div class="media-body">
 
-        {{ .Member.Name }}
-        <span  style="font-size: small;">
-          {{if .Member.Gender }}
-            <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-            {{ else }}
-            <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-            {{ end }}
-        </span>
+       
         
         <span style="font-style: italic;">
           （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>，
@@ -163,7 +154,8 @@
         </span>
 
        
-        <h5>{{ .TeamMember.Role }}</h5>
+        <p>角色：   <span style="font-size:  large;">{{ .TeamMember.Role }}</span></p> 
+
 
         <p>加盟时间：{{ .CreatedAtDate }}</p>
 
@@ -180,26 +172,17 @@
 
     <div class="media">
       <div class="media-left">
-        <a href="/v1/user/biography?id={{ .Member.Uuid }}">
-          <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
-        </a>
+        {{ template "component_avatar_name_gender" .Member }}
       </div>
       <div class="media-body">
-        {{ .Member.Name }}
-        <span  style="font-size: small;">
-          {{if .Member.Gender }}
-          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-          {{ else }}
-          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-          {{ end }}
-          </span>
+        
 
         <span style="font-style: italic;">
           （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>，
           <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
         </span>
    
-        <h5>{{ .TeamMember.Role }}</h5>
+        <p>角色：   <span style="font-size:  large;">{{ .TeamMember.Role }}</span></p> 
 
         <p>加盟时间：{{ .CreatedAtDate }}</p>
 

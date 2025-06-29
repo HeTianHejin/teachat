@@ -2,28 +2,18 @@
 {{ define "component_thread_bean" }}
 
 <div class="media">
+
   <div class="media-left">
     {{ if .Count }}
     <span class="badge">{{ .Count }}</span>
     {{ end }}
-    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
 
-    <div style="text-align: center; margin-top: 10px;">
-      <a href="/v1/user/biography?id={{ .Author.Uuid }}">
-        {{ .Author.Name }}
-      </a>
-      {{if .Author.Gender }}
-      <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-      {{ else }}
-      <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-      {{ end }}
-
-    </div>
+    {{ template "component_avatar_name_gender" .Author }}
 
   </div>
+
   <div class="media-body">
+
     <p>
       <span style="margin-inline-end: 20px; font-size: smaller;">
         （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}" style="color: black;">{{ .AuthorFamily.Name }}</a>，
@@ -31,6 +21,7 @@
       </span>
       <span style="margin-inline-end: 20px;font-size: smaller;">{{ .Thread.CreatedAtDate }}</span>
     </p>
+
     <p>
       <mark>{{ .Thread.TypeString }}</mark>
 
@@ -47,8 +38,11 @@
         {{ end }}
       </span>
     </p>
+
     <p>{{ .Thread.Body }} ...</p>
+
     <br />
+
   </div>
 </div>
 

@@ -501,7 +501,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
-	pD.Author = pD.ProjectBean.Author
 
 	// 准备页面数据
 	if pD.ProjectBean.Project.Class == data.ClassOpenTeaTable {

@@ -8,7 +8,6 @@
   <li class="=active">详情</li>
 </ol>
 
-
 {{ if .IsNewMember }}{{/* 检查是否新家庭成员声明提及的茶友 -开始 */}}
 {{ with .FamilyMemberSignIn }}{{/* 检查是否新家庭成员声明为空 -开始  */}}
 <div class="alert alert-info" role="alert">
@@ -21,14 +20,11 @@
 
 {{ end }}{{/* 检查是否新家庭成员声明提及的茶友 -结束  */}}
 
-
-
 {{ if .IsParent }}
 <div style="margin: 1rem;">
   <a class="btn btn-default" href="/v1/families/home" role="button">家庭首页</a>
   {{/* 显示添加家庭成员的功能按钮  */}}
-  <a class="btn btn-default" href="/v1/search" role="button"
-    style="margin-inline-start: 2rem;">
+  <a class="btn btn-default" href="/v1/search" role="button" style="margin-inline-start: 2rem;">
     <i class="bi-pencil-square" style="font-size: 1.2rem; color: green;"></i>
     添加成员</a>
 </div>
@@ -113,25 +109,14 @@
 
 <div class="media">
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .Member.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
-    </a>
+    {{ template "component_avatar_name_gender" .Member }}
   </div>
+  
   <div class="media-body">
-
-    {{ .Member.Name }}
-    <span style="font-size: small;">
-      {{if .Member.Gender }}
-      <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-      {{ else }}
-      <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-      {{ end }}
-    </span>
-
     <span style="font-style: italic;">
       （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
-      </span>
+      <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+    </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
 
@@ -150,24 +135,13 @@
 
 <div class="media">
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .Member.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
-    </a>
+     {{ template "component_avatar_name_gender" .Member }}
   </div>
   <div class="media-body">
-    {{ .Member.Name }}
-    <span style="font-size: small;">
-      {{if .Member.Gender }}
-      <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-      {{ else }}
-      <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-      {{ end }}
-    </span>
-
     <span style="font-style: italic;">
       （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
-      </span>
+      <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+    </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
 
@@ -186,25 +160,13 @@
 
 <div class="media">
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .Member.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
-    </a>
+     {{ template "component_avatar_name_gender" .Member }}
   </div>
   <div class="media-body">
-
-    {{ .Member.Name }}
-    <span style="font-size: small;">
-      {{if .Member.Gender }}
-      <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-      {{ else }}
-      <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-      {{ end }}
-    </span>
-
     <span style="font-style: italic;">
       （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
-      </span>
+      <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+    </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
 

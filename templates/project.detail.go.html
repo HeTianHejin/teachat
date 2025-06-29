@@ -28,7 +28,7 @@
 <div class="media" style="margin-top: 20px;">
 
   <div class="media-left">
-   {{ template "component_avatar_name_gender" . }}
+   {{ template "component_avatar_name_gender" .ProjectBean.Author }}
   </div>
 
   <div class="media-body">
@@ -50,6 +50,11 @@
           </div>
 
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+            {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
+          {{/* 这个茶台已被茶围管理员选中入围 */}}
+          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+          {{/* 检查是否入围1 */}}{{ end }}
+          
             <span>
               {{ if .Open }}
               <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
@@ -60,6 +65,7 @@
               {{ end }}
             </span>
 
+
             <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ProjectBean.CreatedAtDate }}</span>
           </div>
         </div>
@@ -68,11 +74,6 @@
       <div class="panel-body">
         <h4>
           {{ .ProjectBean.Project.Title }}
-
-          {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
-          {{/* 这个茶台已被茶围管理员选中入围 */}}
-          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
-          {{/* 检查是否入围1 */}}{{ end }}
         </h4>
         <p style="white-space: pre-wrap;">
           {{ .ProjectBean.Project.Body }}
@@ -259,7 +260,7 @@
 
 {{ if .IsApproved }}
 {{/* 以下是此茶台的“5步茶”茶议展示 */}}
-{{ template "component_thread_bean_approved" $.ApprovedFiveThreads }}
+{{ template "component_thread_bean_approved" .ApprovedFiveThreads }}
 {{ end }}
 
 {{/* 以下是此茶台的全部普通茶议展示 */}}

@@ -69,7 +69,6 @@ type ObjectiveDetail struct {
 	SessUserDefaultPlace Place
 	SessUserBindPlaces   []Place
 
-	Author           User          // 作者
 	ObjectiveBean    ObjectiveBean // 该茶话会资料夹
 	ProjectBeanSlice []ProjectBean // objective下所有projects
 }
@@ -123,7 +122,6 @@ type ProjectDetail struct {
 	SessUserBindPlaces       []Place
 
 	ProjectBean         ProjectBean                //当前浏览茶台资料夹
-	Author              User                       // 作者
 	IsApproved          bool                       //是否入围
 	ApprovedFiveThreads ProjectApprovedFiveThreads //入围茶台必备5茶议
 

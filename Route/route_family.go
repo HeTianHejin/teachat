@@ -326,7 +326,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	fD.OtherMemberBeanSlice = other_member_bean_slice
 
 	// 4. render
-	RenderHTML(w, &fD, "layout", "navbar.private", "family.detail")
+	RenderHTML(w, &fD, "layout", "navbar.private", "family.detail", "component_avatar_name_gender")
 }
 
 // HandleNewFamily() /v1/family/new

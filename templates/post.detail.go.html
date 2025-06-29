@@ -23,15 +23,7 @@
 
 <div class="media">
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .PostBean.Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .PostBean.Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
-     {{ .PostBean.Author.Name }}
-            {{if .PostBean.Author.Gender }}
-            <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-            {{ else }}
-            <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-            {{ end }}
+    {{ template "component_avatar_name_gender" .PostBean.Author }}
   </div>
   <div class="media-body">
 
@@ -219,21 +211,14 @@
     <span class="badge">{{ .Count }}</span>
     {{ else }}
     {{ end }}
-    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
+    {{ template "component_avatar_name_gender" .Author }}
   </div>
 
   <div class="media-body">
     <p>
-      {{if .Author.Gender }}
-      <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-      {{ else }}
-      <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-      {{ end }}
-      <span>{{ .Author.Name }}</span>
+     
       <span style="margin-inline-end: 20px; font-size: smaller;">
-        @（<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+        （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
                 <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
 
       <span style="margin-inline-end: 20px;font-size: smaller;">{{ .Thread.CreatedAtDate }}</span>

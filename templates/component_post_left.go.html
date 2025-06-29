@@ -5,11 +5,10 @@
 <div class="media">
 
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .Author.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像">
-    </a>
-  </div>
 
+    {{ template "component_avatar_name_gender" .Author }}
+    
+  </div>
   <div class="media-body">
 
     {{ if .Post.PageData.IsAuthor }}
@@ -23,12 +22,6 @@
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="font-size: small;">
-              {{ .Author.Name }}
-              {{if .Author.Gender }}
-              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
-              {{ end }}
               （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
               <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
             </span>

@@ -376,7 +376,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
-	oD.Author = oD.ObjectiveBean.Author
+
 	//fetch public projects
 	project_slice, err := ob.GetPublicProjects()
 	if err != nil {
