@@ -19,8 +19,10 @@ const (
 )
 const (
 	TeamIdNone          = iota // 0
-	TeamIdSpaceshipCrew        // 1
-	TeamIdFreelancer           // 2
+	TeamIdSpaceshipCrew        // 1   飞船茶棚团队，系统保留
+	TeamIdFreelancer           // 2  默认的系统“自由人”$事业茶团
+
+	TeamIdVerifier = 18 //  见证者团队，系统保留
 )
 const (
 	TeamClassSpaceship = iota //飞船茶棚团队，系统保留

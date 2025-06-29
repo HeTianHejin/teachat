@@ -16,7 +16,6 @@
     {{/* 个人头像和名字和性别 */}}
     {{ template "component_avatar_name_gender" .ObjectiveBean.Author }}
 
-
   </div>
 
   <div class="media-body">
@@ -120,26 +119,11 @@
         </a>
         {{ end }}
 
-        {{/* 这是某个茶台（项目）的地址显示 */}}
-        <div style="text-align: center; margin-top: 10px;">
-
-          <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
-          <span style="font-size: smaller;">
-            <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
-
-          </span>
-        </div>
 
       </div>
 
       <div class="media-body">
         <p>
-          <h5>
-            <a href="/v1/project/detail?id={{ .Project.Uuid }}">
-              {{ .Project.Title }}
-            </a>
-          </h5>
-
           {{/* 检查是否入围1 */}}{{if .IsApproved }}
           {{/* 这个主意已被台主或者管理员选中入围 */}}
           <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
@@ -175,7 +159,24 @@
           </span>
         </p>
 
+        <h4>
+            <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+              {{ .Project.Title }}
+            </a>
+          </h4>
+
         {{ .Project.Body }} ...
+
+        <p>
+          {{/* 这是某个茶台（项目）的地址显示 */}}
+        <div style="text-align: center; margin-top: 10px;">
+          <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
+          <span style="font-size: smaller;">
+            <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
+          </span>
+        </div>
+        </p>
+
       </div>
 
     </div>

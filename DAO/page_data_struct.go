@@ -169,9 +169,10 @@ type ThreadDetail struct {
 	IsGuest                  bool // 是否为游客
 	IsAdmin                  bool // 是否为茶围（服务发起/需求）管理成员
 	IsMaster                 bool // 是否为茶台（服务提供/响应）管理成员
-	IsAuthor                 bool // 是否为茶议作者
-	IsInput                  bool // 是否需要显示新茶议输入面板
-	IsPostExist              bool // 是否已经回复过了
+	IsVerifier               bool // 是否为见证员
+	//IsAuthor                 bool // 是否为茶议作者
+	IsInput     bool // 是否需要显示新茶议输入面板
+	IsPostExist bool // 是否已经回复过了
 
 	NumSupport int // 支持人数
 	NumOppose  int // 反对人数

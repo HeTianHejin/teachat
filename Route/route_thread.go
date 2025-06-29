@@ -368,7 +368,6 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		// 游客
-		tD.IsAuthor = false
 		// 检查茶议的级别状态
 		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
 			//记录茶议被点击数
@@ -380,6 +379,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.IsInput = false
 			tD.IsAdmin = false
 			tD.IsMaster = false
+			tD.IsVerifier = false
 
 			tD.SessUser = data.User{
 				Id:   0,
@@ -404,7 +404,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		//用户是登录状态,可以访问1和2级别茶议
+		//用户是登录状态
 		tD.IsGuest = false
 
 		if tD.ThreadBean.Thread.Class == data.ThreadClassOpen || tD.ThreadBean.Thread.Class == data.ThreadClassClosed {
@@ -442,30 +442,44 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// 检测是否茶议撰写者
+			if !tD.IsAdmin && !tD.IsMaster {
+				// 检测当前会话茶友是否见证者
+				verifier_team := data.Team{Id: data.TeamIdVerifier}
+				is_member, err := verifier_team.IsMember(s_u.Id)
+				if err != nil {
+					util.Debug(" Cannot check team member", err)
+					Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+					return
+				}
+				if is_member {
+					tD.IsVerifier = true
+				}
+			}
+
+			// 检测是否其中某一个Post品味撰写者
+			for i := range tD.PostBeanSlice {
+				if tD.PostBeanSlice[i].Post.UserId == s_u.Id {
+					tD.PostBeanSlice[i].Post.PageData.IsAuthor = true
+					break
+				} else {
+					tD.PostBeanSlice[i].Post.PageData.IsAuthor = false
+				}
+			}
+
 			if s_u.Id == tD.ThreadBean.Thread.UserId {
 				// 是茶议撰写者！
-				tD.IsAuthor = true
-				// 填写页面数据
 				tD.ThreadBean.Thread.PageData.IsAuthor = true
-				// 提议撰写者不能自评品味，王婆卖瓜也不行？！
-				tD.IsInput = false
+				tD.IsInput = true
 				//点击数+1
 				//tD.ThreadBean.Thread.AddHitCount()
 				//记录用户阅读该帖子一次
 				//data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
-
-				//迭代PostSlice，把其PageData.IsAuthor设置为false，页面渲染时检测布局用
-				for i := range tD.PostBeanSlice {
-					tD.PostBeanSlice[i].Post.PageData.IsAuthor = false
-				}
 
 				//展示撰写者视角茶议详情页面
 				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_post_left", "component_post_right", "component_avatar_name_gender")
 				return
 			} else {
 				//不是茶议撰写者
-
 				//记录茶议被点击数
 				//tD.ThreadBean.Thread.AddHitCount()
 				tD.ThreadBean.Thread.PageData.IsAuthor = false
@@ -498,16 +512,6 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 						tD.IsInput = false
 						tD.IsPostExist = true
 						break
-					}
-				}
-
-				// 检测是否其中某一个Post品味撰写者
-				for i := range tD.PostBeanSlice {
-					if tD.PostBeanSlice[i].Post.UserId == s_u.Id {
-						tD.PostBeanSlice[i].Post.PageData.IsAuthor = true
-						break
-					} else {
-						tD.PostBeanSlice[i].Post.PageData.IsAuthor = false
 					}
 				}
 
