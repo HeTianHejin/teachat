@@ -643,12 +643,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 未登录，游客
 		// 填写页面数据
-		pD.ProjectBean.Project.PageData.IsAuthor = false
-
 		pD.IsGuest = true
-		pD.IsInput = false
-		pD.IsAdmin = false
-		pD.IsMaster = false
 
 		pD.SessUser = data.User{
 			Id:        data.UserId_None,
@@ -662,7 +657,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 已登陆用户
-	pD.IsGuest = false
 
 	//从会话查获当前浏览用户资料荚
 	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
@@ -730,15 +724,22 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	pD.IsAdmin = is_admin
 
+	if !pD.IsAdmin && !pD.IsMaster {
+		veri_team := data.Team{Id: data.TeamIdVerifier}
+		is_member, err := veri_team.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug("Cannot check verifier team member", err)
+			Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+			return
+		}
+		if is_member {
+			pD.IsVerifier = true
+		}
+	}
+
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path
 	pD.SessUser.Query = r.URL.RawQuery
-
-	// if is_master {
-	// 	// 茶台管理成员，项目乙方，服务提供商团队成员
-	// 	RenderHTML(w, &pD, "layout", "navbar.private", "project.master")
-	// 	return
-	// }
 
 	RenderHTML(w, &pD, "layout", "navbar.private", "project.detail", "component_thread_bean_approved", "component_thread_bean", "component_avatar_name_gender", "component_sess_capacity")
 }

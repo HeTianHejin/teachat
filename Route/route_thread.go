@@ -395,7 +395,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			}
 
 			//show the thread and the posts展示页面
-			RenderHTML(w, &tD, "layout", "navbar.public", "thread.detail", "component_post_left", "component_post_right", "component_avatar_name_gender")
+			RenderHTML(w, &tD, "layout", "navbar.public", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
 			return
 		} else {
 			//非法访问未开放的话题？
@@ -476,7 +476,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				//data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
 
 				//展示撰写者视角茶议详情页面
-				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_post_left", "component_post_right", "component_avatar_name_gender")
+				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
 				return
 			} else {
 				//不是茶议撰写者
@@ -516,7 +516,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				}
 
 				//展示非撰写者视角茶议详情页面
-				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_post_left", "component_post_right", "component_avatar_name_gender")
+				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
 				return
 			}
 		} else {
@@ -633,11 +633,7 @@ func HandleThreadSupplement(w http.ResponseWriter, r *http.Request) {
 // GET /v1/thread/supplement?uuid=xxx
 // 打开指定的茶议（议程）追加（补充必需内容）页面，
 func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		util.Debug(" Cannot parse form", err)
-		return
-	}
+
 	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -649,7 +645,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 		return
 	}
-	uuid := r.PostFormValue("uuid")
+	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
 		Report(w, r, "茶博士失魂鱼，未能读取茶议编号，请确认后再试。")
 		return
@@ -665,7 +661,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
 		return
 	}
-	switch thread.Class {
+	switch thread.Category {
 	case data.ThreadCategoryAppointment:
 		break
 	case data.ThreadCategorySeeSeek:
@@ -722,12 +718,13 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
-	//核对用户操作权限
 
-	ok, err := checkObjectiveAdminPermission(&objective, s_u.Id)
+	//核对用户身份，是否具有完善操作权限
+	verifier_team := data.Team{Id: data.TeamIdVerifier}
+	ok, err := verifier_team.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check objective admin permission", objective.Id, err)
-		Report(w, r, "茶博士失魂鱼，未能读取专属茶议，请稍后再试。")
+		util.Debug(" Cannot check team membership", verifier_team.Id, err)
+		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您没有权限补充该茶议。")
 		return
 	}
 	if !ok {

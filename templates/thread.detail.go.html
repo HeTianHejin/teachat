@@ -11,7 +11,9 @@
   <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
   </li>
   <li>#{{ .ThreadBean.Thread.Id }}</li> @茶议
-
+<li>
+    {{ template "component_sess_capacity" . }}
+  </li>
 </ol>
 
 {{/* 这是关注这个茶议的总人数 显示 */}}
@@ -108,10 +110,7 @@
 
         {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，显示完善图标按钮 */}}
         <div style="text-align: center;">
-          <form class="form" role="form" action="/v1/thread/supplement" method="post">
-            <input type="hidden" name="id" value="{{ .ThreadBean.Thread.Uuid }}" />
-            <button type="submit" class="btn btn-warning">完善</button>
-          </form>
+          <a class="btn btn-default" href="/v1/thread/supplement?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">完善</a>
         </div>
         {{ else if lt .ThreadBean.Thread.Category 2 }}{{/* 检查是否见证者，检测是否是茶围管理员--不是！ */}}
 

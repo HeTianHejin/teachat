@@ -97,11 +97,8 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		// 未登录，游客
-		pD.IsAuthor = false
-		pD.IsInput = false
 		pD.IsGuest = true
-		pD.IsAdmin = false
-		pD.IsMaster = false
+
 		// 填写页面数据
 		pD.SessUser = data.User{
 			Id:   data.UserId_None,
@@ -110,7 +107,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-		RenderHTML(w, &pD, "layout", "navbar.public", "post.detail", "component_avatar_name_gender")
+		RenderHTML(w, &pD, "layout", "navbar.public", "post.detail", "component_sess_capacity", "component_avatar_name_gender")
 		return
 	}
 	// 读取已登陆用户资料
@@ -150,6 +147,18 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
+	if !pD.IsAdmin && !pD.IsMaster {
+		veri_team := data.Team{Id: data.TeamIdVerifier}
+		is_member, err := veri_team.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug("Cannot check verifier team member", err)
+			Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+			return
+		}
+		if is_member {
+			pD.IsVerifier = true
+		}
+	}
 
 	// 默认家庭
 	pD.SessUserDefaultFamily = s_default_family
@@ -173,7 +182,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsAuthor = false
 	}
 
-	RenderHTML(w, &pD, "layout", "navbar.private", "post.detail", "component_avatar_name_gender")
+	RenderHTML(w, &pD, "layout", "navbar.private", "post.detail", "component_sess_capacity", "component_avatar_name_gender")
 
 }
 

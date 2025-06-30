@@ -394,8 +394,8 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		//未登录！
+		oD.IsGuest = true
 		// 准备页面数据
-		//oD.IsAuthor = false
 		oD.SessUser = data.User{
 			Id:   data.UserId_None,
 			Name: "游客",
@@ -403,16 +403,11 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-
-		oD.IsGuest = true
-		// 是否受邀请团队成员？
-		oD.IsInvited = false
-		oD.IsAdmin = false
-
 		//配置公开导航条的茶话会详情页面
 		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
+
 	//已经登录！
 	s_u, err := s.User()
 	if err != nil {
@@ -420,8 +415,6 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	oD.IsGuest = false
-	oD.IsInvited = false
 	// 记录用户查询的资讯
 	// if err = RecordLastQueryPath(s_u.Id, r.URL.Path, r.URL.RawQuery); err != nil {
 	// 	util.Debug(s_u.Email, " Cannot record last query path")
@@ -442,31 +435,33 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		oD.IsInvited = ok
 	}
 
-	//检测u.Id == o.UserId是否这个茶话会作者
-	if s_u.Id == oD.ObjectiveBean.Author.Id {
-		//是作者
-		//oD.IsAuthor = true
-		oD.IsAdmin = true
-
-		//配置私有导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
-		return
-	} else {
-		//不是茶围的作者
-		//oD.IsAuthor = false
-
-		//检测当前用户是否是管理员 =这个茶话会所属团队or家庭的成员
-		is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
-		if err != nil {
-			util.Debug(" Cannot read objective-bean slice", err)
-			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌着。")
-			return
-		}
-		oD.IsAdmin = is_admin
-
-		//配置私有导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
+	//检测当前用户身份
+	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
+	if err != nil {
+		util.Debug("Admin permission check failed",
+			"userId", s_u.Id,
+			"objectiveId", ob.Id,
+			"error", err,
+		)
+		Report(w, r, "你好，茶博士说：玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
+	oD.IsAdmin = is_admin
+
+	if !oD.IsAdmin {
+		veri_team := data.Team{Id: data.TeamIdVerifier}
+		is_member, err := veri_team.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug("Cannot check verifier team member", err)
+			Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+			return
+		}
+		if is_member {
+			oD.IsVerifier = true
+		}
+	}
+
+	//配置私有导航条的茶话会详情页面
+	RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
 
 }

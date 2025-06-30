@@ -214,6 +214,7 @@ type PostDetail struct {
 	IsAuthor                 bool     // 是否为品味作者
 	IsAdmin                  bool     // 是否为茶围管理成员
 	IsMaster                 bool     // 是否为茶台管理成员
+	IsVerifier               bool     // 是否为见证员
 	SessUserDefaultFamily    Family   // 当前会话用户默认&家庭茶团
 	SessUserSurvivalFamilies []Family // 当前会话用户全部&家庭茶团
 	SessUserDefaultTeam      Team

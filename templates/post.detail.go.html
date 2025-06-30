@@ -8,15 +8,9 @@
   <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台</li>
   <li><a href="/v1/thread/detail?id={{ .QuoteThreadBean.Thread.Uuid }}">{{ .QuoteThreadBean.Thread.Title }} </a>@茶议</li>
   <li class="active">#{{ .PostBean.Post.Id }} @品味</li>
-   {{ if .IsAdmin }}
-  <li>
-    <span class="label label-info">围主</span>
+   <li>
+    {{ template "component_sess_capacity" . }}
   </li>
-    {{ else if .IsMaster }}
-    <li>
-    <span class="label label-warning">台主</span>
-    </li>
-  {{ end }}
 </ol>
 
 {{/* 这是某个 品味 的详情页 */}}
