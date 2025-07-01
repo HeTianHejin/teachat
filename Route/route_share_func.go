@@ -1406,14 +1406,22 @@ func RenderHTML(w http.ResponseWriter, data interface{}, filenames ...string) {
 	// 手动解析模板并处理错误
 	templates, err := template.ParseFiles(files...)
 	if err != nil {
-		// 记录错误并返回HTTP 500错误
-		http.Error(w, fmt.Sprintf("Error parsing templates: %v", err), http.StatusInternalServerError)
+		// 添加详细的错误日志和HTTP错误响应
+		util.PrintStdout("模板解析错误: ", err)
+		http.Error(w, "服务器内部错误: 无法解析模板", http.StatusInternalServerError)
 		return
 	}
 
-	// 执行模板并处理可能的错误
-	if err := templates.ExecuteTemplate(w, "layout", data); err != nil {
-		http.Error(w, fmt.Sprintf("Error executing template: %v", err), http.StatusInternalServerError)
+	// 安全增强：设置内容类型为HTML并添加XSS防护头
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+
+	// 执行模板渲染
+	if err = templates.ExecuteTemplate(w, "layout", data); err != nil {
+		// 添加详细的错误日志
+		util.PrintStdout("模板渲染错误: ", err)
+		// 避免在错误响应中泄露敏感信息
+		http.Error(w, "茶博士失魂鱼: 无法煮水冲茶，陛下稍安勿躁", http.StatusInternalServerError)
 	}
 }
 

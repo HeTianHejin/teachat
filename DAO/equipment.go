@@ -14,6 +14,7 @@ import (
 	util "teachat/Util"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
@@ -21,35 +22,31 @@ import (
    涉及数据库存取操作的定义和一些方法
 */
 
-// 定义数据库链接常量
-const (
-	dbdriver   = "postgres"
-	dbhost     = "localhost"
-	dbport     = 5432
-	dbuser     = "postgres"
-	dbpassword = "teachat"
-	dbname     = "teachat"
-	dbsslmode  = "disable"
-	dbTimeZone = "Asia/Shanghai"
-)
-
 var Db *sql.DB // postgres 数据库实例
-
-// 使用常量管理文件路径和文件扩展名，增加可维护性
-const (
-	ImageDir = "./public/image/"
-	ImageExt = ".jpeg"
-)
 
 func init() {
 	var err error
+	// 加载 .env 文件
+	err = godotenv.Load()
+	if err != nil {
+		util.PrintStdout("Error loading .env file")
+	}
+	// 从环境变量获取数据库配置
+	dbdriver := os.Getenv("DB_DRIVER")
+	dbhost := os.Getenv("DB_HOST")
+	dbport, _ := strconv.Atoi(os.Getenv("DB_PORT")) // 字符串转整数
+	dbuser := os.Getenv("DB_USER")
+	dbpassword := os.Getenv("DB_PASSWORD")
+	dbname := os.Getenv("DB_NAME")
+	dbsslmode := os.Getenv("DB_SSLMODE")
+	dbTimeZone := os.Getenv("DB_TIMEZONE")
 	//数据库连接
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=%s TimeZone=%s",
 		dbhost, dbport, dbuser, dbpassword, dbname, dbsslmode, dbTimeZone)
 	Db, err = sql.Open(dbdriver, psqlInfo)
 	if err != nil {
-		util.Fatal("星际迷失->茶棚数据库打开时", err)
+		util.Fatal("星际迷失->茶棚数据库打开时：", err)
 	}
 	//测试数据库连接是否成功
 	err = Db.Ping()
@@ -61,6 +58,12 @@ func init() {
 	util.PrintStdout("Open tea chat database success, 星际茶棚开始服务")
 
 }
+
+// 使用常量管理文件路径和文件扩展名，增加可维护性
+const (
+	ImageDir = "./public/image/"
+	ImageExt = ".jpeg"
+)
 
 // create a random UUID with from RFC 4122
 // adapted from http://github.com/nu7hatch/gouuid
