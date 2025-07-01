@@ -1,80 +1,167 @@
 {{ define "content" }}
 
 <ol class="breadcrumb">
-  <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?uuid={{ .Objective.Uuid }}">{{ .Objective.Title }}@茶话会</a></li>
-  <li><a href="#">{{ .Project.Title }}@茶台</a></li>
-  <li class="active">加水@茶议</li>
+   <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
+    </a>@茶话会
+  </li>
+  <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
+  </li>
+  <li>#{{ .ThreadBean.Thread.Id }} @茶议</li>
+  <li class="active">完善茶议</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
 
 </ol>
 
-<div class="panel panel-default">
+<div class="media" style="margin-top: 20px;">
 
-  <div class="panel-heading">
-    <div class="row">
+  <div class="media-left">
+    {{ template "component_avatar_name_gender" .ThreadBean.Author }}
+  </div>
 
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <a href="/v1/user/biography?id={{ .User.Uuid }}">{{ .User.Name }}
+  <div class="media-body">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span>
+              （<a
+                href="/v1/family/detail?id={{ .ThreadBean.AuthorFamily.Uuid }}">{{ .ThreadBean.AuthorFamily.Name }}</a>，
+              <a
+                href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>）
+            </span>
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+              <i class="bi bi-paint-bucket" style="font-size: large; color: red;"></i>
+            </span>
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: right;">{{ .ThreadBean.Thread.CreatedAtDate }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <h4><mark>{{ .ThreadBean.Thread.TypeString }}</mark>
 
-        </a>
-        <span style="font-size: smaller;">
+          {{if .ThreadBean.IsApproved }}{{/* 检查是否被采纳1-1 */}}
+          {{/* 这个主意已被茶围管理员采纳 */}}
+          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
+          {{ end }}{{/* 检查是否被采纳1-2 */}}
+          {{ .ThreadBean.Thread.Title }}
+        </h4>
+
+        <span style="white-space: pre-wrap;">
+          {{ .ThreadBean.Thread.Body }}
         </span>
+
+        {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，显示完善图标按钮 */}}
+        <div style="text-align: right;">
+          <a class="btn btn-danger" href="/v1/thread/completed?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">全部内容补充完成</a>
+        </div>
+
+        {{ end }} {{/* 检查是否见证者--完成 */}}
+        <hr />
+
+        {{ if .ThreadBean.Thread.PostId }}
+        <blockquote>
+          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePostBean.Post.Uuid }}"
+              style="margin-inline-end: 1rem;"><span
+                class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
+          </p>
+          <footer style="font-size: small;">
+            <a href="/v1/user/biography?id={{ .QuotePostBean.Author.Uuid }}"
+              style="color: black;">{{ .QuotePostBean.Author.Name }}</a>
+            {{if .QuotePostBean.Author.Gender }}
+            <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+            {{ end }}
+            <span style="margin-inline-end: 20px;">
+              （<a href="/v1/family/detail?id={{ .QuotePostBean.AuthorFamily.Uuid }}"
+                style="color: black;">{{ .QuotePostBean.AuthorFamily.Name }}</a>，
+              <a href="/v1/team/detail?id={{ .QuotePostBean.AuthorTeam.Uuid }}"
+                style="color: black;">{{ .QuotePostBean.AuthorTeam.Abbreviation }}</a>）
+            </span>
+          </footer>
+        </blockquote>
+
+        {{ else }}
+        <blockquote>
+          <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}"><span
+                class="label label-default">茶台</span></a>{{ .QuoteProjectBean.Project.Body }} ...</p>
+          <footer style="font-size: small;">
+
+            <cite title="Source Title"> <a
+                href="/v1/user/biography?id={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
+              {{if .QuoteProjectBean.Author.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+              {{ end }}
+              <span style="margin-inline-end: 20px;">
+                （<a
+                  href="/v1/family/detail?id={{ .QuoteProjectBean.AuthorFamily.Uuid }}">{{ .QuoteProjectBean.AuthorFamily.Name }}</a>，
+                <a
+                  href="/v1/team/detail?id={{ .QuoteProjectBean.AuthorTeam.Uuid }}">{{ .QuoteProjectBean.AuthorTeam.Abbreviation }}</a>）
+              </span></cite>
+          </footer>
+        </blockquote>
+        {{ end }}
       </div>
 
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <span style="display: block; font-size: smaller;text-align: center;">
-          {{ .CreatedAtDate }}
-        </span>
-      </div>
-
-      <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <span style="display: block; text-align: right;">
-          <span class="label label-success">{{ .Status }}
-          </span>
-        </span>
-
+      <div class="panel-footer">
+        <span style="margin-inline-end: 2rem;">个人 4</span>
+        <span style="margin-inline-end: 2rem;">团队 1</span>
+        <span style="margin-inline-end: 2rem;">家庭 3</span>
       </div>
     </div>
   </div>
+</div>
 
+
+{{/* 展示全部管理员品味 */}}
+{{ range .PostBeanAdminSlice }}
+
+{{/* 检查茶围管理员品味的立场以决定左右侧布局 */}}
+{{ if .Post.Attitude }}
+{{/* 品味是“颔首”表态，左侧头像布局 */}}
+
+{{ template "component_post_left" . }}
+
+{{ else }}
+
+{{/* 品味是“摇头”表态，右侧头像布局 */}}
+{{template "component_post_right" . }}
+
+{{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
+
+{{ end }}{{/* 展示全部管理员品味完成 */}}
+
+<hr />
+
+
+{{ if .IsVerifier }}{{/* 检查是否见证者，如果是，显示补充输入框 */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    加水-补充完善内容，总字数要求少于456字。
+  </div>
   <div class="panel-body">
-    <h5>{{ .TypeStatus }}: {{ .Title }}</h5>
-
-    {{ .Topic }}
-  </div>
-
-  <div class="panel-footer">
-    <span style="font-size: smaller;"><a href="/v1/thread/edit?id={{ .Uuid }}">斟酌</a>？次于{{ .CreatedAtDate }}
-    </span>
-  </div>
-</div>
-
-<div class="panel panel-default">
-
-  <div class="panel-heading">
-    加水-输入补充说明内容，总字数要求少于456字。
-  </div>
-
-  <form role="form" action="/v1/thread/update" method="post">
-    <div class="panel-body">
-
+    <form role="form" action="/v1/thread/supplement" method="post">
       <div class="form-group">
-        <textarea class="form-control" name="additional" id="additional" rows="3" minlength="17" maxlength="567"
-          required>
-      </textarea>
+        <textarea class="form-control" name="additional" id="additional" rows="6" minlength="17" maxlength="567"
+          required></textarea>
       </div>
-
-      <input type="hidden" name="uuid" value="{{ .Uuid }}">
-
-      <div class="form-group  col-xs-2 col-sm-2 col-md-2 col-lg-2">
-
-        <button class="btn btn-primary pull-right" type="submit">提交
-        </button>
+      <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}">
+      <div class="form-group  col-xs-4 col-sm-4 col-md-4 col-lg-4">
+        <button class="btn btn-primary pull-right" type="submit">提交</button>
       </div>
-
+    </form>
     </div>
-  </form>
-
 </div>
+{{ end }}{{/* 检查是否见证者--完成 */}}
 
 {{ end }}

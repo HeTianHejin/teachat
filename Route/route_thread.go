@@ -282,7 +282,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 	//检查品味的类型
 	if thread.PostId != 0 {
-		// 说明这是一个附加类型的,针对某个post发表的茶议(chat-in-chat，讲开又讲，延伸话题)
+		// 说明这是一个附加类型的,针对某个post发表的茶议(comment-in-thread，讲开又讲，延伸话题)
 		post := data.Post{Id: thread.PostId}
 		if err = post.Get(); err != nil {
 			util.Debug(" Cannot read post given post_id", err)
@@ -650,6 +650,9 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "茶博士失魂鱼，未能读取茶议编号，请确认后再试。")
 		return
 	}
+
+	var tD data.ThreadDetail
+
 	// 读取茶议内容
 	thread, err := data.GetThreadByUUID(uuid)
 	if err != nil {
@@ -678,7 +681,21 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	var tD data.ThreadDetail
+	//核对用户身份，是否具有完善操作权限
+	verifier_team := data.Team{Id: data.TeamIdVerifier}
+	ok, err := verifier_team.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug(" Cannot check team membership", verifier_team.Id, err)
+		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您没有权限补充该茶议。")
+		return
+	}
+	if !ok {
+		Report(w, r, "茶博士惊讶，陛下你没有权限补充该茶议，请确认后再试。")
+		return
+	}
+	tD.IsVerifier = true
+	tD.IsInput = true
+
 	// 读取茶议资料荚
 	tD.ThreadBean, err = FetchThreadBean(thread)
 	if err != nil {
@@ -718,24 +735,19 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
-
-	//核对用户身份，是否具有完善操作权限
-	verifier_team := data.Team{Id: data.TeamIdVerifier}
-	ok, err := verifier_team.IsMember(s_u.Id)
+	post_admi_slice, err := tD.ThreadBean.Thread.PostsAdmin()
 	if err != nil {
-		util.Debug(" Cannot check team membership", verifier_team.Id, err)
-		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您没有权限补充该茶议。")
+		util.Debug(" Cannot read admin posts", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
-	if !ok {
-		Report(w, r, "茶博士惊讶，陛下你没有权限补充该茶议，请确认后再试。")
+	tD.PostBeanAdminSlice, err = FetchPostBeanSlice(post_admi_slice)
+	if err != nil {
+		util.Debug(" Cannot read admin postbean", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
 		return
 	}
 
-	tD.IsGuest = false
-	tD.IsMaster = false
-	tD.IsAdmin = true
-	tD.IsInput = true
 	//从会话查获当前浏览用户资料荚
 	s_u, s_d_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(sess)
 	if err != nil {
@@ -755,7 +767,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	tD.SessUserDefaultPlace = s_default_place
 	tD.SessUserBindPlaces = s_places
 
-	RenderHTML(w, &tD, "layout", "navbar.private", "thread.supplement")
+	RenderHTML(w, &tD, "layout", "navbar.private", "thread.supplement", "component_post_left", "component_post_right", "component_sess_capacity", "component_avatar_name_gender")
 
 }
 
