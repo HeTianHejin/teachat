@@ -182,7 +182,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		tIds_str := r.PostFormValue("invite_ids")
 
 		//用正则表达式检测茶团号TeamIds，是否符合“整数，整数，整数...”的格式
-		if !Verify_id_slice_Format(tIds_str) {
+		if !VerifyIdSliceFormat(tIds_str) {
 			util.Debug(" TeamId slice format is wrong", err)
 			Report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 			return

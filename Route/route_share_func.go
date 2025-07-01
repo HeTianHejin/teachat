@@ -1434,13 +1434,18 @@ func VerifyPositiveIntegerFormat(str string) bool {
 	return reg.MatchString(str)
 }
 
-// 验证team_id_slice:"2,19,87..."字符串格式是否正确，正确返回true，错误返回false。
-func Verify_id_slice_Format(team_id_slice string) bool {
+// 验证team_id_slice，必需是正整数的逗号分隔的"2,19,87..."字符串格式是否正确，正确返回true，错误返回false。
+func VerifyIdSliceFormat(team_id_slice string) bool {
 	if team_id_slice == "" {
 		return false
 	}
-	pattern := `^[0-9]+(,[0-9]+)*$`
-	reg := regexp.MustCompile(pattern)
+	// 使用双引号显式声明正则表达式，避免隐藏字符
+	pattern := "^[0-9]+(,[0-9]+)*$"
+	reg, err := regexp.Compile(pattern)
+	if err != nil {
+		// 实际生产环境应记录该错误
+		return false
+	}
 	return reg.MatchString(team_id_slice)
 }
 
@@ -1448,7 +1453,7 @@ func Verify_id_slice_Format(team_id_slice string) bool {
 // 返回百分数的分子整数
 func ProgressRound(numerator, denominator int) int {
 	if denominator == 0 {
-		// 分母为0时，视作未有记录，即未进行表决状态，返回100
+		// 分母为0时，视作未有记录，即未进行表决状态，返回默认值100
 		return 100
 	}
 	if numerator == denominator {
@@ -1469,7 +1474,8 @@ func ProgressRound(numerator, denominator int) int {
 	// }
 
 	// 其他情况，使用math.Floor确保向下取整，然后四舍五入
-	return int(math.Floor(ratio + 0.5))
+	//return int(math.Floor(ratio + 0.5))
+	return int(math.Round(ratio))
 }
 
 /*
@@ -1576,21 +1582,26 @@ func MarsString(str string, ratio int) string {
 	return string(rstr)
 }
 
-// 入参string，截取前面一段指定长度文字，返回string
-// 注意，输入负数=最大值
-// 参考https://blog.thinkeridea.com/201910/go/efficient_string_truncation.html
+// 入参string，截取前面一段指定长度文字，返回string，作为预览文字
+// CodeBuddy修改
 func Substr(s string, length int) string {
-	//这是根据range的特性加的，如果不加，截取不到最后一个字（end+1=意外，因为1中文=3字节！）
-	//str += "."
-	var n, i int
-	for i = range s {
-		if n == length {
+	if length <= 0 {
+		return ""
+	}
+	var count int //统计字符数（而非字节数）
+	end := 0      //记录最后一个字符的起始字节位置
+	for i := range s {
+		if count == length {
 			break
 		}
-		n++
+		count++
+		end = i
 	}
-
-	return s[:i]
+	if count < length {
+		return s
+	}
+	_, size := utf8.DecodeRuneInString(s[end:])
+	return s[:end+size]
 }
 
 // 截取一段指定开始和结束位置的文字，用range迭代方法。入参string，返回string“...”

@@ -58,7 +58,7 @@ func init() {
 	}
 
 	//ok
-	util.PrintStdout("Well done, 星际茶棚开始服务")
+	util.PrintStdout("Open tea chat database success, 星际茶棚开始服务")
 
 }
 
