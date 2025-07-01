@@ -1403,8 +1403,18 @@ func RenderHTML(w http.ResponseWriter, data interface{}, filenames ...string) {
 		files = append(files, fmt.Sprintf("templates/%s.go.html", file))
 	}
 
-	templates := template.Must(template.ParseFiles(files...))
-	templates.ExecuteTemplate(w, "layout", data)
+	// 手动解析模板并处理错误
+	templates, err := template.ParseFiles(files...)
+	if err != nil {
+		// 记录错误并返回HTTP 500错误
+		http.Error(w, fmt.Sprintf("Error parsing templates: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// 执行模板并处理可能的错误
+	if err := templates.ExecuteTemplate(w, "layout", data); err != nil {
+		http.Error(w, fmt.Sprintf("Error executing template: %v", err), http.StatusInternalServerError)
+	}
 }
 
 // 验证邮箱地址，格式是否正确，正确返回true，错误返回false。
