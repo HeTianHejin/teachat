@@ -164,7 +164,7 @@ func (a *AcceptObject) Get() (err error) {
 }
 
 // 根据acceptObjectId查询返回其“友邻蒙评”对象
-func (ao *AcceptObject) GetObjectByACId() (object interface{}, err error) {
+func (ao *AcceptObject) GetObjectByACId() (object any, err error) {
 	switch ao.ObjectType {
 	case 1:
 		ob := Objective{

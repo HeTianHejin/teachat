@@ -40,7 +40,7 @@ func InitLogger(writeToFile bool, level int) {
 }
 
 // 带调用位置的基础日志方法
-func logWithCaller(skip int, prefix string, v ...interface{}) {
+func logWithCaller(skip int, prefix string, v ...any) {
 	_, file, line, ok := runtime.Caller(skip + 1) // +1 跳过本函数
 	if !ok {
 		file = "???"
@@ -53,35 +53,35 @@ func logWithCaller(skip int, prefix string, v ...interface{}) {
 }
 
 // Debug 开发调试信息
-func Debug(v ...interface{}) {
+func Debug(v ...any) {
 	if logLevel <= LevelDebug {
 		logWithCaller(1, "DEBUG", v...)
 	}
 }
 
 // Info 常规信息
-func Info(v ...interface{}) {
+func Info(v ...any) {
 	if logLevel <= LevelInfo {
 		logWithCaller(1, "INFO", v...)
 	}
 }
 
 // Warning 警告信息
-func Warning(v ...interface{}) {
+func Warning(v ...any) {
 	if logLevel <= LevelWarning {
 		logWithCaller(1, "WARNING", v...)
 	}
 }
 
 // Error 错误信息
-func Error(v ...interface{}) {
+func Error(v ...any) {
 	if logLevel <= LevelError {
 		logWithCaller(1, "ERROR", v...)
 	}
 }
 
 // Fatal 致命错误并退出
-func Fatal(v ...interface{}) {
+func Fatal(v ...any) {
 	logWithCaller(1, "FATAL", v...)
 	os.Exit(1)
 }

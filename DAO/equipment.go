@@ -1,13 +1,10 @@
 package data
 
 import (
-	"bufio"
 	"crypto/rand"
 	"crypto/sha1"
 	"database/sql"
 	"fmt"
-	"image"
-	"image/jpeg"
 	"log"
 	"os"
 	"strconv"
@@ -22,7 +19,7 @@ import (
    涉及数据库存取操作的定义和一些方法
 */
 
-var Db *sql.DB // postgres 数据库实例
+var Db *sql.DB //数据库实例
 
 func init() {
 	var err error
@@ -49,21 +46,14 @@ func init() {
 		util.Fatal("星际迷失->茶棚数据库打开时：", err)
 	}
 	//测试数据库连接是否成功
-	err = Db.Ping()
-	if err != nil {
-		util.Fatal("ping teachat database failure - 测试链接茶话会数据库失败~~~", err)
+	if err = Db.Ping(); err != nil {
+		util.Fatal("ping teachat database failure - 测试链接茶话会数据库失败！", err)
 	}
 
 	//ok
-	util.PrintStdout("Open tea chat database success, 星际茶棚开始服务")
+	util.PrintStdout("Open tea chat database success, 星际茶棚数据库连接成功！")
 
 }
-
-// 使用常量管理文件路径和文件扩展名，增加可维护性
-const (
-	ImageDir = "./public/image/"
-	ImageExt = ".jpeg"
-)
 
 // create a random UUID with from RFC 4122
 // adapted from http://github.com/nu7hatch/gouuid
@@ -121,29 +111,6 @@ func SaveReadedUserId(thread_id int, user_id int) (read Read, err error) {
 	defer stmt.Close()
 	err = stmt.QueryRow(thread_id, user_id, time.Now()).Scan(&read.Id, &read.ThreadId, &read.UserId, &read.ReadAt)
 	return
-}
-
-// 生成头像默认（占位）图片，jpeg格式，64*64
-func DefaultAvatar(uuid string) {
-	// 生成64*64新画布
-	bg := image.NewRGBA(image.Rect(0, 0, 64, 64))
-
-	newFilePath := ImageDir + uuid + ImageExt
-	newFile, err := os.Create(newFilePath)
-	if err != nil {
-
-		return
-	}
-	// 确保文件在函数执行完毕后关闭
-	defer newFile.Close()
-
-	// 先写内存缓存
-	buff := bufio.NewWriter(newFile)
-	//转换格式
-	jpeg.Encode(buff, bg, nil)
-
-	// 写入硬盘
-	buff.Flush()
 }
 
 // contains 检查切片中是否包含特定元素

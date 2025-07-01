@@ -1,21 +1,52 @@
 package main
 
 import (
+	"context"
+	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	route "teachat/Route"
 	util "teachat/Util"
 	"time"
+
+	"github.com/NYTimes/gziphandler" // 压缩
 )
 
 func main() {
+	// 初始化配置
+	if err := util.LoadConfig(); err != nil {
+		log.Fatalf("配置加载失败: %v", err)
+	}
+	if err := util.Config.Validate(); err != nil {
+		log.Fatalf("配置校验失败: %v", err)
+	}
 
-	// 在控制台输出当前运行地址、版本等信息
-	util.PrintStdout("teachat", util.Version(), "server at", util.Config.Address)
-
-	// handle static assets
+	// 创建路由器
 	mux := http.NewServeMux()
-	files := http.FileServer(http.Dir(util.Config.Static))
-	mux.Handle("/v1/static/", http.StripPrefix("/v1/static/", files))
+
+	// 静态资源处理
+	const staticPrefix = "/v1/static/"
+	if _, err := os.Stat(util.Config.Static); os.IsNotExist(err) {
+		log.Fatalf("静态资源目录不存在: %s", util.Config.Static)
+	}
+
+	// 创建文件处理器（带缓存控制）
+	cacheControl := func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Cache-Control", "public, max-age=31536000") // 一年
+			h.ServeHTTP(w, r)
+		})
+	}
+
+	files := cacheControl(http.FileServer(http.Dir(util.Config.Static)))
+
+	// 添加Gzip压缩
+	handler := gziphandler.GzipHandler(files) // 直接使用，无需 nil 检查
+
+	// 注册静态资源处理器
+	mux.Handle(staticPrefix, http.StripPrefix(staticPrefix, handler))
 
 	// index
 	mux.HandleFunc("/", route.Index)
@@ -162,14 +193,37 @@ func main() {
 	// about
 	mux.HandleFunc("/v1/about", route.About)
 
-	// starting up the server
+	// 创建服务器
 	server := &http.Server{
 		Addr:           util.Config.Address,
 		Handler:        mux,
-		ReadTimeout:    time.Duration(util.Config.ReadTimeout * int64(time.Second)),
-		WriteTimeout:   time.Duration(util.Config.WriteTimeout * int64(time.Second)),
-		MaxHeaderBytes: 1 << 20, //是位运算，表示将数字1左移20位，即 2^20 = 1,048,576 字节 = 1MB.
+		ReadTimeout:    time.Duration(util.Config.ReadTimeout) * time.Second, // 修正时间单位
+		WriteTimeout:   time.Duration(util.Config.WriteTimeout) * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
-	server.ListenAndServe()
+	// 设置优雅关闭
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
+	go func() {
+		<-quit
+		log.Println("接收到关闭信号，正在停止服务器...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		if err := server.Shutdown(ctx); err != nil {
+			log.Fatalf("服务器强制关闭: %v", err)
+		} else {
+			log.Println("服务器已优雅停止")
+		}
+	}()
+	// 启动服务器
+	log.Printf("服务器启动，监听地址: %s", util.Config.Address)
+	util.PrintStdout("teachat", util.Version(), "星际茶棚一>开门迎客")
+	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		log.Fatalf("服务器启动失败: %v", err)
+	}
+	log.Println("服务器已停止")
+	log.Println("星际茶棚 --> 打烊休息")
 }

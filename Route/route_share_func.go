@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -1314,7 +1315,7 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	}
 
 	// 创建新文件，无需切换目录，直接使用完整路径，减少安全风险
-	newFilePath := data.ImageDir + uuid + data.ImageExt
+	newFilePath := util.Config.ImageDir + uuid + util.Config.ImageExt
 	newFile, err := os.Create(newFilePath)
 	if err != nil {
 		util.Debug("创建头像文件名失败", err)
@@ -1326,15 +1327,17 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 
 	// 通过缓存方法写入硬盘
 	buff := bufio.NewWriter(newFile)
-	buff.Write(fileBytes)
-	err = buff.Flush()
-	if err != nil {
+	if _, err = buff.Write(fileBytes); err != nil {
+		util.Debug("fail to write avatar image", err)
+		Report(w, r, "你好，茶博士居然说没有墨水了， 未能写完头像文件，请稍后再试。")
+		return err
+	}
+	if err = buff.Flush(); err != nil {
 		util.Debug("fail to write avatar image", err)
 		Report(w, r, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
 		return err
 	}
 
-	// _, err = newFile.Write(fileBytes)
 	return nil
 }
 
@@ -1342,13 +1345,21 @@ func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 // 茶博士-teaOffice，是古代中华传统文化对茶馆工作人员的昵称，如：富家宴会，犹有专供茶事之人，谓之茶博士。——唐代《西湖志馀》
 // 现在多指精通茶艺的师傅，尤其是四川的长嘴壶茶艺，茶博士个个都是身怀绝技的“高手”。
 // 茶博士向茶客报告信息的方法，包括但不限于意外事件和通知、感谢等等提示。
-func Report(w http.ResponseWriter, r *http.Request, msg ...interface{}) {
+func Report(w http.ResponseWriter, r *http.Request, msg ...any) {
 	var userBPD data.UserBean
-	userBPD.Message = fmt.Sprint(msg...)
+	var b strings.Builder
+	for i, arg := range msg {
+		if i > 0 {
+			b.WriteByte(' ') // 参数间添加空格
+		}
+		fmt.Fprint(&b, arg)
+	}
+	userBPD.Message = b.String()
+
 	s, err := Session(r)
 	if err != nil {
 		userBPD.SessUser = data.User{
-			Id:   0,
+			Id:   data.UserId_None,
 			Name: "游客",
 		}
 		RenderHTML(w, &userBPD, "layout", "navbar.public", "feedback")
@@ -1356,7 +1367,7 @@ func Report(w http.ResponseWriter, r *http.Request, msg ...interface{}) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session", s.Email, err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1386,18 +1397,20 @@ func Session(r *http.Request) (data.Session, error) {
 
 // parse HTML templates
 // pass in a slice of file names, and get a template
-func ParseTemplateFiles(filenames ...string) (t *template.Template) {
+func ParseTemplateFiles(filenames ...string) *template.Template {
 	var files []string
-	t = template.New("layout")
+	t := template.New("layout")
 	for _, file := range filenames {
-		files = append(files, fmt.Sprintf("templates/%s.go.html", file))
+		// 使用 filepath.Join 安全拼接路径,unix+windows
+		filePath := filepath.Join(util.Config.TemplateExt, file+util.Config.TemplateExt)
+		files = append(files, filePath)
 	}
 	t = template.Must(t.ParseFiles(files...))
-	return
+	return t
 }
 
 // 处理器把页面模版和需求数据揉合后，由这个方法，将填写好的页面“制作“成HTML格式，调用http响应方法，发送给浏览器端客户
-func RenderHTML(w http.ResponseWriter, data interface{}, filenames ...string) {
+func RenderHTML(w http.ResponseWriter, data any, filenames ...string) {
 	var files []string
 	for _, file := range filenames {
 		files = append(files, fmt.Sprintf("templates/%s.go.html", file))
