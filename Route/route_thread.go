@@ -8,6 +8,7 @@ import (
 	"strconv"
 	data "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // NewDraftThreadHandle()
@@ -144,7 +145,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	// 如果茶台class=1，存为开放式茶议草稿，
 	// 如果茶台class=2， 存为封闭式茶议草稿
 	if proj.Class == data.ClassOpenTeaTable || proj.Class == data.ClassClosedTeaTable {
-		//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<456
+		//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<int(util.Config.ThreadMaxWord)
 		if CnStrLen(title) < 1 {
 			Report(w, r, "你好，茶博士竟然说该茶议标题为空，请确认后再试一次。")
 			return
@@ -156,12 +157,12 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		if CnStrLen(body) < 1 {
 			Report(w, r, "你好，茶博士竟然说该茶议内容为空，请确认后再试一次。")
 			return
-		} else if CnStrLen(body) < 17 {
+		} else if CnStrLen(body) < int(util.Config.ThreadMinWord) {
 			Report(w, r, "你好，茶博士竟然说该茶议内容太短，请确认后再试一次。")
 			return
 		}
-		if CnStrLen(body) > 456 {
-			Report(w, r, "你好，茶博士小声说茶棚的小纸条只能写456字，请确认后再试一次。")
+		if CnStrLen(body) > int(util.Config.ThreadMaxWord) {
+			Report(w, r, "你好，茶博士小声说茶棚的小纸条只能写int(util.Config.ThreadMaxWord)字，请确认后再试一次。")
 			return
 		}
 
@@ -373,13 +374,8 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			//记录茶议被点击数
 			//tD.ThreadBean.Thread.AddHitCount()
 			// 填写页面数据
-			tD.ThreadBean.Thread.PageData.IsAuthor = false
 
 			tD.IsGuest = true
-			tD.IsInput = false
-			tD.IsAdmin = false
-			tD.IsMaster = false
-			tD.IsVerifier = false
 
 			tD.SessUser = data.User{
 				Id:   0,
@@ -388,24 +384,16 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				Footprint: r.URL.Path,
 				Query:     r.URL.RawQuery,
 			}
-			//迭代postSlice,标记非品味撰写者
-			for i := range tD.PostBeanSlice {
-				tD.PostBeanSlice[i].Post.PageData.IsAuthor = false
-
-			}
 
 			//show the thread and the posts展示页面
 			RenderHTML(w, &tD, "layout", "navbar.public", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
 			return
 		} else {
-			//非法访问未开放的话题？
-			util.Debug(" 试图访问未公开的thread", uuid)
 			Report(w, r, "茶水温度太高了，不适合品味，请稍后再试。")
 			return
 		}
 	} else {
 		//用户是登录状态
-		tD.IsGuest = false
 
 		if tD.ThreadBean.Thread.Class == data.ThreadClassOpen || tD.ThreadBean.Thread.Class == data.ThreadClassClosed {
 			//从会话查获当前浏览用户资料荚
@@ -461,8 +449,6 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				if tD.PostBeanSlice[i].Post.UserId == s_u.Id {
 					tD.PostBeanSlice[i].Post.PageData.IsAuthor = true
 					break
-				} else {
-					tD.PostBeanSlice[i].Post.PageData.IsAuthor = false
 				}
 			}
 
@@ -482,7 +468,6 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				//不是茶议撰写者
 				//记录茶议被点击数
 				//tD.ThreadBean.Thread.AddHitCount()
-				tD.ThreadBean.Thread.PageData.IsAuthor = false
 
 				//检查是否封闭式茶台
 				if tD.QuoteProjectBean.Project.Class == data.ClassClosedTeaTable {
@@ -777,9 +762,93 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 // 不能超过max_word，不能修改已记录的茶议内容，
 // 不能修改茶议等级，
 // 不能修改茶议标题，
-// 不能修改茶议创建时间，
 // 不能修改茶议是否开放式/封闭式，
 func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+
+	sess, err := Session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", sess.Email, err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取陛下资料。")
+		return
+	}
+	//检查用户身份，是否具有完善操作权限
+	verifier_team := data.Team{Id: data.TeamIdVerifier}
+	ok, err := verifier_team.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug(" Cannot check team membership", verifier_team.Id, err)
+		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您没有权限补充该茶议。")
+		return
+	}
+	if !ok {
+		Report(w, r, "茶博士惊讶，陛下你没有权限补充该茶议，请确认后再试。")
+		return
+	}
+	//获取post方法提交的表单
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug(" Cannot parse form", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能补充该茶议。")
+		return
+	}
+	t_uuid := r.PostFormValue("uuid")
+	if t_uuid == "" {
+		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您补充的茶议编号不存在。")
+		return
+	}
+	//读取提交的additional
+	additional := r.PostFormValue("additional")
+
+	// 读取茶议内容
+	thread, err := data.GetThreadByUUID(t_uuid)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			Report(w, r, "你好，茶博士竟然说该茶议不存在，请确认后再试一次。")
+			return
+		}
+		util.Debug(" Cannot read thread given uuid", t_uuid, err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
+		return
+	}
+	switch thread.Category {
+	case data.ThreadCategoryAppointment:
+		break
+	case data.ThreadCategorySeeSeek:
+		break
+	case data.ThreadCategorySuggestion:
+		break
+	case data.ThreadCategoryGoods:
+		break
+	case data.ThreadCategoryHandcraft:
+		break
+	default:
+		Report(w, r, "你好，茶博士表示，陛下，普通茶议不能加水呢。")
+		return
+	}
+	// log.Println(CnStrLen(thread.Body))
+	// log.Println(CnStrLen(additional))
+	//读取提交内容要求>int(util.Config.ThreadMinWord)中文字符，加上已有内容是否<=int(util.Config.ThreadMaxWord),
+	if ok = SubmitAdditionalContent(w, r, thread.Body, additional); !ok {
+		return
+	}
+	//当前“[中文时间字符 + 补充]” + body
+	//获取当前时间，格式化成中文时间字符
+	now := time.Now()
+	timeStr := now.Format("2006年1月2日 15:04:05")
+	// 追加内容（另起一行）
+	t := "\n[" + timeStr + " 补充] " + additional // 注意开头的 \n
+	thread.Body += t
+	//更新茶议内容
+	if err = thread.UpdateBodyAndClass(thread.Body, thread.Class, r.Context()); err != nil {
+		util.Debug(" Cannot update thread", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能补充该茶议。")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/thread/detail?id="+t_uuid, http.StatusFound)
 
 }

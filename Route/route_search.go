@@ -155,7 +155,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 	case data.SearchTypeThreadTitle:
 		//查询，茶话标题，thread.title
-		thread_slice, err := data.SearchThreadByTitle(keyword)
+		thread_slice, err := data.SearchThreadByTitle(keyword, r.Context())
 		if err != nil {
 			util.Debug(" Cannot search thread by title", err)
 		}

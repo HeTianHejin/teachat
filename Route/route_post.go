@@ -215,7 +215,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	if CnStrLen(body) <= 17 {
 		Report(w, r, "你好，戴着厚厚眼镜片的茶博士居然说，请不要用隐形墨水来写品味内容。")
 		return
-	} else if CnStrLen(body) > 456 {
+	} else if CnStrLen(body) > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，彬彬有礼戴着厚厚眼镜片的茶博士居然说，内容太多，茶叶蛋壳都用光了也写不完呀。")
 		return
 	}
@@ -329,7 +329,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	//检查body的长度，规则是不能少于刘姥姥评价老君眉的品味字数
-	if CnStrLen(body) < 17 {
+	if CnStrLen(body) < int(util.Config.ThreadMinWord) {
 		Report(w, r, "你好，茶博士竟然说品味字太少不值得动笔，记录您的品味失败。")
 		return
 	}
@@ -444,8 +444,8 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 		//可以补充自己的表态内容
 		body := r.PostFormValue("body")
 		if body != "" {
-			//检查补充内容是否有意义，rune 字数>17,总的post字数<456
-			if CnStrLen(body) > 17 && CnStrLen(t_post.Body)+CnStrLen(body) < 456 {
+			//检查补充内容是否有意义，rune 字数>int(util.Config.ThreadMinWord),总的post字数<int(util.Config.ThreadMaxWord)
+			if CnStrLen(body) > int(util.Config.ThreadMinWord) && CnStrLen(t_post.Body)+CnStrLen(body) < int(util.Config.ThreadMaxWord) {
 				t_post.Body += body
 			} else {
 				//提示用户总字数或者本次提交补充内容超出字数限制

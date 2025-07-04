@@ -1434,7 +1434,7 @@ func RenderHTML(w http.ResponseWriter, data any, filenames ...string) {
 		// 添加详细的错误日志
 		util.PrintStdout("模板渲染错误: ", err)
 		// 避免在错误响应中泄露敏感信息
-		http.Error(w, "茶博士失魂鱼: 无法煮水冲茶，陛下稍安勿躁", http.StatusInternalServerError)
+		http.Error(w, "茶博士失魂鱼: 茶壶失踪了，无法煮水冲茶，陛下稍安勿躁。", http.StatusInternalServerError)
 	}
 }
 
@@ -1574,6 +1574,31 @@ func StaRepIntSlice(str_len, ratio int) (numSlice []int, err error) {
 	}
 
 	return
+}
+
+// 1. 校验茶议已有内容是否不超限,false == 超限
+func SubmitAdditionalContent(w http.ResponseWriter, r *http.Request, body, additional string) bool {
+	if CnStrLen(body) >= int(util.Config.ThreadMaxWord) {
+		Report(w, r, "已有内容已超过最大字数限制，无法补充。")
+		return false
+	}
+
+	// 2. 校验补充内容字数
+	min := int(util.Config.ThreadMinWord)
+	max := int(util.Config.ThreadMaxWord) - CnStrLen(body)
+	current := CnStrLen(additional)
+
+	if current < min || current > max {
+		errMsg := fmt.Sprintf(
+			"茶博士提示：补充内容需满足：%d ≤ 字数 ≤ %d（当前：%d）。",
+			min, max, current,
+		)
+		Report(w, r, errMsg)
+		return false
+	}
+	// 3. 校验补充内容是否包含敏感词
+
+	return true
 }
 
 // 计算中文字符串长度

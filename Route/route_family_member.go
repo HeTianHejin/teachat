@@ -134,9 +134,9 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// 提交的声明内容
 	cont := r.PostFormValue("content")
-	// 检查提交的声明内容字数是否>3 and <456
+	// 检查提交的声明内容字数是否>threadMinWord and <int(util.Config.ThreadMaxWord)
 	lenCont := CnStrLen(cont)
-	if lenCont < 3 || lenCont > 456 {
+	if lenCont < int(util.Config.ThreadMinWord) || lenCont > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士认为内容字数太长或者太短，请确认后再试。")
 		return
 	}

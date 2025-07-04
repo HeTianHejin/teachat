@@ -141,13 +141,13 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检测一下name是否>2中文字，body是否在17-456中文字，
+	// 检测一下name是否>2中文字，body是否在min_word-int(util.Config.ThreadMaxWord)中文字，
 	// 如果不是，返回错误信息
 	if CnStrLen(title) < 2 || CnStrLen(title) > 36 {
 		Report(w, r, "你好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
-	if CnStrLen(body) < 17 || CnStrLen(body) > 456 {
+	if CnStrLen(body) < int(util.Config.ThreadMinWord) || CnStrLen(body) > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return
 	}

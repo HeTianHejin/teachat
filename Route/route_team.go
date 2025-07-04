@@ -280,9 +280,9 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mission := r.PostFormValue("mission")
-	// 检测mission是否在17-456中文字符
+	// 检测mission是否在17-int(util.Config.ThreadMaxWord)中文字符
 	lenM := CnStrLen(mission)
-	if lenM < 17 || lenM > 456 {
+	if lenM < int(util.Config.ThreadMinWord) || lenM > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说愿景字数太多或者太少，未能创建新茶团。")
 		return
 	}
@@ -410,12 +410,12 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		RenderHTML(w, &tS, "layout", "navbar.public", "teams.open", "component_teams_public")
+		RenderHTML(w, &tS, "layout", "navbar.public", "teams.open", "component_teams_public", "component_team")
 		return
 	}
 	sUser, _ := s.User()
 	tS.SessUser = sUser
-	RenderHTML(w, &tS, "layout", "navbar.private", "teams.open", "component_teams_public")
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.open", "component_teams_public", "component_team")
 
 }
 
@@ -438,18 +438,18 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s, _ := Session(r)
-	u, err := s.User()
+	s_u, err := s.User()
 	if err != nil {
 		tS.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
 		}
-		RenderHTML(w, &tS, "layout", "navbar.public", "teams.closed", "component_teams_public")
+		RenderHTML(w, &tS, "layout", "navbar.public", "teams.closed", "component_teams_public", "component_team")
 		return
 	}
-	tS.SessUser = u
+	tS.SessUser = s_u
 
-	RenderHTML(w, &tS, "layout", "navbar.private", "teams.closed", "component_teams_public")
+	RenderHTML(w, &tS, "layout", "navbar.private", "teams.closed", "component_teams_public", "component_team")
 
 }
 
@@ -480,7 +480,7 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ts.SessUser = s_u
-	RenderHTML(w, &ts, "layout", "navbar.private", "teams.hold", "component_teams_public")
+	RenderHTML(w, &ts, "layout", "navbar.private", "teams.hold", "component_teams_public", "component_team")
 }
 
 // GET /v1/teams/joined

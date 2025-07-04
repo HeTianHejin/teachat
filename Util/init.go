@@ -24,22 +24,24 @@ func init() {
 
 // 配置文件结构体
 type Configuration struct {
-	Address      string
-	ReadTimeout  int64
-	WriteTimeout int64
-	Static       string
-	ImageDir     string
-	ImageExt     string
-	TemplatesDir string
-	TemplateExt  string
-	// SysMail_Username string
-	// SysMail_Password string
-	// SysMail_Host     string
-	//SysMail_Port   string
+	Address          string
+	ReadTimeout      int64
+	WriteTimeout     int64
+	Static           string
+	ImageDir         string
+	ImageExt         string
+	TemplatesDir     string
+	TemplateExt      string
+	ThreadMinWord    int64 //  茶议最小字数限制
+	ThreadMaxWord    int64 // 茶议最大字数限制
 	MaxInviteTeams   int64 // 茶围、茶台最大可邀请团队数
 	MaxTeamMembers   int64 // 团队最大成员数
 	MaxTeamsCount    int64 // 个人创建的团队数上限
 	MaxSurvivalTeams int64 // 个人最大活跃团队数
+	// SysMail_Username string
+	// SysMail_Password string
+	// SysMail_Host     string
+	//SysMail_Port   string
 }
 
 var Config Configuration
@@ -69,9 +71,9 @@ func LoadConfig() error {
 // 使用绝对路径获取配置文件
 func getConfigPath() string {
 	// 优先使用环境变量指定的配置路径
-	if path := os.Getenv("APP_CONFIG"); path != "" {
-		return path
-	}
+	// if path := os.Getenv("APP_CONFIG"); path != "" {
+	// 	return path
+	// }
 
 	// 其次尝试当前目录下的 config.json
 	if _, err := os.Stat("config.json"); err == nil {
@@ -95,7 +97,6 @@ func (c *Configuration) Validate() error {
 	if c.ImageDir == "" {
 		return errors.New("图片目录不能为空")
 	}
-	// ... 其他验证 ...
 	if c.TemplatesDir == "" {
 		return errors.New("模板目录不能为空")
 	}
@@ -116,6 +117,15 @@ func (c *Configuration) Validate() error {
 	}
 	if c.Static == "" {
 		return errors.New("静态文件目录不能为空")
+	}
+	if c.ThreadMaxWord == 0 {
+		return errors.New("茶议最大字数限制不能为空")
+	}
+	if c.ThreadMinWord == 0 {
+		return errors.New("茶议最小字数限制不能为空")
+	}
+	if c.ImageExt == "" {
+		return errors.New("图片扩展名不能为空")
 	}
 	return nil
 }

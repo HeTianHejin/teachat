@@ -7,6 +7,8 @@
     "ImageExt":".jpeg",
     "TemplatesDir":"templates/",
     "TemplateExt":".go.html",
+    "ThreadMinWord": 2,
+    "ThreadMaxWord": 456,
     "MaxInviteTeams": 12,
     "MaxTeamMembers": 12,
     "MaxTeamsCount": 99,

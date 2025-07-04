@@ -226,15 +226,24 @@ func (t *Thread) IsAuthor(u User) bool {
 }
 
 // update 追加茶议，补充内容，
-func (t *Thread) UpdateBodyAndClass(body string, class int) (err error) {
-	statement := "UPDATE threads SET body = $2, class = $3, edit_at = $4 WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(t.Id, body, class, time.Now())
-	return
+func (t *Thread) UpdateBodyAndClass(body string, class int, ctx context.Context) error {
+	const query = `
+        UPDATE threads 
+        SET body = $2, 
+            class = $3, 
+            edit_at = $4 
+        WHERE id = $1`
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	_, err := Db.ExecContext(ctx, query,
+		t.Id,
+		body,
+		class,
+		time.Now().UTC()) // 使用UTC时间
+
+	return err
 }
 
 // UpdateClass() 根据Thread.Id更新class
@@ -324,8 +333,15 @@ func (thread *Thread) IsApproved() bool {
 
 // 首页展示的必须是class=1或者2状态,返回thread对象数组，前limit个茶议
 // 如果点击数相同，则按创建时间从先到后排序
-func HotThreads(limit int) (threads []Thread, err error) {
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE class IN (1,2) LIMIT $1", limit)
+func HotThreads(limit int, ctx context.Context) (threads []Thread, err error) {
+	if limit <= 0 {
+		err = fmt.Errorf("limit is %d", limit)
+		return
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE class IN (1,2) ORDER BY click_count DESC, created_at DESC LIMIT $1", limit)
 	if err != nil {
 		return
 	}
@@ -543,30 +559,28 @@ func (t *Thread) IsEdited() bool {
 }
 
 // 填写入围茶台约茶等5部曲
-func CreateRequiredThreads(objective *Objective, project *Project, user *User) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+func CreateRequiredThreads(objective *Objective, project *Project, user *User, ctx context.Context) error {
+	// 使用传入的上下文创建超时控制
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
+	// 开始事务（使用传入的上下文）
 	tx, err := Db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("事务启动失败: %w", err)
 	}
 
-	// 确保事务安全处理
-	defer func() {
-		if p := recover(); p != nil {
-			tx.Rollback()
-			panic(p) // 重新抛出panic
-		} else if err != nil {
-			tx.Rollback()
-		}
-	}()
+	// 简化事务处理：确保在函数退出时回滚（如果未提交）
+	defer tx.Rollback()
 
-	templates := []struct {
+	// 明确定义线程模板类型
+	type threadTemplate struct {
 		Title    string
 		Body     string
 		Category int
-	}{
+	}
+
+	templates := []threadTemplate{
 		{"约茶", "请在此处安排具体的茶会时间和参与人员", ThreadCategoryAppointment},
 		{"看看", "请记录作业过程，目标对象检查情况", ThreadCategorySeeSeek},
 		{"建议", "根据「看看」的结论，提出对用户的建议", ThreadCategorySuggestion},
@@ -590,10 +604,12 @@ func CreateRequiredThreads(objective *Objective, project *Project, user *User) e
 		}
 
 		if err := thread.CreateInTx(tx); err != nil {
-			return fmt.Errorf("创建步骤「%s」失败: %w", template.Title, err)
+			return fmt.Errorf("创建步骤「%s」失败 (项目:%d 用户:%d): %w",
+				template.Title, project.Id, user.Id, err)
 		}
 	}
 
+	// 提交事务
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("事务提交失败: %w", err)
 	}
@@ -617,8 +633,10 @@ func (t *Thread) CreateInTx(tx *sql.Tx) error {
 }
 
 // SearchThreadByTitle(keyword) 根据关键字搜索茶议，返回 []Thread，限制limit条数9
-func SearchThreadByTitle(keyword string) (threads []Thread, err error) {
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE title LIKE $1 ORDER BY created_at DESC LIMIT 9", "%"+keyword+"%")
+func SearchThreadByTitle(keyword string, ctx context.Context) (threads []Thread, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE title LIKE $1 ORDER BY created_at DESC LIMIT 9", "%"+keyword+"%")
 	if err != nil {
 		return
 	}

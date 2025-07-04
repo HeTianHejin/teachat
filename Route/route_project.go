@@ -105,7 +105,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 预填充约茶...5部曲
-	if err = data.CreateRequiredThreads(&ob, &pr, &s_u); err != nil {
+	if err = data.CreateRequiredThreads(&ob, &pr, &s_u, r.Context()); err != nil {
 		util.Debug(" Cannot create required threads", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 		return
@@ -216,14 +216,14 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检测一下name是否>2中文字，desc是否在17-456中文字，
+	// 检测一下name是否>2中文字，desc是否在17-int(util.Config.ThreadMaxWord)中文字，
 	// 如果不是，返回错误信息
 	if CnStrLen(title) < 2 || CnStrLen(title) > 36 {
 		util.Debug("Project name is too short", err)
 		Report(w, r, "你好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
-	if CnStrLen(body) < 17 || CnStrLen(body) > 456 {
+	if CnStrLen(body) < int(util.Config.ThreadMinWord) || CnStrLen(body) > int(util.Config.ThreadMaxWord) {
 		util.Debug(" Project description is too long or too short", err)
 		Report(w, r, "你好，茶博士傻眼了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return

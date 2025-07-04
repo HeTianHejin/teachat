@@ -16,7 +16,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	num := 12
 
 	// 读取最热的茶议
-	thread_slice, err := data.HotThreads(num)
+	thread_slice, err := data.HotThreads(num, r.Context())
 	if err != nil {
 		util.Debug(" Cannot read hot thread slice", err)
 		Report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
@@ -51,7 +51,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			thread_slice[i].PageData.IsAuthor = false
 		}
 		//展示游客首页
-		RenderHTML(w, &indexPD, "layout", "navbar.public", "index")
+		RenderHTML(w, &indexPD, "layout", "navbar.public", "index", "component_avatar_name_gender")
 		return
 	}
 	//已登录
@@ -70,7 +70,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	//展示茶客的首页
-	RenderHTML(w, &indexPD, "layout", "navbar.private", "index")
+	RenderHTML(w, &indexPD, "layout", "navbar.private", "index", "component_avatar_name_gender")
 
 }
 

@@ -377,59 +377,10 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// //假设是单身,没有提及伴侣/对象
-	// IsSingle := true
-	// partner_user := data.User{Id: 0}
-
-	// switch status_int {
-	// case 0, 1:
-	// 	//单身
-	// 	IsSingle = true
-	// case 2, 3, 4, 5:
-	// 	//有伴侣/对象
-	// 	IsSingle = false
-	// }
-
-	// partner_email := r.PostFormValue("partner")
-	// if partner_email == "" {
-	// 	IsSingle = true
-	// }
-	// if !IsSingle {
-	// 	//有伴侣/对象
-	// 	// 检查提交的对象邮箱
-	// 	if ok := IsEmail(partner_email); !ok {
-	// 		Report(w, r, "你好，涨红了脸的茶博士，竟然说，提及的对象电子邮箱看不懂，请确认后再试一次。")
-	// 		return
-	// 	}
-	// 	//读取对象的成员资料
-	// 	partner_user, err = data.GetUserByEmail(partner_email)
-	// 	if err != nil {
-	// 		util.PanicTea(util.LogError(err), partner_email, "Cannot get user by email")
-	// 		Report(w, r, "你好，茶博士正在无事忙之中，稍后再试。")
-	// 		return
-	// 	}
-	// 	if partner_user.Id > 0 {
-	// 		IsSingle = false
-	// 	}
-
-	// 	//检查s_u和partner_user作为男女主角色的家庭茶团是否存在？可能已经被partner_user登记为某个家庭
-	// 	exist, err := data.IsFamilyExist(s_u.Id, partner_user.Id)
-	// 	if err != nil {
-	// 		util.PanicTea(util.LogError(err), s_u.Id, partner_user.Id, "Cannot check family exist")
-	// 		Report(w, r, "你好，茶博士摸摸头，竟然说笔墨不见了，未能创建新茶团。")
-	// 		return
-	// 	}
-	// 	if exist {
-	// 		Report(w, r, "你好，茶博士摸摸头，竟然说你的对象已经登记过这个&家庭茶团，请确认后再试。")
-	// 		return
-	// 	}
-
-	// }
-
 	introduction := r.PostFormValue("introduction")
-	// 检测introduction是否在17-456中文字符
+	// 检测introduction是否在min-int(util.Config.ThreadMaxWord)中文字符
 	lenI := CnStrLen(introduction)
-	if lenI < 3 || lenI > 456 {
+	if lenI < int(util.Config.ThreadMinWord) || lenI > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团价绍字数太多或者太少，未能创建新茶团。")
 		return
 	}
@@ -524,9 +475,9 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	//报告用户登记家庭茶团成功
 	text := ""
 	if s_u.Gender == 0 {
-		text = fmt.Sprintf("%s 女士，你好，登记 %s 家庭茶团成功，祝愿拥有快乐品茶时光。", s_u.Name, new_family.Name)
+		text = fmt.Sprintf("%s 女士，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有快乐品茶时光。", s_u.Name, new_family.Name)
 	} else {
-		text = fmt.Sprintf("%s 先生，你好，登记 %s 家庭茶团成功，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)
+		text = fmt.Sprintf("%s 先生，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)
 	}
 	Report(w, r, text)
 }

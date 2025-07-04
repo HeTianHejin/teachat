@@ -85,7 +85,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 
 		biog := r.PostFormValue("biography")
 		len_biog = CnStrLen(biog)
-		if len_biog < 2 || len_biog > 456 {
+		if len_biog < 2 || len_biog > int(util.Config.ThreadMaxWord) {
 			Report(w, r, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
 			return
 		}

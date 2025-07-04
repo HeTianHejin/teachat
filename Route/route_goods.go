@@ -129,14 +129,14 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	// Get goods description
 	describe := r.PostFormValue("describe")
 	le = len(describe)
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
 
 	//applicability
 	le = len(r.PostFormValue("applicability"))
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
@@ -168,7 +168,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	//specification
 	le = len(r.PostFormValue("specification"))
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -700,7 +700,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// Get goods description
 	le = len(r.PostFormValue("describe"))
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -708,7 +708,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//applicability
 	le = len(r.PostFormValue("applicability"))
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
@@ -740,7 +740,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//specification
 	le = len(r.PostFormValue("specification"))
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}
@@ -1143,14 +1143,14 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	// Get goods description
 	describe := r.PostFormValue("describe")
 	le = len(describe)
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
 
 	//applicability
 	le = len(r.PostFormValue("applicability"))
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
@@ -1182,7 +1182,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 	//specification
 	le = len(r.PostFormValue("specification"))
-	if le > 456 {
+	if le > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}

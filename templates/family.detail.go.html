@@ -37,43 +37,36 @@
 
 <div class="media">
 
+  <div class="media-left">
+    {{ template "component_avatar_name_gender" .FamilyBean.Family.Founder }}
+  </div>
+
   <div class="media-body">
     <div class="panel panel-default">
       <div class="panel-heading">
         <div class="row">
 
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            {{ .FamilyBean.Family.Name }}
-            @<span style="font-style: italic;"><a href="/v1/group-of-relatives/detail?id=x">金陵X大家族</a></span>
-
+          <div class="col-xs-4">
+            <span style="font-style: italic;"><a
+                  href="/v1/team/detail?id={{ .FamilyBean.FounderTeam.Uuid }}" title="团队详情">({{ .FamilyBean.FounderTeam.Abbreviation }})</a>
+                </span>
           </div>
 
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block;text-align: center;">
-              <span class="label label-default">
-                {{ .FamilyBean.Family.GetStatus }}
-              </span>
-            </span>
-            </span>
+          <div class="col-xs-4 text-center">
+              <span class="label label-default">{{ .FamilyBean.Family.GetStatus }}</span>
           </div>
 
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: right; font-size: smaller;">
-              <a href="/v1/user/biography?id={{ .FamilyBean.Founder.Uuid }}">{{ .FamilyBean.Founder.Name }}</a>
-              {{if .FamilyBean.Founder.Gender }}
-              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-              {{ else }}
-              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-              {{ end }}
-              <span style="font-style: italic;"><a
-                  href="/v1/team/detail?id={{ .FamilyBean.FounderTeam.Uuid }}">({{ .FamilyBean.FounderTeam.Abbreviation }})</a></span>
-
+          <div class="col-xs-4 text-right">
               {{ .FamilyBean.Family.CreatedAtDate }}
-            </span>
           </div>
         </div>
       </div>
       <div class="panel-body">
+        <div class="text-center" style="font-size: large;">
+          {{ .FamilyBean.Family.Name }}
+            @<span style="font-style: italic;"><a href="/v1/group-of-relatives/detail?id=x">金陵X大家族</a>
+            </span>
+        </div>
         <span style="white-space: pre-wrap;">
           {{ .FamilyBean.Family.Introduction }}
         </span>

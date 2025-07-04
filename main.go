@@ -22,7 +22,6 @@ func main() {
 	if err := util.Config.Validate(); err != nil {
 		log.Fatalf("配置校验失败: %v", err)
 	}
-
 	// 创建路由器
 	mux := http.NewServeMux()
 

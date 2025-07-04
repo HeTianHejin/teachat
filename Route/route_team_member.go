@@ -57,9 +57,9 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 
 	// 提交的声明内容
 	cont := r.PostFormValue("content")
-	// 检查提交的声明内容字数是否>3 and <456
+	// 检查提交的声明内容字数是否>3 and <int(util.Config.ThreadMaxWord)
 	lenCont := CnStrLen(cont)
-	if lenCont < 3 || lenCont > 456 {
+	if lenCont < 3 || lenCont > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士认为内容字数太长或者太短，请确认后再试。")
 		return
 	}
@@ -511,8 +511,8 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	}
 	//提交的角色调整内容
 	content := r.PostFormValue("content")
-	//检查提交的内容是否正常，中文字数>2,<456,
-	if CnStrLen(content) < 2 || CnStrLen(content) > 456 {
+	//检查提交的内容是否正常，中文字数>2,<int(util.Config.ThreadMaxWord),
+	if CnStrLen(content) < 2 || CnStrLen(content) > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的内容太长或太短，请确认后再提交。")
 		return
 	}
@@ -1213,8 +1213,8 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	reply_word := r.PostFormValue("invitation_reply")
-	//检查一下茶友提交的string，即reply_word是否不为空，中文长度小于456字符之间
-	if reply_word == "" || CnStrLen(reply_word) > 456 {
+	//检查一下茶友提交的string，即reply_word是否不为空，中文长度小于int(util.Config.ThreadMaxWord)字符之间
+	if reply_word == "" || CnStrLen(reply_word) > int(util.Config.ThreadMaxWord) {
 		util.Debug(s_u.Email, " Cannot process invitation")
 		Report(w, r, "你好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，答复的话太长了或者太短，只有外星人才接受呀，请确认再试。")
 		return
