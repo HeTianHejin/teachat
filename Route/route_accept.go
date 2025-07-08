@@ -83,7 +83,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		XAccept:        false,
 		XUserId:        s_u.Id,
 		YAccept:        false,
-		YUserId:        0,
+		YUserId:        data.UserId_None,
 	}
 
 	// 权限检查。。。
@@ -158,12 +158,11 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 检查新茶评审结果,如果任意一位友邻否定这是文明发言，就判断为不通过审核
 	if !oldAcceptance.XAccept || !oldAcceptance.YAccept {
-
 		//友邻蒙评拒绝接纳这个茶语！Oh my...
 		// 通知茶语主人友邻蒙评结果为：婉拒！---没有通知
 		// 根据对象类型处理
 		switch ao.ObjectType {
-		case 1:
+		case data.AcceptObjectTypeOb:
 			ob := data.Objective{
 				Id: ao.ObjectId}
 			if err = ob.Get(); err != nil {
@@ -172,10 +171,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch ob.Class {
-			case 10:
-				ob.Class = 31
-			case 20:
-				ob.Class = 32
+			case data.ObClassOpenStraw:
+				ob.Class = data.ObClassNeighborRejectOpen
+			case data.ObClassClosedStraw:
+				ob.Class = data.ObClassNeighborRejectClose
 			}
 			// 更新茶话会，友邻蒙评未通过！
 			if err = ob.UpdateClass(); err != nil {
@@ -183,7 +182,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，(摸摸头想了又想), 为什么踢足球的人都说临门一脚最麻烦呢？")
 				return
 			}
-		case 2:
+		case data.AcceptObjectTypePr:
 			pr := data.Project{
 				Id: ao.ObjectId,
 			}
@@ -193,10 +192,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch pr.Class {
-			case 10:
-				pr.Class = 31
-			case 20:
-				pr.Class = 32
+			case data.PrClassOpenStraw:
+				pr.Class = data.PrClassRejectedOpen
+			case data.PrClassClosedStraw:
+				pr.Class = data.PrClassClose
 			}
 			// 更新茶台属性，
 			if err = pr.UpdateClass(); err != nil {
@@ -204,7 +203,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，一畦春韭绿，十里稻花香。")
 				return
 			}
-		case 3:
+		case data.AcceptObjectTypeTh:
 			dThread := data.DraftThread{
 				Id: ao.ObjectId,
 			}
@@ -215,12 +214,12 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// 更新茶议属性，友邻蒙评 已拒绝公开发布
-			if err = dThread.UpdateClass(2); err != nil {
+			if err = dThread.UpdateStatus(data.DraftThreadStatusRejected); err != nil {
 				util.Debug("Cannot update thread class", err)
 				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
 				return
 			}
-		case 4:
+		case data.AcceptObjectTypePo:
 			dPost := data.DraftPost{
 				Id: ao.ObjectId,
 			}
@@ -229,12 +228,12 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候 弄丢草稿的人不一定是诗人？")
 				return
 			}
-			if err = dPost.UpdateClass(403); err != nil {
+			if err = dPost.UpdateClass(data.DraftPostClassRejectedByNeighbor); err != nil {
 				util.Debug("Cannot update draft-post class", err)
 				Report(w, r, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
 				return
 			}
-		case 5:
+		case data.AcceptObjectTypeTe:
 			team, err := data.GetTeam(ao.ObjectId)
 			if err != nil {
 				util.Debug("Cannot get team", err)
@@ -242,10 +241,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch team.Class {
-			case 10:
-				team.Class = 31
-			case 20:
-				team.Class = 32
+			case data.TeamClassOpenStraw:
+				team.Class = data.TeamClassRejectedOpenStraw
+			case data.TeamClassCloseStraw:
+				team.Class = data.TeamClassRejectedCloseStraw
 			}
 			if err = team.UpdateClass(); err != nil {
 				util.Debug("Cannot update team class", err)
@@ -260,7 +259,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		// 两个审茶官都认为这是文明发言
 		// 根据对象类型处理
 		switch ao.ObjectType {
-		case 1:
+		case data.AcceptObjectTypeOb:
 			//茶围
 			ob := data.Objective{
 				Id: ao.ObjectId}
@@ -270,10 +269,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch ob.Class {
-			case 10:
-				ob.Class = 1
-			case 20:
-				ob.Class = 2
+			case data.ObClassOpenStraw:
+				ob.Class = data.ObClassOpen
+			case data.ObClassClosedStraw:
+				ob.Class = data.ObClassClosed
 			default:
 				//非法class值
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
@@ -286,8 +285,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case 2:
-			//茶台
+		case data.AcceptObjectTypePr:
 			pr := data.Project{
 				Id: ao.ObjectId,
 			}
@@ -297,10 +295,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch pr.Class {
-			case 10:
-				pr.Class = 1
-			case 20:
-				pr.Class = 2
+			case data.PrClassOpenStraw:
+				pr.Class = data.PrClassOpen
+			case data.PrClassClosedStraw:
+				pr.Class = data.PrClassClose
 			default:
 				//非法class值
 				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
@@ -313,8 +311,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case 3:
-			//茶议草稿
+		case data.AcceptObjectTypeTh:
 			dThread := data.DraftThread{
 				Id: ao.ObjectId,
 			}
@@ -325,8 +322,8 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			// 更新茶议，友邻蒙评已通过！
-			if err = dThread.UpdateClass(1); err != nil {
-				util.Debug("Cannot update draft-thread class", err)
+			if err = dThread.UpdateStatus(data.DraftThreadStatusAccepted); err != nil {
+				util.Debug("Cannot update draft-thread status", err)
 				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
 				return
 			}
@@ -351,8 +348,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case 4:
-			//品味草稿
+		case data.AcceptObjectTypePo:
 			dPost := data.DraftPost{
 				Id: ao.ObjectId,
 			}
@@ -379,7 +375,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case 5:
+		case data.AcceptObjectTypeTe:
 			//把草团转为正式$事业茶团
 			team, err := data.GetTeam(ao.ObjectId)
 			if err != nil {
@@ -388,10 +384,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch team.Class {
-			case 10:
-				team.Class = 1
-			case 20:
-				team.Class = 2
+			case data.TeamClassOpenStraw:
+				team.Class = data.TeamClassOpen
+			case data.TeamClassCloseStraw:
+				team.Class = data.TeamClassClose
 			}
 			// 更新团队属性，友邻蒙评已通过！
 			if err = team.UpdateClass(); err != nil {
@@ -404,7 +400,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				TeamId: team.Id,
 				UserId: team.FounderId,
 				Role:   RoleCEO,
-				Status: 1,
+				Status: data.TeMemberStatusActive,
 			}
 			if err = teamMember.Create(); err != nil {
 				util.Debug("Cannot create team-member", err)
@@ -426,7 +422,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			//茶团2是“自由人$”，是系统预设占位茶团，
-			if old_default_team.Id == 2 {
+			if old_default_team.Id == data.TeamIdFreelancer {
 				// 没有设置默认茶团
 				// 设置默认茶团
 				uDT := data.UserDefaultTeam{
@@ -463,7 +459,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 
 		default:
 			util.Debug("Cannot get object", err)
-			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候什么都不做,就能赢50%的竞争对手？")
+			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候什么都不做,就能赢大多数竞争对手？")
 			return
 		}
 
@@ -473,9 +469,23 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Get /v1/office/polite
+// Get /v1/office/polite?id=123456
 // 向用户返回“友邻蒙评”审茶页面
 func PoliteGet(w http.ResponseWriter, r *http.Request) {
+	// 读取提交的ID参数
+	ob_id_str := r.URL.Query().Get("id")
+	if ob_id_str == "" {
+		util.Debug("ID parameter is missing")
+		Report(w, r, "你好，缺少编号参数，茶博士找不到评审的资料")
+		return
+	}
+	// 换成int
+	ob_id, err := strconv.Atoi(ob_id_str)
+	if err != nil {
+		util.Debug("Cannot convert id to integer", err)
+		Report(w, r, "你好，转换编号失败，茶博士找不到评审的资料")
+		return
+	}
 	sess, err := Session(r)
 	if err != nil {
 		util.Debug(" Cannot get session given session id", sess.Id)
@@ -491,25 +501,8 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 
 	var aopd data.AcceptObjectPageData
 
-	// 读取提交的ID参数
-	vals := r.URL.Query()
-	ob_id_str := vals.Get("id")
-	if ob_id_str == "" {
-		util.Debug("ID parameter is missing")
-		Report(w, r, "你好，缺少编号参数，茶博士找不到评审的资料")
-		return
-	}
-	// 换成int
-	ob_id, err := strconv.Atoi(ob_id_str)
-	if err != nil {
-		util.Debug("Cannot convert id to integer", err)
-		Report(w, r, "你好，转换编号失败，茶博士找不到评审的资料")
-		return
-	}
 	// 友邻蒙评对象
-	ao := data.AcceptObject{
-		Id: ob_id,
-	}
+	ao := data.AcceptObject{Id: ob_id}
 	if err = ao.Get(); err != nil {
 		util.Debug("Cannot get object", err)
 		Report(w, r, "你好，茶博士都糊涂了，竟然唱问世间情为何物，直教人找不到对象？")

@@ -24,18 +24,6 @@ const (
 
 	TeamIdVerifier = 18 //  见证者团队，系统保留
 )
-const (
-	TeamClassSpaceship = iota //飞船茶棚团队，系统保留
-	TeamClassOpen             //开放式$事业茶团
-	TeamClassClose            // 封闭式$事业茶团
-)
-const (
-	MemberStatusBlacklist = iota // 黑名单（禁止参与） | Blacklisted (no access)
-	MemberStatusActive           // 正常（活跃成员）   | Active (normal member)
-	MemberStatusSuspended        // 暂停（临时限制）   | Suspended (temporary)
-	MemberStatusResigned         // 已退出（主动离开） | Resigned (voluntary leave)
-	MemberStatusPending          // 待审核（申请中）   | Pending (under review)
-)
 
 // 默认的系统“自由人”$事业茶团
 // 刚注册或者没有声明加入任何$事业团队的茶友，属于未确定的$事业茶团
@@ -143,13 +131,23 @@ type Team struct {
 	Mission           string
 	FounderId         int //团队发起人茶友id
 	CreatedAt         time.Time
-	Class             int    //0:"系统$事业茶团", 1: "开放式$事业茶团",2: "封闭式$事业茶团",10: "开放式草团",20: "封闭式草团"
+	Class             int    //0:"系统$事业茶团", 1: "开放式$事业茶团",2: "封闭式$事业茶团",10: "开放式草团",20: "封闭式草团",31:"已婉拒开放式"，32:"已婉拒封闭式"
 	Abbreviation      string // 队名简称
 	Logo              string // $事业茶团标志
 	UpdatedAt         *time.Time
 	SuperiorTeamId    int // (默认直接管理，顶头上司)上级 $事业茶团id（high level team）superior
 	SubordinateTeamId int // （默认直接下属？如果有多个下属团队，则是队长集合？）下级 $事业茶团id（lower level team）Subordinate
 }
+
+const (
+	TeamClassSpaceship          = 0  //飞船茶棚团队，系统保留
+	TeamClassOpen               = 1  //开放式$事业茶团
+	TeamClassClose              = 2  // 封闭式$事业茶团
+	TeamClassOpenStraw          = 10 //开放式草团
+	TeamClassCloseStraw         = 20 // 封闭式草团
+	TeamClassRejectedOpenStraw  = 31 //已婉拒开放式草团
+	TeamClassRejectedCloseStraw = 32 // 已婉拒封闭式草团
+)
 
 // 团队成员=当前$事业茶团加入成员记录
 type TeamMember struct {
@@ -169,18 +167,26 @@ type TeamMember struct {
 	Status int
 }
 
+const (
+	TeMemberStatusBlacklist = iota // 黑名单（禁止参与） | Blacklisted (no access)
+	TeMemberStatusActive           // 正常（活跃成员）   | Active (normal member)
+	TeMemberStatusSuspended        // 暂停（临时限制）   | Suspended (temporary)
+	TeMemberStatusResigned         // 已退出（主动离开） | Resigned (voluntary leave)
+	TeMemberStatusPending          // 待审核（申请中）   | Pending (under review)
+)
+
 // TeamMember.GetStatus()
 func (member *TeamMember) GetStatus() string {
 	switch member.Status {
-	case 0:
+	case TeMemberStatusBlacklist:
 		return "黑名单（禁止参与）"
-	case 1:
+	case TeMemberStatusActive:
 		return "正常品茶"
-	case 2:
+	case TeMemberStatusSuspended:
 		return "暂停品茶"
-	case 3:
+	case TeMemberStatusResigned:
 		return "退出茶团"
-	case 4:
+	case TeMemberStatusPending:
 		return "待审核"
 	}
 	return "未知"
@@ -501,7 +507,7 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 	teams := make([]Team, 0, estimatedCapacity)
 
 	query += ` LIMIT $5` // 限制最大团队数
-	rows, err := Db.Query(query, TeamClassOpen, TeamClassClose, user.Id, MemberStatusActive, estimatedCapacity)
+	rows, err := Db.Query(query, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive, estimatedCapacity)
 	if err != nil {
 		return nil, err
 	}
@@ -530,7 +536,7 @@ func (user *User) SurvivalTeamsCount() (count int, err error) {
         JOIN team_members ON teams.id = team_members.team_id
         WHERE teams.class IN ($1, $2) AND team_members.user_id = $3 AND team_members.status = $4`
 
-	err = Db.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, MemberStatusActive).Scan(&count)
+	err = Db.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive).Scan(&count)
 
 	return
 }

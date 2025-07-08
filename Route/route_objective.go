@@ -231,7 +231,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_ob.Id,
-		ObjectType: data.AcceptObjectTypeTeaTalk,
+		ObjectType: data.AcceptObjectTypeOb,
 	}
 	if err = aO.Create(); err != nil {
 		util.Debug("Cannot create accept_object", err)
@@ -349,7 +349,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
 	if uuid == "" {
-		Report(w, r, "你好，茶博士迷糊了，请稍后再试。")
+		Report(w, r, "你好，茶博士看不懂陛下提交的UUID参数，请稍后再试。")
 		return
 	}
 	// 根据uuid查询茶话会资料
@@ -361,9 +361,9 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch ob.Class {
-	case data.ClassOpenTeaTalk, data.ClassClosedTeaTalk:
+	case data.ObClassOpen, data.ObClassClosed:
 		break
-	case data.ClassOpenStrawRing, data.ClassClosedStrawRing:
+	case data.ObClassOpenStraw, data.ObClassClosedStraw:
 		Report(w, r, "你好，这个茶话会需要等待友邻蒙评通过之后才能启用呢。")
 		return
 	default:
@@ -425,7 +425,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	oD.SessUser = s_u
 
 	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
-	if ob.Class == data.ClassClosedTeaTalk {
+	if ob.Class == data.ObClassClosed {
 		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot read objective-bean slice", err)

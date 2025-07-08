@@ -9,7 +9,7 @@ type Post struct {
 	Id        int
 	Uuid      string
 	Body      string
-	UserId    int
+	UserId    int //作者id
 	ThreadId  int
 	Attitude  bool //表态：肯定（颔首）或者否定（摇头）
 	FamilyId  int  //作者发帖时选择的家庭id
@@ -63,6 +63,13 @@ type DraftPost struct {
 	//3 Post rejected by neighbor review 友邻评审已拒绝
 	Class int
 }
+
+const (
+	DraftPostClassNormal             = iota // Regular post (by passerby) 路人发布
+	DraftPostClassAdmin                     // Official post (by team/family admin) 管理方发布(团队/家庭)
+	DraftPostClassSpaceShipTeam             // Post by spaceship crew 飞船机组团队发布
+	DraftPostClassRejectedByNeighbor        // Post rejected by neighbor review 友邻评审已拒绝
+)
 
 var DraftPostStatus = map[int]string{
 	0: "草稿",

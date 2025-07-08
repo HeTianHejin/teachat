@@ -109,12 +109,12 @@ func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error 
 // 向当前用户发送友邻蒙评结果通知消息
 func PilotAcceptMessageSend(u_id int, mess data.AcceptMessage) error {
 
-	// 发送友����评结果通知消息
+	// 发送友评邻蒙结果通知消息
 	if err := mess.Send([]int{u_id}); err != nil {
 		util.Debug(" Cannot send accept message", err)
 		return err
 	}
-	// ��录用户有1新消息
+	// 记录用户有1新消息
 	if err := data.AddUserMessageCount(u_id); err != nil {
 		util.Debug(" Cannot add user new-message-count", err)
 		return err

@@ -280,7 +280,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mission := r.PostFormValue("mission")
-	// 检测mission是否在17-int(util.Config.ThreadMaxWord)中文字符
+	// 检测mission是否在min-int(util.Config.ThreadMaxWord)中文字符
 	lenM := CnStrLen(mission)
 	if lenM < int(util.Config.ThreadMinWord) || lenM > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，茶博士摸摸头，竟然说愿景字数太多或者太少，未能创建新茶团。")
@@ -301,7 +301,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 
 	//检测class是否合规
 	switch class {
-	case 10, 20:
+	case data.TeamClassOpenStraw, data.TeamClassCloseStraw:
 		break
 	default:
 		Report(w, r, "你好，茶博士摸摸头，竟然说茶团类别太多或者太少，未能创建新茶团。")
@@ -333,7 +333,6 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 将NewTeam草稿存入数据库，class=10/20
 	logo := "teamLogo"
 	new_team := data.Team{
 		Name:              new_name,
@@ -354,7 +353,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	// 创建一条友邻蒙评,是否接纳 新茶团的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_team.Id,
-		ObjectType: data.AcceptObjectTypeTeaTeam,
+		ObjectType: data.AcceptObjectTypeTe,
 	}
 	if err = aO.Create(); err != nil {
 		util.Debug("Cannot create accept_object", err)
@@ -407,7 +406,7 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		tS.SessUser = data.User{
-			Id:   0,
+			Id:   data.UserId_None,
 			Name: "游客",
 		}
 		RenderHTML(w, &tS, "layout", "navbar.public", "teams.open", "component_teams_public", "component_team")
@@ -441,7 +440,7 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		tS.SessUser = data.User{
-			Id:   0,
+			Id:   data.UserId_None,
 			Name: "游客",
 		}
 		RenderHTML(w, &tS, "layout", "navbar.public", "teams.closed", "component_teams_public", "component_team")
@@ -687,7 +686,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//游客
 		tD.SessUser = data.User{
-			Id:   0,
+			Id:   data.UserId_None,
 			Name: "游客",
 			// 用户足迹
 			Footprint: r.URL.Path,

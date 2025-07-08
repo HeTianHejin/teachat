@@ -264,9 +264,9 @@ func checkProjectMasterPermission(pr *data.Project, user_id int) (bool, error) {
 // 检查茶台创建权限
 func checkCreateProjectPermission(objective data.Objective, userId int, w http.ResponseWriter, r *http.Request) bool {
 	switch objective.Class {
-	case data.ClassOpenTeaTalk: // 开放式茶话会
+	case data.ObClassOpen: // 开放式茶话会
 		return true
-	case data.ClassClosedTeaTalk: // 封闭式茶话会
+	case data.ObClassClosed: // 封闭式茶话会
 		isInvited, err := objective.IsInvitedMember(userId)
 		if err != nil {
 			util.Debug("检查邀请名单失败", "error", err)
@@ -287,9 +287,9 @@ func checkCreateProjectPermission(objective data.Objective, userId int, w http.R
 // 检查茶议（thread）创建权限
 func checkCreateThreadPermission(project data.Project, userId int, w http.ResponseWriter, r *http.Request) bool {
 	switch project.Class {
-	case data.ClassOpenTeaTable: // 开放式茶台
+	case data.PrClassOpen: // 开放式茶台
 		return true
-	case data.ClassClosedTeaTable: // 封闭式茶台
+	case data.PrClassClose: // 封闭式茶台
 		isInvited, err := project.IsInvitedMember(userId)
 		if err != nil {
 			util.Debug("检查邀请名单失败", "error", err)
@@ -1692,4 +1692,17 @@ func sanitizeRedirectPath(inputPath string) string {
 
 	// 非相对路径（如http://）则返回默认路径
 	return "/v1/"
+}
+
+// Helper function for validating string length
+func validateCnStrLen(value string, min int, max int, fieldName string, w http.ResponseWriter, r *http.Request) bool {
+	if CnStrLen(value) < min {
+		Report(w, r, fmt.Sprintf("你好，茶博士竟然说该茶议%s为空或太短，请确认后再试一次。", fieldName))
+		return false
+	}
+	if CnStrLen(value) > max {
+		Report(w, r, fmt.Sprintf("你好，茶博士竟然说该茶议%s过长，请确认后再试一次。", fieldName))
+		return false
+	}
+	return true
 }

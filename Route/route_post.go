@@ -189,12 +189,6 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 // POST /v1/post/draft
 // Create the post 创建品味（跟帖/回复）草稿 new
 func NewPostDraft(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士摸摸头，竟然说今天电脑去热带海岛潜水了。")
-		return
-	}
 	s, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -203,7 +197,13 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，未能读取用户会话信息。请重新登录或联系管理员。")
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug(" Cannot parse form", err)
+		Report(w, r, "你好，茶博士摸摸头，竟然说今天电脑飞去热带海岛潜水度假了。")
 		return
 	}
 
@@ -212,7 +212,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	body := r.PostFormValue("body")
 	//检查body的长度，规则是不能少于刘姥姥评价老君眉的品味字数
-	if CnStrLen(body) <= 17 {
+	if CnStrLen(body) <= int(util.Config.PostMinWord) {
 		Report(w, r, "你好，戴着厚厚眼镜片的茶博士居然说，请不要用隐形墨水来写品味内容。")
 		return
 	} else if CnStrLen(body) > int(util.Config.ThreadMaxWord) {
@@ -230,19 +230,25 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	te_id_str := r.PostFormValue("team_id")
 	//change team_id to int
-	team_id, err := strconv.Atoi(te_id_str)
-	if err != nil {
-		util.Debug(" Cannot change team_id to int", te_id_str, err)
-		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的团队编号。")
-		return
+	team_id := 0 // Default value for invalid input
+	if te_id_str != "" {
+		team_id, err = strconv.Atoi(te_id_str)
+		if err != nil {
+			util.Debug(" Cannot change team_id to int", te_id_str, err)
+			Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的团队编号。")
+			return
+		}
 	}
 	family_id_str := r.PostFormValue("family_id")
 	//change family_id to int
-	family_id, err := strconv.Atoi(family_id_str)
-	if err != nil {
-		util.Debug(" Cannot change family_id to int", family_id_str, err)
-		Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的家庭编号。")
-		return
+	family_id := 0 // Default value for invalid input
+	if family_id_str != "" {
+		family_id, err = strconv.Atoi(family_id_str)
+		if err != nil {
+			util.Debug(" Cannot change family_id to int", family_id_str, err)
+			Report(w, r, "一年三百六十日，风刀霜剑严相逼，请确认提交的家庭编号。")
+			return
+		}
 	}
 	is_private := false
 	if family_id > data.FamilyIdUnknown && team_id == data.TeamIdFreelancer {
@@ -259,11 +265,11 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch t_proj.Class {
-	case data.ClassOpenTeaTable:
+	case data.PrClassOpen:
 		// 开放式茶台，任何人可以品茶
 		// 直接继续创建流程
 
-	case data.ClassClosedTeaTable:
+	case data.PrClassClose:
 		// 封闭式茶台，检查邀请状态
 		ok, err := t_proj.IsInvitedMember(s_u.Id)
 		if err != nil {
@@ -283,9 +289,8 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	//确定品味发布者身份
 	is_admin := false
-	is_master := false
 
-	is_master, err = checkProjectMasterPermission(&t_proj, s_u.Id)
+	is_master, err := checkProjectMasterPermission(&t_proj, s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check project master permission", t_proj.Id, err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
@@ -316,24 +321,6 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		team_id = t_proj.TeamId
 	}
 
-	// 检查参数组合是否合法
-	// OK, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id, w, r)
-	// if err != nil {
-	// 	util.Debug("Cannot validate team and family params", is_private, team_id, family_id, s_u.Id, err)
-	// 	Report(w, r, "你好，茶博士失魂鱼，嘀咕笔头宝珠掉了，记录您的品味失败。")
-	// 	return
-	// }
-	// if !OK {
-	// 	Report(w, r, "你好，茶博士失魂鱼，嘀咕笔头宝珠掉了，记录您的品味失败。")
-	// 	return
-	// }
-
-	//检查body的长度，规则是不能少于刘姥姥评价老君眉的品味字数
-	if CnStrLen(body) < int(util.Config.ThreadMinWord) {
-		Report(w, r, "你好，茶博士竟然说品味字太少不值得动笔，记录您的品味失败。")
-		return
-	}
-
 	//确定是哪一种级别发布
 	dp_class := data.PostClassNormal
 	if is_admin || is_master {
@@ -359,7 +346,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	aO := data.AcceptObject{
 		ObjectId:   new_draft_post.Id,
-		ObjectType: data.AcceptObjectTypeTeaTaste,
+		ObjectType: data.AcceptObjectTypePo,
 	}
 	if err = aO.Create(); err != nil {
 		util.Debug("Cannot create accept_object given draft_post_id", new_draft_post.Id)

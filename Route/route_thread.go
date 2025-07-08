@@ -46,8 +46,8 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 
 	//读取茶议表达
 	thre_type, err := strconv.Atoi(r.PostFormValue("type"))
-	if err != nil {
-		util.Debug("Failed to convert type to int", thre_type, err)
+	if err != nil || (thre_type != data.ThreadTypeIthink && thre_type != data.ThreadTypeIdea) {
+		util.Debug("Invalid thread type value", thre_type, err)
 		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
@@ -84,7 +84,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
 		return
 	}
-	if proj.Class != data.ClassOpenTeaTable && proj.Class != data.ClassClosedTeaTable {
+	if proj.Class != data.PrClassOpen && proj.Class != data.PrClassClose {
 		//util.Debug("试图访问未蒙评审核的茶台被阻止。", s_u.Email, err)
 		Report(w, r, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
 		return
@@ -144,81 +144,67 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 
 	// 如果茶台class=1，存为开放式茶议草稿，
 	// 如果茶台class=2， 存为封闭式茶议草稿
-	if proj.Class == data.ClassOpenTeaTable || proj.Class == data.ClassClosedTeaTable {
-		//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<int(util.Config.ThreadMaxWord)
-		if CnStrLen(title) < 1 {
-			Report(w, r, "你好，茶博士竟然说该茶议标题为空，请确认后再试一次。")
-			return
-		}
-		if CnStrLen(title) > 36 {
-			Report(w, r, "你好，茶博士竟然说该茶议标题过长，请确认后再试一次。")
-			return
-		}
-		if CnStrLen(body) < 1 {
-			Report(w, r, "你好，茶博士竟然说该茶议内容为空，请确认后再试一次。")
-			return
-		} else if CnStrLen(body) < int(util.Config.ThreadMinWord) {
-			Report(w, r, "你好，茶博士竟然说该茶议内容太短，请确认后再试一次。")
-			return
-		}
-		if CnStrLen(body) > int(util.Config.ThreadMaxWord) {
-			Report(w, r, "你好，茶博士小声说茶棚的小纸条只能写int(util.Config.ThreadMaxWord)字，请确认后再试一次。")
-			return
-		}
 
-		//保存新茶议草稿
-		draft_thread := data.DraftThread{
-			UserId:    s_u.Id,
-			ProjectId: project_id,
-			Title:     title,
-			Body:      body,
-			Class:     proj.Class,
-			Type:      thre_type,
-			PostId:    post_id,
-			TeamId:    team_id,
-			IsPrivate: is_private,
-			FamilyId:  family_id,
-		}
-		if post_id > 0 {
-			draft_thread.Category = data.ThreadCategoryNested
-		}
-		if err = draft_thread.Create(); err != nil {
-			util.Debug(" Cannot create thread draft", err)
-			Report(w, r, "你好，茶博士没有墨水了，未能保存新茶议草稿。")
-			return
-		}
-		// 创建一条友邻蒙评,是否接纳 新茶的记录
-		aO := data.AcceptObject{
-			ObjectId:   draft_thread.Id,
-			ObjectType: data.AcceptObjectTypeTeaProposal,
-		}
-		if err = aO.Create(); err != nil {
-			util.Debug("Cannot create accept_object", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
-			return
-		}
-		// 发送蒙评请求消息给两个在线用户
-		//构造消息
-		mess := data.AcceptMessage{
-			FromUserId:     data.UserId_SpaceshipCaptain,
-			Title:          "新茶语邻座评审邀请",
-			Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
-			AcceptObjectId: aO.Id,
-		}
-		//发送消息
-		if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-			Report(w, r, "你好，早知日后闲争气，岂肯今朝错读书！未能发送蒙评请求消息。")
-			return
-		}
-
-		// 提示用户草稿保存成功
-		t := fmt.Sprintf("你好，你在“ %s ”茶台发布的茶议已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", proj.Title)
-		// 提示用户草稿保存成功
-		Report(w, r, t)
+	//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<int(util.Config.ThreadMaxWord)
+	if !validateCnStrLen(title, 1, 36, "标题", w, r) {
 		return
 	}
-	//出现非法的class值
-	Report(w, r, "你好，糊里糊涂的茶博士竟然说该茶台坐满了外星人，请确认后再试一次。")
+	if !validateCnStrLen(body, int(util.Config.ThreadMinWord), int(util.Config.ThreadMaxWord), "内容", w, r) {
+		return
+	}
+
+	//保存新茶议草稿
+	draft_thread := data.DraftThread{
+		UserId:    s_u.Id,
+		ProjectId: project_id,
+		Title:     title,
+		Body:      body,
+		Class:     proj.Class,
+		Type:      thre_type,
+		PostId:    post_id,
+		TeamId:    team_id,
+		IsPrivate: is_private,
+		FamilyId:  family_id,
+	}
+	if post_id > 0 {
+		draft_thread.Category = data.ThreadCategoryNested
+	}
+	if err = draft_thread.Create(); err != nil {
+		util.Debug(" Cannot create thread draft", err)
+		Report(w, r, "你好，茶博士没有墨水了，未能保存新茶议草稿。")
+		return
+	}
+
+	// 创建一条友邻蒙评,是否接纳 新茶的记录
+	aO := data.AcceptObject{
+		ObjectId:   draft_thread.Id,
+		ObjectType: data.AcceptObjectTypeTh,
+	}
+	if err = aO.Create(); err != nil {
+		util.Debug("Cannot create accept_object", err)
+
+		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+		return
+	}
+	// 发送蒙评请求消息给两个在线用户
+	//构造消息
+	mess := data.AcceptMessage{
+		FromUserId:     data.UserId_SpaceshipCaptain,
+		Title:          "新茶语邻座评审邀请",
+		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
+		AcceptObjectId: aO.Id,
+	}
+	//发送消息
+	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
+		util.Debug("Failed to send accept messages", err)
+		Report(w, r, "你好，茶博士未能发送蒙评请求消息，请稍后再试。")
+		return
+	}
+
+	// 提示用户草稿保存成功
+	t := fmt.Sprintf("你好，你在“ %s ”茶台发布的茶议已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", proj.Title)
+	// 提示用户草稿保存成功
+	Report(w, r, t)
 
 }
 
@@ -378,7 +364,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			tD.IsGuest = true
 
 			tD.SessUser = data.User{
-				Id:   0,
+				Id:   data.UserId_None,
 				Name: "游客",
 				// 用户足迹
 				Footprint: r.URL.Path,
@@ -444,11 +430,15 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			// 检测是否其中某一个Post品味撰写者
+			// 检测是否Post品味撰写者
+			for i := range tD.PostBeanAdminSlice {
+				if tD.PostBeanAdminSlice[i].Post.UserId == s_u.Id {
+					tD.PostBeanAdminSlice[i].Post.PageData.IsAuthor = true
+				}
+			}
 			for i := range tD.PostBeanSlice {
 				if tD.PostBeanSlice[i].Post.UserId == s_u.Id {
 					tD.PostBeanSlice[i].Post.PageData.IsAuthor = true
-					break
 				}
 			}
 
@@ -470,7 +460,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				//tD.ThreadBean.Thread.AddHitCount()
 
 				//检查是否封闭式茶台
-				if tD.QuoteProjectBean.Project.Class == data.ClassClosedTeaTable {
+				if tD.QuoteProjectBean.Project.Class == data.PrClassClose {
 					//是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
 					ok, err := tD.QuoteProjectBean.Project.IsInvitedMember(s_u.Id)
 					if err != nil {
@@ -492,14 +482,15 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 				// 如果当前用户已经品味过了，则关闭撰写输入面板(每人仅可表态一次)
 				// 用于页面判断是否显示品味POST（回复）撰写面板
-				for i := range tD.PostBeanSlice {
-					if tD.PostBeanSlice[i].Post.UserId == s_u.Id {
-						tD.IsInput = false
-						tD.IsPostExist = true
-						break
+				if !tD.IsAdmin && !tD.IsMaster && !tD.IsVerifier {
+					for i := range tD.PostBeanSlice {
+						if tD.PostBeanSlice[i].Post.UserId == s_u.Id {
+							tD.IsInput = false
+							tD.IsPostExist = true
+							break
+						}
 					}
 				}
-
 				//展示非撰写者视角茶议详情页面
 				RenderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
 				return
@@ -839,8 +830,9 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	//获取当前时间，格式化成中文时间字符
 	now := time.Now()
 	timeStr := now.Format("2006年1月2日 15:04:05")
+	name := s_u.Name
 	// 追加内容（另起一行）
-	t := "\n[" + timeStr + " 补充] " + additional // 注意开头的 \n
+	t := "\n[" + timeStr + " " + name + " 补充] " + additional // 注意开头的 \n
 	thread.Body += t
 	//更新茶议内容
 	if err = thread.UpdateBodyAndClass(thread.Body, thread.Class, r.Context()); err != nil {

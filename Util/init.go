@@ -34,6 +34,7 @@ type Configuration struct {
 	TemplateExt      string
 	ThreadMinWord    int64 //  茶议最小字数限制
 	ThreadMaxWord    int64 // 茶议最大字数限制
+	PostMinWord      int64 // 品味最小字数限制
 	MaxInviteTeams   int64 // 茶围、茶台最大可邀请团队数
 	MaxTeamMembers   int64 // 团队最大成员数
 	MaxTeamsCount    int64 // 个人创建的团队数上限
@@ -71,9 +72,9 @@ func LoadConfig() error {
 // 使用绝对路径获取配置文件
 func getConfigPath() string {
 	// 优先使用环境变量指定的配置路径
-	// if path := os.Getenv("APP_CONFIG"); path != "" {
-	// 	return path
-	// }
+	if path := os.Getenv("APP_CONFIG"); path != "" {
+		return path
+	}
 
 	// 其次尝试当前目录下的 config.json
 	if _, err := os.Stat("config.json"); err == nil {

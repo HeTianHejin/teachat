@@ -83,12 +83,12 @@ type FamilyMember struct {
 }
 
 const (
-	RoleUnknown = iota
-	RoleHusband
-	RoleWife
-	RoleDaughter
-	RoleSon
-	RolePet
+	FamilyMemberRoleUnknown  = iota // 0、秘密
+	FamilyMemberRoleHusband         // 1、男主人公
+	FamilyMemberRoleWife            // 2、女主人公
+	FamilyMemberRoleDaughter        // 3、女儿
+	FamilyMemberRoleSon             // 4、儿子
+	FamilyMemberRolePet             // 5、宠物
 )
 
 // FamilyMember.GetRole()
@@ -723,7 +723,7 @@ func (f *Family) IsParentMember(user_id int) (isMember bool, err error) {
 	}
 	defer stmt.Close()
 	var count int
-	err = stmt.QueryRow(f.Id, user_id, RoleHusband, RoleWife).Scan(&count)
+	err = stmt.QueryRow(f.Id, user_id, FamilyMemberRoleHusband, FamilyMemberRoleWife).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -832,7 +832,7 @@ func (fm *FamilyMember) GetByRoleFamilyId() (err error) {
 
 // FamilyMember.ParentMember() 获取家庭成员的父母成员,return parentMembers []FamilyMember,err error
 func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, RoleHusband, RoleWife)
+	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleHusband, FamilyMemberRoleWife)
 	if err != nil {
 		return
 	}
@@ -850,7 +850,7 @@ func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
 
 // FamilyMember.ChildMembers() 获取家庭成员的子女成员列表
 func (f *Family) ChildMembers() (child_members []FamilyMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, RoleDaughter, RoleSon)
+	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleDaughter, FamilyMemberRoleSon)
 	if err != nil {
 		return
 	}
@@ -868,7 +868,7 @@ func (f *Family) ChildMembers() (child_members []FamilyMember, err error) {
 
 // FamilyMember.OtherMembers() 获取家庭成员的其他成员列表
 func (f *Family) OtherMembers() (other_members []FamilyMember, err error) {
-	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, RoleUnknown, RolePet)
+	rows, err := Db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleUnknown, FamilyMemberRolePet)
 	if err != nil {
 		return
 	}

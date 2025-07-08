@@ -80,9 +80,11 @@
         </p>
 
         <blockquote style="font-size: xx-small;">
-          <p><a href="/v1/objective/detail?id={{ .QuoteObjectiveBean.Objective.Uuid }}">
-              <span class="label label-default">茶围</span></a><span
-              style="margin-inline-start: 1rem;">{{ .QuoteObjectiveBean.Objective.Body }} ...</span></p>
+          <p><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">
+              <span class="label label-default">茶围</span>
+            </a>
+            <span style="margin-inline-start: 1rem;">{{ .QuoteObjectiveBean.Objective.Body }} ...</span>
+          </p>
           <footer>
             <cite>
               <a href="/v1/user/biography?id={{ .QuoteObjectiveBean.Author.Uuid }}"

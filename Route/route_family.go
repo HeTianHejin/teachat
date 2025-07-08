@@ -415,8 +415,8 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	new_family.AuthorId = s_u.Id
 	new_family.Introduction = introduction
 	//初始化家庭茶团默认参数
-	new_family.HusbandFromFamilyId = 0
-	new_family.WifeFromFamilyId = 0
+	new_family.HusbandFromFamilyId = data.FamilyIdUnknown
+	new_family.WifeFromFamilyId = data.FamilyIdUnknown
 	new_family.Logo = "familyLogo"
 
 	//保存到数据库中,返回新家庭茶团的id
@@ -433,11 +433,12 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		UserId:   s_u.Id,
 		IsAdult:  true,
 	}
-	//根据茶友性别，设置其相应的男主或者女主角色
-	if s_u.Gender == 1 {
-		author_member.Role = 1
+	//根据茶友性别，设置其相应的男主
+	if s_u.Gender == data.User_Gender_Male {
+		author_member.Role = data.FamilyMemberRoleHusband
 	} else {
-		author_member.Role = 2
+		//或者女主角色
+		author_member.Role = data.FamilyMemberRoleWife
 	}
 	if err := author_member.Create(); err != nil {
 		util.Debug(s_u.Email, "Cannot create author family member")
@@ -458,7 +459,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if df.Id == 0 {
+	if df.Id == data.FamilyIdUnknown {
 		//还没有设置默认家庭
 		udf := data.UserDefaultFamily{
 			UserId:   s_u.Id,
@@ -474,7 +475,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 
 	//报告用户登记家庭茶团成功
 	text := ""
-	if s_u.Gender == 0 {
+	if s_u.Gender == data.User_Gender_Female {
 		text = fmt.Sprintf("%s 女士，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有快乐品茶时光。", s_u.Name, new_family.Name)
 	} else {
 		text = fmt.Sprintf("%s 先生，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)

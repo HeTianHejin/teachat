@@ -81,6 +81,21 @@ type DraftThread struct {
 	Category  int //茶议的分类
 }
 
+const (
+	DraftThreadTypeIthink = iota //我觉得
+	DraftThreadTypeIdea          //出主意（解决方案）
+)
+const (
+	DraftThreadClassPending = iota //待审查
+	DraftThreadClassOpen           //开放式茶议
+	DraftThreadClassClosed         //封闭式茶议
+)
+const (
+	DraftThreadStatusPending  = iota //草稿
+	DraftThreadStatusAccepted        //已接纳
+	DraftThreadStatusRejected        //已婉拒
+)
+
 // 根据type属性的int值，返回方便阅读的自然语字符
 var ThreadType = map[int]string{
 	0: "我觉得",
@@ -145,8 +160,8 @@ func (d *DraftThread) Get() (err error) {
 }
 
 // UpdateClass() 更新茶议草稿级
-func (d *DraftThread) UpdateClass(class int) (err error) {
-	_, err = Db.Exec("UPDATE draft_threads SET class=$1 WHERE id = $2", class, d.Id)
+func (d *DraftThread) UpdateStatus(status int) (err error) {
+	_, err = Db.Exec("UPDATE draft_threads SET status=$1 WHERE id = $2", status, d.Id)
 	return
 }
 
@@ -341,7 +356,7 @@ func HotThreads(limit int, ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE class IN (1,2) ORDER BY click_count DESC, created_at DESC LIMIT $1", limit)
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE class IN (1,2) ORDER BY created_at DESC LIMIT $1", limit)
 	if err != nil {
 		return
 	}

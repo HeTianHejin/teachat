@@ -151,10 +151,16 @@
 
         {{ else }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}"><span
-                class="label label-default">茶台</span></a>{{ .QuoteProjectBean.Project.Body }} ...</p>
-          <footer style="font-size: small;">
-
+          {{/* 这是引用的茶台信息 */}}
+          <p style="font-size: xx-small;">
+            <a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">
+              <span class="label label-default">茶台</span>
+              </a>
+              <span style="margin-inline-start: 1rem;">
+                {{ .QuoteProjectBean.Project.Body }} ...
+              </span>
+            </p>
+          <footer style="font-size: xx-small;">
             <cite title="Source Title"> <a
                 href="/v1/user/biography?id={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
               {{if .QuoteProjectBean.Author.Gender }}

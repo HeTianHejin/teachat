@@ -32,16 +32,16 @@ type Objective struct {
 }
 
 const (
-	ClassPendingModReview    int  = iota // 0: 修改待评草围 (Pending modification review)
-	ClassOpenTeaTalk                     // 1: 开放式茶话会 (Open tea talk)
-	ClassClosedTeaTalk                   // 2: 封闭式茶话会 (Closed tea talk)
-	_                                    // 跳过 3-9
-	ClassOpenStrawRing       = 10        // 10: 开放式草围 (Open straw ring)
-	_                                    // 跳过 11-19
-	ClassClosedStrawRing     = 20        // 20: 封闭式草围 (Closed straw ring)
-	_                                    // 跳过 21-30
-	ClassNeighborRejectOpen  = 31        // 31: 友邻婉拒开围 (Neighbor rejected opening)
-	ClassNeighborRejectClose = 32        // 32: 友邻婉拒闭围 (Neighbor rejected closing)
+	ObClassPendingModReview    int  = iota // 0: 修改待评草围 (Pending modification review)
+	ObClassOpen                            // 1: 开放式茶话会 (Open tea talk)
+	ObClassClosed                          // 2: 封闭式茶话会 (Closed tea talk)
+	_                                      // 跳过 3-9
+	ObClassOpenStraw           = 10        // 10: 开放式草围 (Open straw ring)
+	_                                      // 跳过 11-19
+	ObClassClosedStraw         = 20        // 20: 封闭式草围 (Closed straw ring)
+	_                                      // 跳过 21-30
+	ObClassNeighborRejectOpen  = 31        // 31: 友邻婉拒开围 (Neighbor rejected opening)
+	ObClassNeighborRejectClose = 32        // 32: 友邻婉拒闭围 (Neighbor rejected closing)
 )
 
 // objective.Create() Create a new record based on the given objective struct{},return a new objective and error

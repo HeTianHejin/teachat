@@ -244,16 +244,16 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 根据茶话会属性判断
 	// 检查一下该茶话会是否草围（待蒙评审核状态）
 	switch t_ob.Class {
-	case data.ClassOpenStrawRing, data.ClassClosedStrawRing:
+	case data.ObClassOpenStraw, data.ObClassClosedStraw:
 		// 该茶话会是草围,尚未启用，不能新开茶台
 		Report(w, r, "你好，这个茶话会尚未启用。")
 		return
 
-	case data.ClassOpenTeaTalk:
+	case data.ObClassOpen:
 		// 该茶话会是开放式茶话会，可以新开茶台
 		// 检查提交的class值是否有效，必须为10或者20
 		switch class {
-		case data.ClassOpenStrawRing:
+		case data.ObClassOpenStraw:
 			// 创建开放式草台
 			if err = new_proj.Create(); err != nil {
 				util.Debug(" Cannot create open project", err)
@@ -261,7 +261,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case data.ClassClosedStrawRing:
+		case data.ObClassClosedStraw:
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !VerifyIdSliceFormat(tIds_str) {
@@ -306,7 +306,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case data.ClassClosedTeaTalk:
+	case data.ObClassClosed:
 		// 封闭式茶话会
 		// 检查用户是否可以在此茶话会下新开茶台
 		ok, err := t_ob.IsInvitedMember(s_u.Id)
@@ -317,11 +317,11 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		if class == data.ClassOpenStrawRing {
+		if class == data.ObClassOpenStraw {
 			Report(w, r, "你好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
 			return
 		}
-		if class == data.ClassClosedStrawRing {
+		if class == data.ObClassClosedStraw {
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !VerifyIdSliceFormat(tIds_str) {
@@ -384,7 +384,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 创建一条友邻蒙评,是否接纳 新茶的记录
 	accept_object := data.AcceptObject{
 		ObjectId:   new_proj.Id,
-		ObjectType: data.AcceptObjectTypeTeaTable,
+		ObjectType: data.AcceptObjectTypePr,
 	}
 	if err = accept_object.Create(); err != nil {
 		util.Debug("Cannot create accept_object", err)
@@ -490,7 +490,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
-	if pr.Class != data.ClassOpenTeaTable && pr.Class != data.ClassClosedTeaTable {
+	if pr.Class != data.PrClassOpen && pr.Class != data.PrClassClose {
 		Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
 		return
 	}
@@ -503,7 +503,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	if pD.ProjectBean.Project.Class == data.ClassOpenTeaTable {
+	if pD.ProjectBean.Project.Class == data.PrClassOpen {
 		pD.Open = true
 	} else {
 		pD.Open = false
@@ -675,7 +675,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.SessUserBindPlaces = s_places
 
 	//如果这是class=2封闭式茶台，需要检查当前浏览用户是否可以创建新茶议
-	if pD.ProjectBean.Project.Class == data.ClassClosedTeaTable {
+	if pD.ProjectBean.Project.Class == data.PrClassClose {
 		// 是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
 		ok, err := pD.ProjectBean.Project.IsInvitedMember(s_u.Id)
 		if err != nil {

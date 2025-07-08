@@ -56,11 +56,11 @@ type AcceptObject struct {
 }
 
 const (
-	AcceptObjectTypeTeaTalk     = 1 //objective
-	AcceptObjectTypeTeaTable    = 2 //project
-	AcceptObjectTypeTeaProposal = 3 //thread
-	AcceptObjectTypeTeaTaste    = 4 //post
-	AcceptObjectTypeTeaTeam     = 5 //team
+	AcceptObjectTypeOb = 1 //objective
+	AcceptObjectTypePr = 2 //project
+	AcceptObjectTypeTh = 3 //thread
+	AcceptObjectTypePo = 4 //post
+	AcceptObjectTypeTe = 5 //team
 )
 
 // 用户新消息统计

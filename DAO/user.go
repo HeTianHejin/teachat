@@ -41,10 +41,17 @@ var UserRole = map[string]string{
 	"UFO":          "外星人",
 }
 
-var UserGender = map[int]string{
-	0: "天仙女",
-	1: "山大王",
-}
+const (
+	// 用户角色
+	User_Role_Traveller    = "traveller"    //太空普通旅客
+	User_Role_Hijacker     = "hijacker"     //劫机者
+	User_Role_Zebra        = "zebra"        //莽撞者
+	User_Role_Troublemaker = "troublemaker" //捣乱者
+	User_Role_UFO          = "UFO"          //外星人
+	// 用户性别
+	User_Gender_Female = 0 // 女
+	User_Gender_Male   = 1 // 男
+)
 
 // SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users.name模糊查询用户，WHERE column LIKE 'keyword%',返回[]User,err
 func SearchUserByNameKeyword(keyword string) ([]User, error) {

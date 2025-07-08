@@ -40,16 +40,16 @@ type Project struct {
 }
 
 const (
-	ClassPendingAppendReview int  = iota // 0: 追加待评草台 (Pending append review)
-	ClassOpenTeaTable                    // 1: 开放式茶台 (Open tea table)
-	ClassClosedTeaTable                  // 2: 封闭式茶台 (Closed tea table)
-	_                                    // 跳过 3-9
-	ClassOpenStrawTable      = 10        // 10: 开放式草台 (Open straw table)
-	_                                    // 跳过 11-19
-	ClassClosedStrawTable    = 20        // 20: 封闭式草台 (Closed straw table)
-	_                                    // 跳过 21-30
-	ClassRejectedOpenTable   = 31        // 31: 已婉拒开放式茶台 (Rejected open table)
-	ClassRejectedCloseTable  = 32        // 32: 已婉拒封闭式茶台 (Rejected close table)
+	PrClassPendingAppendReview int  = iota // 0: 追加待评草台 (Pending append review)
+	PrClassOpen                            // 1: 开放式茶台 (Open tea table)
+	PrClassClose                           // 2: 封闭式茶台 (Closed tea table)
+	_                                      // 跳过 3-9
+	PrClassOpenStraw           = 10        // 10: 开放式草台 (Open straw table)
+	_                                      // 跳过 11-19
+	PrClassClosedStraw         = 20        // 20: 封闭式草台 (Closed straw table)
+	_                                      // 跳过 21-30
+	PrClassRejectedOpen        = 31        // 31: 已婉拒开放式茶台 (Rejected open table)
+	PrClassRejectedClose       = 32        // 32: 已婉拒封闭式茶台 (Rejected close table)
 )
 
 // 同意入围，许可某个茶台（项目）设立
@@ -170,7 +170,7 @@ func (project *Project) IsEdited() bool {
 
 // InvitedTeamIds() 获取一个封闭式茶台的全部受邀请茶团id
 func (project *Project) InvitedTeamIds() (team_id_slice []int, err error) {
-	if project.Class != ClassClosedTeaTable {
+	if project.Class != PrClassClose {
 		return nil, fmt.Errorf("project.Class != ClassClosedTeaTable")
 	}
 	rows, err := Db.Query("SELECT team_id FROM project_invited_teams WHERE project_id = $1", project.Id)
@@ -351,7 +351,7 @@ func (project *Project) UpdateClass() (err error) {
 
 // IsInvitedMember 检查用户是否是封闭式茶台邀请的团队或家庭成员
 func (proj *Project) IsInvitedMember(user_id int) (bool, error) {
-	if proj.Class != ClassClosedTeaTable {
+	if proj.Class != PrClassClose {
 		return false, fmt.Errorf("茶台类型不是封闭式茶台,不存在邀请名单")
 	}
 	team_ids, err := proj.InvitedTeamIds()
