@@ -142,9 +142,6 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 如果茶台class=1，存为开放式茶议草稿，
-	// 如果茶台class=2， 存为封闭式茶议草稿
-
 	//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<int(util.Config.ThreadMaxWord)
 	if !validateCnStrLen(title, 1, 36, "标题", w, r) {
 		return

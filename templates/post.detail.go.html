@@ -102,11 +102,13 @@
 
 {{/* 这是 针对某个post的“茶议中茶议” 撰写模版 */}}
 {{ if .IsInput }}
+<button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel">
+  <i class="bi bi-chevron-double-down"></i> 新茶议
+</button>
+
+<div class="collapse" id="newThreadPanel">
 <div class="panel panel-default">
-  <div class="panel-heading">
-    <i class="bi bi-paint-bucket" style="font-size: 1.5rem;"> 新茶议 </i>
-    
-  </div>
+  
   <div class="panel-body">
 
     <form class="form-horizontal" role="form" action="/v1/thread/draft" method="post">
@@ -181,6 +183,7 @@
           </div>
     </form>
   </div>
+</div>
 </div>
 
 {{ else }}

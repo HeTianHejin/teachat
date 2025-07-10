@@ -9,7 +9,6 @@
   <li>
     {{ template "component_sess_capacity" . }}
   </li>
-  
 
 </ol>
 
@@ -28,7 +27,7 @@
 <div class="media" style="margin-top: 20px;">
 
   <div class="media-left">
-   {{ template "component_avatar_name_gender" .ProjectBean.Author }}
+    {{ template "component_avatar_name_gender" .ProjectBean.Author }}
   </div>
 
   <div class="media-body">
@@ -51,10 +50,10 @@
 
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
-          {{/* 这个茶台已被茶围管理员选中入围 */}}
-          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
-          {{/* 检查是否入围1 */}}{{ end }}
-          
+            {{/* 这个茶台已被茶围管理员选中入围 */}}
+            <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+            {{/* 检查是否入围1 */}}{{ end }}
+
             <span>
               {{ if .Open }}
               <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
@@ -64,7 +63,6 @@
               <span class="label label-default">封闭式茶台</span>
               {{ end }}
             </span>
-
 
             <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ProjectBean.CreatedAtDate }}</span>
           </div>
@@ -132,88 +130,100 @@
 
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
 {{ if .IsInput }}
-{{/* 这是新茶议 撰写模版 */}}
-<div class="panel panel-default">
-  <div class="panel-heading">
-    <i class="bi bi-paint-bucket" style="font-size: 1.5rem;"> 新茶议 </i>
-  </div>
-  <div class="panel-body">
+{{/* 这是茶台下的新茶议撰写模版 */}}
+<button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel">
+  <i class="bi bi-chevron-double-down"></i> 新茶议
+</button>
+<div class="collapse" id="newThreadPanel">
+  <div class="panel panel-default">
+   
+    <div class="panel-body">
 
-    <form class="form-horizontal" action="/v1/thread/draft" method="post">
+      <form class="form-horizontal" action="/v1/thread/draft" method="post">
 
-      <div class="form-group">
-        <label class="col-sm-2 control-label">表达</label>
-        <div class="col-sm-10">
-          <label class="radio">
-            <input type="radio" name="type" value="0" required> 我觉得
-          </label>
-          <label class="radio">
-            <input type="radio" name="type" value="1" required> 出主意
-          </label>
+        <div class="form-group">
+          <fieldset>
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+              <i class="bi bi-cup-hot"></i>
+            </div>
+
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="type" id="ithink" style="width: fit-content;" value="0" required />
+              <label for="ithink">我觉得</label>
+            </div>
+
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="type" id="idea" style="width: fit-content;" value="1" required />
+              <label for="idea">出主意</label>
+            </div>
+
+          </fieldset>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="title" class="col-sm-2 control-label">标题</label>
-        <div class="col-sm-10">
-          <input type="text" class="form-control" name="title" id="title" placeholder="2～36字" minlength="3"
-            maxlength="42" required>
+        <div class="form-group">
+          <label for="title" class="col-sm-2 control-label">标题</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" name="title" id="title" placeholder="2～36字" minlength="3"
+              maxlength="42" required>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="topic" class="col-sm-2 control-label">内容</label>
-        <div class="col-sm-10">
-          <textarea class="form-control" name="topic" id="topic" rows="3" placeholder="17～456字" minlength="17"
-            maxlength="567" required></textarea>
+        <div class="form-group">
+          <label for="topic" class="col-sm-2 control-label">内容</label>
+          <div class="col-sm-10">
+            <textarea class="form-control" name="topic" id="topic" rows="3" placeholder="17～456字" minlength="17"
+              maxlength="567" required></textarea>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="col-sm-2 control-label">身份</label>
-        <div class="col-sm-10">
-          <label class="radio">
-            <input type="radio" name="is_private" value="false" checked required> 团队成员身份
-          </label>
-          <label class="radio">
-            <input type="radio" name="is_private" value="true" required> 家庭成员身份
-          </label>
+        <div class="form-group">
+          <fieldset>
+            <label for="team" class="col-sm-2 control-label">身份</label>
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="is_private" value="false" id="team" checked required>
+              <label for="team">团队成员</label>
+            </div>
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="is_private" value="true" id="family" required>
+              <label for="family">家庭成员</label>
+            </div>
+          </fieldset>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="team_id" class="col-sm-2 control-label">团队</label>
-        <div class="col-sm-10">
-          <select class="form-control" name="team_id" id="team_id" required>
-            <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}</option>
-            {{ range .SessUserSurvivalTeams }}
-            <option value="{{ .Id }}">{{ .Name }}</option>
-            {{ end }}
-          </select>
+        <div class="form-group">
+          <label for="team_id" class="col-sm-2 control-label">团队</label>
+          <div class="col-sm-10">
+            <select class="form-control" name="team_id" id="team_id" required>
+              <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}</option>
+              {{ range .SessUserSurvivalTeams }}
+              <option value="{{ .Id }}">{{ .Name }}</option>
+              {{ end }}
+            </select>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="family_id" class="col-sm-2 control-label">家庭</label>
-        <div class="col-sm-10">
-          <select class="form-control" name="family_id" id="family_id" required>
-            <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}</option>
-            {{ range .SessUserSurvivalFamilies }}
-            <option value="{{ .Id }}">{{ .Name }}</option>
-            {{ end }}
-          </select>
+        <div class="form-group">
+          <label for="family_id" class="col-sm-2 control-label">家庭</label>
+          <div class="col-sm-10">
+            <select class="form-control" name="family_id" id="family_id" required>
+              <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}</option>
+              {{ range .SessUserSurvivalFamilies }}
+              <option value="{{ .Id }}">{{ .Name }}</option>
+              {{ end }}
+            </select>
+          </div>
         </div>
-      </div>
 
-      <input type="hidden" name="project_id" value="{{ .ProjectBean.Project.Id }}">
-      <input type="hidden" name="post_id" value="0">
+        <input type="hidden" name="project_id" value="{{ .ProjectBean.Project.Id }}">
+        <input type="hidden" name="post_id" value="0">
 
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-default">提交</button>
+        <div class="form-group">
+          <div class="col-sm-offset-5">
+            <button type="submit" class="btn btn-default">提交</button>
+          </div>
         </div>
-      </div>
-    </form>
+      </form>
+    </div>
   </div>
 </div>
 
