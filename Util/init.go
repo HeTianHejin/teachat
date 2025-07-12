@@ -39,6 +39,8 @@ type Configuration struct {
 	MaxTeamMembers   int64 // 团队最大成员数
 	MaxTeamsCount    int64 // 个人创建的团队数上限
 	MaxSurvivalTeams int64 // 个人最大活跃团队数
+	PoliteMode       bool  // Debug模式
+
 	// SysMail_Username string
 	// SysMail_Password string
 	// SysMail_Host     string

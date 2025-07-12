@@ -31,7 +31,7 @@
 
       <span style="margin-inline-start: 1rem;margin-inline-end: 1rem;">
 
-        <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
+        <a href="/v1/thread/detail?uuid={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
 
         {{ if .IsCompleted }}
         <span class="label label-success">已完成</span>

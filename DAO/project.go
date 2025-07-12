@@ -46,7 +46,7 @@ const (
 	_                                      // 跳过 3-9
 	PrClassOpenStraw           = 10        // 10: 开放式草台 (Open straw table)
 	_                                      // 跳过 11-19
-	PrClassClosedStraw         = 20        // 20: 封闭式草台 (Closed straw table)
+	PrClassCloseStraw          = 20        // 20: 封闭式草台 (Closed straw table)
 	_                                      // 跳过 21-30
 	PrClassRejectedOpen        = 31        // 31: 已婉拒开放式茶台 (Rejected open table)
 	PrClassRejectedClose       = 32        // 32: 已婉拒封闭式茶台 (Rejected close table)

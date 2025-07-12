@@ -51,7 +51,7 @@
           {{/* 这个主意已被台主采纳 */}}
           <i class="bi-bookmark-check" style="font-size: 2rem; color: red;"></i>
           {{ end }}
-          <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
+          <a href="/v1/thread/detail?uuid={{ .Thread.Uuid }}">
             <span style="margin-inline-start: 1rem;">{{ .Thread.Title }}</span>
           </a>
         </h5>
@@ -65,7 +65,7 @@
       <div class="panel-footer">
 
         <span class="pull-right">
-          <a href="/v1/thread/detail?id={{.Thread.Uuid }}">
+          <a href="/v1/thread/detail?uuid={{.Thread.Uuid }}">
             <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
 
           </a> {{ .Count }}
@@ -120,7 +120,7 @@
           {{/* 这个主意已被台主采纳 */}}
           <i class="bi-bookmark-check" style="font-size: 2rem; color: red;"></i>
           {{ end }}
-          <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">
+          <a href="/v1/thread/detail?uuid={{ .Thread.Uuid }}">
             <span style="margin-inline-start: 1rem;">{{ .Thread.Title }}</span>
           </a>
         </h5>

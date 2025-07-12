@@ -6,7 +6,7 @@
       href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
     </a>@茶话会
   </li>
-  <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
+  <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
   </li>
   <li>#{{ .ThreadBean.Thread.Id }} @茶议</li>
   <li class="active">完善茶议</li>
@@ -91,7 +91,7 @@
 
         {{ else }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}"><span
+          <p style="font-size: small;"><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}"><span
                 class="label label-default">茶台</span></a>{{ .QuoteProjectBean.Project.Body }} ...</p>
           <footer style="font-size: small;">
 

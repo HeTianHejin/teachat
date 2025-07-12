@@ -8,7 +8,7 @@
       href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
     </a>@茶话会
   </li>
-  <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
+  <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
   </li>
   <li>#{{ .ThreadBean.Thread.Id }}</li> @茶议
   <li>
@@ -153,7 +153,7 @@
         <blockquote>
           {{/* 这是引用的茶台信息 */}}
           <p style="font-size: xx-small;">
-            <a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">
+            <a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">
               <span class="label label-default">茶台</span>
               </a>
               <span style="margin-inline-start: 1rem;">

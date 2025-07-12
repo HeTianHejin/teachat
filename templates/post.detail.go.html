@@ -5,8 +5,8 @@
   <li><a
       href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }} </a>@茶话会
   </li>
-  <li><a href="/v1/project/detail?id={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台</li>
-  <li><a href="/v1/thread/detail?id={{ .QuoteThreadBean.Thread.Uuid }}">{{ .QuoteThreadBean.Thread.Title }} </a>@茶议</li>
+  <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台</li>
+  <li><a href="/v1/thread/detail?uuid={{ .QuoteThreadBean.Thread.Uuid }}">{{ .QuoteThreadBean.Thread.Title }} </a>@茶议</li>
   <li class="active">#{{ .PostBean.Post.Id }} @品味</li>
    <li>
     {{ template "component_sess_capacity" . }}
@@ -58,7 +58,7 @@
 
         <div class="panel panel-default">
           <div class="panel-body" style="font-size: xx-small;">
-            <a href="/v1/thread/detail?id={{ .QuoteThreadBean.Thread.Uuid }}"><span class="label label-default">茶议</span></a>
+            <a href="/v1/thread/detail?uuid={{ .QuoteThreadBean.Thread.Uuid }}"><span class="label label-default">茶议</span></a>
             <a href="/v1/user/biography?id={{ .QuoteThreadBean.Author.Uuid }}">{{ .QuoteThreadBean.Author.Name }}</a>
             <span style="margin-inline-end: 20px;">
               （<a href="/v1/family/detail?id={{ .QuoteThreadBean.AuthorFamily.Uuid }}">{{ .QuoteThreadBean.AuthorFamily.Name }}</a>,
@@ -113,22 +113,24 @@
 
     <form class="form-horizontal" role="form" action="/v1/thread/draft" method="post">
 
-      <div class="form-group">
-        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <div class="radio">
-            <label>
-              <input type="radio" name="type" id="ithink" value="0" required />
-              我觉得
-            </label>
-          </div>
-          <div class="radio">
-            <label>
-              <input type="radio" name="type" id="idea" value="1" required />
-              出主意
-            </label>
-          </div>
+       <div class="form-group">
+          <fieldset>
+            <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+              <i class="bi bi-cup-hot"></i>
+            </div>
+
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="type" id="ithink" style="width: fit-content;" value="0" required />
+              <label for="ithink">我觉得</label>
+            </div>
+
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="type" id="idea" style="width: fit-content;" value="1" required />
+              <label for="idea">出主意</label>
+            </div>
+
+          </fieldset>
         </div>
-      </div>
 
       <div class=" form-group">
               <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -224,7 +226,7 @@
 
     <h5>
       <mark>{{ .Thread.TypeString }}</mark>
-      <a href="/v1/thread/detail?id={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
+      <a href="/v1/thread/detail?uuid={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
     </h5>
     <span style="font-size: small; margin-inline-start: 40px;">
       

@@ -112,7 +112,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//跳转入围的茶台详情页面
-	http.Redirect(w, r, "/v1/project/detail?id="+uuid, http.StatusFound)
+	http.Redirect(w, r, "/v1/project/detail?uuid="+uuid, http.StatusFound)
 }
 
 // 处理新建茶台的操作处理器
@@ -244,7 +244,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 根据茶话会属性判断
 	// 检查一下该茶话会是否草围（待蒙评审核状态）
 	switch t_ob.Class {
-	case data.ObClassOpenStraw, data.ObClassClosedStraw:
+	case data.ObClassOpenStraw, data.ObClassCloseStraw:
 		// 该茶话会是草围,尚未启用，不能新开茶台
 		Report(w, r, "你好，这个茶话会尚未启用。")
 		return
@@ -261,7 +261,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case data.ObClassClosedStraw:
+		case data.ObClassCloseStraw:
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !VerifyIdSliceFormat(tIds_str) {
@@ -306,7 +306,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case data.ObClassClosed:
+	case data.ObClassClose:
 		// 封闭式茶话会
 		// 检查用户是否可以在此茶话会下新开茶台
 		ok, err := t_ob.IsInvitedMember(s_u.Id)
@@ -321,7 +321,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
 			return
 		}
-		if class == data.ObClassClosedStraw {
+		if class == data.ObClassCloseStraw {
 			tIds_str := r.PostFormValue("invite_ids")
 			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
 			if !VerifyIdSliceFormat(tIds_str) {
@@ -381,37 +381,29 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建一条友邻蒙评,是否接纳 新茶的记录
-	accept_object := data.AcceptObject{
-		ObjectId:   new_proj.Id,
-		ObjectType: data.AcceptObjectTypePr,
-	}
-	if err = accept_object.Create(); err != nil {
-		util.Debug("Cannot create accept_object", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
-		return
-	}
-	// 发送蒙评请求消息给两个在线用户
-	// 构造消息
-	mess := data.AcceptMessage{
-		FromUserId:     data.UserId_SpaceshipCaptain,
-		Title:          "新茶语邻座评审邀请",
-		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
-		AcceptObjectId: accept_object.Id,
-	}
-	// 发送消息给两个在线用户
-	err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess)
-	if err != nil {
-		util.Debug(" Cannot send message", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
-		return
-	}
+	if util.Config.PoliteMode {
 
-	// 提示用户草台保存成功
-	t := fmt.Sprintf("你好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", new_proj.Title)
-	// 提示用户草稿保存成功
-	Report(w, r, t)
+		if err = CreateAndSendAcceptMessage(new_proj.Id, data.AcceptObjectTypePr, s_u.Id); err != nil {
+			if strings.Contains(err.Error(), "创建AcceptObject失败") {
+				Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+			} else {
+				Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+			}
+			return
+		}
 
+		// 提示用户草台保存成功
+		t := fmt.Sprintf("你好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", new_proj.Title)
+		Report(w, r, t)
+		return
+	} else {
+		if err = AcceptNewProject(new_proj.Id); err != nil {
+			Report(w, r, err.Error())
+			return
+		}
+		//跳转到新茶台页面
+		http.Redirect(w, r, fmt.Sprintf("/v1/project/detail?uuid=%s", new_proj.Uuid), http.StatusFound)
+	}
 }
 
 // GET /v1/project/new?uuid=xxx
@@ -468,14 +460,14 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, &obPageData, "layout", "navbar.private", "project.new")
 }
 
-// GET /v1/project/detail?id=
+// GET /v1/project/detail?uuid=
 // 展示指定UUID茶台详情
 func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var pD data.ProjectDetail
 	// 读取用户提交的查询参数
 	vals := r.URL.Query()
-	uuid := vals.Get("id")
+	uuid := vals.Get("uuid")
 	// 获取请求的茶台详情
 
 	pr := data.Project{Uuid: uuid}

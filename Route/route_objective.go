@@ -85,6 +85,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
 		util.Debug("Failed to convert class to int", err)
+		Report(w, r, "茶话会类型参数格式错误")
 		return
 	}
 
@@ -119,17 +120,18 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		Title: title,
 	}
 	t_ob, err := obj.GetByTitle()
-	if err == nil {
-		// 已经存在相同名字且状态正常的茶话会
+	if err != nil {
+		util.Debug("查询茶话会失败", err)
+		Report(w, r, "查询茶话会失败")
+		return
+	}
+	if len(t_ob) > 0 {
 		Report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复哦，请确认后再试。")
 		return
 	}
-	if len(t_ob) >= 1 {
-		Report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会相同名称仅能使用1次，请确认后再试。")
-		return
-	}
 
-	count_team, err := obj.CountByTeamId()
+	countObj := data.Objective{TeamId: team_id}
+	count_team, err := countObj.CountByTeamId()
 	if err != nil {
 		util.Debug(" cannot get count given objective team_id", err)
 		Report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
@@ -144,7 +146,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	// 检测一下name是否>2中文字，body是否在min_word-int(util.Config.ThreadMaxWord)中文字，
 	// 如果不是，返回错误信息
 	if CnStrLen(title) < 2 || CnStrLen(title) > 36 {
-		Report(w, r, "你好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
+		Report(w, r, "你好，茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
 	if CnStrLen(body) < int(util.Config.ThreadMinWord) || CnStrLen(body) > int(util.Config.ThreadMaxWord) {
@@ -164,21 +166,18 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch class {
-	case 10:
+	case data.ObClassOpenStraw:
 		//如果class=10开放式茶话会草围
 		//尝试保存新茶话会
 		if err = new_ob.Create(); err != nil {
-			// 撤回（删除）发送给两个用户的消息，测试未做 ～～～～～～～～～:P
-
 			// 记录错误，提示用户新开茶话会未成功
 			util.Debug(" Cannot create objective", err)
 			Report(w, r, "你好，偷来梨蕊三分白，借得梅花一缕魂。")
 			return
 		}
 
-	case 20:
+	case data.ObClassCloseStraw:
 		//如果class=20封闭式茶话会(草围)，需要读取指定茶团号TeamIds列表
-
 		tIds_str := r.PostFormValue("invite_ids")
 
 		//用正则表达式检测茶团号TeamIds，是否符合“整数，整数，整数...”的格式
@@ -200,26 +199,11 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 			te_id_int, _ := strconv.Atoi(t_id)
 			t_id_slice = append(t_id_slice, te_id_int)
 		}
-		//尝试保存新茶话会草稿
-		if err = new_ob.Create(); err != nil {
-			// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
-
-			util.Debug(" Cannot create objective", err)
+		// 使用事务创建封闭式茶话会及其许可茶团
+		if err = data.CreateObjectiveWithTeams(&new_ob, t_id_slice); err != nil {
+			util.Debug("创建封闭式茶话会失败", err)
 			Report(w, r, "你好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
 			return
-		}
-
-		// 迭代t_id_slice，尝试保存新封闭式茶话会草围邀请的茶团
-		for _, te_id := range t_id_slice {
-			obInviTeams := data.ObjectiveInvitedTeam{
-				ObjectiveId: new_ob.Id,
-				TeamId:      te_id,
-			}
-			if err = obInviTeams.Create(); err != nil {
-				// 撤回发送给两个用户的消息，测试未做 ～～～～～～～～～:P
-
-				util.Debug(" Cannot create objective License Team", err)
-			}
 		}
 	default:
 		// 非法的茶话会属性
@@ -228,34 +212,29 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建一条友邻蒙评,是否接纳 新茶的记录
-	aO := data.AcceptObject{
-		ObjectId:   new_ob.Id,
-		ObjectType: data.AcceptObjectTypeOb,
-	}
-	if err = aO.Create(); err != nil {
-		util.Debug("Cannot create accept_object", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
-		return
-	}
-	// 发送蒙评请求消息给两个在线用户
-	// 构造消息
-	mess := data.AcceptMessage{
-		FromUserId:     data.UserId_SpaceshipCaptain,
-		Title:          "新茶语邻座评审邀请",
-		Content:        "你好，茶博士隆重宣布：您被选中为新茶语评茶官啦，请及时处理。",
-		AcceptObjectId: aO.Id,
-	}
-	// 发送消息给两个在线用户
-	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-		util.Debug("Cannot send 2 acceptMessage", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶，请稍后再试。")
-		return
-	}
+	if util.Config.PoliteMode {
+		if err = CreateAndSendAcceptMessage(new_ob.Id, data.AcceptObjectTypeOb, s_u.Id); err != nil {
+			if strings.Contains(err.Error(), "创建AcceptObject失败") {
+				Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+			} else {
+				Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+			}
+			return
+		}
 
-	t := fmt.Sprintf("你好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", new_ob.Title)
-	// 提示用户草稿保存成功
-	Report(w, r, t)
+		t := fmt.Sprintf("你好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", new_ob.Title)
+		// 提示用户草稿保存成功
+		Report(w, r, t)
+		return
+	} else {
+		objective, err := AcceptNewObjective(new_ob.Id)
+		if err != nil {
+			Report(w, r, err.Error())
+			return
+		}
+		//跳转到茶话会详情页
+		http.Redirect(w, r, fmt.Sprintf("/v1/objective/detail?uuid=%s", objective.Uuid), http.StatusFound)
+	}
 
 }
 
@@ -361,9 +340,9 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch ob.Class {
-	case data.ObClassOpen, data.ObClassClosed:
+	case data.ObClassOpen, data.ObClassClose:
 		break
-	case data.ObClassOpenStraw, data.ObClassClosedStraw:
+	case data.ObClassOpenStraw, data.ObClassCloseStraw:
 		Report(w, r, "你好，这个茶话会需要等待友邻蒙评通过之后才能启用呢。")
 		return
 	default:
@@ -425,7 +404,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	oD.SessUser = s_u
 
 	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
-	if ob.Class == data.ObClassClosed {
+	if ob.Class == data.ObClassClose {
 		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot read objective-bean slice", err)

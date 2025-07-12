@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	data "teachat/DAO"
 	util "teachat/Util"
 	"time"
@@ -138,7 +139,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 处理数据库错误
 		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
-		Report(w, r, "你好，成员资格检查失败，请确认后再试。")
+		Report(w, r, "你好，茶团成员资格检查未通过，请确认后再试。")
 		return
 	}
 
@@ -162,6 +163,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		TeamId:    team_id,
 		IsPrivate: is_private,
 		FamilyId:  family_id,
+		Status:    data.DraftThreadClassPending,
 	}
 	if post_id > 0 {
 		draft_thread.Category = data.ThreadCategoryNested
@@ -172,45 +174,50 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建一条友邻蒙评,是否接纳 新茶的记录
-	aO := data.AcceptObject{
-		ObjectId:   draft_thread.Id,
-		ObjectType: data.AcceptObjectTypeTh,
-	}
-	if err = aO.Create(); err != nil {
-		util.Debug("Cannot create accept_object", err)
+	if util.Config.PoliteMode {
+		if err = CreateAndSendAcceptMessage(draft_thread.Id, data.AcceptObjectTypeTh, s_u.Id); err != nil {
+			if strings.Contains(err.Error(), "创建AcceptObject失败") {
+				Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+			} else {
+				Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+			}
+			return
+		}
+		t := fmt.Sprintf("你好，你在“ %s ”茶台发布的茶议已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", proj.Title)
+		// 提示用户草稿保存成功
+		Report(w, r, t)
+		return
 
-		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+	} else {
+		// 无需发送AcceptObject消息，直接创建新茶议
+		thread, err := AcceptNewDraftThread(draft_thread.Id)
+		if err != nil {
+			switch {
+			case strings.Contains(err.Error(), "获取茶议草稿失败"):
+				util.Debug("Cannot get draft-thread", err)
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候解决问题，需要的不是技术而是耐心。")
+			case strings.Contains(err.Error(), "更新茶议草稿状态失败"):
+				util.Debug("Cannot update draft-thread status", err)
+				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
+			case strings.Contains(err.Error(), "创建新茶议失败"):
+				util.Debug("Cannot save thread", err)
+				Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
+			default:
+				util.Debug("未知错误", err)
+				Report(w, r, "处理过程中发生未知错误")
+			}
+			return
+		}
+		//跳转到新茶议详情页
+		http.Redirect(w, r, fmt.Sprintf("/v1/thread/detail?uuid=%s", thread.Uuid), http.StatusFound)
 		return
 	}
-	// 发送蒙评请求消息给两个在线用户
-	//构造消息
-	mess := data.AcceptMessage{
-		FromUserId:     data.UserId_SpaceshipCaptain,
-		Title:          "新茶语邻座评审邀请",
-		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
-		AcceptObjectId: aO.Id,
-	}
-	//发送消息
-	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-		util.Debug("Failed to send accept messages", err)
-		Report(w, r, "你好，茶博士未能发送蒙评请求消息，请稍后再试。")
-		return
-	}
-
-	// 提示用户草稿保存成功
-	t := fmt.Sprintf("你好，你在“ %s ”茶台发布的茶议已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", proj.Title)
-	// 提示用户草稿保存成功
-	Report(w, r, t)
-
 }
 
-// GET /v1/thread/detail?id=
+// GET /v1/thread/detail?uuid=
 // 显示需求uuid茶议（议题）的详细信息，包括品味（回复帖子）和记录品味的表格
 func ThreadDetail(w http.ResponseWriter, r *http.Request) {
-	vals := r.URL.Query()
-	uuid := vals.Get("id")
-
+	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
 		Report(w, r, "你好，茶博士看不透您提交的茶议id。")
 		return
@@ -586,7 +593,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//采纳（认可好主意）成功,跳转茶议详情页面
-	http.Redirect(w, r, "/v1/thread/detail?id="+thread.Uuid, http.StatusFound)
+	http.Redirect(w, r, "/v1/thread/detail?uuid="+thread.Uuid, http.StatusFound)
 	//Report(w, r, "你好，闪电茶博士极速服务，采纳该主意操作成功，请刷新页面查看。")
 
 }
@@ -838,6 +845,6 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/v1/thread/detail?id="+t_uuid, http.StatusFound)
+	http.Redirect(w, r, "/v1/thread/detail?uuid="+t_uuid, http.StatusFound)
 
 }

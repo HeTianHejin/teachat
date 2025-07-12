@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	data "teachat/DAO"
 	util "teachat/Util"
 	"time"
@@ -173,7 +174,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			switch ob.Class {
 			case data.ObClassOpenStraw:
 				ob.Class = data.ObClassNeighborRejectOpen
-			case data.ObClassClosedStraw:
+			case data.ObClassCloseStraw:
 				ob.Class = data.ObClassNeighborRejectClose
 			}
 			// 更新茶话会，友邻蒙评未通过！
@@ -194,7 +195,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			switch pr.Class {
 			case data.PrClassOpenStraw:
 				pr.Class = data.PrClassRejectedOpen
-			case data.PrClassClosedStraw:
+			case data.PrClassCloseStraw:
 				pr.Class = data.PrClassClose
 			}
 			// 更新茶台属性，
@@ -260,142 +261,61 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		// 根据对象类型处理
 		switch ao.ObjectType {
 		case data.AcceptObjectTypeOb:
-			//茶围
-			ob := data.Objective{
-				Id: ao.ObjectId}
-			if err = ob.Get(); err != nil {
-				util.Debug("Cannot get objective", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
-				return
-			}
-			switch ob.Class {
-			case data.ObClassOpenStraw:
-				ob.Class = data.ObClassOpen
-			case data.ObClassClosedStraw:
-				ob.Class = data.ObClassClosed
-			default:
-				//非法class值
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
-				return
-			}
-			// 更新茶话会，友邻蒙评已通过！
-			if err = ob.UpdateClass(); err != nil {
-				util.Debug("Cannot update ob class", err)
-				Report(w, r, "你好，(摸摸头想了又想), 为什么踢足球的人都说临门一脚最麻烦呢？")
+			if _, err = AcceptNewObjective(ao.ObjectId); err != nil {
+				Report(w, r, err.Error())
 				return
 			}
 
 		case data.AcceptObjectTypePr:
-			pr := data.Project{
-				Id: ao.ObjectId,
-			}
-			if err = pr.Get(); err != nil {
-				util.Debug("Cannot get project", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
+			if err = AcceptNewProject(ao.ObjectId); err != nil {
+				Report(w, r, err.Error())
 				return
 			}
-			switch pr.Class {
-			case data.PrClassOpenStraw:
-				pr.Class = data.PrClassOpen
-			case data.PrClassClosedStraw:
-				pr.Class = data.PrClassClose
-			default:
-				//非法class值
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
-				return
-			}
-			// 更新茶台，友邻蒙评已通过！
-			if err = pr.UpdateClass(); err != nil {
-				util.Debug("Cannot update pr class", err)
-				Report(w, r, "你好，一畦春韭绿，十里稻花香。")
-				return
-			}
-
 		case data.AcceptObjectTypeTh:
-			dThread := data.DraftThread{
-				Id: ao.ObjectId,
-			}
-
-			if err = dThread.Get(); err != nil {
-				util.Debug("Cannot get dfart-thread", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
+			_, err := AcceptNewDraftThread(ao.ObjectId)
+			if err != nil {
+				switch {
+				case strings.Contains(err.Error(), "获取茶议草稿失败"):
+					util.Debug("Cannot get draft-thread", err)
+					Report(w, r, "你好，茶博士失魂鱼，竟然说有时候解决问题，需要的不是技术而是耐心。")
+				case strings.Contains(err.Error(), "更新茶议草稿状态失败"):
+					util.Debug("Cannot update draft-thread status", err)
+					Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
+				case strings.Contains(err.Error(), "创建新茶议失败"):
+					util.Debug("Cannot save thread", err)
+					Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
+				default:
+					util.Debug("未知错误", err)
+					Report(w, r, "处理过程中发生未知错误")
+				}
 				return
 			}
-			// 更新茶议，友邻蒙评已通过！
-			if err = dThread.UpdateStatus(data.DraftThreadStatusAccepted); err != nil {
-				util.Debug("Cannot update draft-thread status", err)
-				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
-				return
-			}
-
-			// 转为正式茶议稿,第一步，记录thread
-			thread := data.Thread{
-				Body:      dThread.Body,
-				UserId:    dThread.UserId,
-				Class:     dThread.Class,
-				Title:     dThread.Title,
-				ProjectId: dThread.ProjectId,
-				FamilyId:  dThread.FamilyId,
-				Type:      dThread.Type,
-				PostId:    dThread.PostId,
-				TeamId:    dThread.TeamId,
-				IsPrivate: dThread.IsPrivate,
-				Category:  dThread.Category,
-			}
-			if err = thread.Create(); err != nil {
-				util.Debug("Cannot save thread", err)
-				Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
-				return
-			}
-
 		case data.AcceptObjectTypePo:
-			dPost := data.DraftPost{
-				Id: ao.ObjectId,
-			}
-			if err = dPost.Get(); err != nil {
-				util.Debug("Cannot get draft-post given acceptObject.object_id", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料的人不一定是外星人？")
-				return
-			}
-
-			// 转为正式品味稿
-			new_post := data.Post{
-				Body:      dPost.Body,
-				UserId:    dPost.UserId,
-				FamilyId:  dPost.FamilyId,
-				TeamId:    dPost.TeamId,
-				ThreadId:  dPost.ThreadId,
-				IsPrivate: dPost.IsPrivate,
-				Attitude:  dPost.Attitude,
-				Class:     dPost.Class,
-			}
-			if err = new_post.Create(); err != nil {
-				util.Debug("Cannot create post", err)
-				Report(w, r, "你好，品茶是一种艺术，一杯为品，二杯为解渴。")
+			_, err = AcceptNewDraftPost(ao.ObjectId)
+			if err != nil {
+				switch {
+				case strings.Contains(err.Error(), "获取品味草稿失败"):
+					util.Debug("Cannot get draft-post", err)
+					Report(w, r, "你好，茶博士失魂鱼，竟然说有时候解决问题，需要的不是技术而是耐心。")
+				case strings.Contains(err.Error(), "创建新品味失败"):
+					util.Debug("Cannot save post", err)
+					Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
+				default:
+					util.Debug("未知错误", err)
+					Report(w, r, "处理过程中发生未知错误")
+				}
 				return
 			}
 
 		case data.AcceptObjectTypeTe:
 			//把草团转为正式$事业茶团
-			team, err := data.GetTeam(ao.ObjectId)
+			team, err := AcceptNewTeam(ao.ObjectId)
 			if err != nil {
-				util.Debug("Cannot get team", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚，比刻苦奋斗有用？")
+				Report(w, r, err.Error())
 				return
 			}
-			switch team.Class {
-			case data.TeamClassOpenStraw:
-				team.Class = data.TeamClassOpen
-			case data.TeamClassCloseStraw:
-				team.Class = data.TeamClassClose
-			}
-			// 更新团队属性，友邻蒙评已通过！
-			if err = team.UpdateClass(); err != nil {
-				util.Debug("Cannot update team class", err)
-				Report(w, r, "你好，（摸摸头）考一考你，情中情因情感妹妹　错里错以错劝哥哥.是什么意思？")
-				return
-			}
-			// 将team的Founder作为默认的CEO成员，teamMember.Role=RoleCEO
+
+			// 将设立team的Founder作为默认的CEO角色成员，teamMember.Role=RoleCEO
 			teamMember := data.TeamMember{
 				TeamId: team.Id,
 				UserId: team.FounderId,
@@ -407,35 +327,18 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，花因喜洁难寻偶，人为悲秋易断魂。")
 				return
 			}
-			//检查团队发起人是否设置了默认$茶团，
+			//检查团队发起人是否设置了（有效）非占位默认$茶团，
+			//如果还没有，把这个新茶团设置为默认$茶团
 			t_founder, err := data.GetUser(team.FounderId)
 			if err != nil {
 				util.Debug("Cannot get team founder", err)
 				Report(w, r, "你好，茶博士失魂鱼，未能完成记录的任务，请稍后再试。")
 				return
 			}
-			//如果还没有设置，把这个新茶团设置为默认$茶团
-			old_default_team, err := t_founder.GetLastDefaultTeam()
-			if err != nil {
-				util.Debug(t_founder.Email, "Cannot get last default team")
-				Report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
+			if !SetUserDefaultTeam(&t_founder, team.Id, w, r) {
 				return
 			}
-			//茶团2是“自由人$”，是系统预设占位茶团，
-			if old_default_team.Id == data.TeamIdFreelancer {
-				// 没有设置默认茶团
-				// 设置默认茶团
-				uDT := data.UserDefaultTeam{
-					UserId: t_founder.Id,
-					TeamId: team.Id,
-				}
-				if err := uDT.Create(); err != nil {
-					util.Debug(t_founder.Email, team.Id, "Cannot create default team")
-					Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
-					return
-				}
 
-			}
 		case 6:
 			//集团
 			group, err := data.GetGroup(ao.ObjectId)

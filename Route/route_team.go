@@ -350,27 +350,12 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建一条友邻蒙评,是否接纳 新茶团的记录
-	aO := data.AcceptObject{
-		ObjectId:   new_team.Id,
-		ObjectType: data.AcceptObjectTypeTe,
-	}
-	if err = aO.Create(); err != nil {
-		util.Debug("Cannot create accept_object", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
-	}
-
-	// 发送蒙评请求消息给两个在线用户
-	//构造消息
-	mess := data.AcceptMessage{
-		FromUserId:     data.UserId_SpaceshipCaptain,
-		Title:          "新茶语邻座评审邀请",
-		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
-		AcceptObjectId: aO.Id,
-	}
-	//发送消息
-	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-		Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+	if err = CreateAndSendAcceptMessage(new_team.Id, data.AcceptObjectTypeTe, s_u.Id); err != nil {
+		if strings.Contains(err.Error(), "创建AcceptObject失败") {
+			Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+		} else {
+			Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+		}
 		return
 	}
 

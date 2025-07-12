@@ -110,11 +110,11 @@
         {{ end }}
 
         {{ if .Open }}
-        <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+        <a href="/v1/project/detail?uuid={{ .Project.Uuid }}">
           <img class="media-object" src="/v1/static/bootstrap-icons/disc.svg" alt="茶台封面" width=40 height=40>
         </a>
         {{ else }}
-        <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+        <a href="/v1/project/detail?uuid={{ .Project.Uuid }}">
           <img class="media-object" src="/v1/static/bootstrap-icons/disc-fill.svg" alt="茶台封面" width=40 height=40>
         </a>
         {{ end }}
@@ -160,7 +160,7 @@
         </p>
 
         <h4>
-            <a href="/v1/project/detail?id={{ .Project.Uuid }}">
+            <a href="/v1/project/detail?uuid={{ .Project.Uuid }}">
               {{ .Project.Title }}
             </a>
           </h4>

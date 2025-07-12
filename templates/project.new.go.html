@@ -10,7 +10,7 @@
 
 <div class="panel panel-default">
   <div class="panel-body" style="font-size: small;">
-    <a href="/v1/thread/detail?id={{ .ObjectiveBean.Objective.Uuid }}"><span class="label label-default">茶围</span></a>
+    <a href="/v1/thread/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}"><span class="label label-default">茶围</span></a>
     <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
     <span style="margin-inline-end: 1rem;">@<a
         href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a></span>

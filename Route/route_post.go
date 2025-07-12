@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	data "teachat/DAO"
 	util "teachat/Util"
 )
@@ -343,32 +344,41 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建一条友邻蒙评,是否接纳 新茶的记录
-	aO := data.AcceptObject{
-		ObjectId:   new_draft_post.Id,
-		ObjectType: data.AcceptObjectTypePo,
-	}
-	if err = aO.Create(); err != nil {
-		util.Debug("Cannot create accept_object given draft_post_id", new_draft_post.Id)
-		Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+	if util.Config.PoliteMode {
+
+		if err := CreateAndSendAcceptMessage(new_draft_post.Id, data.AcceptObjectTypePo, s_u.Id); err != nil {
+			// 根据错误类型返回不同提示
+			if strings.Contains(err.Error(), "创建AcceptObject失败") {
+				Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+			} else {
+				Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+			}
+			return
+		}
+		t := fmt.Sprintf("你好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", t_thread.Title)
+		// 提示用户草稿保存成功
+		Report(w, r, t)
+		return
+
+	} else {
+		post, err := AcceptNewDraftPost(new_draft_post.Id)
+		if err != nil {
+			switch {
+			case strings.Contains(err.Error(), "获取品味草稿失败"):
+				util.Debug("Cannot get draft-post", err)
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候解决问题，需要的不是技术而是耐心。")
+			case strings.Contains(err.Error(), "创建新品味失败"):
+				util.Debug("Cannot save post", err)
+				Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
+			default:
+				util.Debug("未知错误", err)
+				Report(w, r, "处理过程中发生未知错误")
+			}
+			return
+		}
+		http.Redirect(w, r, fmt.Sprintf("/v1/post/detail?uuid=%s", post.Uuid), http.StatusFound)
 		return
 	}
-	// 发送邻座蒙评消息
-	mess := data.AcceptMessage{
-		FromUserId:     data.UserId_SpaceshipCaptain,
-		Title:          "新茶语邻座评审邀请",
-		Content:        "您被茶棚选中为新茶语评审官啦，请及时审理新茶。",
-		AcceptObjectId: aO.Id,
-	}
-	// 发送消息
-	if err = TwoAcceptMessagesSendExceptUserId(s_u.Id, mess); err != nil {
-		Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
-		return
-	}
-	// 提示用户草稿保存成功
-	t := fmt.Sprintf("你好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", t_thread.Title)
-	// 提示用户草稿保存成功
-	Report(w, r, t)
 }
 
 // 修改post的处理器
@@ -450,7 +460,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 				util.Debug(" Cannot read thread", err)
 				Report(w, r, "茶博士失魂鱼，未能读取专属资料，请稍后再试。")
 			}
-			url := fmt.Sprint("/v1/thread/detail?id=", thread.Uuid)
+			url := fmt.Sprint("/v1/thread/detail?uuid=", thread.Uuid)
 			http.Redirect(w, r, url, http.StatusFound)
 		} else {
 			//空白或者一个字被认为是无意义追加内容
