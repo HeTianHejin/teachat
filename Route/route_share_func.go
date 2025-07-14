@@ -603,39 +603,18 @@ func prepareObjectivePageData(objective data.Objective, userData *data.UserPageD
 	}, nil
 }
 
-// 根据给出的thread_slice参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
-func FetchThreadBeanSlice(thread_slice []data.Thread) (ThreadBeanSlice []data.ThreadBean, err error) {
-	var oabslice []data.ThreadBean
-	// 截短ThreadSlice中thread.Body文字长度为168字符,
-	// 展示时长度接近，排列比较整齐，最小惊讶原则？效果比较nice
-	for i := range thread_slice {
-		thread_slice[i].Body = Substr(thread_slice[i].Body, 168)
-	}
-	for _, thread := range thread_slice {
-		ThreadBean, err := FetchThreadBean(thread)
-		if err != nil {
-			return nil, err
-		}
-		oabslice = append(oabslice, ThreadBean)
-	}
-	ThreadBeanSlice = oabslice
-	return
-}
-
 // 根据给出的thread参数，去获取对应的茶议，附属品味计数，作者资料，作者发帖时候选择的茶团，费用和费时。
-func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error) {
-	var tB data.ThreadBean
+func FetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, err error) {
 	tB.Thread = thread
 
-	tB.Count = thread.NumReplies()
+	tB.PostCount = thread.NumReplies()
 	//作者资料
-	author, err := thread.User()
+	tB.Author, err = thread.User()
 	if err != nil {
-		util.Debug(" Cannot read thread author", err)
-		return
+		util.Debug(fmt.Sprintf("Failed to read thread author for thread ID %d: %v", thread.Id, err))
+		return tB, fmt.Errorf("failed to read thread author: %w", err)
 	}
-	tB.Author = author
-	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
+	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。
 	tB.AuthorFamily, err = data.GetFamily(thread.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read thread author family", err)
@@ -648,10 +627,50 @@ func FetchThreadBean(thread data.Thread) (ThreadBean data.ThreadBean, err error)
 		return
 	}
 
+	tB.StatsSet.PersonCount = 1 //默认为1(作者本人)
+	tB.StatsSet.FamilyCount = 0
+	tB.StatsSet.TeamCount = 0
+
+	if thread.IsPrivate {
+		p_f_count, err := data.CountFamilyParentAndChildMembers(thread.FamilyId, r.Context())
+		if err != nil {
+			util.Debug(fmt.Sprintf("Failed to count family members for family ID %d: %v", thread.FamilyId, err))
+			return tB, fmt.Errorf("failed to count family members: %w", err)
+		}
+		tB.StatsSet.PersonCount = p_f_count
+		tB.StatsSet.FamilyCount = 1
+	} else {
+		teamMemberCount := tB.AuthorTeam.NumMembers()
+		tB.StatsSet.PersonCount = teamMemberCount
+	}
+
+	if tB.AuthorTeam.Id > data.TeamIdFreelancer && tB.AuthorTeam.Id != data.TeamIdVerifier {
+		tB.StatsSet.TeamCount = 1
+	}
+
 	//idea是否被采纳
 	tB.IsApproved = thread.IsApproved()
 
 	return tB, nil
+}
+
+// 根据给出的thread_slice参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
+func FetchThreadBeanSlice(thread_slice []data.Thread, r *http.Request) (ThreadBeanSlice []data.ThreadBean, err error) {
+	var beanSlice []data.ThreadBean
+	// 截短ThreadSlice中thread.Body文字长度为168字符,
+	// 展示时长度接近，页面排列比较整齐，
+	for i := range thread_slice {
+		thread_slice[i].Body = Substr(thread_slice[i].Body, 168)
+	}
+	for _, thread := range thread_slice {
+		ThreadBean, err := FetchThreadBean(thread, r)
+		if err != nil {
+			return nil, err
+		}
+		beanSlice = append(beanSlice, ThreadBean)
+	}
+	ThreadBeanSlice = beanSlice
+	return
 }
 
 // 根据给出的objectiv_slice参数，去获取对应的茶话会（objective），截短正文保留前168字符，附属茶台计数，发起人资料，发帖时候选择的茶团。然后按结构填写返回资料荚。
@@ -681,7 +700,7 @@ func FetchObjectiveBean(ob data.Objective) (ObjectiveBean data.ObjectiveBean, er
 		oB.Open = false
 	}
 	oB.Status = ob.GetStatus()
-	oB.Count = ob.NumReplies()
+	oB.ProjectCount = ob.NumReplies()
 	oB.CreatedAtDate = ob.CreatedAtDate()
 	user, err := ob.User()
 	if err != nil {
@@ -733,7 +752,7 @@ func FetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 		pb.Open = false
 	}
 	pb.Status = project.GetStatus()
-	pb.Count = project.NumReplies()
+	pb.ThreadCount = project.NumReplies()
 	pb.CreatedAtDate = project.CreatedAtDate()
 	author, err := project.User()
 	if err != nil {
@@ -788,7 +807,7 @@ func FetchPostBeanSlice(post_slice []data.Post) (PostBeanSlice []data.PostBean, 
 func FetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 	PostBean.Post = post
 	PostBean.Attitude = post.Atti()
-	PostBean.Count = post.NumReplies()
+	PostBean.ThreadCount = post.NumReplies()
 	PostBean.CreatedAtDate = post.CreatedAtDate()
 	author, err := post.User()
 	if err != nil {
@@ -849,7 +868,7 @@ func FetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 		return
 	}
 
-	TeamBean.Count = team.NumMembers()
+	TeamBean.MemberCount = team.NumMembers()
 
 	if team.Id == data.TeamIdFreelancer {
 		//茶友的默认团队还是“自由人”的情况
@@ -911,7 +930,7 @@ func FetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error)
 		return FamilyBean, err
 	}
 
-	FamilyBean.Count, err = data.CountFamilyMembers(family.Id)
+	FamilyBean.PersonCount, err = data.CountFamilyMembers(family.Id)
 	if err != nil {
 		util.Debug(family.AuthorId, " Cannot read family member count")
 		return FamilyBean, err
@@ -1743,7 +1762,7 @@ func AcceptNewProject(objectId int) error {
 	}
 	if err := pr.Get(); err != nil {
 		util.Debug("Cannot get project", objectId, err)
-		return errors.New("你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
+		return errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 	}
 
 	switch pr.Class {
@@ -1752,7 +1771,7 @@ func AcceptNewProject(objectId int) error {
 	case data.PrClassCloseStraw:
 		pr.Class = data.PrClassClose
 	default:
-		return errors.New("你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
+		return errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 	}
 
 	if err := pr.UpdateClass(); err != nil {
@@ -1769,7 +1788,7 @@ func AcceptNewObjective(objectId int) (*data.Objective, error) {
 	}
 	if err := ob.Get(); err != nil {
 		util.Debug("Cannot get objective", objectId, err)
-		return nil, errors.New("你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
+		return nil, errors.New("你好，茶博士失魂鱼，竟然说没有找到新茶茶叶的资料未必是怪事。")
 	}
 	// 检查当前茶围的状态
 	switch ob.Class {
@@ -1778,7 +1797,7 @@ func AcceptNewObjective(objectId int) (*data.Objective, error) {
 	case data.ObClassCloseStraw:
 		ob.Class = data.ObClassClose
 	default:
-		return nil, errors.New("你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
+		return nil, errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 	}
 
 	if err := ob.UpdateClass(); err != nil {
@@ -1793,7 +1812,7 @@ func AcceptNewTeam(objectId int) (*data.Team, error) {
 	t := data.Team{Id: objectId}
 	if err := t.Get(); err != nil {
 		util.Debug("Cannot get team", objectId, err)
-		return nil, errors.New("你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
+		return nil, errors.New("你好，茶博士失魂鱼，竟然说没有找到新茶茶叶的资料未必是怪事。")
 	}
 	switch t.Class {
 	case data.TeamClassOpenStraw:
@@ -1801,7 +1820,7 @@ func AcceptNewTeam(objectId int) (*data.Team, error) {
 	case data.TeamClassCloseStraw:
 		t.Class = data.TeamClassClose
 	default:
-		return nil, errors.New("你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
+		return nil, errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 	}
 	if err := t.UpdateClass(); err != nil {
 		util.Debug("Cannot update t class", objectId, err)
@@ -1870,7 +1889,7 @@ func SetUserDefaultTeam(founder *data.User, newTeamID int, w http.ResponseWriter
 	oldDefaultTeam, err := founder.GetLastDefaultTeam()
 	if err != nil {
 		util.Debug(founder.Email, "Cannot get last default team")
-		Report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
+		Report(w, r, "你好，茶博士失魂鱼，手滑未能创建你的天命使团，请稍后再试。")
 		return false
 	}
 

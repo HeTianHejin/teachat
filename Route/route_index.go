@@ -30,7 +30,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tb_slice, err = FetchThreadBeanSlice(thread_slice)
+	tb_slice, err = FetchThreadBeanSlice(thread_slice, r)
 	if err != nil {
 		util.Debug(" Cannot read thread and author slice", err)
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中。")

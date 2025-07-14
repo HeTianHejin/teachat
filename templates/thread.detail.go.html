@@ -16,29 +16,7 @@
   </li>
 </ol>
 
-{{/* 这是关注这个茶议的总人数 显示 */}}
-<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
 
-  {{/* 这是茶议的关注人数 数量显示 */}}
-  <i class="bi-person-heart" style="font-size: 2rem; color: black;" title="关注人数"></i> 1011
-
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是茶议的总品味数量 显示 */}}
-    <a href="#">
-      <i class="bi-cup-hot" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数">
-        {{ .ThreadBean.Count }}</i>
-    </a>
-  </span>
-  {{ if .ThreadBean.Thread.IsEdited }}
-  {{/* 这是有编辑过 */}}
-  <span style="margin-inline-start: 2rem;">
-    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-    {{ .ThreadBean.Thread.EditAtDate }}
-  </span>
-  {{ else }}
-  {{/* 没有“追加”编辑过，留空白 */}}
-  {{ end }}
-</div>
 
 {{/* 左右侧立场的人数比较 */}}
 <div style="text-align: center;">
@@ -86,7 +64,7 @@
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <span style="display: block; text-align: center;">
-              <i class="bi bi-paint-bucket" style="font-size: large; color: red;"></i>
+              <i class="bi bi-cup" style="font-size: large; color: red;"></i>
             </span>
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -128,7 +106,7 @@
 
         {{ if .ThreadBean.Thread.PostId }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePostBean.Post.Uuid }}"
+          <p style="font-size: small;"><a href="/v1/post/detail?uuid={{ .QuotePostBean.Post.Uuid }}"
               style="margin-inline-end: 1rem;"><span
                 class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
           </p>
@@ -189,6 +167,30 @@
 
 </div>
 
+{{/* 这是关注这个茶议的总人数 显示 */}}
+<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
+
+  {{/* 这是茶议的关注人数 数量显示 */}}
+  <i class="bi-person-heart" style="font-size: 2rem; color: black;" title="关注人数"></i> 1011
+
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是茶议的总品味数量 显示 */}}
+    <a href="#">
+      <i class="bi-cup-hot" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数">
+        {{ .ThreadBean.PostCount }}</i>
+    </a>
+  </span>
+  {{ if .ThreadBean.Thread.IsEdited }}
+  {{/* 这是有编辑过 */}}
+  <span style="margin-inline-start: 2rem;">
+    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+    {{ .ThreadBean.Thread.EditAtDate }}
+  </span>
+  {{ else }}
+  {{/* 没有“追加”编辑过，留空白 */}}
+  {{ end }}
+</div>
+
 {{/* 决定是否显示品味编辑区 */}}
 {{ if .IsInput }}
 
@@ -226,8 +228,22 @@
       <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
 
       <div class="form-group">
+          <fieldset>
+            <label for="team" class="col-sm-2 control-label">身份</label>
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="is_private" value="false" id="team" checked required>
+              <label for="team">团队成员</label>
+            </div>
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="is_private" value="true" id="family" required>
+              <label for="family">家庭成员</label>
+            </div>
+          </fieldset>
+        </div>
+
+      <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="team_id">选择团队</label>
+          <label for="team_id">责任团队</label>
           <select name="team_id" class="form-control" id="select" required>
             <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
             </option>
@@ -240,7 +256,7 @@
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-          <label for="family_id">选择家庭</label>
+          <label for="family_id">受益家庭</label>
           <select name="family_id" class="form-control" id="family_id" required>
             <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
             </option>

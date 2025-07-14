@@ -52,7 +52,7 @@
 
       </div>
       <div class="panel-footer">
-        <i class="bi-disc" style="font-size: 1.5rem;"> {{ .ObjectiveBean.Count }}</i>
+        <i class="bi-disc" style="font-size: 1.5rem;"></i> {{ .ObjectiveBean.ProjectCount }}
 
         {{ if .ObjectiveBean.Objective.IsEdited }}
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
@@ -105,8 +105,8 @@
   <div class="panel-body">
     <div class="media">
       <div class="media-left">
-        {{ if .Count }}
-        <span class="badge">{{ .Count }}</span>
+        {{ if .ThreadCount }}
+        <span class="badge">{{ .ThreadCount }}</span>
         {{ end }}
 
         {{ if .Open }}

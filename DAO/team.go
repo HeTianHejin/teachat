@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -22,7 +23,8 @@ const (
 	TeamIdSpaceshipCrew        // 1   飞船茶棚团队，系统保留
 	TeamIdFreelancer           // 2  默认的系统“自由人”$事业茶团
 
-	TeamIdVerifier = 18 //  见证者团队，系统保留
+	TeamIdVerifier = 18 // 18 见证者团队，系统保留
+
 )
 
 // 默认的系统“自由人”$事业茶团
@@ -37,13 +39,14 @@ var FreelancerTeam = Team{
 	Class:             TeamClassSpaceship,
 	Abbreviation:      "自由人",
 	Logo:              "teamLogo",
-	SuperiorTeamId:    0,
-	SubordinateTeamId: 0,
+	SuperiorTeamId:    TeamIdNone,
+	SubordinateTeamId: TeamIdNone,
 }
 
 var (
 	TeamUUIDSpaceshipCrew = "dcbe3046-b192-44b6-7afb-bc55817c13a9"
 	TeamUUIDFreelancer    = "72c06442-2b60-418a-6493-a91bd03ae4k8"
+	TeamUUIDVerifier      = "38be3046-b192-44b6-7afb-bc55817c13c4"
 )
 
 // GetTeam retrieves team by ID
@@ -431,10 +434,13 @@ var TeamProperty = map[int]string{
 	32: "已婉拒闭团",
 }
 
-// 根据给出的团队简称关键词（keyword），查询相似的team.Abbreviation，返回 []team,err，限制返回结果数量为9
-func SearchTeamByAbbreviation(keyword string) ([]Team, error) {
+// 根据给出的团队简称关键词（keyword），查询相似的team.Abbreviation，返回 []team,err，限制返回结果数量为limit
+func SearchTeamByAbbreviation(keyword string, limit int, ctx context.Context) ([]Team, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	teams := []Team{}
-	rows, err := Db.Query("SELECT * FROM teams WHERE abbreviation LIKE $1 LIMIT 9", "%"+keyword+"%")
+	rows, err := Db.QueryContext(ctx, "SELECT * FROM teams WHERE abbreviation LIKE $1 LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return teams, err
 	}

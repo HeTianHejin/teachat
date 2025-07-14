@@ -1,6 +1,8 @@
 package data
 
-import "time"
+import (
+	"time"
+)
 
 // teaVote 对茶议主张的表态，回复，立场
 // 喜欢或者讨厌？认同或者反感？支持或者反对？
@@ -14,7 +16,7 @@ type Post struct {
 	Attitude  bool //表态：肯定（颔首）或者否定（摇头）
 	FamilyId  int  //作者发帖时选择的家庭id
 	TeamId    int  //作者发帖时选择的成员所属茶团id（team/family）
-	IsPrivate bool //类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
+	IsPrivate bool //指定责任（受益）权属类型，代表&家庭（family）=true，代表$团队（team）=false。默认是false
 	CreatedAt time.Time
 	EditAt    *time.Time
 
@@ -145,7 +147,7 @@ func (post *Post) GetByUuid() (err error) {
 // 获取某个thread的全部普通posts,class = 0,
 func (t *Thread) Posts() (posts []Post, err error) {
 	posts = []Post{}
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE class = 0 AND thread_id = $1", t.Id)
+	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE class = $1 AND thread_id = $2 ORDER BY created_at DESC", PostClassNormal, t.Id)
 	if err != nil {
 		return
 	}
@@ -164,7 +166,7 @@ func (t *Thread) Posts() (posts []Post, err error) {
 // post by admin team/family
 func (t *Thread) PostsAdmin() (posts []Post, err error) {
 	posts = []Post{}
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE class = 1 AND thread_id = $1", t.Id)
+	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE class = $1 AND thread_id = $2 ORDER BY created_at DESC", PostClassAdmin, t.Id)
 	if err != nil {
 		return
 	}

@@ -35,7 +35,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user given session", err)
-		Report(w, r, "你好，(摸摸头想了又想), 你能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
+		Report(w, r, "你好，(摸摸头想了又想), 陛下能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
 		return
 	}
 	err = r.ParseForm()
@@ -49,14 +49,14 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	id_str := r.PostFormValue("id")
 	if id_str == "" {
 		util.Debug(" Cannot get id", err)
-		Report(w, r, "你好，(摸摸头想了又想), 你能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
+		Report(w, r, "你好，(摸摸头想了又想), 陛下能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
 		return
 	}
 	// 把准备审核的对象茶语id_str转成id_int
 	ao_id_int, err := strconv.Atoi(id_str)
 	if err != nil {
 		util.Debug(" Cannot get id", err)
-		Report(w, r, "你好，(摸摸头想了又想), 你能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
+		Report(w, r, "你好，(摸摸头想了又想), 陛下能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
 		return
 	}
 
@@ -66,7 +66,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		break
 	default:
 		util.Debug(" Cannot get form value civilizer", err)
-		Report(w, r, "你好，(茶博士摸摸头想了又想),无为有处有还无，中文真是博大精深。")
+		Report(w, r, "你好，(茶博士摸摸头想了又想),喝茶文化真是博大精深。")
 		return
 	}
 	switch care {
@@ -74,7 +74,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 		break
 	default:
 		util.Debug(" Cannot get form value care", err)
-		Report(w, r, "你好，(摸摸头想了又想),贾不假，请问这是火星文吗？")
+		Report(w, r, "你好，(摸摸头想了又想),陛下，请问这是火星文吗？")
 		return
 	}
 
@@ -96,7 +96,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	}
 	if !ok {
 		util.Debug(" Cannot check acceptance by ao_id", err)
-		Report(w, r, "你好，(茶博士摸摸头想了又想), 这里真的可以接受无票登陆星际飞船吗？")
+		Report(w, r, "你好，(茶博士摸摸头想了又想), 这里真的可以接受无票喝茶吗？")
 		return
 	}
 
@@ -168,7 +168,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId}
 			if err = ob.Get(); err != nil {
 				util.Debug("Cannot get objective", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶评审的资料未必是怪事。")
+				Report(w, r, "你好，茶博士失魂鱼，竟然说没有找到新茶茶叶的资料未必是怪事。")
 				return
 			}
 			switch ob.Class {
@@ -189,7 +189,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			if err = pr.Get(); err != nil {
 				util.Debug("Cannot get project", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修养的过程。")
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 				return
 			}
 			switch pr.Class {
@@ -211,7 +211,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 
 			if err = dThread.Get(); err != nil {
 				util.Debug("Cannot get dfart-thread", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术,而是耐心。")
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找茶叶需要的不是技术,而是耐心。")
 				return
 			}
 			// 更新茶议属性，友邻蒙评 已拒绝公开发布
@@ -277,7 +277,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				switch {
 				case strings.Contains(err.Error(), "获取茶议草稿失败"):
 					util.Debug("Cannot get draft-thread", err)
-					Report(w, r, "你好，茶博士失魂鱼，竟然说有时候解决问题，需要的不是技术而是耐心。")
+					Report(w, r, "你好，茶博士失魂鱼，竟然说有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
 				case strings.Contains(err.Error(), "更新茶议草稿状态失败"):
 					util.Debug("Cannot update draft-thread status", err)
 					Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
@@ -286,7 +286,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 					Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 				default:
 					util.Debug("未知错误", err)
-					Report(w, r, "处理过程中发生未知错误")
+					Report(w, r, "世事洞明皆学问，人情练达即文章。")
 				}
 				return
 			}
@@ -296,13 +296,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				switch {
 				case strings.Contains(err.Error(), "获取品味草稿失败"):
 					util.Debug("Cannot get draft-post", err)
-					Report(w, r, "你好，茶博士失魂鱼，竟然说有时候解决问题，需要的不是技术而是耐心。")
+					Report(w, r, "你好，茶博士失魂鱼，竟然说有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
 				case strings.Contains(err.Error(), "创建新品味失败"):
 					util.Debug("Cannot save post", err)
 					Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 				default:
-					util.Debug("未知错误", err)
-					Report(w, r, "处理过程中发生未知错误")
+					util.Debug("处理接纳新品味时发生未知错误", err)
+					Report(w, r, "世事洞明皆学问，人情练达即文章。")
 				}
 				return
 			}
@@ -344,7 +344,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			group, err := data.GetGroup(ao.ObjectId)
 			if err != nil {
 				util.Debug("Cannot get group", err)
-				Report(w, r, "你好，满头大汗的茶博士请教你，错里错以错劝哥哥，是什么意思？")
+				Report(w, r, "你好，满头大汗的茶博士请教你，错里错以错劝哥哥，是什么茶品种？")
 				return
 			}
 			switch group.Class {
@@ -362,7 +362,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 
 		default:
 			util.Debug("Cannot get object", err)
-			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候什么都不做,就能赢大多数竞争对手？")
+			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候喝茶比做傻事强？")
 			return
 		}
 
@@ -379,14 +379,14 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	ob_id_str := r.URL.Query().Get("id")
 	if ob_id_str == "" {
 		util.Debug("ID parameter is missing")
-		Report(w, r, "你好，缺少编号参数，茶博士找不到评审的资料")
+		Report(w, r, "你好，缺少编号参数，茶博士找不到茶叶的资料")
 		return
 	}
 	// 换成int
 	ob_id, err := strconv.Atoi(ob_id_str)
 	if err != nil {
 		util.Debug("Cannot convert id to integer", err)
-		Report(w, r, "你好，转换编号失败，茶博士找不到评审的资料")
+		Report(w, r, "你好，转换编号失败，茶博士找不到茶叶的资料")
 		return
 	}
 	sess, err := Session(r)
@@ -416,7 +416,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	var acceptMessage data.AcceptMessage
 	if err = acceptMessage.GetAccMesByUIdAndAOId(s_u.Id, ao.Id); err != nil {
 		util.Debug("Cannot get accept-message invitation", err)
-		Report(w, r, "你好，茶博士莫名其妙，竟然说没有机票也可以登船有时候是合情合理的。")
+		Report(w, r, "你好，茶博士莫名其妙，竟然说没有机票也登船有时候是合情合理的。")
 		return
 	}
 
@@ -439,7 +439,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 			Id: ao.ObjectId}
 		if err = ob.Get(); err != nil {
 			util.Debug("Cannot get objective", err)
-			Report(w, r, "你好，有时候找不到新茶评审的资料未必是外星人闹事。")
+			Report(w, r, "你好，有时候找不到新茶茶叶的资料未必是外星人闹事。")
 			return
 		}
 		//aopd.Title = ob.Title
@@ -454,7 +454,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = pr.Get(); err != nil {
 			util.Debug("Cannot get project", err)
-			Report(w, r, "你好，茶博士失魂鱼，竟然说有时找资料也是一种修心养性的过程。")
+			Report(w, r, "你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修心养性的过程。")
 			return
 		}
 		//aopd.Title = pr.Title
@@ -469,7 +469,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = dThread.Get(); err != nil {
 			util.Debug("Cannot get dfart-thread", err)
-			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料需要的不是技术而是耐心。")
+			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找茶叶需要的不是技术而是耐心。")
 			return
 		}
 
@@ -485,7 +485,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = dPost.Get(); err != nil {
 			util.Debug("Cannot get post", err)
-			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找资料的人也会迷路。")
+			Report(w, r, "你好，茶博士失魂鱼，竟然说有时候找茶叶的人也会迷路。")
 			return
 		}
 		aopd.Body = dPost.Body
@@ -508,7 +508,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 	default:
 		util.Debug("Cannot get object", err)
-		Report(w, r, "你好，茶博士失魂鱼，竟然说有时候什么都不做就能赢50%的竞争对手？")
+		Report(w, r, "你好，茶博士失魂鱼，竟然说有时候喝茶比什么都不做好？")
 		return
 	}
 

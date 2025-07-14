@@ -12,16 +12,7 @@
 
 </ol>
 
-{{/* 这是某个茶台（项目）的地址显示 */}}
-<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;">
-  <i class="bi-geo" style="font-size: 2rem; color: black;" title="地方"></i>
-  <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
 
-  <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">个人 4</span>
-  <span style="margin-inline-end: 2rem;">家庭 3</span>
-  <span style="margin-inline-end: 2rem;">团队 1</span>
-  <span style="margin-inline-end: 2rem;">叩击 404</span>
-</div>
 
 {{/* 这是某个茶台（项目）的详情页 */}}
 <div class="media" style="margin-top: 20px;">
@@ -128,11 +119,22 @@
   </div>
 </div>
 
+{{/* 这是某个茶台（项目）的地址显示 */}}
+<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;">
+  <i class="bi-geo" style="font-size: 2rem; color: black;" title="地方"></i>
+  <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
+
+  <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">个人 4</span>
+  <span style="margin-inline-end: 2rem;">家庭 3</span>
+  <span style="margin-inline-end: 2rem;">团队 1</span>
+  <span style="margin-inline-end: 2rem;">叩击 404</span>
+</div>
+
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
 {{ if .IsInput }}
 {{/* 这是茶台下的新茶议撰写模版 */}}
-<button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel">
-  <i class="bi bi-chevron-double-down"></i> 新茶议
+<button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel" style="margin-top: 2rem;">
+  <i class="bi-patch-plus" style="font-size: 2rem; color: black;"></i> 新茶议
 </button>
 <div class="collapse" id="newThreadPanel">
   <div class="panel panel-default">
@@ -144,7 +146,7 @@
         <div class="form-group">
           <fieldset>
             <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
-              <i class="bi bi-cup-hot"></i>
+              <i class="bi bi-cup"></i>
             </div>
 
             <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
@@ -255,7 +257,7 @@
   <span style="margin-inline-start: 2rem;">
     {{/* 这是茶台的总茶议数量 显示 */}}
     <a href="/v1/place/detail?id={{ .Place.Uuid }}">
-      <i class="bi-paint-bucket" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数">
+      <i class="bi bi-cup" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数">
         {{ .ThreadCount }}</i>
     </a>
   </span>

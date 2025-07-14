@@ -9,23 +9,23 @@ import (
 	util "teachat/Util"
 )
 
-// GET /v1/post/detail?id=
+// GET /v1/post/detail?uuid=
 // 品味的详情
 func PostDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vals := r.URL.Query()
-	uuid := vals.Get("id")
+	uuid := vals.Get("uuid")
 	var pD data.PostDetail
 	t_post := data.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	post_bean, err := FetchPostBean(t_post)
 	if err != nil {
 		util.Debug(" Cannot get post bean given post", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	pD.PostBean = post_bean
@@ -36,7 +36,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
 		return
 	}
-	pD.QuoteThreadBean, err = FetchThreadBean(quote_thread)
+	pD.QuoteThreadBean, err = FetchThreadBean(quote_thread, r)
 	if err != nil {
 		util.Debug(" Cannot get thread given post", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
@@ -49,13 +49,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	thread_slice, err := t_post.Threads()
 	if err != nil {
 		util.Debug(" Cannot get thread_slice given t_post", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
-	pD.ThreadBeanSlice, err = FetchThreadBeanSlice(thread_slice)
+	pD.ThreadBeanSlice, err = FetchThreadBeanSlice(thread_slice, r)
 	if err != nil {
 		util.Debug(" Cannot get thread_bean_slice given thread_slice", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 
@@ -63,13 +63,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	quote_project, err := quote_thread.Project()
 	if err != nil {
 		util.Debug(quote_thread.Id, " Cannot get project given thread")
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	pD.QuoteProjectBean, err = FetchProjectBean(quote_project)
 	if err != nil {
 		util.Debug(quote_project.Id, " Cannot get project given project")
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 
@@ -77,13 +77,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	quote_objective, err := quote_project.Objective()
 	if err != nil {
 		util.Debug(quote_project.Id, " Cannot get objective given project")
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	pD.QuoteObjectiveBean, err = FetchObjectiveBean(quote_objective)
 	if err != nil {
 		util.Debug(quote_objective.Id, " Cannot get objective given objective")
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 
@@ -251,11 +251,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	is_private := false
-	if family_id > data.FamilyIdUnknown && team_id == data.TeamIdFreelancer {
-		//默认是团队负责，soso
-		is_private = true
-	}
+	is_private := r.PostFormValue("is_private") == "true"
 
 	// 茶议所在的茶台
 	t_proj, err := t_thread.Project()
@@ -366,13 +362,13 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 			switch {
 			case strings.Contains(err.Error(), "获取品味草稿失败"):
 				util.Debug("Cannot get draft-post", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候解决问题，需要的不是技术而是耐心。")
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
 			case strings.Contains(err.Error(), "创建新品味失败"):
 				util.Debug("Cannot save post", err)
 				Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 			default:
 				util.Debug("未知错误", err)
-				Report(w, r, "处理过程中发生未知错误")
+				Report(w, r, "世事洞明皆学问，人情练达即文章。")
 			}
 			return
 		}
@@ -411,7 +407,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	//从会话中读取用户资料
@@ -423,13 +419,13 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	uuid := r.PostFormValue("uuid")
 	if uuid == "" {
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	t_post := data.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail given uuid", uuid)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 
@@ -458,7 +454,7 @@ func UpdatePost(w http.ResponseWriter, r *http.Request) {
 			thread, err := data.GetThreadById(t_post.ThreadId)
 			if err != nil {
 				util.Debug(" Cannot read thread", err)
-				Report(w, r, "茶博士失魂鱼，未能读取专属资料，请稍后再试。")
+				Report(w, r, "茶博士失魂鱼，嘀咕无为有处有还无？，请稍后再试。")
 			}
 			url := fmt.Sprint("/v1/thread/detail?uuid=", thread.Uuid)
 			http.Redirect(w, r, url, http.StatusFound)
@@ -492,7 +488,7 @@ func EditPost(w http.ResponseWriter, r *http.Request) {
 	t_post := data.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	if t_post.UserId == user.Id {

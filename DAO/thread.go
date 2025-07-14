@@ -21,7 +21,7 @@ type Thread struct {
 	EditAt    *time.Time
 	Class     int  //1: "开放式",2: "封闭式"
 	ProjectId int  //所属茶台号
-	IsPrivate bool // 指定管理权属类型，属于&家庭管理（family）=true，属于$团队管理（team）=false。默认是false
+	IsPrivate bool // 指定责任（受益）权属类型，属于&家庭管理（family）=true，属于$团队管理（team）=false。默认是false
 	FamilyId  int  //作者发帖时选择的成员所属家庭id(family_id)
 	TeamId    int  //作者发帖时选择的成员身份所属茶团，$事业团队id。换句话说就是选择那个团队负责？（注意个人身份发言是代表“自由职业者”虚拟茶团）
 	PostId    int  //是否针对某一个品味？默认=0，普通类型针对茶台（project）发布；如果有>0值，则是该品味（post）的ID，是议中议类型。

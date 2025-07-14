@@ -71,13 +71,13 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	place := data.Place{Id: place_id_int}
 	if err = place.Get(); err != nil {
 		util.Debug(" Cannot get place given id ", place_id_int, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	t_proj := data.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	if t_proj.TeamId == data.TeamIdFreelancer {
@@ -88,7 +88,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	master_team, err := data.GetTeam(t_proj.TeamId)
 	if err != nil {
 		util.Debug(" Cannot get master team", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	is_member, err := master_team.IsMember(master_id_int)
@@ -105,25 +105,25 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	t_obje, err := t_proj.Objective()
 	if err != nil {
 		util.Debug(" Cannot get objective given proj_id", t_proj.Id, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	projBean, err := FetchProjectBean(t_proj)
 	if err != nil {
 		util.Debug(" Cannot get projBean", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	objeBean, err := FetchObjectiveBean(t_obje)
 	if err != nil {
 		util.Debug(" Cannot get objeBean", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	admin_team, err := data.GetTeam(t_obje.TeamId)
 	if err != nil {
 		util.Debug(" Cannot get ob_admin team", t_obje.TeamId, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	is_member, err = admin_team.IsMember(admin_id_int)
@@ -141,13 +141,13 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	admin, err := data.GetUser(admin_id_int)
 	if err != nil {
 		util.Debug(" Cannot get ob_admin given userid", admin_id_int, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	master, err := data.GetUser(master_id_int)
 	if err != nil {
 		util.Debug(" Cannot get master given userid", master_id_int, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 
@@ -167,7 +167,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	sessUserData, err := prepareUserPageData(&sess)
 	if err != nil {
 		util.Debug(" Cannot prepare user page data", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 

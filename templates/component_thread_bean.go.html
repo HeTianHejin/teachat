@@ -4,8 +4,8 @@
 <div class="media">
 
   <div class="media-left">
-    {{ if .Count }}
-    <span class="badge">{{ .Count }}</span>
+    {{ if .PostCount }}
+    <span class="badge">{{ .PostCount }}</span>
     {{ end }}
 
     {{ template "component_avatar_name_gender" .Author }}

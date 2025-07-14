@@ -134,7 +134,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 	case data.SearchTypeTeamAbbr:
 		//查询，茶团简称，team.abbreviation
-		team_slice, err := data.SearchTeamByAbbreviation(keyword)
+		team_slice, err := data.SearchTeamByAbbreviation(keyword, 9, r.Context())
 		if err != nil {
 			util.Debug(" Cannot search team by abbreviation", err)
 		}
@@ -160,7 +160,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			util.Debug(" Cannot search thread by title", err)
 		}
 		if len(thread_slice) >= 1 {
-			thread_bean_slice, err := FetchThreadBeanSlice(thread_slice)
+			thread_bean_slice, err := FetchThreadBeanSlice(thread_slice, r)
 			if err != nil {
 				util.Debug(" Cannot fetch thread bean slice given thread_slice", err)
 			}

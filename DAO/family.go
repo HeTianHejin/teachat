@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -889,9 +890,21 @@ func (fm *FamilyMember) CreatedAtDate() string {
 	return fm.CreatedAt.Format("2006-01-02")
 }
 
-// 统计某个家庭的成员数量
+// 统计某个家庭的总成员数（包括宠物等）
 func CountFamilyMembers(familyId int) (count int, err error) {
 	err = Db.QueryRow("SELECT COUNT(*) FROM family_members WHERE family_id=$1", familyId).Scan(&count)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// 统计家庭父母加子女角色成员的数量
+func CountFamilyParentAndChildMembers(familyId int, ctx context.Context) (count int, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	err = Db.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND role IN ($2, $3, $4, $5)", familyId, FamilyMemberRoleHusband, FamilyMemberRoleWife, FamilyMemberRoleDaughter, FamilyMemberRoleSon).Scan(&count)
 	if err != nil {
 		return
 	}

@@ -3,12 +3,15 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a
-      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }} </a>@茶话会
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
+    </a>@茶话会
   </li>
-  <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台</li>
-  <li><a href="/v1/thread/detail?uuid={{ .QuoteThreadBean.Thread.Uuid }}">{{ .QuoteThreadBean.Thread.Title }} </a>@茶议</li>
+  <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }}
+    </a>@茶台</li>
+  <li><a href="/v1/thread/detail?uuid={{ .QuoteThreadBean.Thread.Uuid }}">{{ .QuoteThreadBean.Thread.Title }} </a>@茶议
+  </li>
   <li class="active">#{{ .PostBean.Post.Id }} @品味</li>
-   <li>
+  <li>
     {{ template "component_sess_capacity" . }}
   </li>
 </ol>
@@ -26,10 +29,10 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-           
+
             <span style="font-size: smaller;">
               (<a href="/v1/family/detail?id={{ .PostBean.AuthorFamily.Uuid }}">{{ .PostBean.AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>)
+              <a href="/v1/team/detail?id={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>)
             </span>
           </div>
 
@@ -58,13 +61,16 @@
 
         <div class="panel panel-default">
           <div class="panel-body" style="font-size: xx-small;">
-            <a href="/v1/thread/detail?uuid={{ .QuoteThreadBean.Thread.Uuid }}"><span class="label label-default">茶议</span></a>
+            <a href="/v1/thread/detail?uuid={{ .QuoteThreadBean.Thread.Uuid }}">
+              <span class="label label-default" style="margin-inline-end: 20px;" aria-hidden="true">茶议</span></a>
             <a href="/v1/user/biography?id={{ .QuoteThreadBean.Author.Uuid }}">{{ .QuoteThreadBean.Author.Name }}</a>
             <span style="margin-inline-end: 20px;">
-              （<a href="/v1/family/detail?id={{ .QuoteThreadBean.AuthorFamily.Uuid }}">{{ .QuoteThreadBean.AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .QuoteThreadBean.AuthorTeam.Uuid }}">{{ .QuoteThreadBean.AuthorTeam.Abbreviation }}</a>）
-              
-              </span>
+              （<a
+                href="/v1/family/detail?id={{ .QuoteThreadBean.AuthorFamily.Uuid }}">{{ .QuoteThreadBean.AuthorFamily.Name }}</a>,
+              <a
+                href="/v1/team/detail?id={{ .QuoteThreadBean.AuthorTeam.Uuid }}">{{ .QuoteThreadBean.AuthorTeam.Abbreviation }}</a>）
+
+            </span>
             <span style="font-style: italic;">
               {{ .QuoteThreadBean.Thread.TypeString }}
               : {{ .QuoteThreadBean.Thread.Title }}
@@ -78,12 +84,8 @@
         <a href="#">
           <span class="glyphicon glyphicon-comment" aria-hidden="true"></span>
         </a>
-        <span style="font-size: smaller; margin-inline-end: 30px;">{{ .PostBean.Count }}</span>
-
-        <a href="#">
-          <span class="glyphicon glyphicon-heart-empty" aria-hidden="true"></span>
-        </a>
-        <span style="margin-inline-end: 30px;"> 123 </span>
+        <span style="font-size: smaller;"></span> {{ .PostBean.ThreadCount }}
+        {{/* 评论数 */}}
 
         {{ if .PostBean.Post.IsEdited }}
 
@@ -103,17 +105,17 @@
 {{/* 这是 针对某个post的“茶议中茶议” 撰写模版 */}}
 {{ if .IsInput }}
 <button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel">
-  <i class="bi bi-chevron-double-down"></i> 新茶议
+  <i class="bi-patch-plus" style="font-size: 2rem; color: black;"></i> 新茶议
 </button>
 
 <div class="collapse" id="newThreadPanel">
-<div class="panel panel-default">
-  
-  <div class="panel-body">
+  <div class="panel panel-default">
 
-    <form class="form-horizontal" role="form" action="/v1/thread/draft" method="post">
+    <div class="panel-body">
 
-       <div class="form-group">
+      <form class="form-horizontal" role="form" action="/v1/thread/draft" method="post">
+
+        <div class="form-group">
           <fieldset>
             <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
               <i class="bi bi-cup-hot"></i>
@@ -132,60 +134,72 @@
           </fieldset>
         </div>
 
-      <div class=" form-group">
-              <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-                <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="42"
-                  placeholder="标题（2～36字）" required />
-              </div>
+        <div class=" form-group">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <input type="text" class="form-control" name="title" id="title" minlength="3" maxlength="42"
+              placeholder="标题（2～36字）" required />
           </div>
+        </div>
 
-          <div class="form-group">
-            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        <div class="form-group">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
 
-              <textarea class="form-control" name="topic" id="topic" rows="3" minlength="17" maxlength="567"
-                placeholder="内容（17～456字）" required></textarea>
+            <textarea class="form-control" name="topic" id="topic" rows="3" minlength="17" maxlength="567"
+              placeholder="内容（17～456字）" required></textarea>
+          </div>
+        </div>
+
+        {{/* 这是对应的post的uuid提交 */}}
+        <input type="hidden" name="post_id" value="{{ .PostBean.Post.Id }}" />
+        {{/* 这是project的id提交 */}}
+        <input type="hidden" name="project_id" value="{{ .QuoteProjectBean.Project.Id }}" />
+
+        <div class="form-group">
+          <fieldset>
+            <label for="team" class="col-sm-2 control-label">身份</label>
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="is_private" value="false" id="team" checked required>
+              <label for="team">团队成员</label>
             </div>
-          </div>
-
-          
-
-          {{/* 这是对应的post的uuid提交 */}}
-          <input type="hidden" name="post_id" value="{{ .PostBean.Post.Id }}" />
-          {{/* 这是project的id提交 */}}
-          <input type="hidden" name="project_id" value="{{ .QuoteProjectBean.Project.Id }}" />
-           
-          <div class="form-group">
-            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <label for="team_id">选择团队</label>
-              <select name="team_id" class="form-control" id="team_id" required>
-                <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
-                </option>
-                {{ range .SessUserSurvivalTeams }}
-                <option value="{{ .Id }}">{{ .Name }}</option>
-                {{ end }}
-              </select>
+            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+              <input type="radio" name="is_private" value="true" id="family" required>
+              <label for="family">家庭成员</label>
             </div>
-          </div>
+          </fieldset>
+        </div>
 
-          <div class="form-group">
-            <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-              <label for="family_id">选择家庭</label>
-              <select name="family_id" class="form-control" id="family_id" required>
-                <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
-                </option>
-                {{ range .SessUserSurvivalFamilies }}
-                <option value="{{ .Id }}">{{ .Name }}</option>
-                {{ end }}
-              </select>
-            </div>
+        <div class="form-group">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <label for="team_id">责任团队</label>
+            <select name="team_id" class="form-control" id="team_id" required>
+              <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
+              </option>
+              {{ range .SessUserSurvivalTeams }}
+              <option value="{{ .Id }}">{{ .Name }}</option>
+              {{ end }}
+            </select>
           </div>
+        </div>
 
-          <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
-            <button type="submit" class="btn btn-default">提交</button>
+        <div class="form-group">
+          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <label for="family_id">受益家庭</label>
+            <select name="family_id" class="form-control" id="family_id" required>
+              <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
+              </option>
+              {{ range .SessUserSurvivalFamilies }}
+              <option value="{{ .Id }}">{{ .Name }}</option>
+              {{ end }}
+            </select>
           </div>
-    </form>
+        </div>
+
+        <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+          <button type="submit" class="btn btn-default">提交</button>
+        </div>
+      </form>
+    </div>
   </div>
-</div>
 </div>
 
 {{ else }}
@@ -193,12 +207,9 @@
 <p class="text text-center">
   <a href="/v1/login?footprint={{ .SessUser.Footprint }}&query={{ .SessUser.Query }}">
     <i class="bi-airplane" style="font-size: 2rem; color: black;"></i>
-  登船</a> 以开始聊天品茶 </p>
+    登船</a> 以开始聊天品茶 </p>
 <hr />
 {{ end }}
-
-
-
 
 {{/* 以下是针对这个品味的茶议展示，一页一打dozen，如果超过就显示“下一页”按钮 */}}
 {{ range .ThreadBeanSlice }}
@@ -206,8 +217,8 @@
 <div class=" media">
 
   <div class="media-left">
-    {{ if .Count }}
-    <span class="badge">{{ .Count }}</span>
+    {{ if .PostCount }}
+    <span class="badge">{{ .PostCount }}</span>
     {{ else }}
     {{ end }}
     {{ template "component_avatar_name_gender" .Author }}
@@ -215,13 +226,13 @@
 
   <div class="media-body">
     <p>
-     
+
       <span style="margin-inline-end: 20px; font-size: smaller;">
         （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
-                <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
+        <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
 
       <span style="margin-inline-end: 20px;font-size: smaller;">{{ .Thread.CreatedAtDate }}</span>
-      
+
     </p>
 
     <h5>
@@ -229,24 +240,24 @@
       <a href="/v1/thread/detail?uuid={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
     </h5>
     <span style="font-size: small; margin-inline-start: 40px;">
-      
+
       {{ .Thread.Body }} ...
   </div>
 </div>
 
-      <hr />
+<hr />
 
-      {{ end }}
+{{ end }}
 
-      {{ if .IsOverTwelve }}
+{{ if .IsOverTwelve }}
 
-      <nav aria-label="下一页">
-        <ul class="pager">
-          <li><a href="#">上一页</a></li>
-          <li><a href="#">下一页 </a></li>
-        </ul>
-      </nav>
+<nav aria-label="下一页">
+  <ul class="pager">
+    <li><a href="#">上一页</a></li>
+    <li><a href="#">下一页 </a></li>
+  </ul>
+</nav>
 
-      {{ end }}
+{{ end }}
 
-      {{ end }}
+{{ end }}

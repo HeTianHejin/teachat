@@ -195,7 +195,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 			switch {
 			case strings.Contains(err.Error(), "获取茶议草稿失败"):
 				util.Debug("Cannot get draft-thread", err)
-				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候解决问题，需要的不是技术而是耐心。")
+				Report(w, r, "你好，茶博士失魂鱼，竟然说有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
 			case strings.Contains(err.Error(), "更新茶议草稿状态失败"):
 				util.Debug("Cannot update draft-thread status", err)
 				Report(w, r, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
@@ -204,7 +204,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 				Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 			default:
 				util.Debug("未知错误", err)
-				Report(w, r, "处理过程中发生未知错误")
+				Report(w, r, "世事洞明皆学问，人情练达即文章。")
 			}
 			return
 		}
@@ -219,11 +219,10 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		Report(w, r, "你好，茶博士看不透您提交的茶议id。")
+		Report(w, r, "你好，茶博士看不透您提交的茶议编号。")
 		return
 	}
 
-	// 准备一个空白的表
 	var tD data.ThreadDetail
 
 	// 读取茶议内容
@@ -234,7 +233,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		util.Debug(" Cannot read thread given uuid", uuid, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？")
 		return
 	}
 
@@ -242,7 +241,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	project, err := thread.Project()
 	if err != nil {
 		util.Debug(" Cannot read project given thread", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶台资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？")
 		return
 	}
 	tD.QuoteProjectBean, err = FetchProjectBean(project)
@@ -253,7 +252,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		util.Debug(" Cannot read project", err)
-		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人？")
 		return
 	}
 
@@ -261,7 +260,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	objective, err := project.Objective()
 	if err != nil {
 		util.Debug(" Cannot read objective given project", err)
-		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶围资料。")
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
 	tD.QuoteObjectiveBean, err = FetchObjectiveBean(objective)
@@ -291,14 +290,14 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		tD.QuotePostBean.Post.Body = Substr(tD.QuotePostBean.Post.Body, 66)
 
 	} else {
-		// 是一个普通的茶议
+		// 是一个普通的茶台
 		// 截短body
 		tD.QuoteProjectBean.Project.Body = Substr(tD.QuoteProjectBean.Project.Body, 66)
 
 	}
 
 	// 读取茶议资料荚
-	tD.ThreadBean, err = FetchThreadBean(thread)
+	tD.ThreadBean, err = FetchThreadBean(thread, r)
 	if err != nil {
 		util.Debug(" Cannot read threadBean", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料荚。")
@@ -328,30 +327,72 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	tD.ProgressSupport = ProgressRound(n1, n2)
 	tD.ProgressOppose = 100 - tD.ProgressSupport
 
-	post_admi_slice, err := tD.ThreadBean.Thread.PostsAdmin()
+	post_admin_slice, err := tD.ThreadBean.Thread.PostsAdmin()
 	if err != nil {
 		util.Debug(" Cannot read admin posts", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
-	tD.PostBeanAdminSlice, err = FetchPostBeanSlice(post_admi_slice)
+	//统计post_admin_slice[i].FamilyId数量 ，重复的family_id数量不计入
+	familyMap := make(map[int]bool)
+	teamMap := make(map[int]bool)
+	family_count := 0
+	team_count := 0
+	for _, post := range post_admin_slice {
+		if _, exists := familyMap[post.FamilyId]; !exists {
+			if post.FamilyId != data.FamilyIdUnknown {
+				familyMap[post.FamilyId] = true
+				family_count++
+			}
+		}
+	}
+	for _, post := range post_admin_slice {
+		if _, exits := teamMap[post.TeamId]; !exits {
+			if post.TeamId > data.TeamIdFreelancer && post.TeamId != data.TeamIdVerifier {
+				teamMap[post.TeamId] = true
+				team_count++
+			}
+		}
+	}
+
+	tD.PostBeanAdminSlice, err = FetchPostBeanSlice(post_admin_slice)
 	if err != nil {
 		util.Debug(" Cannot read admin postbean", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 
 	// 读取全部普通回复帖子（品味）
-	post_slice, err := tD.ThreadBean.Thread.Posts()
+	post_n_slice, err := tD.ThreadBean.Thread.Posts()
 	if err != nil {
 		util.Debug(" Cannot read posts", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
-	tD.PostBeanSlice, err = FetchPostBeanSlice(post_slice)
+	for _, post := range post_n_slice {
+		if _, exists := familyMap[post.FamilyId]; !exists {
+			if post.FamilyId != data.FamilyIdUnknown {
+				familyMap[post.FamilyId] = true
+				family_count++
+			}
+		}
+	}
+	for _, post := range post_n_slice {
+		if _, exits := teamMap[post.TeamId]; !exits {
+			if post.TeamId > data.TeamIdFreelancer && post.TeamId != data.TeamIdVerifier {
+				teamMap[post.TeamId] = true
+				team_count++
+			}
+		}
+	}
+	tD.StatsSet.FamilyCount = family_count 
+	tD.StatsSet.TeamCount = team_count 
+	//tD.StatsSet.PersonCount = ?
+
+	tD.PostBeanSlice, err = FetchPostBeanSlice(post_n_slice)
 	if err != nil {
 		util.Debug(" Cannot read posts", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 	// 读取会话
@@ -641,7 +682,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		util.Debug(" Cannot read thread given uuid", uuid, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？")
 		return
 	}
 	switch thread.Category {
@@ -666,7 +707,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	ok, err := verifier_team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check team membership", verifier_team.Id, err)
-		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您没有权限补充该茶议。")
+		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说陛下您没有权限补充该茶议。")
 		return
 	}
 	if !ok {
@@ -677,7 +718,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	tD.IsInput = true
 
 	// 读取茶议资料荚
-	tD.ThreadBean, err = FetchThreadBean(thread)
+	tD.ThreadBean, err = FetchThreadBean(thread, r)
 	if err != nil {
 		util.Debug(" Cannot read threadBean", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料荚。")
@@ -706,7 +747,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	objective, err := project.Objective()
 	if err != nil {
 		util.Debug(" Cannot read objective given project", err)
-		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶围资料。")
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
 	tD.QuoteObjectiveBean, err = FetchObjectiveBean(objective)
@@ -715,16 +756,16 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
-	post_admi_slice, err := tD.ThreadBean.Thread.PostsAdmin()
+	post_admin_slice, err := tD.ThreadBean.Thread.PostsAdmin()
 	if err != nil {
 		util.Debug(" Cannot read admin posts", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
-	tD.PostBeanAdminSlice, err = FetchPostBeanSlice(post_admi_slice)
+	tD.PostBeanAdminSlice, err = FetchPostBeanSlice(post_admin_slice)
 	if err != nil {
 		util.Debug(" Cannot read admin postbean", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属资料。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
 
@@ -776,7 +817,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	ok, err := verifier_team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check team membership", verifier_team.Id, err)
-		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您没有权限补充该茶议。")
+		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说陛下您没有权限补充该茶议。")
 		return
 	}
 	if !ok {
@@ -806,7 +847,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		util.Debug(" Cannot read thread given uuid", t_uuid, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议。")
+		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？")
 		return
 	}
 	switch thread.Category {
@@ -841,7 +882,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	//更新茶议内容
 	if err = thread.UpdateBodyAndClass(thread.Body, thread.Class, r.Context()); err != nil {
 		util.Debug(" Cannot update thread", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能补充该茶议。")
+		Report(w, r, "你好，茶博士失魂鱼，墨水中断未能补充茶议。")
 		return
 	}
 

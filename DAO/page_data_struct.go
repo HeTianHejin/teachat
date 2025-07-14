@@ -88,7 +88,7 @@ type ObjectiveBean struct {
 	AuthorFamily  Family // 作者发帖时选择的家庭，
 	AuthorTeam    Team   // 作者发帖时选择的团队，
 
-	Count int // 附属对象茶台计数
+	ProjectCount int // 附属对象茶台计数
 }
 type ProjectBean struct {
 	Project       Project
@@ -102,8 +102,8 @@ type ProjectBean struct {
 
 	Place Place //项目发生的地方,地点
 
-	IsApproved bool // 是否入围
-	Count      int  // 附属对象茶议计数
+	ThreadCount int  // 附属对象茶议计数
+	IsApproved  bool // 是否入围
 }
 
 // 某个茶台详情页面渲染所需的动态数据
@@ -190,18 +190,28 @@ type ThreadDetail struct {
 
 	PostBeanAdminSlice []PostBean //茶围管理团队签署回复切片
 
+	StatsSet StatsSet //涉及人事统计值集合
+}
+
+// 涉及人事统计值集合
+type StatsSet struct {
+	PersonCount int // 人数
+	FamilyCount int // 家庭数
+	TeamCount   int // 团队数
 }
 
 // 茶议对象和作者资料荚（豆荚一样有许多个单元）
 type ThreadBean struct {
-	Thread Thread
-	Count  int // 附属对象计数
+	Thread    Thread
+	PostCount int // 附属品味计数
 
 	Author       User   // 作者
 	AuthorFamily Family //作者发帖时选择的&受益家庭
 	AuthorTeam   Team   // 作者创建发帖时选择的$责任团队
 
 	IsApproved bool // 主张方案是否被采纳
+
+	StatsSet StatsSet //涉及人事统计数值集合
 
 	IsCompleted bool // 主张方案是否完成
 }
@@ -235,7 +245,7 @@ type PostDetail struct {
 }
 type PostBean struct {
 	Post          Post
-	Count         int    // 附属对象计数
+	ThreadCount   int    // 附属对象茶议计数
 	Attitude      string // 表态立场，支持or反对
 	CreatedAtDate string
 	Author        User   // 作者
@@ -262,7 +272,7 @@ type TeamBean struct {
 	CEOTeam              Team   // CEO所在默认团队
 	CEODefaultFamily     Family // CEO默认&家庭茶团
 
-	Count int //成员计数
+	MemberCount int //成员计数
 }
 
 // 用于某个茶团详情页面渲染
@@ -346,7 +356,7 @@ type FamilyBean struct {
 	Founder     User
 	FounderTeam Team // 发起人默认所在的团队
 
-	Count int //成员计数
+	PersonCount int //成员计数
 }
 type FamilyMemberBean struct {
 	FamilyMember FamilyMember

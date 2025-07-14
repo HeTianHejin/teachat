@@ -68,7 +68,7 @@
 
         {{ if .ThreadBean.Thread.PostId }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/post/detail?id={{ .QuotePostBean.Post.Uuid }}"
+          <p style="font-size: small;"><a href="/v1/post/detail?uuid={{ .QuotePostBean.Post.Uuid }}"
               style="margin-inline-end: 1rem;"><span
                 class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
           </p>

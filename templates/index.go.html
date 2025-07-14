@@ -68,15 +68,15 @@
           <a href="/v1/thread/detail?uuid={{.Thread.Uuid }}">
             <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
 
-          </a> {{ .Count }}
+          </a> {{ .PostCount }}
         </span>
       </div>
 
     </div>
   </div>
   <div class="media-right">
-    {{ if .Count }}
-    <span class="badge">{{ .Count }}</span>
+    {{ if .PostCount }}
+    <span class="badge">{{ .PostCount }}</span>
     {{ end }}
    {{ template "component_avatar_name_gender" .Author }}
 </div>
@@ -86,8 +86,8 @@
 
 <div class="media">
   <div class="media-left">
-    {{ if .Count }}
-    <span class="badge">{{ .Count }}</span>
+    {{ if .PostCount }}
+    <span class="badge">{{ .PostCount }}</span>
     {{ end }}
     {{ template "component_avatar_name_gender" .Author }}
 
@@ -134,7 +134,7 @@
       <div class="panel-footer">
        
           <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
-          {{ .Count }}
+          {{ .PostCount }}
         </span>
       </div>
 
