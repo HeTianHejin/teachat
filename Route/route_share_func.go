@@ -1453,7 +1453,7 @@ func RenderHTML(w http.ResponseWriter, data any, filenames ...string) {
 		// 添加详细的错误日志
 		util.PrintStdout("模板渲染错误: ", err)
 		// 避免在错误响应中泄露敏感信息
-		http.Error(w, "茶博士失魂鱼: 茶壶失踪了，无法煮水冲茶，陛下稍安勿躁。", http.StatusInternalServerError)
+		http.Error(w, "*** 茶博士: 茶壶不见了，无法烧水冲茶，陛下稍安勿躁 ***", http.StatusInternalServerError)
 	}
 }
 

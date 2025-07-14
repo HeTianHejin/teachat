@@ -158,9 +158,9 @@
       </div>
 
       <div class="panel-footer">
-        <span style="margin-inline-end: 2rem;">个人 4</span>
-        <span style="margin-inline-end: 2rem;">团队 1</span>
-        <span style="margin-inline-end: 2rem;">家庭 3</span>
+        
+        <span style="margin-inline-end: 2rem;">家庭 {{ .ThreadBean.StatsSet.FamilyCount }}</span>
+        <span style="margin-inline-end: 2rem;">团队 {{ .ThreadBean.StatsSet.TeamCount }}</span>
       </div>
     </div>
   </div>
@@ -169,18 +169,25 @@
 
 {{/* 这是关注这个茶议的总人数 显示 */}}
 <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
-
-  {{/* 这是茶议的关注人数 数量显示 */}}
-  <i class="bi-person-heart" style="font-size: 2rem; color: black;" title="关注人数"></i> 1011
-
+  
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是品味涉及家庭数量 显示 */}}
+    <i class="bi bi-house-fill" style="font-size: 2rem; color: black;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
+    </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是品味涉及团队数量 显示 */}}
+    <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: black;" title="品味团队数量"></i> {{ $.StatsSet.TeamCount }}
+    </span>
   <span style="margin-inline-start: 2rem;">
     {{/* 这是茶议的总品味数量 显示 */}}
-    <a href="#">
-      <i class="bi-cup-hot" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数">
-        {{ .ThreadBean.PostCount }}</i>
-    </a>
+    <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: black;" title="品味数量"></i> {{ .ThreadBean.PostCount }}
   </span>
-  {{ if .ThreadBean.Thread.IsEdited }}
+  
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是茶议的关注人数 数量显示 */}}
+    <i class="bi bi-eye-fill" style="font-size: 2rem; color: black;" title="关注人数"></i>  1011
+    {{ if .ThreadBean.Thread.IsEdited }}
+  </span>
   {{/* 这是有编辑过 */}}
   <span style="margin-inline-start: 2rem;">
     <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
@@ -201,12 +208,12 @@
     <form class="form-horizontal" role="form" action="/v1/post/draft" method="post">
 
       <div class="form-group">
-        <fieldset>
-          <div class="col-xs-2 col-sm-2 col-md-2 col-lg-2">
+      
+          <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
             <i class="bi bi-cup-hot"></i>
           </div>
 
-          <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <input type="radio" name="attitude" id="support" style="width: fit-content;" value="true" required />
             <label for="support">颔首</label>
           </div>
@@ -215,7 +222,7 @@
             <input type="radio" name="attitude" id="oppose" value="false" style="width: fit-content;" required />
             <label for="oppose">摇头</label>
           </div>
-        </fieldset>
+     
       </div>
 
       <div class="form-group">
@@ -228,9 +235,8 @@
       <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
 
       <div class="form-group">
-          <fieldset>
-            <label for="team" class="col-sm-2 control-label">身份</label>
-            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+            <label for="team" class="col-xs-3 col-sm-3 col-md-3 col-lg-3">身份</label>
+            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
               <input type="radio" name="is_private" value="false" id="team" checked required>
               <label for="team">团队成员</label>
             </div>
@@ -238,7 +244,6 @@
               <input type="radio" name="is_private" value="true" id="family" required>
               <label for="family">家庭成员</label>
             </div>
-          </fieldset>
         </div>
 
       <div class="form-group">

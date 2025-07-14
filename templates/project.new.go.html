@@ -8,48 +8,97 @@
   <li class="active">新开茶台</li>
 </ol>
 
-<div class="panel panel-default">
-  <div class="panel-body" style="font-size: small;">
-    <a href="/v1/thread/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}"><span class="label label-default">茶围</span></a>
-    <a href="/v1/user/biography?id={{ .ObjectiveBean.Author.Uuid }}">{{ .ObjectiveBean.Author.Name }}</a>
-    <span style="margin-inline-end: 1rem;">@<a
-        href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a></span>
-    <span>
-      <mark>{{ .ObjectiveBean.Status }}</mark>
-      <h3>{{ .ObjectiveBean.Objective.Title }}</h3>
-      {{ .ObjectiveBean.Objective.Body }}
-    </span>
+{{/* 这是某个茶围的详情页 */}}
+<div class="media">
+  <div class="media-left">
+
+    {{/* 个人头像和名字和性别 */}}
+    {{ template "component_avatar_name_gender" .ObjectiveBean.Author }}
+
+  </div>
+
+  <div class="media-body">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="font-size: smaller;">
+            （<a href="/v1/family/detail?id={{ .ObjectiveBean.AuthorFamily.Uuid }}">
+              {{ .ObjectiveBean.AuthorFamily.Name }}</a>，
+            <a href="/v1/team/detail?id={{ .ObjectiveBean.AuthorTeam.Uuid }}">
+              {{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a>）
+          </div>
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="font-size: smaller;">
+            {{ if .ObjectiveBean.Open }}
+            <i class="bi-egg" style="font-size: 1.5rem;"></i>
+            <span class="label label-success">开放式茶围</span>
+            {{ else }}
+            <i class="bi-egg-fill" style="font-size: 1.5rem;"></i>
+            <span class="label label-default">封闭式茶围</span>
+            {{ end }}
+
+            <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ObjectiveBean.CreatedAtDate }}</span>
+
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <h4>{{ .ObjectiveBean.Objective.Title }}</h4>
+
+        <p style="white-space: pre-wrap;">
+          {{ .ObjectiveBean.Objective.Body }}
+        </p>
+
+      </div>
+      <div class="panel-footer">
+        <i class="bi-disc" style="font-size: 1.5rem;"></i> {{ .ObjectiveBean.ProjectCount }}
+
+        {{ if .ObjectiveBean.Objective.IsEdited }}
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        <span style="font-size: smaller; margin-inline-end: 20px;"> {{ .ObjectiveBean.Objective.EditAtDate }} </span>
+        {{ end }}
+      </div>
+    </div>
   </div>
 </div>
 
+{{/* 这是新开茶台的表单 */}}
 <div class="panel panel-default">
-<div class="panel-heading">
-  <img src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="24" height="24">
-  在这个茶围里新开茶台
-</div>
+  <div class="panel-heading">
+    <img src="/v1/static/image/teachat-table.svg" alt="茶台封面" width="24" height="24">
+    在这个茶围里新开茶台
+  </div>
+
   <div class="panel-body">
 
-    <form role="form" action="/v1/project/new" method="post">
+    <form  role="form" action="/v1/project/new" method="post">
 
       <div class="form-group">
-          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <input type="radio" name="class" id="open" style="width: fit-content;" value="10" required checked 
-                   onchange="toggleInviteIdsInput(false)"/>
-            <label for="open">开放式-所有人都可以品茶</label>
-          </div>
+        <fieldset>
+      <div class="form-group">
+        <input type="radio" name="class" id="open" style="width: fit-content;" value="10" required checked
+          onchange="toggleInviteIdsInput(false)" />
+        <label for="open">开放式-所有人都可以品茶</label>
+      </div>
+      <div class="form-group">
+        <input type="radio" name="class" id="close" style="width: fit-content;" value="20" required
+          onchange="toggleInviteIdsInput(true)" />
+        <label for="close">封闭式-仅受邀团队可以品茶</label>
+      </div>
 
-          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <input type="radio" name="class" id="close" style="width: fit-content;" value="20" required 
-                   onchange="toggleInviteIdsInput(true)"/>
-            <label for="close">封闭式-仅受邀团队可以品茶</label>
-          </div> 
+      <div class="form-group" id="inviteIdsGroup" style="display:none;">
+        <label for="invite_ids">指定邀请的茶团号，以逗号分隔</label>
+        <input type="text" class="form-control" name="invite_ids" id="invite_ids" maxlength="456"
+          placeholder="例如: 1,2,3" />
+      </div>
+      </fieldset>
       </div>
 
       <div class="form-group">
         <label for="name">名称（2-24字）</label>
         <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="42" required />
       </div>
-      
+
       <div class="form-group">
         <label for="description">介绍（17-456字）</label>
         <textarea class="form-control" name="description" id="description" rows="6" minlength="17" maxlength="567"
@@ -57,7 +106,7 @@
       </div>
 
       <div class="form-group">
-        <label for="place_uuid">地方</label>
+        <label for="place_uuid">活动地方</label>
         <select name="place_uuid" class="form-control" id="place_uuid" required>
           <option value="{{ .SessUserDefaultPlace.Uuid }}">{{ .SessUserDefaultPlace.Name }}
           </option>
@@ -87,7 +136,7 @@
       </div>
 
       <div class="form-group">
-        <label for="team_id">支持团队</label>
+        <label for="team_id">选择台主团队</label>
         <select name="team_id" class="form-control" id="team_id" required>
           <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
           </option>
@@ -98,19 +147,14 @@
       </div>
 
       <div class="form-group">
-        <label for="description">选择家庭</label>
-          <select name="family_id" class="form-control" id="family_id" required>
-            <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
-            </option>
-            {{ range .SessUserSurvivalFamilies }}
-            <option value="{{ .Id }}">{{ .Name }}</option>
-            {{ end }}
-          </select>
-      </div>
-      
-      <div class="form-group" id="inviteIdsGroup" style="display:none;">
-        <label for="invite_ids">封闭式茶台指定邀请的茶团号，以逗号分隔。</label>
-        <input type="text" class="form-control" name="invite_ids" id="invite_ids" maxlength="456" placeholder="例如: 1,2,3"/>
+        <label for="description">选择台主家庭</label>
+        <select name="family_id" class="form-control" id="family_id" required>
+          <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
+          </option>
+          {{ range .SessUserSurvivalFamilies }}
+          <option value="{{ .Id }}">{{ .Name }}</option>
+          {{ end }}
+        </select>
       </div>
 
       <input type="hidden" name="ob_uuid" id="ob_uuid" value="{{ .ObjectiveBean.Objective.Uuid }}">
@@ -118,7 +162,7 @@
       <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
         <button type="submit" class="btn btn-default">开台</button>
       </div>
-      
+
     </form>
 
   </div>
@@ -130,11 +174,11 @@
 </div>
 
 <script>
-function toggleInviteIdsInput(show) {
+  function toggleInviteIdsInput(show) {
     document.getElementById('inviteIdsGroup').style.display = show ? 'block' : 'none';
     // 如果需要，可以在这里清空输入框的值
-     if (!show) document.getElementById('invite_ids').value = '';
-}
+    if (!show) document.getElementById('invite_ids').value = '';
+  }
 </script>
 
 {{ end }}

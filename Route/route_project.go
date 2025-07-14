@@ -457,7 +457,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 7. 渲染创建表单
-	RenderHTML(w, &obPageData, "layout", "navbar.private", "project.new")
+	RenderHTML(w, &obPageData, "layout", "navbar.private", "project.new", "component_avatar_name_gender")
 }
 
 // GET /v1/project/detail?uuid=
@@ -542,7 +542,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.ThreadIsApprovedCount = ta.CountByProjectId()
 
 	// 获取茶议和作者相关资料荚
-	tb_normal_slice, err = FetchThreadBeanSlice(thread_normal_slice,r)
+	tb_normal_slice, err = FetchThreadBeanSlice(thread_normal_slice, r)
 	if err != nil {
 		util.Debug(" Cannot read thread-bean slice", err)
 		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中...")
@@ -560,7 +560,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议预约信息，请稍后再试。")
 			return
 		}
-		threadAppointmentBean, err := FetchThreadBean(threadAppointment,r)
+		threadAppointmentBean, err := FetchThreadBean(threadAppointment, r)
 		if err != nil {
 			util.Debug(" Cannot read thread appointment bean", err)
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议预约信息，请稍后再试。")
@@ -573,7 +573,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议看看信息，请稍后再试。")
 			return
 		}
-		threadSeeSeekBean_slice, err := FetchThreadBeanSlice(threadSeeSeek_slice,r)
+		threadSeeSeekBean_slice, err := FetchThreadBeanSlice(threadSeeSeek_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread see seek bean slice", err)
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议看看信息，请稍后再试。")
@@ -586,7 +586,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议建议信息，请稍后再试。")
 			return
 		}
-		threadSuggestionBean_slice, err := FetchThreadBeanSlice(threadSuggestion,r)
+		threadSuggestionBean_slice, err := FetchThreadBeanSlice(threadSuggestion, r)
 		if err != nil {
 			util.Debug(" Cannot read thread suggestion bean slice", err)
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议建议信息，请稍后再试。")
@@ -599,7 +599,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议物资信息，请稍后再试。")
 			return
 		}
-		threadGoodsBean_slice, err := FetchThreadBeanSlice(threadGoods_slice,r)
+		threadGoodsBean_slice, err := FetchThreadBeanSlice(threadGoods_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread goods bean slice", err)
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议物资信息，请稍后再试。")
@@ -612,7 +612,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议手艺信息，请稍后再试。")
 			return
 		}
-		threadHandcraftBean_slice, err := FetchThreadBeanSlice(threadHandcraft_slice,r)
+		threadHandcraftBean_slice, err := FetchThreadBeanSlice(threadHandcraft_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread handcraft bean slice", err)
 			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议手艺信息，请稍后再试。")
