@@ -332,33 +332,33 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			t_founder, err := data.GetUser(team.FounderId)
 			if err != nil {
 				util.Debug("Cannot get team founder", err)
-				Report(w, r, "你好，茶博士失魂鱼，未能完成记录的任务，请稍后再试。")
+				Report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。请稍后再试。")
 				return
 			}
 			if !SetUserDefaultTeam(&t_founder, team.Id, w, r) {
 				return
 			}
 
-		case 6:
-			//集团
-			group, err := data.GetGroup(ao.ObjectId)
-			if err != nil {
-				util.Debug("Cannot get group", err)
-				Report(w, r, "你好，满头大汗的茶博士请教你，错里错以错劝哥哥，是什么茶品种？")
-				return
-			}
-			switch group.Class {
-			case 10:
-				group.Class = 1
-			case 20:
-				group.Class = 2
-			}
-			// 更新，友评已通过！
-			if err = group.Update(); err != nil {
-				util.Debug("Cannot update group class", err)
-				Report(w, r, "你好，满头大汗的茶博士问，情中情因情感妹妹是么意思？")
-				return
-			}
+		// case 6:
+		// 	//集团
+		// 	group, err := data.GetGroup(ao.ObjectId)
+		// 	if err != nil {
+		// 		util.Debug("Cannot get group", err)
+		// 		Report(w, r, "你好，满头大汗的茶博士请教你，错里错以错劝哥哥，是什么茶品种？")
+		// 		return
+		// 	}
+		// 	switch group.Class {
+		// 	case 10:
+		// 		group.Class = 1
+		// 	case 20:
+		// 		group.Class = 2
+		// 	}
+		// 	// 更新，友评已通过！
+		// 	if err = group.Update(); err != nil {
+		// 		util.Debug("Cannot update group class", err)
+		// 		Report(w, r, "你好，满头大汗的茶博士问，情中情因情感妹妹是么意思？")
+		// 		return
+		// 	}
 
 		default:
 			util.Debug("Cannot get object", err)

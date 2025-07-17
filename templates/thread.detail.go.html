@@ -29,7 +29,7 @@
   {{ .NumOppose }}
 </div>
 
-{{/* 左danger（红）右primary（蓝）品味进度条 */}}
+{{/* 左红色（肯定）右蓝色（否定），品味立场对比条状图 */}}
 <div class="progress">
   <div class="progress-bar progress-bar-danger progress-bar-striped active" aria-valuenow="{{.ProgressSupport}}"
     aria-valuemin="0" aria-valuemax="100" style="width: {{.ProgressSupport}}%;">
@@ -41,7 +41,7 @@
     <span class="sr-only">{{.ProgressOppose}}% 完成 (摇头)</span>
   </div>
 </div>
-{{/* 左红右蓝进度条到此为止  */}}
+{{/* 左红右蓝对比条状图到此为止  */}}
 
 {{/* 茶议头像位置显示在左侧布局 */}}
 <div class="media" style="margin-top: 20px;">
@@ -159,44 +159,22 @@
 
       <div class="panel-footer">
         
-        <span style="margin-inline-end: 2rem;">家庭 {{ .ThreadBean.StatsSet.FamilyCount }}</span>
-        <span style="margin-inline-end: 2rem;">团队 {{ .ThreadBean.StatsSet.TeamCount }}</span>
+        <span style="margin-inline-end: 2rem;">
+          <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="家庭数量"></i>
+          {{ .ThreadBean.StatsSet.FamilyCount }}</span>
+        <span style="margin-inline-end: 2rem;">
+          <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="团队数量"></i>
+           {{ .ThreadBean.StatsSet.TeamCount }}</span>
+        <span style="margin-inline-end: 2rem;">
+          <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="人数"></i>
+          {{ .ThreadBean.StatsSet.PersonCount }}</span>
       </div>
     </div>
   </div>
 
 </div>
 
-{{/* 这是关注这个茶议的总人数 显示 */}}
-<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
-  
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是品味涉及家庭数量 显示 */}}
-    <i class="bi bi-house-fill" style="font-size: 2rem; color: black;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
-    </span>
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是品味涉及团队数量 显示 */}}
-    <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: black;" title="品味团队数量"></i> {{ $.StatsSet.TeamCount }}
-    </span>
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是茶议的总品味数量 显示 */}}
-    <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: black;" title="品味数量"></i> {{ .ThreadBean.PostCount }}
-  </span>
-  
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是茶议的关注人数 数量显示 */}}
-    <i class="bi bi-eye-fill" style="font-size: 2rem; color: black;" title="关注人数"></i>  1011
-    {{ if .ThreadBean.Thread.IsEdited }}
-  </span>
-  {{/* 这是有编辑过 */}}
-  <span style="margin-inline-start: 2rem;">
-    <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
-    {{ .ThreadBean.Thread.EditAtDate }}
-  </span>
-  {{ else }}
-  {{/* 没有“追加”编辑过，留空白 */}}
-  {{ end }}
-</div>
+
 
 {{/* 决定是否显示品味编辑区 */}}
 {{ if .IsInput }}
@@ -304,6 +282,32 @@
 <hr />
 
 {{ end }}{{/* 品味编辑区结束 */}}
+
+<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
+  {{/* 这是参与的团队和家庭数量显示 */}}
+  
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是品味涉及家庭数量 显示 */}}
+    <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
+  </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是品味涉及团队数量 显示 */}}
+    <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="品味团队数量"></i> {{ $.StatsSet.TeamCount }}
+  </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是品味涉及个人数量 显示 */}}
+    <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="品味团队数量"></i> ？
+  </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是茶议的总品味数量 显示 */}}
+    <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: gray;" title="品味数量"></i> {{ .ThreadBean.PostCount }}
+  </span>
+  
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是茶议的关注人数 数量显示 */}}
+    <i class="bi bi-eye-fill" style="font-size: 2rem; color: gray;" title="关注人数"></i>  ？
+  
+</div>
 
 {{/* 展示全部管理员品味 */}}
 {{ range .PostBeanAdminSlice }}

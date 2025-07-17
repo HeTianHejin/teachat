@@ -168,12 +168,12 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.ThreadBeanSlice = thread_bean_slice
 			fPD.IsEmpty = false
 		}
-		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_thread_bean")
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_thread_bean", "component_avatar_name_gender")
 		return
 
 	case data.SearchTypeObjectiveTitle:
 		//查询，茶话会标题，objective.title
-		objective_slice, err := data.SearchObjectiveByTitle(keyword, 9)
+		objective_slice, err := data.SearchObjectiveByTitle(keyword, 9, r.Context())
 		if err != nil {
 			util.Debug(" Cannot search objective by title", err)
 		}
@@ -186,6 +186,8 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.ObjectiveBeanSlice = objective_bean_slice
 			fPD.IsEmpty = false
 		}
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_objective_bean", "component_avatar_name_gender")
+		return
 
 	case data.SearchTypeProjectTitle:
 		//按茶台标题查询
@@ -202,6 +204,8 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.ProjectBeanSlice = project_bean_slice
 			fPD.IsEmpty = false
 		}
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
+		return
 
 	case data.SearchTypePlaceName:
 		//查询品茶地点 place

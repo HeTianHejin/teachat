@@ -392,8 +392,11 @@ func CreateObjectiveWithTeams(objective *Objective, teamIDs []int) error {
 }
 
 // SearchObjectiveByTitle() 通过标题关键词搜索茶话会
-func SearchObjectiveByTitle(keyword string, limit int) (objectives []Objective, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE title ILIKE $1 ORDER BY created_at DESC LIMIT $2", "%"+keyword+"%", limit)
+func SearchObjectiveByTitle(keyword string, limit int, ctx context.Context) (objectives []Objective, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE title ILIKE $1 ORDER BY created_at DESC LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return
 	}

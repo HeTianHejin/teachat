@@ -85,6 +85,6 @@
      <a href="https://www.glyphicons.com/">Glyphicons</a>
      <a href="https://icons.bootcss.com/">Bootstrap-icons</a>
      <a href="https://www.deepseek.com">DeepSeek</a>
-     <a href="https://cloud.tencent.com/product/acc">腾讯云AI代码助手</a>  
+     <a href="https://cloud.tencent.com/product/acc">腾讯云代码助手</a>  
 
-## 都读到这里了，欢迎一起来品茶呀！
+## 都读到这里了，欢迎来品茶呀！

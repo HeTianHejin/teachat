@@ -125,7 +125,7 @@ type ProjectDetail struct {
 	IsApproved          bool                       //是否入围
 	ApprovedFiveThreads ProjectApprovedFiveThreads //入围茶台必备5茶议
 
-	Place    Place //茶台(项目)，活动地方
+	Place    Place //茶台(项目)，喝茶地方
 	Open     bool
 	IsEdited bool
 

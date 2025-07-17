@@ -598,7 +598,7 @@ func CreateRequiredThreads(objective *Objective, project *Project, user *User, c
 	templates := []threadTemplate{
 		{"约茶", "请在此处安排具体的茶会时间和参与人员", ThreadCategoryAppointment},
 		{"看看", "请记录作业过程，目标对象检查情况", ThreadCategorySeeSeek},
-		{"建议", "根据「看看」的结论，提出对用户的建议", ThreadCategorySuggestion},
+		{"建议", "根据「看看」的结果，提出对应建议。", ThreadCategorySuggestion},
 		{"宝贝", "请列出需要准备的物资清单", ThreadCategoryGoods},
 		{"手艺", "记录手艺执行过程", ThreadCategoryHandcraft},
 	}

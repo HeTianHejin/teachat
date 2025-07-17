@@ -1,0 +1,88 @@
+{{ define "component_project_bean" }}
+
+{{/* 组件：通用这是茶台的对象展示 */}}
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left">
+        {{ if .ThreadCount }}
+        <span class="badge">{{ .ThreadCount }}</span>
+        {{ end }}
+
+        {{ if .Open }}
+        <a href="/v1/project/detail?uuid={{ .Project.Uuid }}">
+          <img class="media-object" src="/v1/static/bootstrap-icons/disc.svg" alt="茶台封面" width=40 height=40>
+        </a>
+        {{ else }}
+        <a href="/v1/project/detail?uuid={{ .Project.Uuid }}">
+          <img class="media-object" src="/v1/static/bootstrap-icons/disc-fill.svg" alt="茶台封面" width=40 height=40>
+        </a>
+        {{ end }}
+
+
+      </div>
+
+      <div class="media-body">
+        <p>
+          {{/* 检查是否入围1 */}}{{if .IsApproved }}
+          {{/* 这个主意已被台主或者管理员选中入围 */}}
+          <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+          {{/* 检查是否入围1 */}}{{ end }}
+
+          {{ if .Open }}
+          <span class="label label-success" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ .Status }}
+          </span>
+
+          {{ else }}
+          <span class="label label-default" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ .Status }}
+          </span>
+
+          {{ end }}
+
+          <span style="margin-inline-end: 30px;">
+            <span style="font-size: smaller;">
+              {{ .Author.Name }}
+              {{if .Author.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+              {{ end }}
+              （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+              <a href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）
+            </span>
+          </span>
+
+          <span style="font-size: smaller;">
+            {{ .CreatedAtDate }}
+          </span>
+        </p>
+
+        <h4>
+            <a href="/v1/project/detail?uuid={{ .Project.Uuid }}">
+              {{ .Project.Title }}
+            </a>
+          </h4>
+
+        {{ .Project.Body }} ...
+
+        <p>
+          {{/* 这是某个茶台（项目）的地址显示 */}}
+        <div style="text-align: center; margin-top: 10px;">
+          <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
+          <span style="font-size: smaller;">
+            <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
+          </span>
+        </div>
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+{{ end }}

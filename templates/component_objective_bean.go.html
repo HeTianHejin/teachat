@@ -1,0 +1,68 @@
+{{ define "component_objective_bean" }}
+
+{{/* 组件 : 通用茶话会（茶围）展示 */}}
+
+<div class="panel panel-default">
+    <div class="panel-body">
+        <div class="media">
+            <div class="media-left">
+                {{ if .ProjectCount }}
+                <span class="badge">{{ .ProjectCount }}</span>
+                {{ else }}
+                {{ end }}
+
+                {{ if .Open }}
+                <img class="media-object" src="/v1/static/bootstrap-icons/egg.svg" alt="茶话会封面" width="40" height="40">
+                {{ else }}
+                <img class="media-object" src="/v1/static/bootstrap-icons/egg-fill.svg" alt="茶话会封面" width="40"
+                    height="40">
+                {{ end }}
+
+            </div>
+            <div class="media-body">
+                <p>
+                    <h4 class="media-heading">
+                        <a href="/v1/objective/detail?uuid={{ .Objective.Uuid }}">
+                            {{ .Objective.Title }}
+
+                        </a>
+                        </h5>
+
+                        {{ if .Open }}
+                        <span class="label label-success" style="margin-inline-end: 30px;">
+                            {{ .Status }}
+                        </span>
+
+                        {{ else }}
+                        <span class="label label-default" style="margin-inline-end: 30px;">
+                            {{ .Status }}
+                        </span>
+
+                        {{ end }}
+
+                        <span style="margin-inline-end: 30px;">
+                            <span style="font-size: small;">
+                                {{ .Author.Name }}
+                                {{if .Author.Gender }}
+                                <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+                                {{ else }}
+                                <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+                                {{ end }}
+                                （<a href="/v1/family/detail?id={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>,
+                                <a
+                                    href="/v1/team/detail?id={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
+                            </span>
+                        </span>
+
+                        <span">
+                            {{ .CreatedAtDate }}
+                            </span>
+                </p>
+                {{ .Objective.Body }} ...
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{{ end }}

@@ -262,15 +262,6 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 如果茶话会状态是草围（未经邻座蒙评审核的草稿）,对其名称和描述内容局部进行随机遮盖处理。
-	// for i := range objective_slice {
-	// 	if objective_slice[i].Class == 10 || objective_slice[i].Class == 20 {
-	// 		// 随机遮盖50%处理
-	// 		objective_slice[i].Title = MarsString(objective_slice[i].Title, 50)
-	// 		objective_slice[i].Body = MarsString(objective_slice[i].Body, 50)
-	// 	}
-	// }
-
 	oSpD.ObjectiveBeanSlice, err = FetchObjectiveBeanSlice(objective_slice)
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
@@ -282,7 +273,6 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		//未登录！游客
-		//准备页面数据
 		oSpD.SessUser = data.User{
 			Id:   data.UserId_None,
 			Name: "游客",
@@ -293,10 +283,10 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//返回页面
-		RenderHTML(w, &oSpD, "layout", "navbar.public", "objectives.square")
+		RenderHTML(w, &oSpD, "layout", "navbar.public", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
 		return
 	}
-	//已登录
+	//已登录，读取用户信息
 	sUser, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
@@ -304,10 +294,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//已经登录！
-	//准备页面数据
 	oSpD.SessUser = sUser
-	//检测u.Id == o.UserId是否这个茶话会作者
 	for i := range oSpD.ObjectiveBeanSlice {
 		if oSpD.ObjectiveBeanSlice[i].Objective.UserId == sUser.Id {
 			oSpD.ObjectiveBeanSlice[i].Objective.PageData.IsAuthor = true
@@ -315,7 +302,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 			oSpD.ObjectiveBeanSlice[i].Objective.PageData.IsAuthor = false
 		}
 	}
-	RenderHTML(w, &oSpD, "layout", "navbar.private", "objectives.square")
+	RenderHTML(w, &oSpD, "layout", "navbar.private", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
 
 }
 
@@ -335,7 +322,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	ob := data.Objective{
 		Uuid: uuid}
 	if err = ob.GetByUuid(); err != nil {
-		Report(w, r, "你好，茶博士摸摸满头大汗，居然自言自语说外星人把这个茶话会资料带走了。")
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 
@@ -343,10 +330,10 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	case data.ObClassOpen, data.ObClassClose:
 		break
 	case data.ObClassOpenStraw, data.ObClassCloseStraw:
-		Report(w, r, "你好，这个茶话会需要等待友邻蒙评通过之后才能启用呢。")
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	default:
-		Report(w, r, "你好，这个茶话会主人据说因为很cool，资料似乎被外星人看中带走了。")
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 	oD.ObjectiveBean, err = FetchObjectiveBean(ob)
@@ -374,7 +361,6 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//未登录！
 		oD.IsGuest = true
-		// 准备页面数据
 		oD.SessUser = data.User{
 			Id:   data.UserId_None,
 			Name: "游客",
@@ -383,7 +369,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.RawQuery,
 		}
 		//配置公开导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
+		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
 
@@ -422,7 +408,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 			"objectiveId", ob.Id,
 			"error", err,
 		)
-		Report(w, r, "你好，茶博士说：玉烛滴干风里泪，晶帘隔破月中痕。")
+		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	oD.IsAdmin = is_admin
@@ -432,7 +418,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		is_member, err := veri_team.IsMember(s_u.Id)
 		if err != nil {
 			util.Debug("Cannot check verifier team member", err)
-			Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+			Report(w, r, "你好，茶博士，有眼不识泰山。")
 			return
 		}
 		if is_member {
@@ -441,6 +427,6 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//配置私有导航条的茶话会详情页面
-	RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_avatar_name_gender", "component_sess_capacity")
+	RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
 
 }

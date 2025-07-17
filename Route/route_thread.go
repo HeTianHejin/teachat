@@ -334,23 +334,22 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//统计post_admin_slice[i].FamilyId数量 ，重复的family_id数量不计入
-	familyMap := make(map[int]bool)
-	teamMap := make(map[int]bool)
-	family_count := 0
-	team_count := 0
+	//统计post_admin_slice[i].TeamId数量 ，重复的id数量不计入
+	familyMap := make(map[int]struct{})
+	teamMap := make(map[int]struct{})
+
 	for _, post := range post_admin_slice {
-		if _, exists := familyMap[post.FamilyId]; !exists {
-			if post.FamilyId != data.FamilyIdUnknown {
-				familyMap[post.FamilyId] = true
-				family_count++
+		// 处理家庭ID
+		if post.FamilyId != data.FamilyIdUnknown {
+			if _, exists := familyMap[post.FamilyId]; !exists {
+				familyMap[post.FamilyId] = struct{}{}
 			}
 		}
-	}
-	for _, post := range post_admin_slice {
-		if _, exits := teamMap[post.TeamId]; !exits {
-			if post.TeamId > data.TeamIdFreelancer && post.TeamId != data.TeamIdVerifier {
-				teamMap[post.TeamId] = true
-				team_count++
+
+		// 处理团队ID
+		if post.TeamId > data.TeamIdFreelancer && post.TeamId != data.TeamIdVerifier {
+			if _, exists := teamMap[post.TeamId]; !exists {
+				teamMap[post.TeamId] = struct{}{}
 			}
 		}
 	}
@@ -370,23 +369,21 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, post := range post_n_slice {
-		if _, exists := familyMap[post.FamilyId]; !exists {
-			if post.FamilyId != data.FamilyIdUnknown {
-				familyMap[post.FamilyId] = true
-				family_count++
+		if post.FamilyId != data.FamilyIdUnknown {
+			if _, exists := familyMap[post.FamilyId]; !exists {
+				familyMap[post.FamilyId] = struct{}{}
+			}
+		}
+
+		if post.TeamId > data.TeamIdFreelancer && post.TeamId != data.TeamIdVerifier {
+			if _, exists := teamMap[post.TeamId]; !exists {
+				teamMap[post.TeamId] = struct{}{}
 			}
 		}
 	}
-	for _, post := range post_n_slice {
-		if _, exits := teamMap[post.TeamId]; !exits {
-			if post.TeamId > data.TeamIdFreelancer && post.TeamId != data.TeamIdVerifier {
-				teamMap[post.TeamId] = true
-				team_count++
-			}
-		}
-	}
-	tD.StatsSet.FamilyCount = family_count 
-	tD.StatsSet.TeamCount = team_count 
+
+	tD.StatsSet.FamilyCount = len(familyMap)
+	tD.StatsSet.TeamCount = len(teamMap)
 	//tD.StatsSet.PersonCount = ?
 
 	tD.PostBeanSlice, err = FetchPostBeanSlice(post_n_slice)
@@ -401,7 +398,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 游客
 		// 检查茶议的级别状态
-		if tD.ThreadBean.Thread.Class == 1 || tD.ThreadBean.Thread.Class == 2 {
+		if tD.ThreadBean.Thread.Class == data.ThreadClassOpen || tD.ThreadBean.Thread.Class == data.ThreadClassClosed {
 			//记录茶议被点击数
 			//tD.ThreadBean.Thread.AddHitCount()
 			// 填写页面数据
@@ -569,14 +566,12 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//读取表单数据
 	uuid := r.PostFormValue("id")
 	if uuid == "" {
 		Report(w, r, "你好，闪电茶博士极速服务中，未能读取茶议资料，请稍后再试。")
 		return
 	}
 
-	//读取提及的茶议资料
 	thread, err := data.GetThreadByUUID(uuid)
 	if err != nil {
 		util.Debug(" Cannot read thread given uuid", uuid)

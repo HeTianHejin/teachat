@@ -644,7 +644,7 @@ func FetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 		tB.StatsSet.PersonCount = teamMemberCount
 	}
 
-	if tB.AuthorTeam.Id > data.TeamIdFreelancer && tB.AuthorTeam.Id != data.TeamIdVerifier {
+	if tB.AuthorTeam.Id > data.TeamIdFreelancer {
 		tB.StatsSet.TeamCount = 1
 	}
 
@@ -1257,28 +1257,6 @@ func FetchTeamMemberRoleNoticeBeanSlice(tmrn_slice []data.TeamMemberRoleNotice) 
 	return
 }
 
-// 据给出的 group 参数，去获取对应的 group 资料，是否开放，下属茶团计数，发起日期，发起人（Founder）及其默认团队，第一团队，然后按结构拼装返回。
-func FetchGroupBean(group data.Group) (GroupBean data.GroupBean, err error) {
-	var gb data.GroupBean
-	gb.Group = group
-	if group.Class == 1 {
-		gb.Open = true
-	} else {
-		gb.Open = false
-	}
-	gb.CreatedAtDate = group.CreatedAtDate()
-	u, _ := data.GetUser(group.FounderId)
-	gb.Founder = u
-	gb.FounderTeam, err = u.GetLastDefaultTeam()
-	if err != nil {
-		util.Debug(" Cannot read team given founder", err)
-		return gb, err
-	}
-	gb.TeamsCount = data.GetTeamsCountByGroupId(gb.Group.Id)
-	gb.Count = group.NumMembers()
-	return gb, nil
-}
-
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
 func ProcessUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) error {
 	// 从请求中解包出单个上传文件
@@ -1440,7 +1418,7 @@ func RenderHTML(w http.ResponseWriter, data any, filenames ...string) {
 	if err != nil {
 		// 添加详细的错误日志和HTTP错误响应
 		util.PrintStdout("模板解析错误: ", err)
-		http.Error(w, "服务器内部错误: 无法解析模板", http.StatusInternalServerError)
+		http.Error(w, "*** 茶博士: 茶壶不见了，无法烧水冲茶，陛下稍安勿躁 ***", http.StatusInternalServerError)
 		return
 	}
 

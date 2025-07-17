@@ -101,9 +101,9 @@
       </div>
 
       <div class="panel-footer">
-        <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">惦记 14</span>
-        <span style="margin-inline-end: 2rem;">电眼 22</span>
-        <span style="margin-inline-end: 2rem;">白眼 13</span>
+        {{/* 这是某个茶台（项目）的地址显示 */}}
+        <i class="bi-geo" style="font-size: 1.5rem; color: black;" title="喝茶地方"></i>
+  <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
 
         {{ if .IsEdited }}
 
@@ -119,22 +119,13 @@
   </div>
 </div>
 
-{{/* 这是某个茶台（项目）的地址显示 */}}
-<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;">
-  <i class="bi-geo" style="font-size: 2rem; color: black;" title="地方"></i>
-  <a href="/v1/place/detail?id={{ .Place.Uuid }}">{{ .Place.Name }}</a>
 
-  <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">个人 4</span>
-  <span style="margin-inline-end: 2rem;">家庭 3</span>
-  <span style="margin-inline-end: 2rem;">团队 1</span>
-  <span style="margin-inline-end: 2rem;">叩击 404</span>
-</div>
 
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
 {{ if .IsInput }}
 {{/* 这是茶台下的新茶议撰写模版 */}}
 <button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel" style="margin-top: 2rem;">
-  <i class="bi-patch-plus" style="font-size: 2rem;"></i> 新茶议
+  <i class="bi-patch-plus" style="font-size: 1.5rem;"></i> 新茶议
 </button>
 <div class="collapse" id="newThreadPanel">
   <div class="panel panel-default">
@@ -165,7 +156,7 @@
         <div class="form-group">
           <label for="title" class="col-sm-2 ">标题</label>
           <div class="col-sm-10">
-            <input type="text" class="form-control" name="title" id="title" placeholder="2～36字" minlength="3"
+            <input type="text" class="form-control" name="title" id="title" placeholder="3～36字" minlength="3"
               maxlength="42" required>
           </div>
         </div>
@@ -251,7 +242,7 @@
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-结束 */}}
 
 {{/* 这是关注这个茶台的总人数 显示 */}}
-<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-top: 15px;">
+<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-top: 20px;">
 
   <i class="bi-person-heart" style="font-size: 2rem; color: black;" title="关注人数"></i>
   1510

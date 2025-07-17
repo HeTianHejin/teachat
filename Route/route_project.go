@@ -212,7 +212,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	place := data.Place{Uuid: place_uuid}
 	if err = place.GetByUuid(); err != nil {
 		util.Debug(" Cannot get place", err)
-		Report(w, r, "你好，茶博士服务中，眼镜都模糊了，也未能找到你提交的活动地方资料，请确认后再试。")
+		Report(w, r, "你好，茶博士服务中，眼镜都模糊了，也未能找到你提交的喝茶地方资料，请确认后再试。")
 		return
 	}
 
@@ -370,7 +370,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 保存草台活动地方
+	// 保存草台喝茶地方
 	pp := data.ProjectPlace{
 		ProjectId: new_proj.Id,
 		PlaceId:   place.Id}
@@ -450,7 +450,6 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士失魂鱼，未能找到茶围资料，请稍后再试。")
 		return
 	}
-
 	// 6. 检查茶台创建权限
 	if !checkCreateProjectPermission(objective, sessUserData.User.Id, w, r) {
 		return
@@ -468,17 +467,16 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取用户提交的查询参数
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
-	// 获取请求的茶台详情
 
 	pr := data.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			util.Debug("Project not found by uuid: ", uuid)
-			Report(w, r, "你好，茶博士说：茶台不存在，请检查茶台ID。")
+			Report(w, r, "你好，荡昏寐，饮之以茶。请稍后再试。")
 			return
 		}
 		util.Debug(" Cannot read project by uuid: ", uuid, ", error: ", err)
-		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
+		Report(w, r, "你好，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
 	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
@@ -490,7 +488,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.ProjectBean, err = FetchProjectBean(pr)
 	if err != nil {
 		util.Debug(" Cannot read projectbean by project:", pr.Uuid, err)
-		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
+		Report(w, r, "你好，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
 
@@ -504,13 +502,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	ob, err := pD.ProjectBean.Project.Objective()
 	if err != nil {
 		util.Debug(" Cannot read objective", err)
-		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。")
+		Report(w, r, "你好，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 		return
 	}
 	pD.QuoteObjectiveBean, err = FetchObjectiveBean(ob)
 	if err != nil {
 		util.Debug(" Cannot read objective", err)
-		Report(w, r, "你好，茶博士失魂鱼，松影一庭惟见鹤，梨花满地不闻莺。")
+		Report(w, r, "你好，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 		return
 	}
 	// 截短此引用的茶围内容以方便展示
@@ -518,34 +516,28 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	var tb_normal_slice []data.ThreadBean
 	ctx := r.Context()
-	// 读取普通茶议资料
 	thread_normal_slice, err := pD.ProjectBean.Project.ThreadsNormal(ctx)
 	if err != nil {
 		util.Debug(" Cannot read threads given project", err)
-		Report(w, r, "你好，满头大汗的茶博士说，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。")
+		Report(w, r, "你好，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。请稍后再试。")
 		return
 	}
 
-	// .ThreadCount数量
 	pD.ThreadCount = pr.NumReplies()
-	// 检测pageData.ThreadSlice数量是否超过一打dozen
 	if pD.ThreadCount > 12 {
 		pD.IsOverTwelve = true
 	} else {
-		//测试时都设为true显示效果 🐶🐶🐶
 		pD.IsOverTwelve = false
 	}
-	// .ThreadIsApprovedCount数量
 	ta := data.ThreadApproved{
 		ProjectId: pD.ProjectBean.Project.Id,
 	}
 	pD.ThreadIsApprovedCount = ta.CountByProjectId()
 
-	// 获取茶议和作者相关资料荚
 	tb_normal_slice, err = FetchThreadBeanSlice(thread_normal_slice, r)
 	if err != nil {
 		util.Debug(" Cannot read thread-bean slice", err)
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中...")
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 		return
 	}
 	pD.ThreadBeanSlice = tb_normal_slice
@@ -557,76 +549,76 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		threadAppointment, err := pr.ThreadAppointment(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread appointment", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议预约信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		threadAppointmentBean, err := FetchThreadBean(threadAppointment, r)
 		if err != nil {
 			util.Debug(" Cannot read thread appointment bean", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议预约信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		pD.ApprovedFiveThreads.ThreadBeanAppointment = threadAppointmentBean
 		threadSeeSeek_slice, err := pr.ThreadSeeSeek(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread see seek", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议看看信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。，请稍后再试。")
 			return
 		}
 		threadSeeSeekBean_slice, err := FetchThreadBeanSlice(threadSeeSeek_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread see seek bean slice", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议看看信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		pD.ApprovedFiveThreads.ThreadBeanSeeSeekSlice = threadSeeSeekBean_slice
 		threadSuggestion, err := pr.ThreadSuggestion(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread suggestion", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议建议信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		threadSuggestionBean_slice, err := FetchThreadBeanSlice(threadSuggestion, r)
 		if err != nil {
 			util.Debug(" Cannot read thread suggestion bean slice", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议建议信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		pD.ApprovedFiveThreads.ThreadBeanSuggestionSlice = threadSuggestionBean_slice
 		threadGoods_slice, err := pr.ThreadGoods(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread goods", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议物资信息，请稍后再试。")
+			Report(w, r, "疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		threadGoodsBean_slice, err := FetchThreadBeanSlice(threadGoods_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread goods bean slice", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议物资信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		pD.ApprovedFiveThreads.ThreadBeanGoodsSlice = threadGoodsBean_slice
 		threadHandcraft_slice, err := pr.ThreadHandcraft(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread handcraft", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议手艺信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		threadHandcraftBean_slice, err := FetchThreadBeanSlice(threadHandcraft_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread handcraft bean slice", err)
-			Report(w, r, "你好，茶博士失魂鱼，未能找到茶议手艺信息，请稍后再试。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		pD.ApprovedFiveThreads.ThreadBeanHandcraftSlice = threadHandcraftBean_slice
 
 	}
 
-	// 获取茶台项目活动地方
+	// 获取茶台项目喝茶地方
 	pD.Place, err = pD.ProjectBean.Project.Place()
 	if err != nil {
 		util.Debug(" Cannot read project place", err)
-		Report(w, r, "你好，满头大汗的茶博士唱，过高花已妒，请稍后再试。")
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 		return
 	}
 
@@ -634,7 +626,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
 	if err != nil {
 		// 未登录，游客
-		// 填写页面数据
 		pD.IsGuest = true
 
 		pD.SessUser = data.User{
@@ -643,7 +634,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-		// 返回给浏览者茶台详情页面
+		// 返回茶台详情游客页面
 		RenderHTML(w, &pD, "layout", "navbar.public", "project.detail", "component_thread_bean_approved", "component_thread_bean", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
@@ -654,7 +645,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug(" Cannot get user-related data from session", s.Email, err)
-		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 		return
 	}
 
@@ -679,7 +670,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			// 当前用户是本茶话会邀请$团队成员，可以新开茶议
 			pD.IsInput = true
 		} else {
-			// 当前会话用户不是本茶话会邀请$团队成员，不能新开茶议
 			pD.IsInput = false
 		}
 	} else {
@@ -698,8 +688,8 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	is_master, err := checkProjectMasterPermission(&pr, s_u.Id)
 	if err != nil {
-		util.Debug("Permission check failed", "user", s_u.Id, "error", err)
-		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Permission check failed", "user_id:", s_u.Id, "error:", err)
+		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 		return
 	}
 	pD.IsMaster = is_master
@@ -711,7 +701,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			"objectiveId", ob.Id,
 			"error", err,
 		)
-		Report(w, r, "你好，茶博士说：玉烛滴干风里泪，晶帘隔破月中痕。")
+		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	pD.IsAdmin = is_admin
@@ -721,7 +711,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		is_member, err := veri_team.IsMember(s_u.Id)
 		if err != nil {
 			util.Debug("Cannot check verifier team member", err)
-			Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 			return
 		}
 		if is_member {
