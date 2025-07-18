@@ -11,7 +11,7 @@ import (
 	util "teachat/Util"
 )
 
-// GET /v1/team/default?id=
+// GET /v1/team/default?uuid=
 // 设置某个茶友的默认$事业茶团
 func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
@@ -27,7 +27,7 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//获取参数
-	uuid := r.URL.Query().Get("id")
+	uuid := r.URL.Query().Get("uuid")
 
 	//检查是否将特殊茶团作为默认茶团
 	if uuid == data.TeamUUIDFreelancer || uuid == data.TeamUUIDSpaceshipCrew {
@@ -47,18 +47,6 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//检查用户是否茶团成员，非成员不能设置默认茶团
-	ok, err := t_team.IsMember(s_u.Id)
-	if err != nil {
-		util.Debug("Cannot check user is member of team", t_team.Id, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
-		return
-	}
-	if !ok {
-		Report(w, r, "你好，茶博士竟然说，陛下你似乎不是这个茶团成员，请确认。")
-		return
-	}
-
 	//检查是否重复设置默认事业茶团
 	lastDefaultTeam, err := s_u.GetLastDefaultTeam()
 	if err != nil {
@@ -71,6 +59,18 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 			Report(w, r, "你好，茶博士竟然说，陛下你已经设置过这个默认$事业茶团了，请确认。")
 			return
 		}
+	}
+
+	//检查用户是否茶团成员，非成员不能设置默认茶团
+	ok, err := t_team.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug("Cannot check user is member of team", t_team.Id, err)
+		Report(w, r, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
+		return
+	}
+	if !ok {
+		Report(w, r, "你好，茶博士竟然说，陛下你似乎不是这个茶团成员，请确认。")
+		return
 	}
 
 	//设置默认茶团
@@ -94,7 +94,7 @@ func MemberFired(w http.ResponseWriter, r *http.Request) {
 	Report(w, r, "您好，茶博士正在忙碌建设这个功能中。。。")
 }
 
-// GET /v1/team_member/application/check?id=
+// GET /v1/team_member/application/check?uuid=
 // 查看加盟某个茶团的全部新的加盟申请书
 func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	s, err := Session(r)
@@ -110,7 +110,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//获取参数
-	uuid := r.URL.Query().Get("id")
+	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
 		Report(w, r, "你好，茶博士竟然说，陛下你没有给我茶团的uuid，请确认。")
 		return
@@ -124,7 +124,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	//查询目标茶团
 	t_team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
-		util.Debug(uuid, "Cannot get team by given uuid")
+		util.Debug("Cannot get team by given uuid", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}

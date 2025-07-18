@@ -78,7 +78,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if ok := IsEmail(keyword); ok {
 			user, err := data.GetUserByEmail(keyword, r.Context())
 			if err != nil {
-				util.Debug(keyword, " Cannot search user by keyword")
+				util.Debug(keyword, " Cannot search user by keyword", err)
+				Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				return
 			}
 			//如果user是非空
 			if user.Id > 0 {
@@ -95,17 +97,19 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		} else {
 			user_slice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 			if err != nil {
-				util.Debug(keyword, " Cannot search user by keyword")
+				util.Debug(" Cannot search user by keyword", err)
+				Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				return
 			}
 
 			if len(user_slice) >= 1 {
 				fPD.UserBeanSlice, err = FetchUserBeanSlice(user_slice)
 				if err != nil {
 					util.Debug(" Cannot fetch user bean slice given user_slice", err)
+					Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+					return
 				}
-				if len(fPD.UserBeanSlice) >= 1 {
-					fPD.IsEmpty = false
-				}
+				fPD.IsEmpty = false
 			}
 		}
 		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
@@ -114,19 +118,17 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	case data.SearchTypeUserId:
 		//按user_id查询茶友
 		// 验证关键词是否为自然数
-		if keyword == "0" {
-			Report(w, r, "搜索关键词必须是有效数字，请重新输入")
-			return
-		}
 		keyword_int, err := strconv.Atoi(keyword)
-		if err != nil {
-			Report(w, r, "你好，看不懂提交的茶友号，请换个关键词再试。")
+		if err != nil || keyword_int <= 0 {
+			Report(w, r, "茶友号必须是正整数")
 			return
 		}
 		user, err := data.GetUser(keyword_int)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				fPD.IsEmpty = true
+				RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
+				return
 			} else {
 				util.Debug("failed to get user given user_id: ", keyword_int, err)
 				Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -153,12 +155,16 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		team_slice, err := data.SearchTeamByAbbreviation(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search team by abbreviation", err)
+			Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+			return
 		}
 
 		if len(team_slice) >= 1 {
 			t_b_slice, err := FetchTeamBeanSlice(team_slice)
 			if err != nil {
 				util.Debug(" Cannot fetch team bean slice given team_slice", err)
+				Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				return
 			}
 			if len(t_b_slice) >= 1 {
 				fPD.Count = len(t_b_slice)
@@ -166,19 +172,23 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.IsEmpty = false
 			}
 		}
-		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_team")
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_team", "component_avatar_name_gender")
 		return
 
 	case data.SearchTypeThreadTitle:
-		//查询，茶话标题，thread.title
+		//查询，茶议标题，thread.title
 		thread_slice, err := data.SearchThreadByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search thread by title", err)
+			Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+			return
 		}
 		if len(thread_slice) >= 1 {
 			thread_bean_slice, err := FetchThreadBeanSlice(thread_slice, r)
 			if err != nil {
 				util.Debug(" Cannot fetch thread bean slice given thread_slice", err)
+				Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				return
 			}
 			fPD.Count = len(thread_slice)
 			fPD.ThreadBeanSlice = thread_bean_slice
@@ -188,15 +198,19 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		return
 
 	case data.SearchTypeObjectiveTitle:
-		//查询，茶话会标题，objective.title
+		//查询，茶会标题，objective.title
 		objective_slice, err := data.SearchObjectiveByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search objective by title", err)
+			Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+			return
 		}
 		if len(objective_slice) >= 1 {
 			objective_bean_slice, err := FetchObjectiveBeanSlice(objective_slice)
 			if err != nil {
 				util.Debug(" Cannot fetch objective bean slice given objective_slice", err)
+				Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				return
 			}
 			fPD.Count = len(objective_slice)
 			fPD.ObjectiveBeanSlice = objective_bean_slice
@@ -211,6 +225,8 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			util.Debug(" failed to search project by title", err)
 			fPD.IsEmpty = true
+			RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
+			return
 		} else {
 			if len(project_slice) >= 1 {
 				project_bean_slice, err := FetchProjectBeanSlice(project_slice)
@@ -242,7 +258,6 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
 		return
 	}
-	RenderHTML(w, &fPD, "layout", "navbar.private", "search")
 }
 
 // GET /v1/SearchGet
