@@ -70,7 +70,7 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取声明退出的成员资料
-	t_user, err := data.GetUserByEmail(m_email)
+	t_user, err := data.GetUserByEmail(m_email, r.Context())
 	if err != nil {
 		util.Debug(m_email, "Cannot get user by email")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -316,7 +316,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取拟调整角色目标茶友资料
-	t_member, err := data.GetUserByEmail(member_email)
+	t_member, err := data.GetUserByEmail(member_email, r.Context())
 	if err != nil {
 		util.Debug(member_email, "Cannot get user given email")
 		Report(w, r, "你好，满头大汗的茶博士表示找不到这个茶友，稍后再试。")
@@ -473,7 +473,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//目标茶友
-	t_member, err := data.GetUserByEmail(m_email)
+	t_member, err := data.GetUserByEmail(m_email, r.Context())
 	if err != nil {
 		util.Debug(m_email, "Cannot get user by email")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1195,7 +1195,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		Report(w, r, "你好，这个邀请函已经答复或者已过期。")
 		return
 	}
-	invi_user, err := data.GetUserByEmail(invitation.InviteEmail)
+	invi_user, err := data.GetUserByEmail(invitation.InviteEmail, r.Context())
 	if err != nil {
 		util.Debug(invitation.InviteEmail, " Cannot get invited user given invitation's email")
 		Report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1419,7 +1419,7 @@ func InviteMemberReply(w http.ResponseWriter, r *http.Request) {
 	team_uuid := r.PostFormValue("team_uuid")
 
 	//根据茶友提交的Uuid，检查是否存在该User
-	invite_user, err := data.GetUserByEmail(email)
+	invite_user, err := data.GetUserByEmail(email, r.Context())
 	if err != nil {
 		util.Debug(email, " Cannot search user given email")
 		Report(w, r, "你好，满头大汗的茶博士未能茶棚里找到这个茶友，请确认后再试。")

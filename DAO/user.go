@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -54,8 +55,11 @@ const (
 )
 
 // SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users.name模糊查询用户，WHERE column LIKE 'keyword%',返回[]User,err
-func SearchUserByNameKeyword(keyword string) ([]User, error) {
-	rows, err := Db.Query("SELECT * FROM users WHERE name LIKE $1 Limit 9", "%"+keyword+"%")
+// limit int 表示查询结果数量，5秒超时取消
+func SearchUserByNameKeyword(keyword string, limit int, ctx context.Context) ([]User, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := Db.QueryContext(ctx, "SELECT * FROM users WHERE name LIKE $1 Limit $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -347,10 +351,12 @@ func (user *User) UpdateAvatar() (err error) {
 	return
 }
 
-// Get a single user given the email
-func GetUserByEmail(email string) (user User, err error) {
+// Get a single user given the email，limit - 限制查询结果数量,5秒超时就取消
+func GetUserByEmail(email string, ctx context.Context) (user User, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	user = User{}
-	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", email).
+	err = Db.QueryRowContext(ctx, "SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", email).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }

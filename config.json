@@ -15,6 +15,7 @@
     "MaxTeamMembers": 12,
     "MaxTeamsCount": 99,
     "MaxSurvivalTeams": 12,
-    "PoliteMode": false
+    "PoliteMode": false,
+    "defaultSearchResultNum": 9
 }
 

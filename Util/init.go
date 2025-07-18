@@ -24,22 +24,23 @@ func init() {
 
 // 配置文件结构体
 type Configuration struct {
-	Address          string
-	ReadTimeout      int64
-	WriteTimeout     int64
-	Static           string
-	ImageDir         string
-	ImageExt         string
-	TemplatesDir     string
-	TemplateExt      string
-	ThreadMinWord    int64 //  茶议最小字数限制
-	ThreadMaxWord    int64 // 茶议最大字数限制
-	PostMinWord      int64 // 品味最小字数限制
-	MaxInviteTeams   int64 // 茶围、茶台最大可邀请团队数
-	MaxTeamMembers   int64 // 团队最大成员数
-	MaxTeamsCount    int64 // 个人创建的团队数上限
-	MaxSurvivalTeams int64 // 个人最大活跃团队数
-	PoliteMode       bool  // Debug模式
+	Address                string
+	ReadTimeout            int64
+	WriteTimeout           int64
+	Static                 string
+	ImageDir               string
+	ImageExt               string
+	TemplatesDir           string
+	TemplateExt            string
+	ThreadMinWord          int64 //  茶议最小字数限制
+	ThreadMaxWord          int64 // 茶议最大字数限制
+	PostMinWord            int64 // 品味最小字数限制
+	MaxInviteTeams         int64 // 茶围、茶台最大可邀请团队数
+	MaxTeamMembers         int64 // 团队最大成员数
+	MaxTeamsCount          int64 // 个人创建的团队数上限
+	MaxSurvivalTeams       int64 // 个人最大活跃团队数
+	PoliteMode             bool  // Debug模式
+	DefaultSearchResultNum int64 // 默认搜索结果数
 
 	// SysMail_Username string
 	// SysMail_Password string

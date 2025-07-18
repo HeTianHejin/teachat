@@ -103,7 +103,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取声明增加的成员资料
-	t_user, err := data.GetUserByEmail(m_email)
+	t_user, err := data.GetUserByEmail(m_email,r.Context())
 	if err != nil {
 		util.Debug(m_email, "Cannot get user by email")
 		Report(w, r, "你好，茶博士正在无事忙之中，稍后再试。")

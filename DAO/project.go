@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -397,8 +398,10 @@ func isUserInAnyFamily(user_id int, family_ids []int) (bool, error) {
 }
 
 // SearchProjectByTitle(keyword) 根据关键字搜索茶台,返回 []Project, error, 限制返回limit数量
-func SearchProjectByTitle(keyword string, limit int) (projects []Project, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE title LIKE $1 LIMIT $2", "%"+keyword+"%", limit)
+func SearchProjectByTitle(keyword string, limit int, ctx context.Context) (projects []Project, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE title LIKE $1 LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return
 	}

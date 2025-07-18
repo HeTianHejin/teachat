@@ -67,7 +67,7 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 		}
 		//获取新飞行员的用户信息，并添加到数据库中
 		email := r.PostFormValue("email")
-		newPilot, err := data.GetUserByEmail(email)
+		newPilot, err := data.GetUserByEmail(email, r.Context())
 		if err != nil {
 			util.Debug(" Cannot find user by email", err)
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)

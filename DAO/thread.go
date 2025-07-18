@@ -647,11 +647,11 @@ func (t *Thread) CreateInTx(tx *sql.Tx) error {
 	return nil
 }
 
-// SearchThreadByTitle(keyword) 根据关键字搜索茶议，返回 []Thread，限制limit条数9
-func SearchThreadByTitle(keyword string, ctx context.Context) (threads []Thread, err error) {
+// SearchThreadByTitle(keyword) 根据关键字搜索茶议，返回 []Thread，限制limit条数
+func SearchThreadByTitle(keyword string, limit int, ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE title LIKE $1 ORDER BY created_at DESC LIMIT 9", "%"+keyword+"%")
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE title LIKE $1 ORDER BY created_at DESC LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return
 	}

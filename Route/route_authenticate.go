@@ -169,7 +169,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			s_u = t_user
 		} else if IsEmail(email) {
 			// Retrieve user by email
-			t_u, userErr := data.GetUserByEmail(email)
+			t_u, userErr := data.GetUserByEmail(email,  r.Context())
 			if userErr != nil {
 				Report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
 				return

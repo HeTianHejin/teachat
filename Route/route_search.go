@@ -76,7 +76,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//用户可能提交了一个电子邮箱地址，如果是，我们需要先通过电子邮箱地址查找用户
 		//检查keyword是否是电子邮箱地址
 		if ok := IsEmail(keyword); ok {
-			user, err := data.GetUserByEmail(keyword)
+			user, err := data.GetUserByEmail(keyword, r.Context())
 			if err != nil {
 				util.Debug(keyword, " Cannot search user by keyword")
 			}
@@ -85,13 +85,15 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				user_bean, err := FetchUserBean(user)
 				if err != nil {
 					util.Debug("cannot get user-bean given user", err)
+					Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+					return
 				} else {
 					fPD.UserBeanSlice = append(fPD.UserBeanSlice, user_bean)
 					fPD.IsEmpty = false
 				}
 			}
 		} else {
-			user_slice, err := data.SearchUserByNameKeyword(keyword)
+			user_slice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 			if err != nil {
 				util.Debug(keyword, " Cannot search user by keyword")
 			}
@@ -106,18 +108,29 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
+		return
 
 	case data.SearchTypeUserId:
 		//按user_id查询茶友
+		// 验证关键词是否为自然数
+		if keyword == "0" {
+			Report(w, r, "搜索关键词必须是有效数字，请重新输入")
+			return
+		}
 		keyword_int, err := strconv.Atoi(keyword)
 		if err != nil {
-			Report(w, r, "你好，茶博士摸摸头，看不懂提交的茶友号，请换个关键词再试。")
+			Report(w, r, "你好，看不懂提交的茶友号，请换个关键词再试。")
 			return
 		}
 		user, err := data.GetUser(keyword_int)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				//				util.Debug(" Cannot get user by keyword_int id", err)
+				fPD.IsEmpty = true
+			} else {
+				util.Debug("failed to get user given user_id: ", keyword_int, err)
+				Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				return
 			}
 		}
 
@@ -126,15 +139,18 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			userbean, err := FetchUserBean(user)
 			if err != nil {
 				util.Debug("cannot get user-bean given user", err)
+				Report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				return
 			} else {
 				fPD.UserBeanSlice = append(fPD.UserBeanSlice, userbean)
 				fPD.IsEmpty = false
 			}
 		}
-
+		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
+		return
 	case data.SearchTypeTeamAbbr:
 		//查询，茶团简称，team.abbreviation
-		team_slice, err := data.SearchTeamByAbbreviation(keyword, 9, r.Context())
+		team_slice, err := data.SearchTeamByAbbreviation(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search team by abbreviation", err)
 		}
@@ -155,7 +171,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 	case data.SearchTypeThreadTitle:
 		//查询，茶话标题，thread.title
-		thread_slice, err := data.SearchThreadByTitle(keyword, r.Context())
+		thread_slice, err := data.SearchThreadByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search thread by title", err)
 		}
@@ -173,7 +189,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 	case data.SearchTypeObjectiveTitle:
 		//查询，茶话会标题，objective.title
-		objective_slice, err := data.SearchObjectiveByTitle(keyword, 9, r.Context())
+		objective_slice, err := data.SearchObjectiveByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search objective by title", err)
 		}
@@ -191,27 +207,28 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 	case data.SearchTypeProjectTitle:
 		//按茶台标题查询
-		project_slice, err := data.SearchProjectByTitle(keyword, 9)
+		project_slice, err := data.SearchProjectByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" Cannot search project by title", err)
-		}
-		if len(project_slice) >= 1 {
-			project_bean_slice, err := FetchProjectBeanSlice(project_slice)
-			if err != nil {
-				util.Debug(" Cannot fetch project bean slice given project_slice", err)
+			util.Debug(" failed to search project by title", err)
+			fPD.IsEmpty = true
+		} else {
+			if len(project_slice) >= 1 {
+				project_bean_slice, err := FetchProjectBeanSlice(project_slice)
+				if err != nil {
+					util.Debug(" Cannot fetch project bean slice given project_slice", err)
+				}
+				fPD.Count = len(project_slice)
+				fPD.ProjectBeanSlice = project_bean_slice
+				fPD.IsEmpty = false
 			}
-			fPD.Count = len(project_slice)
-			fPD.ProjectBeanSlice = project_bean_slice
-			fPD.IsEmpty = false
+			RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
+			return
 		}
-		RenderHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
-		return
-
 	case data.SearchTypePlaceName:
 		//查询品茶地点 place
 		place_slice, err := data.FindPlaceByName(keyword)
 		if err != nil {
-			util.Debug(" Cannot search place by keyword", err)
+			util.Debug(" failed to search place by keyword", err)
 		}
 		if len(place_slice) >= 1 {
 			fPD.Count = len(place_slice)

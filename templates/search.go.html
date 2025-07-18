@@ -14,10 +14,10 @@
     <div>
       <label for="radio">选择类别：</label>
       <fieldset id="radio">
-        <input type="radio" name="class" id="user_id" style="width: fit-content;" value="10" checked required />
+        <input type="radio" name="class" id="user_id" style="width: fit-content;" value="10"required />
         <label for="user_id">茶友茶号</label>
 
-        <input type="radio" name="class" id="user" style="width: fit-content;" value="0" required />
+        <input type="radio" name="class" id="user" style="width: fit-content;" value="0"  checked required />
         <label for="user">茶友花名</label>
 
         <input type="radio" name="class" id="team" style="width: fit-content;" value="1" required />
@@ -26,10 +26,10 @@
         <input type="radio" name="class" id="thread" style="width: fit-content;" value="2" required />
         <label for="thread">茶议标题</label>
 
-        <input type="radio" name="class" id="objective" style="width: fit-content;" value="3" disabled />
-        <label for="objective">茶话会名</label>
+        <input type="radio" name="class" id="objective" style="width: fit-content;" value="3" required />
+        <label for="objective">茶会名称</label>
 
-        <input type="radio" name="class" id="project" style="width: fit-content;" value="4" disabled />
+        <input type="radio" name="class" id="project" style="width: fit-content;" value="4" required  />
         <label for="project">茶台名称</label>
 
         <input type="radio" name="class" id="place" style="width: fit-content;" value="5" required />
@@ -67,21 +67,9 @@
 
 <div class="media">
   <div class="media-left">
-    <a href="/v1/user/biography?id={{ .User.Uuid }}">
-      <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
-    </a>
+   {{ template "component_avatar_name_gender" .User }}
   </div>
   <div class="media-body">
-    <p>
-      {{ .User.Name }}
-      <span style="font-size: small;">
-        {{if .User.Gender }}
-        <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-        {{ else }}
-        <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-        {{ end }}
-      </span>
-
       <span style="font-style: italic;">
         （<a href="/v1/family/detail?id={{ .DefaultFamilyBean.Family.Uuid }}">{{ .DefaultFamilyBean.Family.Name }}</a>，
         <a href="/v1/team/detail?id={{ .DefaultTeamBean.Team.Uuid }}">{{ .DefaultTeamBean.Team.Abbreviation }}</a>）
@@ -97,18 +85,29 @@
 {{ end }}{{/* 这是查找用户（茶友）结果队列迭代结束 */}}
 
 {{ range .TeamBeanSlice }}
-{{/* 这是查找茶团（团队）结果展示 */}}
+{{/* 这是查找茶团（事业团队）结果展示 */}}
 {{ template "component_team" . }}
 <hr />
 {{ end }}{{/* 这是查找到的茶团结果队列迭代结束 */}}
 
 
-{{/* 以下是查询结果，茶台的简要展示 */}}
+{{/* 以下是查询结果，茶议的简要展示 */}}
 {{ range .ThreadBeanSlice }}
 {{ template "component_thread_bean" . }}
 <hr />
 {{ end }}{{/* 这是查找到的茶台结果队列迭代结束 */}}
 
+{{/* 以下是查询结果，茶台的简要展示 */}}
+{{ range .ProjectBeanSlice }}
+{{ template "component_project_bean" . }}
+<hr />
+{{ end }}{{/* 这是查找到的茶台结果队列迭代结束 */}} 
+
+{{/* 以下是查询结果，茶会（茶围）的简要展示 */}}
+{{ range .ObjectiveBeanSlice }}
+{{ template "component_objective_bean" . }}
+<hr />
+{{ end }}{{/* 这是查找到的茶会（茶围）结果队列迭代结束 */}}
 
 {{ range .PlaceSlice }}{{/* 这是查找到的 品茶地点 结果队列迭代-开始 */}}
 <hr />
