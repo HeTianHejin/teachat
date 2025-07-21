@@ -18,7 +18,7 @@
 {{/* 展示全部茶议 */}}
 {{ range .ThreadBeanSlice }}
 
-{{ if .Thread.PageData.IsAuthor }}
+{{ if .Thread.ActiveData.IsAuthor }}
 {{/* 检测是否茶议作者，是,安排右侧头像布局 */}}
 <div class="media">
 

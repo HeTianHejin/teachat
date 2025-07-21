@@ -30,7 +30,7 @@ type Objective struct {
 	EditAt    *time.Time
 
 	// 仅用于页面渲染，不保存到数据库
-	PageData PublicPData
+	ActiveData PublicPData
 }
 
 const (

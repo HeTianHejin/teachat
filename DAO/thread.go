@@ -28,7 +28,7 @@ type Thread struct {
 	Category  int  //茶议的分类 0:普通，1:嵌套，2:约茶，3:看看，4:建议，5:宝贝，6:手艺
 
 	//仅用于页面渲染，不保存到数据库
-	PageData PublicPData
+	ActiveData PublicPData
 }
 
 const (
@@ -596,10 +596,10 @@ func CreateRequiredThreads(objective *Objective, project *Project, user *User, c
 	}
 
 	templates := []threadTemplate{
-		{"约茶", "请在此处安排具体的茶会时间和参与人员", ThreadCategoryAppointment},
-		{"看看", "请记录作业过程，目标对象检查情况", ThreadCategorySeeSeek},
-		{"建议", "根据「看看」的结果，提出对应建议。", ThreadCategorySuggestion},
-		{"宝贝", "请列出需要准备的物资清单", ThreadCategoryGoods},
+		{"约茶", "请在此处记录具体的茶会时间和出席人员", ThreadCategoryAppointment},
+		{"看看", "请记录作业过程，目标对象检查情况，一项目一茶议", ThreadCategorySeeSeek},
+		{"建议", "根据「看看」的结果，提出对应处置建议，一项目一茶议。", ThreadCategorySuggestion},
+		{"宝贝", "请逐一列出需要准备的物资", ThreadCategoryGoods},
 		{"手艺", "记录手艺执行过程", ThreadCategoryHandcraft},
 	}
 

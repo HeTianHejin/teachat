@@ -403,7 +403,7 @@ func (administrator *Administrator) User() (user User, err error) {
 }
 
 // Get the user who created the objective
-// 获取创建茶话会的用户
+// 获取创建茶话会的用户，即围主代表
 func (o *Objective) User() (user User, err error) {
 	user = User{}
 	Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", o.UserId).
@@ -428,7 +428,7 @@ func (post *Post) User() (user User, err error) {
 }
 
 // get the user who created this project
-// 获取创建该茶台（项目）的用户，即台主
+// 获取创建该茶台（项目）的用户，即台主代表
 func (project *Project) User() (user User, err error) {
 	user = User{}
 	Db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", project.UserId).

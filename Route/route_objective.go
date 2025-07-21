@@ -279,7 +279,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		}
 		//迭代茶话会队列，把作者属性设置为false
 		for i := range oSpD.ObjectiveBeanSlice {
-			oSpD.ObjectiveBeanSlice[i].Objective.PageData.IsAuthor = false
+			oSpD.ObjectiveBeanSlice[i].Objective.ActiveData.IsAuthor = false
 		}
 
 		//返回页面
@@ -297,9 +297,9 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	oSpD.SessUser = sUser
 	for i := range oSpD.ObjectiveBeanSlice {
 		if oSpD.ObjectiveBeanSlice[i].Objective.UserId == sUser.Id {
-			oSpD.ObjectiveBeanSlice[i].Objective.PageData.IsAuthor = true
+			oSpD.ObjectiveBeanSlice[i].Objective.ActiveData.IsAuthor = true
 		} else {
-			oSpD.ObjectiveBeanSlice[i].Objective.PageData.IsAuthor = false
+			oSpD.ObjectiveBeanSlice[i].Objective.ActiveData.IsAuthor = false
 		}
 	}
 	RenderHTML(w, &oSpD, "layout", "navbar.private", "objectives.square", "component_objective_bean", "component_avatar_name_gender")

@@ -37,7 +37,7 @@ type Project struct {
 	// 32: 已婉拒封闭式茶台 (Rejected close table)
 	Class int
 	// 仅用于页面渲染，不保存到数据库
-	PageData PublicPData
+	ActiveData PublicPData
 }
 
 const (

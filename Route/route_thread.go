@@ -35,7 +35,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士迷路了，未能找到你想要的资料。")
+		Report(w, r, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
 	s_u, err := sess.User()
@@ -475,18 +475,18 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			// 检测是否Post品味撰写者
 			for i := range tD.PostBeanAdminSlice {
 				if tD.PostBeanAdminSlice[i].Post.UserId == s_u.Id {
-					tD.PostBeanAdminSlice[i].Post.PageData.IsAuthor = true
+					tD.PostBeanAdminSlice[i].Post.ActiveData.IsAuthor = true
 				}
 			}
 			for i := range tD.PostBeanSlice {
 				if tD.PostBeanSlice[i].Post.UserId == s_u.Id {
-					tD.PostBeanSlice[i].Post.PageData.IsAuthor = true
+					tD.PostBeanSlice[i].Post.ActiveData.IsAuthor = true
 				}
 			}
 
 			if s_u.Id == tD.ThreadBean.Thread.UserId {
 				// 是茶议撰写者！
-				tD.ThreadBean.Thread.PageData.IsAuthor = true
+				tD.ThreadBean.Thread.ActiveData.IsAuthor = true
 				tD.IsInput = true
 				//点击数+1
 				//tD.ThreadBean.Thread.AddHitCount()
@@ -658,7 +658,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", sess.Email, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	uuid := r.URL.Query().Get("uuid")
@@ -677,7 +677,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		util.Debug(" Cannot read thread given uuid", uuid, err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	switch thread.Category {
@@ -716,14 +716,14 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	tD.ThreadBean, err = FetchThreadBean(thread, r)
 	if err != nil {
 		util.Debug(" Cannot read threadBean", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料荚。")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	//读取所在的茶台资料
 	project, err := thread.Project()
 	if err != nil {
 		util.Debug(" Cannot read project given thread", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取茶台资料。")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	tD.QuoteProjectBean, err = FetchProjectBean(project)
@@ -734,7 +734,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		util.Debug(" Cannot read project bean given project", project.Id, err)
-		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取茶台资料。")
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
 
@@ -754,13 +754,13 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	post_admin_slice, err := tD.ThreadBean.Thread.PostsAdmin()
 	if err != nil {
 		util.Debug(" Cannot read admin posts", err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	tD.PostBeanAdminSlice, err = FetchPostBeanSlice(post_admin_slice)
 	if err != nil {
 		util.Debug(" Cannot read admin postbean", err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -768,7 +768,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	s_u, s_d_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(sess)
 	if err != nil {
 		util.Debug(" Cannot get user-related data from session", s_u.Id)
-		Report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	// 用户足迹
@@ -804,7 +804,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", sess.Email, err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取陛下资料。")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	//检查用户身份，是否具有完善操作权限
@@ -823,7 +823,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能补充该茶议。")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	t_uuid := r.PostFormValue("uuid")
@@ -842,7 +842,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		util.Debug(" Cannot read thread given uuid", t_uuid, err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？")
+		Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	switch thread.Category {

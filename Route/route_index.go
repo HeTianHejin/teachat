@@ -48,7 +48,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			Name: "游客",
 		}
 		for i := range thread_slice {
-			thread_slice[i].PageData.IsAuthor = false
+			thread_slice[i].ActiveData.IsAuthor = false
 		}
 		//展示游客首页
 		RenderHTML(w, &indexPD, "layout", "navbar.public", "index", "component_avatar_name_gender")
@@ -64,9 +64,9 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	indexPD.SessUser = sUser
 	for i := range thread_slice {
 		if sUser.Id == thread_slice[i].UserId {
-			thread_slice[i].PageData.IsAuthor = true
+			thread_slice[i].ActiveData.IsAuthor = true
 		} else {
-			thread_slice[i].PageData.IsAuthor = false
+			thread_slice[i].ActiveData.IsAuthor = false
 		}
 	}
 	//展示茶客的首页

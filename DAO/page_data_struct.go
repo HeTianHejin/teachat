@@ -58,10 +58,6 @@ type ObjectiveDetail struct {
 
 	SessUserDefaultFamily    Family
 	SessUserSurvivalFamilies []Family
-	// SessUserParentMemberFamilySlice []Family
-	// SessUserChildMemberFamilySlice  []Family
-	// SessUserOtherMemberFamilySlice  []Family
-	// SessUserResignMemberFamilySlice []Family
 
 	SessUserDefaultTeam   Team
 	SessUserSurvivalTeams []Team
@@ -230,6 +226,7 @@ type PostDetail struct {
 	SessUserSurvivalTeams    []Team
 	SessUserDefaultPlace     Place
 	SessUserBindPlaces       []Place
+	IsInput                  bool // 是否需要显示输入面板
 
 	PostBean        PostBean     // 跟贴豆荚
 	ThreadBeanSlice []ThreadBean // 针对此品味的茶议队列
@@ -240,7 +237,6 @@ type PostDetail struct {
 
 	QuoteObjectiveBean ObjectiveBean // 引用的茶围豆荚
 
-	IsInput      bool // 是否需要显示输入面板
 	IsOverTwelve bool // 是否超过12个
 }
 type PostBean struct {

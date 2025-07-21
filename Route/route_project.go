@@ -680,10 +680,10 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	//会话用户是否是作者
 	if pD.ProjectBean.Project.UserId == s_u.Id {
 		// 是作者
-		pD.ProjectBean.Project.PageData.IsAuthor = true
+		pD.ProjectBean.Project.ActiveData.IsAuthor = true
 	} else {
 		// 不是作者
-		pD.ProjectBean.Project.PageData.IsAuthor = false
+		pD.ProjectBean.Project.ActiveData.IsAuthor = false
 	}
 
 	is_master, err := checkProjectMasterPermission(&pr, s_u.Id)

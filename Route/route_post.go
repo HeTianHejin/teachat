@@ -7,6 +7,7 @@ import (
 	"strings"
 	data "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // GET /v1/post/detail?uuid=
@@ -19,13 +20,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	t_post := data.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail", err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 	post_bean, err := FetchPostBean(t_post)
 	if err != nil {
 		util.Debug(" Cannot get post bean given post", err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 	pD.PostBean = post_bean
@@ -49,13 +50,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	thread_slice, err := t_post.Threads()
 	if err != nil {
 		util.Debug(" Cannot get thread_slice given t_post", err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 	pD.ThreadBeanSlice, err = FetchThreadBeanSlice(thread_slice, r)
 	if err != nil {
 		util.Debug(" Cannot get thread_bean_slice given thread_slice", err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 
@@ -63,13 +64,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	quote_project, err := quote_thread.Project()
 	if err != nil {
 		util.Debug(quote_thread.Id, " Cannot get project given thread")
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 	pD.QuoteProjectBean, err = FetchProjectBean(quote_project)
 	if err != nil {
 		util.Debug(quote_project.Id, " Cannot get project given project")
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 
@@ -77,13 +78,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	quote_objective, err := quote_project.Objective()
 	if err != nil {
 		util.Debug(quote_project.Id, " Cannot get objective given project")
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 	pD.QuoteObjectiveBean, err = FetchObjectiveBean(quote_objective)
 	if err != nil {
 		util.Debug(quote_objective.Id, " Cannot get objective given objective")
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 
@@ -104,14 +105,14 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		pD.SessUser = data.User{
 			Id:   data.UserId_None,
 			Name: "游客",
-			// 用户足迹
+			// 陛下足迹
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
 		RenderHTML(w, &pD, "layout", "navbar.public", "post.detail", "component_sess_capacity", "component_avatar_name_gender")
 		return
 	}
-	// 读取已登陆用户资料
+	// 读取已登陆陛下资料
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
@@ -119,7 +120,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	pD.SessUser = s_u
-	// 从会话查获当前浏览用户资料荚
+	// 从会话查获当前浏览陛下资料荚
 	s_u, s_default_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug(" Cannot get user-related data from session", err)
@@ -127,7 +128,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 用户足迹
+	// 陛下足迹
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
 
@@ -176,7 +177,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 全部绑定地点
 	pD.SessUserBindPlaces = s_places
 
-	// 当前会话用户是否此品味作者？
+	// 当前会话陛下是否此品味作者？
 	if s_u.Id == t_post.UserId {
 		pD.IsAuthor = true
 	} else {
@@ -198,17 +199,38 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能读取用户会话信息。请重新登录或联系管理员。")
+		Report(w, r, "你好，未能读取陛下会话信息。请重新登录或联系管理员。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士摸摸头，竟然说今天电脑飞去热带海岛潜水度假了。")
+		Report(w, r, "你好，茶博士摸摸头，竟然说人工智能助理飞去热带海岛潜水度假了。")
 		return
 	}
 
-	//读取用户表态,立场是支持（true）或者反对(false)
+	//读取针对的目标茶议
+	thre_uuid := r.PostFormValue("uuid")
+	//检查uuid是否有效
+	t_thread, err := data.GetThreadByUUID(thre_uuid)
+	if err != nil {
+		Report(w, r, "你好，根据陛下的指示，却未能读取目标茶议。")
+		return
+	}
+	ctx := r.Context()
+	posted := data.Post{UserId: s_u.Id, ThreadId: t_thread.Id}
+	posted_exists, err := posted.HasUserPostedInThread(ctx)
+	if err != nil {
+		util.Debug("failed to check has-user-posted-thread", err)
+		Report(w, r, "你好，茶博士摸摸头，竟然说人工智能助理飞去热带海岛潜水度假了。")
+		return
+	}
+	if posted_exists {
+		Report(w, r, "你好，陛下已在该话题下发表过品味了。还有话说？可以加深您的品味内涵噢。")
+		return
+	}
+
+	//读取陛下表态,立场是支持（true）或者反对(false)
 	post_attitude := r.PostFormValue("attitude") == "true"
 
 	body := r.PostFormValue("body")
@@ -218,14 +240,6 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	} else if CnStrLen(body) > int(util.Config.ThreadMaxWord) {
 		Report(w, r, "你好，彬彬有礼戴着厚厚眼镜片的茶博士居然说，内容太多，茶叶蛋壳都用光了也写不完呀。")
-		return
-	}
-	//读取针对的目标茶议
-	thre_uuid := r.PostFormValue("uuid")
-	//检查uuid是否有效
-	t_thread, err := data.GetThreadByUUID(thre_uuid)
-	if err != nil {
-		Report(w, r, "你好，茶博士失魂鱼，未能读取专属茶议。")
 		return
 	}
 
@@ -341,7 +355,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if util.Config.PoliteMode {
-
+		// 友邻蒙评模式
 		if err := CreateAndSendAcceptMessage(new_draft_post.Id, data.AcceptObjectTypePo, s_u.Id); err != nil {
 			// 根据错误类型返回不同提示
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
@@ -352,11 +366,12 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		t := fmt.Sprintf("你好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", t_thread.Title)
-		// 提示用户草稿保存成功
+		// 提示陛下草稿保存成功
 		Report(w, r, t)
 		return
 
 	} else {
+
 		post, err := AcceptNewDraftPost(new_draft_post.Id)
 		if err != nil {
 			switch {
@@ -378,12 +393,12 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 }
 
 // 修改post的处理器
-func HandleEditPost(w http.ResponseWriter, r *http.Request) {
+func HandleSupplementPost(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		EditPost(w, r)
+		SupplementPostGet(w, r)
 	case http.MethodPost:
-		UpdatePost(w, r)
+		SupplementPostPost(w, r)
 	case "PUT":
 		//未允许的方法
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -394,108 +409,219 @@ func HandleEditPost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST /post/edit
-// update the post
-// 更新用户的post，规则是可以补充内容，不能覆载修改之前说的话，不能变更立场（从支持变反对）。
-func UpdatePost(w http.ResponseWriter, r *http.Request) {
-	//读取请求会话
+// POST /v1/post/supplement
+// 加水（补充）已经发布的post，规则是可以补充内容，不能覆载修改之前说的话，不能变更立场（从支持变反对）。
+func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	err = r.ParseForm()
-	if err != nil {
-		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
-		return
-	}
-	//从会话中读取用户资料
+	//从会话中读取陛下资料
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug(" Cannot parse form", err)
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+		return
+	}
+
 	uuid := r.PostFormValue("uuid")
 	if uuid == "" {
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 	t_post := data.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail given uuid", uuid)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
-
-	if t_post.UserId != s_u.Id {
-		util.Debug(" Cannot edit other user's post", err)
-		Report(w, r, "茶博士提示，目前仅能补充自己的回复")
-		return
-	} else {
-		//可以补充自己的表态内容
-		body := r.PostFormValue("body")
-		if body != "" {
-			//检查补充内容是否有意义，rune 字数>int(util.Config.ThreadMinWord),总的post字数<int(util.Config.ThreadMaxWord)
-			if CnStrLen(body) > int(util.Config.ThreadMinWord) && CnStrLen(t_post.Body)+CnStrLen(body) < int(util.Config.ThreadMaxWord) {
-				t_post.Body += body
-			} else {
-				//提示用户总字数或者本次提交补充内容超出字数限制
-				Report(w, r, "你好， 粗鲁的茶博士竟然说字数满了，纸条写不下您的品味。")
-				return
-			}
-			err = t_post.UpdateBody(body)
-			if err != nil {
-				util.Debug(" Cannot update post", err)
-				Report(w, r, "茶博士失魂鱼，未能更新专属资料，请稍后再试。")
-				return
-			}
-			thread, err := data.GetThreadById(t_post.ThreadId)
-			if err != nil {
-				util.Debug(" Cannot read thread", err)
-				Report(w, r, "茶博士失魂鱼，嘀咕无为有处有还无？，请稍后再试。")
-			}
-			url := fmt.Sprint("/v1/thread/detail?uuid=", thread.Uuid)
-			http.Redirect(w, r, url, http.StatusFound)
-		} else {
-			//空白或者一个字被认为是无意义追加内容
-			Report(w, r, "你好，陛下英明，请勿提供小于17个字的品味补充")
+	body_addi := r.PostFormValue("additional")
+	if body_addi != "" {
+		//检查补充内容是否有意义，字数>int(util.Config.ThreadMinWord),总的post字数<int(util.Config.ThreadMaxWord)
+		if CnStrLen(body_addi) < int(util.Config.ThreadMinWord) {
+			Report(w, r, "你好， 粗鲁的茶博士竟然说，陛下下旨字数太少了？")
 			return
+		} else if CnStrLen(t_post.Body)+CnStrLen(body_addi) < int(util.Config.ThreadMaxWord) {
+			//提示陛下总字数或者本次提交补充内容超出字数限制
+			Report(w, r, "你好， 粗鲁的茶博士竟然说字数满了，纸条写不下您的品味。")
+			return
+		}
+	}
+
+	// 检查是否有权加水当前帖子
+	ok := false
+	// 如果是作者本人，ok
+	if t_post.UserId == s_u.Id {
+		ok = true
+	} else {
+		//检查是否是品味发布者所在团队成员，或者家庭成员
+		if t_post.IsPrivate {
+			//检查是否是品味发布者所在家庭成员
+			family := data.Family{Id: t_post.FamilyId}
+			if is_member, err := family.IsMember(s_u.Id); err != nil || !is_member {
+				util.Debug(" Cannot check family member", err)
+				Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+				return
+			}
+			//是发布者所在家庭成员，可以编辑
+			ok = true
+
+		} else {
+			//检查是否是品味发布者所在团队成员
+			team := data.Team{Id: t_post.TeamId}
+			if is_member, err := team.IsMember(s_u.Id); err != nil || !is_member {
+				util.Debug(" Cannot check team member", err)
+				Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+				return
+			}
+			//是发布者所在团队成员，可以编辑
+			ok = true
 		}
 
 	}
+	if ok {
+		//可以补充自己的表态内容
+		//当前“[中文时间字符 + 补充]” + body
+		now := time.Now()
+		timeStr := now.Format("2006年1月2日 15:04:05")
+		name := s_u.Name
+		// 追加内容（另起一行）// 注意开头的 \n
+		t_post.Body += "\n[" + timeStr + " " + name + " 补充 ]" + body_addi
 
+		err = t_post.UpdateBody()
+		if err != nil {
+			util.Debug(" Cannot update post", err)
+			Report(w, r, "你好，茶博士失魂鱼，墨水中断未能补充品味。")
+			return
+		}
+		// thread, err := data.GetThreadById(t_post.ThreadId)
+		// if err != nil {
+		// 	util.Debug(" Cannot read thread", err)
+		// 	Report(w, r, "身后有余忘缩手，眼前无路想回头，请稍后再试。")
+		// 	return
+		// }
+		url := fmt.Sprint("/v1/post/detail?uuid=", t_post.Uuid)
+		http.Redirect(w, r, url, http.StatusFound)
+		return
+	} else {
+		//提示无权操作
+		Report(w, r, "你好，陛下英明，请勿往陌生人的茶杯加水呢？")
+		return
+	}
 }
 
-// GET /post/edit
-// 用户补充自己的表态内容POST的界面
-func EditPost(w http.ResponseWriter, r *http.Request) {
+// GET /v1/post/supplement?uuid=xxx
+// 陛下加水（补充）自己的表态内容,完善补漏
+func SupplementPostGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := Session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	vals := r.URL.Query()
-	uuid := vals.Get("id")
+	uuid := vals.Get("uuid")
 	t_post := data.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail", err)
-		Report(w, r, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
-	if t_post.UserId == user.Id {
-		RenderHTML(w, &t_post, "layout", "navbar.private", "post.edit")
+	ok := false
+	// 检查是否是品味发布者本人
+	if t_post.UserId == s_u.Id {
+		//是发布者本人，可以编辑
+		ok = true
 	} else {
-		util.Debug(" Cannot edit other user's post", err)
-		Report(w, r, "茶博士提示，目前仅能补充自己的回复")
+		//检查是否是品味发布者所在团队成员，或者家庭成员
+		if t_post.IsPrivate {
+			//检查是否是品味发布者所在家庭成员
+			family := data.Family{Id: t_post.FamilyId}
+			if is_member, err := family.IsMember(s_u.Id); err != nil || !is_member {
+				util.Debug(" Cannot check family member", err)
+				Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+				return
+			}
+			//是发布者所在家庭成员，可以编辑
+			ok = true
+
+		} else {
+			//检查是否是品味发布者所在团队成员
+			team := data.Team{Id: t_post.TeamId}
+			if is_member, err := team.IsMember(s_u.Id); err != nil || !is_member {
+				util.Debug(" Cannot check team member", err)
+				Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+				return
+			}
+			//是发布者所在团队成员，可以编辑
+			ok = true
+		}
+	}
+	var pD data.PostDetail
+	pD.SessUser = s_u
+	pD.IsInput = true
+	pD.PostBean, err = FetchPostBean(t_post)
+	if err != nil {
+		util.Debug(" Cannot fetch post bean", t_post.Id, err)
+		Report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+		return
+	}
+	quote_thread, err := t_post.Thread()
+	if err != nil {
+		util.Debug(" Cannot get thread given post", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
+		return
+	}
+	pD.QuoteThreadBean, err = FetchThreadBean(quote_thread, r)
+	if err != nil {
+		util.Debug(" Cannot get thread given post", err)
+		Report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料。")
+		return
+	}
+	project, err := quote_thread.Project()
+	if err != nil {
+		util.Debug(" Cannot read project given thread", err)
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
+		return
+	}
+	pD.QuoteProjectBean, err = FetchProjectBean(project)
+	if err != nil {
+		util.Debug(" Cannot read project bean given project", project.Id, err)
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
+		return
+	}
+	objective, err := project.Objective()
+	if err != nil {
+		util.Debug(" Cannot read objective given project", err)
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
+		return
+	}
+	pD.QuoteObjectiveBean, err = FetchObjectiveBean(objective)
+	if err != nil {
+		util.Debug(" Cannot read objective given project", project.Id, err)
+		Report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
+		return
+	}
+	if ok {
+		//显示编辑页面
+		RenderHTML(w, &pD, "layout", "navbar.private", "post.supplement", "component_avatar_name_gender")
+	} else {
+		//提示陛下无权编辑
+		Report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说陛下您没有权限加水呢。")
+		return
 	}
 
 }

@@ -16,8 +16,8 @@
 
 </ol>
 
-<div class="media" style="margin-top: 20px;">
 
+<div class="media" style="margin-top: 20px;">
   <div class="media-left">
     {{ template "component_avatar_name_gender" .ThreadBean.Author }}
   </div>
@@ -91,8 +91,14 @@
 
         {{ else }}
         <blockquote>
-          <p style="font-size: small;"><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}"><span
-                class="label label-default">茶台</span></a>{{ .QuoteProjectBean.Project.Body }} ...</p>
+          <p style="font-size: small;">
+            <a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">
+              <span class="label label-default">茶台</span>
+            </a>
+            <span style="margin-inline-start: 2rem;">
+              {{ .QuoteProjectBean.Project.Body }} ...
+            </span>
+          </p>
           <footer style="font-size: small;">
 
             <cite title="Source Title"> <a
@@ -113,14 +119,30 @@
         {{ end }}
       </div>
 
-      <div class="panel-footer">
-        <span style="margin-inline-end: 2rem;">个人 4</span>
-        <span style="margin-inline-end: 2rem;">团队 1</span>
-        <span style="margin-inline-end: 2rem;">家庭 3</span>
-      </div>
+     
     </div>
   </div>
 </div>
+
+{{ if .IsInput }}{{/* 检查是否显示补充输入框 */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    加水-补充完善内容，总字数要求少于456字。
+  </div>
+  <div class="panel-body">
+    <form role="form" action="/v1/thread/supplement" method="post">
+      <div class="form-group">
+        <textarea class="form-control" name="additional" id="additional" rows="4" minlength="17" maxlength="567"
+          required></textarea>
+      </div>
+      <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}">
+      <div class="form-group  col-xs-offset-5">
+        <button class="btn btn-warning" type="submit">提交</button>
+      </div>
+    </form>
+  </div>
+</div>
+{{ end }}{{/* 检查是否显示补充输入框--完成 */}}
 
 
 {{/* 展示全部管理员品味 */}}
@@ -144,24 +166,6 @@
 <hr />
 
 
-{{ if .IsVerifier }}{{/* 检查是否见证者，如果是，显示补充输入框 */}}
-<div class="panel panel-default">
-  <div class="panel-heading">
-    加水-补充完善内容，总字数要求少于456字。
-  </div>
-  <div class="panel-body">
-    <form role="form" action="/v1/thread/supplement" method="post">
-      <div class="form-group">
-        <textarea class="form-control" name="additional" id="additional" rows="4" minlength="17" maxlength="567"
-          required></textarea>
-      </div>
-      <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}">
-      <div class="form-group  col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        <button class="btn btn-warning pull-right" type="submit">提交</button
-      </div>
-    </form>
-    </div>
-</div>
-{{ end }}{{/* 检查是否见证者--完成 */}}
+
 
 {{ end }}

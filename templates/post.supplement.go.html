@@ -1,0 +1,123 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+   <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
+    </a>@茶话会
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
+  </li>
+  <li>#{{ .QuoteThreadBean.Thread.Id }} @茶议</li>
+  <li>#{{ .PostBean.Post.Id }} @品味</li>
+  <li class="active">完善品味</li>
+ 
+
+</ol>
+
+
+{{/* 这是某个 品味 的详情页 */}}
+<div class="media">
+  <div class="media-left">
+    {{ template "component_avatar_name_gender" .PostBean.Author }}
+  </div>
+  <div class="media-body">
+
+    <div class="panel panel-default">
+
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+
+            <span style="font-size: smaller;">
+              (<a href="/v1/family/detail?id={{ .PostBean.AuthorFamily.Uuid }}">{{ .PostBean.AuthorFamily.Name }}</a>,
+              <a href="/v1/team/detail?id={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>)
+            </span>
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+              <i class="bi-cup-hot" style="font-size: 2rem; color:gray;"></i>
+              <span class="label label-default">{{ .PostBean.Attitude }}
+              </span>
+            </span>
+          </div>
+
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: right;">
+              {{ .PostBean.CreatedAtDate }}
+            </span>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+
+        <p style="white-space: pre-wrap;">
+          {{ .PostBean.Post.Body }}
+        </p>
+
+        <div class="panel panel-default">
+          <div class="panel-body" style="font-size: xx-small;">
+            <a href="/v1/thread/detail?uuid={{ .QuoteThreadBean.Thread.Uuid }}">
+              <span class="label label-default" style="margin-inline-end: 20px;" aria-hidden="true">茶议</span></a>
+            <a href="/v1/user/biography?id={{ .QuoteThreadBean.Author.Uuid }}">{{ .QuoteThreadBean.Author.Name }}</a>
+            <span style="margin-inline-end: 20px;">
+              （<a
+                href="/v1/family/detail?id={{ .QuoteThreadBean.AuthorFamily.Uuid }}">{{ .QuoteThreadBean.AuthorFamily.Name }}</a>,
+              <a
+                href="/v1/team/detail?id={{ .QuoteThreadBean.AuthorTeam.Uuid }}">{{ .QuoteThreadBean.AuthorTeam.Abbreviation }}</a>）
+
+            </span>
+            <span style="font-style: italic;">
+              {{ .QuoteThreadBean.Thread.TypeString }}
+              : {{ .QuoteThreadBean.Thread.Title }}
+              {{ .QuoteThreadBean.Thread.Body }} ...
+            </span>
+          </div>
+        </div>
+
+      </div>
+      <div class="panel-footer">
+        <i class="bi bi-cup" style="color:gray;"></i>
+        <span style="font-size: smaller;"></span> {{ .PostBean.ThreadCount }}
+        {{/* 评论数 */}}
+
+        {{ if .PostBean.Post.IsEdited }}
+
+        <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
+        <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .PostBean.Post.EditAtDate }} </span>
+        {{ else }}
+        {{/* 没有编辑过（补充内容）则留空白 */}}
+        {{ end }}
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ if .IsInput }}{{/* 检查是否显示补充输入框 */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    加水-补充完善内容，总字数要求少于456字。
+  </div>
+  <div class="panel-body">
+    <form role="form" action="/v1/post/supplement" method="post">
+      <div class="form-group">
+        <textarea class="form-control" name="additional" id="additional" rows="3" minlength="17" maxlength="567"
+          required></textarea>
+      </div>
+
+      <input type="hidden" name="uuid" value="{{ .PostBean.Post.Uuid }}">
+      
+      <div class="form-group  col-xs-offset-5">
+        <button class="btn btn-default" type="submit">提交</button>
+      </div>
+    </form>
+  </div>
+</div>
+{{ end }}{{/* 检查是否显示补充输入框--完成 */}}
+
+
+{{ end }}

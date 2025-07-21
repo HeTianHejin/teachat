@@ -1,12 +1,15 @@
 package data
 
 import (
+	"context"
+	"database/sql"
+	"fmt"
 	"time"
 )
 
-// teaVote 对茶议主张的表态，回复，立场
-// 喜欢或者讨厌？认同或者反感？支持或者反对？
-// 回复需要风控人吗？慎独原则适用于表态吗？
+// teaVote 对茶议主张的表态，回复，立场。肯定或者否定？认同或者反感？支持或者反对？
+// 一个茶友对一个茶议仅能表态一次一个立场，
+// 如果有更多表达需要，可以通过“内涵”内构功能（自己对自己发起新议程）循环立议再表决表达形式
 type Post struct {
 	Id        int
 	Uuid      string
@@ -26,8 +29,9 @@ type Post struct {
 	//2 Post by spaceship crew 飞船机组团队发布，
 	Class int
 
-	//仅页面渲染用
-	PageData PublicPData
+	//不固化保存（不存入数据库）。
+	//根据访客身份动态检测决定，仅返回页面渲染用
+	ActiveData PublicPData
 }
 
 const (
@@ -96,14 +100,14 @@ func (post *Post) EditAtDate() string {
 
 // update a post
 // 用户补充（追加）其表态内容
-func (post *Post) UpdateBody(body string) (err error) {
+func (post *Post) UpdateBody() (err error) {
 	statement := "UPDATE posts SET body = $2, edit_at = $3 WHERE id = $1"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(post.Id, body, time.Now())
+	_, err = stmt.Exec(post.Id, post.Body, time.Now())
 	return
 }
 
@@ -219,4 +223,34 @@ func (post *DraftPost) UpdateClass(class int) (err error) {
 	defer stmt.Close()
 	_, err = stmt.Exec(post.Id, class)
 	return
+}
+
+// HasUserPostedInThread 检查用户是否在指定话题下发表过回复
+// 结构体必备参数: userID - 用户ID, threadID - 话题ID
+// 返回值: bool - 是否发表过, error - 错误信息
+func (p *Post) HasUserPostedInThread(ctx context.Context) (bool, error) {
+	// 5秒查询超时则取消
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+	query := `
+        SELECT EXISTS(
+            SELECT 1 
+            FROM posts 
+            WHERE thread_id = $1 
+            AND user_id = $2
+            LIMIT 1
+        )`
+
+	var exists bool
+	err := Db.QueryRowContext(ctx, query, p.ThreadId, p.UserId).Scan(&exists)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// 没有记录属于正常情况，返回false
+			return false, nil
+		}
+		return false, fmt.Errorf("查询用户回复记录失败: %w", err)
+	}
+
+	return exists, nil
 }

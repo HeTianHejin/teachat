@@ -137,16 +137,15 @@ func main() {
 	mux.HandleFunc("/v1/thread/detail", route.ThreadDetail)
 	mux.HandleFunc("/v1/thread/supplement", route.HandleThreadSupplement)
 	mux.HandleFunc("/v1/thread/approve", route.ThreadApprove)
-	//mux.HandleFunc("/v1/thread/plus", route.PlusThread)
+
+	//定义在 route_post.go
+	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
+	mux.HandleFunc("/v1/post/supplement", route.HandleSupplementPost)
+	mux.HandleFunc("/v1/post/detail", route.PostDetail)
 
 	// defined in route_see-seek.go
 	mux.HandleFunc("/v1/see-seek/new", route.HandleNewSeeSeek)
 	//mux.HandleFunc("/v1/see-seek/detail", route.SeeSeekDetail)
-
-	//定义在 route_post.go
-	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
-	mux.HandleFunc("/v1/post/edit", route.HandleEditPost)
-	mux.HandleFunc("/v1/post/detail", route.PostDetail)
 
 	//defined in route_pilot.go
 	mux.HandleFunc("/v1/pilot/new", route.NewPilot)
