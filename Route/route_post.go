@@ -448,7 +448,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 		if CnStrLen(body_addi) < int(util.Config.ThreadMinWord) {
 			Report(w, r, "你好， 粗鲁的茶博士竟然说，陛下下旨字数太少了？")
 			return
-		} else if CnStrLen(t_post.Body)+CnStrLen(body_addi) < int(util.Config.ThreadMaxWord) {
+		} else if CnStrLen(t_post.Body)+CnStrLen(body_addi) > int(util.Config.ThreadMaxWord) {
 			//提示陛下总字数或者本次提交补充内容超出字数限制
 			Report(w, r, "你好， 粗鲁的茶博士竟然说字数满了，纸条写不下您的品味。")
 			return

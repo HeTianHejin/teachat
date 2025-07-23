@@ -9,7 +9,7 @@
     "TemplateExt":".go.html",
     "ThreadMinWord": 2,
     "ThreadMaxWord": 456,
-    "PostMinWord": 17,
+    "PostMinWord": 7,
     "MaxInviteUsers": 12,
     "MaxInviteTeams": 12,
     "MaxTeamMembers": 12,

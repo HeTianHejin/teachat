@@ -142,6 +142,7 @@ func main() {
 	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
 	mux.HandleFunc("/v1/post/supplement", route.HandleSupplementPost)
 	mux.HandleFunc("/v1/post/detail", route.PostDetail)
+	//mux.HandleFunc("/v1/post/depth", route.PostDepth)
 
 	// defined in route_see-seek.go
 	mux.HandleFunc("/v1/see-seek/new", route.HandleNewSeeSeek)

@@ -22,8 +22,9 @@ type User struct {
 	Gender    int // 0: "女",1: "男",
 	Avatar    string
 	UpdatedAt *time.Time
+
 	//Footprint 浏览页面足迹，不保存到数据库，
-	//用于临时记录点击‘登录’按钮时页面，以便登船成功后返回同一页面，提升用户体验
+	//用于临时记录点击‘登录’按钮时页面，以便登船成功后返回同一页面，
 	Footprint string
 	Query     string //查询参数
 }
@@ -31,6 +32,7 @@ type User struct {
 const (
 	UserId_None             = 0
 	UserId_SpaceshipCaptain = 1
+	UserId_Verifier         = 67 // 见证团队代表人id
 )
 const sessionDuration = 7 * 24 * time.Hour
 
@@ -741,4 +743,32 @@ func (user *User) InvitationRejectedCount() (count int) {
 	}
 	rows.Close()
 	return
+}
+
+// isUserInAnyTeam() 检查用户是否在特定一团队中
+func isUserInAnyTeam(user_id int, team_ids []int) (bool, error) {
+	for _, team_id := range team_ids {
+		members, err := GetAllMemberUserIdsByTeamId(team_id)
+		if err != nil {
+			return false, fmt.Errorf("获取团队 #%d 全部成员失败: %v", team_id, err)
+		}
+		if contains(members, user_id) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// isUserInAnyFamily() 检查用户是否在特定一家庭中
+func isUserInAnyFamily(user_id int, family_ids []int) (bool, error) {
+	for _, family_id := range family_ids {
+		members, err := GetAllMembersUserIdsByFamilyId(family_id)
+		if err != nil {
+			return false, fmt.Errorf("获取家庭%d成员失败: %v", family_id, err)
+		}
+		if contains(members, user_id) {
+			return true, nil
+		}
+	}
+	return false, nil
 }

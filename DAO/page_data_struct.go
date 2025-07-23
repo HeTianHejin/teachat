@@ -69,7 +69,7 @@ type ObjectiveDetail struct {
 	ProjectBeanSlice []ProjectBean // objective下所有projects
 }
 
-// 茶话会页面（集锦）页面渲染所需数据
+// 茶话会页面（集合）页面渲染所需数据
 type ObjectiveSquare struct {
 	SessUser           User            // 当前会话用户
 	ObjectiveBeanSlice []ObjectiveBean // 广场上所有茶话会
@@ -163,8 +163,8 @@ type ThreadDetail struct {
 	SessUserDefaultPlace     Place
 	SessUserBindPlaces       []Place
 	IsGuest                  bool // 是否为游客
-	IsAdmin                  bool // 是否为茶围（服务发起/需求）管理成员
-	IsMaster                 bool // 是否为茶台（服务提供/响应）管理成员
+	IsAdmin                  bool // 是否为茶围管理员
+	IsMaster                 bool // 是否为茶台管理员
 	IsVerifier               bool // 是否为见证员
 	IsInput                  bool // 是否需要显示新茶议输入面板
 	IsPostExist              bool // 是否已经回复过了
@@ -184,7 +184,7 @@ type ThreadDetail struct {
 
 	PostBeanSlice []PostBean // 普通跟贴豆荚队列
 
-	PostBeanAdminSlice []PostBean //茶围管理团队签署回复切片
+	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
 	StatsSet StatsSet //涉及人事统计值集合
 }

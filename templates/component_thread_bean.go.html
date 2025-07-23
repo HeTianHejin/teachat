@@ -1,4 +1,4 @@
-{{/* 通用茶议展示组件 */}}
+{{/* 通用简要茶议展示组件 */}}
 {{ define "component_thread_bean" }}
 
 <div class="media">
@@ -29,14 +29,13 @@
       <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已采纳"></i>
       {{ end }}
 
-      <span style="margin-inline-start: 1rem;margin-inline-end: 1rem;">
-
+      <h4>
         <a href="/v1/thread/detail?uuid={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
+      </h4>
 
         {{ if .IsCompleted }}
         <span class="label label-success">已完成</span>
         {{ end }}
-      </span>
     </p>
 
     <p>{{ .Thread.Body }} ...</p>

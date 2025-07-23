@@ -8,7 +8,7 @@ import (
 
 // 茶台 teaTable，寓意为某个愿景下的分类项目，具体事件，活动节点，关卡。
 // 规则1：如果class=1, 是普通的开放式茶台，任意用户可以入座品茶聆听，而且可以提出新茶议（主张/议题），属于全员可参与的自由开放式圆桌茶话会。游客可以查看主题和品味跟帖，但是不能品味（跟帖）。
-// 规则2：如果class=2，是封闭式茶台，则需要检查访问用户是否台主（创建人）指定团体成员，非成员只能旁观但是不能参与品茶活动（不可以提议新主张/跟帖/表态）。
+// 规则2：如果class=2，是封闭式茶台，则需要检查访问用户是否台主（创建茶团）指定团体成员，非成员只能旁观但是不能参与品茶活动（不可以提议新主张/跟帖/表态）。
 // 类似于某个公开但不是人人均可投票的议程，如奥运会高台跳水比赛，仅有评委成员可以评议，而观众只能观看不能表决；
 // 又或者某个歌唱比赛，评委成员可以表态（票决），听众仅能旁听；又或者是某些服务评价案件，仅同行专业人士可以评议，其他人围观。
 type Project struct {
@@ -367,34 +367,6 @@ func (proj *Project) IsInvitedMember(user_id int) (bool, error) {
 		return isUserInAnyTeam(user_id, team_ids)
 	}
 	return isUserInAnyFamily(user_id, team_ids)
-}
-
-// isUserInAnyTeam 检查用户是否在任一团队中
-func isUserInAnyTeam(user_id int, team_ids []int) (bool, error) {
-	for _, team_id := range team_ids {
-		members, err := GetAllMemberUserIdsByTeamId(team_id)
-		if err != nil {
-			return false, fmt.Errorf("获取团队 #%d 全部成员失败: %v", team_id, err)
-		}
-		if contains(members, user_id) {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-// isUserInAnyFamily 检查用户是否在任一家庭中
-func isUserInAnyFamily(user_id int, family_ids []int) (bool, error) {
-	for _, family_id := range family_ids {
-		members, err := GetAllMembersUserIdsByFamilyId(family_id)
-		if err != nil {
-			return false, fmt.Errorf("获取家庭%d成员失败: %v", family_id, err)
-		}
-		if contains(members, user_id) {
-			return true, nil
-		}
-	}
-	return false, nil
 }
 
 // SearchProjectByTitle(keyword) 根据关键字搜索茶台,返回 []Project, error, 限制返回limit数量

@@ -8,15 +8,14 @@
       href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
     </a>@茶话会
   </li>
-  <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
+  <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }}
+    </a>@茶台
   </li>
   <li>#{{ .ThreadBean.Thread.Id }}</li> @茶议
   <li>
     {{ template "component_sess_capacity" . }}
   </li>
 </ol>
-
-
 
 {{/* 左右侧立场的人数比较 */}}
 <div style="text-align: center;">
@@ -87,13 +86,13 @@
         </span>
 
         {{ if and .IsVerifier (ge .ThreadBean.Thread.Category 2) }}
-        {{/* 见证者且分类≥2时显示完善按钮 */}}
+        {{/* 见证者 且分类≥2时 显示完善按钮 */}}
         <div class="text-center">
           <a class="btn btn-warning" href="/v1/thread/supplement?uuid={{ .ThreadBean.Thread.Uuid }}"
             role="button">完善</a>
         </div>
         {{ else if and (lt .ThreadBean.Thread.Category 2) .ThreadBean.Thread.Type (not .ThreadBean.IsApproved) .IsAdmin }}
-        {{/* 分类<2 + 出主意类型 + 未被采纳 + 管理员时显示采纳按钮 */}}
+        {{/* 分类小于2 + 出主意类型 + 未被采纳 + 管理员时显示采纳按钮 */}}
         <div class="action-right">
           <form class="approve-form" action="/v1/thread/approve" method="post">
             <input type="hidden" name="id" value="{{ .ThreadBean.Thread.Uuid }}" />
@@ -133,11 +132,11 @@
           <p style="font-size: xx-small;">
             <a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">
               <span class="label label-default">茶台</span>
-              </a>
-              <span style="margin-inline-start: 1rem;">
-                {{ .QuoteProjectBean.Project.Body }} ...
-              </span>
-            </p>
+            </a>
+            <span style="margin-inline-start: 1rem;">
+              {{ .QuoteProjectBean.Project.Body }} ...
+            </span>
+          </p>
           <footer style="font-size: xx-small;">
             <cite title="Source Title"> <a
                 href="/v1/user/biography?id={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
@@ -158,13 +157,13 @@
       </div>
 
       <div class="panel-footer">
-        
+
         <span style="margin-inline-end: 2rem;">
           <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="家庭数量"></i>
           {{ .ThreadBean.StatsSet.FamilyCount }}</span>
         <span style="margin-inline-end: 2rem;">
           <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="团队数量"></i>
-           {{ .ThreadBean.StatsSet.TeamCount }}</span>
+          {{ .ThreadBean.StatsSet.TeamCount }}</span>
         <span style="margin-inline-end: 2rem;">
           <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="出席人数"></i>
           {{ .ThreadBean.StatsSet.PersonCount }}</span>
@@ -174,33 +173,89 @@
 
 </div>
 
-
-
 {{/* 决定是否显示品味编辑区 */}}
 {{ if .IsInput }}
 
-{{/* 这是品味编辑区-撰写模版 开始 */}}
+{{ if .IsVerifier or .IsAdmin or IsMaster }}
+{{/* 这是 见证人或者管理员或者业主 品味编辑区-撰写模版 开始 */}}
 <div class="panel panel-default">
 
   <div class="panel-body">
-    <form class="form-horizontal" role="form" action="/v1/post/draft" method="post">
+    <form class="form-horizontal" role="form" action="/v1/post/draft" method="post" onsubmit="return validateForm()">
 
       <div class="form-group">
+
+        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+          <i class="bi bi-cup-hot"></i>
+        </div>
+
+        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+          <input type="radio" name="attitude" id="support" style="width: fit-content;" value="true" required />
+          <label for="support">颔首</label>
+        </div>
+
+        <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+          <input type="radio" name="attitude" id="oppose" value="false" style="width: fit-content;" required />
+          <label for="oppose">摇头</label>
+        </div>
+
+      </div>
+
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <textarea class="form-control" name="body" id="body" rows="3" minlength="17" maxlength="567"
+            placeholder="请您品味（17~456字）" required></textarea>
+        </div>
+      </div>
+
+      <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
+
       
-          <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-            <i class="bi bi-cup-hot"></i>
+      <button type="button" class="btn btn-default" onclick="toggleHandicraftIdsInput(true)">添加作业编号</button>
+      
+
+       <div class="form-group" id="handicraftGroup" style="display:none;">
+            <label for="handicraft_ids">茶艺作业编号，以逗号分隔</label>
+            <input type="text" class="form-control" name="handicraft_ids" id="handicraft_ids" maxlength="456"
+              placeholder="例如: 12,345,6780" />
           </div>
 
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <input type="radio" name="attitude" id="support" style="width: fit-content;" value="true" required />
-            <label for="support">颔首</label>
-          </div>
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        </div>
+      </div>
 
-          <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-            <input type="radio" name="attitude" id="oppose" value="false" style="width: fit-content;" required />
-            <label for="oppose">摇头</label>
-          </div>
-     
+      <div class="col-xs-offset-5 col-xs-2 col-sm-2">
+        <button type="submit" class="btn btn-default">提交</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+{{ else }}
+{{/* 这是普通茶友品味编辑区-撰写模版 开始 */}}
+<div class="panel panel-default">
+
+  <div class="panel-body">
+    <form class="form-horizontal" role="form" action="/v1/post/draft" method="post" onsubmit="return validateForm()">
+
+      <div class="form-group">
+
+        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+          <i class="bi bi-cup-hot"></i>
+        </div>
+
+        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+          <input type="radio" name="attitude" id="support" style="width: fit-content;" value="true" required />
+          <label for="support">颔首</label>
+        </div>
+
+        <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+          <input type="radio" name="attitude" id="oppose" value="false" style="width: fit-content;" required />
+          <label for="oppose">摇头</label>
+        </div>
+
       </div>
 
       <div class="form-group">
@@ -213,16 +268,16 @@
       <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
 
       <div class="form-group">
-            <label for="team" class="col-xs-3 col-sm-3 col-md-3 col-lg-3">身份</label>
-            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-              <input type="radio" name="is_private" value="false" id="team" checked required>
-              <label for="team">团队成员</label>
-            </div>
-            <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-              <input type="radio" name="is_private" value="true" id="family" required>
-              <label for="family">家庭成员</label>
-            </div>
+        <label for="team" class="col-xs-3 col-sm-3 col-md-3 col-lg-3">身份</label>
+        <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+          <input type="radio" name="is_private" value="false" id="team" checked required>
+          <label for="team">团队成员</label>
         </div>
+        <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
+          <input type="radio" name="is_private" value="true" id="family" required>
+          <label for="family">家庭成员</label>
+        </div>
+      </div>
 
       <div class="form-group">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
@@ -250,7 +305,12 @@
         </div>
       </div>
 
-      <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
+      <div class="form-group">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+        </div>
+      </div>
+
+      <div class="col-xs-offset-5 col-xs-2 col-sm-2">
         <button type="submit" class="btn btn-default">提交</button>
       </div>
 
@@ -279,20 +339,22 @@
   茶博士：这是封闭式茶议,只有台主邀请的茶团成员，才能入座品茶呢。</p>
 {{ end }}
 {{ end }}
+{{ end }}
 <hr />
 
 {{ end }}{{/* 品味编辑区结束 */}}
 
 <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
   {{/* 这是参与的团队和家庭数量显示 */}}
-  
+
   <span style="margin-inline-start: 2rem;">
     {{/* 这是品味涉及家庭数量 显示 */}}
     <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
   </span>
   <span style="margin-inline-start: 2rem;">
     {{/* 这是品味涉及团队数量 显示 */}}
-    <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="品味团队数量"></i> {{ $.StatsSet.TeamCount }}
+    <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="品味团队数量"></i>
+    {{ $.StatsSet.TeamCount }}
   </span>
   <span style="margin-inline-start: 2rem;">
     {{/* 这是品味涉及个人数量 显示 */}}
@@ -302,11 +364,11 @@
     {{/* 这是茶议的总品味数量 显示 */}}
     <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: gray;" title="品味小计数量"></i> {{ .ThreadBean.PostCount }}
   </span>
-  
+
   <span style="margin-inline-start: 2rem;">
     {{/* 这是茶议的关注人数 数量显示 */}}
-    <i class="bi bi-eye-fill" style="font-size: 2rem; color: gray;" title="关注人数"></i>  ？
-  
+    <i class="bi bi-eye-fill" style="font-size: 2rem; color: gray;" title="关注人数"></i> ？
+
 </div>
 
 {{/* 展示全部管理员品味 */}}
@@ -347,8 +409,21 @@
 
 {{ end }}{{/* 展示全部其他用户品味完成 */}}
 
-<div class="well">
-  <a href="#">更多相关茶议 >></a>
-</div>
+
+<script>
+  function toggleHandicraftIdsInput(show) {
+    document.getElementById('handicraftGroup').style.display = show ? 'block' : 'none';
+    if (!show) document.getElementById('handicraft_ids').value = '';
+  }
+
+  function validateForm() {
+    const handicraftIds = document.getElementById('handicraft_ids').value.trim();
+    if (handicraftIds && !/^\d+(,\d+)*$/.test(handicraftIds)) {
+      alert('请输入有效的逗号分隔数字（如：12,345,6780）');
+      return false;
+    }
+    return true;
+  }
+</script>
 
 {{ end }}

@@ -47,11 +47,11 @@ func init() {
 	}
 	//测试数据库连接是否成功
 	if err = Db.Ping(); err != nil {
-		util.Fatal("ping teachat database failure - 测试链接茶话会数据库失败！", err)
+		util.Fatal("ping teachat database failure - 测试链接茶话会数据库失败", err)
 	}
 
 	//ok
-	util.PrintStdout("Open tea chat database success, 星际茶棚数据库连接成功！")
+	util.PrintStdout("Open tea chat database success, 星际茶棚数据库打开成功")
 
 }
 

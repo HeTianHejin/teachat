@@ -574,7 +574,7 @@ func (t *Thread) IsEdited() bool {
 }
 
 // 填写入围茶台约茶等5部曲
-func CreateRequiredThreads(objective *Objective, project *Project, user *User, ctx context.Context) error {
+func CreateRequiredThreads(objective *Objective, project *Project, user_id int, ctx context.Context) error {
 	// 使用传入的上下文创建超时控制
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -605,7 +605,7 @@ func CreateRequiredThreads(objective *Objective, project *Project, user *User, c
 
 	for _, template := range templates {
 		thread := Thread{
-			UserId:    user.Id,
+			UserId:    user_id,
 			Type:      ThreadTypeIdea,
 			Title:     template.Title,
 			Body:      template.Body,
@@ -620,7 +620,7 @@ func CreateRequiredThreads(objective *Objective, project *Project, user *User, c
 
 		if err := thread.CreateInTx(tx); err != nil {
 			return fmt.Errorf("创建步骤「%s」失败 (项目:%d 用户:%d): %w",
-				template.Title, project.Id, user.Id, err)
+				template.Title, project.Id, user_id, err)
 		}
 	}
 

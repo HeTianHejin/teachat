@@ -87,13 +87,13 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//记录入围的茶台
+	// 准备记录入围的茶台
 	new_project_approved := data.ProjectApproved{
 		ObjectiveId: ob.Id,
 		ProjectId:   pr.Id,
 		UserId:      s_u.Id,
 	}
-	//检查是否已经入围过了
+	// 检查是否已经入围过了
 	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
 		Report(w, r, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
 		return
@@ -105,7 +105,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 预填充约茶...5部曲
-	if err = data.CreateRequiredThreads(&ob, &pr, &s_u, r.Context()); err != nil {
+	if err = data.CreateRequiredThreads(&ob, &pr, data.UserId_Verifier, r.Context()); err != nil {
 		util.Debug(" Cannot create required threads", err)
 		Report(w, r, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 		return

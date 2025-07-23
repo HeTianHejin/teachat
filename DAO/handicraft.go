@@ -257,20 +257,6 @@ type Inauguration struct {
 	UpdatedAt      *time.Time
 }
 
-// type Tool struct {
-// 	Id             int
-// 	Uuid           string
-// 	HandicraftId   int
-// 	GoodsId        int    //好东西（商品）id，例如，砚台，砂石，水，墨，毛笔，纸，书桌等
-// 	RecorderUserId int    // 记录人id
-// 	Note           string //备注,特别说明
-// 	Category       int    //类型
-// 	Class          int    //分类
-// 	Level          int    //等级
-// 	CreatedAt      time.Time
-// 	UpdatedAt      *time.Time
-// }
-
 // 收尾，手工艺作业结束仪式，离手（场）快照。
 type Ending struct {
 	Id             int
