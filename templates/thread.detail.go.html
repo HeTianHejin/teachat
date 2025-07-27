@@ -6,7 +6,7 @@
   <li><a href="/v1/">大堂</a></li>
   <li><a
       href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
-    </a>@茶话会
+    </a>@茶围
   </li>
   <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }}
     </a>@茶台
@@ -173,30 +173,29 @@
 
 </div>
 
-{{/* 决定是否显示品味编辑区 */}}
-{{ if .IsInput }}
+{{ if .IsInput }}{{/* 11 决定是否显示品味编辑区 开始 */}}
 
-{{ if .IsVerifier or .IsAdmin or IsMaster }}
-{{/* 这是 见证人或者管理员或者业主 品味编辑区-撰写模版 开始 */}}
+{{ if .IsVerifier }}{{/* 21 这是 见证人或者管理员或者业主 品味编辑区-撰写模版 开始 */}}
 <div class="panel panel-default">
 
   <div class="panel-body">
-    <form class="form-horizontal" role="form" action="/v1/post/draft" method="post" onsubmit="return validateForm()">
+    <form class="form-horizontal" role="form" action="/v1/post/verifie" method="post" onsubmit="return validateForm()">
 
       <div class="form-group">
-
         <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
           <i class="bi bi-cup-hot"></i>
         </div>
 
         <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-          <input type="radio" name="attitude" id="support" style="width: fit-content;" value="true" required />
-          <label for="support">颔首</label>
+          <input type="radio" name="work_type" id="see-seek" value="see-seek" style="width: fit-content;"
+            onclick="toggleInputs('see-seek')" required />
+          <label for="see-seek">看看</label>
         </div>
 
         <div class="col-xs-5 col-sm-5 col-md-5 col-lg-5">
-          <input type="radio" name="attitude" id="oppose" value="false" style="width: fit-content;" required />
-          <label for="oppose">摇头</label>
+          <input type="radio" name="work_type" id="handicraft" value="handicraft" style="width: fit-content;"
+            onclick="toggleInputs('handicraft')" required />
+          <label for="handicraft">手艺</label>
         </div>
 
       </div>
@@ -208,22 +207,23 @@
         </div>
       </div>
 
-      <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
-
-      
-      <button type="button" class="btn btn-default" onclick="toggleHandicraftIdsInput(true)">添加作业编号</button>
-      
-
-       <div class="form-group" id="handicraftGroup" style="display:none;">
-            <label for="handicraft_ids">茶艺作业编号，以逗号分隔</label>
-            <input type="text" class="form-control" name="handicraft_ids" id="handicraft_ids" maxlength="456"
-              placeholder="例如: 12,345,6780" />
-          </div>
-
-      <div class="form-group">
+      <div class="form-group" id="see-seekGroup" style="display:none;">
         <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="see-seek_ids">“看看”茶艺编号，以逗号分隔</label>
+          <input type="text" class="form-control" name="see-seek_ids" id="see-seek_ids" maxlength="456"
+            placeholder="例如: 12,345,6780" />
         </div>
       </div>
+
+      <div class="form-group" id="handicraftGroup" style="display:none;">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <label for="handicraft_ids">“手艺”茶艺编号，以逗号分隔</label>
+          <input type="text" class="form-control" name="handicraft_ids" id="handicraft_ids" maxlength="456"
+            placeholder="例如: 12,345,6780" />
+        </div>
+      </div>
+
+      <input type="hidden" name="uuid" value="{{ .ThreadBean.Thread.Uuid }}" />
 
       <div class="col-xs-offset-5 col-xs-2 col-sm-2">
         <button type="submit" class="btn btn-default">提交</button>
@@ -233,8 +233,9 @@
   </div>
 </div>
 
-{{ else }}
-{{/* 这是普通茶友品味编辑区-撰写模版 开始 */}}
+{{/* 这是见证人或者管理员或者业主 品味编辑区-撰写模版 完成 */}}
+
+{{ else }} {{/* 22 这是普通茶友，品味编辑区-撰写模版 开始 */}}
 <div class="panel panel-default">
 
   <div class="panel-body">
@@ -319,111 +320,150 @@
   </div>
 
 </div>
+{{ end }} {{/* 23 区分见证人或者普通用户，品味编辑区-撰写模版 结束 */}}
 
-{{ else }}
+{{ else }} {{/* 12 不显示品味编辑区  开始 */}}
 
 {{ if .IsGuest }}
+{{/* 31 是游客 */}}
 <hr />
-{{/* 不是游客 */}}
 <p class="text text-center">
   <a href="/v1/login?footprint={{ .SessUser.Footprint }}&query={{ .SessUser.Query }}">
     <i class="bi-airplane" style="font-size: 2rem; color: black;"></i>
     登船</a> 以开始聊天品茶 </p>
-{{ else }}
+
+{{ else }}{{/* 32 不是游客 */}}
 <hr />
-{{ if .IsPostExist }}{{/* 是否已经表态过了 */}}
+{{ if .IsPostExist }}{{/* 41 是否已经表态过了 */}}
 <p class=" text-center"> <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
   茶博士：你的品味已经发布。</p>
-{{ else }}
-<p class=" text-center"> <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-  茶博士：这是封闭式茶议,只有台主邀请的茶团成员，才能入座品茶呢。</p>
-{{ end }}
-{{ end }}
-{{ end }}
-<hr />
+{{ else }} {{/* 42 没有表态过 */}}
+<form class="form-horizontal" role="form" action="/v1/post/draft" method="post" onsubmit="return validateForm()">
+  <p class=" text-center"> <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+    茶博士：这是封闭式茶议,只有台主邀请的茶团成员，才能入座品茶呢。</p>
+  {{ end }} {{/* 33 检查是否游客 结束 */}}
 
-{{ end }}{{/* 品味编辑区结束 */}}
+  {{ end }} {{/* 43 检查是否表态过 结束 */}}
 
-<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
-  {{/* 这是参与的团队和家庭数量显示 */}}
+  <hr />
 
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是品味涉及家庭数量 显示 */}}
-    <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
-  </span>
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是品味涉及团队数量 显示 */}}
-    <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="品味团队数量"></i>
-    {{ $.StatsSet.TeamCount }}
-  </span>
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是品味涉及个人数量 显示 */}}
-    <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="品味团队数量"></i> ？
-  </span>
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是茶议的总品味数量 显示 */}}
-    <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: gray;" title="品味小计数量"></i> {{ .ThreadBean.PostCount }}
-  </span>
+  {{ end }}{{/* 13 决定是否显示品味编辑区 结束 */}}
 
-  <span style="margin-inline-start: 2rem;">
-    {{/* 这是茶议的关注人数 数量显示 */}}
-    <i class="bi bi-eye-fill" style="font-size: 2rem; color: gray;" title="关注人数"></i> ？
+  <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
+    {{/* 这是参与的团队和家庭数量显示 */}}
 
-</div>
+    <span style="margin-inline-start: 2rem;">
+      {{/* 这是品味涉及家庭数量 显示 */}}
+      <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
+    </span>
+    <span style="margin-inline-start: 2rem;">
+      {{/* 这是品味涉及团队数量 显示 */}}
+      <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="品味团队数量"></i>
+      {{ $.StatsSet.TeamCount }}
+    </span>
+    <span style="margin-inline-start: 2rem;">
+      {{/* 这是品味涉及个人数量 显示 */}}
+      <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="品味团队数量"></i> ？
+    </span>
+    <span style="margin-inline-start: 2rem;">
+      {{/* 这是茶议的总品味数量 显示 */}}
+      <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: gray;" title="品味小计数量"></i>
+      {{ .ThreadBean.PostCount }}
+    </span>
 
-{{/* 展示全部管理员品味 */}}
-{{ range .PostBeanAdminSlice }}
+    <span style="margin-inline-start: 2rem;">
+      {{/* 这是茶议的关注人数 数量显示 */}}
+      <i class="bi bi-eye-fill" style="font-size: 2rem; color: gray;" title="关注人数"></i> ？
 
-{{/* 检查茶围管理员品味的立场以决定左右侧布局 */}}
-{{ if .Post.Attitude }}
-{{/* 品味是“颔首”表态，左侧头像布局 */}}
+  </div>
 
-{{ template "component_post_left" . }}
+  {{/* 展示全部管理员品味 */}}
+  {{ range .PostBeanAdminSlice }}
 
-{{ else }}
+  {{/* 检查茶围管理员品味的立场以决定左右侧布局 */}}
+  {{ if .Post.Attitude }}
+  {{/* 品味是“颔首”表态，左侧头像布局 */}}
 
-{{/* 品味是“摇头”表态，右侧头像布局 */}}
-{{template "component_post_right" . }}
+  {{ template "component_post_left" . }}
 
-{{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
+  {{ else }}
 
-{{ end }}{{/* 展示全部管理员品味完成 */}}
+  {{/* 品味是“摇头”表态，右侧头像布局 */}}
+  {{template "component_post_right" . }}
 
-<hr />
+  {{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
 
-{{/* 展示其他用户的品味 */}}
-{{ range .PostBeanSlice }}
+  {{ end }}{{/* 展示全部管理员品味完成 */}}
 
-{{/* 检查品味的立场以决定左右侧布局 */}}
-{{ if .Post.Attitude }}
+  <hr />
 
-{{/* 品味是“颔首”表态，左侧头像布局 */}}
-{{ template "component_post_left" . }}
+  {{/* 展示其他用户的品味 */}}
+  {{ range .PostBeanSlice }}
 
-{{ else }}
+  {{/* 检查品味的立场以决定左右侧布局 */}}
+  {{ if .Post.Attitude }}
 
-{{/* 品味是“摇头”表态，右侧头像布局 */}}
-{{template "component_post_right" . }}
+  {{/* 品味是“颔首”表态，左侧头像布局 */}}
+  {{ template "component_post_left" . }}
 
-{{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
+  {{ else }}
 
-{{ end }}{{/* 展示全部其他用户品味完成 */}}
+  {{/* 品味是“摇头”表态，右侧头像布局 */}}
+  {{template "component_post_right" . }}
 
+  {{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
 
-<script>
-  function toggleHandicraftIdsInput(show) {
-    document.getElementById('handicraftGroup').style.display = show ? 'block' : 'none';
-    if (!show) document.getElementById('handicraft_ids').value = '';
-  }
+  {{ end }}{{/* 展示全部其他用户品味完成 */}}
 
-  function validateForm() {
-    const handicraftIds = document.getElementById('handicraft_ids').value.trim();
-    if (handicraftIds && !/^\d+(,\d+)*$/.test(handicraftIds)) {
-      alert('请输入有效的逗号分隔数字（如：12,345,6780）');
-      return false;
+  <script>
+    // 统一管理输入框显示状态
+    function toggleInputs(selectedType) {
+      const types = ['see-seek', 'handicraft'];
+      types.forEach(type => {
+        const group = document.getElementById(`${type}Group`);
+        const input = document.getElementById(`${type}_ids`);
+        if (type === selectedType) {
+          group.style.display = 'block';
+        } else {
+          group.style.display = 'none';
+          input.value = ''; // 清除非活动输入框
+        }
+      });
     }
-    return true;
-  }
-</script>
+    // 完善表单验证
+    function validateForm() {
+      // 1. 检查是否选择了类型
+      const selectedType = document.querySelector('input[name="work_type"]:checked');
+      if (!selectedType) {
+        alert('请选择类型（看看或手艺）');
+        return false;
+      }
+      // 2. 验证对应输入框
+      const type = selectedType.value;
+      const inputId = `${type}_ids`;
+      const idsInput = document.getElementById(inputId);
+      const idsValue = idsInput.value.trim();
+      if (idsValue) {
+        const isValid = /^\d+(,\d+)*$/.test(idsValue);
+        // 添加额外检查：单个数字最大值
+        const maxId = 999999;
+        const invalidIds = idsValue.split(',').filter(id =>
+          id > maxId || id < 1
+        );
+        if (!isValid || invalidIds.length > 0) {
+          alert(`请输入有效的逗号分隔数字（1-${maxId}）`);
+          return false;
+        }
+      } else {
+        alert(`请输入${type==='see-seek'?'看看':'手艺'}茶艺编号`);
+        return false;
+      }
+      return true;
+    }
+    // 初始化隐藏所有输入框
+    window.addEventListener('DOMContentLoaded', () => {
+      toggleInputs(null);
+    });
+  </script>
 
-{{ end }}
+  {{ end }}

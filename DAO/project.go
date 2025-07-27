@@ -36,6 +36,7 @@ type Project struct {
 	// 31: 已婉拒开放式茶台 (Rejected open table)
 	// 32: 已婉拒封闭式茶台 (Rejected close table)
 	Class int
+
 	// 仅用于页面渲染，不保存到数据库
 	ActiveData PublicPData
 }
@@ -115,7 +116,7 @@ type ProjectInvitedTeam struct {
 	CreatedAt time.Time
 }
 
-// 茶台（事件）地方
+// 茶台（事件/项目）发生地方
 type ProjectPlace struct {
 	Id        int
 	ProjectId int
@@ -137,7 +138,7 @@ func (projectPlace *ProjectPlace) Create() (err error) {
 
 // project_place.GetByProjectId()
 func (projectPlace *ProjectPlace) GetByProjectId() (err error) {
-	err = Db.QueryRow("SELECT id, project_id, place_id, created_at FROM project_place WHERE project_id = $1", projectPlace.ProjectId).Scan(&projectPlace.Id, &projectPlace.ProjectId, &projectPlace.PlaceId, &projectPlace.CreatedAt)
+	err = Db.QueryRow("SELECT id, project_id, place_id, created_at FROM project_place WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1", projectPlace.ProjectId).Scan(&projectPlace.Id, &projectPlace.ProjectId, &projectPlace.PlaceId, &projectPlace.CreatedAt)
 	return
 }
 
