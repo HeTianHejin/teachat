@@ -596,11 +596,11 @@ func CreateRequiredThreads(objective *Objective, project *Project, user_id int, 
 	}
 
 	templates := []threadTemplate{
-		{"约茶", "请在此处记录具体的茶会时间和出席人员", ThreadCategoryAppointment},
-		{"看看", "请记录作业过程，目标对象检查情况，一项目一茶议", ThreadCategorySeeSeek},
-		{"建议", "根据「看看」的结果，提出对应处置建议，一项目一茶议。", ThreadCategorySuggestion},
-		{"宝贝", "请逐一列出需要准备的物资", ThreadCategoryGoods},
-		{"手艺", "记录手艺执行过程", ThreadCategoryHandcraft},
+		{"约茶", "在此记录具体的茶会时间、地址和出席人员", ThreadCategoryAppointment},
+		{"看看", "在此记录“看看”作业情况。", ThreadCategorySeeSeek},
+		{"建议", "在此记录根据「看看」的结果，提出对应建议。", ThreadCategorySuggestion},
+		{"宝贝", "在此记录逐一列出需要准备的物资", ThreadCategoryGoods},
+		{"手艺", "在此记录“手艺”作业情况。", ThreadCategoryHandcraft},
 	}
 
 	for _, template := range templates {

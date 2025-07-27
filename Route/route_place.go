@@ -253,15 +253,14 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 	RenderHTML(w, &pL, "layout", "navbar.private", "places.my", "component_place")
 }
 
-// GET  /v1/place/detail?id=
+// GET  /v1/place/detail?uuid=
 func PlaceDetail(w http.ResponseWriter, r *http.Request) {
-	//获取地方的uuid
-	r.ParseForm()
-	place_uuid := r.FormValue("id")
+
+	place_uuid := r.URL.Query().Get("uuid")
 
 	//如果uuid为茶棚系统值"x",这是一个占位值，跳转首页
 	if place_uuid == data.PlaceUuidSpaceshipTeabar {
-		http.Redirect(w, r, "/", http.StatusFound)
+		Report(w, r, "你好，欢迎陛下大驾光临星际茶棚。")
 		return
 	}
 
@@ -271,7 +270,7 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 
 	if err := t_place.GetByUuid(); err != nil {
 		util.Debug("Cannot get place by uuid", err)
-		Report(w, r, "你好，������表示无法获取您要查看的地方，请稍后再试。")
+		Report(w, r, "你好，无法获取您要查看的地方，请稍后再试。")
 		return
 	}
 

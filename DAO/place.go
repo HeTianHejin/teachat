@@ -496,8 +496,7 @@ func (p *Place) Delete() (err error) {
 	return
 }
 
-// 物流快递地址，如大清帝国京都金陵市世袭园区贾府大街1号大观园，
-// 品茶的地方place是一个共享口头表述地点，没有私有权限属性；
+// 物流包裹快递地址，如大清帝国京都金陵市世袭园区贾府大街1号大观园，
 // 物流地址address是有权限属性的，例如寄到某个地址的邮包必须由该地址所有权人/授权人签收。
 type Address struct {
 	Id           int
@@ -512,13 +511,23 @@ type Address struct {
 	Building     string // 楼栋
 	Unit         string // 单元
 	PortalNumber string // 门牌号
-	PostalCode   string // 邮政编码（邮政部门发布，末端是基层邮局）
-	Category     int    // 类别
+	PostalCode   string // 邮政编码
+	Category     int    // 类别：1=住宅 2=商业 3=公司 4=学校 5=政府 6=其他
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
 }
+type AddressCategory int
 
-// address.Create() 保存1地址记录，用queryRow方法��入addresses表，返回id,
+const (
+	AddressResidential AddressCategory = iota + 1 //住宅
+	AddressCommercial                             //商业
+	AddressCompany                                //公司
+	AddressSchool                                 //学校
+	AddressGovernment                             //政府
+	AddressOther                                  //其他
+)
+
+// address.Create() 保存1地址记录，用queryRow方法新增addresses记录，返回id,
 func (a *Address) Create() (err error) {
 	statement := "INSERT INTO addresses (uuid, nation, province, city, district, town, village, street, building, unit, portal_number, postal_code, category, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
