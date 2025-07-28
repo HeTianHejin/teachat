@@ -4,7 +4,7 @@
    <li><a href="/v1/">大堂</a></li>
   <li><a
       href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
-    </a>@茶话会
+    </a>@茶围
   </li>
   <li><a href="/v1/project/detail?uuid={{ .QuoteProjectBean.Project.Uuid }}">{{ .QuoteProjectBean.Project.Title }} </a>@茶台
   </li>
@@ -58,9 +58,11 @@
           {{ .ThreadBean.Thread.Body }}
         </span>
 
-        {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，显示完善图标按钮 */}}
-        <div style="text-align: right;">
-          <a class="btn btn-danger" href="/v1/thread/completed?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">全部内容补充完成</a>
+        {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，显示三个功能图标按钮 */}}
+        <div style="display: flex; justify-content: space-between;">
+          <a class="btn btn-default" href="/v1/see-seek/new?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">+ 看看</a>
+          <a class="btn btn-default" href="/v1/handicraft/new?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">+ 手艺</a>
+          <a class="btn btn-danger" href="/v1/thread/completed?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">茶议完成</a>
         </div>
 
         {{ end }} {{/* 检查是否见证者--完成 */}}
@@ -119,7 +121,14 @@
         {{ end }}
       </div>
 
-     
+      <div class="panel-footer">
+        <i class="bi bi-eye-fill" style="color:gray;"></i>
+        <span style="font-size: smaller;"></span> 看看 1
+        {{/* 看看数 */}}  
+        <i class="bi bi-hand-thumbs-up-fill" style="color:gray;margin-inline-start: 2rem;"></i>
+        <span style="font-size: smaller;"></span> 手艺 1
+        {{/* 手艺数 */}}  
+      </div>
     </div>
   </div>
 </div>
