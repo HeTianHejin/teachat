@@ -58,13 +58,24 @@
           {{ .ThreadBean.Thread.Body }}
         </span>
 
-        {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，显示三个功能图标按钮 */}}
+        {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，再检查茶议类型以决定功能按钮  */}}
+        {{ if (eq .ThreadBean.Thread.Category 2) }} {{/* 检查茶议类型--约茶 */}}
         <div style="display: flex; justify-content: space-between;">
-          <a class="btn btn-default" href="/v1/see-seek/new?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">+ 看看</a>
-          <a class="btn btn-default" href="/v1/handicraft/new?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">+ 手艺</a>
-          <a class="btn btn-danger" href="/v1/thread/completed?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">茶议完成</a>
+          <a class="btn btn-default" href="/v1/project/place?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+ 更新茶话会地点</a>
+          <a class="btn btn-default" href="/v1/appointment/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+ 茶约</a>
         </div>
-
+        {{ else if (eq .ThreadBean.Thread.Category 3) }} {{/* 检查茶议类型--看看 */}}
+        <a class="btn btn-default" href="/v1/see-seek/new?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">+ 看看</a>
+        {{ else if (eq .ThreadBean.Thread.Category 4) }} {{/* 检查茶议类型--建议 */}}
+        <a class="btn btn-default" href="/v1/suggestion/new?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">+ 建议</a>
+        {{ else if (eq .ThreadBean.Thread.Category 5) }} {{/* 检查茶议类型--宝贝 */}}
+        <a class="btn btn-default" href="/v1/project_goods/new?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">+ 宝贝</a>
+        {{ else if (eq .ThreadBean.Thread.Category 6) }} {{/* 检查茶议类型--手艺 */}}
+        <div style="display: flex; justify-content: space-between;">
+        <a class="btn btn-default" href="/v1/handicraft/new?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">+ 手艺</a>
+        <a class="btn btn-danger" href="/v1/thread/completed?uuid={{ .ThreadBean.Thread.Uuid }}" role="button">茶议完成</a>
+        </div>
+        {{ end }} {{/* 检查茶议类型--完成 */}}
         {{ end }} {{/* 检查是否见证者--完成 */}}
         <hr />
 
