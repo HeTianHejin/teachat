@@ -16,16 +16,16 @@ func ActivateDraftThread(w http.ResponseWriter, r *http.Request) {
 // 打开选择邀请茶友成为管理员页面
 func Invite(w http.ResponseWriter, r *http.Request) {
 	//读取会话资料
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	//读取当前用户的相关资料
-	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := FetchSessionUserRelatedData(s)
+	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := fetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug(" Cannot fetch user related data", err)
-		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	//读取被邀请用户的相关资料
@@ -33,7 +33,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	invi_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
 		util.Debug(" Cannot get user by uuid", err)
-		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	var iD data.InvitationDetail
@@ -48,7 +48,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 
 	iD.InvitationBean.InviteUser = invi_user
 
-	RenderHTML(w, &iD, "layout", "navbar.private", "pilot.invite")
+	renderHTML(w, &iD, "layout", "navbar.private", "pilot.invite")
 
 }
 

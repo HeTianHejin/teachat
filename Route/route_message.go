@@ -10,7 +10,7 @@ import (
 // 用户信箱
 func Letterbox(w http.ResponseWriter, r *http.Request) {
 	//获取session
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		util.Debug(" Cannot get session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -28,13 +28,13 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 	i_slice, err := s_u.Invitations()
 	if err != nil {
 		util.Debug(s_u.Email, " Cannot get invitations")
-		Report(w, r, "你好，满头大汗的茶博士在努力查找您的邀请函中，请稍后再试。")
+		report(w, r, "你好，满头大汗的茶博士在努力查找您的邀请函中，请稍后再试。")
 		return
 	}
-	i_b_slice, err := FetchInvitationBeanSlice(i_slice)
+	i_b_slice, err := fetchInvitationBeanSlice(i_slice)
 	if err != nil {
 		util.Debug(s_u.Email, " Cannot get invitations bean slice")
-		Report(w, r, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
+		report(w, r, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 
@@ -43,14 +43,14 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 	lbPD.InvitationBeanSlice = i_b_slice
 
 	//向用户返回接收邀请函的表单页面
-	RenderHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")
+	renderHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")
 }
 
 // Get /v1/message/accetp
 // read AcceptMessages page
 func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	//获取session
-	sess, err := Session(r)
+	sess, err := session(r)
 	if err != nil {
 		util.Debug(" Cannot get session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -59,7 +59,7 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user", err)
-		Report(w, r, "你好，满头大汗的茶博士在努力中，请稍后再试。")
+		report(w, r, "你好，满头大汗的茶博士在努力中，请稍后再试。")
 		return
 	}
 	var amPD data.AcceptMessagePageData
@@ -68,11 +68,11 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	amPD.AcceptMessageSlice, err = s_u.UnreadAcceptMessages()
 	if err != nil {
 		util.Debug(s_u.Email, " Cannot get invitations")
-		Report(w, r, "你好，满头大汗的茶博士在加倍努力查找您的资料中，请稍后再试。")
+		report(w, r, "你好，满头大汗的茶博士在加倍努力查找您的资料中，请稍后再试。")
 		return
 	}
 
 	//向用户返回表单页面
-	RenderHTML(w, &amPD, "layout", "navbar.private", "message.accept")
+	renderHTML(w, &amPD, "layout", "navbar.private", "message.accept")
 
 }

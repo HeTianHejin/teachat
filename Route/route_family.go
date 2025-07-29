@@ -14,7 +14,7 @@ import (
 // 设置某个茶友的默认家庭茶团
 func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	// 1. get session
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -29,7 +29,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	family_uuid := r.URL.Query().Get("id")
 	//check family is valid
 	if family_uuid == data.FamilyUuidUnknown {
-		Report(w, r, "你好，茶博士摸摸头竟然说，陛下这个特殊家庭茶团不允许私用呢。")
+		report(w, r, "你好，茶博士摸摸头竟然说，陛下这个特殊家庭茶团不允许私用呢。")
 		return
 	}
 	t_family := data.Family{
@@ -38,19 +38,19 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	//fetch family
 	if err = t_family.GetByUuid(); err != nil {
 		util.Debug("Cannot get family by uuid", err)
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
 		return
 	}
 	//check user is family member
 	ok, err := t_family.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot check user is family member", err)
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
 		return
 	}
 	//if not member
 	if !ok {
-		Report(w, r, "你好，茶博士摸摸头竟然说，陛下真的和这个家庭茶团有关系吗？")
+		report(w, r, "你好，茶博士摸摸头竟然说，陛下真的和这个家庭茶团有关系吗？")
 		return
 	}
 
@@ -59,14 +59,14 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	lastDefaultFamily, err := s_u.GetLastDefaultFamily()
 	if err != nil {
 		util.Debug("Cannot get user's last default family", err)
-		Report(w, r, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
+		report(w, r, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
 		return
 	}
 	//if last default family is not Unknown
 	if lastDefaultFamily.Id > data.FamilyIdUnknown {
 		//if last default family is  equal to the new default family
 		if lastDefaultFamily.Id == t_family.Id {
-			Report(w, r, "你好，茶博士竟然说,请勿重复设置默认家庭茶团。")
+			report(w, r, "你好，茶博士竟然说,请勿重复设置默认家庭茶团。")
 			return
 		}
 
@@ -79,7 +79,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = new_user_default_family.Create(); err != nil {
 		util.Debug("Cannot create user default family", err)
-		Report(w, r, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
+		report(w, r, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
 		return
 	}
 
@@ -91,7 +91,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 // 浏览&家庭茶团队列
 func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	// 1. get session
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -106,14 +106,14 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	family_slice, err := data.GetAllFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's family given id")
-		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
+		report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
 
-	f_b_slice, err := FetchFamilyBeanSlice(family_slice)
+	f_b_slice, err := fetchFamilyBeanSlice(family_slice)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's family")
-		Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
+		report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
 
@@ -132,7 +132,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 				l_default_family = data.UnknownFamily
 			} else {
 				util.Debug(s_u.Id, "Cannot get user's default family")
-				Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
+				report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 				return
 			}
 
@@ -140,7 +140,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 
 		for i, bean := range f_b_slice {
 			//截短 family.introduction 内容为66中文字，方便排版浏览
-			bean.Family.Introduction = Substr(bean.Family.Introduction, 66)
+			bean.Family.Introduction = subStr(bean.Family.Introduction, 66)
 
 			//if l_default_family.id == bean.family.id ,fSPD.DefaultFamilyBean = bean
 			if bean.Family.Id == l_default_family.Id {
@@ -162,7 +162,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	fSPD.SessUser = s_u
 
 	// 3. render
-	RenderHTML(w, &fSPD, "layout", "navbar.private", "families.home")
+	renderHTML(w, &fSPD, "layout", "navbar.private", "families.home")
 }
 
 // GET /v1/family/detail?id=XXX
@@ -172,7 +172,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 // 如果这个家庭设置isopen==false，检查会话用户不是家庭成员，也不是被声明为新成员，那么不能查看家庭茶团资料
 func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	// 1. get session
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -192,7 +192,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	//用户如果没有设置默认家庭，则其uuid为x.
 	//报告无信息可供查看。
 	if family_uuid == data.FamilyUuidUnknown {
-		Report(w, r, "盛世无饥馑，四海可为家。")
+		report(w, r, "盛世无饥馑，四海可为家。")
 		return
 	}
 
@@ -201,7 +201,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = family.GetByUuid(); err != nil {
 		util.Debug("Cannot get family by UUID", err)
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 
@@ -211,7 +211,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	isMember, err = family.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot check user is_member of family")
-		Report(w, r, "你好，茶博士摸摸满头大汗，说因为外星人突然出现导致未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸满头大汗，说因为外星人突然出现导致未能查看&家庭茶团详情。")
 		return
 	}
 	if !isMember {
@@ -225,7 +225,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 			if !errors.Is(err, sql.ErrNoRows) {
 				//查询资料出现失误
 				util.Debug("Cannot get family member sign in", err)
-				Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+				report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 				return
 			}
 			fD.IsNewMember = false
@@ -242,16 +242,16 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	// 检查家庭是否被设置为公开，否则不能查看
 	if !family.IsOpen {
 		if !isMember && !fD.IsNewMember {
-			Report(w, r, "你好，茶博士摸摸头，竟然说你不是这个&家庭茶团的成员，未能查看&家庭茶团详情。")
+			report(w, r, "你好，茶博士摸摸头，竟然说你不是这个&家庭茶团的成员，未能查看&家庭茶团详情。")
 			return
 		}
 	}
 
 	//读取目标家庭的资料夹
-	family_bean, err := FetchFamilyBean(family)
+	family_bean, err := fetchFamilyBean(family)
 	if err != nil {
 		util.Debug(family.Id, "Cannot fetch bean given family")
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	f := data.Family{
@@ -260,38 +260,38 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	f_p_members, err := f.ParentMembers()
 	if err != nil {
 		util.Debug(family.Id, "Cannot fetch family's parent members")
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
-	parent_member_bean_slice, err := FetchFamilyMemberBeanSlice(f_p_members)
+	parent_member_bean_slice, err := fetchFamilyMemberBeanSlice(f_p_members)
 	if err != nil {
 		util.Debug(family.Id, "Cannot fetch family's parent members bean")
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 
 	c_members, err := f.ChildMembers()
 	if err != nil {
 		util.Debug(family.Id, "Cannot fetch family's child members")
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
-	child_member_bean_slice, err := FetchFamilyMemberBeanSlice(c_members)
+	child_member_bean_slice, err := fetchFamilyMemberBeanSlice(c_members)
 	if err != nil {
 		util.Debug(family.Id, "Cannot fetch family's child members")
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	other_members, err := f.OtherMembers()
 	if err != nil {
 		util.Debug(family.Id, "Cannot fetch family's other members")
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
-	other_member_bean_slice, err := FetchFamilyMemberBeanSlice(other_members)
+	other_member_bean_slice, err := fetchFamilyMemberBeanSlice(other_members)
 	if err != nil {
 		util.Debug(family.Id, "Cannot fetch family's other members bean")
-		Report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
+		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 
@@ -326,7 +326,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	fD.OtherMemberBeanSlice = other_member_bean_slice
 
 	// 4. render
-	RenderHTML(w, &fD, "layout", "navbar.private", "family.detail", "component_avatar_name_gender")
+	renderHTML(w, &fD, "layout", "navbar.private", "family.detail", "component_avatar_name_gender")
 }
 
 // HandleNewFamily() /v1/family/new
@@ -350,17 +350,17 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
+		report(w, r, "你好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
 		return
 	}
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+		report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
 	// 读取提交的家庭状态
@@ -368,20 +368,20 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	// change str into int
 	status_int, err := strconv.Atoi(status_str)
 	if err != nil {
-		Report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团状态看不懂，未能创建新茶团。")
+		report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团状态看不懂，未能创建新茶团。")
 		return
 	}
 	// 0 =< status_int <= 5
 	if status_int < 0 || status_int > 5 {
-		Report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团状态看不懂，未能创建新茶团。")
+		report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团状态看不懂，未能创建新茶团。")
 		return
 	}
 
 	introduction := r.PostFormValue("introduction")
 	// 检测introduction是否在min-int(util.Config.ThreadMaxWord)中文字符
-	lenI := CnStrLen(introduction)
+	lenI := cnStrLen(introduction)
 	if lenI < int(util.Config.ThreadMinWord) || lenI > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团价绍字数太多或者太少，未能创建新茶团。")
+		report(w, r, "你好，茶博士摸摸头，竟然说&家庭茶团价绍字数太多或者太少，未能创建新茶团。")
 		return
 	}
 
@@ -406,7 +406,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	case "no":
 		new_family.HasChild = false
 	default:
-		Report(w, r, "你好，茶博士摸摸头，&家庭茶团是否有孩子？看不懂提交内容，未能创建新茶团。")
+		report(w, r, "你好，茶博士摸摸头，&家庭茶团是否有孩子？看不懂提交内容，未能创建新茶团。")
 		return
 	}
 
@@ -422,7 +422,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	//保存到数据库中,返回新家庭茶团的id
 	if err := new_family.Create(); err != nil {
 		util.Debug(s_u.Email, "Cannot create new family")
-		Report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
+		report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
 
@@ -442,7 +442,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := author_member.Create(); err != nil {
 		util.Debug(s_u.Email, "Cannot create author family member")
-		Report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
+		report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
 
@@ -454,7 +454,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 			df = data.UnknownFamily
 		} else {
 			util.Debug(s_u.Id, "Cannot get user's default family")
-			Report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
+			report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 			return
 		}
 	}
@@ -468,7 +468,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		//把这个新家庭茶团设为默认
 		if err := udf.Create(); err != nil {
 			util.Debug(s_u.Email, "Cannot create user's default family")
-			Report(w, r, "你好，茶博士摸摸头，未能创建默认家庭茶团，请稍后再试。")
+			report(w, r, "你好，茶博士摸摸头，未能创建默认家庭茶团，请稍后再试。")
 			return
 		}
 	}
@@ -480,13 +480,13 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	} else {
 		text = fmt.Sprintf("%s 先生，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)
 	}
-	Report(w, r, text)
+	report(w, r, text)
 }
 
 // GET /v1/family/new
 // 返回一张空白的家庭填写表格（页面）
 func NewFamily(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -500,5 +500,5 @@ func NewFamily(w http.ResponseWriter, r *http.Request) {
 	var fSPD data.FamilySquare
 	fSPD.SessUser = s_u
 
-	RenderHTML(w, &fSPD, "layout", "navbar.private", "family.new")
+	renderHTML(w, &fSPD, "layout", "navbar.private", "family.new")
 }

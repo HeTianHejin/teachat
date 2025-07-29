@@ -15,7 +15,7 @@ func LoginGet(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士正在为你服务的路上极速行动，请稍安勿躁。")
+		report(w, r, "你好，茶博士正在为你服务的路上极速行动，请稍安勿躁。")
 		return
 	}
 	// 读取用户提交的，点击‘登船’时所在页面资料，以便checkin成功时回到原页面，改善体验
@@ -28,11 +28,11 @@ func LoginGet(w http.ResponseWriter, r *http.Request) {
 	// 	Id:   0,
 	// 	Name: "游客",
 	// }
-	_, err = Session(r)
+	_, err = session(r)
 	if err != nil {
 		// t := ParseTemplateFiles("layout", "navbar.public", "login")
 		// t.Execute(w, nil)
-		RenderHTML(w, &aopD, "layout", "navbar.public", "login")
+		renderHTML(w, &aopD, "layout", "navbar.public", "login")
 		return
 	}
 	http.Redirect(w, r, "/v1/", http.StatusFound)
@@ -41,7 +41,7 @@ func LoginGet(w http.ResponseWriter, r *http.Request) {
 // GET /SignupGet
 // 新用户注册页面
 func SignupGet(w http.ResponseWriter, r *http.Request) {
-	RenderHTML(w, nil, "layout", "navbar.public", "signup")
+	renderHTML(w, nil, "layout", "navbar.public", "signup")
 }
 
 // POST /signup
@@ -58,11 +58,11 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	biography := r.PostFormValue("biography")
 	gender, err := strconv.Atoi(r.PostFormValue("gender"))
 	if err != nil {
-		Report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
+		report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
 	if gender != 0 && gender != 1 {
-		Report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
+		report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
 
@@ -77,26 +77,26 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		Avatar:    "teaSet",
 	}
 	// 用正则表达式匹配一下提交的邮箱格式是否正确
-	if ok := IsEmail(newU.Email); !ok {
-		Report(w, r, "你好，请确认邮箱拼写是否正确。")
+	if ok := isEmail(newU.Email); !ok {
+		report(w, r, "你好，请确认邮箱拼写是否正确。")
 		return
 	}
 	// 检查提交的邮箱是否已经注册过了
 	exist, err := data.UserExistByEmail(newU.Email)
 	if err != nil {
 		util.Debug((fmt.Errorf("检查邮箱存在性时出错: %v, 邮箱: %s", err, newU.Email)), "数据库查询错误")
-		Report(w, r, "你好，茶博士因找不到笔导致注册失败，请确认情况后重试。")
+		report(w, r, "你好，茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
 	if exist {
 		util.Debug((fmt.Errorf("重复注册尝试: 邮箱 %s 已注册", newU.Email)), "重复注册")
-		Report(w, r, "你好，提交注册的邮箱地址已经注册,请确认后再试。")
+		report(w, r, "你好，提交注册的邮箱地址已经注册,请确认后再试。")
 		return
 	}
 	// 存储新用户（测试时不作邮箱有效性检查，直接激活账户）
 	if err := newU.Create(); err != nil {
 		util.Debug(" Cannot create user", err)
-		Report(w, r, "你好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
+		report(w, r, "你好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
 	// 将新成员添加进默认的自由人茶团
@@ -108,7 +108,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = team_member.Create(); err != nil {
 		util.Debug(" Cannot create default_free team_member", err)
-		Report(w, r, "你好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
+		report(w, r, "你好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
 	//设置茶棚预设的默认团队（自由人）
@@ -118,7 +118,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err = udt.Create(); err != nil {
 		util.Debug(" Cannot create default team", err)
-		Report(w, r, "你好，茶博士因摸不到超高度近视眼镜，导致注册失败，请确认情况后重试。")
+		report(w, r, "你好，茶博士因摸不到超高度近视眼镜，导致注册失败，请确认情况后重试。")
 		return
 	}
 
@@ -130,7 +130,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	} else {
 		t = fmt.Sprintf("%s 先生，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
 	}
-	Report(w, r, t)
+	report(w, r, t)
 
 }
 
@@ -141,7 +141,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		Report(w, r, "你好，茶博士正在为你服务的路上努力，请稍安勿躁。")
+		report(w, r, "你好，茶博士正在为你服务的路上努力，请稍安勿躁。")
 		return
 	}
 	// 读取用户提交的资料
@@ -163,21 +163,21 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			// Retrieve user by ID
 			t_user, userErr := data.UserById(s_u_id)
 			if userErr != nil {
-				Report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
+				report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
 				return
 			}
 			s_u = t_user
-		} else if IsEmail(email) {
+		} else if isEmail(email) {
 			// Retrieve user by email
-			t_u, userErr := data.GetUserByEmail(email,  r.Context())
+			t_u, userErr := data.GetUserByEmail(email, r.Context())
 			if userErr != nil {
-				Report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
+				report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
 				return
 			}
 			s_u = t_u
 		} else {
 			// Invalid email format
-			Report(w, r, "茶博士嘀咕说，请确认握笔姿势正确,而且身姿健美。")
+			report(w, r, "茶博士嘀咕说，请确认握笔姿势正确,而且身姿健美。")
 			return
 		}
 
@@ -187,7 +187,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			session, err := s_u.CreateSession()
 			if err != nil {
 				util.Debug(" Cannot create session", err)
-				Report(w, r, "你好，茶博士因找不到笔导致登船验证失败，请确认情况后重试。")
+				report(w, r, "你好，茶博士因找不到笔导致登船验证失败，请确认情况后重试。")
 				return
 			}
 			//设置cookie
@@ -221,13 +221,13 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			//     Period: 1 * time.Minute,
 			// }
 			util.Debug(s_u.Email, "密码和用户名不匹配。")
-			Report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
+			report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 			return
 		}
 
 	} else {
 		//输入了错误的口令
-		Report(w, r, "你好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
+		report(w, r, "你好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
 		return
 	}
 
@@ -261,7 +261,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	valid, err := sess.Check()
 	if err != nil {
 		util.Debug(operation, "检查会话失败", "uuid", cookie.Value, "error", err)
-		Report(w, r, "你好，茶博士因找不到资料导致登出失败，请确认情况后重试。")
+		report(w, r, "你好，茶博士因找不到资料导致登出失败，请确认情况后重试。")
 		return
 	}
 
@@ -275,7 +275,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	// 3. 删除会话
 	if err := sess.Delete(); err != nil {
 		util.Debug(operation, "删除会话失败", "uuid", cookie.Value, "error", err)
-		Report(w, r, "你好，茶博士因找不到笔导致登出失败，请确认情况后重试。")
+		report(w, r, "你好，茶博士因找不到笔导致登出失败，请确认情况后重试。")
 		return
 	}
 

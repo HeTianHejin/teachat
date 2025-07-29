@@ -10,7 +10,7 @@ import (
 // 返回飞行员列表页面
 func OfficePilot(w http.ResponseWriter, r *http.Request) {
 	//获取session
-	sess, err := Session(r)
+	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -29,23 +29,23 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 			util.Debug(" Cannot get pilots", err)
 			http.Redirect(w, r, "/v1/", http.StatusFound)
 		}
-		RenderHTML(w, &pilots, "layout", "navbar.private", "pilot.office")
+		renderHTML(w, &pilots, "layout", "navbar.private", "pilot.office")
 	}
 	//如果不是，则显示错误信息
-	Report(w, r, "你好，欢迎光临茶博士服务室！")
+	report(w, r, "你好，欢迎光临茶博士服务室！")
 }
 
 // GET /pilot/new
 // 返回添加飞行员页面
 func NewPilot(w http.ResponseWriter, r *http.Request) {
-	RenderHTML(w, nil, "layout", "navbar.private", "pilot.new")
+	renderHTML(w, nil, "layout", "navbar.private", "pilot.new")
 }
 
 // POST /pilot/add
 // 添加一个飞行员
 func AddPilot(w http.ResponseWriter, r *http.Request) {
 	//获取session
-	sess, err := Session(r)
+	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return

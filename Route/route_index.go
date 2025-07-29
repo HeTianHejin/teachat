@@ -19,28 +19,28 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	thread_slice, err := data.HotThreads(num, r.Context())
 	if err != nil {
 		util.Debug(" Cannot read hot thread slice", err)
-		Report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
+		report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
 	len := len(thread_slice)
 
 	if len == 0 {
 		util.Debug(" Cannot read hot thread slice", err)
-		Report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
+		report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 
-	tb_slice, err = FetchThreadBeanSlice(thread_slice, r)
+	tb_slice, err = fetchThreadBeanSlice(thread_slice, r)
 	if err != nil {
 		util.Debug(" Cannot read thread and author slice", err)
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中。")
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中。")
 		return
 	}
 
 	indexPD.ThreadBeanSlice = tb_slice
 
 	//是否登录
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		//游客
 		indexPD.SessUser = data.User{
@@ -51,14 +51,14 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			thread_slice[i].ActiveData.IsAuthor = false
 		}
 		//展示游客首页
-		RenderHTML(w, &indexPD, "layout", "navbar.public", "index", "component_avatar_name_gender")
+		renderHTML(w, &indexPD, "layout", "navbar.public", "index", "component_avatar_name_gender")
 		return
 	}
 	//已登录
 	sUser, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot read user info from session", err)
-		Report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
+		report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
 		return
 	}
 	indexPD.SessUser = sUser
@@ -70,7 +70,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	//展示茶客的首页
-	RenderHTML(w, &indexPD, "layout", "navbar.private", "index", "component_avatar_name_gender")
+	renderHTML(w, &indexPD, "layout", "navbar.private", "index", "component_avatar_name_gender")
 
 }
 
@@ -78,7 +78,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // show About page 区别是导航条不同
 func About(w http.ResponseWriter, r *http.Request) {
 	var uB data.UserBean
-	sess, err := Session(r)
+	sess, err := session(r)
 	if err != nil {
 		//游客
 		uB.IsAuthor = false
@@ -86,13 +86,13 @@ func About(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		RenderHTML(w, &uB, "layout", "navbar.public", "about")
+		renderHTML(w, &uB, "layout", "navbar.public", "about")
 		return
 	} else {
 		//已登录
 		uB.SessUser, _ = sess.User()
 		//展示tea客的首页
-		RenderHTML(w, &uB, "layout", "navbar.private", "about")
+		renderHTML(w, &uB, "layout", "navbar.private", "about")
 	}
 
 }

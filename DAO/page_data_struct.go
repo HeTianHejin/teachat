@@ -610,12 +610,12 @@ type SearchPageData struct {
 // 新建“看看”页面数据
 // “看看”详情页面数据
 type SeeSeekDetailPageData struct {
-	SessUser User
-	//IsAuthor bool
-	IsAdmin   bool
-	IsMaster  bool
-	IsGuest   bool
-	IsInvited bool
+	SessUser   User
+	IsVerifier bool
+	IsAdmin    bool
+	IsMaster   bool
+	IsInvited  bool
+	//IsGuest   bool
 
 	SessUserDefaultFamily    Family
 	SessUserSurvivalFamilies []Family
@@ -625,17 +625,17 @@ type SeeSeekDetailPageData struct {
 	SessUserDefaultPlace  Place
 	SessUserBindPlaces    []Place
 
-	Admin                 User
-	AdminDefaultFamily    Family
-	AdminSurvivalFamilies []Family
-	AdminDefaultTeam      Team
-	AdminSurvivalTeams    []Team
+	Admin              User
+	AdminDefaultFamily Family
+	//AdminSurvivalFamilies []Family
+	AdminDefaultTeam Team
+	//AdminSurvivalTeams    []Team
 
-	Master                 User
-	MasterDefaultFamily    Family
-	MasterSurvivalFamilies []Family
-	MasterDefaultTeam      Team
-	MasterSurvivalTeams    []Team
+	Master              User
+	MasterDefaultFamily Family
+	//MasterSurvivalFamilies []Family
+	MasterDefaultTeam Team
+	//MasterSurvivalTeams    []Team
 
 	SeeSeekBean SeeSeekBean
 

@@ -144,15 +144,39 @@ func main() {
 	mux.HandleFunc("/v1/post/detail", route.PostDetail)
 	//mux.HandleFunc("/v1/post/depth", route.PostDepth)
 
+	//defined in route_appointment.go
+	mux.HandleFunc("/v1/appointment/new", route.HandleNewAppointment)
+	mux.HandleFunc("/v1/appointment/detail", route.AppointmentDetail)
+
 	// defined in route_see-seek.go
 	mux.HandleFunc("/v1/see-seek/new", route.HandleNewSeeSeek)
 	//mux.HandleFunc("/v1/see-seek/detail", route.SeeSeekDetail)
 
+	//defined in route_suggestion.go
+	mux.HandleFunc("/v1/suggestion/new", route.HandleNewSuggestion)
+	mux.HandleFunc("/v1/suggestion/detail", route.SuggestionDetail)
+
+	// defined in route_goods.go
+	mux.HandleFunc("/v1/goods/family_new", route.HandleGoodsFamilyNew)
+	//mux.HandleFunc("/v1/goods/family", route.GoodsFamily)
+	//mux.HandleFunc("/v1/goods/family_detail", route.GoodsFamilyDetail)
+	mux.HandleFunc("/v1/goods/team_new", route.HandleGoodsTeamNew)
+	mux.HandleFunc("/v1/goods/team", route.GoodsTeam)
+	mux.HandleFunc("/v1/goods/team_detail", route.GoodsTeamDetail)
+	mux.HandleFunc("/v1/goods/team_update", route.HandleGoodsTeamUpdate)
+	mux.HandleFunc("/v1/goods/collect", route.GoodsCollect)
+	mux.HandleFunc("/v1/goods/eye_on", route.GoodsEyeOn)
+
+	//defined in route_handicraft.go
+	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)
+	mux.HandleFunc("/v1/handicraft/detail", route.HandicraftDetail)
+	
 	//defined in route_pilot.go
 	mux.HandleFunc("/v1/pilot/new", route.NewPilot)
 	mux.HandleFunc("/v1/pilot/add", route.AddPilot)
 	mux.HandleFunc("/v1/pilot/office", route.OfficePilot)
 	//mux.HandleFunc("/v1/pilot/detail", pilotDetail)
+
 
 	//defined in route_office
 	mux.HandleFunc("/v1/office/polite", route.Polite)
@@ -168,18 +192,6 @@ func main() {
 	mux.HandleFunc("/v1/place/detail", route.PlaceDetail)
 	mux.HandleFunc("/v1/place/my", route.MyPlace)
 	mux.HandleFunc("/v1/place/collect", route.PlaceCollect)
-
-	// defined in route_goods.go
-	mux.HandleFunc("/v1/goods/family_new", route.HandleGoodsFamilyNew)
-	//mux.HandleFunc("/v1/goods/family", route.GoodsFamily)
-	//mux.HandleFunc("/v1/goods/family_detail", route.GoodsFamilyDetail)
-	mux.HandleFunc("/v1/goods/team_new", route.HandleGoodsTeamNew)
-	mux.HandleFunc("/v1/goods/team", route.GoodsTeam)
-	mux.HandleFunc("/v1/goods/team_detail", route.GoodsTeamDetail)
-	mux.HandleFunc("/v1/goods/team_update", route.HandleGoodsTeamUpdate)
-
-	mux.HandleFunc("/v1/goods/collect", route.GoodsCollect)
-	mux.HandleFunc("/v1/goods/eye_on", route.GoodsEyeOn)
 
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
