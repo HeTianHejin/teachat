@@ -11,8 +11,97 @@ import (
 	util "teachat/Util"
 )
 
+func HandleProjectPlace(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		ProjectPlaceGet(w, r)
+	case http.MethodPost:
+		ProjectPlacePost(w, r)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// POST /v1/project/place_update?uuid=xXx
+func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
+	panic("unimplemented")
+}
+
+// GET /v1/project/place_update?uuid=xXx
+func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//检查会话用户身份是否见证者
+	if !isVerifier(s_u.Id) {
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//获取用户查询参数
+	uuid := r.FormValue("uuid")
+	if uuid == "" {
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//获取目标茶台
+	pr := data.Project{Uuid: uuid}
+	if err = pr.GetByUuid(); err != nil {
+		util.Debug(" Cannot get project", uuid, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//读取目标茶台地点
+	place := data.ProjectPlace{ProjectId: pr.Id}
+	if err = place.GetByProjectId(); err != nil {
+		util.Debug(" Cannot get project place", uuid, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	prBean, err := fetchProjectBean(pr)
+	if err != nil {
+		util.Debug(" Cannot get project bean", uuid, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//读取目标茶围
+	ob, err := pr.Objective()
+	if err != nil {
+		util.Debug(" Cannot get objective", ob.Id, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	obBean, err := fetchObjectiveBean(ob)
+	if err != nil {
+		util.Debug(" Cannot get objective bean", uuid, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	var pD data.ProjectDetail
+	pD.SessUser = s_u
+	pD.IsVerifier = true
+	pD.ProjectBean = prBean
+	pD.QuoteObjectiveBean = obBean
+
+	//渲染页面
+	renderHTML(w, &pD, "layout", "navbar.private", "project.place_update", "component_sess_capacity", "component_project_bean")
+}
+
 // POST /v1/project/approve
-// 茶话会(茶围)管理员选择某个茶台入围，
+// 茶话会(茶围)管理员选择某个茶台入围（入选/中标），
 func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -22,7 +111,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
@@ -140,12 +229,12 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	//获取用户提交的表单数据
@@ -160,13 +249,13 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
 		util.Debug(team_id, "Failed to convert team_id to int")
-		report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
 		util.Debug("Failed to convert family_id to int", err)
-		report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 
@@ -199,7 +288,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	count_title, err := data.CountProjectByTitleObjectiveId(title, t_ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug(" Cannot get count of project by title and objective id", err)
-		report(w, r, "你好，茶博士失魂鱼，未能创建新茶台，请稍后再试。")
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	//如果已经存在相同名字的茶台，返回错误信息
@@ -612,14 +701,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		}
 		pD.ApprovedFiveThreads.ThreadBeanHandcraftSlice = threadHandcraftBean_slice
 
-	}
-
-	// 获取茶台项目喝茶地方
-	pD.Place, err = pD.ProjectBean.Project.Place()
-	if err != nil {
-		util.Debug(" Cannot read project place", err)
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
-		return
 	}
 
 	// 获取会话session

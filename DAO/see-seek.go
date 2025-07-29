@@ -2,14 +2,11 @@ package data
 
 import (
 	"context"
-	"errors"
-	util "teachat/Util"
 	"time"
 )
 
 // 看看，睇睇，
-// 一个为解决某个问题作业
-// 例如一个“问诊设备故障”的交流会谈记录
+// 一个为解决某个具体问题而举行的茶会记录
 type SeeSeek struct {
 	Id          int
 	Uuid        string
@@ -17,93 +14,14 @@ type SeeSeek struct {
 	Nickname    string
 	Description string
 
-	RequesterId       int // 需求方茶团代表人ID（直接负责人），注意需求方是家庭&团队组合
-	RequesterFamilyId int // 需求方家庭id【如果需要声明与家庭无关，选ID=UnknownFamilyID（0）】
-	RequesterTeamId   int // 需求方团队Id【如果需要声明与团队无关，选id=TeamIdFreelancer（2）】
+	UserId   int
+	ThreadId int
 
-	ProviderId       int // 服务方茶团代表人ID（直接负责人），注意服务方是家庭&团队组合
-	ProviderFamilyId int // 服务方家庭id【如果需要声明与家庭无关，选ID=UnknownFamilyID（0）】
-	ProviderTeamId   int //服务方团队Id【如果需要声明与团队无关，选id=TeamIdFreelancer（2）】
+	Category int //分类：0、公开，1、保密，仅当事家庭/团队可见内容
+	Status   int //状态：0、未开始，1、进行中，2、暂停，3、已终止，4、已结束
 
-	VerifierId       int // 监护、见证，审核人,监护方代表id（直接负责人）
-	VerifierFamilyId int // 监护方家庭id【如果需要声明与家庭无关，选ID=UnknownFamilyID（0）】
-	VerifierTeamId   int // 监护方团队Id【如果需要声明与团队无关，选id=TeamIdFreelancer（2）】
-
-	PlaceId       int // 事发地点ID
-	EnvironmentId int //看看环境条件Id
-	// HazardSeverityLevel int // “看看”场所安全隐患等级
-	// RiskSeverityLevel   int //执行“看看”作业风险等级
-
-	Category  int //分类：0、公开，1、保密，仅当事家庭/团队可见内容
-	Status    int //状态：0、未开始，1、进行中，2、暂停，3、已终止，4、已结束
 	CreatedAt time.Time
 	UpdatedAt *time.Time
-}
-
-// SeeSeek.Create() // 创建一个SeeSeek
-// 编写postgreSQL语句，插入新纪录，return （err error）
-func (ss *SeeSeek) Create(ctx context.Context) (err error) {
-	// 设置一个 5 秒的超时
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel() // 确保在函数退出时取消上下文
-
-	statement := `INSERT INTO see_seek (uuid, name, nickname, description, requester_id, requester_family_id, requester_team_id, provider_id, provider_family_id, provider_team_id, verifier_id, verifier_family_id, verifier_team_id, place_id, environment_id, category, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id, uuid`
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, Random_UUID(), ss.Name, ss.Nickname, ss.Description, ss.RequesterId, ss.RequesterFamilyId, ss.RequesterTeamId, ss.ProviderId, ss.ProviderFamilyId, ss.ProviderTeamId, ss.VerifierId, ss.VerifierFamilyId, ss.VerifierTeamId, ss.PlaceId, ss.EnvironmentId, ss.Category, ss.Status, time.Now()).Scan(&ss.Id, &ss.Uuid)
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
-		}
-		return
-	}
-	return
-}
-func (ss *SeeSeek) Get(ctx context.Context) (err error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel() // 确保在函数退出时取消上下文
-
-	statement := `SELECT id, uuid, name, nickname, description, requester_id, requester_family_id, requester_team_id, provider_id, provider_family_id, provider_team_id, verifier_id, verifier_family_id, verifier_team_id, place_id, environment_id, category, status, created_at, updated_at FROM see_seek WHERE id = $1`
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, ss.Id).Scan(&ss.Id, &ss.Uuid, &ss.Name, &ss.Nickname, &ss.Description, &ss.RequesterId, &ss.RequesterFamilyId, &ss.RequesterTeamId, &ss.ProviderId, &ss.ProviderFamilyId, &ss.ProviderTeamId, &ss.VerifierId, &ss.VerifierFamilyId, &ss.VerifierTeamId, &ss.PlaceId, &ss.EnvironmentId, &ss.Category, &ss.Status, &ss.CreatedAt, &ss.UpdatedAt)
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
-		}
-		return
-	}
-	return
-}
-func (ss *SeeSeek) Update(ctx context.Context) (err error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel() // 确保在函数退出时取消上下文
-
-	statement := `UPDATE see_seek SET name = $1, nickname = $2, description = $3, requester_id = $4, requester_family_id = $5, requester_team_id = $6, provider_id = $7, provider_family_id = $8, provider_team_id = $9, verifier_id = $10, verifier_family_id = $11, verifier_team_id = $12, place_id = $13, environment_id = $14, category = $15, status = $16, updated_at = $17 WHERE id = $18`
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, ss.Name, ss.Nickname, ss.Description, ss.RequesterId, ss.RequesterFamilyId, ss.RequesterTeamId, ss.ProviderId, ss.ProviderFamilyId, ss.ProviderTeamId, ss.VerifierId, ss.VerifierFamilyId, ss.VerifierTeamId, ss.PlaceId, ss.EnvironmentId, ss.Category, ss.Status, time.Now(), ss.Id)
-	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
-		}
-		return
-	}
-	return
-}
-
-// SeeSeek.CreateAtDate() string
-func (ss *SeeSeek) CreatedDateTime() string {
-	return ss.CreatedAt.Format(FMT_DATE_TIME_CN)
 }
 
 const (
@@ -118,6 +36,47 @@ const (
 	SeeSeekStatusAborted           // 已半途终止（异常）
 	SeeSeekStatusCompleted         // 已完成（顺利结束）
 )
+
+// SeeSeek.Create() // 创建一个SeeSeek
+// 编写postgreSQL语句，插入新纪录，return （err error）
+func (ss *SeeSeek) Create(ctx context.Context) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := "INSERT INTO see_seeks (uuid, name, nickname, description, user_id, thread_id, category, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRowContext(ctx, ss.Uuid, ss.Name, ss.Nickname, ss.Description, ss.UserId, ss.ThreadId, ss.Category, ss.Status, time.Now()).Scan(&ss.Id, &ss.Uuid)
+	if err != nil {
+		return
+	}
+	return err
+}
+
+// SeeSeek.Get()
+func (ss *SeeSeek) Get(ctx context.Context) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := "SELECT id, uuid, name, nickname, description, user_id, thread_id, category, status, created_at, updated_at FROM see_seeks WHERE id=$1"
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRowContext(ctx, ss.Id).Scan(&ss.Id, &ss.Uuid, &ss.Name, &ss.Nickname, &ss.Description, &ss.UserId, &ss.ThreadId, &ss.Category, &ss.Status, &ss.CreatedAt, &ss.UpdatedAt)
+	if err != nil {
+		return
+	}
+	return
+}
+
+// SeeSeek.CreateAtDate() string
+func (ss *SeeSeek) CreatedDateTime() string {
+	return ss.CreatedAt.Format(FMT_DATE_TIME_CN)
+}
 
 func (see_seek *SeeSeek) StatusString() string {
 	switch see_seek.Status {
@@ -472,73 +431,6 @@ func (s *SeeSeekExaminationItem) GetByUuid() (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRow(s.Uuid).Scan(&s.ID, &s.Uuid, &s.Classify, &s.SeeSeekExaminationReportID, &s.ItemCode, &s.ItemName, &s.Result, &s.ResultUnit, &s.ReferenceMin, &s.ReferenceMax, &s.Remark, &s.AbnormalFlag, &s.Method, &s.Operator, &s.Status, &s.CreatedAt, &s.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// 凭据，依据，指音视频等视觉证据，
-type SeeSeekEvidence struct {
-	Id             int
-	Uuid           string
-	SeeSeekId      int    // 标记属于那一个“看看”，
-	Description    string // 描述记录
-	RecorderUserId int    // 记录人id
-	Note           string //备注,特别说明
-	Category       int    //分类：1、图片，2、视频，3、音频，4、其他
-	Link           string // 储存链接（地址）
-	CreatedAt      time.Time
-	UpdatedAt      *time.Time
-}
-
-func (see_seek_evidence *SeeSeekEvidence) Create() (err error) {
-	statement := "INSERT INTO see_seek_evidences (uuid, see_seek_id, description, recorder_user_id, note, category, link, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), see_seek_evidence.SeeSeekId, see_seek_evidence.Description, see_seek_evidence.RecorderUserId, see_seek_evidence.Note, see_seek_evidence.Category, see_seek_evidence.Link, time.Now()).Scan(&see_seek_evidence.Id, &see_seek_evidence.Uuid)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_evidence *SeeSeekEvidence) Update() (err error) {
-	statement := "UPDATE see_seek_evidences SET see_seek_id=$2, description=$3, recorder_user_id=$4, note=$5, category=$6, link=$7, updated_at=$8 WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(see_seek_evidence.Id, see_seek_evidence.SeeSeekId, see_seek_evidence.Description, see_seek_evidence.RecorderUserId, see_seek_evidence.Note, see_seek_evidence.Category, see_seek_evidence.Link, time.Now())
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_evidence *SeeSeekEvidence) Get() (err error) {
-	statement := "SELECT id, uuid, see_seek_id, description, recorder_user_id, note, category, link, created_at, updated_at FROM see_seek_evidences WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_evidence.Id).Scan(&see_seek_evidence.Id, &see_seek_evidence.Uuid, &see_seek_evidence.SeeSeekId, &see_seek_evidence.Description, &see_seek_evidence.RecorderUserId, &see_seek_evidence.Note, &see_seek_evidence.Category, &see_seek_evidence.Link, &see_seek_evidence.CreatedAt, &see_seek_evidence.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (see_seek_evidence *SeeSeekEvidence) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, see_seek_id, description, recorder_user_id, note, category, link, created_at, updated_at FROM see_seek_evidences WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(see_seek_evidence.Uuid).Scan(&see_seek_evidence.Id, &see_seek_evidence.Uuid, &see_seek_evidence.SeeSeekId, &see_seek_evidence.Description, &see_seek_evidence.RecorderUserId, &see_seek_evidence.Note, &see_seek_evidence.Category, &see_seek_evidence.Link, &see_seek_evidence.CreatedAt, &see_seek_evidence.UpdatedAt)
 	if err != nil {
 		return
 	}

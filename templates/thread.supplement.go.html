@@ -61,7 +61,7 @@
         {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，再检查茶议类型以决定功能按钮  */}}
         {{ if (eq .ThreadBean.Thread.Category 2) }} {{/* 检查茶议类型--约茶 */}}
         <div style="display: flex; justify-content: space-between;">
-          <a class="btn btn-default" href="/v1/project/place?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+ 更新茶话会地点</a>
+          <a class="btn btn-default" href="/v1/project/place_update?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+ 更新茶话会地点</a>
           <a class="btn btn-default" href="/v1/appointment/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+ 茶约</a>
         </div>
         {{ else if (eq .ThreadBean.Thread.Category 3) }} {{/* 检查茶议类型--看看 */}}

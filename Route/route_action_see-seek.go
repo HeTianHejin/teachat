@@ -53,13 +53,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检测当前会话茶友是否见证者
-	verifier_team := data.Team{Id: data.TeamIdVerifier}
-	is_verifier, err := verifier_team.IsMember(s_u.Id)
-	if err != nil {
-		util.Debug(" Cannot check team member", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
-		return
-	}
+	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")

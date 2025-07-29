@@ -33,7 +33,7 @@ type Thread struct {
 
 const (
 	ThreadCategoryNormal      = iota //普通
-	ThreadCategoryNested             //嵌套
+	ThreadCategoryNested             //内涵
 	ThreadCategoryAppointment        //约茶
 	ThreadCategorySeeSeek            //看看
 	ThreadCategorySuggestion         //建议

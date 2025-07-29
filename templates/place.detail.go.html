@@ -2,9 +2,10 @@
 
 {{/*  这是某个地方详情展示页面  */}}
 
+{{ with .Place }}
 <ol class="breadcrumb">
-  <li><a href="/v1/">大堂</a></li>
-  <li>{{ .Place.Name }}@地方</li>
+    <li><a href="/v1/">大堂</a></li>
+  <li>{{ .Name }}@地方</li>
   <li class="=active">详情</li>
 </ol>
 
@@ -14,62 +15,67 @@
         <thead>
             <tr>
                 <th>条目</th>
-                <th>说明</th>
+                <th>值</th>
             </tr>
         </thead>
         <tbody>
             <tr>
+                <td>编号ID</td>
+                <td>{{ .Id }}</td>
+            </tr>
+            <tr>
                 <td>名称</td>
-                <td>{{ .Place.Name }}</td>
+                <td>{{ .Name }}</td>
             </tr>
             <tr>
                 <td>别名</td>
-                <td>{{ .Place.Nickname }}</td>
+                <td>{{ .Nickname }}</td>
             </tr>
             <tr>
                 <td>描述</td>
-                <td>{{ .Place.Description }}</td>
+                <td>{{ .Description }}</td>
             </tr>
             <tr>
                 <td>使用者</td>
-                <td>{{ .Place.OccupantUserId }}</td>
+                <td>{{ .OccupantUserId }}</td>
             </tr>
             <tr>
                 <td>业主</td>
-                <td>{{ .Place.OwnerUserId }}</td>
+                <td>{{ .OwnerUserId }}</td>
             </tr>
             <tr>
                 <td>等级</td>
-                <td>{{ .Place.Level }}</td>
+                <td>{{ .Level }}</td>
             </tr>
             <tr>
                 <td>类型</td>
-                <td>{{ .Place.Category }}</td>
+                <td>{{ .Category }}</td>
             </tr>
             <tr>
                 <td>公共场所</td>
-                <td>{{ .Place.IsPublic }}</td>
+                <td>{{ .IsPublic }}</td>
             </tr>
             <tr>
                 <td>行政机关</td>
-                <td>{{ .Place.IsGovernment }}</td>
+                <td>{{ .IsGovernment }}</td>
             </tr>
             <tr>
-                <td>登记者</td>
-                <td>{{ .Place.UserId }}</td>
+                <td>登记者ID</td>
+                <td>{{ .UserId }}</td>
             </tr>
             <tr>
                 <td>登记日期</td>
-                <td>{{ .Place.CreatedAt }}</td>
+                <td>{{ .CreatedAt }}</td>
             </tr>
             <tr>
                 <td>更新日期</td>
-                <td>{{ .Place.UpdatedAt }}</td>
+                <td>{{ .UpdatedAt }}</td>
             </tr>
         </tbody>
     </table>
 </div>
 
+{{ end }}
 
 <div class="media">
     <div class="media-body">

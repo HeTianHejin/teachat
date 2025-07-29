@@ -14,7 +14,7 @@ type Risk struct {
 	Source      string   // 细分来源类型（设备/环境/操作）
 
 	// 分级维度
-	Severity int // 严重程度（1-5） 等级	Level值	判定标准	示例场景
+	Severity RiskSeverityLevel // 严重程度（1-5） 等级	Level值	判定标准	示例场景
 	// Probability     string // 发生概率（A-D）等级	代码标识	发生频率定义（每年）	典型场景
 	// Controllability int    // 可控性（Ⅰ-Ⅲ） 等级	Class值	管控措施有效性	对应措施举例
 	// CompositeLevel  string // 综合等级（如"4BⅡ"）
@@ -26,6 +26,9 @@ type Risk struct {
 	CreatedAt time.Time
 	UpdatedAt *time.Time
 }
+
+// 作业风险分级维度
+type RiskSeverityLevel int
 
 const (
 	RiskSeverityLevel1 = iota + 1 // 1	可忽略	无实际伤害风险	设备表面灰尘接触

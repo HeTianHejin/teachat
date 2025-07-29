@@ -460,13 +460,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 			if !tD.IsAdmin && !tD.IsMaster {
 				// 检测当前会话茶友是否见证者
-				verifier_team := data.Team{Id: data.TeamIdVerifier}
-				is_member, err := verifier_team.IsMember(s_u.Id)
-				if err != nil {
-					util.Debug(" Cannot check team member", err)
-					report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
-					return
-				}
+				is_member := isVerifier(s_u.Id)
 				if is_member {
 					tD.IsVerifier = true
 				}

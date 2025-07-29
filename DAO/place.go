@@ -256,6 +256,19 @@ func (u *User) GetAllBindPlaces() (Places []Place, err error) {
 	return
 }
 
+// project.Place() 根据project_id，从project_place表中获取place_id,然后根据place_id,从places表中获取place对象
+func (project *Project) Place() (place Place, err error) {
+	projectPlace := ProjectPlace{ProjectId: project.Id}
+	if err = projectPlace.GetByProjectId(); err != nil {
+		return
+	}
+	place = Place{Id: projectPlace.PlaceId}
+	if err = place.Get(); err != nil {
+		return
+	}
+	return
+}
+
 // 用户关联地址
 type UserAddress struct {
 	Id        int

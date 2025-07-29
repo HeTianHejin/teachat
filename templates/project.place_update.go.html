@@ -1,0 +1,52 @@
+{{ define "content" }}
+
+{{/* 这是某个茶台（项目）的更新地点页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}</a>
+    @茶围</li>
+  <li class="active"> #{{ .ProjectBean.Project.Id }} @茶台</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{ template "component_project_bean" .ProjectBean }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">更新茶话会活动地点</h3>
+  </div>
+  <div class="panel-body">
+    
+    <label for="input-id" class="col-sm-2"></label>
+    <div class="col-sm-10">
+      <form class="form-horizontal" role="form" method="POST" action="/v1/project/place_update">
+        <input type="hidden" name="uuid" value="{{ .ProjectBean.Project.Uuid }}">
+        <div class="form-group">
+          <label for="input-id-old" class="col-sm-2 control-label">原编号</label>
+          <div class="col-sm-10">
+            <input type="text" class="form-control" id="input-id-old"  value="{{ .ProjectBean.Project.Place.Id }}" disabled />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="input-id" class="col-sm-2 control-label">新编号</label>
+          <div class="col-sm-10">
+            <input type="number" class="form-control" id="input-id" name="place_id" placeholder="地点编号" 
+           min="1" max="999999999" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="col-sm-offset-2 col-sm-10">
+            <button type="submit" class="btn btn-default">更新</button>
+          </div>
+        </div>
+      </form>
+    </div>
+    
+  </div>
+</div>
+
+{{ end }}

@@ -1821,3 +1821,14 @@ func setUserDefaultTeam(founder *data.User, newTeamID int, w http.ResponseWriter
 	}
 	return true
 }
+
+// isVerifier 检查用户是否为见证者
+func isVerifier(userId int) bool {
+	verifier_team := data.Team{Id: data.TeamIdVerifier}
+	is_member, err := verifier_team.IsMember(userId)
+	if err != nil {
+		util.Debug(" Cannot check team member", err)
+		return false
+	}
+	return is_member
+}

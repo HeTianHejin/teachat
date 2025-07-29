@@ -131,6 +131,7 @@ func main() {
 	mux.HandleFunc("/v1/project/new", route.HandleNewProject)
 	mux.HandleFunc("/v1/project/detail", route.ProjectDetail)
 	mux.HandleFunc("/v1/project/approve", route.ProjectApprove)
+	mux.HandleFunc("/v1/project/place_update", route.HandleProjectPlace)
 
 	// defined in route_thread.go
 	mux.HandleFunc("/v1/thread/draft", route.NewDraftThreadHandle)
@@ -170,13 +171,12 @@ func main() {
 	//defined in route_handicraft.go
 	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)
 	mux.HandleFunc("/v1/handicraft/detail", route.HandicraftDetail)
-	
+
 	//defined in route_pilot.go
 	mux.HandleFunc("/v1/pilot/new", route.NewPilot)
 	mux.HandleFunc("/v1/pilot/add", route.AddPilot)
 	mux.HandleFunc("/v1/pilot/office", route.OfficePilot)
 	//mux.HandleFunc("/v1/pilot/detail", pilotDetail)
-
 
 	//defined in route_office
 	mux.HandleFunc("/v1/office/polite", route.Polite)
