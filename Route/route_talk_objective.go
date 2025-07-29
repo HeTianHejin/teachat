@@ -28,17 +28,17 @@ func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 // 返回objective.new页面
 func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	//尝试从http请求中读取用户会话信息
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	var oD data.ObjectiveDetail
 	//根据会话读取当前用户的信息
-	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := FetchSessionUserRelatedData(s)
+	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug("cannot fetch s_u s_teams given session", err)
-		Report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 
@@ -54,21 +54,21 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	oD.SessUserDefaultPlace = s_default_place
 	oD.SessUserBindPlaces = s_places
 	// 给请求用户返回新建茶话会页面
-	RenderHTML(w, &oD, "layout", "navbar.private", "objective.new")
+	renderHTML(w, &oD, "layout", "navbar.private", "objective.new")
 }
 
 // POST /objective/create
 // create the objective
 // 创建新茶话会
 func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 	s_u, err := s.User()
@@ -85,7 +85,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
 		util.Debug("Failed to convert class to int", err)
-		Report(w, r, "茶话会类型参数格式错误")
+		report(w, r, "茶话会类型参数格式错误")
 		return
 	}
 
@@ -94,13 +94,13 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
 		util.Debug("Failed to convert family_id to int", err)
-		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
 		util.Debug("Failed to convert class to int", err)
-		Report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 
@@ -111,7 +111,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 处理数据库错误
 		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
-		Report(w, r, "你好，成员资格检查失败，请确认后再试。")
+		report(w, r, "你好，成员资格检查失败，请确认后再试。")
 		return
 	}
 
@@ -122,11 +122,11 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	t_ob, err := obj.GetByTitle()
 	if err != nil {
 		util.Debug("查询茶话会失败", err)
-		Report(w, r, "查询茶话会失败")
+		report(w, r, "查询茶话会失败")
 		return
 	}
 	if len(t_ob) > 0 {
-		Report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复哦，请确认后再试。")
+		report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复哦，请确认后再试。")
 		return
 	}
 
@@ -134,23 +134,23 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	count_team, err := countObj.CountByTeamId()
 	if err != nil {
 		util.Debug(" cannot get count given objective team_id", err)
-		Report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
+		report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
 		return
 	}
 	// 最大团队可以创建 茶话会 数量
 	if count_team > int(util.Config.MaxInviteTeams) {
-		Report(w, r, "你好，编新不如述旧，一个茶团最多可以开的茶话会数量是有限的，请确认后再试。")
+		report(w, r, "你好，编新不如述旧，一个茶团最多可以开的茶话会数量是有限的，请确认后再试。")
 		return
 	}
 
 	// 检测一下name是否>2中文字，body是否在min_word-int(util.Config.ThreadMaxWord)中文字，
 	// 如果不是，返回错误信息
-	if CnStrLen(title) < 2 || CnStrLen(title) > 36 {
-		Report(w, r, "你好，茶博士竟然说字太少浪费纸张，请确认后再试。")
+	if cnStrLen(title) < 2 || cnStrLen(title) > 36 {
+		report(w, r, "你好，茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
-	if CnStrLen(body) < int(util.Config.ThreadMinWord) || CnStrLen(body) > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
+	if cnStrLen(body) < int(util.Config.ThreadMinWord) || cnStrLen(body) > int(util.Config.ThreadMaxWord) {
+		report(w, r, "你好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return
 	}
 
@@ -172,7 +172,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		if err = new_ob.Create(); err != nil {
 			// 记录错误，提示用户新开茶话会未成功
 			util.Debug(" Cannot create objective", err)
-			Report(w, r, "你好，偷来梨蕊三分白，借得梅花一缕魂。")
+			report(w, r, "你好，偷来梨蕊三分白，借得梅花一缕魂。")
 			return
 		}
 
@@ -181,9 +181,9 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		tIds_str := r.PostFormValue("invite_ids")
 
 		//用正则表达式检测茶团号TeamIds，是否符合“整数，整数，整数...”的格式
-		if !VerifyIdSliceFormat(tIds_str) {
+		if !verifyIdSliceFormat(tIds_str) {
 			util.Debug(" TeamId slice format is wrong", err)
-			Report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
+			report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
 			return
 		}
 		//用户提交的t_id是以逗号分隔的字符串,需要分割后，转换成[]Id,以便处理
@@ -191,7 +191,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
 		if len(t_ids_str) > int(util.Config.MaxInviteTeams) {
 			util.Debug(" Too many team ids", err)
-			Report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，茶壶不够用，请确认后再试。")
+			report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，茶壶不够用，请确认后再试。")
 			return
 		}
 		t_id_slice := make([]int, 0, util.Config.MaxInviteTeams)
@@ -202,34 +202,34 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		// 使用事务创建封闭式茶话会及其许可茶团
 		if err = data.CreateObjectiveWithTeams(&new_ob, t_id_slice); err != nil {
 			util.Debug("创建封闭式茶话会失败", err)
-			Report(w, r, "你好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
+			report(w, r, "你好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
 			return
 		}
 	default:
 		// 非法的茶话会属性
 		util.Debug(" Unknown objective class", err)
-		Report(w, r, "你好，身前有余勿伸手，眼前无路请回头，请稍后再试。")
+		report(w, r, "你好，身前有余勿伸手，眼前无路请回头，请稍后再试。")
 		return
 	}
 
 	if util.Config.PoliteMode {
-		if err = CreateAndSendAcceptMessage(new_ob.Id, data.AcceptObjectTypeOb, s_u.Id); err != nil {
+		if err = createAndSendAcceptMessage(new_ob.Id, data.AcceptObjectTypeOb, s_u.Id); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
-				Report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
-				Report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
 			}
 			return
 		}
 
 		t := fmt.Sprintf("你好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", new_ob.Title)
 		// 提示用户草稿保存成功
-		Report(w, r, t)
+		report(w, r, t)
 		return
 	} else {
-		objective, err := AcceptNewObjective(new_ob.Id)
+		objective, err := acceptNewObjective(new_ob.Id)
 		if err != nil {
-			Report(w, r, err.Error())
+			report(w, r, err.Error())
 			return
 		}
 		//跳转到茶话会详情页
@@ -253,24 +253,24 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	objective_slice, err := data.GetPublicObjectives(24)
 	if err != nil {
 		util.Debug(" Cannot get objectives", err)
-		Report(w, r, "你好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
+		report(w, r, "你好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
 		return
 	}
 	len := len(objective_slice)
 	if len == 0 {
-		Report(w, r, "你好，山穷水尽疑无路，为何没有任何茶话会资料？请稍后再试。")
+		report(w, r, "你好，山穷水尽疑无路，为何没有任何茶话会资料？请稍后再试。")
 		return
 	}
 
 	oSpD.ObjectiveBeanSlice, err = FetchObjectiveBeanSlice(objective_slice)
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 
 	//检查用户是否已经登录
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		//未登录！游客
 		oSpD.SessUser = data.User{
@@ -283,7 +283,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//返回页面
-		RenderHTML(w, &oSpD, "layout", "navbar.public", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
+		renderHTML(w, &oSpD, "layout", "navbar.public", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
 		return
 	}
 	//已登录，读取用户信息
@@ -302,7 +302,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 			oSpD.ObjectiveBeanSlice[i].Objective.ActiveData.IsAuthor = false
 		}
 	}
-	RenderHTML(w, &oSpD, "layout", "navbar.private", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
+	renderHTML(w, &oSpD, "layout", "navbar.private", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
 
 }
 
@@ -315,14 +315,14 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
 	if uuid == "" {
-		Report(w, r, "你好，茶博士看不懂陛下提交的UUID参数，请稍后再试。")
+		report(w, r, "你好，茶博士看不懂陛下提交的UUID参数，请稍后再试。")
 		return
 	}
 	// 根据uuid查询茶话会资料
 	ob := data.Objective{
 		Uuid: uuid}
 	if err = ob.GetByUuid(); err != nil {
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 
@@ -330,16 +330,16 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	case data.ObClassOpen, data.ObClassClose:
 		break
 	case data.ObClassOpenStraw, data.ObClassCloseStraw:
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	default:
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
-	oD.ObjectiveBean, err = FetchObjectiveBean(ob)
+	oD.ObjectiveBean, err = fetchObjectiveBean(ob)
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 
@@ -347,17 +347,17 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	project_slice, err := ob.GetPublicProjects()
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
-	oD.ProjectBeanSlice, err = FetchProjectBeanSlice(project_slice)
+	oD.ProjectBeanSlice, err = fetchProjectBeanSlice(project_slice)
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
-		Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 	//检查用户是否已经登录
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		//未登录！
 		oD.IsGuest = true
@@ -369,7 +369,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.RawQuery,
 		}
 		//配置公开导航条的茶话会详情页面
-		RenderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
+		renderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
 
@@ -394,7 +394,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot read objective-bean slice", err)
-			Report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌着。")
+			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌着。")
 			return
 		}
 		oD.IsInvited = ok
@@ -408,7 +408,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 			"objectiveId", ob.Id,
 			"error", err,
 		)
-		Report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	oD.IsAdmin = is_admin
@@ -418,7 +418,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		is_member, err := veri_team.IsMember(s_u.Id)
 		if err != nil {
 			util.Debug("Cannot check verifier team member", err)
-			Report(w, r, "你好，茶博士，有眼不识泰山。")
+			report(w, r, "你好，茶博士，有眼不识泰山。")
 			return
 		}
 		if is_member {
@@ -427,6 +427,6 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//配置私有导航条的茶话会详情页面
-	RenderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
+	renderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
 
 }

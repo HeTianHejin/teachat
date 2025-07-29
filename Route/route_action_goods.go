@@ -17,7 +17,7 @@ func HandleGoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		GoodsTeamUpdatePost(w, r)
 	default:
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 
@@ -26,7 +26,7 @@ func HandleGoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 // POST /v1/goods/team_update
 func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	// Check session
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -40,51 +40,51 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 
 	g_id_str := r.PostFormValue("id")
 	if g_id_str == "" {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	g_id, err := strconv.Atoi(g_id_str)
 	if err != nil {
-		Report(w, r, "一脸蒙的茶博士，看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 
 	team_id_str := r.PostFormValue("team_id")
 	if team_id_str == "" {
-		Report(w, r, "茶博士耸耸肩说，你无法查看不存在的物资，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无法查看不存在的物资，请确认后再试一次。")
 		return
 	}
 	team_id, err := strconv.Atoi(team_id_str)
 	if err != nil {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team member from database")
-		Report(w, r, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
 		return
 	}
 	if !is_member {
-		Report(w, r, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
 		return
 	}
 	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
 		util.Debug(s.Email, "Cannot get team goods from database")
-		Report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
 	g := data.Goods{Id: g_id}
 	if err = g.Get(); err != nil {
 		util.Debug(s.Email, "Cannot get goods from database")
-		Report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
+		report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
 	}
 
@@ -92,20 +92,20 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	if cat := r.PostFormValue("category"); cat == "0" || cat == "1" {
 		category_int, _ = strconv.Atoi(cat) // Safe to ignore error as we've already validated
 	} else {
-		Report(w, r, "你好，茶博士表示无法理解物资的类型，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的类型，请确认后再试。")
 		return
 	}
 	// Get goods name
 	le := len(r.PostFormValue("goods_name"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_name := r.PostFormValue("goods_name")
 	//nickname
 	le = len(r.PostFormValue("nickname"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_nickname := r.PostFormValue("nickname")
@@ -115,14 +115,14 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	if fea := r.PostFormValue("features"); fea == "0" || fea == "1" {
 		goods_features, _ = strconv.Atoi(fea) // Safe to ignore error as we've already validated
 	} else {
-		Report(w, r, "你好，茶博士表示无法理解物资的特性，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的特性，请确认后再试。")
 		return
 	}
 
 	goods_designer := r.PostFormValue("designer")
 	le = len(goods_designer)
 	if le > 45 {
-		Report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
 		return
 	}
 
@@ -130,14 +130,14 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	describe := r.PostFormValue("describe")
 	le = len(describe)
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
 
 	//applicability
 	le = len(r.PostFormValue("applicability"))
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
 	goods_applicability := r.PostFormValue("applicability")
@@ -145,7 +145,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	//brandname
 	le = len(r.PostFormValue("brandname"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
 		return
 	}
 	brand_name := r.PostFormValue("brandname")
@@ -153,7 +153,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	//model
 	le = len(r.PostFormValue("model"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
 		return
 	}
 	goods_model := r.PostFormValue("model")
@@ -161,7 +161,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	//color
 	le = len(r.PostFormValue("color"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
 		return
 	}
 	goods_color := r.PostFormValue("color")
@@ -169,7 +169,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	//specification
 	le = len(r.PostFormValue("specification"))
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}
 	goods_specification := r.PostFormValue("specification")
@@ -177,7 +177,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	//manufacturer
 	le = len(r.PostFormValue("manufacturer"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
 		return
 	}
 	goods_manufacturer := r.PostFormValue("manufacturer")
@@ -185,7 +185,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	//origin
 	le = len(r.PostFormValue("origin"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
 		return
 	}
 	goods_origin := r.PostFormValue("origin")
@@ -197,13 +197,13 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		// Convert goods price to float64
 		goods_price, err = strconv.ParseFloat(goods_price_str, 64)
 		if err != nil {
-			Report(w, r, "你好，茶博士表示物资的价格转换失败，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的价格转换失败，请确认后再试。")
 			return
 		}
 	}
 	//0<goods_price<100,000,000
 	if goods_price < 0 || goods_price > 100000000 {
-		Report(w, r, "你好，茶博士表示物资的价格异常，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的价格异常，请确认后再试。")
 		return
 	}
 
@@ -214,7 +214,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		// Convert goods weight to float64
 		goods_weight, err = strconv.ParseFloat(goods_weight_str, 64)
 		if err != nil {
-			Report(w, r, "你好，茶博士表示物资的重量转换失败，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的重量转换失败，请确认后再试。")
 			return
 		}
 	}
@@ -222,56 +222,56 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	if goods_dimensions_str != "" {
 		le = len(goods_dimensions_str)
 		if le > 50 {
-			Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
 			return
 		}
 	}
 	goods_material := r.PostFormValue("material")
 	le = len(goods_material)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_size := r.PostFormValue("size")
 	le = len(goods_size)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_net_con_typ := r.PostFormValue("connection_type")
 	le = len(goods_net_con_typ)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的网络连接类型太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的网络连接类型太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_sn := r.PostFormValue("serial_number")
 	le = len(goods_sn)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的序列号太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的序列号太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_expi_date := r.PostFormValue("expiration_date")
 	le = len(goods_expi_date)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_state := r.PostFormValue("state")
 	le = len(goods_state)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_manu_url_str := r.PostFormValue("official_website")
 	le = len(goods_manu_url_str)
 	if le > 256 {
-		Report(w, r, "你好，茶博士表示物资的官方网站太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的官方网站太长或者太短，请确认后再试。")
 		return
 	}
 	//check url
@@ -288,14 +288,14 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	goods_engine_typ := r.PostFormValue("engine_type")
 	le = len(goods_engine_typ)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的引擎类型太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的引擎类型太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_purchase_url_str := r.PostFormValue("purchase_url")
 	le = len(goods_purchase_url_str)
 	if le > 256 {
-		Report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
 		return
 	}
 	//check url
@@ -339,7 +339,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := o_goods.Update(); err != nil {
 		util.Debug(s.Email, "Cannot update goods from database")
-		Report(w, r, "一脸蒙的茶博士，表示无法更新物资，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示无法更新物资，请确认后再试一次。")
 		return
 	}
 	http.Redirect(w, r, "/v1/goods/team_detail?id="+g_id_str+"&team_id="+team_id_str, http.StatusFound)
@@ -349,7 +349,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 
 	// Check session
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -363,51 +363,51 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 
 	g_id_str := r.URL.Query().Get("id")
 	if g_id_str == "" {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	g_id, err := strconv.Atoi(g_id_str)
 	if err != nil {
-		Report(w, r, "一脸蒙的茶博士，看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 
 	team_id_str := r.URL.Query().Get("team_id")
 	if team_id_str == "" {
-		Report(w, r, "茶博士耸耸肩说，你无法查看不存在的物资，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无法查看不存在的物资，请确认后再试一次。")
 		return
 	}
 	team_id, err := strconv.Atoi(team_id_str)
 	if err != nil {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team member from database")
-		Report(w, r, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
 		return
 	}
 	if !is_member {
-		Report(w, r, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
 		return
 	}
 	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
 		util.Debug(s.Email, "Cannot get team goods from database")
-		Report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
 	g := data.Goods{Id: g_id}
 	if err = g.Get(); err != nil {
 		util.Debug(s.Email, "Cannot get goods from database")
-		Report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
+		report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
 	}
 
@@ -418,13 +418,13 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 	gTD.Team = team
 	gTD.Goods = g
 
-	RenderHTML(w, &gTD, "layout", "navbar.private", "goods.team_update")
+	renderHTML(w, &gTD, "layout", "navbar.private", "goods.team_update")
 
 }
 
 // GET /v1/goods/team_detail?id=xxx&team_id=xxx
 func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -438,55 +438,55 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	g_id_str := r.URL.Query().Get("id")
 	if g_id_str == "" {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	g_id, err := strconv.Atoi(g_id_str)
 	if err != nil {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 
 	team_id_str := r.URL.Query().Get("team_id")
 	if team_id_str == "" {
-		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
 	if team_id_str == "0" || team_id_str == "2" {
-		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
 
 	team_id, err := strconv.Atoi(team_id_str)
 	if err != nil {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
-		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
 	if !is_member {
-		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
 	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
 		util.Debug(s.Email, "Cannot get team goods from database")
-		Report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
 	g := data.Goods{Id: g_id}
 	if err = g.Get(); err != nil {
 		util.Debug(s.Email, "Cannot get goods from database")
-		Report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
+		report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
 	}
 
@@ -497,13 +497,13 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 	tGD.Team = team
 	tGD.Goods = g
 
-	RenderHTML(w, &tGD, "layout", "navbar.private", "goods.team_detail")
+	renderHTML(w, &tGD, "layout", "navbar.private", "goods.team_detail")
 
 }
 
 // GET /v1/goods/team?id=
 func GoodsTeam(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -517,29 +517,29 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 
 	team_uuid := r.URL.Query().Get("id")
 	if team_uuid == "" {
-		Report(w, r, "你好，请确认提交的团队ID资料。")
+		report(w, r, "你好，请确认提交的团队ID资料。")
 		return
 	}
 
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	if team.Id == data.TeamIdNone || team.Id == data.TeamIdFreelancer || team.Id == data.TeamIdSpaceshipCrew {
-		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
 
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team member from database")
-		Report(w, r, "茶博士耸耸肩说，成员资格检查未通过，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，成员资格检查未通过，请确认后再试一次。")
 		return
 	}
 	if !is_member {
-		Report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
 
@@ -548,7 +548,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	t_goods_slice, err := t_g.GetAllGoodsByTeamId()
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug(s.Email, "Cannot get goods from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 
@@ -559,7 +559,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	gTS.Team = team
 	gTS.GoodsSlice = t_goods_slice
 
-	RenderHTML(w, &gTS, "layout", "navbar.private", "goods.team")
+	renderHTML(w, &gTS, "layout", "navbar.private", "goods.team")
 
 }
 
@@ -590,7 +590,7 @@ func HandleGoodsTeamNew(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/goods/team_new
 func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -608,30 +608,30 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.Debug(s.Email, "Cannot parse form data")
 		//http.Redirect(w, r, "/v1/goods/new", http.StatusFound)
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你提交的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你提交的物资资料，请确认后再试一次。")
 		return
 	}
 
 	team_id_str := r.PostFormValue("team_id")
 	// Check team_id
 	if team_id_str == "" || team_id_str == "0" {
-		Report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
 		return
 	}
 	team_id, err := strconv.Atoi(team_id_str)
 	if err != nil {
-		Report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
 		return
 	}
 	if team_id == data.TeamIdFreelancer || team_id == data.TeamIdSpaceshipCrew {
-		Report(w, r, "你好，茶博士表示特殊团队的物资今天无法处理，请确认后再试。")
+		report(w, r, "你好，茶博士表示特殊团队的物资今天无法处理，请确认后再试。")
 		return
 	}
 
 	team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team from database")
-		Report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
 		return
 	}
 
@@ -639,12 +639,12 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team member from database")
-		Report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
 		return
 	}
 
 	if !is_member {
-		Report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
 		return
 	}
 	// Max goods count check
@@ -652,11 +652,11 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	count_teams_goods, err := goods_teams.CountByTeamId()
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team goods from database")
-		Report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
 		return
 	}
 	if count_teams_goods >= 9999 {
-		Report(w, r, "你好，茶博士表示你的团队已经达到最大物资数量，请确认后再试。")
+		report(w, r, "你好，茶博士表示你的团队已经达到最大物资数量，请确认后再试。")
 		return
 	}
 
@@ -664,20 +664,20 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	if cat := r.PostFormValue("category"); cat == "0" || cat == "1" {
 		category_int, _ = strconv.Atoi(cat) // Safe to ignore error as we've already validated
 	} else {
-		Report(w, r, "你好，茶博士表示无法理解物资的类型，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的类型，请确认后再试。")
 		return
 	}
 	// Get goods name
 	le := len(r.PostFormValue("goods_name"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_name := r.PostFormValue("goods_name")
 	//nickname
 	le = len(r.PostFormValue("nickname"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_nickname := r.PostFormValue("nickname")
@@ -687,21 +687,21 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	if fea := r.PostFormValue("features"); fea == "0" || fea == "1" {
 		goods_features, _ = strconv.Atoi(fea) // Safe to ignore error as we've already validated
 	} else {
-		Report(w, r, "你好，茶博士表示无法理解物资的特性，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的特性，请确认后再试。")
 		return
 	}
 
 	goods_designer := r.PostFormValue("designer")
 	le = len(goods_designer)
 	if le > 45 {
-		Report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
 		return
 	}
 
 	// Get goods description
 	le = len(r.PostFormValue("describe"))
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
 	describe := r.PostFormValue("describe")
@@ -709,7 +709,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//applicability
 	le = len(r.PostFormValue("applicability"))
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
 	goods_applicability := r.PostFormValue("applicability")
@@ -717,7 +717,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//brandname
 	le = len(r.PostFormValue("brandname"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
 		return
 	}
 	brand_name := r.PostFormValue("brandname")
@@ -725,7 +725,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//model
 	le = len(r.PostFormValue("model"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
 		return
 	}
 	goods_model := r.PostFormValue("model")
@@ -733,7 +733,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//color
 	le = len(r.PostFormValue("color"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
 		return
 	}
 	goods_color := r.PostFormValue("color")
@@ -741,7 +741,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//specification
 	le = len(r.PostFormValue("specification"))
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}
 	goods_specification := r.PostFormValue("specification")
@@ -749,7 +749,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//manufacturer
 	le = len(r.PostFormValue("manufacturer"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
 		return
 	}
 	goods_manufacturer := r.PostFormValue("manufacturer")
@@ -757,7 +757,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//origin
 	le = len(r.PostFormValue("origin"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
 		return
 	}
 	goods_origin := r.PostFormValue("origin")
@@ -770,13 +770,13 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		goods_price, err = strconv.ParseFloat(goods_price_str, 64)
 		// Check goods price
 		if err != nil {
-			Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
 			return
 		}
 	}
 	//0<goods_price<100,000,000
 	if goods_price < 0 || goods_price > 100000000 {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
 		return
 	}
 
@@ -788,7 +788,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		goods_weight, err = strconv.ParseFloat(goods_weight_str, 64)
 		// Check goods weight
 		if err != nil {
-			Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
 			return
 		}
 	}
@@ -797,7 +797,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	if goods_dimensions_str != "" {
 		le = len(goods_dimensions_str)
 		if le > 50 {
-			Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
 			return
 		}
 	}
@@ -805,49 +805,49 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	goods_material := r.PostFormValue("material")
 	le = len(goods_material)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_size := r.PostFormValue("size")
 	le = len(goods_size)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_net_con_typ := r.PostFormValue("connection_type")
 	le = len(goods_net_con_typ)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的网络连接类型太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的网络连接类型太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_sn := r.PostFormValue("serial_number")
 	le = len(goods_sn)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的序列号太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的序列号太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_expi_date := r.PostFormValue("expiration_date")
 	le = len(goods_expi_date)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_state := r.PostFormValue("state")
 	le = len(goods_state)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_manu_url_str := r.PostFormValue("official_website")
 	le = len(goods_manu_url_str)
 	if le > 256 {
-		Report(w, r, "你好，茶博士表示物资的官方网站太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的官方网站太长或者太短，请确认后再试。")
 		return
 	}
 	//check url
@@ -864,14 +864,14 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	goods_engine_typ := r.PostFormValue("engine_type")
 	le = len(goods_engine_typ)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的引擎类型太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的引擎类型太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_purchase_url_str := r.PostFormValue("purchase_url")
 	le = len(goods_purchase_url_str)
 	if le > 256 {
-		Report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
 		return
 	}
 	//check url
@@ -914,7 +914,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := new_goods.Create(); err != nil {
 		util.Debug(s.Email, "Cannot create new goods")
-		Report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return
 	}
 
@@ -925,7 +925,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := tg.Create(); err != nil {
 		util.Debug(s.Email, "Cannot create team goods")
-		Report(w, r, "一脸蒙的茶博士，表示无法绑定团队物资，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示无法绑定团队物资，请确认后再试一次。")
 		return
 	}
 	http.Redirect(w, r, "/v1/goods/team?id="+team.Uuid, http.StatusFound)
@@ -934,7 +934,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/goods/team_new?id=xxx
 func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -950,30 +950,30 @@ func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
 	team_id_str := r.URL.Query().Get("id")
 	team_id, err := strconv.Atoi(team_id_str)
 	if err != nil {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 
 	if team_id == data.TeamIdFreelancer || team_id == data.TeamIdSpaceshipCrew {
-		Report(w, r, "一脸蒙的茶博士，表示任何人都不能处理特殊团队的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示任何人都不能处理特殊团队的物资资料，请确认后再试一次。")
 		return
 	}
 	team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 	//check if user is member of the team
 	is_member, err := team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get team member from database")
-		Report(w, r, "茶博士耸耸肩说，你无权处理茶团物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权处理茶团物资的资料，请确认后再试一次。")
 		return
 	}
 
 	if !is_member {
-		Report(w, r, "茶博士耸耸肩说，你无权处理茶团物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权处理茶团物资的资料，请确认后再试一次。")
 		return
 	}
 
@@ -983,12 +983,12 @@ func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
 	gL.Team = team
 	gL.SessUser = s_u
 
-	RenderHTML(w, &gL, "layout", "navbar.private", "goods.team_new")
+	renderHTML(w, &gL, "layout", "navbar.private", "goods.team_new")
 }
 
 // GET /goods/family_new?id=xxx
 func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -1004,31 +1004,31 @@ func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
 	family_id_str := r.URL.Query().Get("id")
 	family_id, err := strconv.Atoi(family_id_str)
 	if err != nil {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认后再试。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认后再试。")
 		return
 	}
 
 	if family_id == data.FamilyIdUnknown {
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认后再试一次。")
 		return
 	}
 
 	family, err := data.GetFamily(family_id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get family from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认。")
 		return
 	}
 	//check if user is member of the family
 	is_member, err := family.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug(s.Email, "Cannot get family member from database")
-		Report(w, r, "茶博士耸耸肩说，你无权处理家庭物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权处理家庭物资的资料，请确认后再试一次。")
 		return
 	}
 
 	if !is_member {
-		Report(w, r, "茶博士耸耸肩说，你无权处理家庭物资的资料，请确认后再试一次。")
+		report(w, r, "茶博士耸耸肩说，你无权处理家庭物资的资料，请确认后再试一次。")
 		return
 	}
 
@@ -1038,10 +1038,10 @@ func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
 	gL.Family = family
 	gL.SessUser = s_u
 
-	RenderHTML(w, &gL, "layout", "navbar.private", "goods.new")
+	renderHTML(w, &gL, "layout", "navbar.private", "goods.new")
 }
 func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -1061,44 +1061,44 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.Debug(s.Email, "Cannot parse form data")
 		//http.Redirect(w, r, "/v1/goods/new", http.StatusFound)
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你提交的物资资料，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你提交的物资资料，请确认后再试一次。")
 		return
 	}
 	// Get family_id
 	family_id_str := r.PostFormValue("family_id")
 	// Check family_id
 	if family_id_str == "" {
-		Report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试一次。")
+		report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试一次。")
 		return
 	}
 
 	if family_id_str == "0" {
-		Report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
 		return
 	}
 	// Convert family_id to int
 	family_id, err := strconv.Atoi(family_id_str)
 	// Check family_id
 	if err != nil {
-		Report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
 		return
 	}
 	family, err := data.GetFamily(family_id)
 	// Check family
 	if err != nil {
-		Report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
 		return
 	}
 	//check if user is member of the family
 	is_member, err := family.IsMember(s_u.Id)
 	// Check family member
 	if err != nil {
-		Report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
 		return
 	}
 	// Check family member
 	if !is_member {
-		Report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
 		return
 	}
 
@@ -1106,20 +1106,20 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	if cat := r.PostFormValue("category"); cat == "0" || cat == "1" {
 		category_int, _ = strconv.Atoi(cat) // Safe to ignore error as we've already validated
 	} else {
-		Report(w, r, "你好，茶博士表示无法理解物资的类型，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的类型，请确认后再试。")
 		return
 	}
 	// Get goods name
 	le := len(r.PostFormValue("goods_name"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_name := r.PostFormValue("goods_name")
 	//nickname
 	le = len(r.PostFormValue("nickname"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
 		return
 	}
 	goods_nickname := r.PostFormValue("nickname")
@@ -1129,14 +1129,14 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	if fea := r.PostFormValue("features"); fea == "0" || fea == "1" {
 		goods_features, _ = strconv.Atoi(fea) // Safe to ignore error as we've already validated
 	} else {
-		Report(w, r, "你好，茶博士表示无法理解物资的特性，请确认后再试。")
+		report(w, r, "你好，茶博士表示无法理解物资的特性，请确认后再试。")
 		return
 	}
 
 	goods_designer := r.PostFormValue("designer")
 	le = len(goods_designer)
 	if le > 45 {
-		Report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
 		return
 	}
 
@@ -1144,14 +1144,14 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	describe := r.PostFormValue("describe")
 	le = len(describe)
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
 		return
 	}
 
 	//applicability
 	le = len(r.PostFormValue("applicability"))
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
 		return
 	}
 	goods_applicability := r.PostFormValue("applicability")
@@ -1159,7 +1159,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	//brandname
 	le = len(r.PostFormValue("brandname"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的品牌名称太长或者太短，请确认后再试。")
 		return
 	}
 	brand_name := r.PostFormValue("brandname")
@@ -1167,7 +1167,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	//model
 	le = len(r.PostFormValue("model"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的型号太长或者太短，请确认后再试。")
 		return
 	}
 	goods_model := r.PostFormValue("model")
@@ -1175,7 +1175,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	//color
 	le = len(r.PostFormValue("color"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的款色描述太长或者太短，请确认后再试。")
 		return
 	}
 	goods_color := r.PostFormValue("color")
@@ -1183,7 +1183,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	//specification
 	le = len(r.PostFormValue("specification"))
 	if le > int(util.Config.ThreadMaxWord) {
-		Report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的规格描述太长或者太短，请确认后再试。")
 		return
 	}
 	goods_specification := r.PostFormValue("specification")
@@ -1191,7 +1191,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	//manufacturer
 	le = len(r.PostFormValue("manufacturer"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的制造商太长或者太短，请确认后再试。")
 		return
 	}
 	goods_manufacturer := r.PostFormValue("manufacturer")
@@ -1199,7 +1199,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	//origin
 	le = len(r.PostFormValue("origin"))
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的产地太长或者太短，请确认后再试。")
 		return
 	}
 	goods_origin := r.PostFormValue("origin")
@@ -1212,13 +1212,13 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		goods_price, err = strconv.ParseFloat(goods_price_str, 64)
 		// Check goods price
 		if err != nil {
-			Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
 			return
 		}
 	}
 	//0<goods_price<100,000,000
 	if goods_price < 0 || goods_price > 100000000 {
-		Report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的价格太长或者太短，请确认后再试。")
 		return
 	}
 
@@ -1230,7 +1230,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		goods_weight, err = strconv.ParseFloat(goods_weight_str, 64)
 		// Check goods weight
 		if err != nil {
-			Report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的重量太长或者太短，请确认后再试。")
 			return
 		}
 	}
@@ -1239,7 +1239,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	if goods_dimensions_str != "" {
 		le = len(goods_dimensions_str)
 		if le > 50 {
-			Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+			report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
 			return
 		}
 	}
@@ -1247,49 +1247,49 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	goods_material := r.PostFormValue("material")
 	le = len(goods_material)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的材质太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_size := r.PostFormValue("size")
 	le = len(goods_size)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的尺寸太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_net_con_typ := r.PostFormValue("connection_type")
 	le = len(goods_net_con_typ)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的网络连接类型太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的网络连接类型太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_sn := r.PostFormValue("serial_number")
 	le = len(goods_sn)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的序列号太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的序列号太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_expi_date := r.PostFormValue("expiration_date")
 	le = len(goods_expi_date)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_state := r.PostFormValue("state")
 	le = len(goods_state)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_manu_url_str := r.PostFormValue("official_website")
 	le = len(goods_manu_url_str)
 	if le > 256 {
-		Report(w, r, "你好，茶博士表示物资的官方网站太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的官方网站太长或者太短，请确认后再试。")
 		return
 	}
 	//check url
@@ -1306,14 +1306,14 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	goods_engine_typ := r.PostFormValue("engine_type")
 	le = len(goods_engine_typ)
 	if le > 50 {
-		Report(w, r, "你好，茶博士表示物资的引擎类型太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的引擎类型太长或者太短，请确认后再试。")
 		return
 	}
 
 	goods_purchase_url_str := r.PostFormValue("purchase_url")
 	le = len(goods_purchase_url_str)
 	if le > 256 {
-		Report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
+		report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
 		return
 	}
 	//check url
@@ -1356,7 +1356,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := new_goods.Create(); err != nil {
 		util.Debug(s.Email, "Cannot create new goods")
-		Report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return
 	}
 
@@ -1366,7 +1366,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := fg.Create(); err != nil {
 		util.Debug(s.Email, "Cannot create new goods family")
-		Report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
+		report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return
 	}
 
@@ -1376,7 +1376,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/goods/collect?id=xxx
 func GoodsCollect(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -1394,7 +1394,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 
 	if err = t_goods.GetByUuid(); err != nil {
 		util.Debug(s.Email, "Cannot get goods from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
 
@@ -1407,12 +1407,12 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	exist, err := t_goods_user.CheckUserGoodsExist()
 	if err != nil {
 		util.Debug(s.Email, "Cannot check goods user from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
 	//如果已经收藏过，就不再收藏
 	if exist {
-		Report(w, r, "你已经收藏过了，不用再收藏了。")
+		report(w, r, "你已经收藏过了，不用再收藏了。")
 		return
 	}
 	//max < 99
@@ -1420,17 +1420,17 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	count, err := t_goods_user.CountByUserId()
 	if err != nil {
 		util.Debug(s.Email, "Cannot count goods user from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
 	if count > 99 {
-		Report(w, r, "你已经收藏太多了，地库都藏不下了。")
+		report(w, r, "你已经收藏太多了，地库都藏不下了。")
 		return
 	}
 	//insert
 	if err = t_goods_user.Create(); err != nil {
 		util.Debug(s.Email, "Cannot create goods user from database")
-		Report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
 
@@ -1439,7 +1439,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 
 // GoodsEyeOn() /v1/goods/eye_on
 func GoodsEyeOn(w http.ResponseWriter, r *http.Request) {
-	s, err := Session(r)
+	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
@@ -1460,7 +1460,7 @@ func GoodsEyeOn(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// 处理真实错误
 			util.Debug("数据库错误", "error", err)
-			Report(w, r, "你好，云空未必空，查询物资陷泥潭。")
+			report(w, r, "你好，云空未必空，查询物资陷泥潭。")
 			return
 		}
 	}
@@ -1469,5 +1469,5 @@ func GoodsEyeOn(w http.ResponseWriter, r *http.Request) {
 		GoodsSlice: goods_slice,
 	}
 
-	RenderHTML(w, &gL, "layout", "navbar.private", "goods.eye_on")
+	renderHTML(w, &gL, "layout", "navbar.private", "goods.eye_on")
 }
