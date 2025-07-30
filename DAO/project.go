@@ -122,27 +122,26 @@ type ProjectPlace struct {
 	ProjectId int
 	PlaceId   int
 	CreatedAt time.Time
+	UserId    int //创建人
 }
 
 // project_place.Create()
 func (projectPlace *ProjectPlace) Create() (err error) {
-	statement := "INSERT INTO project_place (project_id, place_id) VALUES ($1, $2) RETURNING id"
+	statement := "INSERT INTO project_place (project_id, place_id, user_id) VALUES ($1, $2, $3) RETURNING id"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(projectPlace.ProjectId, projectPlace.PlaceId).Scan(&projectPlace.Id)
+	err = stmt.QueryRow(projectPlace.ProjectId, projectPlace.PlaceId, projectPlace.UserId).Scan(&projectPlace.Id)
 	return
 }
 
 // project_place.GetByProjectId()
 func (projectPlace *ProjectPlace) GetByProjectId() (err error) {
-	err = Db.QueryRow("SELECT id, project_id, place_id, created_at FROM project_place WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1", projectPlace.ProjectId).Scan(&projectPlace.Id, &projectPlace.ProjectId, &projectPlace.PlaceId, &projectPlace.CreatedAt)
+	err = Db.QueryRow("SELECT id, project_id, place_id, created_at, user_id FROM project_place WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1", projectPlace.ProjectId).Scan(&projectPlace.Id, &projectPlace.ProjectId, &projectPlace.PlaceId, &projectPlace.CreatedAt, &projectPlace.UserId)
 	return
 }
-
-
 
 var PrProperty = map[int]string{
 	0:  "追加待评草台",
@@ -375,5 +374,11 @@ func SearchProjectByTitle(keyword string, limit int, ctx context.Context) (proje
 		projects = append(projects, project)
 	}
 	rows.Close()
+	return
+}
+
+// project.PlaceId() 获取茶台的地点place_id，最后一次更新place_id的记录
+func (project *Project) PlaceId() (place_id int, err error) {
+	err = Db.QueryRow("SELECT place_id FROM project_place WHERE project_id = $1", project.Id).Scan(&place_id)
 	return
 }

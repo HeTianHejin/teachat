@@ -22,9 +22,88 @@ func HandleProjectPlace(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST /v1/project/place_update?uuid=xXx
+// POST /v1/project/place_update
 func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//检查会话用户身份是否见证者
+	if !isVerifier(s_u.Id) {
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//获取用户提交uuid参数
+	uuid := r.PostFormValue("uuid")
+	if uuid == "" {
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//获取目标茶台
+	pr := data.Project{Uuid: uuid}
+	if err = pr.GetByUuid(); err != nil {
+		util.Debug(" Cannot get project", uuid, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//读取提交的place_id参数
+	place_id := r.PostFormValue("place_id")
+	if place_id == "" {
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//检查提交的place_id是否合法,是否正整数
+	place_id_int, err := strconv.Atoi(place_id)
+	if err != nil {
+		util.Debug(" Cannot convert place_id to int", place_id, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	//检查提交的place_id是否合法
+	if place_id_int < 1 || place_id_int > 1000000000 {
+		util.Debug(" Invalid place_id", place_id, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	old_place_id, err := pr.PlaceId()
+	if err != nil {
+		util.Debug(" Cannot get place_id", place_id, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	if place_id_int == old_place_id {
+		report(w, r, "你好，陛下英明！但是茶台位置没有变化？请确认后再试。")
+		return
+	}
+
+	//更新茶台地点
+	pp := data.ProjectPlace{
+		ProjectId: pr.Id,
+		PlaceId:   place_id_int,
+		UserId:    s_u.Id,
+	}
+	if err = pp.Create(); err != nil {
+		util.Debug(" Cannot update place_id", place_id, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	//跳转茶台详情
+	http.Redirect(w, r, "/v1/project/detail?uuid="+uuid, http.StatusFound)
+
 }
 
 // GET /v1/project/place_update?uuid=xXx
@@ -462,8 +541,9 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 保存草台喝茶地方
 	pp := data.ProjectPlace{
 		ProjectId: new_proj.Id,
-		PlaceId:   place.Id}
-
+		PlaceId:   place.Id,
+		UserId:    s_u.Id,
+	}
 	if err = pp.Create(); err != nil {
 		util.Debug(" Cannot create project place", err)
 		report(w, r, "你好，茶博士抹了抹汗，竟然说茶台地方保存失败，请确认后再试。")
