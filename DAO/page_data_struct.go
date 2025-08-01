@@ -595,46 +595,65 @@ type ConnectionFriendPageData struct {
 type SearchPageData struct {
 	SessUser User
 
-	IsEmpty bool //查询结果为空
+	IsEmpty bool //查询结果为空?
 	Count   int  //查询结果个数
 
 	UserBeanSlice      []UserBean //茶友（用户）资料夹队列
 	TeamBeanSlice      []TeamBean //茶团资料夹队列
 	ThreadBeanSlice    []ThreadBean
-	ObjectiveBeanSlice []ObjectiveBean
 	ProjectBeanSlice   []ProjectBean
+	ObjectiveBeanSlice []ObjectiveBean
 	PlaceSlice         []Place //品茶地点集合
 }
 
-// 新建“看看”页面数据
-// “看看”详情页面数据
-type SeeSeekDetailPageData struct {
+// Appointment
+type AppointmentPageData struct {
 	SessUser   User
 	IsVerifier bool
 	IsAdmin    bool
 	IsMaster   bool
 	IsInvited  bool
-	//IsGuest   bool
 
-	SessUserDefaultFamily    Family
-	SessUserSurvivalFamilies []Family
-	// SessUserParentMemberFamilySlice []Family
-	SessUserDefaultTeam   Team
-	SessUserSurvivalTeams []Team
-	SessUserDefaultPlace  Place
-	SessUserBindPlaces    []Place
+	ObjectiveBean   ObjectiveBean
+	ProjectBean     ProjectBean
+	AppointmentBean ProjectAppointmentBean
+}
+type ProjectAppointmentBean struct {
+	ProjectAppointment ProjectAppointment
 
-	Admin              User
-	AdminDefaultFamily Family
-	//AdminSurvivalFamilies []Family
-	AdminDefaultTeam Team
-	//AdminSurvivalTeams    []Team
+	Project Project
 
-	Master              User
-	MasterDefaultFamily Family
-	//MasterSurvivalFamilies []Family
-	MasterDefaultTeam Team
-	//MasterSurvivalTeams    []Team
+	Payer       User
+	PayerFamily Family
+	PayerTeam   Team
+
+	Payee       User
+	PayeeFamily Family
+	PayeeTeam   Team
+
+	Verifier       User
+	VerifierFamily Family
+	VerifierTeam   Team
+}
+
+// 新建“看看”页面数据
+// “看看”详情页面数据
+type SeeSeekDetailPageData struct {
+	SessUser       User
+	IsVerifier     bool
+	IsAdmin        bool
+	IsMaster       bool
+	IsInvited      bool
+	SessUserFamily Family
+	SessUserTeam   Team
+
+	Admin       User
+	AdminFamily Family
+	AdminTeam   Team
+
+	Master       User
+	MasterFamily Family
+	MasterTeam   Team
 
 	SeeSeekBean SeeSeekBean
 
@@ -644,18 +663,6 @@ type SeeSeekDetailPageData struct {
 type SeeSeekBean struct {
 	SeeSeek SeeSeek
 	IsOpen  bool
-
-	Verifier                 User
-	VerifierBeneficialFamily Family
-	VerifierBeneficialTeam   Team
-
-	Requester                 User
-	RequesterBeneficialFamily Family
-	RequesterBeneficialTeam   Team
-
-	Provider                 User
-	ProviderBeneficialFamily Family
-	ProviderBeneficialTeam   Team
 
 	Place       Place
 	Environment Environment

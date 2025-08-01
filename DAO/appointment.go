@@ -7,15 +7,29 @@ import (
 	"time"
 )
 
-// 茶约
-type ThreadAppointment struct {
-	ID              int
-	ProjectID       int
-	ThreadID        int
-	RequesterUserID int
-	ProviderUserID  int
+// 约茶
+type ProjectAppointment struct {
+	Id        int
+	ProjectId int
+	Note      string //做备注，简明扼要地描述一下约会目的
 
-	// 状态管理
+	PayerTeamId   int //出茶叶团队Id
+	PayerFamilyId int //出茶叶家庭Id
+	PayeeTeamId   int //收茶叶团队Id
+	PayeeFamilyId int //收茶叶家庭Id
+
+	VerifierUserId   int
+	VerifierFamilyId int
+	VerifierTeamId   int
+
+	PayerUserId int //出茶叶代表人Id
+	PayeeUserId int //收茶叶代表人Id
+
+	// 状态管理：
+	// 0、"待确认"
+	// 1、"已确认"
+	// 2、"已拒绝"
+	// 3、"已取消"
 	Status      AppointmentStatus // 枚举类型
 	ConfirmedAt *time.Time        // 明确记录确认时间
 	RejectedAt  *time.Time        // 记录拒绝时间（可选）
@@ -25,33 +39,33 @@ type ThreadAppointment struct {
 	UpdatedAt time.Time // 始终记录最后更新时间
 }
 
-// ThreadAppointment.Isconfirmed() bool
-func (t *ThreadAppointment) IsConfirmed() bool {
+// ProjectAppointment.Isconfirmed() bool //已确认
+func (t *ProjectAppointment) IsConfirmed() bool {
 	return t.Status == StatusConfirmed
 }
 
-// ThreadAppointment.IsRejected() bool
-func (t *ThreadAppointment) IsRejected() bool {
+// ProjectAppointment.IsRejected() bool //已拒绝
+func (t *ProjectAppointment) IsRejected() bool {
 	return t.Status == StatusRejected
 }
 
-// ThreadAppointment.IsCancelled() bool
-func (t *ThreadAppointment) IsCancelled() bool {
+// ProjectAppointment.IsCancelled() bool //已取消
+func (t *ProjectAppointment) IsCancelled() bool {
 	return t.Status == StatusCancelled
 }
 
-// ThreadAppointment.IsPending() bool
-func (t *ThreadAppointment) IsPending() bool {
+// ProjectAppointment.IsPending() bool //待确认
+func (t *ProjectAppointment) IsPending() bool {
 	return t.Status == StatusPending
 }
 
-// ThreadAppointment.IsExpired() bool
-func (t *ThreadAppointment) IsExpired() bool {
+// ProjectAppointment.IsExpired() bool //24小时过期
+func (t *ProjectAppointment) IsExpired() bool {
 	return t.Status == StatusPending && t.CreatedAt.Add(24*time.Hour).Before(time.Now())
 }
 
-// ThreadAppointment.StatusString() string
-func (t *ThreadAppointment) StatusString() string {
+// ProjectAppointment.StatusString() string
+func (t *ProjectAppointment) StatusString() string {
 	switch t.Status {
 	case StatusPending:
 		return "待确认"
@@ -66,37 +80,36 @@ func (t *ThreadAppointment) StatusString() string {
 	}
 }
 
-// ThreadAppointment.Create(ctx context.Context) (err error)
-func (t *ThreadAppointment) Create(ctx context.Context) (err error) {
+// ProjectAppointment.Create(ctx context.Context) (err error)
+func (t *ProjectAppointment) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-
-	statement := `INSERT INTO thread_appointment (project_id, thread_id, requester_user_id, provider_user_id, status) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	statement := `INSERT INTO project_appointments (project_id, note, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id,verifier_family_id,verifier_team_id, payer_user_id, payee_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id`
 	stmt, err := Db.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, t.ProjectID, t.ThreadID, t.RequesterUserID, t.ProviderUserID, t.Status).Scan(&t.ID)
+	err = stmt.QueryRowContext(ctx, t.ProjectId, t.Note, t.PayerTeamId, t.PayerFamilyId, t.PayeeTeamId, t.PayeeFamilyId, t.VerifierUserId, t.VerifierFamilyId, t.VerifierTeamId, t.PayerUserId, t.PayeeUserId).Scan(&t.Id)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			util.Debug("Query timed out")
 		}
 		return
 	}
+
 	return
 }
-func (t *ThreadAppointment) Get(ctx context.Context) (err error) {
+func (t *ProjectAppointment) Get(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-
-	statement := `SELECT id, project_id, thread_id, requester_user_id, provider_user_id, status, created_at, updated_at FROM thread_appointment WHERE id = $1`
+	statement := `SELECT id, project_id, note,payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status, confirmed_at, rejected_at, created_at, updated_at FROM project_appointments WHERE id = $1`
 	stmt, err := Db.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, t.ID).Scan(&t.ID, &t.ProjectID, &t.ThreadID, &t.RequesterUserID, &t.ProviderUserID, &t.Status, &t.CreatedAt, &t.UpdatedAt)
+	err = stmt.QueryRowContext(ctx, t.Id).Scan(&t.Id, &t.ProjectId, &t.Note, &t.PayerTeamId, &t.PayerFamilyId, &t.PayeeTeamId, &t.PayeeFamilyId, &t.VerifierUserId, &t.VerifierFamilyId, &t.VerifierTeamId, &t.PayerUserId, &t.PayeeUserId, &t.Status, &t.ConfirmedAt, &t.RejectedAt, &t.CreatedAt, &t.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			util.Debug("Query timed out")
@@ -110,14 +123,14 @@ func (t *ThreadAppointment) Get(ctx context.Context) (err error) {
 type AppointmentStatus int
 
 const (
-	StatusPending   AppointmentStatus = iota // 待确认
-	StatusConfirmed                          // 已确认
-	StatusRejected                           // 已拒绝
-	StatusCancelled                          // 已取消
+	StatusPending   AppointmentStatus = iota // 0 待确认
+	StatusConfirmed                          // 1 已确认
+	StatusRejected                           // 2 已拒绝
+	StatusCancelled                          // 3 已取消
 )
 
 // 约茶确认
-func (a *ThreadAppointment) Confirm(confirmerID int) error {
+func (a *ProjectAppointment) Confirm(confirmerID int) error {
 	if a.Status != StatusPending {
 		return errors.New("只能确认待处理的预约")
 	}
@@ -135,87 +148,40 @@ func (a *ThreadAppointment) Confirm(confirmerID int) error {
 	return nil
 }
 
-// func (t *ThreadAppointment) Create(ctx context.Context) (err error) {
-// 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-// 	defer cancel()
+// 取消预约
+func (a *ProjectAppointment) Cancel(cancelerID int) error {
+	if a.Status != StatusPending {
+		return errors.New("只能取消待处理的预约")
+	}
+	a.Status = StatusCancelled
+	now := time.Now()
+	a.UpdatedAt = now
+	return nil
+}
 
-// 	statement := `INSERT INTO thread_appointment (project_id, thread_id) VALUES ($1, $2) RETURNING id`
-// 	stmt, err := Db.PrepareContext(ctx, statement)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer stmt.Close()
-// 	err = stmt.QueryRowContext(ctx, t.ProjectId, t.ThreadId).Scan(&t.Id)
-// 	if err != nil {
-// 		if errors.Is(err, context.DeadlineExceeded) {
-// 			util.Debug("Query timed out")
-// 		}
-// 		return
-// 	}
-// 	return
-// }
-// func (t *ThreadAppointment) Get(ctx context.Context) (err error) {
-// 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-// 	defer cancel()
+// 拒绝预约
+func (a *ProjectAppointment) Reject(rejecterID int) error {
+	if a.Status != StatusPending {
+		return errors.New("只能拒绝待处理的预约")
+	}
+	a.Status = StatusRejected
+	now := time.Now()
+	a.RejectedAt = &now
+	a.UpdatedAt = now
+	return nil
+}
 
-// 	statement := `SELECT id, project_id, thread_id, created_at FROM thread_appointment WHERE id = $1`
-// 	stmt, err := Db.PrepareContext(ctx, statement)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer stmt.Close()
-// 	err = stmt.QueryRowContext(ctx, t.Id).Scan(&t.Id, &t.ProjectId, &t.ThreadId, &t.CreatedAt)
-// 	if err != nil {
-// 		if errors.Is(err, context.DeadlineExceeded) {
-// 			util.Debug("Query timed out")
-// 		}
-// 		return
-// 	}
-// 	return
-// }
+// project.AppointmentStatusString() string读取茶台预约状态
+func (project *Project) AppointmentStatusString(ctx context.Context) string {
+	projectAppointment := ProjectAppointment{ProjectId: project.Id}
+	if err := projectAppointment.Get(ctx); err != nil {
+		return "未知"
+	}
+	return projectAppointment.StatusString()
 
-// type AppointmentConfirmed struct {
-// 	Id        int
-// 	ProjectId int
-// 	PostId    int
-// 	CreatedAt time.Time
-// }
+}
 
-// func (a *AppointmentConfirmed) Create(ctx context.Context) (err error) {
-// 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-// 	defer cancel()
-
-// 	statement := `INSERT INTO appointment_confirmed (project_id, post_id) VALUES ($1, $2) RETURNING id`
-// 	stmt, err := Db.PrepareContext(ctx, statement)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer stmt.Close()
-// 	err = stmt.QueryRowContext(ctx, a.ProjectId, a.PostId).Scan(&a.Id)
-// 	if err != nil {
-// 		if errors.Is(err, context.DeadlineExceeded) {
-// 			util.Debug("Query timed out")
-// 		}
-// 		return
-// 	}
-// 	return
-// }
-// func (a *AppointmentConfirmed) Get(ctx context.Context) (err error) {
-// 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-// 	defer cancel()
-
-// 	statement := `SELECT id, project_id, post_id, created_at FROM appointment_confirmed WHERE id = $1`
-// 	stmt, err := Db.PrepareContext(ctx, statement)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	defer stmt.Close()
-// 	err = stmt.QueryRowContext(ctx, a.Id).Scan(&a.Id, &a.ProjectId, &a.PostId, &a.CreatedAt)
-// 	if err != nil {
-// 		if errors.Is(err, context.DeadlineExceeded) {
-// 			util.Debug("Query timed out")
-// 		}
-// 		return
-// 	}
-// 	return
-// }
+// projectAppointment.CreareAt() string读取茶台预约创建时间
+func (projectAppointment *ProjectAppointment) CreareAt() string {
+	return projectAppointment.CreatedAt.Format("2006-01-02 15:04:05")
+}

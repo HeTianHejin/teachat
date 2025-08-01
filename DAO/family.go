@@ -33,7 +33,7 @@ type Family struct {
 
 // 未明确家庭资料的茶友，其家庭资料统一虚拟为"四海为家",id=0
 // 任何生物人均是来自某个家庭，但是单独的个体，即使成年，属于一个未来家庭的成员之一，不能视为一个家庭。
-var UnknownFamily = Family{
+var FamilyUnknown = Family{
 	Id:           FamilyIdUnknown,
 	Uuid:         FamilyUuidUnknown,
 	Name:         "四海为家",
@@ -637,7 +637,7 @@ func (f *Family) Get() (err error) {
 // Returns error when family not found or database operation fails.
 func GetFamily(family_id int) (family Family, err error) {
 	if family_id == 0 {
-		return UnknownFamily, nil
+		return FamilyUnknown, nil
 	}
 
 	family = Family{Id: family_id}
@@ -672,7 +672,7 @@ func GetFamiliesByAuthorId(authorId int) (families []Family, err error) {
 // Family.GetByUuid() 根据uuid获取家庭
 func (f *Family) GetByUuid() (err error) {
 	if f.Uuid == FamilyUuidUnknown {
-		*f = UnknownFamily
+		*f = FamilyUnknown
 		return nil
 	}
 	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open FROM families WHERE uuid=$1"

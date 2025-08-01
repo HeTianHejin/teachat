@@ -30,7 +30,7 @@ const (
 // 默认的系统“自由人”$事业茶团
 // 刚注册或者没有声明加入任何$事业团队的茶友，属于未确定的$事业茶团
 // 自由职业者集合也是一个“团队”
-var FreelancerTeam = Team{
+var TeamFreelancer = Team{
 	Id:                TeamIdFreelancer,
 	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
 	Name:              "自由人",
@@ -38,6 +38,20 @@ var FreelancerTeam = Team{
 	FounderId:         UserId_SpaceshipCaptain, //表示系统预设的值
 	Class:             TeamClassSpaceship,
 	Abbreviation:      "自由人",
+	Logo:              "teamLogo",
+	SuperiorTeamId:    TeamIdNone,
+	SubordinateTeamId: TeamIdNone,
+}
+
+// 验证者团队，系统保留
+var TeamVerifier = Team{
+	Id:                TeamIdVerifier,
+	Uuid:              TeamUUIDVerifier,
+	Name:              "见证者茶团",
+	Mission:           "见证者团队，系统保留。",
+	FounderId:         UserId_SpaceshipCaptain, //表示系统预设的值
+	Class:             TeamClassSpaceship,
+	Abbreviation:      "见证者",
 	Logo:              "teamLogo",
 	SuperiorTeamId:    TeamIdNone,
 	SubordinateTeamId: TeamIdNone,
@@ -475,12 +489,12 @@ func (user *User) GetLastDefaultTeam() (team Team, err error) {
 		return Team{}, err
 	}
 	if count == 0 {
-		return FreelancerTeam, nil
+		return TeamFreelancer, nil
 	}
 	team = Team{}
 	err = Db.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.superior_team_id, teams.subordinate_team_id FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
 	if errors.Is(err, sql.ErrNoRows) {
-		team = FreelancerTeam
+		team = TeamFreelancer
 		err = nil
 	}
 	return
@@ -757,7 +771,7 @@ func (team *Team) Get() (err error) {
 		return fmt.Errorf("team not found with id: %d", team.Id)
 	}
 	if team.Id == TeamIdFreelancer {
-		*team = FreelancerTeam
+		*team = TeamFreelancer
 		return nil
 	}
 	err = Db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE id = $1", team.Id).

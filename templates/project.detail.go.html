@@ -11,8 +11,6 @@
   </li>
 </ol>
 
-
-
 {{/* 这是某个茶台（项目）的详情页 */}}
 <div class="media" style="margin-top: 20px;">
 
@@ -96,16 +94,39 @@
           </form>
           {{ end }}
         </p>
-
+        <div style="text-align: center; margin-top: 10px;">
+          {{/* 这是某个茶台（项目）的地址显示 */}}
+          <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
+          
+            <a href="/v1/place/detail?uuid={{ .ProjectBean.Place.Uuid }}">{{ .ProjectBean.Place.Name }}</a>
+          
+        </div>
+       
       </div>
 
       <div class="panel-footer">
-        {{/* 这是某个茶台（项目）的地址显示 */}}
-        <i class="bi-geo" style="font-size: 1.5rem; color: black;" title="喝茶地方"></i>
-  <a href="/v1/place/detail?uuid={{ .ProjectBean.Place.Uuid }}">{{ .ProjectBean.Place.Name }}</a>
-
-        {{ if .IsEdited }}
-
+        <span>
+          <a href="/v1/appointment/detail?uuid={{ .ProjectBean.Project.Uuid }}">约茶</a> 
+           <i class="bi-bookmark-check" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/see-seek/detail?uuid={{ .ProjectBean.Project.Uuid }}">看看</a> 
+           <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/suggestion/detail?uuid={{ .ProjectBean.Project.Uuid }}">建议</a> 
+           <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a> 
+           <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a> 
+           <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+      
+        {{ if .IsEdited }}   {{/* 检查是否编辑过（补充内容） */}}
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>
         <span style="font-size: smaller; margin-inline-end: 30px;"> {{ .ProjectBean.Project.EditAtDate }} </span>
         {{ else }}
@@ -118,17 +139,16 @@
   </div>
 </div>
 
-
-
 {{/* 根据当前用户身份显示是否可以创建新茶议或者登录-开始 */}}
 {{ if .IsInput }}
 {{/* 这是茶台下的新茶议撰写模版 */}}
-<button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel" style="margin-top: 2rem;">
+<button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel"
+  style="margin-top: 2rem;">
   <i class="bi-patch-plus" style="font-size: 1.5rem;"></i> 新茶议
 </button>
 <div class="collapse" id="newThreadPanel">
   <div class="panel panel-default">
-   
+
     <div class="panel-body">
 
       <form class="form-horizontal" action="/v1/thread/draft" method="post">
@@ -171,7 +191,7 @@
         <div class="form-group">
           <fieldset>
             <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
-            <label>身份</label>
+              <label>身份</label>
             </div>
             <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
               <input type="radio" name="is_private" value="false" id="team" checked required>

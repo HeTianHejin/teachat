@@ -112,12 +112,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	sSDpD.ObjectiveBean = objeBean
 	sSDpD.SessUser = sessUserData.User
 	sSDpD.IsMaster = true
-	sSDpD.SessUserDefaultFamily = sessUserData.DefaultFamily
-	sSDpD.SessUserSurvivalFamilies = sessUserData.SurvivalFamilies
-	sSDpD.SessUserDefaultTeam = sessUserData.DefaultTeam
-	sSDpD.SessUserSurvivalTeams = sessUserData.SurvivalTeams
-	sSDpD.SessUserDefaultPlace = sessUserData.DefaultPlace
-	sSDpD.SessUserBindPlaces = sessUserData.BindPlaces
+
 	// sSDpD.Admin = admin
 	// sSDpD.AdminDefaultFamily = a_default_family
 	// sSDpD.AdminSurvivalFamilies = a_survival_families

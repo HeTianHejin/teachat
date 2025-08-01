@@ -129,7 +129,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		l_default_family, err := s_u.GetLastDefaultFamily()
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				l_default_family = data.UnknownFamily
+				l_default_family = data.FamilyUnknown
 			} else {
 				util.Debug(s_u.Id, "Cannot get user's default family")
 				report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
@@ -451,7 +451,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 	df, err := s_u.GetLastDefaultFamily()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			df = data.UnknownFamily
+			df = data.FamilyUnknown
 		} else {
 			util.Debug(s_u.Id, "Cannot get user's default family")
 			report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
