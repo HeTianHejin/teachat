@@ -661,13 +661,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 准备页面数据
-	if pD.ProjectBean.Project.Class == data.PrClassOpen {
-		pD.Open = true
-	} else {
-		pD.Open = false
-	}
-
 	ob, err := pD.ProjectBean.Project.Objective()
 	if err != nil {
 		util.Debug(" Cannot read objective", err)

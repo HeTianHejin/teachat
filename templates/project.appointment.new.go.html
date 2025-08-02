@@ -1,0 +1,477 @@
+{{ define "content" }}
+
+{{/* 这是新建“约茶”的页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
+    </a>@茶围
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}
+    </a>@茶台
+  </li>
+
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{/* 这是茶台（项目）的详情 */}}
+<div class="media" style="margin-top: 20px;">
+
+  <div class="media-left">
+    {{ template "component_avatar_name_gender" .ProjectBean.Author }}
+  </div>
+
+  <div class="media-body">
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+
+            <span style="font-size: smaller;">
+
+              （<a
+                href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
+              <a
+                href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
+
+            </span>
+          </div>
+
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+            {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
+            {{/* 这个茶台已被茶围管理员选中入围 */}}
+            <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+            {{/* 检查是否入围1 */}}{{ end }}
+
+            <span>
+              {{ if .ProjectBean.Open }}
+              <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
+              <span class="label label-info">开放式茶台</span>
+              {{ else }}
+              <i class="bi-disc-fill" style="font-size: 2rem; color: black;"></i>
+              <span class="label label-default">封闭式茶台</span>
+              {{ end }}
+            </span>
+
+            <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ProjectBean.CreatedAtDate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <h4>
+          {{ .ProjectBean.Project.Title }}
+        </h4>
+        <p style="white-space: pre-wrap;">
+          {{ .ProjectBean.Project.Body }}
+        </p>
+
+        <blockquote style="font-size: small;">
+          <p><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">
+              <span class="label label-default">茶围</span>
+            </a>
+            <span style="margin-inline-start: 1rem;">{{ .QuoteObjectiveBean.Objective.Body }} ...</span>
+          </p>
+          <footer>
+            <cite>
+              <a href="/v1/user/biography?id={{ .QuoteObjectiveBean.Author.Uuid }}"
+                style="color: black;">{{ .QuoteObjectiveBean.Author.Name }}</a>
+              <span style="margin-inline-end: 20px;">
+                （<a href="/v1/family/detail?id={{ .QuoteObjectiveBean.AuthorFamily.Uuid }}"
+                  style="color: black;">{{ .QuoteObjectiveBean.AuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?id={{ .QuoteObjectiveBean.AuthorTeam.Uuid }}"
+                  style="color: black;">{{ .QuoteObjectiveBean.AuthorTeam.Abbreviation }}</a>）
+              </span>
+            </cite>
+          </footer>
+        </blockquote>
+
+        <div style="text-align: center; margin-top: 10px;">
+          {{/* 这是某个茶台（项目）的地址显示 */}}
+          <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
+
+          <a href="/v1/place/detail?uuid={{ .ProjectBean.Place.Uuid }}">{{ .ProjectBean.Place.Name }}</a>
+
+        </div>
+
+      </div>
+
+      <div class="panel-footer">
+        <span>
+          <a href="/v1/appointment/detail?uuid={{ .ProjectBean.Project.Uuid }}">约茶</a>
+          <i class="bi-bookmark-check" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/see-seek/detail?uuid={{ .ProjectBean.Project.Uuid }}">看看</a>
+          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/suggestion/detail?uuid={{ .ProjectBean.Project.Uuid }}">建议</a>
+          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a>
+          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a>
+          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{{ with .AppointmentBean }}{{/* 约茶预填充信息非空检查-开始 */}}
+<form role="form" action="/v1/appointment/new" method="post">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <img src="/v1/static/image/teachat-table.svg" alt="约茶封面" width="24" height="24">
+      新建约茶
+    </div>
+    <div class="panel-body">
+      <!-- 参与方信息 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">出席双方信息</div>
+        <div class="panel-body">
+          <!-- 出茶叶方选择 -->
+          <div class="form-group">
+            <label>请确定出茶叶方</label>
+            <div class="radio">
+              <label>
+                <input type="radio" name="tea_payer" value="original" checked>
+                {{ .Payer.Name }}({{ .PayerTeam.Abbreviation }}/{{ .PayerFamily.Name }})
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="tea_payer" value="swap">
+                {{ .Payee.Name }}({{ .PayeeTeam.Abbreviation }}/{{ .PayeeFamily.Name }})
+              </label>
+            </div>
+          </div>
+          <!-- 出茶叶方 -->
+          <div class="form-group">
+            <label>出茶叶方</label>
+            <div class="row">
+              <div class="col-sm-6">
+                <label for="payer_team_id">团队ID</label>
+                <input type="number" class="form-control" name="payer_team_id" id="payer_team_id"
+                  value="{{ .PayerTeam.Id }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label for="payer_team_abbreviation">团队简称</label>
+                <input type="text" class="form-control" name="payer_team_abbreviation" id="payer_team_abbreviation"
+                  value="{{ .PayerTeam.Abbreviation }}" required>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-6">
+                <label for="payer_family_id">家庭ID</label>
+                <input type="number" class="form-control" name="payer_family_id" id="payer_family_id"
+                  value="{{ .PayerFamily.Id }}" required>
+              </div>
+              <div class="col-sm-6">
+                <label for="payer_family_name">家庭名称</label>
+                <input type="text" class="form-control" name="payer_family_name" id="payer_family_name"
+                  value="{{ .PayerFamily.Name }}" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <div class="row">
+                <div class="col-sm-6">
+                  <label for="payer_user_id">代表人ID</label>
+                  <input type="number" class="form-control" name="payer_user_id" id="payer_user_id"
+                    value="{{ .Payer.Id }}" required>
+                </div>
+                <div class="col-sm-6">
+                  <label for="payer_user_name">代表人姓名</label>
+                  <input type="text" class="form-control" name="payer_user_name" id="payer_user_name"
+                    value="{{ .Payer.Name }}" required>
+                </div>
+              </div>
+            </div>
+
+            <!-- 收茶叶方 -->
+            <div class="form-group">
+              <label>收茶叶方</label>
+              <div class="row">
+                <div class="col-sm-6">
+                  <label for="payee_team_id">团队ID</label>
+                  <input type="number" class="form-control" name="payee_team_id" id="payee_team_id"
+                    value="{{ .PayeeTeam.Id }}" required>
+                </div>
+                <div class="col-sm-6">
+                  <label for="payee_team_abbreviation">团队简称</label>
+                  <input type="text" class="form-control" name="payee_team_abbreviation" id="payee_team_abbreviation"
+                    value="{{ .PayeeTeam.Abbreviation }}" required>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+                  <label for="payee_family_id">家庭ID</label>
+                  <input type="number" class="form-control" name="payee_family_id" id="payee_family_id"
+                    value="{{ .PayeeFamily.Id }}" required>
+                </div>
+                <div class="col-sm-6">
+                  <label for="payee_family_name">家庭名称</label>
+                  <input type="text" class="form-control" name="payee_family_name" id="payee_family_name"
+                    value="{{ .PayeeFamily.Name }}" required>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-sm-6">
+                  <label for="payee_user_id">代表人ID</label>
+                  <input type="number" class="form-control" name="payee_user_id" id="payee_user_id"
+                    value="{{ .Payee.Id }}" required>
+                </div>
+                <div class="col-sm-6">
+                  <label for="payee_user_name">代表人姓名</label>
+                  <input type="text" class="form-control" name="payee_user_name" id="payee_user_name"
+                    value="{{ .Payee.Name }}" required>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 见证方 -->
+      <div class="form-group">
+        <label>见证方</label>
+        <div class="row">
+          <div class="col-sm-6">
+            <label for="verifier_team_id">团队ID</label>
+            <input type="number" class="form-control" name="verifier_team_id" id="verifier_team_id"
+              value="{{ .VerifierTeam.Id }}" required>
+          </div>
+          <div class="col-sm-6">
+            <label for="verifier_family_id">家庭ID</label>
+            <input type="number" class="form-control" name="verifier_family_id" id="verifier_family_id"
+              value="{{ .VerifierFamily.Id }}" required>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-12">
+            <label for="verifier_user_id">见证人ID</label>
+            <input type="number" class="form-control" name="verifier_user_id" id="verifier_user_id"
+              value="{{ .Verifier.Id }}" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- 基础信息 -->
+      <div class="form-group">
+        <label for="note">约茶备注（2-100字）</label>
+        <textarea class="form-control" name="note" id="note" rows="3" minlength="2" maxlength="100" required></textarea>
+      </div>
+      <!-- 状态展示 -->
+      <div class="form-group">
+        <label for="status">约茶状态</label>
+        <input type="text" class="form-control" id="status" value="{{ .Appointment.StatusString }}" readonly>
+      </div>
+
+      <input type="hidden" name="project_id" value="{{ .Project.Id }}">
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">创建约茶</button>
+      </div>
+    </div>
+  </div>
+</form>
+{{ else }}{{/* 约茶预填充信息非空检查-空数据！ */}}
+<div class="alert alert-danger" role="alert">
+  <strong>烫手山芋!</strong> 约茶预填充信息为空，请先创建家庭和团队信息。
+</div>
+{{ end }}{{/* 约茶预填充信息非空检查-结束 */}}
+
+<script>
+  // 定义交换函数，用于实时交换显示和提交时交换
+  function swapPartyInfo(isSwap) {
+    // 存储原始值
+    const originalPayerTeamId = document.getElementById('original_payer_team_id') ?
+      document.getElementById('original_payer_team_id').value :
+      document.getElementById('payer_team_id').value;
+    const originalPayerTeamAbbr = document.getElementById('original_payer_team_abbreviation') ?
+      document.getElementById('original_payer_team_abbreviation').value :
+      document.getElementById('payer_team_abbreviation').value;
+    const originalPayerFamilyId = document.getElementById('original_payer_family_id') ?
+      document.getElementById('original_payer_family_id').value :
+      document.getElementById('payer_family_id').value;
+    const originalPayerFamilyName = document.getElementById('original_payer_family_name') ?
+      document.getElementById('original_payer_family_name').value :
+      document.getElementById('payer_family_name').value;
+    const originalPayerUserId = document.getElementById('original_payer_user_id') ?
+      document.getElementById('original_payer_user_id').value :
+      document.getElementById('payer_user_id').value;
+    const originalPayerUserName = document.getElementById('original_payer_user_name') ?
+      document.getElementById('original_payer_user_name').value :
+      document.getElementById('payer_user_name').value;
+    const originalPayeeTeamId = document.getElementById('original_payee_team_id') ?
+      document.getElementById('original_payee_team_id').value :
+      document.getElementById('payee_team_id').value;
+    const originalPayeeTeamAbbr = document.getElementById('original_payee_team_abbreviation') ?
+      document.getElementById('original_payee_team_abbreviation').value :
+      document.getElementById('payee_team_abbreviation').value;
+    const originalPayeeFamilyId = document.getElementById('original_payee_family_id') ?
+      document.getElementById('original_payee_family_id').value :
+      document.getElementById('payee_family_id').value;
+    const originalPayeeFamilyName = document.getElementById('original_payee_family_name') ?
+      document.getElementById('original_payee_family_name').value :
+      document.getElementById('payee_family_name').value;
+    const originalPayeeUserId = document.getElementById('original_payee_user_id') ?
+      document.getElementById('original_payee_user_id').value :
+      document.getElementById('payee_user_id').value;
+    const originalPayeeUserName = document.getElementById('original_payee_user_name') ?
+      document.getElementById('original_payee_user_name').value :
+      document.getElementById('payee_user_name').value;
+    // 创建隐藏的原始值存储字段（如果不存在）
+    if (!document.getElementById('original_payer_team_id')) {
+      const fields = [{
+          id: 'original_payer_team_id',
+          value: originalPayerTeamId
+        },
+        {
+          id: 'original_payer_team_abbreviation',
+          value: originalPayerTeamAbbr
+        },
+        {
+          id: 'original_payer_family_id',
+          value: originalPayerFamilyId
+        },
+        {
+          id: 'original_payer_family_name',
+          value: originalPayerFamilyName
+        },
+        {
+          id: 'original_payer_user_id',
+          value: originalPayerUserId
+        },
+        {
+          id: 'original_payer_user_name',
+          value: originalPayerUserName
+        },
+        {
+          id: 'original_payee_team_id',
+          value: originalPayeeTeamId
+        },
+        {
+          id: 'original_payee_team_abbreviation',
+          value: originalPayeeTeamAbbr
+        },
+        {
+          id: 'original_payee_family_id',
+          value: originalPayeeFamilyId
+        },
+        {
+          id: 'original_payee_family_name',
+          value: originalPayeeFamilyName
+        },
+        {
+          id: 'original_payee_user_id',
+          value: originalPayeeUserId
+        },
+        {
+          id: 'original_payee_user_name',
+          value: originalPayeeUserName
+        }
+      ];
+      fields.forEach(field => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.id = field.id;
+        input.value = field.value;
+        document.querySelector('form').appendChild(input);
+      });
+    }
+    // 根据是否交换设置显示值
+    if (isSwap) {
+      // 交换显示：将payee的值显示在payer字段中，payer的值显示在payee字段中
+      document.getElementById('payer_team_id').value = originalPayeeTeamId;
+      document.getElementById('payer_team_abbreviation').value = originalPayeeTeamAbbr;
+      document.getElementById('payer_family_id').value = originalPayeeFamilyId;
+      document.getElementById('payer_family_name').value = originalPayeeFamilyName;
+      document.getElementById('payer_user_id').value = originalPayeeUserId;
+      document.getElementById('payer_user_name').value = originalPayeeUserName;
+      document.getElementById('payee_team_id').value = originalPayerTeamId;
+      document.getElementById('payee_team_abbreviation').value = originalPayerTeamAbbr;
+      document.getElementById('payee_family_id').value = originalPayerFamilyId;
+      document.getElementById('payee_family_name').value = originalPayerFamilyName;
+      document.getElementById('payee_user_id').value = originalPayerUserId;
+      document.getElementById('payee_user_name').value = originalPayerUserName;
+    } else {
+      // 恢复原始显示
+      document.getElementById('payer_team_id').value = originalPayerTeamId;
+      document.getElementById('payer_team_abbreviation').value = originalPayerTeamAbbr;
+      document.getElementById('payer_family_id').value = originalPayerFamilyId;
+      document.getElementById('payer_family_name').value = originalPayerFamilyName;
+      document.getElementById('payer_user_id').value = originalPayerUserId;
+      document.getElementById('payer_user_name').value = originalPayerUserName;
+      document.getElementById('payee_team_id').value = originalPayeeTeamId;
+      document.getElementById('payee_team_abbreviation').value = originalPayeeTeamAbbr;
+      document.getElementById('payee_family_id').value = originalPayeeFamilyId;
+      document.getElementById('payee_family_name').value = originalPayeeFamilyName;
+      document.getElementById('payee_user_id').value = originalPayeeUserId;
+      document.getElementById('payee_user_name').value = originalPayeeUserName;
+    }
+  }
+  // 监听单选按钮变化，实时更新UI
+  document.querySelectorAll('input[name="tea_payer"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const isSwap = this.value === 'swap';
+      swapPartyInfo(isSwap);
+    });
+  });
+  // 表单验证和提交处理
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const payerTeamId = document.getElementById('payer_team_id').value;
+    const payerFamilyId = document.getElementById('payer_family_id').value;
+    const payerUserId = document.getElementById('payer_user_id').value;
+    const payeeTeamId = document.getElementById('payee_team_id').value;
+    const payeeFamilyId = document.getElementById('payee_family_id').value;
+    const payeeUserId = document.getElementById('payee_user_id').value;
+    const verifierTeamId = document.getElementById('verifier_team_id').value;
+    const verifierFamilyId = document.getElementById('verifier_family_id').value;
+    const verifierUserId = document.getElementById('verifier_user_id').value;
+    // 确保所有ID都填写
+    if (!payerTeamId || !payerFamilyId || !payerUserId ||
+      !payeeTeamId || !payeeFamilyId || !payeeUserId ||
+      !verifierTeamId || !verifierFamilyId || !verifierUserId) {
+      alert('请填写所有参与方的信息');
+      e.preventDefault();
+      return false;
+    }
+    // 验证ID是否相同
+    if (payerTeamId === payeeTeamId ||
+      payerFamilyId === payeeFamilyId ||
+      payerUserId === payeeUserId) {
+      alert('出茶叶方和收茶叶方不能相同');
+      e.preventDefault();
+      return false;
+    }
+    if (payerTeamId === verifierTeamId ||
+      payerFamilyId === verifierFamilyId ||
+      payerUserId === verifierUserId) {
+      alert('出茶叶方和见证方不能相同');
+      e.preventDefault();
+      return false;
+    }
+    if (payeeTeamId === verifierTeamId ||
+      payeeFamilyId === verifierFamilyId ||
+      payeeUserId === verifierUserId) {
+      alert('收茶叶方和见证方不能相同');
+      e.preventDefault();
+      return false;
+    }
+    // 表单提交前无需再交换数据，因为UI已经显示了正确的交换状态
+  });
+</script>
+
+{{ end }}

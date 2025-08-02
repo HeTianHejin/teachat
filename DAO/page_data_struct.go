@@ -121,7 +121,6 @@ type ProjectDetail struct {
 	IsApproved          bool                       //是否入围
 	ApprovedFiveThreads ProjectApprovedFiveThreads //入围茶台必备5茶议
 
-	Open     bool
 	IsEdited bool
 
 	QuoteObjectiveBean ObjectiveBean // 引用的茶围
@@ -614,12 +613,12 @@ type AppointmentPageData struct {
 	IsMaster   bool
 	IsInvited  bool
 
-	ObjectiveBean   ObjectiveBean
-	ProjectBean     ProjectBean
-	AppointmentBean ProjectAppointmentBean
+	QuoteObjectiveBean ObjectiveBean
+	ProjectBean        ProjectBean
+	AppointmentBean    ProjectAppointmentBean
 }
 type ProjectAppointmentBean struct {
-	ProjectAppointment ProjectAppointment
+	Appointment ProjectAppointment
 
 	Project Project
 

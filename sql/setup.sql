@@ -52,16 +52,8 @@ drop table if exists member_applications;
 drop table if exists member_application_replies;
 drop table if exists team_member_resignations;
 drop table if exists footprints;
-drop table if exists see_seeks;
-drop table if exists see_seek_masters;
-drop table if exists see_seek_master_looks;
-drop table if exists see_seek_master_listens;
-drop table if exists see_seek_master_smells;
-drop table if exists see_seek_master_ask_and_answers;
-drop table if exists see_seek_master_touches;
-drop table if exists see_seek_master_examination_reports;
-drop table if exists see_seek_master_examination_report_items;
-drop table if exists see_seek_evidences;
+drop table if exists project_appointments;
+
 
 
 
@@ -493,219 +485,6 @@ CREATE TABLE new_message_counts (
   count                INTEGER default 0
 );
 
-
-
-Create table see_seeks (
-    id            serial primary key,
-    uuid          varchar(64) not null unique,
-    name          varchar(255),
-    nickname      varchar(255),
-    description   text,
-    category      integer,
-    status        integer,
-    created_at    timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    timestamp
-);
-
-CREATE TABLE see_seek_masters (
-    id            serial primary key,
-    uuid          varchar(64) not null unique,
-    see_seek_id   integer,
-    classify      integer,
-    recorder_user_id integer,
-    user_id       integer,
-    status        integer,
-    request_title   varchar(255),
-    request_content text,
-    request_history text,
-    request_remark  varchar(255),
-    master_title   varchar(255),
-    master_content text,
-    master_history text,
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP
-);
-
-
-CREATE TABLE see_seek_master_looks (
-    id                   serial primary key,
-    uuid                 varchar(64) not null unique,
-    see_seek_master_id   integer,
-    classify             integer,
-    status               integer,
-
-    request_outline      varchar(255),
-    request_is_deform    boolean,
-    request_skin         varchar(255),
-    request_is_graze     boolean,
-    request_color        varchar(255),
-    request_is_change    boolean,
-    request_look_history text,
-
-    master_outline       varchar(255),
-    master_is_deform     boolean,
-    master_skin          varchar(255),
-    master_is_graze      boolean,
-    master_color         varchar(255),
-    master_is_change     boolean,
-    master_look_history  text,
-
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP
-);
-
-
-CREATE TABLE see_seek_master_listens (
-    id                   serial primary key,
-    uuid                 varchar(64) not null unique,
-    see_seek_master_id   integer,
-    classify             integer,
-    status               integer,
-
-    request_sound        varchar(255),
-    request_is_abnormal  boolean,
-    request_sound_history text,
-
-    master_sound         varchar(255),
-    master_is_abnormal   boolean,
-    master_sound_history text,
-
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP
-);
-
-
-CREATE TABLE see_seek_master_smells (
-    id                   serial primary key,
-    uuid                 varchar(64) not null unique,
-    see_seek_master_id   integer,
-    classify             integer,
-    status               integer,
-
-    request_odour        varchar(255),
-    request_is_foul_odour boolean,
-    request_odour_history text,
-
-    master_odour        varchar(255),
-    master_is_foul_odour boolean,
-    master_odour_history text,
-
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP
-    
-);
-
-
-CREATE TABLE see_seek_master_touches (
-    id                   serial primary key,
-    uuid                 varchar(64) not null unique,
-    see_seek_master_id   integer,
-    classify             integer,
-    status               integer,
-
-    request_temperature  varchar(255),
-    request_is_fever     boolean,
-    request_stretch      varchar(255),
-    request_is_stiff     boolean,
-    request_shake        varchar(255),
-    request_is_shake     boolean,
-    request_touch_history text,
-
-    master_temperature  varchar(255),
-    master_is_fever     boolean,
-    master_stretch      varchar(255),
-    master_is_stiff     boolean,
-    master_shake        varchar(255),
-    master_is_shake     boolean,
-    master_touch_history text,
-
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP
-);
-
-
-CREATE TABLE see_seek_master_ask_and_answers (
-    id                   serial primary key,
-    uuid                 varchar(64) not null unique,
-    see_seek_master_id   integer,
-    classify             integer,
-    status               integer,
-
-    request_title   varchar(255),
-    request_content varchar(255),
-    request_history text,
-
-    master_title   varchar(255),
-    master_content varchar(255),
-    master_history text,
-
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP
-);
-
-
-CREATE TABLE see_seek_master_examination_reports (
-    id                   serial primary key,
-    uuid                 varchar(64) not null unique,
-    see_seek_master_id   integer,
-    classify             integer,
-    status               integer,
-
-    sample_type          varchar(255),
-    sample_order                varchar(255),
-    instrument_goods_id  integer,
-
-    report_title         varchar(255),
-    report_content       text,
-
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP,
-
-    master_user_id       integer,
-    reviewer_user_id     integer,
-
-    report_date          TIMESTAMP,
-    attachment           varchar(255),
-    tags                 varchar(255)
-);
-
-
-CREATE TABLE see_seek_master_examination_report_items (
-    id                   serial primary key,
-    uuid                 varchar(64) not null unique,
-    see_seek_master_examination_report_id   integer,
-    classify             integer,
-    status               integer,
-
-    item_code            varchar(255),
-    item_name            varchar(255),
-    result               varchar(255),
-    result_unit          varchar(255),
-    reference_min        varchar(255),
-    reference_max        varchar(255),
-    remark               varchar(255),
-    abnormal_flag        boolean,
-
-    method               varchar(255),
-    operator             varchar(255),
-
-    created_at           TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP
-);
-
-CREATE TABLE see_seek_evidences (
-    id            serial primary key,
-    uuid          varchar(64) not null unique,
-    see_seek_id   integer,
-    description   varchar(255),
-    recorder_user_id integer,
-    note          varchar(255),
-    category      integer,
-    link          varchar(255),
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at    TIMESTAMP
-);
-
 create table goods (
     id                    serial primary key,
     uuid                  varchar(64) not null unique,
@@ -771,7 +550,8 @@ CREATE TABLE project_place (
     id                   SERIAL PRIMARY KEY,
     project_id           INTEGER,
     place_id             INTEGER,
-    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at           TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    user_id              INTEGER
 );
 
 CREATE TABLE footprints (
@@ -822,4 +602,17 @@ CREATE TABLE member_application_replies (
     status                            SMALLINT NOT NULL DEFAULT 0,
     created_at                        TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at                        TIMESTAMP
+);
+
+CREATE TABLE project_appointments (
+    id                    SERIAL PRIMARY KEY,
+    project_id            INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    verifier_user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+    admin_user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+    master_user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+    status                SMALLINT NOT NULL DEFAULT 0,
+    confirmed_at          TIMESTAMP WITH TIME ZONE, 
+    rejected_at           TIMESTAMP WITH TIME ZONE,
+    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );

@@ -42,5 +42,9 @@ go.work.sum
 # 鹤田河津- MacOS的环境文件
 .DS_Store
 */.DS_Store
+# 鹤田河津- MacOS的临时文件
+*.tmp
+# 鹤田河津-Vscode的设置文件
+.vscode/*
 
 
