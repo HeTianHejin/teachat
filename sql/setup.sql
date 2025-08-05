@@ -414,9 +414,9 @@ create table threads (
   type                   integer default 0,
   post_id                INTEGER REFERENCES post(id),
   is_private             boolean default false,
-  category               integer default 0
+  category               integer default 0,
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  edit_at                TIMESTAMP,
+  edit_at                TIMESTAMP
 );
 
 ALTER TABLE post
@@ -606,13 +606,23 @@ CREATE TABLE member_application_replies (
 
 CREATE TABLE project_appointments (
     id                    SERIAL PRIMARY KEY,
-    project_id            INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    verifier_user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-    admin_user_id         INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-    master_user_id        INTEGER NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+    project_id            INTEGER NOT NULL,
+    note                  VARCHAR(255),
+    start_time            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_time              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
+    place_id              INTEGER NOT NULL DEFAULT 0,
+    payer_user_id         INTEGER,
+    payer_team_id         INTEGER,
+    payer_family_id       INTEGER,
+    payee_user_id         INTEGER,
+    payee_team_id         INTEGER,
+    payee_family_id       INTEGER,
+    verifier_user_id      INTEGER,
+    verifier_family_id    INTEGER,
+    verifier_team_id      INTEGER,
     status                SMALLINT NOT NULL DEFAULT 0,
-    confirmed_at          TIMESTAMP WITH TIME ZONE, 
-    rejected_at           TIMESTAMP WITH TIME ZONE,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    confirmed_at          TIMESTAMP,
+    rejected_at           TIMESTAMP,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

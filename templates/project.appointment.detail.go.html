@@ -1,0 +1,288 @@
+{{ define "content" }}
+
+{{/* 这是"约茶"详情的页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
+    </a>@茶围
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}
+    </a>@茶台
+  </li>
+
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{/* 这是茶台（项目）的详情 */}}
+<div class="media" style="margin-top: 20px;">
+
+  <div class="media-left">
+    {{ template "component_avatar_name_gender" .ProjectBean.Author }}
+  </div>
+
+  <div class="media-body">
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+
+            <span style="font-size: smaller;">
+
+              （<a
+                href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
+              <a
+                href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
+
+            </span>
+          </div>
+
+          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
+            {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
+            {{/* 这个茶台已被茶围管理员选中入围 */}}
+            <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+            {{/* 检查是否入围1 */}}{{ end }}
+
+            <span>
+              {{ if .ProjectBean.Open }}
+              <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
+              <span class="label label-info">开放式茶台</span>
+              {{ else }}
+              <i class="bi-disc-fill" style="font-size: 2rem; color: black;"></i>
+              <span class="label label-default">封闭式茶台</span>
+              {{ end }}
+            </span>
+
+            <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ProjectBean.CreatedAtDate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-body">
+        <h4>
+          {{ .ProjectBean.Project.Title }}
+        </h4>
+        <p style="white-space: pre-wrap;">
+          {{ .ProjectBean.Project.Body }}
+        </p>
+
+        <blockquote style="font-size: small;">
+          <p><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">
+              <span class="label label-default">茶围</span>
+            </a>
+            <span style="margin-inline-start: 1rem;">{{ .QuoteObjectiveBean.Objective.Body }} ...</span>
+          </p>
+          <footer>
+            <cite>
+              <a href="/v1/user/biography?id={{ .QuoteObjectiveBean.Author.Uuid }}"
+                style="color: black;">{{ .QuoteObjectiveBean.Author.Name }}</a>
+              <span style="margin-inline-end: 20px;">
+                （<a href="/v1/family/detail?id={{ .QuoteObjectiveBean.AuthorFamily.Uuid }}"
+                  style="color: black;">{{ .QuoteObjectiveBean.AuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?id={{ .QuoteObjectiveBean.AuthorTeam.Uuid }}"
+                  style="color: black;">{{ .QuoteObjectiveBean.AuthorTeam.Abbreviation }}</a>）
+              </span>
+            </cite>
+          </footer>
+        </blockquote>
+
+        <div style="text-align: center; margin-top: 10px;">
+          {{/* 这是某个茶台（项目）的地址显示 */}}
+          <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
+
+          <a href="/v1/place/detail?uuid={{ .ProjectBean.Place.Uuid }}">{{ .ProjectBean.Place.Name }}</a>
+
+        </div>
+
+      </div>
+
+      <div class="panel-footer">
+        <span>
+          <a href="/v1/appointment/detail?uuid={{ .ProjectBean.Project.Uuid }}">约茶</a>
+          <i class="bi-bookmark-check" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/see-seek/detail?uuid={{ .ProjectBean.Project.Uuid }}">看看</a>
+          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/suggestion/detail?uuid={{ .ProjectBean.Project.Uuid }}">建议</a>
+          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a>
+          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a>
+          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{{ with .AppointmentBean }}{{/* 约茶信息非空检查-开始 */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <img src="/v1/static/image/teachat-table.svg" alt="约茶封面" width="24" height="24">
+    约茶详情
+  </div>
+  <div class="panel-body">
+    <!-- 参与方信息 -->
+    <div class="panel panel-default">
+      <div class="panel-heading">出席双方信息</div>
+      <div class="panel-body">
+        <!-- 出茶叶方 -->
+        <div class="form-group">
+          <label>出茶叶方</label>
+          <div class="row">
+            <div class="col-sm-6">
+              <label>团队简称</label>
+              <p class="form-control-static">{{ .PayerTeam.Abbreviation }}</p>
+            </div>
+            <div class="col-sm-6">
+              <label>家庭名称</label>
+              <p class="form-control-static">{{ .PayerFamily.Name }}</p>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="row">
+              <div class="col-sm-6">
+                <label>代表人ID</label>
+                <p class="form-control-static">{{ .Payer.Id }}</p>
+              </div>
+              <div class="col-sm-6">
+                <label>代表人姓名</label>
+                <p class="form-control-static">{{ .Payer.Name }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 收茶叶方 -->
+          <div class="form-group">
+            <label>收茶叶方</label>
+            <div class="row">
+              <div class="col-sm-6">
+                <label>团队简称</label>
+                <p class="form-control-static">{{ .PayeeTeam.Abbreviation }}</p>
+              </div>
+              <div class="col-sm-6">
+                <label>家庭名称</label>
+                <p class="form-control-static">{{ .PayeeFamily.Name }}</p>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-6">
+                <label>代表人ID</label>
+                <p class="form-control-static">{{ .Payee.Id }}</p>
+              </div>
+              <div class="col-sm-6">
+                <label>代表人姓名</label>
+                <p class="form-control-static">{{ .Payee.Name }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 见证方 -->
+    <div class="form-group">
+      <label>见证方</label>
+      <div class="row">
+        <div class="col-sm-6">
+          <label>团队简称</label>
+          <p class="form-control-static">{{ .VerifierTeam.Abbreviation }}</p>
+        </div>
+        <div class="col-sm-6">
+          <label>家庭名称</label>
+          <p class="form-control-static">{{ .VerifierFamily.Name }}</p>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <label>见证人姓名</label>
+          <p class="form-control-static">{{ .Verifier.Name }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 基础信息 -->
+    <div class="form-group">
+      <label>约茶备注</label>
+      <p class="form-control-static" style="white-space: pre-wrap;">{{ .Appointment.Note }}</p>
+    </div>
+
+    <div class="form-group">
+      <label>开始时间</label>
+      <p class="form-control-static">{{ .Appointment.StartTime.Format "2006-01-02 15:04" }}</p>
+    </div>
+
+    <div class="form-group">
+      <label>结束时间</label>
+      <p class="form-control-static">{{ .Appointment.EndTime.Format "2006-01-02 15:04" }}</p>
+    </div>
+
+    <div class="form-group">
+      <label>约茶地方</label>
+      <p class="form-control-static" style="white-space: pre-wrap;">{{ $.ProjectBean.Place.Name }}</p>
+    </div>
+
+    <div class="form-group">
+      <label>地点ID</label>
+      <p class="form-control-static">{{ .Appointment.PlaceId }}</p>
+    </div>
+
+    <!-- 状态展示 -->
+    <div class="form-group">
+      <label>约茶状态</label>
+      <p class="form-control-static">{{ .Appointment.StatusString }}</p>
+    </div>
+
+    <!-- 时间信息 -->
+    <div class="form-group">
+      <label>创建时间</label>
+      <p class="form-control-static">{{ .Appointment.CreatedAt.Format "2006-01-02 15:04"  }}</p>
+    </div>
+
+    {{ if .Appointment.UpdatedAt }}
+    <div class="form-group">
+      <label>更新时间</label>
+      <p class="form-control-static">{{ .Appointment.UpdatedAt.Format "2006-01-02 15:04"  }}</p>
+    </div>
+    {{ end }}
+
+    <div class="form-group text-center">
+      {{ if $.IsVerifier }}    {{/* 只有见证人可以修改约茶状态 */}}
+      {{ if eq .Appointment.Status 0 }}
+      <a href="/v1/appointment/accept?id={{ .Appointment.Id }}" class="btn btn-success">接受约茶</a>
+      <a href="/v1/appointment/reject?id={{ .Appointment.Id }}" class="btn btn-danger">拒绝约茶</a>
+      {{ else if eq .Appointment.Status 1 }}
+      <a href="/v1/appointment/complete?id={{ .Appointment.Id }}" class="btn btn-primary">完成约茶</a>
+      {{ end }}
+      {{ end }}
+
+      {{ if or (eq $.SessUser.Id .Payer.Id) (eq $.SessUser.Id .Payee.Id) }}
+      {{/* 出茶叶方或收茶叶方可以取消约茶 */}}
+      {{ if or (eq .Appointment.Status 1) (eq .Appointment.Status 2) }}
+      <a href="/v1/appointment/cancel?id={{ .Appointment.Id }}" class="btn btn-warning">取消约茶</a>
+      {{ end }}
+      {{ end }}
+    </div>
+  </div>
+</div>
+{{ else }}{{/* 约茶信息非空检查-空数据！ */}}
+<div class="alert alert-danger" role="alert">
+  <strong>烫手山芋!</strong> 约茶信息为空。
+</div>
+{{ end }}{{/* 约茶信息非空检查-结束 */}}
+
+{{ end }}
