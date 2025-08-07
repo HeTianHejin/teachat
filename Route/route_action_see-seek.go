@@ -36,19 +36,16 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
-
 	vals := r.URL.Query()
-
 	uuid := vals.Get("uuid")
-
-	t_thread, err := data.GetThreadByUUID(uuid)
-	if err != nil {
-		util.Debug(" Cannot get thread given uuid ", uuid, err)
+	if uuid == "" {
+		util.Debug(" No uuid provided in query")
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
-	if t_thread.Category != data.ThreadCategorySeeSeek {
-		util.Debug(" this Thread category is not a see-seek", t_thread.Id, t_thread.Category)
+	t_proj := data.Project{Uuid: uuid}
+	if err := t_proj.GetByUuid(); err != nil {
+		util.Debug(" Cannot get project by uuid", uuid, err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -60,16 +57,9 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t_proj, err := t_thread.Project()
-	if err != nil {
-		util.Debug(" Cannot get project given proj_id", t_thread.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
-		return
-	}
-
 	t_obje, err := t_proj.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective given proj_id", t_thread.Id, err)
+		util.Debug(" Cannot get objective given proj_id", t_proj.Id, err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -86,20 +76,6 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// master_team, err := data.GetTeam(t_proj.TeamId)
-	// if err != nil {
-	// 	util.Debug(" Cannot get master team", err)
-	// 	Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
-	// 	return
-	// }
-
-	// admin_team, err := data.GetTeam(t_obje.TeamId)
-	// if err != nil {
-	// 	util.Debug(" Cannot get ob_admin team", t_obje.TeamId, err)
-	// 	Report(w, r, "你好，假作真时真亦假，无为有处有还无？")
-	// 	return
-	// }
-
 	sessUserData, err := prepareUserPageData(&sess)
 	if err != nil {
 		util.Debug(" Cannot prepare user page data", err)
@@ -112,17 +88,6 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	sSDpD.ObjectiveBean = objeBean
 	sSDpD.SessUser = sessUserData.User
 	sSDpD.IsMaster = true
-
-	// sSDpD.Admin = admin
-	// sSDpD.AdminDefaultFamily = a_default_family
-	// sSDpD.AdminSurvivalFamilies = a_survival_families
-	// sSDpD.AdminDefaultTeam = a_default_team
-	// sSDpD.AdminSurvivalTeams = a_survival_teams
-	// sSDpD.Master = master
-	// sSDpD.MasterDefaultFamily = m_default_family
-	// sSDpD.MasterSurvivalFamilies = m_survival_families
-	// sSDpD.MasterDefaultTeam = m_default_team
-	// sSDpD.MasterSurvivalTeams = m_survival_teams
 
 	renderHTML(w, &sSDpD, "layout", "navbar.private", "see-seek.new")
 }

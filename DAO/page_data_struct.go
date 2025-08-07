@@ -34,13 +34,6 @@ type UserPageData struct {
 	BindPlaces       []Place
 }
 
-// 个人独白，独角戏资料
-// type MonologueBean struct {
-// 	Monologue Monologue
-// 	Author    User
-// 	Team      Team
-// }
-
 // 某个茶话页面渲染所需的动态数据
 type PublicPData struct {
 	IsAuthor bool // 是否为作者
@@ -635,7 +628,7 @@ type ProjectAppointmentBean struct {
 	VerifierTeam   Team
 }
 
-// 新建“看看”页面数据
+// 新建“看看”，
 // “看看”详情页面数据
 type SeeSeekDetailPageData struct {
 	SessUser       User
@@ -646,13 +639,17 @@ type SeeSeekDetailPageData struct {
 	SessUserFamily Family
 	SessUserTeam   Team
 
-	Admin       User
-	AdminFamily Family
-	AdminTeam   Team
+	Payer       User
+	PayerFamily Family
+	PayerTeam   Team
 
-	Master       User
-	MasterFamily Family
-	MasterTeam   Team
+	Payee       User
+	PayeeFamily Family
+	PayeeTeam   Team
+
+	Verifier       User
+	VerifierFamily Family
+	VerifierTeam   Team
 
 	SeeSeekBean SeeSeekBean
 

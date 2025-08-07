@@ -4,21 +4,23 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}">{{ .ObjectiveBean.Objective.Title }}@茶围</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}">{{ .ObjectiveBean.Objective.Title }}@茶围</a>
+  </li>
   <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
-  <li class="active">新建"看看"</li>
+  <li class="active">+ 看看</li>
 </ol>
 
 <div class="panel panel-default">
   <div class="panel-body" style="font-size: small;">
-    <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}"><span class="label label-default">品味</span></a>
-    <a href="/v1/user/biography?id={{ .ProjectBean.Author.Uuid }}">{{ .ProjectBean.Author.Name }}</a>
+    <a href="/v1/thread/detail?uuid={{ .ThreadBean.Thread.Uuid }}"><span class="label label-default">茶议“看看”</span></a>
+    <a href="/v1/user/biography?id={{ .ThreadBean.Author.Uuid }}">{{ .ThreadBean.Author.Name }}</a>
     <span style="margin-inline-end: 1rem;">@<a
-        href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a></span>
+        href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a></span>
     <span>
-      <mark>{{ .ProjectBean.Status }}</mark>
-      <h3>{{ .ProjectBean.Project.Title }}</h3>
-      {{ .ProjectBean.Project.Body }}
+      <mark>{{ .ThreadBean.Status }}</mark>
+      <h3>{{ .ThreadBean.Thread.Title }}</h3>
+      {{ .ThreadBean.Thread.Body }}
     </span>
   </div>
 </div>
@@ -36,60 +38,59 @@
         <label for="name">"看看"名称（2-24字）</label>
         <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="24" required />
       </div>
-      
+
       <div class="form-group">
         <label for="nickname">"看看"昵称（可选）</label>
         <input type="text" class="form-control" name="nickname" id="nickname" maxlength="24" />
       </div>
-      
+
       <div class="form-group">
         <label for="description">"看看"描述（17-456字）</label>
-        <textarea class="form-control" name="description" id="description" rows="6" minlength="17" maxlength="456" required></textarea>
+        <textarea class="form-control" name="description" id="description" rows="6" minlength="17" maxlength="456"
+          required></textarea>
       </div>
 
-      <!-- 参与方信息 -->
+      <!-- 参与方信息, 无需提交，展示是用于填写时检查核对信息准确性-->
       <div class="panel panel-default">
-        <div class="panel-heading">参与方设置</div>
+        <div class="panel-heading">主客方</div>
         <div class="panel-body">
-          <!-- 需求方 -->
+          <!-- 主场方 -->
+          <label>主场方</label>
           <div class="form-group">
-            <label>需求方</label>
-            <div class="radio">
-              <label>
-                <input type="radio" name="requester_type" value="team" checked> 团队身份
-              </label>
-            </div>
-            <div class="radio">
-              <label>
-                <input type="radio" name="requester_type" value="family"> 家庭身份
-              </label>
-            </div>
-            <select name="requester_id" class="form-control" required>
-              <option value="{{ .SessUser.Id }}">{{ .SessUser.Name }} (我)</option>
-            </select>
+            <label for="admin">主理人</label>
+            <input type="text" class="form-control"  id="admin" disabled />
+
+            <label for="family_admin">家庭</label>
+            <input type="text" class="form-control"  id="family_admin" disabled />
+
+            <label for="team_admin">团队</label>
+            <input type="text" class="form-control" id="team_admin" disabled />
           </div>
 
-          <!-- 服务方 -->
+          <!-- 做客方 -->
           <div class="form-group">
-            <label>服务方</label>
-            <select name="provider_id" class="form-control" required>
-              <option value="">-- 请选择服务方 --</option>
-              {{ range .AvailableProviders }}
-              <option value="{{ .Id }}">{{ .Name }}</option>
-              {{ end }}
-            </select>
+            <label for="master">主理人</label>
+            <input type="text" class="form-control"  id="master" disabled />
+
+            <label for="family_master">家庭</label>
+            <input type="text" class="form-control"  id="family_master" disabled />
+
+            <label for="team_master">团队</label>
+            <input type="text" class="form-control"  id="team_master" disabled />
           </div>
 
           <!-- 见证方 -->
           <div class="form-group">
-            <label>见证/审核方（可选）</label>
-            <select name="verifier_id" class="form-control">
-              <option value="">-- 无见证方 --</option>
-              {{ range .AvailableVerifiers }}
-              <option value="{{ .Id }}">{{ .Name }}</option>
-              {{ end }}
-            </select>
+            <label>见证方</label>
+            <label for="verifier">见证人</label>
+            <input type="text" class="form-control"  id="verifier" disabled />
+            <label for="verifier_family">家庭</label>
+            <input type="text" class="form-control"  id="verifier_family" disabled />
+            <label for="verifier_team">团队</label>
+            <input type="text" class="form-control"  id="verifier_team" disabled />
+
           </div>
+
         </div>
       </div>
 
@@ -98,13 +99,9 @@
         <div class="panel-heading">地点与环境</div>
         <div class="panel-body">
           <div class="form-group">
-            <label for="place_id">事发地点</label>
-            <select name="place_id" class="form-control" id="place_id" required>
-              <option value="{{ .SessUserDefaultPlace.Id }}">{{ .SessUserDefaultPlace.Name }}</option>
-              {{ range .SessUserBindPlaces }}
-              <option value="{{ .Id }}">{{ .Name }}</option>
-              {{ end }}
-            </select>
+            <label for="place">事发地点</label>
+            <input type="text" class="form-control" name ="place" id="place" value="{{ .Place.Name }}" disabled />
+            <input type="hidden" name="place_id" value="{{ .place.Id }}" />
           </div>
 
           <div class="form-group">
@@ -136,15 +133,13 @@
           <div class="form-group">
             <div class="radio">
               <label>
-                <input type="radio" name="category" value="0" checked required 
-                       onchange="toggleInviteIdsInput(false)">
+                <input type="radio" name="category" value="0" checked required onchange="toggleInviteIdsInput(false)">
                 公开（所有人可见）
               </label>
             </div>
             <div class="radio">
               <label>
-                <input type="radio" name="category" value="1" required 
-                       onchange="toggleInviteIdsInput(true)">
+                <input type="radio" name="category" value="1" required onchange="toggleInviteIdsInput(true)">
                 保密（仅当事人可见）
               </label>
             </div>
@@ -152,17 +147,17 @@
 
           <div class="form-group" id="inviteIdsGroup" style="display:none;">
             <label for="invite_ids">指定参与的家庭/团队ID（逗号分隔）</label>
-            <input type="text" class="form-control" name="invite_ids" id="invite_ids" 
-                   placeholder="例如: 1,2,3" maxlength="100">
+            <input type="text" class="form-control" name="invite_ids" id="invite_ids" placeholder="例如: 1,2,3"
+              maxlength="100">
           </div>
         </div>
       </div>
 
-      <input type="hidden" name="project_uuid" value="{{ .ProjectBean.Project.Uuid }}">
+      <input type="hidden" name="thread_uuid" value="{{ .ThreadBean.Thread.Uuid }}">
 
       <div class="form-group text-center">
         <button type="submit" class="btn btn-primary">创建"看看"</button>
-        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+        <a href="/v1/thread/detail?uuid={{ .ThreadBean.Thread.Uuid }}" class="btn btn-default">取消</a>
       </div>
     </form>
   </div>
@@ -174,10 +169,10 @@
 </div>
 
 <script>
-function toggleInviteIdsInput(show) {
-  document.getElementById('inviteIdsGroup').style.display = show ? 'block' : 'none';
-  if (!show) document.getElementById('invite_ids').value = '';
-}
+  function toggleInviteIdsInput(show) {
+    document.getElementById('inviteIdsGroup').style.display = show ? 'block' : 'none';
+    if (!show) document.getElementById('invite_ids').value = '';
+  }
 </script>
 
 {{ end }}
