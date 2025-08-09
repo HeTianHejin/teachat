@@ -679,6 +679,8 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		break
 	case data.ThreadCategorySeeSeek:
 		break
+	case data.ThreadCategoryBrainFire:
+		break
 	case data.ThreadCategorySuggestion:
 		break
 	case data.ThreadCategoryGoods:
@@ -843,6 +845,8 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	case data.ThreadCategoryAppointment:
 		break
 	case data.ThreadCategorySeeSeek:
+		break
+	case data.ThreadCategoryBrainFire:
 		break
 	case data.ThreadCategorySuggestion:
 		break

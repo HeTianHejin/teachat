@@ -272,9 +272,9 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 预填充约茶...5部曲
+	// 预填充约茶...6部曲
 	if err = data.CreateRequiredThreads(&ob, &pr, data.UserId_Verifier, r.Context()); err != nil {
-		util.Debug(" Cannot create required threads", err)
+		util.Debug(" Cannot create required 6 threads", err)
 		report(w, r, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 		return
 	}
@@ -706,73 +706,92 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pD.IsApproved = pD.ProjectBean.IsApproved
 
-	//如果入围，读取入围必备5threads
+	//如果入围，读取入围必备6threads
 	if pD.IsApproved {
-		threadAppointment, err := pr.ThreadAppointment(ctx)
+
+		thread_appo, err := pr.ThreadAppointment(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread appointment", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		threadAppointmentBean, err := fetchThreadBean(threadAppointment, r)
+		thread_appo_bean, err := fetchThreadBean(thread_appo, r)
 		if err != nil {
 			util.Debug(" Cannot read thread appointment bean", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		pD.ApprovedFiveThreads.ThreadBeanAppointment = threadAppointmentBean
-		threadSeeSeek_slice, err := pr.ThreadSeeSeek(ctx)
+		pD.Approved6Threads.ThreadBeanAppointment = thread_appo_bean
+
+		thread_seeseek_slice, err := pr.ThreadsSeeSeek(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread see seek", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。，请稍后再试。")
 			return
 		}
-		threadSeeSeekBean_slice, err := fetchThreadBeanSlice(threadSeeSeek_slice, r)
+		thread_seeseek_bean_slice, err := fetchThreadBeanSlice(thread_seeseek_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread see seek bean slice", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		pD.ApprovedFiveThreads.ThreadBeanSeeSeekSlice = threadSeeSeekBean_slice
-		threadSuggestion, err := pr.ThreadSuggestion(ctx)
+		pD.Approved6Threads.ThreadBeanSeeSeekSlice = thread_seeseek_bean_slice
+
+		thread_brain_fire_slice, err := pr.ThreadsBrainFire(ctx)
+		if err != nil {
+			util.Debug(" Cannot read thread brain fire", err)
+			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
+			return
+		}
+		thread_brainfire_bean_slice, err := fetchThreadBeanSlice(thread_brain_fire_slice, r)
+		if err != nil {
+			util.Debug(" Cannot read thread brain fire bean", err)
+			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
+			return
+		}
+		pD.Approved6Threads.ThreadBeanBrainFireSlice = thread_brainfire_bean_slice
+
+		thread_suggestion_slice, err := pr.ThreadsSuggestion(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread suggestion", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		threadSuggestionBean_slice, err := fetchThreadBeanSlice(threadSuggestion, r)
+		thread_suggestion_bean_slice, err := fetchThreadBeanSlice(thread_suggestion_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread suggestion bean slice", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		pD.ApprovedFiveThreads.ThreadBeanSuggestionSlice = threadSuggestionBean_slice
-		threadGoods_slice, err := pr.ThreadGoods(ctx)
+		pD.Approved6Threads.ThreadBeanSuggestionSlice = thread_suggestion_bean_slice
+
+		thread_goods_slice, err := pr.ThreadsGoods(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread goods", err)
 			report(w, r, "疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		threadGoodsBean_slice, err := fetchThreadBeanSlice(threadGoods_slice, r)
+		thread_goods_bean_slice, err := fetchThreadBeanSlice(thread_goods_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread goods bean slice", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		pD.ApprovedFiveThreads.ThreadBeanGoodsSlice = threadGoodsBean_slice
-		threadHandcraft_slice, err := pr.ThreadHandcraft(ctx)
+		pD.Approved6Threads.ThreadBeanGoodsSlice = thread_goods_bean_slice
+
+		thread_handicraft_slice, err := pr.ThreadsHandicraft(ctx)
 		if err != nil {
 			util.Debug(" Cannot read thread handcraft", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		threadHandcraftBean_slice, err := fetchThreadBeanSlice(threadHandcraft_slice, r)
+		thread_handicraft_bean_slice, err := fetchThreadBeanSlice(thread_handicraft_slice, r)
 		if err != nil {
 			util.Debug(" Cannot read thread handcraft bean slice", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
-		pD.ApprovedFiveThreads.ThreadBeanHandcraftSlice = threadHandcraftBean_slice
+		pD.Approved6Threads.ThreadBeanHandicraftSlice = thread_handicraft_bean_slice
 
 	}
 
@@ -848,17 +867,19 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	pD.IsMaster = is_master
 
-	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
-	if err != nil {
-		util.Debug("Admin permission check failed",
-			"userId", s_u.Id,
-			"objectiveId", ob.Id,
-			"error", err,
-		)
-		report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
-		return
+	if !is_master {
+		is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
+		if err != nil {
+			util.Debug("Admin permission check failed",
+				"userId", s_u.Id,
+				"objectiveId", ob.Id,
+				"error", err,
+			)
+			report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+			return
+		}
+		pD.IsAdmin = is_admin
 	}
-	pD.IsAdmin = is_admin
 
 	if !pD.IsAdmin && !pD.IsMaster {
 		veri_team := data.Team{Id: data.TeamIdVerifier}

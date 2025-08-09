@@ -1,7 +1,7 @@
 
 {{ define "component_thread_bean_approved" }}
 
-{{/* 这个模版专用于已入围的茶议5部曲展示 */}}
+{{/* 这个模版专用于已入围的茶议6部曲展示 */}}
 
   {{ with .ThreadBeanAppointment }}
     {{ template "component_thread_bean" . }}
@@ -13,6 +13,12 @@
     <hr />
   {{ end }}
 
+  {{ range .ThreadBeanBrainFireSlice }}
+  {{ template "component_thread_bean" . }}
+  <hr />
+  {{ end }}
+
+
   {{ range .ThreadBeanSuggestionSlice }}
     {{ template "component_thread_bean" . }}
     <hr />
@@ -23,7 +29,7 @@
     <hr />
   {{ end }}
 
-  {{ range .ThreadBeanHandcraftSlice }}
+  {{ range .ThreadBeanHandicraftSlice }}
     {{ template "component_thread_bean" . }}
     <hr />
   {{ end }}

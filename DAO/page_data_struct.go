@@ -110,9 +110,9 @@ type ProjectDetail struct {
 	SessUserDefaultPlace     Place
 	SessUserBindPlaces       []Place
 
-	ProjectBean         ProjectBean                //当前浏览茶台资料夹
-	IsApproved          bool                       //是否入围
-	ApprovedFiveThreads ProjectApprovedFiveThreads //入围茶台必备5茶议
+	ProjectBean      ProjectBean             //当前浏览茶台资料夹
+	IsApproved       bool                    //是否入围
+	Approved6Threads ProjectApproved6Threads //入围茶台必备6茶议
 
 	IsEdited bool
 
@@ -126,13 +126,14 @@ type ProjectDetail struct {
 	IsOverTwelve bool //是否超过12个
 }
 
-// 入围茶台必备5茶议
-type ProjectApprovedFiveThreads struct {
+// 入围茶台必备6茶议
+type ProjectApproved6Threads struct {
 	ThreadBeanAppointment     ThreadBean
 	ThreadBeanSeeSeekSlice    []ThreadBean
+	ThreadBeanBrainFireSlice  []ThreadBean
 	ThreadBeanSuggestionSlice []ThreadBean
 	ThreadBeanGoodsSlice      []ThreadBean
-	ThreadBeanHandcraftSlice  []ThreadBean
+	ThreadBeanHandicraftSlice []ThreadBean
 }
 
 // 茶议草稿页面渲染数据

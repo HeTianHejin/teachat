@@ -4,7 +4,7 @@ import "time"
 
 // 限时思考？脑火，指在限时场景下，智力资源运作消耗糖的表观记录
 // 烧脑活动，根据“看看”所得线索作出快刀斩乱麻的判断
-type BrainsFire struct {
+type BrainFire struct {
 	Id        int
 	Uuid      string
 	ProjectId int
@@ -36,7 +36,7 @@ type BrainsFire struct {
 	//2、已点火
 	//3、燃烧中
 	//4、已熄灭
-	Status BrainsFireStatus
+	Status BrainFireStatus
 
 	//1、文艺类
 	//2、理工类
@@ -46,11 +46,11 @@ type BrainsFire struct {
 	//2、私密（专利？）
 	BrainFireType int
 }
-type BrainsFireStatus int
+type BrainFireStatus int
 
 const (
-	BrainsFireStatusUnlit        BrainsFireStatus = iota + 1 // 未点火
-	BrainsFireStatusLit                                      // 已点火
-	BrainsFireStatusBurning                                  // 燃烧中
-	BrainsFireStatusExtinguished                             // 已熄灭
+	BrainFireStatusUnlit        BrainFireStatus = iota + 1 // 未点火
+	BrainFireStatusLit                                     // 已点火
+	BrainFireStatusBurning                                 // 燃烧中
+	BrainFireStatusExtinguished                            // 已熄灭
 )
