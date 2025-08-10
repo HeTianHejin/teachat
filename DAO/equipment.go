@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	util "teachat/Util"
 	"time"
@@ -23,8 +25,12 @@ var Db *sql.DB //数据库实例
 
 func init() {
 	var err error
+
+	// 获取项目根目录（无论从哪里调用）
+	_, filename, _, _ := runtime.Caller(0)
+	rootDir := filepath.Dir(filepath.Dir(filename)) // 根据实际层级调整
 	// 加载 .env 文件
-	err = godotenv.Load()
+	err = godotenv.Load(filepath.Join(rootDir, ".env"))
 	if err != nil {
 		util.PrintStdout("Error loading .env file")
 	}

@@ -52,9 +52,8 @@ var Config Configuration
 
 // 读取配置文件内容
 func LoadConfig() error {
-	configPath := getConfigPath()
 
-	file, err := os.Open(configPath)
+	file, err := os.Open("config.json")
 	if err != nil {
 		return fmt.Errorf("打开配置文件失败: %w", err)
 	}
@@ -72,28 +71,6 @@ func LoadConfig() error {
 	return nil
 }
 
-// 使用绝对路径获取配置文件
-func getConfigPath() string {
-	// 优先使用环境变量指定的配置路径
-	if path := os.Getenv("APP_CONFIG"); path != "" {
-		return path
-	}
-
-	// 其次尝试当前目录下的 config.json
-	if _, err := os.Stat("config.json"); err == nil {
-		return "config.json"
-	}
-
-	// 最后尝试用户主目录
-	if home, err := os.UserHomeDir(); err == nil {
-		defaultPath := filepath.Join(home, ".teachat", "config.json")
-		if _, err := os.Stat(defaultPath); err == nil {
-			return defaultPath
-		}
-	}
-
-	return "config.json" // 默认使用当前目录下的 config.json
-}
 func (c *Configuration) Validate() error {
 	if c.Address == "" {
 		return errors.New("服务器地址不能为空")
