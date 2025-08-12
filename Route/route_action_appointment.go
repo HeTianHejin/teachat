@@ -1,6 +1,8 @@
 package route
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"strconv"
 	data "teachat/DAO"
@@ -193,14 +195,14 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	start_time_string := r.PostFormValue("start_time")
-	start_time, err := time.Parse("2006-01-02 15:04", start_time_string)
+	start_time, err := time.Parse("2006-01-02T15:04", start_time_string)
 	if err != nil {
 		util.Debug(" Cannot parse start_time", err)
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	end_time_string := r.PostFormValue("end_time")
-	end_time, err := time.Parse("2006-01-02 15:04", end_time_string)
+	end_time, err := time.Parse("2006-01-02T15:04", end_time_string)
 	if err != nil {
 		util.Debug(" Cannot parse end_time", err)
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
@@ -366,6 +368,10 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取预约记录
 	p_a, err := data.GetAppointmentByProjectId(pr.Id, r.Context())
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			report(w, r, "这个茶台尚未约茶。")
+			return
+		}
 		if err.Error() == "没有找到相关的茶台预约" {
 			report(w, r, "没有找到相关的茶台预约")
 			return

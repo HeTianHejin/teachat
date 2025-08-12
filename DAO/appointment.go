@@ -89,7 +89,7 @@ func (t *ProjectAppointment) StatusString() string {
 func (t *ProjectAppointment) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `INSERT INTO project_appointments (project_id, note, start_time, end_time, place_id, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id,create_at`
+	statement := `INSERT INTO project_appointments (project_id, note, start_time, end_time, place_id, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id,created_at`
 	stmt, err := Db.PrepareContext(ctx, statement)
 	if err != nil {
 		return err

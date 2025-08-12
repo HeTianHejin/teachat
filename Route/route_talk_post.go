@@ -493,7 +493,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 		timeStr := now.Format("2006年1月2日 15:04:05")
 		name := s_u.Name
 		// 追加内容（另起一行）// 注意开头的 \n
-		t_post.Body += "\n[" + timeStr + " " + name + " 补充 ]" + body_addi
+		t_post.Body += "\n[ " + timeStr + " " + name + " 补充 ]" + body_addi
 
 		err = t_post.UpdateBody()
 		if err != nil {

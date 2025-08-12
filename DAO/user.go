@@ -214,7 +214,7 @@ func (session *Session) Check() (bool, error) {
 	).Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil // 会话不存在不算错误
 		}
 		return false, fmt.Errorf("database query failed: %w", err)

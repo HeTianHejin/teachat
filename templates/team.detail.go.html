@@ -141,11 +141,13 @@
           <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
         </span>
 
+        
         <p>团队角色： <span style="font-size:  large;">{{ .TeamMember.Role }}</span></p>
-
+        
+        <p>茶友号：{{ .Member.Id }}</p>
+        <p style="font-style: italic;">{{ .Member.Email }}</p>
+        
         <p>加盟时间：{{ .CreatedAtDate }}</p>
-
-        <span style="font-style: italic;">{{ .Member.Email }}</span>
 
       </div>
     </div>
@@ -166,11 +168,13 @@
           <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
         </span>
 
+        
         <p>团队角色： <span style="font-size:  large;">{{ .TeamMember.Role }}</span></p>
-
+        
+        <p>茶友号：{{ .Member.Id }}</p>
+        <p style="font-style: italic;">{{ .Member.Email }}</p>
+        
         <p>加盟时间：{{ .CreatedAtDate }}</p>
-
-        <span style="font-style: italic;">{{ .Member.Email }}</span>
 
       </div>
     </div>

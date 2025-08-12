@@ -3,6 +3,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
@@ -245,7 +246,7 @@ func (p *Post) HasUserPostedInThread(ctx context.Context) (bool, error) {
 	err := Db.QueryRowContext(ctx, query, p.ThreadId, p.UserId).Scan(&exists)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			// 没有记录属于正常情况，返回false
 			return false, nil
 		}
