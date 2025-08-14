@@ -193,6 +193,10 @@ func main() {
 	mux.HandleFunc("/v1/place/my", route.MyPlace)
 	mux.HandleFunc("/v1/place/collect", route.PlaceCollect)
 
+	//defined in route_action_environment.go
+	mux.HandleFunc("/v1/environment/new", route.HandleNewEnvironment)
+	mux.HandleFunc("/v1/environment/detail", route.HandleEnvironmentDetail)
+
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
 

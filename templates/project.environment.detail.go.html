@@ -1,0 +1,132 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">环境条件详情</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="glyphicon glyphicon-info-sign"></span>
+    环境条件 #{{ .Environment.Id }} - {{ .Environment.Name }}
+  </div>
+  <div class="panel-body">
+    
+    <!-- 基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>基本信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>ID</strong></td>
+            <td>{{ .Environment.Id }}</td>
+          </tr>
+          <tr>
+            <td><strong>名称</strong></td>
+            <td>{{ .Environment.Name }}</td>
+          </tr>
+          <tr>
+            <td><strong>描述</strong></td>
+            <td>{{ .Environment.Summary }}</td>
+          </tr>
+          <tr>
+            <td><strong>记录者</strong></td>
+            <td>{{ .Recorder.Name }} (ID: {{ .Recorder.Id }})</td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .Environment.CreatedAt.Format "2006-01-02 15:04:05" }}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>环境参数</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>温度</strong></td>
+            <td>{{ GetStarIcons .Environment.Temperature }} {{ GetEnvironmentLevelDescription "Temperature" .Environment.Temperature }}</td>
+          </tr>
+          <tr>
+            <td><strong>湿度</strong></td>
+            <td>{{ GetStarIcons .Environment.Humidity }} {{ GetEnvironmentLevelDescription "Humidity" .Environment.Humidity }}</td>
+          </tr>
+          <tr>
+            <td><strong>PM2.5</strong></td>
+            <td>{{ GetStarIcons .Environment.PM25 }} {{ GetEnvironmentLevelDescription "PM25" .Environment.PM25 }}</td>
+          </tr>
+          <tr>
+            <td><strong>噪声</strong></td>
+            <td>{{ GetStarIcons .Environment.Noise }} {{ GetEnvironmentLevelDescription "Noise" .Environment.Noise }}</td>
+          </tr>
+          <tr>
+            <td><strong>光照</strong></td>
+            <td>{{ GetStarIcons .Environment.Light }} {{ GetEnvironmentLevelDescription "Light" .Environment.Light }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- 详细参数 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>详细参数</h4>
+        <div class="row">
+          <div class="col-md-4">
+            <table class="table table-condensed">
+              <tr>
+                <td><strong>风力</strong></td>
+                <td>{{ GetStarIcons .Environment.Wind }} {{ GetEnvironmentLevelDescription "Wind" .Environment.Wind }}</td>
+              </tr>
+              <tr>
+                <td><strong>流速</strong></td>
+                <td>{{ GetStarIcons .Environment.Flow }} {{ GetEnvironmentLevelDescription "Flow" .Environment.Flow }}</td>
+              </tr>
+              <tr>
+                <td><strong>雨量</strong></td>
+                <td>{{ GetStarIcons .Environment.Rain }} {{ GetEnvironmentLevelDescription "Rain" .Environment.Rain }}</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-4">
+            <table class="table table-condensed">
+              <tr>
+                <td><strong>气压</strong></td>
+                <td>{{ GetStarIcons .Environment.Pressure }} {{ GetEnvironmentLevelDescription "Pressure" .Environment.Pressure }}</td>
+              </tr>
+              <tr>
+                <td><strong>烟雾</strong></td>
+                <td>{{ GetStarIcons .Environment.Smoke }} {{ GetEnvironmentLevelDescription "Smoke" .Environment.Smoke }}</td>
+              </tr>
+              <tr>
+                <td><strong>扬尘</strong></td>
+                <td>{{ GetStarIcons .Environment.Dust }} {{ GetEnvironmentLevelDescription "Dust" .Environment.Dust }}</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-4">
+            <table class="table table-condensed">
+              <tr>
+                <td><strong>异味</strong></td>
+                <td>{{ GetStarIcons .Environment.Odor }} {{ GetEnvironmentLevelDescription "Odor" .Environment.Odor }}</td>
+              </tr>
+              <tr>
+                <td><strong>能见度</strong></td>
+                <td>{{ GetStarIcons .Environment.Visibility }} {{ GetEnvironmentLevelDescription "Visibility" .Environment.Visibility }}</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="javascript:history.back()" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回
+      </a>
+    </div>
+  </div>
+</div>
+
+{{ end }}

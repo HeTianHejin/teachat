@@ -1,13 +1,26 @@
 package data
 
-import "time"
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"log"
+	"sync"
+	"time"
+)
+
+// 错误定义
+var ErrEnvironmentNotFound = errors.New("environment not found")
 
 // 对作业环境模糊（口头）记录，用于茶话会交流
 // 作业环境属性
 type Environment struct {
 	Id      int
 	Uuid    string
+	Name    string
 	Summary string //概述
+	UserId  int    //记录者ID
 
 	// 1: "极热（Scorching）",    >40℃
 	// 2: "炎热（Hot）",          30-40℃
@@ -212,9 +225,17 @@ var LevelMaps = map[string]map[int]string{
 	},
 }
 
+// type LevelDescriber interface {
+// 	GetLevelDescription(field string, level int) string
+// }
+
+// func (e *Environment) GetLevelDescription(field string, level int) string {
+// 	return GetLevelDescription(field, level) // This calls the package-level function
+// }
+
 // 根据字段名和等级返回作业环境描述
 // 安全获取分级描述（处理无效字段或等级）
-func GetLevelDescription(field string, level int) string {
+func GetEnvironmentLevelDescription(field string, level int) string {
 	if level < 1 || level > 5 {
 		return "无效等级"
 	}
@@ -224,80 +245,143 @@ func GetLevelDescription(field string, level int) string {
 	return "未知字段：" + field
 }
 
-// 常见作业环境
-// 家庭--普通家庭
-var EnvironmentHome = Environment{
-	Id:          1,
-	Uuid:        "62c06442-2b60-418a-6493-a91bd03ae4k6",
-	Summary:     "普通家庭",
-	Temperature: 3,
-	Humidity:    3,
-	PM25:        5,
-	Noise:       4,
-	Light:       2,
-	Wind:        5,
-	Flow:        5,
-	Rain:        5,
-	Pressure:    3,
-	Smoke:       5,
-	Dust:        5,
-	Odor:        5,
-	Visibility:  4,
-}
-
 // Environment.Create() 创建作业环境
 func (e *Environment) Create() (err error) {
-	statement := "INSERT INTO environments (uuid, summary, temperature, humidity, pm25, noise, light, wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id, uuid"
+	statement := "INSERT INTO environments (uuid, name, summary, user_id, temperature, humidity, pm25, noise, light, wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id, uuid"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), e.Summary, e.Temperature, e.Humidity, e.PM25, e.Noise, e.Light, e.Wind, e.Flow, e.Rain, e.Pressure, e.Smoke, e.Dust, e.Odor, e.Visibility, time.Now()).Scan(&e.Id, &e.Uuid)
+	err = stmt.QueryRow(Random_UUID(), e.Name, e.Summary, e.UserId, e.Temperature, e.Humidity, e.PM25, e.Noise, e.Light, e.Wind, e.Flow, e.Rain, e.Pressure, e.Smoke, e.Dust, e.Odor, e.Visibility, time.Now()).Scan(&e.Id, &e.Uuid)
 	if err != nil {
 		return
 	}
 	return
 }
 
-// Environment.Get() 获取作业环境
-func (e *Environment) Get() (err error) {
-	statement := "SELECT id, uuid, summary, temperature, humidity, pm25, noise, light, wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at, updated_at FROM environments WHERE id=$1"
+// Environment.GetByIdOrUUID() 获取作业环境
+func (e *Environment) GetByIdOrUUID() (err error) {
+	if e.Id == 0 && e.Uuid == "" {
+		err = errors.New("environment ID must be provided")
+		return
+	}
+
+	statement := "SELECT id, uuid, name, summary, user_id, temperature, humidity, pm25, noise, light, wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at, updated_at FROM environments WHERE id=$1 OR uuid=$2"
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(e.Id).Scan(&e.Id, &e.Uuid, &e.Summary, &e.Temperature, &e.Humidity, &e.PM25, &e.Noise, &e.Light, &e.Wind, &e.Flow, &e.Rain, &e.Pressure, &e.Smoke, &e.Dust, &e.Odor, &e.Visibility, &e.CreatedAt, &e.UpdatedAt)
+	err = stmt.QueryRow(e.Id, e.Uuid).Scan(&e.Id, &e.Uuid, &e.Name, &e.Summary, &e.UserId, &e.Temperature, &e.Humidity, &e.PM25, &e.Noise, &e.Light, &e.Wind, &e.Flow, &e.Rain, &e.Pressure, &e.Smoke, &e.Dust, &e.Odor, &e.Visibility, &e.CreatedAt, &e.UpdatedAt)
 	if err != nil {
-		return
-	}
-	return
-}
-func GetEnvironment(id int) (e Environment, err error) {
-	statement := "SELECT id, uuid, summary, temperature, humidity, pm25, noise, light, wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at, updated_at FROM environments WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(id).Scan(&e.Id, &e.Uuid, &e.Summary, &e.Temperature, &e.Humidity, &e.PM25, &e.Noise, &e.Light, &e.Wind, &e.Flow, &e.Rain, &e.Pressure, &e.Smoke, &e.Dust, &e.Odor, &e.Visibility, &e.CreatedAt, &e.UpdatedAt)
-	if err != nil {
-		return
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("environment not found (id: %d, uuid: %s)", e.Id, e.Uuid)
+		}
+		return fmt.Errorf("failed to get environment: %w", err)
 	}
 	return
 }
 
-func (e *Environment) GetByUuid() (err error) {
-	statement := "SELECT id, uuid, summary, temperature, humidity, pm25, noise, light, wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at, updated_at FROM environments WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
+// fetchDefaultEnvs 从数据库获取默认环境（无缓存），ID in (1,2,3,4)
+func fetchDefaultEnvs(ctx context.Context) ([]Environment, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	const query = `
+        SELECT id, uuid, name, summary, user_id, temperature, humidity, pm25, noise, light, 
+               wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at 
+        FROM environments 
+        WHERE id IN ($1, $2, $3, $4)
+        ORDER BY id`
+
+	rows, err := Db.QueryContext(ctx, query, 1, 2, 3, 4)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("query default environments: %w", err)
 	}
-	defer stmt.Close()
-	err = stmt.QueryRow(e.Uuid).Scan(&e.Id, &e.Uuid, &e.Summary, &e.Temperature, &e.Humidity, &e.PM25, &e.Noise, &e.Light, &e.Wind, &e.Flow, &e.Rain, &e.Pressure, &e.Smoke, &e.Dust, &e.Odor, &e.Visibility, &e.CreatedAt, &e.UpdatedAt)
+	defer rows.Close()
+
+	environments := make([]Environment, 0, 4) // 预分配容量
+	for rows.Next() {
+		var env Environment
+		if err := rows.Scan(
+			&env.Id, &env.Uuid, &env.Name, &env.Summary, &env.UserId,
+			&env.Temperature, &env.Humidity, &env.PM25,
+			&env.Noise, &env.Light, &env.Wind,
+			&env.Flow, &env.Rain, &env.Pressure,
+			&env.Smoke, &env.Dust, &env.Odor,
+			&env.Visibility, &env.CreatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan environment row: %w", err)
+		}
+		environments = append(environments, env)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	if len(environments) == 0 {
+		return nil, fmt.Errorf("no default environments found")
+	}
+
+	return environments, nil
+}
+
+// 缓存相关变量
+var (
+	defaultEnvs     []Environment
+	defaultEnvsOnce sync.Once
+	defaultEnvsErr  error
+)
+
+// GetDefaultEnvironments 获取缓存的默认环境（线程安全）
+func GetDefaultEnvironments(ctx context.Context) ([]Environment, error) {
+	defaultEnvsOnce.Do(func() {
+		log.Println("Initializing default environments cache")
+		defaultEnvs, defaultEnvsErr = fetchDefaultEnvs(ctx)
+	})
+	return defaultEnvs, defaultEnvsErr
+}
+
+// SearchEnvironmentByName 按名称搜索环境条件
+func SearchEnvironmentByName(keyword string, limit int, ctx context.Context) ([]Environment, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	const query = `
+        SELECT id, uuid, name, summary, user_id, temperature, humidity, pm25, noise, light, 
+               wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at, updated_at 
+        FROM environments 
+        WHERE name LIKE $1 OR summary LIKE $1
+        ORDER BY created_at DESC 
+        LIMIT $2`
+
+	rows, err := Db.QueryContext(ctx, query, "%"+keyword+"%", limit)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("search environments: %w", err)
 	}
-	return
+	defer rows.Close()
+
+	var environments []Environment
+	for rows.Next() {
+		var env Environment
+		if err := rows.Scan(
+			&env.Id, &env.Uuid, &env.Name, &env.Summary, &env.UserId,
+			&env.Temperature, &env.Humidity, &env.PM25,
+			&env.Noise, &env.Light, &env.Wind,
+			&env.Flow, &env.Rain, &env.Pressure,
+			&env.Smoke, &env.Dust, &env.Odor,
+			&env.Visibility, &env.CreatedAt, &env.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scan environment row: %w", err)
+		}
+		environments = append(environments, env)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows error: %w", err)
+	}
+
+	return environments, nil
 }

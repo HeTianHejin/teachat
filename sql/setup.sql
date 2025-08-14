@@ -53,6 +53,7 @@ drop table if exists member_application_replies;
 drop table if exists team_member_resignations;
 drop table if exists footprints;
 drop table if exists project_appointments;
+drop table if exists environments;
 
 
 
@@ -61,7 +62,7 @@ drop table if exists project_appointments;
 
 CREATE TABLE places (
     id                   SERIAL PRIMARY KEY,
-    uuid                 VARCHAR(36) NOT NULL,
+    uuid                 VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     name                 VARCHAR(255) NOT NULL,
     nickname             VARCHAR(255),
     description          TEXT,
@@ -79,7 +80,7 @@ CREATE TABLE places (
 
 CREATE TABLE addresses (
     id                   SERIAL PRIMARY KEY,
-    uuid                 VARCHAR(36) NOT NULL,
+    uuid                 VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     nation               VARCHAR(255),
     province             VARCHAR(255),
     city                 VARCHAR(255),
@@ -99,7 +100,7 @@ CREATE TABLE addresses (
 
 create table users (
   id                             serial primary key,
-  uuid                           varchar(64) not null unique,
+  uuid                           varchar(64) not null unique DEFAULT gen_random_uuid(),
   name                           varchar(255),
   email                          varchar(255) not null unique,
   password                       varchar(255) not null,
@@ -113,7 +114,7 @@ create table users (
 
 CREATE TABLE families (
     id                                    SERIAL PRIMARY KEY,
-    uuid                                  VARCHAR(255),
+    uuid                                  VARCHAR(255) DEFAULT gen_random_uuid(),
     author_id                             INTEGER,
     name                                  VARCHAR(255),
     introduction                          TEXT,
@@ -130,7 +131,7 @@ CREATE TABLE families (
 
 create table teams (
   id                     serial primary key,
-  uuid                   varchar(64) not null unique,
+  uuid                   varchar(64) not null unique DEFAULT gen_random_uuid(),
   name                   varchar(255),
   mission                text,
   founder_id             integer references users(id),
@@ -180,7 +181,7 @@ CREATE TABLE place_addresses (
 
 CREATE TABLE family_members (
     id                                    SERIAL PRIMARY KEY,
-    uuid                                  VARCHAR(255),
+    uuid                                  VARCHAR(255) DEFAULT gen_random_uuid(),
     family_id                             INTEGER,
     user_id                               INTEGER,
     role                                  INTEGER default 0,
@@ -195,7 +196,7 @@ CREATE TABLE family_members (
 
 CREATE TABLE family_member_sign_ins (
     id                                    SERIAL PRIMARY KEY,
-    uuid                                  VARCHAR(255),
+    uuid                                  VARCHAR(255) DEFAULT gen_random_uuid(),
     family_id                             INTEGER,
     user_id                               INTEGER,
     role                                  INTEGER default 0,
@@ -211,7 +212,7 @@ CREATE TABLE family_member_sign_ins (
 
 CREATE TABLE family_member_sign_in_replies (
     id                                    SERIAL PRIMARY KEY,
-    uuid                                  VARCHAR(255),
+    uuid                                  VARCHAR(255) DEFAULT gen_random_uuid(),
     sign_in_id                            INTEGER,
     user_id                               INTEGER,
     is_confirm                            BOOLEAN default false,
@@ -220,7 +221,7 @@ CREATE TABLE family_member_sign_in_replies (
 
 CREATE TABLE family_member_sign_outs (
     id                                    SERIAL PRIMARY KEY,
-    uuid                                  VARCHAR(255),
+    uuid                                  VARCHAR(255) DEFAULT gen_random_uuid(),
     family_id                             INTEGER,
     user_id                               INTEGER,
     role                                  INTEGER default 0,
@@ -246,7 +247,7 @@ CREATE TABLE user_default_families (
 
 create table team_members (
   id                     serial primary key,
-  uuid                   varchar(64) not null unique,
+  uuid                   varchar(64) not null unique DEFAULT gen_random_uuid(),
   team_id                integer references teams(id),
   user_id                integer references users(id),
   role                   varchar(255), 
@@ -265,7 +266,7 @@ create table user_default_teams (
 
 create table team_member_role_notices (
   id                     serial primary key,
-  uuid                   varchar(64) not null unique,
+  uuid                   varchar(64) not null unique DEFAULT gen_random_uuid(),
   team_id                integer references teams(id),
   ceo_id                 integer references users(id),
   member_id              integer,
@@ -304,7 +305,7 @@ CREATE TABLE last_queries (
 
 create table sessions (
   id                     serial primary key,
-  uuid                   varchar(64) not null unique,
+  uuid                   varchar(64) not null unique DEFAULT gen_random_uuid(),
   email                  varchar(255),
   user_id                integer references users(id),
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -320,7 +321,7 @@ create table watchwords (
 
 create table objectives (
   id                     serial primary key,
-  uuid                   varchar(64) not null unique,
+  uuid                   varchar(64) not null unique DEFAULT gen_random_uuid(),
   title                  varchar(64) not null,
   body                   text,
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -336,7 +337,7 @@ create table objectives (
 
 create table projects (
   id                     serial primary key,
-  uuid                   varchar(64) not null unique,
+  uuid                   varchar(64) not null unique DEFAULT gen_random_uuid(),
   title                  varchar(64) not null,
   body                   text,
   objective_id           integer,
@@ -373,7 +374,7 @@ create table draft_posts (
 
 create table posts (
   id                     serial primary key,
-  uuid                   varchar(64) not null unique,
+  uuid                   varchar(64) not null unique DEFAULT gen_random_uuid(),
   body                   text,
   user_id                integer references user(id),
   created_at             TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -403,7 +404,7 @@ create table draft_threads (
 
 create table threads (
   id                     serial primary key,
-  uuid                   varchar(64) not null unique,
+  uuid                   varchar(64) not null unique DEFAULT gen_random_uuid(),
   body                   text,
   user_id                integer references users(id),
   class                  integer default 10,
@@ -431,7 +432,7 @@ create table reads (
 
 create table invitations (
   id                   serial primary key,
-  uuid                 varchar(64) not null unique,
+  uuid                 varchar(64) not null unique DEFAULT gen_random_uuid(),
   team_id              integer references teams(id),
   invite_email         varchar(255),
   role                 varchar(50),
@@ -443,7 +444,7 @@ create table invitations (
 
 CREATE TABLE invitation_replies (
   id                   SERIAL PRIMARY KEY,
-  uuid                 VARCHAR(50) NOT NULL,
+  uuid                 VARCHAR(50) NOT NULL DEFAULT gen_random_uuid(),
   invitation_id        INTEGER, 
   user_id              integer,
   reply_word           text NOT NULL,
@@ -487,7 +488,7 @@ CREATE TABLE new_message_counts (
 
 create table goods (
     id                    serial primary key,
-    uuid                  varchar(64) not null unique,
+    uuid                  varchar(64) not null unique DEFAULT gen_random_uuid(),
     recorder_user_id      integer,
     name                  varchar(255),
     nickname              varchar(255),
@@ -567,7 +568,7 @@ CREATE TABLE footprints (
 
 CREATE TABLE team_member_resignations (
     id                   SERIAL PRIMARY KEY,
-    uuid                 VARCHAR(36),
+    uuid                 VARCHAR(36) DEFAULT gen_random_uuid(),
     team_id              INTEGER,
     ceo_user_id          INTEGER,
     core_member_user_id  INTEGER,
@@ -583,7 +584,7 @@ CREATE TABLE team_member_resignations (
 
 CREATE TABLE member_applications (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(36),
+    uuid                  VARCHAR(36) DEFAULT gen_random_uuid(),
     team_id               INTEGER,
     user_id               INTEGER,
     content               TEXT,
@@ -594,7 +595,7 @@ CREATE TABLE member_applications (
 
 CREATE TABLE member_application_replies (
     id                                SERIAL PRIMARY KEY,
-    uuid                              VARCHAR(36),
+    uuid                              VARCHAR(36) DEFAULT gen_random_uuid(),
     member_application_id             INTEGER,
     team_id                           INTEGER,
     user_id                           INTEGER,
@@ -625,4 +626,25 @@ CREATE TABLE project_appointments (
     rejected_at           TIMESTAMP,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+CREATE TABLE environments (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    name                  VARCHAR(255),
+    summary               TEXT,
+    temperature           INTEGER,
+    humidity              INTEGER,
+    pm25                  INTEGER,
+    noise                 INTEGER,
+    light                 INTEGER,
+    wind                  INTEGER,
+    flow                  INTEGER,
+    rain                  INTEGER,
+    pressure              INTEGER,
+    smoke                 INTEGER,
+    dust                  INTEGER,
+    odor                  INTEGER,
+    visibility            INTEGER,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
 );

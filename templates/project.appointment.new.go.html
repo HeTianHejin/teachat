@@ -11,123 +11,15 @@
   <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}
     </a>@茶台
   </li>
+  <li class="active">+ 约茶</li>
 
   <li>
     {{ template "component_sess_capacity" . }}
   </li>
 </ol>
 
-{{/* 这是茶台（项目）的详情 */}}
-<div class="media" style="margin-top: 20px;">
-
-  <div class="media-left">
-    {{ template "component_avatar_name_gender" .ProjectBean.Author }}
-  </div>
-
-  <div class="media-body">
-
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <div class="row">
-
-          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-
-            <span style="font-size: smaller;">
-
-              （<a
-                href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
-              <a
-                href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
-
-            </span>
-          </div>
-
-          <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-            {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
-            {{/* 这个茶台已被茶围管理员选中入围 */}}
-            <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
-            {{/* 检查是否入围1 */}}{{ end }}
-
-            <span>
-              {{ if .ProjectBean.Open }}
-              <i class="bi-disc" style="font-size: 2rem; color: black;"></i>
-              <span class="label label-info">开放式茶台</span>
-              {{ else }}
-              <i class="bi-disc-fill" style="font-size: 2rem; color: black;"></i>
-              <span class="label label-default">封闭式茶台</span>
-              {{ end }}
-            </span>
-
-            <span style="margin-inline-start: 2rem;margin-inline-end: 2rem;">{{ .ProjectBean.CreatedAtDate }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel-body">
-        <h4>
-          {{ .ProjectBean.Project.Title }}
-        </h4>
-        <p style="white-space: pre-wrap;">
-          {{ .ProjectBean.Project.Body }}
-        </p>
-
-        <blockquote style="font-size: small;">
-          <p><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">
-              <span class="label label-default">茶围</span>
-            </a>
-            <span style="margin-inline-start: 1rem;">{{ .QuoteObjectiveBean.Objective.Body }} ...</span>
-          </p>
-          <footer>
-            <cite>
-              <a href="/v1/user/biography?id={{ .QuoteObjectiveBean.Author.Uuid }}"
-                style="color: black;">{{ .QuoteObjectiveBean.Author.Name }}</a>
-              <span style="margin-inline-end: 20px;">
-                （<a href="/v1/family/detail?id={{ .QuoteObjectiveBean.AuthorFamily.Uuid }}"
-                  style="color: black;">{{ .QuoteObjectiveBean.AuthorFamily.Name }}</a>，
-                <a href="/v1/team/detail?id={{ .QuoteObjectiveBean.AuthorTeam.Uuid }}"
-                  style="color: black;">{{ .QuoteObjectiveBean.AuthorTeam.Abbreviation }}</a>）
-              </span>
-            </cite>
-          </footer>
-        </blockquote>
-
-        <div style="text-align: center; margin-top: 10px;">
-          {{/* 这是某个茶台（项目）的地址显示 */}}
-          <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
-
-          <a href="/v1/place/detail?uuid={{ .ProjectBean.Place.Uuid }}">{{ .ProjectBean.Place.Name }}</a>
-
-        </div>
-
-      </div>
-
-      <div class="panel-footer">
-        <span>
-          <a href="/v1/appointment/detail?uuid={{ .ProjectBean.Project.Uuid }}">约茶</a>
-          <i class="bi-bookmark-check" style="font-size: 1.2rem; color: black;"></i>
-        </span>
-        <span style="margin-inline-start: 2rem;">
-          <a href="/v1/see-seek/detail?uuid={{ .ProjectBean.Project.Uuid }}">看看</a>
-          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
-        </span>
-        <span style="margin-inline-start: 2rem;">
-          <a href="/v1/suggestion/detail?uuid={{ .ProjectBean.Project.Uuid }}">建议</a>
-          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
-        </span>
-        <span style="margin-inline-start: 2rem;">
-          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a>
-          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
-        </span>
-        <span style="margin-inline-start: 2rem;">
-          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a>
-          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
-        </span>
-
-      </div>
-    </div>
-
-  </div>
-</div>
+{{/* 这是茶台（项目）的原始详情页 */}}
+{{ template "component_project_simple_detail" . }}
 
 {{ with .AppointmentBean }}{{/* 约茶预填充信息非空检查-开始 */}}
 <form role="form" action="/v1/appointment/new" method="post">

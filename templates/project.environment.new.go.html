@@ -1,0 +1,201 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">+ 新建环境条件</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="glyphicon glyphicon-plus"></span>
+    新建环境条件
+  </div>
+  <div class="panel-body">
+    <form role="form" action="/v1/environment/new" method="post">
+      
+      <div class="form-group">
+        <label for="name">环境名称（2-24字）</label>
+        <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="24" required />
+      </div>
+
+      <div class="form-group">
+        <label for="summary">环境描述（17-456字）</label>
+        <textarea class="form-control" name="summary" id="summary" rows="3" minlength="17" maxlength="456" required></textarea>
+      </div>
+
+      <div class="panel panel-default">
+        <div class="panel-heading">环境参数设置</div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="temperature">温度</label>
+                <select class="form-control" name="temperature" id="temperature">
+                  <option value="1">极热（Scorching）</option>
+                  <option value="2">炎热（Hot）</option>
+                  <option value="3" selected>舒适（Comfortable）</option>
+                  <option value="4">微凉（Cool）</option>
+                  <option value="5">寒冷（Freezing）</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="humidity">湿度</label>
+                <select class="form-control" name="humidity" id="humidity">
+                  <option value="1">极湿（Suffocating）</option>
+                  <option value="2">潮湿（Humid）</option>
+                  <option value="3" selected>适宜（Balanced）</option>
+                  <option value="4">干燥（Dry）</option>
+                  <option value="5">极干（Arid）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="pm25">PM2.5</label>
+                <select class="form-control" name="pm25" id="pm25">
+                  <option value="1">毒雾（Hazardous）</option>
+                  <option value="2">重污染（Very Unhealthy）</option>
+                  <option value="3">中度污染（Unhealthy）</option>
+                  <option value="4">轻度污染（Moderate）</option>
+                  <option value="5" selected>优良（Good）</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="noise">噪声</label>
+                <select class="form-control" name="noise" id="noise">
+                  <option value="1">震耳欲聋（Deafening）</option>
+                  <option value="2">嘈杂（Noisy）</option>
+                  <option value="3">一般（Moderate）</option>
+                  <option value="4" selected>安静（Quiet）</option>
+                  <option value="5">极静（Silent）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="light">光照</label>
+                <select class="form-control" name="light" id="light">
+                  <option value="1">刺眼（Blinding）</option>
+                  <option value="2" selected>明亮（Bright）</option>
+                  <option value="3">适中（Normal）</option>
+                  <option value="4">昏暗（Dim）</option>
+                  <option value="5">黑暗（Dark）</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="wind">风力</label>
+                <select class="form-control" name="wind" id="wind">
+                  <option value="1">飓风（Hurricane）</option>
+                  <option value="2">强风（Gale）</option>
+                  <option value="3">微风（Breeze）</option>
+                  <option value="4">轻风（Light）</option>
+                  <option value="5" selected>无风（Calm）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="rain">雨量</label>
+                <select class="form-control" name="rain" id="rain">
+                  <option value="1">暴雨（Torrential）</option>
+                  <option value="2">大雨（Heavy）</option>
+                  <option value="3">中雨（Moderate）</option>
+                  <option value="4">小雨（Light）</option>
+                  <option value="5" selected>无雨（None）</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="pressure">气压</label>
+                <select class="form-control" name="pressure" id="pressure">
+                  <option value="1">极高（Very High）</option>
+                  <option value="2">偏高（High）</option>
+                  <option value="3" selected>正常（Normal）</option>
+                  <option value="4">偏低（Low）</option>
+                  <option value="5">极低（Very Low）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="smoke">烟雾</label>
+                <select class="form-control" name="smoke" id="smoke">
+                  <option value="1">严重烟雾（Dense）</option>
+                  <option value="2">明显烟雾（Thick）</option>
+                  <option value="3">轻度烟雾（Hazy）</option>
+                  <option value="4">微量烟雾（Trace）</option>
+                  <option value="5" selected>无烟雾（Clear）</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="dust">扬尘</label>
+                <select class="form-control" name="dust" id="dust">
+                  <option value="1">沙尘暴（Dust Storm）</option>
+                  <option value="2">重度扬尘（Heavy）</option>
+                  <option value="3">中度扬尘（Moderate）</option>
+                  <option value="4">轻度扬尘（Light）</option>
+                  <option value="5" selected>无尘（Clean）</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="odor">异味</label>
+                <select class="form-control" name="odor" id="odor">
+                  <option value="1">极臭（Extreme Stench）</option>
+                  <option value="2">浓烈臭味（Strong Odor）</option>
+                  <option value="3">明显异味（Noticeable Smell）</option>
+                  <option value="4">轻微气味（Faint Odor）</option>
+                  <option value="5" selected>无异味（Odorless）</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="visibility">能见度</label>
+            <select class="form-control" name="visibility" id="visibility">
+              <option value="1">极差（Zero）</option>
+              <option value="2">很差（Poor）</option>
+              <option value="3">一般（Fair）</option>
+              <option value="4" selected>良好（Good）</option>
+              <option value="5">极佳（Excellent）</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {{ if .ReturnURL }}
+      <input type="hidden" name="return_url" value="{{ .ReturnURL }}" />
+      {{ end }}
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">创建环境条件</button>
+        <a href="{{ if .ReturnURL }}{{ .ReturnURL }}{{ else }}javascript:history.back(){{ end }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ end }}

@@ -6,7 +6,7 @@ import (
 )
 
 // 根据给出的projectAppointment参数，去获取对应的projectAppointmentBean资料，然后按结构拼装返回。
-func fetchProjectAppointmentBean(pA data.ProjectAppointment) (pABean data.ProjectAppointmentBean, err error) {
+func fetchAppointmentBean(pA data.ProjectAppointment) (pABean data.ProjectAppointmentBean, err error) {
 	pABean.Appointment = pA
 	pr := data.Project{Id: pA.ProjectId}
 	if err := pr.Get(); err != nil {

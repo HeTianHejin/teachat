@@ -339,5 +339,6 @@ const (
 	SearchTypeObjectiveTitle  = 3  // 按茶围名称查询
 	SearchTypeProjectTitle    = 4  // 按茶台名称查询
 	SearchTypePlaceName       = 5  // 按茶室地方名称查询
+	SearchTypeEnvironment     = 6  // 按环境条件名称查询
 	SearchTypeUserId          = 10 // 按用户id查询
 )

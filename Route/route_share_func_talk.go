@@ -386,7 +386,7 @@ func createAndSendAcceptMessage(objectId int, objectType int, excludeUserId int)
 
 	// 创建消息
 	mess := data.AcceptMessage{
-		FromUserId:     data.UserId_SpaceshipCaptain,
+		FromUserId:     data.UserId_Captain_Spaceship,
 		Title:          "新茶语邻座评审邀请",
 		Content:        "您被茶棚选中为新茶语评审官啦，请及时去审理。",
 		AcceptObjectId: aO.Id,
@@ -528,5 +528,3 @@ func acceptNewDraftPost(objectId int) (*data.Post, error) {
 	}
 	return &new_post, nil
 }
-
-

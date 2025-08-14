@@ -30,9 +30,9 @@ type User struct {
 }
 
 const (
-	UserId_None             = 0
-	UserId_SpaceshipCaptain = 1
-	UserId_Verifier         = 67 // 见证团队代表人id
+	UserId_None              = 0
+	UserId_Captain_Spaceship = 1
+	UserId_Verifier          = 67 // 见证团队代表人id
 )
 const sessionDuration = 7 * 24 * time.Hour
 

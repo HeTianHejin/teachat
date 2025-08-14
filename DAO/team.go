@@ -35,7 +35,7 @@ var TeamFreelancer = Team{
 	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
 	Name:              "自由人",
 	Mission:           "星际旅行特立独行的自由人，不属于任何$事业茶团。",
-	FounderId:         UserId_SpaceshipCaptain, //表示系统预设的值
+	FounderId:         UserId_Captain_Spaceship, //表示系统预设的值
 	Class:             TeamClassSpaceship,
 	Abbreviation:      "自由人",
 	Logo:              "teamLogo",
@@ -49,7 +49,7 @@ var TeamVerifier = Team{
 	Uuid:              TeamUUIDVerifier,
 	Name:              "见证者茶团",
 	Mission:           "见证者团队，系统保留。",
-	FounderId:         UserId_SpaceshipCaptain, //表示系统预设的值
+	FounderId:         UserId_Captain_Spaceship, //表示系统预设的值
 	Class:             TeamClassSpaceship,
 	Abbreviation:      "见证者",
 	Logo:              "teamLogo",

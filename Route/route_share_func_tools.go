@@ -18,14 +18,29 @@ import (
 )
 
 // 处理器把页面模版和需求数据揉合后，由这个方法，将填写好的页面“制作“成HTML格式，调用http响应方法，发送给浏览器端客户
-func renderHTML(w http.ResponseWriter, data any, filenames ...string) {
+func renderHTML(w http.ResponseWriter, page_data any, filenames ...string) {
 	var files []string
 	for _, file := range filenames {
 		files = append(files, fmt.Sprintf("templates/%s.go.html", file))
 	}
 
+	// 创建模板并添加自定义函数
+	tmpl := template.New("layout").Funcs(template.FuncMap{
+		"GetEnvironmentLevelDescription": data.GetEnvironmentLevelDescription,
+		"GetStarIcons": func(level int) string {
+			if level < 1 || level > 5 {
+				return ""
+			}
+			stars := ""
+			for i := 0; i < level; i++ {
+				stars += `<span class="glyphicon glyphicon-star" style="color: #f39c12;"></span>`
+			}
+			return stars
+		},
+	})
+
 	// 手动解析模板并处理错误
-	templates, err := template.ParseFiles(files...)
+	templates, err := tmpl.ParseFiles(files...)
 	if err != nil {
 		// 添加详细的错误日志和HTTP错误响应
 		util.PrintStdout("模板解析错误: ", err)
@@ -38,7 +53,7 @@ func renderHTML(w http.ResponseWriter, data any, filenames ...string) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 
 	// 执行模板渲染
-	if err = templates.ExecuteTemplate(w, "layout", data); err != nil {
+	if err = templates.ExecuteTemplate(w, "layout", page_data); err != nil {
 		// 添加详细的错误日志
 		util.PrintStdout("模板渲染错误: ", err)
 		// 避免在错误响应中泄露敏感信息

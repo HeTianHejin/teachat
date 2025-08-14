@@ -35,6 +35,9 @@
         <input type="radio" name="class" id="place" style="width: fit-content;" value="5" required />
         <label for="place">地点名称</label>
 
+        <input type="radio" name="class" id="environment" style="width: fit-content;" value="6" required />
+        <label for="environment">环境条件</label>
+
       </fieldset>
     </div>
 
@@ -119,6 +122,22 @@
     一键收藏</a>
 </div>
 {{ end }}{{/* 这是查找到的 品茶地点 结果队列迭代-结束 */}}
+
+{{ range .EnvironmentSlice }}{{/* 这是查找到的 环境条件 结果队列迭代-开始 */}}
+<hr />
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>环境条件 #{{ .Id }}</strong> - {{ .Name }}
+    <a href="/v1/environment/detail?id={{ .Id }}" class="btn btn-xs btn-info pull-right">
+      <span class="glyphicon glyphicon-eye-open"></span> 查看详情
+    </a>
+  </div>
+  <div class="panel-body">
+    <p>{{ .Summary }}</p>
+    <small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
+  </div>
+</div>
+{{ end }}{{/* 这是查找到的 环境条件 结果队列迭代-结束 */}}
 
 {{ end }}{{/* 这是查找结果非零 结束*/}}
 

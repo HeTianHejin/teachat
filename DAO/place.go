@@ -67,13 +67,13 @@ var Place_SpaceshipTeabar = Place{
 	Nickname:       "Spaceship Teabar",
 	Description:    "星际茶棚",
 	Icon:           "spaceship-teabar",
-	OccupantUserId: UserId_SpaceshipCaptain,
-	OwnerUserId:    UserId_SpaceshipCaptain,
+	OccupantUserId: UserId_Captain_Spaceship,
+	OwnerUserId:    UserId_Captain_Spaceship,
 	Level:          PlaceLevelSystemReserved,
 	Category:       PlaceCategoryVirtual,
 	IsPublic:       true,
 	IsGovernment:   false,
-	UserId:         UserId_SpaceshipCaptain,
+	UserId:         UserId_Captain_Spaceship,
 	CreatedAt:      time.Date(2025, time.May, 7, 17, 17, 7, 17, time.UTC),
 }
 

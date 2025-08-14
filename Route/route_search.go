@@ -254,6 +254,20 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_place")
 		return
 
+	case data.SearchTypeEnvironment:
+		//查询环境条件 environment
+		environment_slice, err := data.SearchEnvironmentByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		if err != nil {
+			util.Debug(" failed to search environment by keyword", err)
+		}
+		if len(environment_slice) >= 1 {
+			fPD.Count = len(environment_slice)
+			fPD.EnvironmentSlice = environment_slice
+			fPD.IsEmpty = false
+		}
+		renderHTML(w, &fPD, "layout", "navbar.private", "search")
+		return
+
 	default:
 		report(w, r, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
 		return

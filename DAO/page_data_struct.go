@@ -596,7 +596,8 @@ type SearchPageData struct {
 	ThreadBeanSlice    []ThreadBean
 	ProjectBeanSlice   []ProjectBean
 	ObjectiveBeanSlice []ObjectiveBean
-	PlaceSlice         []Place //品茶地点集合
+	PlaceSlice         []Place      //品茶地点集合
+	EnvironmentSlice   []Environment //环境条件集合
 }
 
 // Appointment
@@ -652,15 +653,30 @@ type SeeSeekDetailPageData struct {
 	VerifierFamily Family
 	VerifierTeam   Team
 
-	SeeSeekBean SeeSeekBean
+	ProjectAppointment ProjectAppointmentBean //约茶预约资料夹
+	SeeSeekBean        SeeSeekBean
 
-	ProjectBean   ProjectBean
-	ObjectiveBean ObjectiveBean
+	ProjectBean        ProjectBean
+	QuoteObjectiveBean ObjectiveBean
+
+	Environments []Environment //场所环境
 }
 type SeeSeekBean struct {
 	SeeSeek SeeSeek
 	IsOpen  bool
 
+	SeeSeekLook         []SeeSeekLook         //观察
+	SeeSeekListen       []SeeSeekListen       //聆听
+	SeeSeekSmell        []SeeSeekSmell        //闻闻（嗅）
+	SeeSeekTouch        []SeeSeekTouch        //触摸
+	SeeSeekAskAndAnswer []SeeSeekAskAndAnswer //询问
+
+	SeeSeekExaminationReport []SeeSeekExaminationReport //附加专项检测报告，通常是使用专业工具客观验证
+
 	Place       Place
-	Environment Environment
+	Environment Environment //场所环境
+	Hazard      []Hazard    //场所隐患
+	Risk        []Risk      //作业风险
+	Goods       []Goods     //物资
+
 }

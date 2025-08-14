@@ -152,7 +152,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		AppointmentBean:    p_a,
 	}
 	// 渲染HTML页面
-	renderHTML(w, &pAD, "layout", "navbar.private", "project.appointment.new", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &pAD, "layout", "navbar.private", "project.appointment.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/appointment/new
@@ -314,7 +314,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取预约记录的bean
-	p_a_bean, err := fetchProjectAppointmentBean(new_p_a)
+	p_a_bean, err := fetchAppointmentBean(new_p_a)
 	if err != nil {
 		util.Debug(" Cannot fetch project appointment bean", err)
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
@@ -328,7 +328,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		AppointmentBean:    p_a_bean,
 	}
 
-	renderHTML(w, &aPD, "layout", "navbar.private", "project.appointment.detail", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &aPD, "layout", "navbar.private", "project.appointment.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // Get /v1/appointment/detail?uuid=xXx
@@ -380,7 +380,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	p_a_bean, err := fetchProjectAppointmentBean(p_a)
+	p_a_bean, err := fetchAppointmentBean(p_a)
 	if err != nil {
 		util.Debug(" Cannot fetch project appointment bean", err)
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
