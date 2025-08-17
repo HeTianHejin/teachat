@@ -1,0 +1,114 @@
+{{ define "content" }}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-warning-sign"></span> 添加场所安全隐患
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/hazard/new" class="form-horizontal">
+      <!-- 基本信息 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">基本信息</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="name" class="col-sm-2 control-label">隐患名称 *</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="name" id="name" 
+                     placeholder="如：破损护栏、老化电线等" required maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nickname" class="col-sm-2 control-label">隐患别名</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="nickname" id="nickname" 
+                     placeholder="行业术语或简称" maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="keywords" class="col-sm-2 control-label">关键词</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="keywords" id="keywords" 
+                     placeholder="用于检索的关键词，如：电气,老化,漏电" maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="col-sm-2 control-label">详细描述 *</label>
+            <div class="col-sm-10">
+              <textarea class="form-control" name="description" id="description" rows="4" 
+                        placeholder="详细描述隐患情况、位置、可能造成的后果等" required></textarea>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="source" class="col-sm-2 control-label">隐患来源</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="source" id="source" 
+                     placeholder="如：设备老化、环境因素、管理缺失等" maxlength="255">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 分级管理 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">分级管理</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="severity" class="col-sm-2 control-label">严重度 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="severity" id="severity" required>
+                <option value="1">1级 - 可忽略</option>
+                <option value="2">2级 - 低风险</option>
+                <option value="3" selected>3级 - 中风险</option>
+                <option value="4">4级 - 高风险</option>
+                <option value="5">5级 - 危急</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="category" class="col-sm-2 control-label">隐患类型 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="category" id="category" required>
+                <option value="1">电气隐患</option>
+                <option value="2">机械隐患</option>
+                <option value="3">化学隐患</option>
+                <option value="4">生物隐患</option>
+                <option value="5">工效学隐患</option>
+                <option value="6" selected>其他隐患</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {{ if .ReturnURL }}
+      <input type="hidden" name="return_url" value="{{ .ReturnURL }}">
+      {{ end }}
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span> 添加隐患
+          </button>
+          {{ if .ReturnURL }}
+          <a href="{{ .ReturnURL }}" class="btn btn-default">取消</a>
+          {{ else }}
+          <a href="/v1/" class="btn btn-default">取消</a>
+          {{ end }}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：识别安全隐患是一种重要的能力，有助于预防事故发生。
+  </div>
+</div>
+{{ end }}

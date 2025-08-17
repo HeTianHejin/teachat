@@ -1,0 +1,90 @@
+package data
+
+// Appointment
+type AppointmentTemplateData struct {
+	SessUser   User
+	IsVerifier bool
+	IsAdmin    bool
+	IsMaster   bool
+	IsInvited  bool
+
+	QuoteObjectiveBean ObjectiveBean
+	ProjectBean        ProjectBean
+	AppointmentBean    ProjectAppointmentBean
+}
+type ProjectAppointmentBean struct {
+	Appointment ProjectAppointment
+
+	Project Project
+
+	Payer       User
+	PayerFamily Family
+	PayerTeam   Team
+
+	Payee       User
+	PayeeFamily Family
+	PayeeTeam   Team
+
+	Verifier       User
+	VerifierFamily Family
+	VerifierTeam   Team
+}
+
+// 新建“看看”，
+// “看看”详情页面数据
+type SeeSeekDetailTemplateData struct {
+	SessUser       User
+	IsVerifier     bool
+	IsAdmin        bool
+	IsMaster       bool
+	IsInvited      bool
+	SessUserFamily Family
+	SessUserTeam   Team
+
+	Payer       User
+	PayerFamily Family
+	PayerTeam   Team
+
+	Payee       User
+	PayeeFamily Family
+	PayeeTeam   Team
+
+	Verifier       User
+	VerifierFamily Family
+	VerifierTeam   Team
+
+	ProjectAppointment ProjectAppointmentBean //约茶预约资料夹
+	SeeSeekBean        SeeSeekBean
+
+	ProjectBean        ProjectBean
+	QuoteObjectiveBean ObjectiveBean
+
+	Environments []Environment //场所环境
+
+	// 状态管理相关字段
+	CurrentSeeSeek        *SeeSeek //当前进行中的SeeSeek记录
+	ExistingEnvironmentId int      //已选择的环境ID
+	ExistingHazardIds     []int    //已选择的隐患ID列表
+	ExistingRiskIds       []int    //已选择的风险ID列表
+	ExistingHazardIdsStr  string   //隐患ID字符串（逗号分隔）
+	ExistingRiskIdsStr    string   //风险ID字符串（逗号分隔）
+}
+type SeeSeekBean struct {
+	SeeSeek SeeSeek
+	IsOpen  bool
+
+	SeeSeekLook         SeeSeekLook         //观察
+	SeeSeekListen       SeeSeekListen       //聆听
+	SeeSeekSmell        SeeSeekSmell        //闻闻（嗅）
+	SeeSeekTouch        SeeSeekTouch        //触摸
+	SeeSeekAskAndAnswer SeeSeekAskAndAnswer //询问
+
+	SeeSeekExaminationReport []SeeSeekExaminationReport //附加专项检测报告，通常是使用专业工具客观验证
+
+	Place       Place
+	Environment Environment //场所环境
+	Hazard      []Hazard    //场所隐患
+	Risk        []Risk      //作业风险
+	Goods       []Goods     //物资
+
+}

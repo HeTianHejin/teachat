@@ -144,7 +144,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		VerifierTeam:   data.TeamVerifier,
 	}
 	// 创建预约页面数据
-	pAD := data.AppointmentPageData{
+	pAD := data.AppointmentTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         true,
 		ProjectBean:        pr_bean,
@@ -152,7 +152,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		AppointmentBean:    p_a,
 	}
 	// 渲染HTML页面
-	renderHTML(w, &pAD, "layout", "navbar.private", "project.appointment.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &pAD, "layout", "navbar.private", "action.appoinment.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/appointment/new
@@ -320,7 +320,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	aPD := data.AppointmentPageData{
+	aPD := data.AppointmentTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         true,
 		ProjectBean:        pr_bean,
@@ -328,7 +328,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		AppointmentBean:    p_a_bean,
 	}
 
-	renderHTML(w, &aPD, "layout", "navbar.private", "project.appointment.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &aPD, "layout", "navbar.private", "action.appoinment.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // Get /v1/appointment/detail?uuid=xXx
@@ -400,13 +400,13 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	aPD := data.AppointmentPageData{
+	aPD := data.AppointmentTemplateData{
 		SessUser:           s_u,                // TODO: 检查权限-是否为预约记录的相关茶团或审核者
 		IsVerifier:         isVerifier(s_u.Id), // TODO: 检查权限-是否为预约记录的审核者
 		AppointmentBean:    p_a_bean,
 		ProjectBean:        pr_bean,
 		QuoteObjectiveBean: ob_bean,
 	}
-	renderHTML(w, &aPD, "layout", "navbar.private", "project.appointment.detail", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &aPD, "layout", "navbar.private", "action.appoinment.detail", "component_sess_capacity", "component_avatar_name_gender")
 
 }

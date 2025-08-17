@@ -18,7 +18,7 @@ import (
 )
 
 // 处理器把页面模版和需求数据揉合后，由这个方法，将填写好的页面“制作“成HTML格式，调用http响应方法，发送给浏览器端客户
-func renderHTML(w http.ResponseWriter, page_data any, filenames ...string) {
+func renderHTML(w http.ResponseWriter, template_data any, filenames ...string) {
 	var files []string
 	for _, file := range filenames {
 		files = append(files, fmt.Sprintf("templates/%s.go.html", file))
@@ -53,7 +53,7 @@ func renderHTML(w http.ResponseWriter, page_data any, filenames ...string) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 
 	// 执行模板渲染
-	if err = templates.ExecuteTemplate(w, "layout", page_data); err != nil {
+	if err = templates.ExecuteTemplate(w, "layout", template_data); err != nil {
 		// 添加详细的错误日志
 		util.PrintStdout("模板渲染错误: ", err)
 		// 避免在错误响应中泄露敏感信息

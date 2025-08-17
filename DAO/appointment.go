@@ -176,7 +176,7 @@ func (a *ProjectAppointment) Reject(rejecterID int) error {
 	return nil
 }
 
-// project.AppointmentStatusString() string读取茶台预约状态
+// action.appoinmentStatusString() string读取茶台预约状态
 func (project *Project) AppointmentStatusString(ctx context.Context) string {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

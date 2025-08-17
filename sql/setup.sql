@@ -54,6 +54,14 @@ drop table if exists team_member_resignations;
 drop table if exists footprints;
 drop table if exists project_appointments;
 drop table if exists environments;
+drop table if exists see_seek_risks;
+drop table if exists see_seek_hazards;
+drop table if exists see_seek_environments;
+drop table if exists see_seeks;
+drop table if exists safety_protections;
+drop table if exists safety_measures;
+drop table if exists hazards;
+drop table if exists risks;
 
 
 
@@ -648,3 +656,129 @@ CREATE TABLE environments (
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP
 );
+
+CREATE TABLE hazards (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    user_id               INTEGER REFERENCES users(id),
+    name                  VARCHAR(255) NOT NULL,
+    nickname              VARCHAR(255),
+    keywords              VARCHAR(255),
+    description           TEXT,
+    source                VARCHAR(255),
+    severity              INTEGER NOT NULL DEFAULT 1,
+    category              INTEGER NOT NULL DEFAULT 1,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE risks (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    user_id               INTEGER REFERENCES users(id),
+    name                  VARCHAR(255) NOT NULL,
+    nickname              VARCHAR(255),
+    keywords              VARCHAR(255),
+    description           TEXT,
+    source                VARCHAR(255),
+    severity              INTEGER NOT NULL DEFAULT 1,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE safety_measures (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    hazard_id             INTEGER REFERENCES hazards(id),
+    user_id               INTEGER REFERENCES users(id),
+    title                 VARCHAR(255) NOT NULL,
+    description           TEXT,
+    priority              INTEGER NOT NULL DEFAULT 3,
+    status                INTEGER NOT NULL DEFAULT 1,
+    planned_date          TIMESTAMP,
+    completed_date        TIMESTAMP,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE safety_protections (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    risk_id               INTEGER REFERENCES risks(id),
+    user_id               INTEGER REFERENCES users(id),
+    title                 VARCHAR(255) NOT NULL,
+    description           TEXT,
+    type                  INTEGER NOT NULL DEFAULT 1,
+    priority              INTEGER NOT NULL DEFAULT 3,
+    status                INTEGER NOT NULL DEFAULT 1,
+    equipment             VARCHAR(255),
+    planned_date          TIMESTAMP,
+    completed_date        TIMESTAMP,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE see_seeks (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    name                  VARCHAR(255) NOT NULL,
+    nickname              VARCHAR(255),
+    description           TEXT,
+    place_id              INTEGER,
+    project_id            INTEGER,
+    start_time            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_time              TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
+    payer_user_id         INTEGER,
+    payer_team_id         INTEGER,
+    payer_family_id       INTEGER,
+    payee_user_id         INTEGER,
+    payee_team_id         INTEGER,
+    payee_family_id       INTEGER,
+    verifier_user_id      INTEGER,
+    verifier_team_id      INTEGER,
+    verifier_family_id    INTEGER,
+    category              INTEGER DEFAULT 0,
+    status                INTEGER DEFAULT 0,
+    step                  INTEGER DEFAULT 1,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE see_seek_environments (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    see_seek_id           INTEGER REFERENCES see_seeks(id),
+    environment_id        INTEGER REFERENCES environments(id),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE see_seek_hazards (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    see_seek_id           INTEGER REFERENCES see_seeks(id),
+    hazard_id             INTEGER REFERENCES hazards(id),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE see_seek_risks (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    see_seek_id           INTEGER REFERENCES see_seeks(id),
+    risk_id               INTEGER REFERENCES risks(id),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE INDEX idx_safety_measures_hazard_id ON safety_measures(hazard_id);
+CREATE INDEX idx_safety_measures_status ON safety_measures(status);
+CREATE INDEX idx_safety_protections_risk_id ON safety_protections(risk_id);
+CREATE INDEX idx_safety_protections_status ON safety_protections(status);
+CREATE INDEX idx_hazards_severity ON hazards(severity);
+CREATE INDEX idx_hazards_category ON hazards(category);
+CREATE INDEX idx_see_seeks_project_id ON see_seeks(project_id);
+CREATE INDEX idx_see_seeks_status ON see_seeks(status);
+CREATE INDEX idx_see_seek_environments_see_seek_id ON see_seek_environments(see_seek_id);
+CREATE INDEX idx_see_seek_hazards_see_seek_id ON see_seek_hazards(see_seek_id);
+CREATE INDEX idx_see_seek_risks_see_seek_id ON see_seek_risks(see_seek_id);

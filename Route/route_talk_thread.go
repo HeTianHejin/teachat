@@ -661,7 +661,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tD data.ThreadDetail
+	var threSupp data.ThreadSupplement
 
 	// 读取茶议内容
 	thread, err := data.GetThreadByUUID(uuid)
@@ -673,24 +673,6 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		util.Debug(" Cannot read thread given uuid", uuid, err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
-	}
-	switch thread.Category {
-	case data.ThreadCategoryAppointment:
-		break
-	case data.ThreadCategorySeeSeek:
-		break
-	case data.ThreadCategoryBrainFire:
-		break
-	case data.ThreadCategorySuggestion:
-		break
-	case data.ThreadCategoryGoods:
-		break
-	case data.ThreadCategoryHandcraft:
-		break
-	default:
-		report(w, r, "你好，茶博士表示，陛下，普通茶议不能加水呢。")
-		return
-
 	}
 
 	//核对用户身份，是否具有完善操作权限
@@ -705,11 +687,10 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "茶博士惊讶，陛下你没有权限补充该茶议，请确认后再试。")
 		return
 	}
-	tD.IsVerifier = true
-	tD.IsInput = true
+	threSupp.IsVerifier = true
 
 	// 读取茶议资料荚
-	tD.ThreadBean, err = fetchThreadBean(thread, r)
+	threSupp.ThreadBean, err = fetchThreadBean(thread, r)
 	if err != nil {
 		util.Debug(" Cannot read threadBean", err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
@@ -722,7 +703,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
-	tD.QuoteProjectBean, err = fetchProjectBean(project)
+	threSupp.QuoteProjectBean, err = fetchProjectBean(project)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			//	util.Debug(" Cannot read project given uuid", uuid)
@@ -741,45 +722,60 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
-	tD.QuoteObjectiveBean, err = fetchObjectiveBean(objective)
+	threSupp.QuoteObjectiveBean, err = fetchObjectiveBean(objective)
 	if err != nil {
 		util.Debug(" Cannot read objective given project", project.Id, err)
 		report(w, r, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
-	post_admin_slice, err := tD.ThreadBean.Thread.PostsAdmin()
+	post_admin_slice, err := threSupp.ThreadBean.Thread.PostsAdmin()
 	if err != nil {
 		util.Debug(" Cannot read admin posts", err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
-	tD.PostBeanAdminSlice, err = fetchPostBeanSlice(post_admin_slice)
+	threSupp.PostBeanAdminSlice, err = fetchPostBeanSlice(post_admin_slice)
 	if err != nil {
 		util.Debug(" Cannot read admin postbean", err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
-	//从会话查获当前浏览用户资料荚
-	s_u, s_d_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(sess)
-	if err != nil {
-		util.Debug(" Cannot get user-related data from session", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+	switch thread.Category {
+	case data.ThreadCategoryAppointment:
+		break
+	case data.ThreadCategorySeeSeek:
+		//检查see-seek是否存在记录？如果有，状态是否进行中=1？
+		see_seek, err := data.GetSeeSeekByProjectId(project.Id, r.Context())
+		if err != nil && err.Error() != "没有记录" {
+			util.Debug(" Cannot read see-seek given project", err)
+			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+			return
+		}
+		threSupp.SeeSeekUUID = see_seek.Uuid
+		threSupp.SeeSeekStatus = see_seek.Status
+
+	case data.ThreadCategoryBrainFire:
+		break
+	case data.ThreadCategorySuggestion:
+		break
+	case data.ThreadCategoryGoods:
+		break
+	case data.ThreadCategoryHandcraft:
+		break
+	default:
+		report(w, r, "你好，茶博士表示，陛下，普通茶议不能加水呢。")
 		return
+
 	}
+
 	// 用户足迹
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
 
-	tD.SessUser = s_u
-	tD.SessUserDefaultFamily = s_d_family
-	tD.SessUserSurvivalFamilies = s_all_families
-	tD.SessUserDefaultTeam = s_default_team
-	tD.SessUserSurvivalTeams = s_survival_teams
-	tD.SessUserDefaultPlace = s_default_place
-	tD.SessUserBindPlaces = s_places
+	threSupp.SessUser = s_u
 
-	renderHTML(w, &tD, "layout", "navbar.private", "thread.supplement", "component_post_left", "component_post_right", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &threSupp, "layout", "navbar.private", "thread.supplement", "component_post_left", "component_post_right", "component_sess_capacity", "component_avatar_name_gender")
 
 }
 

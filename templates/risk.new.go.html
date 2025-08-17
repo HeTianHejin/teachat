@@ -1,0 +1,104 @@
+{{ define "content" }}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-exclamation-sign"></span> 添加作业风险评估
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/risk/new" class="form-horizontal">
+      <!-- 基本信息 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">基本信息</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="name" class="col-sm-2 control-label">风险名称 *</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="name" id="name" 
+                     placeholder="如：高空坠落风险、触电风险等" required maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nickname" class="col-sm-2 control-label">风险别名</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="nickname" id="nickname" 
+                     placeholder="行业术语或简称" maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="keywords" class="col-sm-2 control-label">关键词</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="keywords" id="keywords" 
+                     placeholder="用于检索的关键词，如：高空,安全带,坠落" maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="col-sm-2 control-label">详细描述 *</label>
+            <div class="col-sm-10">
+              <textarea class="form-control" name="description" id="description" rows="4" 
+                        placeholder="详细描述风险情况、触发条件、可能造成的后果等" required></textarea>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="source" class="col-sm-2 control-label">风险来源</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="source" id="source" 
+                     placeholder="如：设备操作、环境因素、人员行为等" maxlength="255">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 风险分级 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">风险分级</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="severity" class="col-sm-2 control-label">严重程度 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="severity" id="severity" required>
+                <option value="1">1级 - 可忽略</option>
+                <option value="2">2级 - 轻度</option>
+                <option value="3" selected>3级 - 中度</option>
+                <option value="4">4级 - 严重</option>
+                <option value="5">5级 - 致命</option>
+              </select>
+              <small class="help-block">
+                1级：无实际伤害风险 | 2级：轻微伤害可现场处理 | 3级：可逆性伤害需专业医疗干预 | 
+                4级：可能造成重大伤害 | 5级：可能导致死亡/永久性伤残
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {{ if .ReturnURL }}
+      <input type="hidden" name="return_url" value="{{ .ReturnURL }}">
+      {{ end }}
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span> 添加风险
+          </button>
+          {{ if .ReturnURL }}
+          <a href="{{ .ReturnURL }}" class="btn btn-default">取消</a>
+          {{ else }}
+          <a href="/v1/" class="btn btn-default">取消</a>
+          {{ end }}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：风险评估是预防事故的重要环节，需要仔细分析可能的危险因素。
+  </div>
+</div>
+{{ end }}

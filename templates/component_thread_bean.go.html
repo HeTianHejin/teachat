@@ -33,9 +33,7 @@
         <a href="/v1/thread/detail?uuid={{ .Thread.Uuid }}">{{ .Thread.Title }}</a>
       </h4>
 
-        {{ if .IsCompleted }}
-        <span class="label label-success">已完成</span>
-        {{ end }}
+       
     </p>
 
     <p>{{ .Thread.Body }} ...</p>

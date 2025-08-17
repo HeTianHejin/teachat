@@ -34,6 +34,7 @@ type SeeSeek struct {
 
 	Category int //分类：0、公开，1、保密，仅当事家庭/团队可见内容
 	Status   int //状态：0、未开始，1、进行中，2、暂停，3、已终止，4、已结束
+	Step     int //当前步骤：1、环境条件，2、场所隐患，3、风险评估，4、感官观察，5、检测报告
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
@@ -52,6 +53,14 @@ const (
 	SeeSeekStatusCompleted         // 已完成（顺利结束）
 )
 
+const (
+	SeeSeekStepEnvironment = iota + 1 // 1、环境条件
+	SeeSeekStepHazard                 // 2、场所隐患
+	SeeSeekStepRisk                   // 3、风险评估
+	SeeSeekStepObservation            // 4、感官观察
+	SeeSeekStepReport                 // 5、检测报告
+)
+
 // SeeSeek.Create() // 创建一个SeeSeek
 // 编写postgreSQL语句，插入新纪录，return （err error）
 func (s *SeeSeek) Create(ctx context.Context) (err error) {
@@ -61,8 +70,8 @@ func (s *SeeSeek) Create(ctx context.Context) (err error) {
 	statement := `INSERT INTO see_seeks 
 		(uuid, name, nickname, description, place_id, project_id, start_time, end_time, 
 		 payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id, 
-		 verifier_user_id, verifier_team_id, verifier_family_id, category, status) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) 
+		 verifier_user_id, verifier_team_id, verifier_family_id, category, status, step) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
 		RETURNING id, uuid`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
@@ -72,7 +81,7 @@ func (s *SeeSeek) Create(ctx context.Context) (err error) {
 	err = stmt.QueryRowContext(ctx, Random_UUID(), s.Name, s.Nickname, s.Description,
 		s.PlaceId, s.ProjectId, s.StartTime, s.EndTime, s.PayerUserId, s.PayerTeamId,
 		s.PayerFamilyId, s.PayeeUserId, s.PayeeTeamId, s.PayeeFamilyId, s.VerifierUserId,
-		s.VerifierTeamId, s.VerifierFamilyId, s.Category, s.Status).Scan(&s.Id, &s.Uuid)
+		s.VerifierTeamId, s.VerifierFamilyId, s.Category, s.Status, s.Step).Scan(&s.Id, &s.Uuid)
 	return err
 }
 
@@ -80,14 +89,14 @@ func (s *SeeSeek) Create(ctx context.Context) (err error) {
 func (s *SeeSeek) Get(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, name, nickname, description, user_id, project_id, category, status, created_at, updated_at 
+	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id, category, status, step, created_at, updated_at 
 		FROM see_seeks WHERE id=$1`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, s.Id).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description, &s.PlaceId, &s.ProjectId, &s.Category, &s.Status, &s.CreatedAt, &s.UpdatedAt)
+	err = stmt.QueryRowContext(ctx, s.Id).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description, &s.PlaceId, &s.ProjectId, &s.Category, &s.Status, &s.Step, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return
 	}
@@ -116,7 +125,7 @@ func (s *SeeSeek) StatusString() string {
 	}
 }
 
-// “看看”作业自然（物理）环境条件
+// “看看”作业场所自然环境条件
 type SeeSeekEnvironment struct {
 	Id            int
 	Uuid          string
@@ -124,6 +133,37 @@ type SeeSeekEnvironment struct {
 	EnvironmentId int
 	CreatedAt     time.Time
 	UpdatedAt     *time.Time
+}
+
+// SeeSeekEnvironment.Create()
+func (sse *SeeSeekEnvironment) Create() (err error) {
+	statement := `INSERT INTO see_seek_environments 
+		(uuid, see_seek_id, environment_id, created_at) 
+		VALUES ($1, $2, $3, $4) 
+		RETURNING id, uuid`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), sse.SeeSeekId, sse.EnvironmentId, time.Now()).Scan(&sse.Id, &sse.Uuid)
+	return err
+}
+
+// SeeSeekEnvironment.Get()
+func (sse *SeeSeekEnvironment) Get() (err error) {
+	statement := `SELECT id, uuid, see_seek_id, environment_id, created_at, updated_at
+		FROM see_seek_environments WHERE id=$1`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(sse.Id).Scan(&sse.Id, &sse.Uuid, &sse.SeeSeekId, &sse.EnvironmentId, &sse.CreatedAt, &sse.UpdatedAt)
+	if err != nil {
+		return
+	}
+	return
 }
 
 // “看看”场所安全隐患，风险的源
@@ -136,6 +176,37 @@ type SeeSeekHazard struct {
 	UpdatedAt *time.Time
 }
 
+// SeeSeekHazard.Create()
+func (ssh *SeeSeekHazard) Create() (err error) {
+	statement := `INSERT INTO see_seek_hazards
+		(uuid, see_seek_id, hazard_id, created_at)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, uuid`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), ssh.SeeSeekId, ssh.HazardId, time.Now()).Scan(&ssh.Id, &ssh.Uuid)
+	return err
+}
+
+// SeeSeekHazard.Get()
+func (ssh *SeeSeekHazard) Get() (err error) {
+	statement := `SELECT id, uuid, see_seek_id, hazard_id, created_at, updated_at
+		FROM see_seek_hazards WHERE id=$1`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(ssh.Id).Scan(&ssh.Id, &ssh.Uuid, &ssh.SeeSeekId, &ssh.HazardId, &ssh.CreatedAt, &ssh.UpdatedAt)
+	if err != nil {
+		return
+	}
+	return
+}
+
 // 执行“看看”作业安全风险，风险考验因素
 type SeeSeekRisk struct {
 	Id        int
@@ -144,6 +215,37 @@ type SeeSeekRisk struct {
 	RiskId    int
 	CreatedAt time.Time
 	UpdatedAt *time.Time
+}
+
+// SeeSeekRisk.Create()
+func (ssr *SeeSeekRisk) Create() (err error) {
+	statement := `INSERT INTO see_seek_risks
+		(uuid, see_seek_id, risk_id, created_at)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id, uuid`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), ssr.SeeSeekId, ssr.RiskId, time.Now()).Scan(&ssr.Id, &ssr.Uuid)
+	return err
+}
+
+// SeeSeekRisk.Get()
+func (ssr *SeeSeekRisk) Get() (err error) {
+	statement := `SELECT id, uuid, see_seek_id, risk_id, created_at, updated_at
+		FROM see_seek_risks WHERE id=$1`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(ssr.Id).Scan(&ssr.Id, &ssr.Uuid, &ssr.SeeSeekId, &ssr.RiskId, &ssr.CreatedAt, &ssr.UpdatedAt)
+	if err != nil {
+		return
+	}
+	return
 }
 
 // 望，观察
@@ -286,4 +388,96 @@ func (ssaa *SeeSeekAskAndAnswer) Update() (err error) {
 		return
 	}
 	return
+}
+
+// 根据project_id查找SeeSeek记录
+func GetSeeSeekByProjectId(projectId int) (SeeSeek, error) {
+	var s SeeSeek
+	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id, 
+		payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id,
+		verifier_user_id, verifier_team_id, verifier_family_id, category, status, step, created_at, updated_at
+		FROM see_seeks WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return s, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(projectId).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description,
+		&s.PlaceId, &s.ProjectId, &s.PayerUserId, &s.PayerTeamId, &s.PayerFamilyId,
+		&s.PayeeUserId, &s.PayeeTeamId, &s.PayeeFamilyId, &s.VerifierUserId,
+		&s.VerifierTeamId, &s.VerifierFamilyId, &s.Category, &s.Status, &s.Step, &s.CreatedAt, &s.UpdatedAt)
+	return s, err
+}
+
+// SeeSeek.Update() 更新SeeSeek记录
+func (s *SeeSeek) Update() error {
+	statement := `UPDATE see_seeks SET name = $2, nickname = $3, description = $4, 
+		status = $5, step = $6, updated_at = $7 WHERE id = $1`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(s.Id, s.Name, s.Nickname, s.Description, s.Status, s.Step, time.Now())
+	return err
+}
+
+// 获取SeeSeek的环境记录
+func (s *SeeSeek) GetEnvironments() ([]SeeSeekEnvironment, error) {
+	rows, err := Db.Query("SELECT id, uuid, see_seek_id, environment_id, created_at, updated_at FROM see_seek_environments WHERE see_seek_id = $1", s.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var envs []SeeSeekEnvironment
+	for rows.Next() {
+		var env SeeSeekEnvironment
+		err := rows.Scan(&env.Id, &env.Uuid, &env.SeeSeekId, &env.EnvironmentId, &env.CreatedAt, &env.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		envs = append(envs, env)
+	}
+	return envs, nil
+}
+
+// 获取SeeSeek的隐患记录
+func (s *SeeSeek) GetHazards() ([]SeeSeekHazard, error) {
+	rows, err := Db.Query("SELECT id, uuid, see_seek_id, hazard_id, created_at, updated_at FROM see_seek_hazards WHERE see_seek_id = $1", s.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var hazards []SeeSeekHazard
+	for rows.Next() {
+		var hazard SeeSeekHazard
+		err := rows.Scan(&hazard.Id, &hazard.Uuid, &hazard.SeeSeekId, &hazard.HazardId, &hazard.CreatedAt, &hazard.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		hazards = append(hazards, hazard)
+	}
+	return hazards, nil
+}
+
+// 获取SeeSeek的风险记录
+func (s *SeeSeek) GetRisks() ([]SeeSeekRisk, error) {
+	rows, err := Db.Query("SELECT id, uuid, see_seek_id, risk_id, created_at, updated_at FROM see_seek_risks WHERE see_seek_id = $1", s.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var risks []SeeSeekRisk
+	for rows.Next() {
+		var risk SeeSeekRisk
+		err := rows.Scan(&risk.Id, &risk.Uuid, &risk.SeeSeekId, &risk.RiskId, &risk.CreatedAt, &risk.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		risks = append(risks, risk)
+	}
+	return risks, nil
 }
