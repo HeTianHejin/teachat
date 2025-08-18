@@ -1,0 +1,259 @@
+{{ define "content" }}
+
+{{/* 见证者提交新建"看看"第一步，所需的数据表单-模版 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a>
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">+ 看看</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{/* 这是茶台（项目）的原始详情页 */}}
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <img src="/v1/static/image/teachat-table.svg" alt="看看封面" width="24" height="24">
+    新建"看看"
+  </div>
+  <div class="panel-body">
+    <form role="form" action="/v1/see-seek/new" method="post">
+
+      <!-- 基础信息 -->
+      <div class="form-group">
+        <label for="name">"看看"名称（2-24字）</label>
+        <input type="text" class="form-control" name="name" id="name" minlength="2" maxlength="24" required />
+      </div>
+
+      <div class="form-group">
+        <label for="nickname">"看看"昵称（可选）</label>
+        <input type="text" class="form-control" name="nickname" id="nickname" maxlength="24" />
+      </div>
+
+      <div class="form-group">
+        <label for="description">"看看"描述（17-456字）</label>
+        <textarea class="form-control" name="description" id="description" rows="3" minlength="17" maxlength="456"
+          required></textarea>
+      </div>
+
+      <!-- 参与方信息, 可能需要修改后提交-->
+      <div class="panel panel-default">
+        <div class="panel-heading">出席三方</div>
+        <div class="panel-body">
+          <!-- 出茶叶方 -->
+          <label>出茶叶方</label>
+          <div class="form-group">
+            <label for="payee_name">主理人</label>
+            <input type="text" class="form-control" name="payee_name" id="payee_name" value="{{ .Payee.Name }}" required />
+            <input type="hidden" name="payee_id" value="{{ .Payee.Id }}" />
+
+            <label for="family_payee">家庭</label>
+            <input type="text" class="form-control" name="family_payee" id="family_payee" value="{{ .PayeeFamily.Name }}" required />
+            <input type="hidden" name="payee_family_id" value="{{ .PayeeFamily.Id }}" />
+
+            <label for="team_payee">团队</label>
+            <input type="text" class="form-control" name="team_payee" id="team_payee" value="{{ .PayeeTeam.Name }}" required />
+            <input type="hidden" name="payee_team_id" value="{{ .PayeeTeam.Id }}" />
+          </div>
+
+          <!-- 收茶叶方 -->
+           <label>收茶叶方</label>
+          <div class="form-group">
+            <label for="payer_name">主理人</label>
+            <input type="text" class="form-control" name="payer_name" id="payer_name" value="{{ .Payer.Name }}" required />
+            <input type="hidden" name="payer_id" value="{{ .Payer.Id }}" />
+
+            <label for="family_payer">家庭</label>
+            <input type="text" class="form-control" name="family_payer" id="family_payer" value="{{ .PayerFamily.Name }}" required />
+            <input type="hidden" name="payer_family_id" value="{{ .PayerFamily.Id }}" />
+
+            <label for="team_payer">团队</label>
+            <input type="text" class="form-control" name="team_payer" id="team_payer" value="{{ .PayerTeam.Name }}" required />
+            <input type="hidden" name="payer_team_id" value="{{ .PayerTeam.Id }}" />
+          </div>
+
+          <!-- 见证方 -->
+          <label>见证方</label>
+          <div class="form-group">
+            <label for="verifier_name">见证人</label>
+            <input type="text" class="form-control"  id="verifier_name" value="{{ .Verifier.Name }}" disabled />
+            <label for="verifier_family">家庭</label>
+            <input type="text" class="form-control"  id="verifier_family" value="{{ .VerifierFamily.Name }}" disabled />
+            <label for="verifier_team">团队</label>
+            <input type="text" class="form-control"  id="verifier_team" value="{{ .VerifierTeam.Name }}" disabled />
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- 地点与环境 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">地点与环境</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="place">事发地点</label>
+            <input type="text" class="form-control" name ="place" id="place" value="{{ .ProjectBean.Place.Name }}" disabled />
+            <input type="hidden" name="place_id" value="{{ .ProjectBean.Place.Id }}" />
+          </div>
+
+          <div class="form-group">
+            <label for="environment_id">环境条件</label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="environment_display" placeholder="点击添加环境条件" readonly>
+              <input type="hidden" name="environment_id" id="environment_id" value="0">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-default" onclick="showEnvironmentModal()">
+                  <span class="glyphicon glyphicon-plus"></span> 添加环境条件
+                </button>
+              </span>
+            </div>
+          </div>
+
+
+
+      <!-- 隐私设置 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">隐私设置</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <div class="radio">
+              <label>
+                <input type="radio" name="category" value="0" checked required onchange="toggleInviteIdsInput(false)">
+                公开（所有人可见）
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="category" value="1" required onchange="toggleInviteIdsInput(true)">
+                保密（仅当事人可见）
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="inviteIdsGroup" style="display:none;">
+            <label for="invite_ids">指定参与的家庭/团队ID（逗号分隔）</label>
+            <input type="text" class="form-control" name="invite_ids" id="invite_ids" placeholder="例如: 1,2,3"
+              maxlength="100">
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" name="project_uuid" value="{{ .ProjectBean.Project.Uuid }}">
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">下一步</button>
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：您知道吗？"看看"需要动手又动脑，可不是瞄一眼这么简单。
+  </div>
+</div>
+
+<!-- 环境条件选择模态框 -->
+<div class="modal fade" id="environmentModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">选择环境条件</h4>
+      </div>
+      <div class="modal-body">
+        <div class="list-group">
+          <!-- 常用环境条件（默认四个） -->
+          {{ range $index, $env := .Environments }}
+          <a href="#" class="list-group-item{{ if eq $index 0 }} list-group-item-success{{ end }}" 
+             data-env-id="{{ $env.Id }}" 
+             data-env-name="{{ $env.Name }}"
+             onclick="selectEnvironment(this)">
+            <strong>{{ $env.Name }}</strong> - {{ $env.Summary }}
+            {{ if eq $index 0 }}<span class="badge">新创建</span>{{ end }}
+          </a>
+          {{ end }}
+
+          <!-- 手动输入环境ID -->
+          <div class="list-group-item">
+            <div class="input-group">
+              <input type="number" class="form-control" id="manual_env_id" placeholder="输入环境条件ID" min="1">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary" onclick="selectManualEnvironment()">
+                  <span class="glyphicon glyphicon-ok"></span> 选择
+                </button>
+              </span>
+            </div>
+            <small class="text-muted">手动输入已知的环境条件ID</small>
+          </div>
+          
+          <!-- 针对当前项目下的特殊环境，添加新环境条件链接 -->
+          <a href="/v1/environment/new?return_url=/v1/see-seek/new?uuid={{ .ProjectBean.Project.Uuid }}" class="list-group-item list-group-item-info">
+            <span class="glyphicon glyphicon-plus"></span> 添加新的环境条件
+          </a>
+          
+          <!-- 查找环境条件 -->
+          <a href="/v1/search" target="_blank" class="list-group-item list-group-item-warning">
+            <span class="glyphicon glyphicon-search"></span> 查找环境条件
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function toggleInviteIdsInput(show) {
+    document.getElementById('inviteIdsGroup').style.display = show ? 'block' : 'none';
+    if (!show) document.getElementById('invite_ids').value = '';
+  }
+
+  function showEnvironmentModal() {
+    $('#environmentModal').modal('show');
+  }
+
+  function selectEnvironment(element) {
+    const id = element.dataset.envId;
+    const name = element.dataset.envName;
+    document.getElementById('environment_id').value = id;
+    document.getElementById('environment_display').value = name;
+    $('#environmentModal').modal('hide');
+  }
+
+  function selectManualEnvironment() {
+    var envId = document.getElementById('manual_env_id').value;
+    if (envId && envId > 0) {
+      document.getElementById('environment_id').value = envId;
+      document.getElementById('environment_display').value = '环境条件 #' + envId;
+      $('#environmentModal').modal('hide');
+    } else {
+      alert('请输入有效的环境条件ID');
+    }
+  }
+
+  // 如果有新创建的环境条件，自动选中
+  $(document).ready(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    
+    // 处理新创建的环境条件
+    if (urlParams.has('new_env_id')) {
+      var firstEnv = $('.list-group-item').first();
+      if (firstEnv.length > 0) {
+        var envId = firstEnv.attr('onclick').match(/\d+/)[0];
+        var envName = firstEnv.find('strong').text();
+        selectEnvironment(parseInt(envId), envName);
+      }
+    }
+    
+   
+  });
+</script>
+
+{{ end }}

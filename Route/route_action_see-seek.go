@@ -19,11 +19,133 @@ func HandleNewSeeSeek(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// POST /v1/see-seek/new
 func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
-	panic("unimplemented")
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 检测当前会话茶友是否见证者
+	is_verifier := isVerifier(s_u.Id)
+	if !is_verifier {
+		util.Debug(" Current user is not a verifier", s_u.Id)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	// 解析表单数据
+	if err := r.ParseForm(); err != nil {
+		util.Debug(" Cannot parse form", err)
+		report(w, r, "表单数据解析失败")
+		return
+	}
+
+	// 获取项目信息
+	projectUuid := r.FormValue("project_uuid")
+	if projectUuid == "" {
+		report(w, r, "项目信息缺失")
+		return
+	}
+
+	t_proj := data.Project{Uuid: projectUuid}
+	if err := t_proj.GetByUuid(); err != nil {
+		util.Debug(" Cannot get project by uuid", projectUuid, err)
+		report(w, r, "项目不存在")
+		return
+	}
+
+	// 获取表单字段
+	name := r.FormValue("name")
+	nickname := r.FormValue("nickname")
+	description := r.FormValue("description")
+	placeIdStr := r.FormValue("place_id")
+	environmentIdStr := r.FormValue("environment_id")
+	categoryStr := r.FormValue("category")
+
+	// 验证必填字段
+	if name == "" || description == "" {
+		report(w, r, "请填写完整的基本信息")
+		return
+	}
+
+	// 转换数值字段
+	placeId, _ := strconv.Atoi(placeIdStr)
+	environmentId, _ := strconv.Atoi(environmentIdStr)
+	category, _ := strconv.Atoi(categoryStr)
+
+	// 验证环境条件必须选择
+	if environmentId <= 0 {
+		report(w, r, "请务必选择环境条件")
+		return
+	}
+	// 尝试查找环境条件，测试是否存在该id的环境条件记录
+	env := data.Environment{Id: environmentId}
+	if err := env.GetByIdOrUUID(); err != nil {
+		util.Debug(" Cannot get environment by id", environmentId, err)
+		report(w, r, "环境条件不存在，请确认")
+		return
+	}
+
+	// 获取参与方ID
+	payerUserId, _ := strconv.Atoi(r.FormValue("payer_id"))
+	payerTeamId, _ := strconv.Atoi(r.FormValue("payer_team_id"))
+	payerFamilyId, _ := strconv.Atoi(r.FormValue("payer_family_id"))
+	payeeUserId, _ := strconv.Atoi(r.FormValue("payee_id"))
+	payeeTeamId, _ := strconv.Atoi(r.FormValue("payee_team_id"))
+	payeeFamilyId, _ := strconv.Atoi(r.FormValue("payee_family_id"))
+
+	// 创建SeeSeek记录
+	seeSeek := data.SeeSeek{
+		Name:             name,
+		Nickname:         nickname,
+		Description:      description,
+		ProjectId:        t_proj.Id,
+		PlaceId:          placeId,
+		PayerUserId:      payerUserId,
+		PayerTeamId:      payerTeamId,
+		PayerFamilyId:    payerFamilyId,
+		PayeeUserId:      payeeUserId,
+		PayeeTeamId:      payeeTeamId,
+		PayeeFamilyId:    payeeFamilyId,
+		VerifierUserId:   s_u.Id,
+		VerifierFamilyId: data.FamilyIdUnknown,
+		VerifierTeamId:   data.TeamIdVerifier,
+		Category:         category,
+		Status:           data.SeeSeekStatusInProgress, // 进行中
+		Step:             data.SeeSeekStepEnvironment,  // 步骤1：环境条件
+	}
+
+	if err := seeSeek.Create(r.Context()); err != nil {
+		util.Debug(" Cannot create see seek", err)
+		report(w, r, "创建看看记录失败")
+		return
+	}
+
+	// 创建环境关联记录
+	seeSeekEnv := data.SeeSeekEnvironment{
+		SeeSeekId:     seeSeek.Id,
+		EnvironmentId: environmentId,
+	}
+	if err := seeSeekEnv.Create(); err != nil {
+		util.Debug(" Cannot create see seek environment", err)
+		report(w, r, "创建环境关联记录失败")
+		return
+	}
+
+	// 重定向到步骤页面
+	http.Redirect(w, r, "/v1/see-seek/step?uuid="+seeSeek.Uuid, http.StatusFound)
 }
 
 // GET /v1/see-seek/new?uuid=xXx
+// 新建“看看”记录，从第一步开始创建
 func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 
 	sess, err := session(r)
@@ -90,6 +212,19 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
+	// 检查是否已存在当前project_id的see-seek记录
+	existingSeeSeek, err := data.GetSeeSeekByProjectId(t_proj.Id, r.Context())
+	if err != nil && err.Error() != "没有记录" {
+		util.Debug(" Cannot get existing see-seek", err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+	if err == nil && existingSeeSeek.Id > 0 {
+		// 已存在看看记录,跳转到相应步骤
+		http.Redirect(w, r, "/v1/see-seek/step?uuid="+existingSeeSeek.Uuid, http.StatusFound)
+		return
+	}
+
 	//读取预设的4个通用场所环境,id为1,2,3,4
 	environments, err := data.GetDefaultEnvironments(r.Context())
 	if err != nil {
@@ -98,19 +233,9 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查是否有新创建的环境条件
-	newEnvIdStr := r.URL.Query().Get("new_env_id")
-	if newEnvIdStr != "" {
-		if newEnvId, err := strconv.Atoi(newEnvIdStr); err == nil {
-			newEnv := data.Environment{Id: newEnvId}
-			if err := newEnv.GetByIdOrUUID(); err == nil {
-				// 将新环境添加到列表前面
-				environments = append([]data.Environment{newEnv}, environments...)
-			}
-		}
-	}
+	// 准备页面数据
 
-	var sSDpD data.SeeSeekDetailPageData
+	var sSDpD data.SeeSeekDetailTemplateData
 	sSDpD.SessUser = s_u
 	sSDpD.IsVerifier = is_verifier
 
@@ -129,5 +254,5 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	sSDpD.ProjectAppointment = proj_appointment_bean
 	sSDpD.Environments = environments
 
-	renderHTML(w, &sSDpD, "layout", "navbar.private", "project.see-seek.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &sSDpD, "layout", "navbar.private", "action.see-seek.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }

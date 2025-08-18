@@ -1,0 +1,143 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">安全隐患详情</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="glyphicon glyphicon-warning-sign"></span>
+    安全隐患 #{{ .Hazard.Id }} - {{ .Hazard.Name }}
+    <span class="label label-{{ if eq .Hazard.Severity 5 }}danger{{ else if eq .Hazard.Severity 4 }}warning{{ else if eq .Hazard.Severity 3 }}info{{ else }}default{{ end }} pull-right">
+      {{ .Hazard.SeverityName }}
+    </span>
+  </div>
+  <div class="panel-body">
+    
+    <!-- 基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>基本信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>ID</strong></td>
+            <td>{{ .Hazard.Id }}</td>
+          </tr>
+          <tr>
+            <td><strong>隐患名称</strong></td>
+            <td>{{ .Hazard.Name }}</td>
+          </tr>
+          {{ if .Hazard.Nickname }}
+          <tr>
+            <td><strong>隐患别名</strong></td>
+            <td>{{ .Hazard.Nickname }}</td>
+          </tr>
+          {{ end }}
+          <tr>
+            <td><strong>隐患类型</strong></td>
+            <td>
+              <span class="label label-default">{{ .Hazard.CategoryName }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>严重度</strong></td>
+            <td>
+              <span class="label label-{{ if eq .Hazard.Severity 5 }}danger{{ else if eq .Hazard.Severity 4 }}warning{{ else if eq .Hazard.Severity 3 }}info{{ else }}default{{ end }}">
+                {{ .Hazard.SeverityName }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>记录者</strong></td>
+            <td>{{ .Recorder.Name }} (ID: {{ .Recorder.Id }})</td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .Hazard.CreatedAt.Format "2006-01-02 15:04:05" }}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>详细描述</h4>
+        <div class="well">
+          <p>{{ .Hazard.Description }}</p>
+        </div>
+        
+        {{ if .Hazard.Keywords }}
+        <h5>关键词</h5>
+        <p>
+          {{ range $i, $keyword := (split .Hazard.Keywords ",") }}
+            {{ if $i }}, {{ end }}
+            <span class="label label-info">{{ trim $keyword }}</span>
+          {{ end }}
+        </p>
+        {{ end }}
+        
+        {{ if .Hazard.Source }}
+        <h5>隐患来源</h5>
+        <p class="text-muted">{{ .Hazard.Source }}</p>
+        {{ end }}
+      </div>
+    </div>
+
+    <!-- 风险等级说明 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>风险等级说明</h4>
+        <div class="alert alert-{{ if eq .Hazard.Severity 5 }}danger{{ else if eq .Hazard.Severity 4 }}warning{{ else if eq .Hazard.Severity 3 }}info{{ else }}success{{ end }}">
+          <strong>{{ .Hazard.SeverityName }}：</strong>
+          {{ if eq .Hazard.Severity 5 }}
+            危急级别，需要立即采取行动，可能造成严重伤亡或重大财产损失。
+          {{ else if eq .Hazard.Severity 4 }}
+            高风险级别，需要优先处理，可能造成人员伤害或较大财产损失。
+          {{ else if eq .Hazard.Severity 3 }}
+            中等风险级别，需要及时关注和处理，可能造成轻微伤害或财产损失。
+          {{ else if eq .Hazard.Severity 2 }}
+            低风险级别，需要定期检查和维护，风险相对较小。
+          {{ else }}
+            可忽略级别，风险极小，但仍需要注意。
+          {{ end }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="javascript:history.back()" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回
+      </a>
+      <button type="button" class="btn btn-info" onclick="copyHazardId()">
+        <span class="glyphicon glyphicon-copy"></span> 复制ID
+      </button>
+    </div>
+  </div>
+  
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：识别和管理安全隐患是预防事故的重要措施。隐患ID：{{ .Hazard.Id }}
+  </div>
+</div>
+
+<script>
+  function copyHazardId() {
+    var hazardId = "{{ .Hazard.Id }}";
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(hazardId).then(function() {
+        alert('隐患ID已复制到剪贴板：' + hazardId);
+      });
+    } else {
+      // 兼容旧浏览器
+      var textArea = document.createElement("textarea");
+      textArea.value = hazardId;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('隐患ID已复制到剪贴板：' + hazardId);
+    }
+  }
+</script>
+
+{{ end }}

@@ -14,6 +14,7 @@ type SearchPageData struct {
 	ObjectiveBeanSlice []ObjectiveBean
 	PlaceSlice         []Place       //品茶地点集合
 	EnvironmentSlice   []Environment //环境条件集合
+	HazardSlice        []Hazard      //隐患集合
 }
 
 // 我的地盘我做主

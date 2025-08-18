@@ -38,6 +38,9 @@
         <input type="radio" name="class" id="environment" style="width: fit-content;" value="6" required />
         <label for="environment">环境条件</label>
 
+        <input type="radio" name="class" id="hazard" style="width: fit-content;" value="7" required />
+        <label for="hazard">安全隐患</label>
+
       </fieldset>
     </div>
 
@@ -138,6 +141,28 @@
   </div>
 </div>
 {{ end }}{{/* 这是查找到的 环境条件 结果队列迭代-结束 */}}
+
+{{ range .HazardSlice }}{{/* 这是查找到的 安全隐患 结果队列迭代-开始 */}}
+<hr />
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>安全隐患 #{{ .Id }}</strong> - {{ .Name }}
+    <span class="label label-{{ if eq .Severity 5 }}danger{{ else if eq .Severity 4 }}warning{{ else if eq .Severity 3 }}info{{ else }}default{{ end }}">
+      {{ .SeverityName }}
+    </span>
+    <span class="label label-default">{{ .CategoryName }}</span>
+    <a href="/v1/hazard/detail?id={{ .Id }}" class="btn btn-xs btn-info pull-right">
+      <span class="glyphicon glyphicon-eye-open"></span> 查看详情
+    </a>
+  </div>
+  <div class="panel-body">
+    <p>{{ .Description }}</p>
+    {{ if .Keywords }}<p><strong>关键词：</strong>{{ .Keywords }}</p>{{ end }}
+    {{ if .Source }}<p><strong>来源：</strong>{{ .Source }}</p>{{ end }}
+    <small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
+  </div>
+</div>
+{{ end }}{{/* 这是查找到的 安全隐患 结果队列迭代-结束 */}}
 
 {{ end }}{{/* 这是查找结果非零 结束*/}}
 

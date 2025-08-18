@@ -1,6 +1,10 @@
 package data
 
-import "time"
+import (
+	"context"
+	"errors"
+	"time"
+)
 
 // 作业场所安全隐患，
 // 直接责任方默认是归属场所管理茶团（相对的“risk风险”默认责任是作业执行团队方）
@@ -224,11 +228,21 @@ func (h *Hazard) Update() error {
 	return err
 }
 
-// 根据ID获取隐患
-func GetHazardById(id int) (Hazard, error) {
-	var h Hazard
-	err := Db.QueryRow("SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE id = $1", id).Scan(&h.Id, &h.Uuid, &h.UserId, &h.Name, &h.Nickname, &h.Keywords, &h.Description, &h.Source, &h.Severity, &h.Category, &h.CreatedAt, &h.UpdatedAt)
-	return h, err
+// 根据ID/uuid获取隐患
+func (h *Hazard) GetByIdOrUUID() error {
+	var err error
+	if h.Id > 0 || h.Uuid != "" {
+		statement := "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE id = $1 OR uuid = $2"
+		stmt, err := Db.Prepare(statement)
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		err = stmt.QueryRow(h.Id, h.Uuid).Scan(&h.Id, &h.Uuid, &h.UserId, &h.Name, &h.Nickname, &h.Keywords, &h.Description, &h.Source, &h.Severity, &h.Category, &h.CreatedAt, &h.UpdatedAt)
+	} else {
+		return errors.New("隐患ID或UUID不能为空")
+	}
+	return err
 }
 
 // 删除隐患（同时删除相关的防范措施）
@@ -252,6 +266,26 @@ func (h *Hazard) Delete() error {
 // 获取所有隐患
 func GetAllHazards() ([]Hazard, error) {
 	rows, err := Db.Query("SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards ORDER BY severity DESC, created_at DESC")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var hazards []Hazard
+	for rows.Next() {
+		var h Hazard
+		err := rows.Scan(&h.Id, &h.Uuid, &h.UserId, &h.Name, &h.Nickname, &h.Keywords, &h.Description, &h.Source, &h.Severity, &h.Category, &h.CreatedAt, &h.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		hazards = append(hazards, h)
+	}
+	return hazards, nil
+}
+
+// 按名称搜索隐患
+func SearchHazardByName(keyword string, limit int, ctx context.Context) ([]Hazard, error) {
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE name ILIKE $1 OR nickname ILIKE $1 OR keywords ILIKE $1 ORDER BY severity DESC, created_at DESC LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}

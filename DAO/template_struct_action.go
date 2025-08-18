@@ -81,10 +81,40 @@ type SeeSeekBean struct {
 
 	SeeSeekExaminationReport []SeeSeekExaminationReport //附加专项检测报告，通常是使用专业工具客观验证
 
-	Place       Place
 	Environment Environment //场所环境
 	Hazard      []Hazard    //场所隐患
 	Risk        []Risk      //作业风险
 	Goods       []Goods     //物资
 
+	Project Project
+	Place   Place
+}
+
+// 用于继续“看看”步骤的模版数据
+type SeeSeekStepTemplateData struct {
+	SessUser   User
+	IsVerifier bool
+	IsAdmin    bool
+	IsMaster   bool
+
+	Verifier       User
+	VerifierFamily Family
+	VerifierTeam   Team
+
+	SeeSeekBean SeeSeekBean
+
+	ProjectBean        ProjectBean
+	QuoteObjectiveBean ObjectiveBean
+
+	// 状态管理相关字段
+	CurrentSeeSeek   *SeeSeek //当前进行中的SeeSeek记录
+	CompletedSteps   int
+	CurrentStep      int
+	SeeSeekStepTitle string
+
+	ExistingEnvironmentId int    //已选择的环境ID
+	ExistingHazardIds     []int  //已选择的隐患ID列表
+	ExistingRiskIds       []int  //已选择的风险ID列表
+	ExistingHazardIdsStr  string //隐患ID字符串（逗号分隔）
+	ExistingRiskIdsStr    string //风险ID字符串（逗号分隔）
 }

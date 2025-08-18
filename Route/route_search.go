@@ -268,6 +268,20 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		renderHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
+	case data.SearchTypeHazard:
+		//查询隐患 hazard
+		hazard_slice, err := data.SearchHazardByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		if err != nil {
+			util.Debug(" failed to search hazard by keyword", err)
+		}
+		if len(hazard_slice) >= 1 {
+			fPD.Count = len(hazard_slice)
+			fPD.HazardSlice = hazard_slice
+			fPD.IsEmpty = false
+		}
+		renderHTML(w, &fPD, "layout", "navbar.private", "search")
+		return
+
 	default:
 		report(w, r, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
 		return

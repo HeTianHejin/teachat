@@ -2,6 +2,8 @@ package data
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"time"
 )
 
@@ -32,9 +34,9 @@ type SeeSeek struct {
 	VerifierFamilyId int
 	VerifierTeamId   int
 
-	Category int //分类：0、公开，1、保密，仅当事家庭/团队可见内容
-	Status   int //状态：0、未开始，1、进行中，2、暂停，3、已终止，4、已结束
-	Step     int //当前步骤：1、环境条件，2、场所隐患，3、风险评估，4、感官观察，5、检测报告
+	Category int           //分类：0、公开，1、保密，仅当事家庭/团队可见内容
+	Status   SeeSeekStatus //状态：0、未开始，1、进行中，2、暂停，3、已终止，4、已结束
+	Step     int           //当前步骤：1、环境条件，2、场所隐患，3、风险评估，4、感官观察，5、检测报告
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
@@ -44,6 +46,8 @@ const (
 	SeeSeekCategoryPublic = iota // 公开
 	SeeSeekCategorySecret        // 保密
 )
+
+type SeeSeekStatus int
 
 const (
 	SeeSeekStatusNotStarted = iota // 未开始
@@ -60,6 +64,23 @@ const (
 	SeeSeekStepObservation            // 4、感官观察
 	SeeSeekStepReport                 // 5、检测报告
 )
+
+func GetSeeSeekStepTitle(step int) string {
+	switch step {
+	case SeeSeekStepEnvironment:
+		return "环境条件"
+	case SeeSeekStepHazard:
+		return "场所隐患"
+	case SeeSeekStepRisk:
+		return "风险评估"
+	case SeeSeekStepObservation:
+		return "感官观察"
+	case SeeSeekStepReport:
+		return "检测报告"
+	default:
+		return "未知步骤"
+	}
+}
 
 // SeeSeek.Create() // 创建一个SeeSeek
 // 编写postgreSQL语句，插入新纪录，return （err error）
@@ -86,21 +107,34 @@ func (s *SeeSeek) Create(ctx context.Context) (err error) {
 }
 
 // SeeSeek.Get()
-func (s *SeeSeek) Get(ctx context.Context) (err error) {
+func (s *SeeSeek) GetByIdOrUUID(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id, category, status, step, created_at, updated_at 
-		FROM see_seeks WHERE id=$1`
-	stmt, err := Db.Prepare(statement)
+	if s.Id < 0 || s.Uuid == "" {
+		return errors.New("无效的SeeSeek ID或UUID")
+	}
+	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id,
+		payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id,
+		verifier_user_id, verifier_team_id, verifier_family_id, category, status, step,
+		start_time, end_time, created_at, updated_at
+		FROM see_seeks WHERE id=$1 OR uuid=$2`
+	stmt, err := Db.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, s.Id).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description, &s.PlaceId, &s.ProjectId, &s.Category, &s.Status, &s.Step, &s.CreatedAt, &s.UpdatedAt)
+	err = stmt.QueryRowContext(ctx, s.Id, s.Uuid).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description,
+		&s.PlaceId, &s.ProjectId, &s.PayerUserId, &s.PayerTeamId, &s.PayerFamilyId,
+		&s.PayeeUserId, &s.PayeeTeamId, &s.PayeeFamilyId, &s.VerifierUserId,
+		&s.VerifierTeamId, &s.VerifierFamilyId, &s.Category, &s.Status, &s.Step,
+		&s.StartTime, &s.EndTime, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
-		return
+		if err == sql.ErrNoRows {
+			return errors.New("没有记录")
+		}
+		return err
 	}
-	return
+	return nil
 }
 
 // SeeSeek.CreateAtDate() string
@@ -391,7 +425,10 @@ func (ssaa *SeeSeekAskAndAnswer) Update() (err error) {
 }
 
 // 根据project_id查找SeeSeek记录
-func GetSeeSeekByProjectId(projectId int) (SeeSeek, error) {
+func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) {
+	//cancel after 5 seconds
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	var s SeeSeek
 	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id, 
 		payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id,
@@ -402,10 +439,19 @@ func GetSeeSeekByProjectId(projectId int) (SeeSeek, error) {
 		return s, err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(projectId).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description,
+	err = stmt.QueryRowContext(ctx, projectId).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description,
 		&s.PlaceId, &s.ProjectId, &s.PayerUserId, &s.PayerTeamId, &s.PayerFamilyId,
 		&s.PayeeUserId, &s.PayeeTeamId, &s.PayeeFamilyId, &s.VerifierUserId,
 		&s.VerifierTeamId, &s.VerifierFamilyId, &s.Category, &s.Status, &s.Step, &s.CreatedAt, &s.UpdatedAt)
+
+	if err == sql.ErrNoRows {
+		// 没有找到记录，返回明确空记录错误信息
+		s.Id = 0
+		return s, errors.New("没有记录")
+	} else if err != nil {
+		return s, err // 发生其他错误
+	}
+
 	return s, err
 }
 

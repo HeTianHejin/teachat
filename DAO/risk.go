@@ -1,6 +1,9 @@
 package data
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 // “看看”（查勘）及手工（施工）作业潜在风险，（ --DeeSeek && ClaudeSonnet补充完善）
 // 默认直接责任方是归属作业执行茶团
@@ -188,9 +191,21 @@ func (r *Risk) Update() error {
 	return err
 }
 
-// 根据ID获取风险
-func GetRiskById(id int) (Risk, error) {
-	var r Risk
-	err := Db.QueryRow("SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE id = $1", id).Scan(&r.Id, &r.Uuid, &r.UserId, &r.Name, &r.Nickname, &r.Keywords, &r.Description, &r.Source, &r.Severity, &r.CreatedAt, &r.UpdatedAt)
-	return r, err
+// 根据ID/UUID获取风险
+func (r *Risk) GetByIdOrUUID() error {
+	var err error
+	if r.Id > 0 || r.Uuid != "" {
+		statement := "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE id = $1 OR uuid = $2"
+		stmt, err := Db.Prepare(statement)
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		err = stmt.QueryRow(r.Id, r.Uuid).Scan(&r.Id, &r.Uuid, &r.UserId, &r.Name, &r.Nickname, &r.Keywords, &r.Description, &r.Source, &r.Severity, &r.CreatedAt, &r.UpdatedAt)
+	} else {
+		return errors.New("风险ID或UUID不能为空")
+
+	}
+
+	return err
 }

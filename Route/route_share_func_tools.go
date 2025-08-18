@@ -37,6 +37,18 @@ func renderHTML(w http.ResponseWriter, template_data any, filenames ...string) {
 			}
 			return stars
 		},
+		"mul": func(a, b int) int {
+			return a * b
+		},
+		"sub": func(a, b int) int {
+			return a - b
+		},
+		"split": func(s, sep string) []string {
+			return strings.Split(s, sep)
+		},
+		"trim": func(s string) string {
+			return strings.TrimSpace(s)
+		},
 	})
 
 	// 手动解析模板并处理错误

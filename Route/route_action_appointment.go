@@ -328,7 +328,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		AppointmentBean:    p_a_bean,
 	}
 
-	renderHTML(w, &aPD, "layout", "navbar.private", "action.appoinment.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &aPD, "layout", "navbar.private", "action.appointment.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // Get /v1/appointment/detail?uuid=xXx
@@ -407,6 +407,6 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		ProjectBean:        pr_bean,
 		QuoteObjectiveBean: ob_bean,
 	}
-	renderHTML(w, &aPD, "layout", "navbar.private", "action.appoinment.detail", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &aPD, "layout", "navbar.private", "action.appointment.detail", "component_sess_capacity", "component_avatar_name_gender")
 
 }

@@ -151,6 +151,7 @@ func main() {
 
 	// defined in route_see-seek.go
 	mux.HandleFunc("/v1/see-seek/new", route.HandleNewSeeSeek)
+	mux.HandleFunc("/v1/see-seek/step", route.HandleSeeSeekStep)
 	//mux.HandleFunc("/v1/see-seek/detail", route.SeeSeekDetail)
 
 	//defined in route_suggestion.go
@@ -196,6 +197,13 @@ func main() {
 	//defined in route_action_environment.go
 	mux.HandleFunc("/v1/environment/new", route.HandleNewEnvironment)
 	mux.HandleFunc("/v1/environment/detail", route.HandleEnvironmentDetail)
+
+	//defined in route_action_hazard.go
+	mux.HandleFunc("/v1/hazard/new", route.HandleNewHazard)
+	mux.HandleFunc("/v1/hazard/detail", route.HandleHazardDetail)
+
+	//defined in route_action_risk.go
+	mux.HandleFunc("/v1/risk/new", route.HandleNewRisk)
 
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)

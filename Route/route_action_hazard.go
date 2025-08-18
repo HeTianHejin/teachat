@@ -21,6 +21,15 @@ func HandleNewHazard(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Handler /v1/hazard/detail
+func HandleHazardDetail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	HazardDetailGet(w, r)
+}
+
 // GET /v1/hazard/new
 func HazardNewGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
@@ -118,4 +127,57 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	http.Redirect(w, r, returnURL, http.StatusFound)
+}
+
+// GET /v1/hazard/detail?id=123
+func HazardDetailGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	user, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	hazard := data.Hazard{Id: id}
+	if err := hazard.GetByIdOrUUID(); err != nil {
+		util.Debug("Cannot get hazard by id", id, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	// 获取记录者信息
+	recorder, err := data.GetUser(hazard.UserId)
+	if err != nil {
+		util.Debug("Cannot get recorder user", hazard.UserId, err)
+		// 如果获取记录者失败，使用默认值
+		recorder = data.User{Id: 0, Name: "未知用户"}
+	}
+
+	var hazardData struct {
+		SessUser data.User
+		Hazard   data.Hazard
+		Recorder data.User
+	}
+	hazardData.SessUser = user
+	hazardData.Hazard = hazard
+	hazardData.Recorder = recorder
+
+	renderHTML(w, &hazardData, "layout", "navbar.private", "hazard.detail")
 }

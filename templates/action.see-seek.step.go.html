@@ -1,0 +1,233 @@
+{{ define "content" }}
+
+{{/* 见证者接上一次序，继续"看看"工作的中间步骤页面，继续提交所需的数据表单-模版 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a>
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">完善 看看</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{/* 这是茶台（项目）的原始详情页 */}}
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <img src="/v1/static/image/teachat-table.svg" alt="看看封面" width="24" height="24">
+      "看看"工作 - {{ .SeeSeekStepTitle }}
+    </h3>
+  </div>
+
+  <!-- 进度条 -->
+  <div class="panel-body">
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" style="width: {{ mul .CompletedSteps 20 }}%">
+        已完成 {{ .CompletedSteps }}/5 步骤
+      </div>
+    </div>
+    
+    <ol class="breadcrumb">
+      <li class="{{ if eq .CurrentStep 1 }}active{{ else }}{{ if gt .CurrentStep 1 }}text-success{{ end }}{{ end }}">环境条件</li>
+      <li class="{{ if eq .CurrentStep 2 }}active{{ else }}{{ if gt .CurrentStep 2 }}text-success{{ end }}{{ end }}">场所隐患</li>
+      <li class="{{ if eq .CurrentStep 3 }}active{{ else }}{{ if gt .CurrentStep 3 }}text-success{{ end }}{{ end }}">风险评估</li>
+      <li class="{{ if eq .CurrentStep 4 }}active{{ else }}{{ if gt .CurrentStep 4 }}text-success{{ end }}{{ end }}">感官观察</li>
+      <li class="{{ if eq .CurrentStep 5 }}active{{ end }}">检测报告</li>
+    </ol>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/see-seek/step">
+      <input type="hidden" name="see_seek_uuid" value="{{ .SeeSeekBean.SeeSeek.Uuid }}">
+      <input type="hidden" name="step" value="{{ .CurrentStep }}">
+
+      {{ if eq .CurrentStep 2 }}
+        <!-- 步骤2：场所隐患 -->
+        <div class="form-group">
+          <label for="hazard_ids">添加场所隐患</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="hazard_display" placeholder="点击添加场所隐患" readonly>
+            <input type="hidden" name="hazard_ids" id="hazard_ids" value="">
+            <span class="input-group-btn">
+              <button type="button" class="btn btn-default" onclick="showHazardModal()">
+                <span class="glyphicon glyphicon-plus"></span> 添加隐患
+              </button>
+            </span>
+          </div>
+          <small class="help-block">识别并记录作业场所存在的安全隐患</small>
+        </div>
+
+      {{ else if eq .CurrentStep 3 }}
+        <!-- 步骤3：风险评估 -->
+        <div class="form-group">
+          <label for="risk_ids">添加风险评估</label>
+          <div class="input-group">
+            <input type="text" class="form-control" id="risk_display" placeholder="点击添加风险评估" readonly>
+            <input type="hidden" name="risk_ids" id="risk_ids" value="">
+            <span class="input-group-btn">
+              <a href="/v1/risk/new?return_url=/v1/see-seek/step?uuid={{ .SeeSeekBean.SeeSeek.Uuid }}" class="btn btn-default">
+                <span class="glyphicon glyphicon-plus"></span> 添加风险
+              </a>
+            </span>
+          </div>
+          <small class="help-block">评估作业过程中可能遇到的风险</small>
+        </div>
+
+      {{ else if eq .CurrentStep 4 }}
+        <!-- 步骤4：感官观察 -->
+        <div class="alert alert-info">
+          <h4>感官观察记录</h4>
+          <p>请通过视觉、听觉、嗅觉、触觉等感官进行现场观察，记录发现的异常情况。</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="observation_notes">观察记录</label>
+          <textarea class="form-control" name="observation_notes" id="observation_notes" rows="4" 
+                    placeholder="请详细记录通过感官观察发现的情况..."></textarea>
+        </div>
+
+      {{ else if eq .CurrentStep 5 }}
+        <!-- 步骤5：检测报告 -->
+        <div class="alert alert-info">
+          <h4>专项检测报告</h4>
+          <p>使用专业工具进行客观验证的检测报告。</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="report_content">检测报告内容</label>
+          <textarea class="form-control" name="report_content" id="report_content" rows="4" 
+                    placeholder="请输入专项检测报告的内容..."></textarea>
+        </div>
+
+      {{ end }}
+
+      <div class="form-group text-center">
+        {{ if eq .CurrentStep 5 }}
+          <button type="submit" class="btn btn-success">
+            <span class="glyphicon glyphicon-ok"></span> 完成"看看"工作
+          </button>
+        {{ else }}
+          <button type="submit" class="btn btn-primary">
+            <span class="glyphicon glyphicon-arrow-right"></span> 下一步
+          </button>
+        {{ end }}
+        
+        {{ if gt .CurrentStep 1 }}
+          <a href="/v1/see-seek/step?uuid={{ .SeeSeekBean.SeeSeek.Uuid }}" class="btn btn-default">
+            <span class="glyphicon glyphicon-arrow-left"></span> 上一步
+          </a>
+        {{ end }}
+        
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：分步骤完成"看看"工作，确保每个环节都得到充分关注。
+  </div>
+</div>
+
+<!-- 隐患选择模态框 -->
+<div class="modal fade" id="hazardModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">选择场所隐患</h4>
+      </div>
+      <div class="modal-body">
+        <div class="list-group">
+          <!-- 手动输入隐患ID -->
+          <div class="list-group-item">
+            <div class="input-group">
+              <input type="number" class="form-control" id="manual_hazard_id" placeholder="输入隐患ID" min="1">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary" onclick="addHazardById()">
+                  <span class="glyphicon glyphicon-ok"></span> 添加
+                </button>
+              </span>
+            </div>
+            <small class="text-muted">手动输入已知的隐患ID</small>
+          </div>
+          
+          <!-- 添加新隐患链接 -->
+          <a href="/v1/hazard/new?return_url=/v1/see-seek/step?uuid={{ .SeeSeekBean.SeeSeek.Uuid }}" class="list-group-item list-group-item-info">
+            <span class="glyphicon glyphicon-plus"></span> 添加新的隐患
+          </a>
+          
+          <!-- 查找隐患 -->
+          <a href="/v1/search" target="_blank" class="list-group-item list-group-item-warning">
+            <span class="glyphicon glyphicon-search"></span> 查找隐患
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showHazardModal() {
+    $('#hazardModal').modal('show');
+  }
+
+  function addHazardById() {
+    var hazardId = document.getElementById('manual_hazard_id').value;
+    if (hazardId && hazardId > 0) {
+      var currentHazardIds = document.getElementById('hazard_ids').value;
+      var hazardIdsArray = currentHazardIds ? currentHazardIds.split(',') : [];
+      
+      if (hazardIdsArray.indexOf(hazardId) === -1) {
+        hazardIdsArray.push(hazardId);
+        var newHazardIdsStr = hazardIdsArray.join(',');
+        document.getElementById('hazard_ids').value = newHazardIdsStr;
+        document.getElementById('hazard_display').value = '隐患 #' + newHazardIdsStr;
+      }
+      $('#hazardModal').modal('hide');
+      document.getElementById('manual_hazard_id').value = '';
+    } else {
+      alert('请输入有效的隐患ID');
+    }
+  }
+
+  // 处理新创建的隐患和风险
+  $(document).ready(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    
+    // 处理新创建的隐患
+    if (urlParams.has('new_hazard_id')) {
+      var newHazardId = urlParams.get('new_hazard_id');
+      var currentHazardIds = document.getElementById('hazard_ids').value;
+      var hazardIdsArray = currentHazardIds ? currentHazardIds.split(',') : [];
+      
+      if (hazardIdsArray.indexOf(newHazardId) === -1) {
+        hazardIdsArray.push(newHazardId);
+        var newHazardIdsStr = hazardIdsArray.join(',');
+        document.getElementById('hazard_ids').value = newHazardIdsStr;
+        document.getElementById('hazard_display').value = '隐患 #' + newHazardIdsStr;
+      }
+    }
+    
+    // 处理新创建的风险
+    if (urlParams.has('new_risk_id')) {
+      var newRiskId = urlParams.get('new_risk_id');
+      var currentRiskIds = document.getElementById('risk_ids').value;
+      var riskIdsArray = currentRiskIds ? currentRiskIds.split(',') : [];
+      
+      if (riskIdsArray.indexOf(newRiskId) === -1) {
+        riskIdsArray.push(newRiskId);
+        var newRiskIdsStr = riskIdsArray.join(',');
+        document.getElementById('risk_ids').value = newRiskIdsStr;
+        document.getElementById('risk_display').value = '风险 #' + newRiskIdsStr;
+      }
+    }
+  });
+</script>
+{{ end }}
