@@ -71,7 +71,7 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 	// 验证必填字段
 	name := strings.TrimSpace(r.PostFormValue("name"))
 	description := strings.TrimSpace(r.PostFormValue("description"))
-	
+
 	if name == "" {
 		report(w, r, "隐患名称不能为空。")
 		return
@@ -100,7 +100,7 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 		Description: description,
 		Source:      strings.TrimSpace(r.PostFormValue("source")),
 		Severity:    severity,
-		Category:    data.HazardCategory(category),
+		Category:    category,
 	}
 
 	if err := hazard.Create(); err != nil {

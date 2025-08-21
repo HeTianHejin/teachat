@@ -752,8 +752,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
-		threSupp.SeeSeekUUID = see_seek.Uuid
-		threSupp.SeeSeekStatus = see_seek.Status
+		threSupp.SeeSeek = see_seek
 
 	case data.ThreadCategoryBrainFire:
 		break

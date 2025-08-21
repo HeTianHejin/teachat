@@ -21,6 +21,15 @@ func HandleNewRisk(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Handler /v1/risk/detail
+func HandleRiskDetail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	RiskDetailGet(w, r)
+}
+
 // GET /v1/risk/new
 func RiskNewGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
@@ -62,7 +71,7 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 	// 验证必填字段
 	name := strings.TrimSpace(r.PostFormValue("name"))
 	description := strings.TrimSpace(r.PostFormValue("description"))
-	
+
 	if name == "" {
 		report(w, r, "风险名称不能为空。")
 		return
@@ -85,7 +94,7 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 		Keywords:    strings.TrimSpace(r.PostFormValue("keywords")),
 		Description: description,
 		Source:      strings.TrimSpace(r.PostFormValue("source")),
-		Severity:    data.RiskSeverityLevel(severity),
+		Severity:    severity,
 	}
 
 	if err := risk.Create(); err != nil {
@@ -112,4 +121,57 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	http.Redirect(w, r, returnURL, http.StatusFound)
+}
+
+// GET /v1/risk/detail?id=123
+func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	user, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	risk := data.Risk{Id: id}
+	if err := risk.GetByIdOrUUID(); err != nil {
+		util.Debug("Cannot get risk by id", id, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	// 获取记录者信息
+	recorder, err := data.GetUser(risk.UserId)
+	if err != nil {
+		util.Debug("Cannot get recorder user", risk.UserId, err)
+		// 如果获取记录者失败，使用默认值
+		recorder = data.User{Id: 0, Name: "未知用户"}
+	}
+
+	var riskData struct {
+		SessUser data.User
+		Risk     data.Risk
+		Recorder data.User
+	}
+	riskData.SessUser = user
+	riskData.Risk = risk
+	riskData.Recorder = recorder
+
+	renderHTML(w, &riskData, "layout", "navbar.private", "risk.detail")
 }

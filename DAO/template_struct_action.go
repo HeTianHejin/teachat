@@ -117,4 +117,7 @@ type SeeSeekStepTemplateData struct {
 	ExistingRiskIds       []int  //已选择的风险ID列表
 	ExistingHazardIdsStr  string //隐患ID字符串（逗号分隔）
 	ExistingRiskIdsStr    string //风险ID字符串（逗号分隔）
+
+	DefaultHazards []Hazard //默认隐患列表
+	DefaultRisks   []Risk   //默认风险列表
 }

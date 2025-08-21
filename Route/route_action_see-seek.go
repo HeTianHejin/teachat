@@ -221,7 +221,8 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == nil && existingSeeSeek.Id > 0 {
 		// 已存在看看记录,跳转到相应步骤
-		http.Redirect(w, r, "/v1/see-seek/step?uuid="+existingSeeSeek.Uuid, http.StatusFound)
+		url := "/v1/see-seek/step" + strconv.Itoa((existingSeeSeek.Step)) + "?uuid=" + existingSeeSeek.Uuid
+		http.Redirect(w, r, url, http.StatusFound)
 		return
 	}
 

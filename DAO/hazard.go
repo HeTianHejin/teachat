@@ -21,8 +21,8 @@ type Hazard struct {
 	Source      string //隐患来源
 
 	// 分级管理
-	Severity int            // 隐患严重度（1-5级）
-	Category HazardCategory // 隐患类型枚举（电气/机械/化学等）
+	Severity int // 隐患严重度（1-5级）
+	Category int // 隐患类型枚举（电气/机械/化学等）
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
@@ -239,6 +239,9 @@ func (h *Hazard) GetByIdOrUUID() error {
 		}
 		defer stmt.Close()
 		err = stmt.QueryRow(h.Id, h.Uuid).Scan(&h.Id, &h.Uuid, &h.UserId, &h.Name, &h.Nickname, &h.Keywords, &h.Description, &h.Source, &h.Severity, &h.Category, &h.CreatedAt, &h.UpdatedAt)
+		if err != nil {
+			return err
+		}
 	} else {
 		return errors.New("隐患ID或UUID不能为空")
 	}
@@ -286,6 +289,26 @@ func GetAllHazards() ([]Hazard, error) {
 // 按名称搜索隐患
 func SearchHazardByName(keyword string, limit int, ctx context.Context) ([]Hazard, error) {
 	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE name ILIKE $1 OR nickname ILIKE $1 OR keywords ILIKE $1 ORDER BY severity DESC, created_at DESC LIMIT $2", "%"+keyword+"%", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var hazards []Hazard
+	for rows.Next() {
+		var h Hazard
+		err := rows.Scan(&h.Id, &h.Uuid, &h.UserId, &h.Name, &h.Nickname, &h.Keywords, &h.Description, &h.Source, &h.Severity, &h.Category, &h.CreatedAt, &h.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		hazards = append(hazards, h)
+	}
+	return hazards, nil
+}
+
+// 获取默认隐患列表（预设的常见隐患）
+func GetDefaultHazards(ctx context.Context) ([]Hazard, error) {
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE id IN (1, 2, 3) ORDER BY id")
 	if err != nil {
 		return nil, err
 	}

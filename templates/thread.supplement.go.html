@@ -69,19 +69,32 @@
         {{ else if (eq .ThreadBean.Thread.Category 3) }} {{/* 检查茶议类型--看看 */}}
         {{/* 检查“看看”（see-seek）的状态，如果没有记录，显示新建按钮，如果有记录，而且状态是进行中，显示“继续看看”按钮 */}}
         
-        {{ if (eq  .SeeSeekStatus 0) }}{{/* 未开始 */}}
+        {{ with .SeeSeek }}{{/* 非空检查-开始 */}}
+        {{ if (eq  .Status 0) }}{{/* 未开始 */}}
         <a class="btn btn-default" href="/v1/see-seek/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+
           看看</a>
-        {{ else if (eq  .SeeSeekStatus 1) }}{{/* 进行中 */}}
-        <a class="btn btn-default" href="/v1/see-seek/step?uuid={{ .SeeSeekUUID }}" role="button">继续-看看</a>
-        {{ else if (eq  .SeeSeekStatus 2) }}{{/* 已暂停 */}}
-        <a class="btn btn-warning" href="/v1/see-seek/step?uuid={{ .SeeSeekUUID }}" role="button">恢复-看看</a>
-        {{ else if (eq  .SeeSeekStatus 3) }}{{/* 已半途终止（异常） */}}
+
+        {{ else if (eq  .Status 1) }}{{/* 进行中 */}}
+        {{ if (eq .Step 1) }} {{/* 检查看看步骤-开始 */}}
+        <a class="btn btn-default" href="/v1/see-seek/step2?uuid={{ .Uuid }}" role="button">继续-看看</a>
+        {{ else if (eq .Step 2) }}  
+        <a class="btn btn-default" href="/v1/see-seek/step3?uuid={{ .Uuid }}" role="button">继续-看看</a>
+        {{ else if (eq .Step 3) }}
+        <a class="btn btn-default" href="/v1/see-seek/step4?uuid={{ .Uuid }}" role="button">继续-看看</a>
+        {{ else if (eq .Step 4) }}
+        <a class="btn btn-default" href="/v1/see-seek/step5?uuid={{ .Uuid }}" role="button">继续-看看</a>
+        {{ end }} {{/* 检查看看步骤-结束 */}}
+
+        {{ else if (eq  .Status 2) }}{{/* 已暂停 */}}
+        <a class="btn btn-warning" href="/v1/see-seek/step?uuid={{ .Uuid }}" role="button">恢复-看看</a>
+        {{ else if (eq  .Status 3) }}{{/* 已半途终止（异常） */}}
         <a class="btn btn-danger" href="/v1/see-seek/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">重新-看看</a>
-        {{ else if (eq  .SeeSeekStatus 4) }}{{/* 已完成（顺利结束） */}}
-        <a class="btn btn-success" href="/v1/see-seek/detail?uuid={{ .SeeSeekUUID }}"
+        {{ else if (eq  .Status 4) }}{{/* 已完成（顺利结束） */}}
+        <a class="btn btn-success" href="/v1/see-seek/detail?uuid={{ .Uuid }}"
           role="button">查看-已完成</a>
         {{ end }}{{/* 检查“看看”（see-seek）的状态完成 */}}
+
+        {{ end }}{{/* “看看”（see-seek）非空检查完成 */}}
 
         {{ else if (eq .ThreadBean.Thread.Category 4) }} {{/* 检查茶议类型--脑火 */}}
         <a class="btn btn-default" href="/v1/brains-fire/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+

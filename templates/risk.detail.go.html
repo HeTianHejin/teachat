@@ -1,0 +1,140 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">作业风险详情</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="glyphicon glyphicon-exclamation-sign"></span>
+    作业风险 #{{ .Risk.Id }} - {{ .Risk.Name }}
+    <span class="label label-{{ if eq .Risk.Severity 5 }}danger{{ else if eq .Risk.Severity 4 }}warning{{ else if eq .Risk.Severity 3 }}info{{ else }}default{{ end }} pull-right">
+      {{ RiskSeverityLevelString .Risk.Severity }}
+    </span>
+  </div>
+  <div class="panel-body">
+    
+    <!-- 基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>基本信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>ID</strong></td>
+            <td>{{ .Risk.Id }}</td>
+          </tr>
+          <tr>
+            <td><strong>风险名称</strong></td>
+            <td>{{ .Risk.Name }}</td>
+          </tr>
+          {{ if .Risk.Nickname }}
+          <tr>
+            <td><strong>风险别名</strong></td>
+            <td>{{ .Risk.Nickname }}</td>
+          </tr>
+          {{ end }}
+          <tr>
+            <td><strong>严重程度</strong></td>
+            <td>
+              <span class="label label-{{ if eq .Risk.Severity 5 }}danger{{ else if eq .Risk.Severity 4 }}warning{{ else if eq .Risk.Severity 3 }}info{{ else }}default{{ end }}">
+                {{ RiskSeverityLevelString .Risk.Severity }}
+              </span>
+            </td>
+          </tr>
+          {{ if .Risk.Source }}
+          <tr>
+            <td><strong>风险来源</strong></td>
+            <td>
+              <span class="label label-default">{{ .Risk.Source }}</span>
+            </td>
+          </tr>
+          {{ end }}
+          <tr>
+            <td><strong>记录者</strong></td>
+            <td>{{ .Recorder.Name }} (ID: {{ .Recorder.Id }})</td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .Risk.CreatedAt.Format "2006-01-02 15:04:05" }}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>详细描述</h4>
+        <div class="well">
+          <p>{{ .Risk.Description }}</p>
+        </div>
+        
+        {{ if .Risk.Keywords }}
+        <h5>关键词</h5>
+        <p>
+          {{ range $i, $keyword := (split .Risk.Keywords ",") }}
+            {{ if $i }}, {{ end }}
+            <span class="label label-info">{{ trim $keyword }}</span>
+          {{ end }}
+        </p>
+        {{ end }}
+      </div>
+    </div>
+
+    <!-- 风险等级说明 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>风险等级说明</h4>
+        <div class="alert alert-{{ if eq .Risk.Severity 5 }}danger{{ else if eq .Risk.Severity 4 }}warning{{ else if eq .Risk.Severity 3 }}info{{ else }}success{{ end }}">
+          <strong>{{ RiskSeverityLevelString .Risk.Severity }}：</strong>
+          {{ if eq .Risk.Severity 5 }}
+            致命级别，可能导致死亡或永久性伤残，需要立即采取防护措施。
+          {{ else if eq .Risk.Severity 4 }}
+            严重级别，可能造成重大伤害（如骨折、中毒住院），需要优先防护。
+          {{ else if eq .Risk.Severity 3 }}
+            中度级别，可逆性伤害需专业医疗干预，需要及时防护。
+          {{ else if eq .Risk.Severity 2 }}
+            轻度级别，轻微伤害可现场处理，需要基础防护。
+          {{ else }}
+            可忽略级别，无实际伤害风险，但仍需要注意。
+          {{ end }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="javascript:history.back()" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回
+      </a>
+      <button type="button" class="btn btn-info" onclick="copyRiskId()">
+        <span class="glyphicon glyphicon-copy"></span> 复制ID
+      </button>
+    </div>
+  </div>
+  
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：识别和评估作业风险是预防事故的重要措施。风险ID：{{ .Risk.Id }}
+  </div>
+</div>
+
+<script>
+  function copyRiskId() {
+    var riskId = "{{ .Risk.Id }}";
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(riskId).then(function() {
+        alert('风险ID已复制到剪贴板：' + riskId);
+      });
+    } else {
+      // 兼容旧浏览器
+      var textArea = document.createElement("textarea");
+      textArea.value = riskId;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('风险ID已复制到剪贴板：' + riskId);
+    }
+  }
+</script>
+
+{{ end }}

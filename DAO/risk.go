@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"errors"
 	"time"
 )
@@ -18,7 +19,7 @@ type Risk struct {
 	Source      string // 细分来源类型（设备/环境/操作）
 
 	// 分级维度
-	Severity RiskSeverityLevel // 严重程度（1-5） 等级	Level值	判定标准	示例场景
+	Severity int // 严重程度（1-5） 等级	Level值	判定标准	示例场景
 	// Probability     string // 发生概率（A-D）等级	代码标识	发生频率定义（每年）	典型场景
 	// Controllability int    // 可控性（Ⅰ-Ⅲ） 等级	Class值	管控措施有效性	对应措施举例
 	// CompositeLevel  string // 综合等级（如"4BⅡ"）
@@ -42,6 +43,7 @@ const (
 	RiskSeverityLevel5            // 5	致命	可能导致死亡/永久性伤残	高空坠落（无防护）、高压电击
 )
 
+// 根据风险等级数字返回对应的风险等级描述文字
 func RiskSeverityLevelString(level int) string {
 	switch level {
 	case RiskSeverityLevel1:
@@ -202,10 +204,52 @@ func (r *Risk) GetByIdOrUUID() error {
 		}
 		defer stmt.Close()
 		err = stmt.QueryRow(r.Id, r.Uuid).Scan(&r.Id, &r.Uuid, &r.UserId, &r.Name, &r.Nickname, &r.Keywords, &r.Description, &r.Source, &r.Severity, &r.CreatedAt, &r.UpdatedAt)
+		if err != nil {
+			return err
+		}
 	} else {
 		return errors.New("风险ID或UUID不能为空")
-
 	}
 
 	return err
+}
+
+// 获取默认风险列表（预设的常见风险）
+func GetDefaultRisks(ctx context.Context) ([]Risk, error) {
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE id IN (1, 2, 3) ORDER BY id")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var risks []Risk
+	for rows.Next() {
+		var r Risk
+		err := rows.Scan(&r.Id, &r.Uuid, &r.UserId, &r.Name, &r.Nickname, &r.Keywords, &r.Description, &r.Source, &r.Severity, &r.CreatedAt, &r.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		risks = append(risks, r)
+	}
+	return risks, nil
+}
+
+// 按名称搜索风险
+func SearchRiskByName(keyword string, limit int, ctx context.Context) ([]Risk, error) {
+	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE name ILIKE $1 OR nickname ILIKE $1 OR keywords ILIKE $1 ORDER BY severity DESC, created_at DESC LIMIT $2", "%"+keyword+"%", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var risks []Risk
+	for rows.Next() {
+		var r Risk
+		err := rows.Scan(&r.Id, &r.Uuid, &r.UserId, &r.Name, &r.Nickname, &r.Keywords, &r.Description, &r.Source, &r.Severity, &r.CreatedAt, &r.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		risks = append(risks, r)
+	}
+	return risks, nil
 }

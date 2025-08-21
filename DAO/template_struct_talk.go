@@ -178,9 +178,9 @@ type ThreadSupplement struct {
 	PostBeanSlice      []PostBean // 普通跟贴豆荚队列
 	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
-	AppointmentStatus int           // 约茶状态
-	SeeSeekStatus     SeeSeekStatus // SeeSeek状态
-	SeeSeekUUID       string        // SeeSeek UUID
+	AppointmentStatus int     // 约茶状态
+	SeeSeek           SeeSeek // SeeSeek
+
 }
 
 // 用于跟贴详情页面渲染

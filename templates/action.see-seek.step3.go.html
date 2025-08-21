@@ -1,0 +1,201 @@
+{{ define "content" }}
+
+{{/* 见证者接上一次序，继续"看看"工作的第3步页面，提交风险评估数据表单-模版 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a>
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">完善 看看</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{/* 这是茶台（项目）的原始详情页 */}}
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <img src="/v1/static/image/teachat-table.svg" alt="看看封面" width="24" height="24">
+      "看看"工作 - {{ .SeeSeekStepTitle }}
+    </h3>
+  </div>
+
+  <!-- 进度条 -->
+  <div class="panel-body">
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" style="width: {{ mul .CompletedSteps 20 }}%">
+        已完成 {{ .CompletedSteps }}/5 步骤
+      </div>
+    </div>
+    
+    <ol class="breadcrumb">
+      <li class="{{ if eq .CurrentStep 1 }}active{{ else }}{{ if gt .CurrentStep 1 }}text-success{{ end }}{{ end }}">环境条件</li>
+      <li class="{{ if eq .CurrentStep 2 }}active{{ else }}{{ if gt .CurrentStep 2 }}text-success{{ end }}{{ end }}">场所隐患</li>
+      <li class="{{ if eq .CurrentStep 3 }}active{{ else }}{{ if gt .CurrentStep 3 }}text-success{{ end }}{{ end }}">风险评估</li>
+      <li class="{{ if eq .CurrentStep 4 }}active{{ else }}{{ if gt .CurrentStep 4 }}text-success{{ end }}{{ end }}">感官观察</li>
+      <li class="{{ if eq .CurrentStep 5 }}active{{ end }}">检测报告</li>
+    </ol>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/see-seek/step3">
+      <input type="hidden" name="see_seek_uuid" value="{{ .SeeSeekBean.SeeSeek.Uuid }}">
+      <input type="hidden" name="step" value="{{ .CurrentStep }}">
+
+      <!-- 步骤3：风险评估 -->
+      <div class="form-group">
+        <label for="risk_ids">添加风险评估</label>
+        <div class="input-group">
+          <input type="text" class="form-control" id="risk_display" placeholder="点击添加风险评估" readonly>
+          <input type="hidden" name="risk_ids" id="risk_ids" value="">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" onclick="showRiskModal()">
+              <span class="glyphicon glyphicon-plus"></span> 添加风险
+            </button>
+          </span>
+        </div>
+        <small class="help-block">评估作业过程中可能遇到的风险</small>
+      </div>
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-arrow-right"></span> 下一步
+        </button>
+        
+        <a href="/v1/see-seek/step2?uuid={{ .SeeSeekBean.SeeSeek.Uuid }}" class="btn btn-default">
+          <span class="glyphicon glyphicon-arrow-left"></span> 上一步
+        </a>
+        
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：评估作业过程中可能遇到的风险，制定相应的防范措施。
+  </div>
+</div>
+
+<!-- 风险选择模态框 -->
+<div class="modal fade" id="riskModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">选择风险评估</h4>
+      </div>
+      <div class="modal-body">
+        <div class="list-group">
+          <!-- 常见风险选项 -->
+          {{ range $index, $risk := .DefaultRisks }}
+          <a href="#" class="list-group-item{{ if eq $index 0 }} list-group-item-success{{ end }}" 
+             data-risk-id="{{ $risk.Id }}" 
+             data-risk-name="{{ $risk.Name }}"
+             onclick="selectRisk(this)">
+            <strong>{{ $risk.Name }}</strong> 
+            <span class="label label-{{ if eq $risk.Severity 5 }}danger{{ else if eq $risk.Severity 4 }}warning{{ else if eq $risk.Severity 3 }}info{{ else }}default{{ end }}">
+              {{ RiskSeverityLevelString $risk.Severity }}
+            </span>
+            <br><small class="text-muted">{{ $risk.Description }}</small>
+            {{ if eq $index 0 }}<span class="badge">示例</span>{{ end }}
+          </a>
+          {{ end }}
+          
+          
+          <!-- 手动输入风险ID -->
+          <div class="list-group-item">
+            <div class="input-group">
+              <input type="number" class="form-control" id="manual_risk_id" placeholder="输入风险ID" min="1">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary" onclick="addRiskById()">
+                  <span class="glyphicon glyphicon-ok"></span> 添加
+                </button>
+              </span>
+            </div>
+            <small class="text-muted">手动输入已知的风险ID</small>
+          </div>
+          
+          <!-- 添加新风险链接 -->
+          <a href="/v1/risk/new?return_url=/v1/see-seek/step3?uuid={{ .SeeSeekBean.SeeSeek.Uuid }}" class="list-group-item list-group-item-info">
+            <span class="glyphicon glyphicon-plus"></span> 添加新的风险
+          </a>
+          
+          <!-- 查找风险 -->
+          <a href="/v1/search" target="_blank" class="list-group-item list-group-item-warning">
+            <span class="glyphicon glyphicon-search"></span> 查找已保存的风险
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function showRiskModal() {
+    console.log('showRiskModal called');
+    if (typeof $ === 'undefined') {
+      alert('jQuery 未加载');
+      return;
+    }
+    $('#riskModal').modal('show');
+  }
+
+  function selectRisk(element) {
+    const id = element.dataset.riskId;
+    const name = element.dataset.riskName;
+    var currentRiskIds = document.getElementById('risk_ids').value;
+    var riskIdsArray = currentRiskIds ? currentRiskIds.split(',') : [];
+    
+    if (riskIdsArray.indexOf(id) === -1) {
+      riskIdsArray.push(id);
+      var newRiskIdsStr = riskIdsArray.join(',');
+      document.getElementById('risk_ids').value = newRiskIdsStr;
+      document.getElementById('risk_display').value = '风险 #' + newRiskIdsStr;
+    }
+    $('#riskModal').modal('hide');
+  }
+
+  function addRiskById() {
+    var riskId = document.getElementById('manual_risk_id').value;
+    if (riskId && riskId > 0) {
+      var currentRiskIds = document.getElementById('risk_ids').value;
+      var riskIdsArray = currentRiskIds ? currentRiskIds.split(',') : [];
+      
+      if (riskIdsArray.indexOf(riskId) === -1) {
+        riskIdsArray.push(riskId);
+        var newRiskIdsStr = riskIdsArray.join(',');
+        document.getElementById('risk_ids').value = newRiskIdsStr;
+        document.getElementById('risk_display').value = '风险 #' + newRiskIdsStr;
+      }
+      $('#riskModal').modal('hide');
+      document.getElementById('manual_risk_id').value = '';
+    } else {
+      alert('请输入有效的风险ID');
+    }
+  }
+
+  // 处理新创建的风险
+  $(document).ready(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    
+    if (urlParams.has('new_risk_id')) {
+      var newRiskId = urlParams.get('new_risk_id');
+      var currentRiskIds = document.getElementById('risk_ids').value;
+      var riskIdsArray = currentRiskIds ? currentRiskIds.split(',') : [];
+      
+      if (riskIdsArray.indexOf(newRiskId) === -1) {
+        riskIdsArray.push(newRiskId);
+        var newRiskIdsStr = riskIdsArray.join(',');
+        document.getElementById('risk_ids').value = newRiskIdsStr;
+        document.getElementById('risk_display').value = '风险 #' + newRiskIdsStr;
+      }
+    }
+  });
+</script>
+{{ end }}
