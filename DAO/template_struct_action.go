@@ -73,11 +73,10 @@ type SeeSeekBean struct {
 	SeeSeek SeeSeek
 	IsOpen  bool
 
-	SeeSeekLook         SeeSeekLook         //观察
-	SeeSeekListen       SeeSeekListen       //聆听
-	SeeSeekSmell        SeeSeekSmell        //闻闻（嗅）
-	SeeSeekTouch        SeeSeekTouch        //触摸
-	SeeSeekAskAndAnswer SeeSeekAskAndAnswer //询问
+	SeeSeekLook   SeeSeekLook   //观察
+	SeeSeekListen SeeSeekListen //聆听
+	SeeSeekSmell  SeeSeekSmell  //闻闻（嗅）
+	SeeSeekTouch  SeeSeekTouch  //触摸
 
 	SeeSeekExaminationReport []SeeSeekExaminationReport //附加专项检测报告，通常是使用专业工具客观验证
 

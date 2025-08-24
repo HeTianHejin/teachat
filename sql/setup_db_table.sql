@@ -770,7 +770,6 @@ CREATE TABLE see_seek_risks (
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP
 );
-
 CREATE INDEX idx_safety_measures_hazard_id ON safety_measures(hazard_id);
 CREATE INDEX idx_safety_measures_status ON safety_measures(status);
 CREATE INDEX idx_safety_protections_risk_id ON safety_protections(risk_id);
@@ -779,6 +778,113 @@ CREATE INDEX idx_hazards_severity ON hazards(severity);
 CREATE INDEX idx_hazards_category ON hazards(category);
 CREATE INDEX idx_see_seeks_project_id ON see_seeks(project_id);
 CREATE INDEX idx_see_seeks_status ON see_seeks(status);
+
+CREATE TABLE see_seek_looks (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    see_seek_id           INTEGER REFERENCES see_seeks(id),
+    classify              INTEGER DEFAULT 0,
+    status                INTEGER DEFAULT 0,
+    outline               TEXT,
+    is_deform             BOOLEAN DEFAULT false,
+    skin                  TEXT,
+    is_graze              BOOLEAN DEFAULT false,
+    color                 VARCHAR(255),
+    is_change             BOOLEAN DEFAULT false,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE see_seek_listens (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    see_seek_id           INTEGER REFERENCES see_seeks(id),
+    classify              INTEGER DEFAULT 0,
+    status                INTEGER DEFAULT 0,
+    sound                 TEXT,
+    is_abnormal           BOOLEAN DEFAULT false,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE see_seek_smells (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    see_seek_id           INTEGER REFERENCES see_seeks(id),
+    classify              INTEGER DEFAULT 0,
+    status                INTEGER DEFAULT 0,
+    odour                 TEXT,
+    is_foul_odour         BOOLEAN DEFAULT false,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE TABLE see_seek_touches (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    see_seek_id           INTEGER REFERENCES see_seeks(id),
+    classify              INTEGER DEFAULT 0,
+    status                INTEGER DEFAULT 0,
+    temperature           VARCHAR(255),
+    is_fever              BOOLEAN DEFAULT false,
+    stretch               VARCHAR(255),
+    is_stiff              BOOLEAN DEFAULT false,
+    shake                 VARCHAR(255),
+    is_shake              BOOLEAN DEFAULT false,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
 CREATE INDEX idx_see_seek_environments_see_seek_id ON see_seek_environments(see_seek_id);
 CREATE INDEX idx_see_seek_hazards_see_seek_id ON see_seek_hazards(see_seek_id);
 CREATE INDEX idx_see_seek_risks_see_seek_id ON see_seek_risks(see_seek_id);
+
+CREATE TABLE see_seek_examination_reports (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    see_seek_id           INTEGER REFERENCES see_seeks(id),
+    classify              INTEGER DEFAULT 1,
+    status                INTEGER DEFAULT 0,
+    name                  VARCHAR(255),
+    nickname              VARCHAR(255),
+    description           TEXT,
+    sample_type           VARCHAR(255),
+    sample_order          VARCHAR(255),
+    instrument_goods_id   INTEGER,
+    report_title          VARCHAR(255),
+    report_content        TEXT,
+    master_user_id        INTEGER,
+    reviewer_user_id      INTEGER,
+    report_date           TIMESTAMP,
+    attachment            TEXT,
+    tags                  VARCHAR(255),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE INDEX idx_see_seek_looks_see_seek_id ON see_seek_looks(see_seek_id);
+CREATE INDEX idx_see_seek_listens_see_seek_id ON see_seek_listens(see_seek_id);
+CREATE INDEX idx_see_seek_smells_see_seek_id ON see_seek_smells(see_seek_id);
+CREATE INDEX idx_see_seek_touches_see_seek_id ON see_seek_touches(see_seek_id);
+CREATE TABLE see_seek_examination_items (
+    id                              SERIAL PRIMARY KEY,
+    uuid                            VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    classify                        INTEGER DEFAULT 1,
+    see_seek_examination_report_id  INTEGER REFERENCES see_seek_examination_reports(id),
+    item_code                       VARCHAR(50),
+    item_name                       VARCHAR(255) NOT NULL,
+    result                          TEXT,
+    result_unit                     VARCHAR(50),
+    reference_min                   DECIMAL(10,4),
+    reference_max                   DECIMAL(10,4),
+    remark                          TEXT,
+    abnormal_flag                   BOOLEAN DEFAULT false,
+    method                          VARCHAR(255),
+    operator                        VARCHAR(255),
+    status                          INTEGER DEFAULT 0,
+    created_at                      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at                      TIMESTAMP
+);
+
+CREATE INDEX idx_see_seek_examination_reports_see_seek_id ON see_seek_examination_reports(see_seek_id);
+CREATE INDEX idx_see_seek_examination_items_report_id ON see_seek_examination_items(see_seek_examination_report_id);

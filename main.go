@@ -153,6 +153,8 @@ func main() {
 	mux.HandleFunc("/v1/see-seek/new", route.HandleNewSeeSeek)
 	mux.HandleFunc("/v1/see-seek/step2", route.HandleSeeSeekStep2)
 	mux.HandleFunc("/v1/see-seek/step3", route.HandleSeeSeekStep3)
+	mux.HandleFunc("/v1/see-seek/step4", route.HandleSeeSeekStep4)
+	mux.HandleFunc("/v1/see-seek/step5", route.HandleSeeSeekStep5)
 	//mux.HandleFunc("/v1/see-seek/detail", route.SeeSeekDetail)
 
 	//defined in route_suggestion.go

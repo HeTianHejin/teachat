@@ -1,0 +1,275 @@
+{{ define "content" }}
+
+{{/* 见证者接上一次序，继续"看看"工作的第5步页面，检测报告数据表单-模版 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a>
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">完善 看看</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{/* 这是茶台（项目）的原始详情页 */}}
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <img src="/v1/static/image/teachat-table.svg" alt="看看封面" width="24" height="24">
+      "看看"工作 - {{ .SeeSeekStepTitle }}
+    </h3>
+  </div>
+
+  <!-- 进度条 -->
+  <div class="panel-body">
+    <div class="progress">
+      <div class="progress-bar progress-bar-success" role="progressbar" style="width: 100%">
+        即将完成 5/5 步骤
+      </div>
+    </div>
+    
+    <ol class="breadcrumb">
+      <li class="text-success">环境条件</li>
+      <li class="text-success">场所隐患</li>
+      <li class="text-success">风险评估</li>
+      <li class="text-success">感官观察</li>
+      <li class="active">检测报告</li>
+    </ol>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/see-seek/step5">
+      <input type="hidden" name="see_seek_uuid" value="{{ .SeeSeekBean.SeeSeek.Uuid }}">
+      <input type="hidden" name="step" value="{{ .CurrentStep }}">
+
+      <!-- 检测报告说明 -->
+      <div class="alert alert-info">
+        <h4><span class="glyphicon glyphicon-list-alt"></span> 专项检测报告（可选）</h4>
+        <p>使用专业工具进行客观验证的检测报告。如果凭经验已能判定问题，可跳过此步骤直接完成。</p>
+      </div>
+
+      <!-- 检测报告表单 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4><span class="glyphicon glyphicon-wrench"></span> 工具检测验证</h4>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="report_title">检测报告标题</label>
+                <input type="text" class="form-control" name="report_title" id="report_title" 
+                       placeholder="例如：洗衣机水平度检测报告">
+                <small class="help-block">简要描述检测内容</small>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="sample_type">检测样本类型</label>
+                <input type="text" class="form-control" name="sample_type" id="sample_type" 
+                       placeholder="例如：设备水平度、振动频率等">
+                <small class="help-block">描述检测的对象类型</small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-12">
+              <div class="form-group">
+                <label>检测对象分类</label>
+                <div class="radio-inline">
+                  <label class="radio-inline">
+                    <input type="radio" name="classify" value="1" checked> 设备
+                  </label>
+                  <label class="radio-inline">
+                    <input type="radio" name="classify" value="2"> 宠物
+                  </label>
+                  <label class="radio-inline">
+                    <input type="radio" name="classify" value="3"> 动植物
+                  </label>
+                  <label class="radio-inline">
+                    <input type="radio" name="classify" value="4"> 矿物
+                  </label>
+                </div>
+                <small class="help-block">选择检测对象的分类，用于跟踪审计</small>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="instrument_goods_id">使用工具ID（可选）</label>
+                <input type="number" class="form-control" name="instrument_goods_id" id="instrument_goods_id" 
+                       placeholder="输入工具物资ID" min="1">
+                <small class="help-block">如果使用了专业工具，请输入工具ID</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="report_content">检测报告内容</label>
+            <textarea class="form-control" name="report_content" id="report_content" rows="3" 
+                      placeholder="检测报告的总体描述..."></textarea>
+            <small class="help-block">检测报告的总体描述</small>
+          </div>
+
+          <!-- 检测项目列表 -->
+          <div class="form-group">
+            <label>检测项目</label>
+            <div id="examination-items">
+              <div class="examination-item panel panel-default" style="margin-bottom: 10px;">
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-md-3">
+                      <input type="text" class="form-control" name="item_name[]" placeholder="项目名称（如：表面温度）">
+                    </div>
+                    <div class="col-md-3">
+                      <input type="text" class="form-control" name="item_result[]" placeholder="检测结果（如：1200）">
+                    </div>
+                    <div class="col-md-2">
+                      <input type="text" class="form-control" name="item_unit[]" placeholder="单位（如：°C）">
+                    </div>
+                    <div class="col-md-3">
+                      <input type="text" class="form-control" name="item_method[]" placeholder="检测方法">
+                    </div>
+                    <div class="col-md-1">
+                      <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)" style="display: none;">
+                        <span class="glyphicon glyphicon-minus"></span>
+                      </button>
+                    </div>
+                  </div>
+                  <div class="row" style="margin-top: 5px;">
+                    <div class="col-md-8">
+                      <input type="text" class="form-control" name="item_remark[]" placeholder="备注（可选）">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="checkbox-inline">
+                        <input type="checkbox" name="item_abnormal[]" value="1"> 异常
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn btn-info btn-sm" onclick="addItem()">
+              <span class="glyphicon glyphicon-plus"></span> 添加检测项目
+            </button>
+            <small class="help-block">每个检测项目记录具体的检测结果</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- 完成选项 -->
+      <div class="panel panel-success">
+        <div class="panel-heading">
+          <h4><span class="glyphicon glyphicon-ok"></span> 完成"看看"工作</h4>
+        </div>
+        <div class="panel-body">
+          <div class="alert alert-success">
+            <strong>恭喜！</strong> 您即将完成所有"看看"工作步骤。
+            <ul class="list-unstyled" style="margin-top: 10px;">
+              <li><span class="glyphicon glyphicon-ok text-success"></span> 环境条件评估</li>
+              <li><span class="glyphicon glyphicon-ok text-success"></span> 场所隐患识别</li>
+              <li><span class="glyphicon glyphicon-ok text-success"></span> 风险评估分析</li>
+              <li><span class="glyphicon glyphicon-ok text-success"></span> 感官观察记录</li>
+              <li><span class="glyphicon glyphicon-time text-warning"></span> 检测报告验证（可选）</li>
+            </ul>
+          </div>
+          
+          <div class="form-group text-center">
+            <button type="submit" class="btn btn-success btn-lg">
+              <span class="glyphicon glyphicon-ok"></span> 完成"看看"工作
+            </button>
+            
+            <a href="/v1/see-seek/step4?uuid={{ .SeeSeekBean.SeeSeek.Uuid }}" class="btn btn-default">
+              <span class="glyphicon glyphicon-arrow-left"></span> 上一步
+            </a>
+            
+            <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：专业工具检测能提供客观数据支撑，但有经验的技师往往能凭观察直接判定问题。
+  </div>
+</div>
+
+<script>
+function addItem() {
+  const container = document.getElementById('examination-items');
+  const newItem = document.createElement('div');
+  newItem.className = 'examination-item panel panel-default';
+  newItem.style.marginBottom = '10px';
+  
+  newItem.innerHTML = `
+    <div class="panel-body">
+      <div class="row">
+        <div class="col-md-3">
+          <input type="text" class="form-control" name="item_name[]" placeholder="项目名称（如：表面温度）">
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="form-control" name="item_result[]" placeholder="检测结果（如：1200）">
+        </div>
+        <div class="col-md-2">
+          <input type="text" class="form-control" name="item_unit[]" placeholder="单位（如：°C）">
+        </div>
+        <div class="col-md-3">
+          <input type="text" class="form-control" name="item_method[]" placeholder="检测方法">
+        </div>
+        <div class="col-md-1">
+          <button type="button" class="btn btn-danger btn-sm" onclick="removeItem(this)">
+            <span class="glyphicon glyphicon-minus"></span>
+          </button>
+        </div>
+      </div>
+      <div class="row" style="margin-top: 5px;">
+        <div class="col-md-8">
+          <input type="text" class="form-control" name="item_remark[]" placeholder="备注（可选）">
+        </div>
+        <div class="col-md-4">
+          <label class="checkbox-inline">
+            <input type="checkbox" name="item_abnormal[]" value="1"> 异常
+          </label>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  container.appendChild(newItem);
+  updateRemoveButtons();
+}
+
+function removeItem(button) {
+  button.closest('.examination-item').remove();
+  updateRemoveButtons();
+}
+
+function updateRemoveButtons() {
+  const items = document.querySelectorAll('.examination-item');
+  items.forEach((item, index) => {
+    const removeBtn = item.querySelector('.btn-danger');
+    if (items.length > 1) {
+      removeBtn.style.display = 'inline-block';
+    } else {
+      removeBtn.style.display = 'none';
+    }
+  });
+}
+
+// 初始化时隐藏第一个项目的删除按钮
+document.addEventListener('DOMContentLoaded', function() {
+  updateRemoveButtons();
+});
+</script>
+
+{{ end }}

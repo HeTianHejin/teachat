@@ -130,7 +130,7 @@ func (s *SeeSeek) GetByIdOrUUID(ctx context.Context) (err error) {
 		&s.StartTime, &s.EndTime, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return errors.New("没有记录")
+			return errors.New("no row in result")
 		}
 		return err
 	}
@@ -288,7 +288,7 @@ type SeeSeekLook struct {
 	Uuid      string
 	SeeSeekId int
 	Classify  int
-	Status    int
+	Status    int //0、未开始，1、已完成
 
 	Outline  string //外形轮廓
 	IsDeform bool   //是否变形
@@ -299,6 +299,20 @@ type SeeSeekLook struct {
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
+}
+
+func (ssl *SeeSeekLook) Create() (err error) {
+	statement := `INSERT INTO see_seek_looks 
+		(uuid, see_seek_id, classify, status, outline, is_deform, skin, is_graze, color, is_change, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+		RETURNING id, uuid`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), ssl.SeeSeekId, ssl.Classify, ssl.Status, ssl.Outline, ssl.IsDeform, ssl.Skin, ssl.IsGraze, ssl.Color, ssl.IsChange, time.Now()).Scan(&ssl.Id, &ssl.Uuid)
+	return err
 }
 
 // 听，声音
@@ -316,6 +330,20 @@ type SeeSeekListen struct {
 	UpdatedAt *time.Time
 }
 
+func (ssl *SeeSeekListen) Create() (err error) {
+	statement := `INSERT INTO see_seek_listens 
+		(uuid, see_seek_id, classify, status, sound, is_abnormal, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7) 
+		RETURNING id, uuid`
+	stmt, err := Db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), ssl.SeeSeekId, ssl.Classify, ssl.Status, ssl.Sound, ssl.IsAbnormal, time.Now()).Scan(&ssl.Id, &ssl.Uuid)
+	return err
+}
+
 // 嗅，气味
 type SeeSeekSmell struct {
 	Id        int
@@ -331,45 +359,9 @@ type SeeSeekSmell struct {
 	UpdatedAt *time.Time
 }
 
-// 触摸，
-type SeeSeekTouch struct {
-	Id        int
-	Uuid      string
-	SeeSeekId int
-	Classify  int
-
-	Status int
-
-	Temperature string //温度
-	IsFever     bool   //是否异常发热
-	Stretch     string //弹性
-	IsStiff     bool   //是否僵硬
-	Shake       string //震动
-	IsShake     bool   //是否震动
-
-	CreatedAt time.Time
-	UpdatedAt *time.Time
-}
-
-// 问答
-type SeeSeekAskAndAnswer struct {
-	Id        int
-	Uuid      string
-	SeeSeekId int
-	Classify  int
-
-	Status int
-
-	Ask    string
-	Answer string
-
-	CreatedAt time.Time
-	UpdatedAt *time.Time
-}
-
-func (ssaa *SeeSeekAskAndAnswer) Create() (err error) {
-	statement := `INSERT INTO see_seek_ask_and_answers 
-		(uuid, see_seek_id, classify, status, ask, answer, created_at) 
+func (sss *SeeSeekSmell) Create() (err error) {
+	statement := `INSERT INTO see_seek_smells 
+		(uuid, see_seek_id, classify, status, odour, is_foul_odour, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7) 
 		RETURNING id, uuid`
 	stmt, err := Db.Prepare(statement)
@@ -377,51 +369,42 @@ func (ssaa *SeeSeekAskAndAnswer) Create() (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), ssaa.SeeSeekId, ssaa.Classify, ssaa.Status, ssaa.Ask, ssaa.Answer, time.Now()).Scan(&ssaa.Id, &ssaa.Uuid)
+	err = stmt.QueryRow(Random_UUID(), sss.SeeSeekId, sss.Classify, sss.Status, sss.Odour, sss.IsFoulOdour, time.Now()).Scan(&sss.Id, &sss.Uuid)
 	return err
 }
-func (ssaa *SeeSeekAskAndAnswer) Get() (err error) {
-	statement := `SELECT id, uuid, see_seek_id, classify, status, ask, answer, created_at, updated_at 
-		FROM see_seek_ask_and_answers WHERE id=$1`
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(ssaa.Id).Scan(&ssaa.Id, &ssaa.Uuid, &ssaa.SeeSeekId, &ssaa.Classify, &ssaa.Status, &ssaa.Ask, &ssaa.Answer, &ssaa.CreatedAt, &ssaa.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
+
+// 触，触摸，按压，感受
+type SeeSeekTouch struct {
+	Id        int
+	Uuid      string
+	SeeSeekId int
+	Classify  int
+
+	Status int //0
+
+	Temperature string //温度
+	IsFever     bool   //是否异常发热
+	Stretch     string //弹性
+	IsStiff     bool   //是否僵硬
+	Shake       string //震动
+	IsShake     bool   //是否震动过大
+
+	CreatedAt time.Time
+	UpdatedAt *time.Time
 }
-func (ssaa *SeeSeekAskAndAnswer) GetByUuid() (err error) {
-	statement := `SELECT id, uuid, see_seek_id, classify, status, ask, answer, created_at, updated_at 
-		FROM see_seek_ask_and_answers WHERE uuid=$1`
+
+func (sst *SeeSeekTouch) Create() (err error) {
+	statement := `INSERT INTO see_seek_touches 
+		(uuid, see_seek_id, classify, status, temperature, is_fever, stretch, is_stiff, shake, is_shake, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
+		RETURNING id, uuid`
 	stmt, err := Db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(ssaa.Uuid).Scan(&ssaa.Id, &ssaa.Uuid, &ssaa.SeeSeekId, &ssaa.Classify, &ssaa.Status, &ssaa.Ask, &ssaa.Answer, &ssaa.CreatedAt, &ssaa.UpdatedAt)
-	if err != nil {
-		return
-	}
-	return
-}
-func (ssaa *SeeSeekAskAndAnswer) Update() (err error) {
-	statement := `UPDATE see_seek_ask_and_answers 
-		SET see_seek_id=$2, classify=$3, status=$4, ask=$5, answer=$6, updated_at=$7 
-		WHERE id=$1`
-	stmt, err := Db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(ssaa.Id, ssaa.SeeSeekId, ssaa.Classify, ssaa.Status, ssaa.Ask, ssaa.Answer, time.Now())
-	if err != nil {
-		return
-	}
-	return
+	err = stmt.QueryRow(Random_UUID(), sst.SeeSeekId, sst.Classify, sst.Status, sst.Temperature, sst.IsFever, sst.Stretch, sst.IsStiff, sst.Shake, sst.IsShake, time.Now()).Scan(&sst.Id, &sst.Uuid)
+	return err
 }
 
 // 根据project_id查找SeeSeek记录
@@ -447,7 +430,7 @@ func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) 
 	if err == sql.ErrNoRows {
 		// 没有找到记录，返回明确空记录错误信息
 		s.Id = 0
-		return s, errors.New("没有记录")
+		return s, errors.New("no row in result")
 	} else if err != nil {
 		return s, err // 发生其他错误
 	}
@@ -526,4 +509,84 @@ func (s *SeeSeek) GetRisks() ([]SeeSeekRisk, error) {
 		risks = append(risks, risk)
 	}
 	return risks, nil
+}
+
+// 获取SeeSeek的视觉观察记录
+func (s *SeeSeek) GetLooks() ([]SeeSeekLook, error) {
+	rows, err := Db.Query("SELECT id, uuid, see_seek_id, classify, status, outline, is_deform, skin, is_graze, color, is_change, created_at, updated_at FROM see_seek_looks WHERE see_seek_id = $1", s.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var looks []SeeSeekLook
+	for rows.Next() {
+		var look SeeSeekLook
+		err := rows.Scan(&look.Id, &look.Uuid, &look.SeeSeekId, &look.Classify, &look.Status, &look.Outline, &look.IsDeform, &look.Skin, &look.IsGraze, &look.Color, &look.IsChange, &look.CreatedAt, &look.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		looks = append(looks, look)
+	}
+	return looks, nil
+}
+
+// 获取SeeSeek的听觉观察记录
+func (s *SeeSeek) GetListens() ([]SeeSeekListen, error) {
+	rows, err := Db.Query("SELECT id, uuid, see_seek_id, classify, status, sound, is_abnormal, created_at, updated_at FROM see_seek_listens WHERE see_seek_id = $1", s.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var listens []SeeSeekListen
+	for rows.Next() {
+		var listen SeeSeekListen
+		err := rows.Scan(&listen.Id, &listen.Uuid, &listen.SeeSeekId, &listen.Classify, &listen.Status, &listen.Sound, &listen.IsAbnormal, &listen.CreatedAt, &listen.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		listens = append(listens, listen)
+	}
+	return listens, nil
+}
+
+// 获取SeeSeek的嗅觉观察记录
+func (s *SeeSeek) GetSmells() ([]SeeSeekSmell, error) {
+	rows, err := Db.Query("SELECT id, uuid, see_seek_id, classify, status, odour, is_foul_odour, created_at, updated_at FROM see_seek_smells WHERE see_seek_id = $1", s.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var smells []SeeSeekSmell
+	for rows.Next() {
+		var smell SeeSeekSmell
+		err := rows.Scan(&smell.Id, &smell.Uuid, &smell.SeeSeekId, &smell.Classify, &smell.Status, &smell.Odour, &smell.IsFoulOdour, &smell.CreatedAt, &smell.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		smells = append(smells, smell)
+	}
+	return smells, nil
+}
+
+// 获取SeeSeek的触觉观察记录
+func (s *SeeSeek) GetTouches() ([]SeeSeekTouch, error) {
+	rows, err := Db.Query("SELECT id, uuid, see_seek_id, classify, status, temperature, is_fever, stretch, is_stiff, shake, is_shake, created_at, updated_at FROM see_seek_touches WHERE see_seek_id = $1", s.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var touches []SeeSeekTouch
+	for rows.Next() {
+		var touch SeeSeekTouch
+		err := rows.Scan(&touch.Id, &touch.Uuid, &touch.SeeSeekId, &touch.Classify, &touch.Status, &touch.Temperature, &touch.IsFever, &touch.Stretch, &touch.IsStiff, &touch.Shake, &touch.IsShake, &touch.CreatedAt, &touch.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		touches = append(touches, touch)
+	}
+	return touches, nil
 }

@@ -119,5 +119,22 @@ func fetchSeeSeekBean(sS data.SeeSeek) (sSBean data.SeeSeekBean, err error) {
 		}
 	}
 
+	// 获取感官观察数据（允许为空，不算错误）
+	if looks, err := sS.GetLooks(); err == nil && len(looks) > 0 {
+		sSBean.SeeSeekLook = looks[0] // 取第一条记录
+	}
+
+	if listens, err := sS.GetListens(); err == nil && len(listens) > 0 {
+		sSBean.SeeSeekListen = listens[0] // 取第一条记录
+	}
+
+	if smells, err := sS.GetSmells(); err == nil && len(smells) > 0 {
+		sSBean.SeeSeekSmell = smells[0] // 取第一条记录
+	}
+
+	if touches, err := sS.GetTouches(); err == nil && len(touches) > 0 {
+		sSBean.SeeSeekTouch = touches[0] // 取第一条记录
+	}
+
 	return sSBean, nil
 }

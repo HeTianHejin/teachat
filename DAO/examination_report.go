@@ -7,7 +7,7 @@ type SeeSeekExaminationReport struct {
 	ID        int    `json:"id"`
 	Uuid      string `json:"uuid"`
 	SeeSeekID int    `json:"see_seek_id"`
-	Classify  int    `json:"classify"` // 1: Device, 2: Pet
+	Classify  int    `json:"classify"` // 1: 设备, 2: 宠物, 3: 动植物，4: 矿物
 	Status    int    `json:"status"`   // 0: Draft, 1: Completed, 2: Reviewed
 
 	Name        string `json:"name"`
@@ -24,7 +24,7 @@ type SeeSeekExaminationReport struct {
 	CreatedAt time.Time  `json:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at"`
 
-	MasterUserId   int `json:"master_user_id"`
+	MasterUserId   int `json:"master_user_id"` // 操作人员
 	ReviewerUserId int `json:"reviewer_user_id"`
 
 	ReportDate time.Time `json:"report_date"`
@@ -97,7 +97,7 @@ func (s *SeeSeekExaminationReport) GetByUuid() (err error) {
 type SeeSeekExaminationItem struct {
 	ID       int    `json:"id"`
 	Uuid     string `json:"uuid"`
-	Classify int    `json:"classify"` // 1: Device, 2: Pet
+	Classify int    `json:"classify"` // 1: 设备, 2: 宠物, 3: 动植物，4: 矿物
 
 	SeeSeekExaminationReportID int `json:"see_seek_examination_report_id"`
 

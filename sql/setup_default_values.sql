@@ -1,7 +1,5 @@
 -- 清空表并重置序列（如果需要）
 -- TRUNCATE 'table-name' RESTART IDENTITY;--需要+CASCADE！
--- 保持数据但修复序列与数据的一致性（如果使用PostgreSQL）
--- SELECT setval('table-name_id_seq', (SELECT MAX(id) FROM table-name);
 
 -- 插入常见环境1 室内正常环境
 INSERT INTO environments (
@@ -59,3 +57,6 @@ INSERT INTO risks (id, uuid, user_id, name, nickname, keywords, description, sou
 (1, 'risk-001-uuid', 1, '高空坠落', '坠高险', '高空,坠落,安全带', '在≥2米无护栏平台作业时存在坠落风险，可能导致重伤或死亡', '环境', 5, NOW()),
 (2, 'risk-002-uuid', 1, '高温烫伤', '烫伤险', '高温,烫伤,防护', '接触高温设备或介质时可能造成皮肤烫伤，温度≥60℃时触发', '设备', 4, NOW()),
 (3, 'risk-003-uuid', 1, '触电风险', '电击险', '触电,电击,绝缘', '接触带电设备或线路时可能发生电击事故，电压≥36V时存在风险', '设备', 5, NOW());
+
+-- 保持数据但修复序列与数据的一致性（如果使用PostgreSQL）
+-- SELECT setval('table-name_id_seq', (SELECT MAX(id) FROM table-name);

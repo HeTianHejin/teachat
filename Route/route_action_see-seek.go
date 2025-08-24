@@ -214,7 +214,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	// 检查是否已存在当前project_id的see-seek记录
 	existingSeeSeek, err := data.GetSeeSeekByProjectId(t_proj.Id, r.Context())
-	if err != nil && err.Error() != "没有记录" {
+	if err != nil && err.Error() != "no row in result" {
 		util.Debug(" Cannot get existing see-seek", err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return

@@ -1,0 +1,222 @@
+{{ define "content" }}
+
+{{/* 见证者接上一次序，继续"看看"工作的第4步页面，感官观察数据表单-模版 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a>
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">完善 看看</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{/* 这是茶台（项目）的原始详情页 */}}
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <img src="/v1/static/image/teachat-table.svg" alt="看看封面" width="24" height="24">
+      "看看"工作 - {{ .SeeSeekStepTitle }}
+    </h3>
+  </div>
+
+  <!-- 进度条 -->
+  <div class="panel-body">
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" style="width: {{ mul .CompletedSteps 20 }}%">
+        已完成 {{ .CompletedSteps }}/5 步骤
+      </div>
+    </div>
+    
+    <ol class="breadcrumb">
+      <li class="{{ if eq .CurrentStep 1 }}active{{ else }}{{ if gt .CurrentStep 1 }}text-success{{ end }}{{ end }}">环境条件</li>
+      <li class="{{ if eq .CurrentStep 2 }}active{{ else }}{{ if gt .CurrentStep 2 }}text-success{{ end }}{{ end }}">场所隐患</li>
+      <li class="{{ if eq .CurrentStep 3 }}active{{ else }}{{ if gt .CurrentStep 3 }}text-success{{ end }}{{ end }}">风险评估</li>
+      <li class="{{ if eq .CurrentStep 4 }}active{{ else }}{{ if gt .CurrentStep 4 }}text-success{{ end }}{{ end }}">感官观察</li>
+      <li class="{{ if eq .CurrentStep 5 }}active{{ end }}">检测报告</li>
+    </ol>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/see-seek/step4">
+      <input type="hidden" name="see_seek_uuid" value="{{ .SeeSeekBean.SeeSeek.Uuid }}">
+      <input type="hidden" name="step" value="{{ .CurrentStep }}">
+
+      <!-- 感官观察说明 -->
+      <div class="alert alert-info">
+        <h4><span class="glyphicon glyphicon-eye-open"></span> 感官观察记录</h4>
+        <p>通过视觉、听觉、嗅觉、触觉等感官进行现场观察，记录发现的异常情况。</p>
+      </div>
+
+      <!-- 视觉观察 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4><span class="glyphicon glyphicon-eye-open"></span> 视觉观察（望）</h4>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="look_outline">外形轮廓</label>
+                <textarea class="form-control" name="look_outline" id="look_outline" rows="2" 
+                          placeholder="描述观察对象的外形轮廓..."></textarea>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="look_is_deform" value="1"> 发现变形
+                </label>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="look_skin">表面状况</label>
+                <textarea class="form-control" name="look_skin" id="look_skin" rows="2" 
+                          placeholder="描述表面皮肤、涂层等状况..."></textarea>
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="look_is_graze" value="1"> 发现破损
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="look_color">颜色描述</label>
+                <input type="text" class="form-control" name="look_color" id="look_color" 
+                       placeholder="描述观察到的颜色...">
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="look_is_change" value="1"> 发现变色
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 听觉观察 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4><span class="glyphicon glyphicon-volume-up"></span> 听觉观察（听）</h4>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="form-group">
+                <label for="listen_sound">声音描述</label>
+                <textarea class="form-control" name="listen_sound" id="listen_sound" rows="3" 
+                          placeholder="描述听到的声音特征..."></textarea>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="checkbox" style="margin-top: 25px;">
+                <label>
+                  <input type="checkbox" name="listen_is_abnormal" value="1"> 发现异常声音
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 嗅觉观察 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4><span class="glyphicon glyphicon-leaf"></span> 嗅觉观察（嗅）</h4>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-8">
+              <div class="form-group">
+                <label for="smell_odour">气味描述</label>
+                <textarea class="form-control" name="smell_odour" id="smell_odour" rows="3" 
+                          placeholder="描述闻到的气味特征..."></textarea>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="checkbox" style="margin-top: 25px;">
+                <label>
+                  <input type="checkbox" name="smell_is_foul_odour" value="1"> 发现异味
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 触觉观察 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <h4><span class="glyphicon glyphicon-hand-up"></span> 触觉观察（触）</h4>
+        </div>
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="touch_temperature">温度感受</label>
+                <input type="text" class="form-control" name="touch_temperature" id="touch_temperature" 
+                       placeholder="温度感受...">
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="touch_is_fever" value="1"> 异常发热
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="touch_stretch">弹性感受</label>
+                <input type="text" class="form-control" name="touch_stretch" id="touch_stretch" 
+                       placeholder="弹性感受...">
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="touch_is_stiff" value="1"> 发现僵硬
+                </label>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="form-group">
+                <label for="touch_shake">震动感受</label>
+                <input type="text" class="form-control" name="touch_shake" id="touch_shake" 
+                       placeholder="震动感受...">
+              </div>
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="touch_is_shake" value="1"> 发现震动过大
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-arrow-right"></span> 下一步
+        </button>
+        
+        <a href="/v1/see-seek/step3?uuid={{ .SeeSeekBean.SeeSeek.Uuid }}" class="btn btn-default">
+          <span class="glyphicon glyphicon-arrow-left"></span> 上一步
+        </a>
+        
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：通过感官观察能够快速定位异常点位，为后续专业仪器检测提供方向指引，是重要的检查手段。
+  </div>
+</div>
+
+{{ end }}
