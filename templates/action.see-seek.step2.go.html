@@ -45,17 +45,20 @@
   <div class="panel-body">
     <form method="post" action="/v1/see-seek/step2">
       <input type="hidden" name="see_seek_uuid" value="{{ .SeeSeekBean.SeeSeek.Uuid }}">
-      <input type="hidden" name="step" value="{{ .CurrentStep }}">
+      <input type="hidden" name="step" value="2">
 
       <!-- 步骤2：场所隐患 -->
       <div class="form-group">
         <label for="hazard_ids">添加场所隐患</label>
         <div class="input-group">
-          <input type="text" class="form-control" id="hazard_display" placeholder="点击添加场所隐患" readonly>
-          <input type="hidden" name="hazard_ids" id="hazard_ids" value="">
+          <input type="text" class="form-control" id="hazard_display" placeholder="点击添加场所隐患" readonly value="{{ if .SeeSeekBean.Hazard }}隐患 #{{ range $i, $hazard := .SeeSeekBean.Hazard }}{{ if $i }},{{ end }}{{ $hazard.Id }}{{ end }}{{ end }}">
+          <input type="hidden" name="hazard_ids" id="hazard_ids" value="{{ range $i, $hazard := .SeeSeekBean.Hazard }}{{ if $i }},{{ end }}{{ $hazard.Id }}{{ end }}">
           <span class="input-group-btn">
             <button type="button" class="btn btn-default" onclick="showHazardModal()">
               <span class="glyphicon glyphicon-plus"></span> 添加隐患
+            </button>
+            <button type="button" class="btn btn-warning" onclick="clearHazards()">
+              <span class="glyphicon glyphicon-remove"></span> 清除
             </button>
           </span>
         </div>
@@ -147,8 +150,10 @@
       var newHazardIdsStr = hazardIdsArray.join(',');
       document.getElementById('hazard_ids').value = newHazardIdsStr;
       document.getElementById('hazard_display').value = '隐患 #' + newHazardIdsStr;
+      $('#hazardModal').modal('hide');
+    } else {
+      alert('隐患ID ' + id + ' 已经存在，请勿重复添加');
     }
-    $('#hazardModal').modal('hide');
   }
 
   function addHazardById() {
@@ -187,5 +192,12 @@
       }
     }
   });
+
+  function clearHazards() {
+    if (confirm('确定要清除所有已选择的隐患吗？')) {
+      document.getElementById('hazard_ids').value = '';
+      document.getElementById('hazard_display').value = '';
+    }
+  }
 </script>
 {{ end }}

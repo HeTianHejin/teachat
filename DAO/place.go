@@ -79,7 +79,7 @@ var Place_SpaceshipTeabar = Place{
 
 // 根据给出的关键词（keyword），查询相似的place.name，返回 []place, err
 func FindPlaceByName(keyword string) (places []Place, err error) {
-	rows, err := Db.Query("SELECT * FROM places WHERE name LIKE $1 OR nickname LIKE $1 LIMIT 24", "%"+keyword+"%")
+	rows, err := db.Query("SELECT * FROM places WHERE name LIKE $1 OR nickname LIKE $1 LIMIT 24", "%"+keyword+"%")
 	if err != nil {
 		return
 	}
@@ -97,7 +97,7 @@ func FindPlaceByName(keyword string) (places []Place, err error) {
 
 // place.CountByUser() 统计某个用户登记的地方总数量
 func CountPlaceByUserId(user_id int) (count int, err error) {
-	err = Db.QueryRow("SELECT COUNT(*) FROM places WHERE user_id = $1", user_id).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM places WHERE user_id = $1", user_id).Scan(&count)
 	return
 }
 
@@ -147,7 +147,7 @@ type UserPlace struct {
 // UserPlace.Create() 创建用户绑定的地方,返回id
 func (up *UserPlace) Create() (err error) {
 	statement := "INSERT INTO user_place (user_id, place_id, created_at) VALUES ($1, $2, $3) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -158,7 +158,7 @@ func (up *UserPlace) Create() (err error) {
 
 // UserPlace.GetByUserId() 根据用户ID获取某个用户绑定的全部地方
 func (up *UserPlace) GetByUserId() (userPlaces []UserPlace, err error) {
-	rows, err := Db.Query("SELECT id, user_id, place_id, created_at FROM user_place WHERE user_id = $1", up.UserId)
+	rows, err := db.Query("SELECT id, user_id, place_id, created_at FROM user_place WHERE user_id = $1", up.UserId)
 	if err != nil {
 		return
 	}
@@ -176,14 +176,14 @@ func (up *UserPlace) GetByUserId() (userPlaces []UserPlace, err error) {
 
 // CountUserPlace() 统计某个用户绑定的地方数量
 func CountUserPlace(user_id int) (count int, err error) {
-	err = Db.QueryRow("SELECT COUNT(*) FROM user_place WHERE user_id = $1", user_id).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM user_place WHERE user_id = $1", user_id).Scan(&count)
 	return
 }
 
 // CheckUserPlace() 检查用户是否已经绑定该地方
 func CheckUserPlace(user_id int, place_id int) (exist bool, err error) {
 	var count int
-	err = Db.QueryRow("SELECT COUNT(*) FROM user_place WHERE user_id = $1 AND place_id = $2", user_id, place_id).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM user_place WHERE user_id = $1 AND place_id = $2", user_id, place_id).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -196,7 +196,7 @@ func CheckUserPlace(user_id int, place_id int) (exist bool, err error) {
 
 // user_place.count() 统计某个用户绑定的地方数量
 func (up *UserPlace) Count() (count int) {
-	rows, err := Db.Query("SELECT COUNT(*) FROM user_place WHERE user_id = $1", up.UserId)
+	rows, err := db.Query("SELECT COUNT(*) FROM user_place WHERE user_id = $1", up.UserId)
 	if err != nil {
 		return
 	}
@@ -213,7 +213,7 @@ func (up *UserPlace) Count() (count int) {
 // UserDefaultPlace.Create() 创建1默认地方
 func (udp *UserDefaultPlace) Create() (err error) {
 	statement := "INSERT INTO user_default_place (user_id, place_id) VALUES ($1, $2) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -226,7 +226,7 @@ func (udp *UserDefaultPlace) Create() (err error) {
 func (u *User) GetLastDefaultPlace() (place Place, err error) {
 	udp := UserDefaultPlace{}
 	statement := "SELECT id, user_id, place_id, created_at FROM user_default_place WHERE user_id = $1 ORDER BY created_at DESC"
-	err = Db.QueryRow(statement, u.Id).Scan(&udp.Id, &udp.UserId, &udp.PlaceId, &udp.CreatedAt)
+	err = db.QueryRow(statement, u.Id).Scan(&udp.Id, &udp.UserId, &udp.PlaceId, &udp.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			//这是用户还没有设置默认品茶地方，统一返回“星际茶棚”
@@ -279,7 +279,7 @@ type UserAddress struct {
 
 // UserAddress.GetByUserId() 根据用户ID获取全部用户地址
 func (ua *UserAddress) GetByUserId() (userAddresses []UserAddress, err error) {
-	rows, err := Db.Query("SELECT id, user_id, address_id, created_at FROM user_address WHERE user_id = $1", ua.UserId)
+	rows, err := db.Query("SELECT id, user_id, address_id, created_at FROM user_address WHERE user_id = $1", ua.UserId)
 	if err != nil {
 		return
 	}
@@ -328,7 +328,7 @@ func (u *User) GetAllAddress() (Addresses []Address, err error) {
 // UserAddress.Create() 创建1用户地址
 func (ua *UserAddress) Create() (err error) {
 	statement := "INSERT INTO user_address (user_id, address_id) VALUES ($1, $2) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -339,14 +339,14 @@ func (ua *UserAddress) Create() (err error) {
 
 // UserAddress.Get() 获取1用户地址
 func (ua *UserAddress) Get() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, address_id, created_at FROM user_address WHERE id = $1", ua.Id).Scan(&ua.Id, &ua.UserId, &ua.AddressId, &ua.CreatedAt)
+	err = db.QueryRow("SELECT id, user_id, address_id, created_at FROM user_address WHERE id = $1", ua.Id).Scan(&ua.Id, &ua.UserId, &ua.AddressId, &ua.CreatedAt)
 	return
 }
 
 // UserAddress.Delete() 删除1用户地址
 func (ua *UserAddress) Delete() (err error) {
 	statement := "DELETE FROM user_address WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -366,7 +366,7 @@ type UserDefaultAddress struct {
 // UserDefaultAddress.Create() 创建1用户默认地址
 func (uda *UserDefaultAddress) Create() (err error) {
 	statement := "INSERT INTO user_default_address (user_id, address_id) VALUES ($1, $2) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -377,20 +377,20 @@ func (uda *UserDefaultAddress) Create() (err error) {
 
 // UserDefaultAddress.Get() 获取1用户默认地址
 func (uda *UserDefaultAddress) Get() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, address_id, created_at FROM user_default_address WHERE id = $1", uda.Id).Scan(&uda.Id, &uda.UserId, &uda.AddressId, &uda.CreatedAt)
+	err = db.QueryRow("SELECT id, user_id, address_id, created_at FROM user_default_address WHERE id = $1", uda.Id).Scan(&uda.Id, &uda.UserId, &uda.AddressId, &uda.CreatedAt)
 	return
 }
 
 // LocationHistory.get() 获取1定位历��记录
 func (lh *LocationHistory) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, user_id, place_id, time, longitude, latitude, altitude, direction, speed, accuracy, adcode, provider, addr FROM location_history WHERE id = $1", lh.Id).Scan(&lh.Id, &lh.Uuid, &lh.UserId, &lh.PlaceId, &lh.Time, &lh.Longitude, &lh.Latitude, &lh.Altitude, &lh.Direction, &lh.Speed, &lh.Accuracy, &lh.Adcode, &lh.Provider, &lh.Addr)
+	err = db.QueryRow("SELECT id, uuid, user_id, place_id, time, longitude, latitude, altitude, direction, speed, accuracy, adcode, provider, addr FROM location_history WHERE id = $1", lh.Id).Scan(&lh.Id, &lh.Uuid, &lh.UserId, &lh.PlaceId, &lh.Time, &lh.Longitude, &lh.Latitude, &lh.Altitude, &lh.Direction, &lh.Speed, &lh.Accuracy, &lh.Adcode, &lh.Provider, &lh.Addr)
 	return
 }
 
 // LocationHistory.create() 创建1定位历史记录
 func (lh *LocationHistory) Create() (err error) {
 	statement := "INSERT INTO location_history (uuid, user_id, place_id, time, longitude, latitude, altitude, direction, speed, accuracy, adcode, provider, addr) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -399,7 +399,7 @@ func (lh *LocationHistory) Create() (err error) {
 	return
 }
 func (lh *LocationHistory) GetLocationHistoryByPlaceId() (locationHistory []LocationHistory, err error) {
-	rows, err := Db.Query("SELECT id, uuid, user_id, place_id, time, longitude, latitude, altitude, direction, speed, accuracy, adcode, provider, addr FROM location_history WHERE place_id = $1", lh.PlaceId)
+	rows, err := db.Query("SELECT id, uuid, user_id, place_id, time, longitude, latitude, altitude, direction, speed, accuracy, adcode, provider, addr FROM location_history WHERE place_id = $1", lh.PlaceId)
 	if err != nil {
 		return
 	}
@@ -419,7 +419,7 @@ func (lh *LocationHistory) GetLocationHistoryByPlaceId() (locationHistory []Loca
 // place.Create() 保存1地方记录，用queryRow方法插入places表，返回id
 func (p *Place) Create() (err error) {
 	statement := "INSERT INTO places (uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -437,7 +437,7 @@ func (p *Place) Get() (err error) {
 		*p = Place_SpaceshipTeabar
 		return nil
 	}
-	err = Db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE id = $1", p.Id).
+	err = db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE id = $1", p.Id).
 		Scan(&p.Id, &p.Uuid, &p.Name, &p.Nickname, &p.Description, &p.Icon, &p.OccupantUserId, &p.OwnerUserId, &p.Level, &p.Category, &p.IsPublic, &p.IsGovernment, &p.UserId, &p.CreatedAt, &p.UpdatedAt)
 	return
 }
@@ -456,14 +456,14 @@ func (p *Place) GetByUuid() (err error) {
 		*p = Place_SpaceshipTeabar
 		return nil
 	}
-	err = Db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE uuid = $1", p.Uuid).
+	err = db.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE uuid = $1", p.Uuid).
 		Scan(&p.Id, &p.Uuid, &p.Name, &p.Nickname, &p.Description, &p.Icon, &p.OccupantUserId, &p.OwnerUserId, &p.Level, &p.Category, &p.IsPublic, &p.IsGovernment, &p.UserId, &p.CreatedAt, &p.UpdatedAt)
 	return
 }
 
 // user.GetAllRecordPlaces 根据登记者user_id获取全部登记地方
 func (u *User) GetAllRecordPlaces() (places []Place, err error) {
-	rows, err := Db.Query("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE user_id = $1", u.Id)
+	rows, err := db.Query("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE user_id = $1", u.Id)
 	if err != nil {
 		return
 	}
@@ -488,7 +488,7 @@ func (p *Place) Update() (err error) {
 		return fmt.Errorf("cannot update spaceshipTeabar place ID: %d", PlaceIdSpaceshipTeabar)
 	}
 	statement := "UPDATE places SET name = $2, nickname = $3, description = $4, icon = $5, occupant_user_id = $6, owner_user_id = $7, level = $8, category = $9, is_public = $10, is_government = $11, user_id = $12, updated_at = $13 WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -500,7 +500,7 @@ func (p *Place) Update() (err error) {
 // place.Delete() 删除1地方记录
 func (p *Place) Delete() (err error) {
 	statement := "DELETE FROM places WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -543,7 +543,7 @@ const (
 // address.Create() 保存1地址记录，用queryRow方法新增addresses记录，返回id,
 func (a *Address) Create() (err error) {
 	statement := "INSERT INTO addresses (uuid, nation, province, city, district, town, village, street, building, unit, portal_number, postal_code, category, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -554,14 +554,14 @@ func (a *Address) Create() (err error) {
 
 // address.GetById() 根据id获取1地址记录
 func (a *Address) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, nation, province, city, district, town, village, street, building, unit, portal_number, postal_code, category, created_at, updated_at FROM addresses WHERE id = $1", a.Id).
+	err = db.QueryRow("SELECT id, uuid, nation, province, city, district, town, village, street, building, unit, portal_number, postal_code, category, created_at, updated_at FROM addresses WHERE id = $1", a.Id).
 		Scan(&a.Id, &a.Uuid, &a.Nation, &a.Province, &a.City, &a.District, &a.Town, &a.Village, &a.Street, &a.Building, &a.Unit, &a.PortalNumber, &a.PostalCode, &a.Category, &a.CreatedAt, &a.UpdatedAt)
 	return
 }
 
 // address.GetByUuid() 根据uuid获取1地址记录
 func (a *Address) GetByUuid() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, nation, province, city, district, town, village, street, building, unit, portal_number, postal_code, category, created_at, updated_at FROM addresses WHERE uuid = $1", a.Uuid).
+	err = db.QueryRow("SELECT id, uuid, nation, province, city, district, town, village, street, building, unit, portal_number, postal_code, category, created_at, updated_at FROM addresses WHERE uuid = $1", a.Uuid).
 		Scan(&a.Id, &a.Uuid, &a.Nation, &a.Province, &a.City, &a.District, &a.Town, &a.Village, &a.Street, &a.Building, &a.Unit, &a.PortalNumber, &a.PostalCode, &a.Category, &a.CreatedAt, &a.UpdatedAt)
 	return
 }
@@ -569,7 +569,7 @@ func (a *Address) GetByUuid() (err error) {
 // address.Update() 更新1地址记录
 func (a *Address) Update() (err error) {
 	statement := "UPDATE addresses SET uuid = $2, nation = $3, province = $4, city = $5, district = $6, town = $7, village = $8, street = $9, building = $10, unit = $11, portal_number = $12,  postal_code = $13, category = $14, updated_at = $15 WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -581,7 +581,7 @@ func (a *Address) Update() (err error) {
 // address.Delete() 删除1地址记录
 func (a *Address) Delete() (err error) {
 	statement := "DELETE FROM addresses WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}

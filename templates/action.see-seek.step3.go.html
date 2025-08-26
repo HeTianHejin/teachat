@@ -45,17 +45,20 @@
   <div class="panel-body">
     <form method="post" action="/v1/see-seek/step3">
       <input type="hidden" name="see_seek_uuid" value="{{ .SeeSeekBean.SeeSeek.Uuid }}">
-      <input type="hidden" name="step" value="{{ .CurrentStep }}">
+      <input type="hidden" name="step" value="3">
 
       <!-- 步骤3：风险评估 -->
       <div class="form-group">
         <label for="risk_ids">添加风险评估</label>
         <div class="input-group">
-          <input type="text" class="form-control" id="risk_display" placeholder="点击添加风险评估" readonly>
-          <input type="hidden" name="risk_ids" id="risk_ids" value="">
+          <input type="text" class="form-control" id="risk_display" placeholder="点击添加风险评估" readonly value="{{ if .SeeSeekBean.Risk }}风险 #{{ range $i, $risk := .SeeSeekBean.Risk }}{{ if $i }},{{ end }}{{ $risk.Id }}{{ end }}{{ end }}">
+          <input type="hidden" name="risk_ids" id="risk_ids" value="{{ range $i, $risk := .SeeSeekBean.Risk }}{{ if $i }},{{ end }}{{ $risk.Id }}{{ end }}">
           <span class="input-group-btn">
             <button type="button" class="btn btn-default" onclick="showRiskModal()">
               <span class="glyphicon glyphicon-plus"></span> 添加风险
+            </button>
+            <button type="button" class="btn btn-warning" onclick="clearRisks()">
+              <span class="glyphicon glyphicon-remove"></span> 清除
             </button>
           </span>
         </div>
@@ -157,8 +160,10 @@
       var newRiskIdsStr = riskIdsArray.join(',');
       document.getElementById('risk_ids').value = newRiskIdsStr;
       document.getElementById('risk_display').value = '风险 #' + newRiskIdsStr;
+      $('#riskModal').modal('hide');
+    } else {
+      alert('风险ID ' + id + ' 已经存在，请勿重复添加');
     }
-    $('#riskModal').modal('hide');
   }
 
   function addRiskById() {
@@ -197,5 +202,12 @@
       }
     }
   });
+
+  function clearRisks() {
+    if (confirm('确定要清除所有已选择的风险吗？')) {
+      document.getElementById('risk_ids').value = '';
+      document.getElementById('risk_display').value = '';
+    }
+  }
 </script>
 {{ end }}

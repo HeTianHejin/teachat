@@ -24,10 +24,11 @@ type EvidenceHandicraft struct {
 	EvidenceId   int
 	CreatedAt    time.Time
 }
-//EvidenceHandicraft.Create()
+
+// EvidenceHandicraft.Create()
 func (e_h *EvidenceHandicraft) Create() (err error) {
 	statement := "INSERT INTO evidence_handicrafts (uuid, handicraft_id, evidence_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -38,10 +39,11 @@ func (e_h *EvidenceHandicraft) Create() (err error) {
 	}
 	return
 }
-//EvidenceHandicraft.Get()
+
+// EvidenceHandicraft.Get()
 func (e_h *EvidenceHandicraft) Get() (err error) {
 	statement := "SELECT id, uuid, handicraft_id, evidence_id, created_at FROM evidence_handicrafts WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -54,7 +56,7 @@ func (e_h *EvidenceHandicraft) Get() (err error) {
 }
 func (e_h *EvidenceHandicraft) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, handicraft_id, evidence_id, created_at FROM evidence_handicrafts WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -68,17 +70,18 @@ func (e_h *EvidenceHandicraft) GetByUuid() (err error) {
 
 // 凭据，依据，指音视频等视觉证据，
 type SeeSeekEvidence struct {
-	Id             int
-	Uuid           string
-	SeeSeekId      int    // 标记属于那一个“看看”，
-	EvidenceId     int    
-	CreatedAt      time.Time
-	UpdatedAt      *time.Time
+	Id         int
+	Uuid       string
+	SeeSeekId  int // 标记属于那一个“看看”，
+	EvidenceId int
+	CreatedAt  time.Time
+	UpdatedAt  *time.Time
 }
-//SeeSeekEvidence.Create()
+
+// SeeSeekEvidence.Create()
 func (s_s_e *SeeSeekEvidence) Create() (err error) {
 	statement := "INSERT INTO see_seek_evidences (uuid, see_seek_id, evidence_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -89,10 +92,11 @@ func (s_s_e *SeeSeekEvidence) Create() (err error) {
 	}
 	return
 }
-//SeeSeekEvidence.Get()
+
+// SeeSeekEvidence.Get()
 func (s_s_e *SeeSeekEvidence) Get() (err error) {
 	statement := "SELECT id, uuid, see_seek_id, evidence_id, created_at FROM see_seek_evidences WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -105,7 +109,7 @@ func (s_s_e *SeeSeekEvidence) Get() (err error) {
 }
 func (s_s_e *SeeSeekEvidence) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, see_seek_id, evidence_id, created_at FROM see_seek_evidences WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -116,4 +120,3 @@ func (s_s_e *SeeSeekEvidence) GetByUuid() (err error) {
 	}
 	return
 }
-

@@ -18,7 +18,7 @@ type Footprint struct {
 func (footprint *Footprint) Create() (err error) {
 	statement := `INSERT INTO footprints (user_id, team_id, team_name, team_type, content, content_id, created_at)
 	VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (footprint *Footprint) Create() (err error) {
 // Footprint.GetByUserIdAndTeamId()
 func (footprint *Footprint) GetByUserIdAndTeamId() (err error) {
 	statement := `SELECT * FROM footprints WHERE user_id = $1 AND team_id = $2`
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}

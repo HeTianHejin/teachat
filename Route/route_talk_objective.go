@@ -179,26 +179,17 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	case data.ObClassCloseStraw:
 		//如果class=20封闭式茶话会(草围)，需要读取指定茶团号TeamIds列表
 		tIds_str := r.PostFormValue("invite_ids")
+		if tIds_str == "" {
+			report(w, r, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")
+			return
+		}
+		t_id_slice, err := parseIdSlice(tIds_str)
+		if err != nil {
+			util.Debug(" Cannot parse team ids", err)
+			report(w, r, "你好，陛下填写的茶团号格式看不懂，必需是不重复的自然数用英文逗号分隔。")
+			return
+		}
 
-		//用正则表达式检测茶团号TeamIds，是否符合“整数，整数，整数...”的格式
-		if !verifyIdSliceFormat(tIds_str) {
-			util.Debug(" TeamId slice format is wrong", err)
-			report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
-			return
-		}
-		//用户提交的t_id是以逗号分隔的字符串,需要分割后，转换成[]Id,以便处理
-		t_ids_str := strings.Split(tIds_str, ",")
-		// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
-		if len(t_ids_str) > int(util.Config.MaxInviteTeams) {
-			util.Debug(" Too many team ids", err)
-			report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，茶壶不够用，请确认后再试。")
-			return
-		}
-		t_id_slice := make([]int, 0, util.Config.MaxInviteTeams)
-		for _, t_id := range t_ids_str {
-			te_id_int, _ := strconv.Atoi(t_id)
-			t_id_slice = append(t_id_slice, te_id_int)
-		}
 		// 使用事务创建封闭式茶话会及其许可茶团
 		if err = data.CreateObjectiveWithTeams(&new_ob, t_id_slice); err != nil {
 			util.Debug("创建封闭式茶话会失败", err)

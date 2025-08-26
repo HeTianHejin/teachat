@@ -90,7 +90,7 @@ func (t *ProjectAppointment) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `INSERT INTO project_appointments (project_id, note, start_time, end_time, place_id, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id,created_at`
-	stmt, err := Db.PrepareContext(ctx, statement)
+	stmt, err := db.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (t *ProjectAppointment) Get(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `SELECT id, project_id, note, start_time, end_time, place_id, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status, confirmed_at, rejected_at, created_at, updated_at FROM project_appointments WHERE id = $1`
-	stmt, err := Db.PrepareContext(ctx, statement)
+	stmt, err := db.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -181,7 +181,7 @@ func (project *Project) AppointmentStatusString(ctx context.Context) string {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	projectAppointment := ProjectAppointment{ProjectId: project.Id}
-	err := Db.QueryRowContext(ctx, `select status from project_appointments where project_id = $1`, project.Id).Scan(&projectAppointment.Status)
+	err := db.QueryRowContext(ctx, `select status from project_appointments where project_id = $1`, project.Id).Scan(&projectAppointment.Status)
 	if err != nil {
 		return "未知"
 	}
@@ -199,7 +199,7 @@ func GetAppointmentByProjectId(project_id int, ctx context.Context) (p_a Project
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `SELECT id, project_id, note, start_time, end_time, place_id, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status, confirmed_at, rejected_at, created_at, updated_at FROM project_appointments WHERE project_id = $1`
-	stmt, err := Db.PrepareContext(ctx, statement)
+	stmt, err := db.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}

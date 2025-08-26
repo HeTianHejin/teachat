@@ -103,7 +103,7 @@ func (post *Post) EditAtDate() string {
 // 用户补充（追加）其表态内容
 func (post *Post) UpdateBody() (err error) {
 	statement := "UPDATE posts SET body = $2, edit_at = $3 WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -115,7 +115,7 @@ func (post *Post) UpdateBody() (err error) {
 // (post *Post) Create() 按照post的struct创建一个post
 func (post *Post) Create() (err error) {
 	statement := "INSERT INTO posts (uuid, body, user_id, thread_id, created_at, attitude, family_id, team_id, is_private, class) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -127,7 +127,7 @@ func (post *Post) Create() (err error) {
 // (post *Post) Get()
 func (post *Post) Get() (err error) {
 	statement := "SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -139,7 +139,7 @@ func (post *Post) Get() (err error) {
 // (post *Post) GetByUuid() gets a post by the UUID
 func (post *Post) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE uuid = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -152,7 +152,7 @@ func (post *Post) GetByUuid() (err error) {
 // 获取某个thread的全部普通posts,class = 0,
 func (t *Thread) Posts() (posts []Post, err error) {
 	posts = []Post{}
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE class = $1 AND thread_id = $2 ORDER BY created_at DESC", PostClassNormal, t.Id)
+	rows, err := db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE class = $1 AND thread_id = $2 ORDER BY created_at DESC", PostClassNormal, t.Id)
 	if err != nil {
 		return
 	}
@@ -171,7 +171,7 @@ func (t *Thread) Posts() (posts []Post, err error) {
 // post by admin team/family
 func (t *Thread) PostsAdmin() (posts []Post, err error) {
 	posts = []Post{}
-	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE class = $1 AND thread_id = $2 ORDER BY created_at DESC", PostClassAdmin, t.Id)
+	rows, err := db.Query("SELECT id, uuid, body, user_id, thread_id, created_at, edit_at, attitude, family_id, team_id, is_private, class FROM posts WHERE class = $1 AND thread_id = $2 ORDER BY created_at DESC", PostClassAdmin, t.Id)
 	if err != nil {
 		return
 	}
@@ -188,7 +188,7 @@ func (t *Thread) PostsAdmin() (posts []Post, err error) {
 
 // NumReplies() returns the number of threads where Thread.PostId = Post.Id
 func (post *Post) NumReplies() (count int) {
-	err := Db.QueryRow("SELECT count(*) FROM threads WHERE post_id = $1", post.Id).Scan(&count)
+	err := db.QueryRow("SELECT count(*) FROM threads WHERE post_id = $1", post.Id).Scan(&count)
 	if err != nil {
 		return
 	}
@@ -198,7 +198,7 @@ func (post *Post) NumReplies() (count int) {
 // (draft_post *DraftPost) Create() 创建一个新的品味（DraftPost）草稿
 func (draft_post *DraftPost) Create() (err error) {
 	statement := "INSERT INTO draft_posts (user_id, thread_id, body, created_at, attitude, class, team_id, is_private, family_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -209,7 +209,7 @@ func (draft_post *DraftPost) Create() (err error) {
 
 // Get() 读取一个DraftPost品味（跟帖=DraftPost）草稿
 func (draft_post *DraftPost) Get() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id, is_private, family_id FROM draft_posts WHERE id = $1", draft_post.Id).
+	err = db.QueryRow("SELECT id, user_id, thread_id, body, created_at, attitude, class, team_id, is_private, family_id FROM draft_posts WHERE id = $1", draft_post.Id).
 		Scan(&draft_post.Id, &draft_post.UserId, &draft_post.ThreadId, &draft_post.Body, &draft_post.CreatedAt, &draft_post.Attitude, &draft_post.Class, &draft_post.TeamId, &draft_post.IsPrivate, &draft_post.FamilyId)
 	return
 }
@@ -217,7 +217,7 @@ func (draft_post *DraftPost) Get() (err error) {
 // UpdateClass() 更新一个品味（DraftPost）草稿
 func (post *DraftPost) UpdateClass(class int) (err error) {
 	statement := "UPDATE draft_posts SET class = $2 WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -243,7 +243,7 @@ func (p *Post) HasUserPostedInThread(ctx context.Context) (bool, error) {
         )`
 
 	var exists bool
-	err := Db.QueryRowContext(ctx, query, p.ThreadId, p.UserId).Scan(&exists)
+	err := db.QueryRowContext(ctx, query, p.ThreadId, p.UserId).Scan(&exists)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

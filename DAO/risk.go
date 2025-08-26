@@ -137,7 +137,7 @@ func (p *SafetyProtection) StatusName() string {
 
 // 获取风险的所有防护措施
 func (r *Risk) GetSafetyProtections() ([]SafetyProtection, error) {
-	rows, err := Db.Query("SELECT id, uuid, risk_id, user_id, title, description, type, priority, status, equipment, planned_date, completed_date, created_at, updated_at FROM safety_protections WHERE risk_id = $1 ORDER BY priority DESC, created_at DESC", r.Id)
+	rows, err := db.Query("SELECT id, uuid, risk_id, user_id, title, description, type, priority, status, equipment, planned_date, completed_date, created_at, updated_at FROM safety_protections WHERE risk_id = $1 ORDER BY priority DESC, created_at DESC", r.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func (r *Risk) GetSafetyProtections() ([]SafetyProtection, error) {
 // 创建安全防护措施
 func (p *SafetyProtection) Create() error {
 	statement := "INSERT INTO safety_protections (uuid, risk_id, user_id, title, description, type, priority, status, equipment, planned_date, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, created_at"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (p *SafetyProtection) Create() error {
 // 创建风险
 func (r *Risk) Create() error {
 	statement := "INSERT INTO risks (uuid, user_id, name, nickname, keywords, description, source, severity, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func (r *Risk) Create() error {
 // 更新风险
 func (r *Risk) Update() error {
 	statement := "UPDATE risks SET name = $2, nickname = $3, keywords = $4, description = $5, source = $6, severity = $7, updated_at = $8 WHERE id = $1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -198,7 +198,7 @@ func (r *Risk) GetByIdOrUUID() error {
 	var err error
 	if r.Id > 0 || r.Uuid != "" {
 		statement := "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE id = $1 OR uuid = $2"
-		stmt, err := Db.Prepare(statement)
+		stmt, err := db.Prepare(statement)
 		if err != nil {
 			return err
 		}
@@ -216,7 +216,7 @@ func (r *Risk) GetByIdOrUUID() error {
 
 // 获取默认风险列表（预设的常见风险）
 func GetDefaultRisks(ctx context.Context) ([]Risk, error) {
-	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE id IN (1, 2, 3) ORDER BY id")
+	rows, err := db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE id IN (1, 2, 3) ORDER BY id")
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func GetDefaultRisks(ctx context.Context) ([]Risk, error) {
 
 // 按名称搜索风险
 func SearchRiskByName(keyword string, limit int, ctx context.Context) ([]Risk, error) {
-	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE name ILIKE $1 OR nickname ILIKE $1 OR keywords ILIKE $1 ORDER BY severity DESC, created_at DESC LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, created_at, updated_at FROM risks WHERE name ILIKE $1 OR nickname ILIKE $1 OR keywords ILIKE $1 ORDER BY severity DESC, created_at DESC LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}

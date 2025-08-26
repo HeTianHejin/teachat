@@ -431,24 +431,14 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 		case data.ObClassCloseStraw:
 			tIds_str := r.PostFormValue("invite_ids")
-			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
-			if !verifyIdSliceFormat(tIds_str) {
-				util.Debug(" TeamId slice format is wrong", err)
-				report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
+			if tIds_str == "" {
+				report(w, r, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")
 				return
 			}
-			//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId
-			team_ids_str := strings.Split(tIds_str, ",")
-			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
-			if len(team_ids_str) > int(util.Config.MaxInviteTeams) {
-				util.Debug(" Too many team ids", err)
-				report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，请确认后再试。")
+			team_id_slice, err := parseIdSlice(tIds_str)
+			if err != nil {
+				report(w, r, "你好，陛下填写的茶团号格式看不懂，必需是不重复的自然数用英文逗号分隔。")
 				return
-			}
-			team_id_slice := make([]int, 0, util.Config.MaxInviteTeams)
-			for _, te_id_str := range team_ids_str {
-				t_id_int, _ := strconv.Atoi(te_id_str)
-				team_id_slice = append(team_id_slice, t_id_int)
 			}
 
 			//创建封闭式草台
@@ -491,24 +481,14 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		}
 		if class == data.ObClassCloseStraw {
 			tIds_str := r.PostFormValue("invite_ids")
-			//用正则表达式检测一下s，是否符合“整数，整数，整数...”的格式
-			if !verifyIdSliceFormat(tIds_str) {
-				util.Debug(" TeamId slice format is wrong", err)
-				report(w, r, "你好，茶博士迷糊了，竟然说填写的茶团号格式看不懂，请确认后再试。")
+			if tIds_str == "" {
+				report(w, r, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")
 				return
 			}
-			//用户提交的team_id是以逗号分隔的字符串,需要分割后，转换成[]TeamId
-			team_ids_str := strings.Split(tIds_str, ",")
-			// 测试时，受邀请茶团Id数最多为maxInviteTeams设置限制数
-			if len(team_ids_str) > int(util.Config.MaxInviteTeams) {
-				util.Debug(" Too many team ids", err)
-				report(w, r, "你好，茶博士摸摸头，竟然说指定的茶团数超过了茶棚最大限制数，开水不够用，请确认后再试。")
+			team_id_slice, err := parseIdSlice(tIds_str)
+			if err != nil {
+				report(w, r, "你好，陛下填写的茶团号格式看不懂，必需是不重复的自然数用英文逗号分隔。")
 				return
-			}
-			team_id_slice := make([]int, 0, util.Config.MaxInviteTeams)
-			for _, te_id_str := range team_ids_str {
-				t_id_int, _ := strconv.Atoi(te_id_str)
-				team_id_slice = append(team_id_slice, t_id_int)
 			}
 
 			//创建茶台

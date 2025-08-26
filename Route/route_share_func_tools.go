@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 	"strings"
 	data "teachat/DAO"
 	util "teachat/Util"
@@ -91,19 +92,80 @@ func isEmail(email string) bool {
 // 	return reg.MatchString(str)
 // }
 
-// 验证team_id_slice，必需是正整数的逗号分隔的"2,19,87..."字符串格式是否正确，正确返回true，错误返回false。
-func verifyIdSliceFormat(team_id_slice string) bool {
-	if team_id_slice == "" {
+// 验证id_slice，必需是非零正整数而且不重复的逗号分隔的"2,19,87..."字符串格式，是否正确，正确返回true，错误返回false。
+// 预编译正则表达式提高性能（deepSeek.com）
+var idSliceRegex = regexp.MustCompile(`^[1-9][0-9]*(,[1-9][0-9]*)*$`)
+
+// verifyIdSliceFormat 验证ID切片格式，必须是正整数（不允许0）且不重复的逗号分隔字符串
+// 格式示例: "2,19,87", "1"
+// 正确返回true，错误返回false
+func verifyIdSliceFormat(idSlice string) bool {
+	idSlice = strings.TrimSpace(idSlice)
+	if idSlice == "" {
 		return false
 	}
-	// 使用双引号显式声明正则表达式，避免隐藏字符
-	pattern := "^[0-9]+(,[0-9]+)*$"
-	reg, err := regexp.Compile(pattern)
-	if err != nil {
-		// 实际生产环境应记录该错误
+
+	if !idSliceRegex.MatchString(idSlice) {
 		return false
 	}
-	return reg.MatchString(team_id_slice)
+
+	ids := strings.Split(idSlice, ",")
+	seen := make(map[string]bool)
+
+	for _, idStr := range ids {
+		idStr = strings.TrimSpace(idStr) // 确保去除可能的前后空格
+		id, err := strconv.Atoi(idStr)
+		if err != nil || id <= 0 {
+			return false
+		}
+
+		if seen[idStr] {
+			return false
+		}
+		seen[idStr] = true
+	}
+
+	return true
+}
+
+// 修改verifyIdSliceFormat函数，格式正确返回[]int，错误返回error
+func parseIdSlice(idSlice string) ([]int, error) {
+	idSlice = strings.TrimSpace(idSlice)
+	if idSlice == "" {
+		return []int{}, nil
+	}
+
+	if !verifyIdSliceFormat(idSlice) {
+		return nil, fmt.Errorf("invalid hazard ID format")
+	}
+
+	var ids []int
+	for _, idStr := range strings.Split(idSlice, ",") {
+		idStr = strings.TrimSpace(idStr)
+		id, _ := strconv.Atoi(idStr)
+		ids = append(ids, id)
+	}
+
+	return ids, nil
+}
+
+// 比较两个ID切片内容是否一样
+func compareIdsSlice(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	countMap := make(map[int]int)
+	for _, id := range a {
+		countMap[id]++
+	}
+	for _, id := range b {
+		if countMap[id] == 0 {
+			return false
+		}
+		countMap[id]--
+	}
+	return true
 }
 
 // 输入两个统计数（辩论的正方累积得分数，辩论总得分数）（整数），计算前者与后者比值，结果浮点数向上四舍五入取整,

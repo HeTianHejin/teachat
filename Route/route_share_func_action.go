@@ -136,5 +136,10 @@ func fetchSeeSeekBean(sS data.SeeSeek) (sSBean data.SeeSeekBean, err error) {
 		sSBean.SeeSeekTouch = touches[0] // 取第一条记录
 	}
 
+	// 获取检测报告数据（允许为空，不算错误）
+	if reports, err := sS.GetExaminationReports(); err == nil {
+		sSBean.SeeSeekExaminationReport = reports
+	}
+
 	return sSBean, nil
 }

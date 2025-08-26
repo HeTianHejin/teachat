@@ -21,7 +21,7 @@ import (
    涉及数据库存取操作的定义和一些方法
 */
 
-var Db *sql.DB //数据库实例
+var db *sql.DB //数据库实例
 
 func init() {
 	var err error
@@ -47,12 +47,12 @@ func init() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=%s TimeZone=%s",
 		dbhost, dbport, dbuser, dbpassword, dbname, dbsslmode, dbTimeZone)
-	Db, err = sql.Open(dbdriver, psqlInfo)
+	db, err = sql.Open(dbdriver, psqlInfo)
 	if err != nil {
 		util.Fatal("星际迷失->茶棚数据库打开时：", err)
 	}
 	//测试数据库连接是否成功
-	if err = Db.Ping(); err != nil {
+	if err = db.Ping(); err != nil {
 		util.Fatal("ping teachat database failure - 测试链接茶话会数据库失败", err)
 	}
 
@@ -110,7 +110,7 @@ func GetDay(time time.Time) int {
 // create a new read
 func SaveReadedUserId(thread_id int, user_id int) (read Read, err error) {
 	statement := "INSERT INTO reads (thread_id, user_id, read_at) VALUES ($1, $2, $3) RETURNING id, thread_id, user_id, read_at"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}

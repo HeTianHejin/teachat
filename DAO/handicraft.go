@@ -38,7 +38,7 @@ type Skill struct {
 // Magic.Create() 创建法力
 func (m *Magic) Create() (err error) {
 	statement := "INSERT INTO magics (uuid, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -53,7 +53,7 @@ func (m *Magic) Create() (err error) {
 // Magic.Get() 根据id获取法力
 func (m *Magic) Get() (err error) {
 	statement := "SELECT id, uuid, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at, updated_at FROM magics WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -68,7 +68,7 @@ func (m *Magic) Get() (err error) {
 // Magic.GetByUuid() 根据uuid获取法力
 func (m *Magic) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at, updated_at FROM magics WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -83,7 +83,7 @@ func (m *Magic) GetByUuid() (err error) {
 // Skill.Create() 创建技能
 func (s *Skill) Create() (err error) {
 	statement := "INSERT INTO skills (uuid, name, nickname, description, strength_level, difficulty_level, category, level, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -98,7 +98,7 @@ func (s *Skill) Create() (err error) {
 // Skill.Get() 根据id获取技能记录
 func (s *Skill) Get() (err error) {
 	statement := "SELECT id, uuid, name, nickname, description, strength_level, difficulty_level, category, level, created_at, updated_at FROM skills WHERE id=$1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -111,7 +111,7 @@ func (s *Skill) Get() (err error) {
 }
 func (s *Skill) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, name, nickname, description, strength_level, difficulty_level, category, level, created_at, updated_at FROM skills WHERE uuid=$1"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}

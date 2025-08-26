@@ -45,7 +45,7 @@
   <div class="panel-body">
     <form method="post" action="/v1/see-seek/step4">
       <input type="hidden" name="see_seek_uuid" value="{{ .SeeSeekBean.SeeSeek.Uuid }}">
-      <input type="hidden" name="step" value="{{ .CurrentStep }}">
+      <input type="hidden" name="step" value="4">
 
       <!-- 感官观察说明 -->
       <div class="alert alert-info">
@@ -64,11 +64,11 @@
               <div class="form-group">
                 <label for="look_outline">外形轮廓</label>
                 <textarea class="form-control" name="look_outline" id="look_outline" rows="2" 
-                          placeholder="描述观察对象的外形轮廓..."></textarea>
+                          placeholder="描述观察对象的外形轮廓...">{{ .SeeSeekBean.SeeSeekLook.Outline }}</textarea>
               </div>
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="look_is_deform" value="1"> 发现变形
+                  <input type="checkbox" name="look_is_deform" value="1"{{ if .SeeSeekBean.SeeSeekLook.IsDeform }} checked{{ end }}> 发现变形
                 </label>
               </div>
             </div>
@@ -76,11 +76,11 @@
               <div class="form-group">
                 <label for="look_skin">表面状况</label>
                 <textarea class="form-control" name="look_skin" id="look_skin" rows="2" 
-                          placeholder="描述表面皮肤、涂层等状况..."></textarea>
+                          placeholder="描述表面皮肤、涂层等状况...">{{ .SeeSeekBean.SeeSeekLook.Skin }}</textarea>
               </div>
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="look_is_graze" value="1"> 发现破损
+                  <input type="checkbox" name="look_is_graze" value="1"{{ if .SeeSeekBean.SeeSeekLook.IsGraze }} checked{{ end }}> 发现破损
                 </label>
               </div>
             </div>
@@ -90,11 +90,11 @@
               <div class="form-group">
                 <label for="look_color">颜色描述</label>
                 <input type="text" class="form-control" name="look_color" id="look_color" 
-                       placeholder="描述观察到的颜色...">
+                       placeholder="描述观察到的颜色..." value="{{ .SeeSeekBean.SeeSeekLook.Color }}">
               </div>
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="look_is_change" value="1"> 发现变色
+                  <input type="checkbox" name="look_is_change" value="1"{{ if .SeeSeekBean.SeeSeekLook.IsChange }} checked{{ end }}> 发现变色
                 </label>
               </div>
             </div>
@@ -113,13 +113,13 @@
               <div class="form-group">
                 <label for="listen_sound">声音描述</label>
                 <textarea class="form-control" name="listen_sound" id="listen_sound" rows="3" 
-                          placeholder="描述听到的声音特征..."></textarea>
+                          placeholder="描述听到的声音特征...">{{ .SeeSeekBean.SeeSeekListen.Sound }}</textarea>
               </div>
             </div>
             <div class="col-md-4">
               <div class="checkbox" style="margin-top: 25px;">
                 <label>
-                  <input type="checkbox" name="listen_is_abnormal" value="1"> 发现异常声音
+                  <input type="checkbox" name="listen_is_abnormal" value="1"{{ if .SeeSeekBean.SeeSeekListen.IsAbnormal }} checked{{ end }}> 发现异常声音
                 </label>
               </div>
             </div>
@@ -138,13 +138,13 @@
               <div class="form-group">
                 <label for="smell_odour">气味描述</label>
                 <textarea class="form-control" name="smell_odour" id="smell_odour" rows="3" 
-                          placeholder="描述闻到的气味特征..."></textarea>
+                          placeholder="描述闻到的气味特征...">{{ .SeeSeekBean.SeeSeekSmell.Odour }}</textarea>
               </div>
             </div>
             <div class="col-md-4">
               <div class="checkbox" style="margin-top: 25px;">
                 <label>
-                  <input type="checkbox" name="smell_is_foul_odour" value="1"> 发现异味
+                  <input type="checkbox" name="smell_is_foul_odour" value="1"{{ if .SeeSeekBean.SeeSeekSmell.IsFoulOdour }} checked{{ end }}> 发现异味
                 </label>
               </div>
             </div>
@@ -163,11 +163,11 @@
               <div class="form-group">
                 <label for="touch_temperature">温度感受</label>
                 <input type="text" class="form-control" name="touch_temperature" id="touch_temperature" 
-                       placeholder="温度感受...">
+                       placeholder="温度感受..." value="{{ .SeeSeekBean.SeeSeekTouch.Temperature }}">
               </div>
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="touch_is_fever" value="1"> 异常发热
+                  <input type="checkbox" name="touch_is_fever" value="1"{{ if .SeeSeekBean.SeeSeekTouch.IsFever }} checked{{ end }}> 异常发热
                 </label>
               </div>
             </div>
@@ -175,11 +175,11 @@
               <div class="form-group">
                 <label for="touch_stretch">弹性感受</label>
                 <input type="text" class="form-control" name="touch_stretch" id="touch_stretch" 
-                       placeholder="弹性感受...">
+                       placeholder="弹性感受..." value="{{ .SeeSeekBean.SeeSeekTouch.Stretch }}">
               </div>
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="touch_is_stiff" value="1"> 发现僵硬
+                  <input type="checkbox" name="touch_is_stiff" value="1"{{ if .SeeSeekBean.SeeSeekTouch.IsStiff }} checked{{ end }}> 发现僵硬
                 </label>
               </div>
             </div>
@@ -187,11 +187,11 @@
               <div class="form-group">
                 <label for="touch_shake">震动感受</label>
                 <input type="text" class="form-control" name="touch_shake" id="touch_shake" 
-                       placeholder="震动感受...">
+                       placeholder="震动感受..." value="{{ .SeeSeekBean.SeeSeekTouch.Shake }}">
               </div>
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="touch_is_shake" value="1"> 发现震动过大
+                  <input type="checkbox" name="touch_is_shake" value="1"{{ if .SeeSeekBean.SeeSeekTouch.IsShake }} checked{{ end }}> 发现震动过大
                 </label>
               </div>
             </div>

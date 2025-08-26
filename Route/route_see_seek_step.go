@@ -1,12 +1,13 @@
 package route
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 	data "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // Handler /v1/see-seek/step2
@@ -104,15 +105,14 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	completedSteps := see_seek.Step
-	currentStep := completedSteps + 1
+	currentStep := data.SeeSeekStepHazard
 	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
 
 	// 获取默认隐患列表（仅在第2步时需要）
 	var defaultHazards []data.Hazard
-	if currentStep == 2 {
-		if hazards, err := data.GetDefaultHazards(r.Context()); err == nil {
-			defaultHazards = hazards
-		}
+
+	if hazards, err := data.GetDefaultHazards(r.Context()); err == nil {
+		defaultHazards = hazards
 	}
 
 	// 准备页面数据
@@ -176,11 +176,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "无效的看看记录。")
 		return
 	}
-	// 检查是否重复提交
-	if see_seek.Step >= data.SeeSeekStepHazard {
-		report(w, r, "该步骤已经完成，请勿重复提交。")
-		return
-	}
+	// 允许从后续步骤返回修改，不检查重复提交
 
 	// 获取项目信息
 	project := data.Project{Id: see_seek.ProjectId}
@@ -191,37 +187,70 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 
 	//保存提交的场所隐患数据hazard_ids
 	hazardIdsStr := r.PostFormValue("hazard_ids")
+	var hazardIds []int
 	if hazardIdsStr != "" {
-		//用正则表达式检测hazard_ids，是否符合“整数，整数，整数...”的格式
-		if !verifyIdSliceFormat(hazardIdsStr) {
-			util.Debug(" hazard_ids slice format is wrong", err)
-			report(w, r, "你好，填写的场所安全隐患号格式看不懂，请确认后再试。")
+		hazardIds, err = parseIdSlice(hazardIdsStr)
+		if err != nil {
+			report(w, r, "隐患ID格式不正确")
 			return
 		}
 	}
-	var hazardIds []int
-	hazardIdsStrSlice := strings.Split(hazardIdsStr, ",")
-	for _, idStr := range hazardIdsStrSlice {
-		if id, err := strconv.Atoi(idStr); err == nil && id > 0 {
-			hazardIds = append(hazardIds, id)
-		}
+	// 获取已有的隐患ID列表
+	existingHazards, err := see_seek.GetHazards()
+	if err != nil {
+		util.Debug("Cannot get existing hazards", err)
+		report(w, r, "获取已有隐患记录失败")
+		return
 	}
-	// 如果hazardIds为空，表示没有选择隐患
-	//var see_seek_hazards []data.SeeSeekHazard
-	// 允许为空，可能是没有发现隐患
-	if len(hazardIds) > 0 {
-		// 保存隐患记录
+
+	// 读取旧数据id
+	var existingIds []int
+	for _, h := range existingHazards {
+		existingIds = append(existingIds, h.HazardId)
+	}
+
+	// 检查新旧数据是否相同
+	dataSame := compareIdsSlice(hazardIds, existingIds)
+
+	// 只有数据变化时才更新数据库
+	if !dataSame {
+		// 删除已有的隐患关联记录
+		err = data.DeleteSeeSeekHazardsBySeeSeekId(see_seek.Id)
+		if err != nil {
+			util.Debug("Cannot delete existing SeeSeekHazards", err)
+			report(w, r, "更新隐患记录时发生错误，请稍后再试")
+			return
+		}
+
+		// 验证隐患ID是否存在
 		for _, hazardId := range hazardIds {
-			see_seek_hazard := data.SeeSeekHazard{
-				SeeSeekId: see_seek.Id,
-				HazardId:  hazardId,
-			}
-			if err := see_seek_hazard.Create(); err != nil {
-				util.Debug("Cannot create SeeSeekHazard", err)
-				report(w, r, "保存隐患记录时发生错误，请稍后再试")
+			exist, err := data.IsHazardIdExists(hazardId)
+			if err != nil {
+				util.Debug("Cannot check hazard ID existence", err)
+				report(w, r, "验证隐患ID时发生错误，请稍后再试")
 				return
 			}
-			//see_seek_hazards = append(see_seek_hazards, see_seek_hazard)
+			if !exist {
+				util.Debug("Invalid hazard ID", hazardId)
+				report(w, r, fmt.Sprintf("隐患ID %d 不存在，请检查后再试", hazardId))
+				return
+			}
+
+		}
+
+		// 保存新的隐患记录
+		if len(hazardIds) > 0 {
+			for _, hazardId := range hazardIds {
+				see_seek_hazard := data.SeeSeekHazard{
+					SeeSeekId: see_seek.Id,
+					HazardId:  hazardId,
+				}
+				if err := see_seek_hazard.Create(); err != nil {
+					util.Debug("Cannot create SeeSeekHazard", err)
+					report(w, r, "保存隐患记录时发生错误，请稍后再试")
+					return
+				}
+			}
 		}
 	}
 
@@ -334,16 +363,15 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	completedSteps := see_seek.Step
-	currentStep := completedSteps + 1
+	currentStep := data.SeeSeekStepRisk
 	// 获取当前步骤标题
 	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
 
 	// 获取默认风险列表（仅在第3步时需要）
 	var defaultRisks []data.Risk
-	if currentStep == 3 {
-		if risks, err := data.GetDefaultRisks(r.Context()); err == nil {
-			defaultRisks = risks
-		}
+
+	if risks, err := data.GetDefaultRisks(r.Context()); err == nil {
+		defaultRisks = risks
 	}
 
 	sssTD := data.SeeSeekStepTemplateData{
@@ -403,10 +431,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if seeSeek.Step >= step {
-		report(w, r, "该步骤已经完成，请勿重复提交。")
-		return
-	}
+	// 允许从后续步骤返回修改
 
 	project := data.Project{Id: seeSeek.ProjectId}
 	if err := project.Get(); err != nil {
@@ -415,32 +440,53 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	riskIdsStr := r.PostFormValue("risk_ids")
+	var riskIds []int
 	if riskIdsStr != "" {
-		if !verifyIdSliceFormat(riskIdsStr) {
-			util.Debug(" risk_ids slice format is wrong", err)
-			report(w, r, "你好，填写的风险评估号格式看不懂，请确认后再试。")
+		riskIds, err = parseIdSlice(riskIdsStr)
+		if err != nil {
+			report(w, r, "风险ID格式不正确")
 			return
 		}
 	}
 
-	var riskIds []int
-	riskIdsStrSlice := strings.Split(riskIdsStr, ",")
-	for _, idStr := range riskIdsStrSlice {
-		if id, err := strconv.Atoi(idStr); err == nil && id > 0 {
-			riskIds = append(riskIds, id)
-		}
+	// 获取已有的风险ID列表
+	existingRisks, err := seeSeek.GetRisks()
+	if err != nil {
+		util.Debug("Cannot get existing risks", err)
+		report(w, r, "获取已有风险记录失败")
+		return
 	}
 
-	if len(riskIds) > 0 {
-		for _, riskId := range riskIds {
-			see_seek_risk := data.SeeSeekRisk{
-				SeeSeekId: seeSeek.Id,
-				RiskId:    riskId,
-			}
-			if err := see_seek_risk.Create(); err != nil {
-				util.Debug("Cannot create SeeSeekRisk", err)
-				report(w, r, "保存风险记录时发生错误，请稍后再试")
-				return
+	// 比较新旧数据是否一致
+	var existingIds []int
+	for _, r := range existingRisks {
+		existingIds = append(existingIds, r.RiskId)
+	}
+
+	// 检查数据是否变化
+	dataSame := compareIdsSlice(riskIds, existingIds)
+
+	// 只有数据变化时才更新数据库
+	if !dataSame {
+		// 删除已有的风险关联记录
+		err = data.DeleteSeeSeekRisksBySeeSeekId(seeSeek.Id)
+		if err != nil {
+			util.Debug("Cannot delete existing SeeSeekRisks", err)
+			report(w, r, "更新风险记录时发生错误，请稍后再试")
+			return
+		}
+
+		if len(riskIds) > 0 {
+			for _, riskId := range riskIds {
+				see_seek_risk := data.SeeSeekRisk{
+					SeeSeekId: seeSeek.Id,
+					RiskId:    riskId,
+				}
+				if err := see_seek_risk.Create(); err != nil {
+					util.Debug("Cannot create SeeSeekRisk", err)
+					report(w, r, "保存风险记录时发生错误，请稍后再试")
+					return
+				}
 			}
 		}
 	}
@@ -551,7 +597,7 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	completedSteps := see_seek.Step
-	currentStep := completedSteps + 1
+	currentStep := data.SeeSeekStepObservation
 	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
 
 	sssTD := data.SeeSeekStepTemplateData{
@@ -609,10 +655,13 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if seeSeek.Step >= step {
-		report(w, r, "该步骤已经完成，请勿重复提交。")
-		return
-	}
+	// 允许从后续步骤返回修改
+
+	// 获取已有的感官观察数据
+	existingLooks, _ := seeSeek.GetLooks()
+	existingListens, _ := seeSeek.GetListens()
+	existingSmells, _ := seeSeek.GetSmells()
+	existingTouches, _ := seeSeek.GetTouches()
 
 	// 保存视觉观察数据
 	lookOutline := strings.TrimSpace(r.PostFormValue("look_outline"))
@@ -622,7 +671,20 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	lookIsGraze := r.PostFormValue("look_is_graze") == "1"
 	lookIsChange := r.PostFormValue("look_is_change") == "1"
 
-	if lookOutline != "" || lookSkin != "" || lookColor != "" || lookIsDeform || lookIsGraze || lookIsChange {
+	// 检查视觉数据是否变化
+	lookChanged := true
+	if len(existingLooks) > 0 {
+		existing := existingLooks[0]
+		lookChanged = existing.Outline != lookOutline || existing.Skin != lookSkin || existing.Color != lookColor || existing.IsDeform != lookIsDeform || existing.IsGraze != lookIsGraze || existing.IsChange != lookIsChange
+	} else {
+		lookChanged = lookOutline != "" || lookSkin != "" || lookColor != "" || lookIsDeform || lookIsGraze || lookIsChange
+	}
+
+	if lookChanged && (lookOutline != "" || lookSkin != "" || lookColor != "" || lookIsDeform || lookIsGraze || lookIsChange) {
+		err = data.DeleteSeeSeekLooksBySeeSeekId(seeSeek.Id)
+		if err != nil {
+			util.Debug("Cannot delete existing SeeSeekLooks", err)
+		}
 		seeSeekLook := data.SeeSeekLook{
 			SeeSeekId: seeSeek.Id,
 			Classify:  0,
@@ -645,7 +707,19 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	listenSound := strings.TrimSpace(r.PostFormValue("listen_sound"))
 	listenIsAbnormal := r.PostFormValue("listen_is_abnormal") == "1"
 
-	if listenSound != "" || listenIsAbnormal {
+	listenChanged := true
+	if len(existingListens) > 0 {
+		existing := existingListens[0]
+		listenChanged = existing.Sound != listenSound || existing.IsAbnormal != listenIsAbnormal
+	} else {
+		listenChanged = listenSound != "" || listenIsAbnormal
+	}
+
+	if listenChanged && (listenSound != "" || listenIsAbnormal) {
+		err = data.DeleteSeeSeekListensBySeeSeekId(seeSeek.Id)
+		if err != nil {
+			util.Debug("Cannot delete existing SeeSeekListens", err)
+		}
 		seeSeekListen := data.SeeSeekListen{
 			SeeSeekId:  seeSeek.Id,
 			Classify:   0,
@@ -664,7 +738,19 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	smellOdour := strings.TrimSpace(r.PostFormValue("smell_odour"))
 	smellIsFoulOdour := r.PostFormValue("smell_is_foul_odour") == "1"
 
-	if smellOdour != "" || smellIsFoulOdour {
+	smellChanged := true
+	if len(existingSmells) > 0 {
+		existing := existingSmells[0]
+		smellChanged = existing.Odour != smellOdour || existing.IsFoulOdour != smellIsFoulOdour
+	} else {
+		smellChanged = smellOdour != "" || smellIsFoulOdour
+	}
+
+	if smellChanged && (smellOdour != "" || smellIsFoulOdour) {
+		err = data.DeleteSeeSeekSmellsBySeeSeekId(seeSeek.Id)
+		if err != nil {
+			util.Debug("Cannot delete existing SeeSeekSmells", err)
+		}
 		seeSeekSmell := data.SeeSeekSmell{
 			SeeSeekId:   seeSeek.Id,
 			Classify:    0,
@@ -687,7 +773,19 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	touchIsStiff := r.PostFormValue("touch_is_stiff") == "1"
 	touchIsShake := r.PostFormValue("touch_is_shake") == "1"
 
-	if touchTemperature != "" || touchStretch != "" || touchShake != "" || touchIsFever || touchIsStiff || touchIsShake {
+	touchChanged := true
+	if len(existingTouches) > 0 {
+		existing := existingTouches[0]
+		touchChanged = existing.Temperature != touchTemperature || existing.Stretch != touchStretch || existing.Shake != touchShake || existing.IsFever != touchIsFever || existing.IsStiff != touchIsStiff || existing.IsShake != touchIsShake
+	} else {
+		touchChanged = touchTemperature != "" || touchStretch != "" || touchShake != "" || touchIsFever || touchIsStiff || touchIsShake
+	}
+
+	if touchChanged && (touchTemperature != "" || touchStretch != "" || touchShake != "" || touchIsFever || touchIsStiff || touchIsShake) {
+		err = data.DeleteSeeSeekTouchesBySeeSeekId(seeSeek.Id)
+		if err != nil {
+			util.Debug("Cannot delete existing SeeSeekTouches", err)
+		}
 		seeSeekTouch := data.SeeSeekTouch{
 			SeeSeekId:   seeSeek.Id,
 			Classify:    0,
@@ -812,7 +910,7 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	completedSteps := see_seek.Step
-	currentStep := completedSteps + 1
+	currentStep := data.SeeSeekStepReport
 	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
 
 	sssTD := data.SeeSeekStepTemplateData{
@@ -870,10 +968,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if seeSeek.Step >= step {
-		report(w, r, "该步骤已经完成，请勿重复提交。")
-		return
-	}
+	// 允许从后续步骤返回修改
 
 	project := data.Project{Id: seeSeek.ProjectId}
 	if err := project.Get(); err != nil {
@@ -956,15 +1051,15 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 			}
 
 			examinationItem := data.SeeSeekExaminationItem{
-				Classify:                     classify,
-				SeeSeekExaminationReportID:   examinationReport.ID,
-				ItemName:                     itemName,
-				Result:                       itemResult,
-				ResultUnit:                   itemUnit,
-				Remark:                       itemRemark,
-				AbnormalFlag:                 isAbnormal,
-				Method:                       itemMethod,
-				Status:                       1,
+				Classify:                   classify,
+				SeeSeekExaminationReportID: examinationReport.ID,
+				ItemName:                   itemName,
+				Result:                     itemResult,
+				ResultUnit:                 itemUnit,
+				Remark:                     itemRemark,
+				AbnormalFlag:               isAbnormal,
+				Method:                     itemMethod,
+				Status:                     1,
 			}
 
 			if err := examinationItem.Create(); err != nil {

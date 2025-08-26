@@ -47,7 +47,7 @@ func (a *AcceptMessage) Invitee() (user User, err error) {
 // Create() 创建邻桌蒙评消息
 func (a *AcceptMessage) Create() (err error) {
 	statement := "INSERT INTO accept_messages (from_user_id, to_user_id, title, content, accept_object_id, class, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -58,13 +58,13 @@ func (a *AcceptMessage) Create() (err error) {
 
 // GetAccMesByUIdAndAOId() 根据接收用户ID和接纳对象id，获取邻桌蒙评消息
 func (a *AcceptMessage) GetAccMesByUIdAndAOId(user_id, accept_object_id int) (err error) {
-	err = Db.QueryRow("SELECT * FROM accept_messages WHERE to_user_id = $1 AND accept_object_id = $2", user_id, accept_object_id).Scan(&a.Id, &a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, &a.CreatedAt, &a.UpdatedAt)
+	err = db.QueryRow("SELECT * FROM accept_messages WHERE to_user_id = $1 AND accept_object_id = $2", user_id, accept_object_id).Scan(&a.Id, &a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, &a.CreatedAt, &a.UpdatedAt)
 	return
 }
 
 // 根据ToUserId，获取受邀请用户全部的acceptMessage
 func (u *User) AcceptMessages() (acceptMessages []AcceptMessage, err error) {
-	rows, err := Db.Query("SELECT * FROM accept_messages where to_user_id = $1", u.Id)
+	rows, err := db.Query("SELECT * FROM accept_messages where to_user_id = $1", u.Id)
 	if err != nil {
 		return
 	}
@@ -81,7 +81,7 @@ func (u *User) AcceptMessages() (acceptMessages []AcceptMessage, err error) {
 
 // 根据ToUserId,获取用户全部未读的class=0的acceptMessage
 func (u *User) UnreadAcceptMessages() (acceptMessages []AcceptMessage, err error) {
-	rows, err := Db.Query("SELECT * FROM accept_messages where to_user_id = $1 and class = 0", u.Id)
+	rows, err := db.Query("SELECT * FROM accept_messages where to_user_id = $1 and class = 0", u.Id)
 	if err != nil {
 		return
 	}
@@ -98,7 +98,7 @@ func (u *User) UnreadAcceptMessages() (acceptMessages []AcceptMessage, err error
 
 // 根据UserId,获取全部未读的class=0的acceptMessage的统计数量
 func (u *User) UnreadAcceptMessagesCount() (count int) {
-	rows, err := Db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1 and class = 0", u.Id)
+	rows, err := db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1 and class = 0", u.Id)
 	if err != nil {
 		return
 	}
@@ -113,7 +113,7 @@ func (u *User) UnreadAcceptMessagesCount() (count int) {
 
 // ��据ToUserId,获取全部已读的class=1的acceptMessage的统计数量
 func (u *User) ReadAcceptMessagesCount() (count int) {
-	rows, err := Db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1 and class = 1", u.Id)
+	rows, err := db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1 and class = 1", u.Id)
 	if err != nil {
 		return
 	}
@@ -128,7 +128,7 @@ func (u *User) ReadAcceptMessagesCount() (count int) {
 
 // 根据ToUserId，统计全部acceptMessage的数量
 func (u *User) AllAcceptMessageCount() (count int) {
-	rows, err := Db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1", u.Id)
+	rows, err := db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1", u.Id)
 	if err != nil {
 		return
 	}
@@ -143,7 +143,7 @@ func (u *User) AllAcceptMessageCount() (count int) {
 
 // ��据ToUserId,获取全部已读的class=1的acceptMessage
 func (u *User) ReadAcceptMessages() (acceptMessages []AcceptMessage, err error) {
-	rows, err := Db.Query("SELECT * FROM accept_messages where to_user_id = $1 and class = 1", u.Id)
+	rows, err := db.Query("SELECT * FROM accept_messages where to_user_id = $1 and class = 1", u.Id)
 	if err != nil {
 		return
 	}
@@ -161,7 +161,7 @@ func (u *User) ReadAcceptMessages() (acceptMessages []AcceptMessage, err error) 
 // Update() 根据ToUserId和接纳对象id，更新用户的邻桌新茶蒙评消息为已读
 func (a *AcceptMessage) Update(to_user_id, accept_object_id int) (err error) {
 	statement := "UPDATE accept_messages SET class = 1, updated_at = $3 WHERE to_user_id = $1 and accept_object_id = $2"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -183,7 +183,7 @@ func (a *AcceptMessage) Send(user_ids []int) (err error) {
 
 // AcceptMessageCount() 获取用户 新茶评审消息总数
 func (user *User) AcceptMessageCount() (count int) {
-	rows, err := Db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1", user.Id)
+	rows, err := db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1", user.Id)
 	if err != nil {
 		return
 	}
@@ -198,7 +198,7 @@ func (user *User) AcceptMessageCount() (count int) {
 
 // NewAcceptMessagesCount() 获取用户 新茶评审消息数
 func (user *User) NewAcceptMessagesCount() (count int) {
-	rows, err := Db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1 and class = 0", user.Id)
+	rows, err := db.Query("SELECT count(*) FROM accept_messages where to_user_id = $1 and class = 0", user.Id)
 	if err != nil {
 		return 0
 	}
@@ -223,7 +223,7 @@ func (user *User) CheckHasAcceptMessage(accept_object_id int) (ok bool, err erro
 	defer cancel()
 
 	query := "SELECT count(*) FROM accept_messages WHERE (to_user_id = $1 AND accept_object_id = $2) AND class = 0"
-	row := Db.QueryRowContext(ctx, query, user.Id, accept_object_id)
+	row := db.QueryRowContext(ctx, query, user.Id, accept_object_id)
 	var count int
 	if err := row.Scan(&count); err != nil {
 		// Handle error
@@ -241,7 +241,7 @@ func (user *User) CheckHasReadAcceptMessage(accept_object_id int) (ok bool, err 
 	defer cancel()
 
 	query := "SELECT COUNT(*) > 0 FROM accept_messages WHERE to_user_id = $1 AND accept_object_id = $2 AND class = 1"
-	row := Db.QueryRowContext(ctx, query, user.Id, accept_object_id)
+	row := db.QueryRowContext(ctx, query, user.Id, accept_object_id)
 	var exists bool
 	if err := row.Scan(&exists); err != nil {
 		// Handle error

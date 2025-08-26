@@ -66,7 +66,7 @@ type ProjectApproved struct {
 // project_approved.Create()  ----【tencent AI协助】
 func (projectApproved *ProjectApproved) Create() (err error) {
 	statement := "INSERT INTO project_approved (user_id, project_id, objective_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -77,19 +77,19 @@ func (projectApproved *ProjectApproved) Create() (err error) {
 
 // project_approved.GetByProjectId() ----【tencent AI协助】
 func (projectApproved *ProjectApproved) GetByObjectiveIdProjectId() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE objective_id=$1 and project_id = $2", projectApproved.ObjectiveId, projectApproved.ProjectId).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
+	err = db.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE objective_id=$1 and project_id = $2", projectApproved.ObjectiveId, projectApproved.ProjectId).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
 	return
 }
 
 // project_approved.GetById() ----【tencent AI协助】
 func (projectApproved *ProjectApproved) GetById() (err error) {
-	err = Db.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE id = $1", projectApproved.Id).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
+	err = db.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE id = $1", projectApproved.Id).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
 	return
 }
 
 // project_approved.CountByObjectiveId() 统计某个茶围下许可/批准入围的茶台数量 --【tencent AI协助】
 func (projectApproved *ProjectApproved) CountByObjectiveId() (count int) {
-	err := Db.QueryRow("SELECT COUNT(*) FROM project_approved WHERE objective_id = $1", projectApproved.ObjectiveId).Scan(&count)
+	err := db.QueryRow("SELECT COUNT(*) FROM project_approved WHERE objective_id = $1", projectApproved.ObjectiveId).Scan(&count)
 	if err != nil {
 		return
 	}
@@ -98,13 +98,13 @@ func (projectApproved *ProjectApproved) CountByObjectiveId() (count int) {
 
 // project *Project.IsApproved() 判断某个茶台是否被批准（立项） --【tencent AI协助】
 func (project *Project) IsApproved() (approved bool, err error) {
-	err = Db.QueryRow("SELECT EXISTS(SELECT 1 FROM project_approved WHERE project_id = $1)", project.Id).Scan(&approved)
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM project_approved WHERE project_id = $1)", project.Id).Scan(&approved)
 	return
 }
 
 // CountProjectByTitleObjectiveId() 统计某个茶围下相同名称的茶台数量
 func CountProjectByTitleObjectiveId(title string, objectiveId int) (count int, err error) {
-	err = Db.QueryRow("SELECT count(*) FROM projects WHERE title = $1 AND objective_id = $2", title, objectiveId).Scan(&count)
+	err = db.QueryRow("SELECT count(*) FROM projects WHERE title = $1 AND objective_id = $2", title, objectiveId).Scan(&count)
 	return
 }
 
@@ -128,7 +128,7 @@ type ProjectPlace struct {
 // project_place.Create()
 func (projectPlace *ProjectPlace) Create() (err error) {
 	statement := "INSERT INTO project_place (project_id, place_id, user_id) VALUES ($1, $2, $3) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -139,7 +139,7 @@ func (projectPlace *ProjectPlace) Create() (err error) {
 
 // project_place.GetByProjectId()
 func (projectPlace *ProjectPlace) GetByProjectId() (err error) {
-	err = Db.QueryRow("SELECT id, project_id, place_id, created_at, user_id FROM project_place WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1", projectPlace.ProjectId).Scan(&projectPlace.Id, &projectPlace.ProjectId, &projectPlace.PlaceId, &projectPlace.CreatedAt, &projectPlace.UserId)
+	err = db.QueryRow("SELECT id, project_id, place_id, created_at, user_id FROM project_place WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1", projectPlace.ProjectId).Scan(&projectPlace.Id, &projectPlace.ProjectId, &projectPlace.PlaceId, &projectPlace.CreatedAt, &projectPlace.UserId)
 	return
 }
 
@@ -163,7 +163,7 @@ func (project *Project) InvitedTeamIds() (team_id_slice []int, err error) {
 	if project.Class != PrClassClose {
 		return nil, fmt.Errorf("project.Class != ClassClosedTeaTable")
 	}
-	rows, err := Db.Query("SELECT team_id FROM project_invited_teams WHERE project_id = $1", project.Id)
+	rows, err := db.Query("SELECT team_id FROM project_invited_teams WHERE project_id = $1", project.Id)
 	if err != nil {
 		return
 	}
@@ -180,7 +180,7 @@ func (project *Project) InvitedTeamIds() (team_id_slice []int, err error) {
 
 // 封闭式茶台邀请的团队计数
 func (project *Project) InvitedTeamsCount() (count int, err error) {
-	err = Db.QueryRow("SELECT COUNT(*) FROM project_invited_teams WHERE project_id = $1", project.Id).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM project_invited_teams WHERE project_id = $1", project.Id).Scan(&count)
 	return
 }
 
@@ -204,7 +204,7 @@ func (project *Project) EditAtDate() string {
 // Project.Create()  编写postgreSQL语句，插入新纪录，return （err error）
 func (project *Project) Create() (err error) {
 	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, cover, team_id, is_private, family_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -216,7 +216,7 @@ func (project *Project) Create() (err error) {
 
 // Project.Get()  编写postgreSQL语句，根据id查询纪录，return （err error）
 func (project *Project) Get() (err error) {
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE id = $1", project.Id).
+	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE id = $1", project.Id).
 		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId)
 	return
 }
@@ -225,7 +225,7 @@ func (project *Project) Get() (err error) {
 // 返回一个茶台对象，如果查询失败，则返回err不为nil
 func (project *Project) GetByUuid() (err error) {
 
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE uuid = $1", project.Uuid).
+	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE uuid = $1", project.Uuid).
 		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId)
 	return
 }
@@ -233,7 +233,7 @@ func (project *Project) GetByUuid() (err error) {
 // 获取茶议所属的茶台
 func (t *Thread) Project() (project Project, err error) {
 	project = Project{}
-	err = Db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE id = $1", t.ProjectId).
+	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE id = $1", t.ProjectId).
 		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId)
 	return
 }
@@ -253,7 +253,7 @@ func (post *Post) Project() (project Project, err error) {
 
 // 获取茶台的茶议总数量
 func (project *Project) NumReplies() (count int) {
-	rows, err := Db.Query("SELECT count(*) FROM threads WHERE project_id = $1", project.Id)
+	rows, err := db.Query("SELECT count(*) FROM threads WHERE project_id = $1", project.Id)
 	if err != nil {
 		return
 	}
@@ -269,7 +269,7 @@ func (project *Project) NumReplies() (count int) {
 
 // 获取某个ID的茶话会下全部茶台
 func (objective *Objective) Projects() (projects []Project, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE objective_id = $1", objective.Id)
+	rows, err := db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE objective_id = $1", objective.Id)
 	if err != nil {
 		return
 	}
@@ -286,7 +286,7 @@ func (objective *Objective) Projects() (projects []Project, err error) {
 
 // objective.GetPublicProjects() fetch project.Class=1 or 2,return projects
 func (objective *Objective) GetPublicProjects() (projects []Project, err error) {
-	rows, err := Db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE objective_id = $1 AND class IN (1, 2)", objective.Id)
+	rows, err := db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE objective_id = $1 AND class IN (1, 2)", objective.Id)
 	if err != nil {
 		return
 	}
@@ -305,19 +305,19 @@ func (objective *Objective) GetPublicProjects() (projects []Project, err error) 
 func (project_invited_teams *ProjectInvitedTeam) Create() (err error) {
 	// 茶团号是否已存在
 	var count int
-	err = Db.QueryRow("SELECT COUNT(*) FROM project_invited_teams WHERE project_id = $1 AND team_id = $2", project_invited_teams.ProjectId, project_invited_teams.TeamId).Scan(&count)
+	err = db.QueryRow("SELECT COUNT(*) FROM project_invited_teams WHERE project_id = $1 AND team_id = $2", project_invited_teams.ProjectId, project_invited_teams.TeamId).Scan(&count)
 	if err != nil {
 		return
 	}
 	if count > 0 {
-		_, err = Db.Exec("DELETE FROM project_invited_teams WHERE project_id = $1 AND team_id = $2", project_invited_teams.ProjectId, project_invited_teams.TeamId)
+		_, err = db.Exec("DELETE FROM project_invited_teams WHERE project_id = $1 AND team_id = $2", project_invited_teams.ProjectId, project_invited_teams.TeamId)
 		if err != nil {
 			return
 		}
 	}
 	// 受邀请茶团号保存到数据库
 	statement := "INSERT INTO project_invited_teams (project_id, team_id, created_at) VALUES ($1, $2, $3) RETURNING id"
-	stmt, err := Db.Prepare(statement)
+	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -329,13 +329,13 @@ func (project_invited_teams *ProjectInvitedTeam) Create() (err error) {
 
 // 删除一个封闭式茶台的许可茶团号
 func (project_invited_teams *ProjectInvitedTeam) Delete() (err error) {
-	_, err = Db.Exec("DELETE FROM project_invited_teams WHERE project_id = $1 AND team_id = $2", project_invited_teams.ProjectId, project_invited_teams.TeamId)
+	_, err = db.Exec("DELETE FROM project_invited_teams WHERE project_id = $1 AND team_id = $2", project_invited_teams.ProjectId, project_invited_teams.TeamId)
 	return
 }
 
 // UpdateClass() 通过project的id,更新茶台的class
 func (project *Project) UpdateClass() (err error) {
-	_, err = Db.Exec("UPDATE projects SET class = $1 WHERE id = $2", project.Class, project.Id)
+	_, err = db.Exec("UPDATE projects SET class = $1 WHERE id = $2", project.Class, project.Id)
 	return
 }
 
@@ -362,7 +362,7 @@ func (proj *Project) IsInvitedMember(user_id int) (bool, error) {
 func SearchProjectByTitle(keyword string, limit int, ctx context.Context) (projects []Project, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-	rows, err := Db.QueryContext(ctx, "SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE title LIKE $1 LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := db.QueryContext(ctx, "SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE title LIKE $1 LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return
 	}
@@ -379,6 +379,6 @@ func SearchProjectByTitle(keyword string, limit int, ctx context.Context) (proje
 
 // project.PlaceId() 获取茶台的地点place_id，最后一次更新place_id的记录
 func (project *Project) PlaceId() (place_id int, err error) {
-	err = Db.QueryRow("SELECT place_id FROM project_place WHERE project_id = $1", project.Id).Scan(&place_id)
+	err = db.QueryRow("SELECT place_id FROM project_place WHERE project_id = $1", project.Id).Scan(&place_id)
 	return
 }

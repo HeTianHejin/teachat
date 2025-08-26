@@ -45,7 +45,7 @@
   <div class="panel-body">
     <form method="post" action="/v1/see-seek/step5">
       <input type="hidden" name="see_seek_uuid" value="{{ .SeeSeekBean.SeeSeek.Uuid }}">
-      <input type="hidden" name="step" value="{{ .CurrentStep }}">
+      <input type="hidden" name="step" value="5">
 
       <!-- 检测报告说明 -->
       <div class="alert alert-info">
@@ -56,7 +56,7 @@
       <!-- 检测报告表单 -->
       <div class="panel panel-default">
         <div class="panel-heading">
-          <h4><span class="glyphicon glyphicon-wrench"></span> 工具检测验证</h4>
+          <h4><span class="glyphicon glyphicon-wrench"></span> 专业仪器检测验证</h4>
         </div>
         <div class="panel-body">
           <div class="row">
@@ -64,7 +64,7 @@
               <div class="form-group">
                 <label for="report_title">检测报告标题</label>
                 <input type="text" class="form-control" name="report_title" id="report_title" 
-                       placeholder="例如：洗衣机水平度检测报告">
+                       placeholder="例如：火焰山耐火砖检测报告">
                 <small class="help-block">简要描述检测内容</small>
               </div>
             </div>
@@ -72,7 +72,7 @@
               <div class="form-group">
                 <label for="sample_type">检测样本类型</label>
                 <input type="text" class="form-control" name="sample_type" id="sample_type" 
-                       placeholder="例如：设备水平度、振动频率等">
+                       placeholder="例如：温度、密度、年份等">
                 <small class="help-block">描述检测的对象类型</small>
               </div>
             </div>
@@ -96,7 +96,7 @@
                     <input type="radio" name="classify" value="4"> 矿物
                   </label>
                 </div>
-                <small class="help-block">选择检测对象的分类，用于跟踪审计</small>
+                <small class="help-block">选择检测对象的分类，用于分类统计</small>
               </div>
             </div>
           </div>
@@ -104,7 +104,7 @@
           <div class="row">
             <div class="col-md-6">
               <div class="form-group">
-                <label for="instrument_goods_id">使用工具ID（可选）</label>
+                <label for="instrument_goods_id">使用工具或者仪器ID（可选）</label>
                 <input type="number" class="form-control" name="instrument_goods_id" id="instrument_goods_id" 
                        placeholder="输入工具物资ID" min="1">
                 <small class="help-block">如果使用了专业工具，请输入工具ID</small>
