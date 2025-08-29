@@ -1,6 +1,7 @@
 package route
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -56,7 +57,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	// 检查SeeSeek记录
 	see_seek := data.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
-		if err.Error() == "no row in result" {
+		if err == sql.ErrNoRows {
 			// 项目的“看看”第一步还没有做！提醒
 			report(w, r, "你好，项目的“看看”第一步还没有记录，请检查项目详情？")
 			return
@@ -165,7 +166,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	// 获取SeeSeek记录
 	see_seek := data.SeeSeek{Uuid: seeSeekUuid}
 	if err := see_seek.GetByIdOrUUID(r.Context()); err != nil {
-		if err.Error() == "no row in result" {
+		if err == sql.ErrNoRows {
 			report(w, r, "看看记录不存在。")
 			return
 		}
@@ -313,7 +314,7 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 
 	see_seek := data.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
-		if err.Error() == "no row in result" {
+		if err == sql.ErrNoRows {
 			report(w, r, "你好，项目的看看记录不存在，请检查项目详情？")
 			return
 		}
@@ -423,7 +424,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 
 	seeSeek := data.SeeSeek{Uuid: seeSeekUuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
-		if err.Error() == "no row in result" {
+		if err == sql.ErrNoRows {
 			report(w, r, "看看记录不存在。")
 			return
 		}
@@ -547,7 +548,7 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 
 	see_seek := data.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
-		if err.Error() == "no row in result" {
+		if err == sql.ErrNoRows {
 			report(w, r, "你好，项目的看看记录不存在，请检查项目详情？")
 			return
 		}
@@ -647,7 +648,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 
 	seeSeek := data.SeeSeek{Uuid: seeSeekUuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
-		if err.Error() == "no row in result" {
+		if err == sql.ErrNoRows {
 			report(w, r, "看看记录不存在。")
 			return
 		}

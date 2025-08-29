@@ -382,3 +382,12 @@ func (project *Project) PlaceId() (place_id int, err error) {
 	err = db.QueryRow("SELECT place_id FROM project_place WHERE project_id = $1", project.Id).Scan(&place_id)
 	return
 }
+
+// 检查项目的SeeSeek是否已完成
+func (p *Project) IsSeeSeekCompleted(ctx context.Context) bool {
+	seeSeek, err := GetSeeSeekByProjectId(p.Id, ctx)
+	if err != nil {
+		return false
+	}
+	return seeSeek.Status == SeeSeekStatusCompleted
+}

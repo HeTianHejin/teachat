@@ -1,0 +1,249 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">"看看"记录详情</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <img src="/v1/static/image/teachat-table.svg" alt="看看封面" width="24" height="24">
+      "看看"记录 #{{ .SeeSeekBean.SeeSeek.Id }} - {{ .SeeSeekBean.SeeSeek.Name }}
+      <span class="label label-{{ if eq .SeeSeekBean.SeeSeek.Status 4 }}success{{ else if eq .SeeSeekBean.SeeSeek.Status 1 }}info{{ else }}default{{ end }} pull-right">
+        {{ .SeeSeekBean.SeeSeek.StatusString }}
+      </span>
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    <!-- 基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>基本信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>记录ID</strong></td>
+            <td>{{ .SeeSeekBean.SeeSeek.Id }}</td>
+          </tr>
+          <tr>
+            <td><strong>记录名称</strong></td>
+            <td>{{ .SeeSeekBean.SeeSeek.Name }}</td>
+          </tr>
+          {{ if .SeeSeekBean.SeeSeek.Nickname }}
+          <tr>
+            <td><strong>别名</strong></td>
+            <td>{{ .SeeSeekBean.SeeSeek.Nickname }}</td>
+          </tr>
+          {{ end }}
+          <tr>
+            <td><strong>当前状态</strong></td>
+            <td>
+              <span class="label label-{{ if eq .SeeSeekBean.SeeSeek.Status 4 }}success{{ else if eq .SeeSeekBean.SeeSeek.Status 1 }}info{{ else }}default{{ end }}">
+                {{ .SeeSeekBean.SeeSeek.StatusString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>完成步骤</strong></td>
+            <td>{{ .SeeSeekBean.SeeSeek.Step }}/5</td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .SeeSeekBean.SeeSeek.CreatedDateTime }}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>描述信息</h4>
+        <div class="well">
+          {{ if .SeeSeekBean.SeeSeek.Description }}
+            <p>{{ .SeeSeekBean.SeeSeek.Description }}</p>
+          {{ else }}
+            <p class="text-muted">暂无描述</p>
+          {{ end }}
+        </div>
+        
+        {{ if .SeeSeekBean.Place.Id }}
+        <h5>检查地点</h5>
+        <p><span class="label label-default">{{ .SeeSeekBean.Place.Name }}</span></p>
+        {{ end }}
+      </div>
+    </div>
+
+    <!-- 环境条件 -->
+    {{ if .SeeSeekBean.Environment.Id }}
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-leaf"></span> 环境条件</h4>
+        <div class="panel panel-info">
+          <div class="panel-body">
+            <strong>{{ .SeeSeekBean.Environment.Name }}</strong>
+            <p>{{ .SeeSeekBean.Environment.Summary }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{ end }}
+
+    <!-- 场所隐患 -->
+    {{ if .SeeSeekBean.Hazard }}
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-warning-sign"></span> 场所隐患</h4>
+        <div class="row">
+          {{ range .SeeSeekBean.Hazard }}
+          <div class="col-md-6">
+            <div class="panel panel-warning">
+              <div class="panel-body">
+                <strong>{{ .Name }}</strong>
+                <span class="label label-{{ if eq .Severity 5 }}danger{{ else if eq .Severity 4 }}warning{{ else if eq .Severity 3 }}info{{ else }}default{{ end }}">
+                  {{ .SeverityName }}
+                </span>
+                <p>{{ .Description }}</p>
+              </div>
+            </div>
+          </div>
+          {{ end }}
+        </div>
+      </div>
+    </div>
+    {{ end }}
+
+    <!-- 作业风险 -->
+    {{ if .SeeSeekBean.Risk }}
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-exclamation-sign"></span> 作业风险</h4>
+        <div class="row">
+          {{ range .SeeSeekBean.Risk }}
+          <div class="col-md-6">
+            <div class="panel panel-danger">
+              <div class="panel-body">
+                <strong>{{ .Name }}</strong>
+                <span class="label label-{{ if eq .Severity 5 }}danger{{ else if eq .Severity 4 }}warning{{ else if eq .Severity 3 }}info{{ else }}default{{ end }}">
+                  {{ RiskSeverityLevelString .Severity }}
+                </span>
+                <p>{{ .Description }}</p>
+              </div>
+            </div>
+          </div>
+          {{ end }}
+        </div>
+      </div>
+    </div>
+    {{ end }}
+
+    <!-- 感官观察 -->
+    {{ if or .SeeSeekBean.SeeSeekLook.Id .SeeSeekBean.SeeSeekListen.Id .SeeSeekBean.SeeSeekSmell.Id .SeeSeekBean.SeeSeekTouch.Id }}
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-eye-open"></span> 感官观察</h4>
+        
+        {{ if .SeeSeekBean.SeeSeekLook.Id }}
+        <div class="panel panel-default">
+          <div class="panel-heading"><strong>视觉观察</strong></div>
+          <div class="panel-body">
+            {{ if .SeeSeekBean.SeeSeekLook.Outline }}<p><strong>外形轮廓：</strong>{{ .SeeSeekBean.SeeSeekLook.Outline }}</p>{{ end }}
+            {{ if .SeeSeekBean.SeeSeekLook.Skin }}<p><strong>表面状况：</strong>{{ .SeeSeekBean.SeeSeekLook.Skin }}</p>{{ end }}
+            {{ if .SeeSeekBean.SeeSeekLook.Color }}<p><strong>颜色：</strong>{{ .SeeSeekBean.SeeSeekLook.Color }}</p>{{ end }}
+            <p>
+              {{ if .SeeSeekBean.SeeSeekLook.IsDeform }}<span class="label label-warning">发现变形</span>{{ end }}
+              {{ if .SeeSeekBean.SeeSeekLook.IsGraze }}<span class="label label-warning">发现破损</span>{{ end }}
+              {{ if .SeeSeekBean.SeeSeekLook.IsChange }}<span class="label label-warning">发现变色</span>{{ end }}
+            </p>
+          </div>
+        </div>
+        {{ end }}
+
+        {{ if .SeeSeekBean.SeeSeekListen.Id }}
+        <div class="panel panel-default">
+          <div class="panel-heading"><strong>听觉观察</strong></div>
+          <div class="panel-body">
+            {{ if .SeeSeekBean.SeeSeekListen.Sound }}<p><strong>声音描述：</strong>{{ .SeeSeekBean.SeeSeekListen.Sound }}</p>{{ end }}
+            {{ if .SeeSeekBean.SeeSeekListen.IsAbnormal }}<span class="label label-warning">发现异常声音</span>{{ end }}
+          </div>
+        </div>
+        {{ end }}
+
+        {{ if .SeeSeekBean.SeeSeekSmell.Id }}
+        <div class="panel panel-default">
+          <div class="panel-heading"><strong>嗅觉观察</strong></div>
+          <div class="panel-body">
+            {{ if .SeeSeekBean.SeeSeekSmell.Odour }}<p><strong>气味描述：</strong>{{ .SeeSeekBean.SeeSeekSmell.Odour }}</p>{{ end }}
+            {{ if .SeeSeekBean.SeeSeekSmell.IsFoulOdour }}<span class="label label-warning">发现异味</span>{{ end }}
+          </div>
+        </div>
+        {{ end }}
+
+        {{ if .SeeSeekBean.SeeSeekTouch.Id }}
+        <div class="panel panel-default">
+          <div class="panel-heading"><strong>触觉观察</strong></div>
+          <div class="panel-body">
+            {{ if .SeeSeekBean.SeeSeekTouch.Temperature }}<p><strong>温度感受：</strong>{{ .SeeSeekBean.SeeSeekTouch.Temperature }}</p>{{ end }}
+            {{ if .SeeSeekBean.SeeSeekTouch.Stretch }}<p><strong>弹性感受：</strong>{{ .SeeSeekBean.SeeSeekTouch.Stretch }}</p>{{ end }}
+            {{ if .SeeSeekBean.SeeSeekTouch.Shake }}<p><strong>震动感受：</strong>{{ .SeeSeekBean.SeeSeekTouch.Shake }}</p>{{ end }}
+            <p>
+              {{ if .SeeSeekBean.SeeSeekTouch.IsFever }}<span class="label label-warning">异常发热</span>{{ end }}
+              {{ if .SeeSeekBean.SeeSeekTouch.IsStiff }}<span class="label label-warning">发现僵硬</span>{{ end }}
+              {{ if .SeeSeekBean.SeeSeekTouch.IsShake }}<span class="label label-warning">震动过大</span>{{ end }}
+            </p>
+          </div>
+        </div>
+        {{ end }}
+      </div>
+    </div>
+    {{ end }}
+
+    <!-- 检测报告 -->
+    {{ if .SeeSeekBean.SeeSeekExaminationReport }}
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-list-alt"></span> 检测报告</h4>
+        {{ range .SeeSeekBean.SeeSeekExaminationReport }}
+        <div class="panel panel-success">
+          <div class="panel-heading">
+            <strong>{{ .ReportTitle }}</strong>
+            <span class="label label-default">
+              {{ if eq .Classify 1 }}设备{{ else if eq .Classify 2 }}宠物{{ else if eq .Classify 3 }}动植物{{ else if eq .Classify 4 }}矿物{{ else }}未知{{ end }}
+            </span>
+          </div>
+          <div class="panel-body">
+            {{ if .SampleType }}<p><strong>样本类型：</strong>{{ .SampleType }}</p>{{ end }}
+            {{ if .ReportContent }}<p>{{ .ReportContent }}</p>{{ end }}
+            <small class="text-muted">报告时间：{{ .ReportDate.Format "2006-01-02 15:04:05" }}</small>
+          </div>
+        </div>
+        {{ end }}
+      </div>
+    </div>
+    {{ end }}
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回项目
+      </a>
+      {{ if and .IsVerifier (lt .SeeSeekBean.SeeSeek.Status 4) }}
+      <a href="/v1/see-seek/step{{ if eq .SeeSeekBean.SeeSeek.Step 1 }}2{{ else if eq .SeeSeekBean.SeeSeek.Step 2 }}3{{ else if eq .SeeSeekBean.SeeSeek.Step 3 }}4{{ else if eq .SeeSeekBean.SeeSeek.Step 4 }}5{{ else }}{{ .SeeSeekBean.SeeSeek.Step }}{{ end }}?uuid={{ .SeeSeekBean.SeeSeek.Uuid }}" class="btn btn-primary">
+        <span class="glyphicon glyphicon-play"></span> 继续"看看"
+      </a>
+      {{ end }}
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士："看看"记录完整展示了从环境评估到检测报告的全过程，为问题诊断提供了系统性的数据支撑。
+  </div>
+</div>
+
+{{ end }}

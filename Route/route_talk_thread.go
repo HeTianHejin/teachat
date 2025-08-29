@@ -747,9 +747,13 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	case data.ThreadCategorySeeSeek:
 		//检查see-seek是否存在记录？如果有，状态是否进行中=1？
 		see_seek, err := data.GetSeeSeekByProjectId(project.Id, r.Context())
-		if err != nil && err.Error() != "no row in result" {
+		if err != nil && err != sql.ErrNoRows {
 			util.Debug(" Cannot read see-seek given project", err)
 			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+			return
+		}
+		if see_seek.Status != data.SeeSeekStatusInProgress {
+			report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说该寻茶令目前不是进行中状态，不能补充内容。")
 			return
 		}
 		threSupp.SeeSeek = see_seek

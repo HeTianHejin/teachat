@@ -120,48 +120,49 @@ func main() {
 	mux.HandleFunc("/v1/family_member/sign_in", route.HandleFamilyMemberSignIn)
 	//mux.HandleFunc("/v1/family_member/sign_out", route.HandleFamilyMemberSignOut)
 
-	//defined in route_objective.go
+	//defined in route_talk_objective.go
 	mux.HandleFunc("/v1/objective/new", route.HandleNewObjective)
 	mux.HandleFunc("/v1/objective/square", route.ObjectiveSquare)
 	mux.HandleFunc("/v1/objective/detail", route.ObjectiveDetail)
 	//mux.HandleFunc("/v1/objective/edit", editObjective)
 	//mux.HandleFunc("/v1/objective/update", updateObjective)
 
-	//defined in route_project.go
+	//defined in route_talk_project.go
 	mux.HandleFunc("/v1/project/new", route.HandleNewProject)
 	mux.HandleFunc("/v1/project/detail", route.ProjectDetail)
 	mux.HandleFunc("/v1/project/approve", route.ProjectApprove)
 	mux.HandleFunc("/v1/project/place_update", route.HandleProjectPlace)
 
-	// defined in route_thread.go
+	// defined in route_talk_thread.go
 	mux.HandleFunc("/v1/thread/draft", route.NewDraftThreadHandle)
 	mux.HandleFunc("/v1/thread/detail", route.ThreadDetail)
 	mux.HandleFunc("/v1/thread/supplement", route.HandleThreadSupplement)
 	mux.HandleFunc("/v1/thread/approve", route.ThreadApprove)
 
-	//定义在 route_post.go
+	//定义在 route_talk_post.go
 	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
 	mux.HandleFunc("/v1/post/supplement", route.HandleSupplementPost)
 	mux.HandleFunc("/v1/post/detail", route.PostDetail)
 	//mux.HandleFunc("/v1/post/depth", route.PostDepth)
 
-	//defined in route_appointment.go
+	//defined in route_action_appointment.go
 	mux.HandleFunc("/v1/appointment/new", route.HandleNewAppointment)
 	mux.HandleFunc("/v1/appointment/detail", route.AppointmentDetail)
 
-	// defined in route_see-seek.go
+	// defined in route_action_see-seek.go
 	mux.HandleFunc("/v1/see-seek/new", route.HandleNewSeeSeek)
+	mux.HandleFunc("/v1/see-seek/detail", route.HandleSeeSeekDetail)
+	// defined in route_see-seek_step.go
 	mux.HandleFunc("/v1/see-seek/step2", route.HandleSeeSeekStep2)
 	mux.HandleFunc("/v1/see-seek/step3", route.HandleSeeSeekStep3)
 	mux.HandleFunc("/v1/see-seek/step4", route.HandleSeeSeekStep4)
 	mux.HandleFunc("/v1/see-seek/step5", route.HandleSeeSeekStep5)
-	//mux.HandleFunc("/v1/see-seek/detail", route.SeeSeekDetail)
 
-	//defined in route_suggestion.go
+	//defined in route_action_suggestion.go
 	mux.HandleFunc("/v1/suggestion/new", route.HandleNewSuggestion)
 	mux.HandleFunc("/v1/suggestion/detail", route.SuggestionDetail)
 
-	// defined in route_goods.go
+	// defined in route_action_goods.go
 	mux.HandleFunc("/v1/goods/family_new", route.HandleGoodsFamilyNew)
 	//mux.HandleFunc("/v1/goods/family", route.GoodsFamily)
 	//mux.HandleFunc("/v1/goods/family_detail", route.GoodsFamilyDetail)
@@ -172,7 +173,7 @@ func main() {
 	mux.HandleFunc("/v1/goods/collect", route.GoodsCollect)
 	mux.HandleFunc("/v1/goods/eye_on", route.GoodsEyeOn)
 
-	//defined in route_handicraft.go
+	//defined in route_action_handicraft.go
 	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)
 	mux.HandleFunc("/v1/handicraft/detail", route.HandicraftDetail)
 

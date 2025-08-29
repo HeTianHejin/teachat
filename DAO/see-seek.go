@@ -106,12 +106,12 @@ func (s *SeeSeek) Create(ctx context.Context) (err error) {
 	return err
 }
 
-// SeeSeek.Get()
+// SeeSeek.GetByIdOrUUID()
 func (s *SeeSeek) GetByIdOrUUID(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	if s.Id < 0 || s.Uuid == "" {
-		return errors.New("无效的SeeSeek ID或UUID")
+		return errors.New("invalid SeeSeek ID or UUID")
 	}
 	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id,
 		payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id,
@@ -129,9 +129,6 @@ func (s *SeeSeek) GetByIdOrUUID(ctx context.Context) (err error) {
 		&s.VerifierTeamId, &s.VerifierFamilyId, &s.Category, &s.Status, &s.Step,
 		&s.StartTime, &s.EndTime, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return errors.New("no row in result")
-		}
 		return err
 	}
 	return nil
@@ -483,7 +480,7 @@ func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) 
 	if err == sql.ErrNoRows {
 		// 没有找到记录，返回明确空记录错误信息
 		s.Id = 0
-		return s, errors.New("no row in result")
+		return s, err
 	} else if err != nil {
 		return s, err // 发生其他错误
 	}

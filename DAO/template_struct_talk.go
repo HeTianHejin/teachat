@@ -89,6 +89,8 @@ type ProjectDetail struct {
 	ThreadCount           int // project下所有Threads个数
 	ThreadIsApprovedCount int //project（茶台）已采纳茶议数量
 
+	IsSeeSeekCompleted bool // 看看是否完成
+
 	IsOverTwelve bool //是否超过12个
 }
 

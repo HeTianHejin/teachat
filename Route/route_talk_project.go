@@ -874,6 +874,9 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// 检查SeeSeek是否完成
+	pD.IsSeeSeekCompleted = pr.IsSeeSeekCompleted(r.Context())
+
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path
 	pD.SessUser.Query = r.URL.RawQuery

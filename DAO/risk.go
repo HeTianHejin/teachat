@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// “看看”（查勘）及手工（施工）作业潜在风险，（ --DeeSeek && ClaudeSonnet补充完善）
+// “看看”（勘察）及手工（施工）作业潜在风险，（ --DeeSeek && ClaudeSonnet补充完善）
 // 默认直接责任方是归属作业执行茶团
 type Risk struct {
 	Id          int
