@@ -59,6 +59,16 @@
             <td><strong>创建时间</strong></td>
             <td>{{ .SeeSeekBean.SeeSeek.CreatedDateTime }}</td>
           </tr>
+          <tr>
+            <td><strong>开始时间</strong></td>
+            <td>{{ .SeeSeekBean.SeeSeek.StartTime.Format "2006-01-02 15:04:05" }}</td>
+          </tr>
+          {{ if .SeeSeekBean.SeeSeek.EndTime }}
+          <tr>
+            <td><strong>完成时间</strong></td>
+            <td>{{ .SeeSeekBean.SeeSeek.EndTime.Format "2006-01-02 15:04:05" }}</td>
+          </tr>
+          {{ end }}
         </table>
       </div>
       

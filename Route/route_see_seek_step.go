@@ -1074,6 +1074,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	// 更新步骤和状态
 	seeSeek.Step = data.SeeSeekStepReport
 	seeSeek.Status = data.SeeSeekStatusCompleted
+	seeSeek.EndTime = time.Now()
 	if err := seeSeek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
 		report(w, r, "保存看看记录步骤时发生错误，请稍后再试")

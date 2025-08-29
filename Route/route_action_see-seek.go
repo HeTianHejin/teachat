@@ -6,6 +6,7 @@ import (
 	"strconv"
 	data "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // Handler /v1/see-seek/new
@@ -122,6 +123,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 		Category:         category,
 		Status:           data.SeeSeekStatusInProgress, // 进行中
 		Step:             data.SeeSeekStepEnvironment,  // 步骤1：环境条件
+		StartTime:        time.Now(),
 	}
 
 	if err := seeSeek.Create(r.Context()); err != nil {

@@ -491,13 +491,13 @@ func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) 
 // SeeSeek.Update() 更新SeeSeek记录
 func (s *SeeSeek) Update() error {
 	statement := `UPDATE see_seeks SET name = $2, nickname = $3, description = $4, 
-		status = $5, step = $6, updated_at = $7 WHERE id = $1`
+		status = $5, step = $6, start_time = $7, end_time = $8, updated_at = $9  WHERE id = $1`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(s.Id, s.Name, s.Nickname, s.Description, s.Status, s.Step, time.Now())
+	_, err = stmt.Exec(s.Id, s.Name, s.Nickname, s.Description, s.Status, s.Step, s.StartTime, s.EndTime, time.Now())
 	return err
 }
 
