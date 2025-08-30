@@ -151,6 +151,8 @@ type ThreadDetail struct {
 
 	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
+	SeeSeek SeeSeek // SeeSeek
+
 	StatsSet StatsSet //涉及人事统计值集合
 }
 
@@ -167,8 +169,6 @@ type ThreadBean struct {
 
 	StatsSet StatsSet //涉及人事统计数值集合
 
-	IsAppointmentCompleted bool // 约茶是否完成
-	IsSeeSeekCompleted     bool // 看看是否完成
 }
 type ThreadSupplement struct {
 	SessUser   User // 当前会话用户

@@ -81,6 +81,37 @@
           {{ .ThreadBean.Thread.Title }}
         </h4>
 
+        {{ if eq .ThreadBean.Thread.Category 3 }}{{/* 茶议是否"看看"类型检查-开始 */}}
+        {{ with .SeeSeek }}{{/* "看看"（see-seek）非空检查-开始 */}}
+        <div class="text-center" style="margin: 10px 0;">
+          <i class="bi-binoculars" style="font-size: 1.5rem; color: green;" title="看看"></i>
+
+          <!-- 看看进度条 -->
+          <div class="progress" style="margin: 10px 0;">
+            <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ mul .Step 20 }}%">
+              已完成 {{ .Step }}/5 步骤
+            </div>
+          </div>
+
+          <!-- 看看步骤导航 -->
+          <ol class="breadcrumb" style="margin: 10px 0;">
+            <li class="{{ if eq .Step 1 }}active{{ else if gt .Step 1 }}text-success{{ end }}">环境条件</li>
+            <li class="{{ if eq .Step 2 }}active{{ else if gt .Step 2 }}text-success{{ end }}">场所隐患</li>
+            <li class="{{ if eq .Step 3 }}active{{ else if gt .Step 3 }}text-success{{ end }}">风险评估</li>
+            <li class="{{ if eq .Step 4 }}active{{ else if gt .Step 4 }}text-success{{ end }}">感官观察</li>
+            <li class="{{ if eq .Step 5 }}text-success{{ end }}">检测报告</li>
+          </ol>
+
+          {{/* 展示"看看"（see-seek）的状态文字 */}}
+          <span class="label label-info">{{ .StatusString }}</span>
+
+          {{ if eq .Status 4 }}{{/* 已完成（顺利结束） */}}
+          <a class="btn btn-sm btn-default" href="/v1/see-seek/detail?uuid={{ .Uuid }}" role="button">详情</a>
+          {{ end }}{{/* 检查"看看"（see-seek）的状态完成 */}}
+        </div>
+        {{ end }}{{/* "看看"（see-seek）非空检查完成 */}}
+        {{ end }}{{/* 茶议是否"看看"类型检查完成 */}}
+
         <span style="white-space: pre-wrap;">
           {{ .ThreadBean.Thread.Body }}
         </span>
@@ -99,6 +130,7 @@
             <button type="submit" class="btn btn-default">采纳</button>
           </form>
         </div>
+
         {{ end }}
 
         <hr />
@@ -167,6 +199,7 @@
         <span style="margin-inline-end: 2rem;">
           <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="出席人数"></i>
           {{ .ThreadBean.StatsSet.PersonCount }}</span>
+
       </div>
     </div>
   </div>
@@ -282,74 +315,74 @@
 
 {{ end }} {{/* 32 检查是否游客 结束 */}}
 
-  <hr />
+<hr />
 
-  {{ end }}{{/* 13 决定是否显示品味编辑区 结束 */}}
+{{ end }}{{/* 13 决定是否显示品味编辑区 结束 */}}
 
-  <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
-    {{/* 这是参与的团队和家庭数量显示 */}}
+<div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
+  {{/* 这是参与的团队和家庭数量显示 */}}
 
-    <span style="margin-inline-start: 2rem;">
-      {{/* 这是品味涉及家庭数量 显示 */}}
-      <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
-    </span>
-    <span style="margin-inline-start: 2rem;">
-      {{/* 这是品味涉及团队数量 显示 */}}
-      <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="品味团队数量"></i>
-      {{ $.StatsSet.TeamCount }}
-    </span>
-    <span style="margin-inline-start: 2rem;">
-      {{/* 这是品味涉及个人数量 显示 */}}
-      <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="品味团队数量"></i> ？
-    </span>
-    <span style="margin-inline-start: 2rem;">
-      {{/* 这是茶议的总品味数量 显示 */}}
-      <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: gray;" title="品味小计数量"></i>
-      {{ .ThreadBean.PostCount }}
-    </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是品味涉及家庭数量 显示 */}}
+    <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
+  </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是品味涉及团队数量 显示 */}}
+    <i class="bi bi-microsoft-teams" style="font-size: 2rem; color: gray;" title="品味团队数量"></i>
+    {{ $.StatsSet.TeamCount }}
+  </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是品味涉及个人数量 显示 */}}
+    <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="品味团队数量"></i> ？
+  </span>
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是茶议的总品味数量 显示 */}}
+    <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: gray;" title="品味小计数量"></i>
+    {{ .ThreadBean.PostCount }}
+  </span>
 
-    <span style="margin-inline-start: 2rem;">
-      {{/* 这是茶议的关注人数 数量显示 */}}
-      <i class="bi bi-eye-fill" style="font-size: 2rem; color: gray;" title="关注人数"></i> ？
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是茶议的关注人数 数量显示 */}}
+    <i class="bi bi-eye-fill" style="font-size: 2rem; color: gray;" title="关注人数"></i> ？
 
-  </div>
+</div>
 
-  {{/* 展示全部管理员品味 */}}
-  {{ range .PostBeanAdminSlice }}
+{{/* 展示全部管理员品味 */}}
+{{ range .PostBeanAdminSlice }}
 
-  {{/* 检查茶围管理员品味的立场以决定左右侧布局 */}}
-  {{ if .Post.Attitude }}
-  {{/* 品味是“颔首”表态，左侧头像布局 */}}
+{{/* 检查茶围管理员品味的立场以决定左右侧布局 */}}
+{{ if .Post.Attitude }}
+{{/* 品味是“颔首”表态，左侧头像布局 */}}
 
-  {{ template "component_post_left" . }}
+{{ template "component_post_left" . }}
 
-  {{ else }}
+{{ else }}
 
-  {{/* 品味是“摇头”表态，右侧头像布局 */}}
-  {{template "component_post_right" . }}
+{{/* 品味是“摇头”表态，右侧头像布局 */}}
+{{template "component_post_right" . }}
 
-  {{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
+{{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
 
-  {{ end }}{{/* 展示全部管理员品味完成 */}}
+{{ end }}{{/* 展示全部管理员品味完成 */}}
 
-  <hr />
+<hr />
 
-  {{/* 展示其他用户的品味 */}}
-  {{ range .PostBeanSlice }}
+{{/* 展示其他用户的品味 */}}
+{{ range .PostBeanSlice }}
 
-  {{/* 检查品味的立场以决定左右侧布局 */}}
-  {{ if .Post.Attitude }}
+{{/* 检查品味的立场以决定左右侧布局 */}}
+{{ if .Post.Attitude }}
 
-  {{/* 品味是“颔首”表态，左侧头像布局 */}}
-  {{ template "component_post_left" . }}
+{{/* 品味是“颔首”表态，左侧头像布局 */}}
+{{ template "component_post_left" . }}
 
-  {{ else }}
+{{ else }}
 
-  {{/* 品味是“摇头”表态，右侧头像布局 */}}
-  {{template "component_post_right" . }}
+{{/* 品味是“摇头”表态，右侧头像布局 */}}
+{{template "component_post_right" . }}
 
-  {{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
+{{ end }}{{/* 检查品味的立场以决定左右侧布局完成 */}}
 
-  {{ end }}{{/* 展示全部其他用户品味完成 */}}
+{{ end }}{{/* 展示全部其他用户品味完成 */}}
 
 {{ end }}

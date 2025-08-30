@@ -423,6 +423,34 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		//用户是登录状态
 
+		// 检查当前是哪一种类型茶议
+		switch thread.Category {
+		case data.ThreadCategoryAppointment:
+			break
+		case data.ThreadCategorySeeSeek:
+			//检查see-seek是否存在记录？
+			see_seek, err := data.GetSeeSeekByProjectId(project.Id, r.Context())
+			if err != nil && err != sql.ErrNoRows {
+				util.Debug(" Cannot read see-seek given project", err)
+				report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+				return
+			}
+			tD.SeeSeek = see_seek
+
+		case data.ThreadCategoryBrainFire:
+			break
+		case data.ThreadCategorySuggestion:
+			break
+		case data.ThreadCategoryGoods:
+			break
+		case data.ThreadCategoryHandcraft:
+			break
+		default:
+			report(w, r, "你好，茶博士表示，陛下，普通茶议不能加水呢。")
+			return
+
+		}
+
 		if tD.ThreadBean.Thread.Class == data.ThreadClassOpen || tD.ThreadBean.Thread.Class == data.ThreadClassClosed {
 			//从会话查获当前浏览用户资料荚
 			s_u, s_d_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s)
@@ -752,10 +780,10 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
-		if see_seek.Status != data.SeeSeekStatusInProgress {
-			report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说该寻茶令目前不是进行中状态，不能补充内容。")
-			return
-		}
+		// if see_seek.Status != data.SeeSeekStatusInProgress {
+		// 	report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说该看茶活动目前不是进行中状态，不能补充内容。")
+		// 	return
+		// }
 		threSupp.SeeSeek = see_seek
 
 	case data.ThreadCategoryBrainFire:
