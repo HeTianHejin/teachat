@@ -67,6 +67,7 @@ type ProjectDetail struct {
 	IsAdmin                  bool   // 是否为茶围管理员
 	IsMaster                 bool   // 是否为茶台管理员
 	IsVerifier               bool   // 是否为见证员
+	IsInvited                bool   // 是否受邀请茶友
 	IsGuest                  bool   // 是否为游客
 	IsInput                  bool   // 是否需要显示输入面板
 	SessUserDefaultFamily    Family //当前会话用户默认&家庭茶团
@@ -91,7 +92,7 @@ type ProjectDetail struct {
 
 	IsAppointmentCompleted bool // 约茶是否完成
 	IsSeeSeekCompleted     bool // 看看是否完成
-	IsBrainfireCompleted   bool // 脑火是否完成
+	IsBrainFireCompleted   bool // 脑火是否完成
 	IsSuggestionCompleted  bool // 建议是否完成
 	IsGoodsReady           bool // 物资是否备齐
 	IsHandicraftCompleted  bool // 手工艺是否完成
@@ -151,7 +152,12 @@ type ThreadDetail struct {
 
 	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
-	SeeSeek SeeSeek // SeeSeek
+	Appointment ProjectAppointment // 约茶
+	SeeSeek     SeeSeek            // 看看
+	BrainFire   BrainFire          //脑火
+	Suggestion  Suggestion         //建议
+	Goods       Goods              //物资
+	Handicraft  Handicraft         //手工艺
 
 	StatsSet StatsSet //涉及人事统计值集合
 }
@@ -187,7 +193,7 @@ type ThreadSupplement struct {
 
 	AppointmentStatus int     // 约茶状态
 	SeeSeek           SeeSeek // SeeSeek
-
+	BrainFire         BrainFire
 }
 
 // 用于跟贴详情页面渲染

@@ -1,73 +1,6 @@
 DROP database teachat;
 CREATE database teachat;
 
-drop table if exists users;
-drop table if exists user_stars;
-drop table if exists user_default_teams;
-drop table if exists sessions;
-drop table if exists objectives;
-drop table if exists objective_invited_teams;
-drop table if exists projects;
-drop table if exists project_invited_teams;
-drop table if exists draft_posts;
-drop table if exists posts;
-drop table if exists draft_threads;
-drop table if exists threads;
-drop table if exists reads;
-drop table if exists accept_messages;
-drop table if exists accept_objects;
-drop table if exists new_message_counts;
-drop table if exists acceptance;
-drop table if exists teams;
-drop table if exists team_members;
-drop table if exists team_member_role_notices;
-drop table if exists invitations;
-drop table if exists invitation_replies;
-drop table if exists families;
-drop table if exists family_members;
-drop table if exists family_member_role_notices;
-drop table if exists family_member_sign_ins;
-drop table if exists family_member_sign_in_replies;
-drop table if exists family_member_sign_outs;
-drop table if exists administrators;
-drop table if exists goods;
-drop table if exists goods_teams;
-drop table if exists goods_users;
-drop table if exists goods_families;
-drop table if exists handicrafts;
-drop table if exists inaugurations;
-drop table if exists evidences;
-drop table if exists last_queries;
-drop table if exists place_addresses;
-drop table if exists addresses;
-drop table if exists places;
-drop table if exists location_history;
-drop table if exists user_place;
-drop table if exists user_default_place;
-drop table if exists user_address;
-drop table if exists user_default_address;
-drop table if exists project_place;
-drop table if exists thread_approved;
-drop table if exists member_applications;
-drop table if exists member_application_replies;
-drop table if exists team_member_resignations;
-drop table if exists footprints;
-drop table if exists project_appointments;
-drop table if exists environments;
-drop table if exists see_seek_risks;
-drop table if exists see_seek_hazards;
-drop table if exists see_seek_environments;
-drop table if exists see_seeks;
-drop table if exists safety_protections;
-drop table if exists safety_measures;
-drop table if exists hazards;
-drop table if exists risks;
-
-
-
-
-
-
 CREATE TABLE places (
     id                   SERIAL PRIMARY KEY,
     uuid                 VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -888,3 +821,34 @@ CREATE TABLE see_seek_examination_items (
 
 CREATE INDEX idx_see_seek_examination_reports_see_seek_id ON see_seek_examination_reports(see_seek_id);
 CREATE INDEX idx_see_seek_examination_items_report_id ON see_seek_examination_items(see_seek_examination_report_id);
+
+CREATE TABLE brain_fires (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    project_id            INTEGER NOT NULL,
+    start_time            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_time              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
+    environment_id        INTEGER,
+    title                 VARCHAR(255) NOT NULL,
+    inference             TEXT,
+    diagnose              TEXT,
+    judgement             TEXT,
+    payer_user_id         INTEGER,
+    payer_team_id         INTEGER,
+    payer_family_id       INTEGER,
+    payee_user_id         INTEGER,
+    payee_team_id         INTEGER,
+    payee_family_id       INTEGER,
+    verifier_user_id      INTEGER,
+    verifier_family_id    INTEGER,
+    verifier_team_id      INTEGER,
+    status                INTEGER DEFAULT 1,
+    brain_fire_class      INTEGER DEFAULT 1,
+    brain_fire_type       INTEGER DEFAULT 1,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE INDEX idx_brain_fires_project_id ON brain_fires(project_id);
+CREATE INDEX idx_brain_fires_status ON brain_fires(status);
+CREATE INDEX idx_brain_fires_start_time ON brain_fires(start_time);

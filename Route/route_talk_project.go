@@ -780,7 +780,6 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 未登录，游客
 		pD.IsGuest = true
-
 		pD.SessUser = data.User{
 			Id:        data.UserId_None,
 			Name:      "游客",
@@ -812,18 +811,17 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	//如果这是class=2封闭式茶台，需要检查当前浏览用户是否可以创建新茶议
 	if pD.ProjectBean.Project.Class == data.PrClassClose {
-		// 是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
-		ok, err := pD.ProjectBean.Project.IsInvitedMember(s_u.Id)
+		is_invited, err := pD.ProjectBean.Project.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot check invited member", err)
 			report(w, r, "你好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 			return
 		}
-		if ok {
+		pD.IsInvited = is_invited
+		// 是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
+		if is_invited {
 			// 当前用户是本茶话会邀请$团队成员，可以新开茶议
 			pD.IsInput = true
-		} else {
-			pD.IsInput = false
 		}
 	} else {
 		// 开放式茶议，任何人都可以新开茶议
@@ -862,20 +860,15 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !pD.IsAdmin && !pD.IsMaster {
-		veri_team := data.Team{Id: data.TeamIdVerifier}
-		is_member, err := veri_team.IsMember(s_u.Id)
-		if err != nil {
-			util.Debug("Cannot check verifier team member", err)
-			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
-			return
-		}
-		if is_member {
-			pD.IsVerifier = true
-		}
+
+		pD.IsVerifier = isVerifier(s_u.Id)
+
 	}
 
 	// 检查SeeSeek是否完成
 	pD.IsSeeSeekCompleted = pr.IsSeeSeekCompleted(r.Context())
+	// 检查BrainFire是否完成
+	pD.IsBrainFireCompleted = pr.IsBrainFireCompleted(r.Context())
 
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path

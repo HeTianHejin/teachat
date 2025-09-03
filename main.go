@@ -136,8 +136,8 @@ func main() {
 	// defined in route_talk_thread.go
 	mux.HandleFunc("/v1/thread/draft", route.NewDraftThreadHandle)
 	mux.HandleFunc("/v1/thread/detail", route.ThreadDetail)
-	mux.HandleFunc("/v1/thread/supplement", route.HandleThreadSupplement)
 	mux.HandleFunc("/v1/thread/approve", route.ThreadApprove)
+	mux.HandleFunc("/v1/thread/supplement", route.HandleThreadSupplement)
 
 	//定义在 route_talk_post.go
 	mux.HandleFunc("/v1/post/draft", route.NewPostDraft)
@@ -157,6 +157,10 @@ func main() {
 	mux.HandleFunc("/v1/see-seek/step3", route.HandleSeeSeekStep3)
 	mux.HandleFunc("/v1/see-seek/step4", route.HandleSeeSeekStep4)
 	mux.HandleFunc("/v1/see-seek/step5", route.HandleSeeSeekStep5)
+
+	// defined in route_action_brain-fire.go
+	mux.HandleFunc("/v1/brain-fire/new", route.HandleNewBrainFire)
+	mux.HandleFunc("/v1/brain-fire/detail", route.HandleBrainFireDetail)
 
 	//defined in route_action_suggestion.go
 	mux.HandleFunc("/v1/suggestion/new", route.HandleNewSuggestion)

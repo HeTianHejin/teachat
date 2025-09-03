@@ -1,0 +1,248 @@
+{{ define "content" }}
+
+{{/* 见证者提交新建"脑火"数据表单-模版 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">+ 脑火</li>
+  <li>{{ template "component_sess_capacity" . }}</li>
+</ol>
+
+{{/* 茶台简要信息 */}}
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <i class="bi-fire" style="font-size: 1.5rem; color: red;"></i>
+    新建"脑火"
+  </div>
+  <div class="panel-body">
+    <form role="form" action="/v1/brain-fire/new" method="post">
+
+      <!-- 基础信息 -->
+      <div class="form-group">
+        <label for="title">脑火标题（2-24字）</label>
+        <input type="text" class="form-control" name="title" id="title" minlength="2" maxlength="24" required />
+      </div>
+
+      <!-- 时间设置 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">时间设置</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="start_time">开始时间</label>
+            <input type="datetime-local" class="form-control" name="start_time" id="start_time" required />
+          </div>
+          <div class="form-group">
+            <label for="end_time">结束时间</label>
+            <input type="datetime-local" class="form-control" name="end_time" id="end_time" required />
+          </div>
+        </div>
+      </div>
+
+      <!-- 思考内容 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">思考内容</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="inference">快速推理（17-456字）</label>
+            <textarea class="form-control" name="inference" id="inference" rows="3" minlength="17" maxlength="456" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="diagnose">诊断验证（17-456字）</label>
+            <textarea class="form-control" name="diagnose" id="diagnose" rows="3" minlength="17" maxlength="456" required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="judgement">最终解决方案（17-456字）</label>
+            <textarea class="form-control" name="judgement" id="judgement" rows="3" minlength="17" maxlength="456" required></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- 参与方信息 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">出席三方</div>
+        <div class="panel-body">
+          <!-- 付茶叶方 -->
+          <label>付茶叶方</label>
+          <div class="form-group">
+            <input type="text" class="form-control" value="{{ .Payer.Name }}" disabled />
+            <input type="hidden" name="payer_user_id" value="{{ .Payer.Id }}" />
+            <input type="hidden" name="payer_family_id" value="{{ .PayerFamily.Id }}" />
+            <input type="hidden" name="payer_team_id" value="{{ .PayerTeam.Id }}" />
+          </div>
+
+          <!-- 收茶叶方 -->
+          <label>收茶叶方</label>
+          <div class="form-group">
+            <input type="text" class="form-control" value="{{ .Payee.Name }}" disabled />
+            <input type="hidden" name="payee_user_id" value="{{ .Payee.Id }}" />
+            <input type="hidden" name="payee_family_id" value="{{ .PayeeFamily.Id }}" />
+            <input type="hidden" name="payee_team_id" value="{{ .PayeeTeam.Id }}" />
+          </div>
+
+          <!-- 见证方 -->
+          <label>见证方</label>
+          <div class="form-group">
+            <input type="text" class="form-control" value="{{ .Verifier.Name }}" disabled />
+          </div>
+        </div>
+      </div>
+
+      <!-- 环境条件 -->
+      <div class="form-group">
+        <label for="environment_id">环境条件</label>
+        <div class="input-group">
+          <input type="text" class="form-control" id="environment_display" placeholder="点击选择环境条件" readonly>
+          <input type="hidden" name="environment_id" id="environment_id" value="0">
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" onclick="showEnvironmentModal()">
+              <span class="glyphicon glyphicon-plus"></span> 选择环境条件
+            </button>
+          </span>
+        </div>
+      </div>
+
+      <!-- 分类设置 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">分类设置</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label>脑火类别</label>
+            <div class="radio">
+              <label><input type="radio" name="brain_fire_class" value="1" checked required> 文艺类</label>
+            </div>
+            <div class="radio">
+              <label><input type="radio" name="brain_fire_class" value="2" required> 理工类</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>公开性</label>
+            <div class="radio">
+              <label><input type="radio" name="brain_fire_type" value="1" checked required> 公开</label>
+            </div>
+            <div class="radio">
+              <label><input type="radio" name="brain_fire_type" value="2" required> 私密</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" name="project_uuid" value="{{ .ProjectBean.Project.Uuid }}">
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-danger">点燃脑火</button>
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-lightbulb" style="font-size: 2rem; color: orange;"></i>
+    茶博士：脑火需要在限定时间内快速思考，作出判断，请合理安排时间。
+  </div>
+</div>
+
+<!-- 环境条件选择模态框 -->
+<div class="modal fade" id="environmentModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">选择环境条件</h4>
+      </div>
+      <div class="modal-body">
+        <div class="list-group">
+          <!-- 常用环境条件（默认四个） -->
+          {{ range $index, $env := .Environments }}
+          <a href="#" class="list-group-item{{ if eq $index 0 }} list-group-item-success{{ end }}" 
+             data-env-id="{{ $env.Id }}" 
+             data-env-name="{{ $env.Name }}"
+             onclick="selectEnvironment(this)">
+            <strong>{{ $env.Name }}</strong> - {{ $env.Summary }}
+            {{ if eq $index 0 }}<span class="badge">新创建</span>{{ end }}
+          </a>
+          {{ end }}
+
+          <!-- 手动输入环境ID -->
+          <div class="list-group-item">
+            <div class="input-group">
+              <input type="number" class="form-control" id="manual_env_id" placeholder="输入环境条件ID" min="1">
+              <span class="input-group-btn">
+                <button type="button" class="btn btn-primary" onclick="selectManualEnvironment()">
+                  <span class="glyphicon glyphicon-ok"></span> 选择
+                </button>
+              </span>
+            </div>
+            <small class="text-muted">手动输入已知的环境条件ID</small>
+          </div>
+          
+          <!-- 针对当前项目下的特殊环境，添加新环境条件链接 -->
+          <a href="/v1/environment/new?return_url=/v1/see-seek/new?uuid={{ .ProjectBean.Project.Uuid }}" target="_blank" class="list-group-item list-group-item-info">
+            <span class="glyphicon glyphicon-plus"></span> 添加新的环境条件
+          </a>
+          
+          <!-- 查找环境条件 -->
+          <a href="/v1/search" target="_blank" class="list-group-item list-group-item-warning">
+            <span class="glyphicon glyphicon-search"></span> 查找环境条件
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+ 
+
+  function showEnvironmentModal() {
+    $('#environmentModal').modal('show');
+  }
+
+  function selectEnvironment(element) {
+    const id = element.dataset.envId;
+    const name = element.dataset.envName;
+    document.getElementById('environment_id').value = id;
+    document.getElementById('environment_display').value = name;
+    $('#environmentModal').modal('hide');
+  }
+
+  function selectManualEnvironment() {
+    var envId = document.getElementById('manual_env_id').value;
+    if (envId && envId > 0) {
+      document.getElementById('environment_id').value = envId;
+      document.getElementById('environment_display').value = '环境条件 #' + envId;
+      $('#environmentModal').modal('hide');
+    } else {
+      alert('请输入有效的环境条件ID');
+    }
+  }
+
+  // 如果有新创建的环境条件，自动选中
+  $(document).ready(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    
+    // 处理新创建的环境条件
+    if (urlParams.has('new_env_id')) {
+      var firstEnv = $('.list-group-item').first();
+      if (firstEnv.length > 0) {
+        var envId = firstEnv.attr('onclick').match(/\d+/)[0];
+        var envName = firstEnv.find('strong').text();
+        selectEnvironment(parseInt(envId), envName);
+      }
+    }
+  });
+
+  // 设置默认时间
+  $(document).ready(function() {
+    const now = new Date();
+    const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+    
+    document.getElementById('start_time').value = now.toISOString().slice(0, 16);
+    document.getElementById('end_time').value = oneHourLater.toISOString().slice(0, 16);
+  });
+</script>
+
+{{ end }}

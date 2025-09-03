@@ -69,7 +69,7 @@
         {{ else if (eq .ThreadBean.Thread.Category 3) }} {{/* 检查茶议类型--看看 */}}
         {{/* 检查“看看”（see-seek）的状态，如果没有记录，显示新建按钮，如果有记录，而且状态是进行中，显示“继续看看”按钮 */}}
         
-        {{ with .SeeSeek }}{{/* 非空检查-开始 */}}
+        {{ with .SeeSeek }}{{/* 看看非空检查-开始 */}}
         {{ if (eq  .Status 0) }}{{/* 未开始 */}}
         <a class="btn btn-default" href="/v1/see-seek/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+
           看看</a>
@@ -97,8 +97,14 @@
         {{ end }}{{/* “看看”（see-seek）非空检查完成 */}}
 
         {{ else if (eq .ThreadBean.Thread.Category 4) }} {{/* 检查茶议类型--脑火 */}}
-        <a class="btn btn-default" href="/v1/brains-fire/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+
-          脑火</a>
+        {{ with .BrainFire }}{{/* 脑火非空检查-开始 */}}
+        {{ if ge .Status 1 }}
+        <a class="btn btn-default" href="/v1/brain-fire/detail?uuid={{ .Uuid }}" role="button">查看-脑火</a>
+        {{ else }}
+        <a class="btn btn-default" href="/v1/brain-fire/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+ 脑火</a>
+        {{ end }}
+        {{ end }}{{/* 脑火非空检查-结束 */}}
+
         {{ else if (eq .ThreadBean.Thread.Category 5) }} {{/* 检查茶议类型--建议 */}}
         <a class="btn btn-default" href="/v1/suggestion/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+
           建议</a>

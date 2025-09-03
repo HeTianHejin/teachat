@@ -120,3 +120,41 @@ type SeeSeekStepTemplateData struct {
 	DefaultHazards []Hazard //默认隐患列表
 	DefaultRisks   []Risk   //默认风险列表
 }
+
+// 新建“脑火”页面
+// 展示“脑火”详情页面数据
+type BrainFireDetailTemplateData struct {
+	SessUser       User
+	IsVerifier     bool
+	IsAdmin        bool
+	IsMaster       bool
+	IsInvited      bool
+	SessUserFamily Family
+	SessUserTeam   Team
+
+	Payer       User
+	PayerFamily Family
+	PayerTeam   Team
+
+	Payee       User
+	PayeeFamily Family
+	PayeeTeam   Team
+
+	Verifier       User
+	VerifierFamily Family
+	VerifierTeam   Team
+
+	ProjectAppointment ProjectAppointmentBean //约茶预约资料夹
+	BrainFireBean      BrainFireBean
+
+	ProjectBean        ProjectBean
+	QuoteObjectiveBean ObjectiveBean
+
+	Environments []Environment //场所环境
+}
+type BrainFireBean struct {
+	BrainFire   BrainFire
+	IsOpen      bool
+	Environment Environment //场所环境
+	Project     Project
+}

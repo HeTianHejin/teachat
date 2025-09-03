@@ -382,13 +382,13 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 
 	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
 	if ob.Class == data.ObClassClose {
-		ok, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
+		is_invited, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot read objective-bean slice", err)
 			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌着。")
 			return
 		}
-		oD.IsInvited = ok
+		oD.IsInvited = is_invited
 	}
 
 	//检测当前用户身份
@@ -405,16 +405,9 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	oD.IsAdmin = is_admin
 
 	if !oD.IsAdmin {
-		veri_team := data.Team{Id: data.TeamIdVerifier}
-		is_member, err := veri_team.IsMember(s_u.Id)
-		if err != nil {
-			util.Debug("Cannot check verifier team member", err)
-			report(w, r, "你好，茶博士，有眼不识泰山。")
-			return
-		}
-		if is_member {
-			oD.IsVerifier = true
-		}
+
+		oD.IsVerifier = isVerifier(s_u.Id)
+
 	}
 
 	//配置私有导航条的茶话会详情页面

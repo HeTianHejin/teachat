@@ -391,3 +391,13 @@ func (p *Project) IsSeeSeekCompleted(ctx context.Context) bool {
 	}
 	return seeSeek.Status == SeeSeekStatusCompleted
 }
+
+// 检查项目的BrainFire是否已完成
+func (p *Project) IsBrainFireCompleted(ctx context.Context) bool {
+	brainFire, err := GetBrainFireByProjectId(p.Id, ctx)
+	if err != nil {
+		return false
+	}
+	//return brainFire.Status == BrainFireStatusExtinguished
+	return brainFire.Status > BrainFireStatusUnlit //test mode
+}

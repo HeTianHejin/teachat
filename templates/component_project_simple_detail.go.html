@@ -27,7 +27,7 @@
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
             {{/* 检查是否入围1 */}}{{if .ProjectBean.IsApproved }}
             {{/* 这个茶台已被茶围管理员选中入围 */}}
-            <i class="bi-bookmark-check" style="font-size: 2rem; color: red;" title="已入围"></i>
+            <i class="bi-circle-check" style="font-size: 2rem; color: red;" title="已入围"></i>
             {{/* 检查是否入围1 */}}{{ end }}
 
             <span>
@@ -86,23 +86,27 @@
       <div class="panel-footer">
         <span>
           <a href="/v1/appointment/detail?uuid={{ .ProjectBean.Project.Uuid }}">约茶</a>
-          <i class="bi-bookmark-check" style="font-size: 1.2rem; color: black;"></i>
+          <i class="bi-circle" style="font-size: 1.2rem; color: black;"></i>
         </span>
         <span style="margin-inline-start: 2rem;">
           <a href="/v1/see-seek/detail?uuid={{ .ProjectBean.Project.Uuid }}">看看</a>
-          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+          <i class="bi-circle" style="font-size: 1.2rem; color: black;"></i>
+        </span>
+        <span style="margin-inline-start: 2rem;">
+          <a href="/v1/brain-fire/detail?uuid={{ .ProjectBean.Project.Uuid }}">脑火</a>
+          <i class="bi-circle" style="font-size: 1.2rem; color: black;"></i>
         </span>
         <span style="margin-inline-start: 2rem;">
           <a href="/v1/suggestion/detail?uuid={{ .ProjectBean.Project.Uuid }}">建议</a>
-          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+          <i class="bi-circle" style="font-size: 1.2rem; color: black;"></i>
         </span>
         <span style="margin-inline-start: 2rem;">
           <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a>
-          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+          <i class="bi-circle" style="font-size: 1.2rem; color: black;"></i>
         </span>
         <span style="margin-inline-start: 2rem;">
-          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a>
-          <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
+          <a href="/v1/handicraft/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a>
+          <i class="bi-circle" style="font-size: 1.2rem; color: black;"></i>
         </span>
 
       </div>

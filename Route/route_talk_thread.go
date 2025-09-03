@@ -690,7 +690,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var threSupp data.ThreadSupplement
-
+	ctx := r.Context()
 	// 读取茶议内容
 	thread, err := data.GetThreadByUUID(uuid)
 	if err != nil {
@@ -773,21 +773,25 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	case data.ThreadCategoryAppointment:
 		break
 	case data.ThreadCategorySeeSeek:
-		//检查see-seek是否存在记录？如果有，状态是否进行中=1？
-		see_seek, err := data.GetSeeSeekByProjectId(project.Id, r.Context())
+		//检查see-seek是否存在记录？
+		see_seek, err := data.GetSeeSeekByProjectId(project.Id, ctx)
 		if err != nil && err != sql.ErrNoRows {
 			util.Debug(" Cannot read see-seek given project", err)
 			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
-		// if see_seek.Status != data.SeeSeekStatusInProgress {
-		// 	report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说该看茶活动目前不是进行中状态，不能补充内容。")
-		// 	return
-		// }
 		threSupp.SeeSeek = see_seek
 
 	case data.ThreadCategoryBrainFire:
-		break
+		// 检查脑火是否已存在记录
+		brain_fire, err := data.GetBrainFireByProjectId(project.Id, ctx)
+		if err != nil && err != sql.ErrNoRows {
+			util.Debug(" Cannot read brain fire given project", err)
+			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+			return
+		}
+		threSupp.BrainFire = brain_fire
+
 	case data.ThreadCategorySuggestion:
 		break
 	case data.ThreadCategoryGoods:

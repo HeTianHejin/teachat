@@ -321,7 +321,12 @@
 
 <div style="border:0.1rem outset burlywood; border-radius: 4px;padding-inline-start: 1rem;margin-bottom: 2rem;">
   {{/* 这是参与的团队和家庭数量显示 */}}
-
+  
+  <span style="margin-inline-start: 2rem;">
+    {{/* 这是茶议的总品味数量 显示 */}}
+    <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: gray;" title="品味小计数量"></i>
+    {{ .ThreadBean.PostCount }}
+  </span>
   <span style="margin-inline-start: 2rem;">
     {{/* 这是品味涉及家庭数量 显示 */}}
     <i class="bi bi-house-fill" style="font-size: 2rem; color: gray;" title="品味家庭数量"></i> {{ $.StatsSet.FamilyCount }}
@@ -336,15 +341,9 @@
     <i class="bi bi-person-fill" style="font-size: 2rem; color: gray;" title="品味团队数量"></i> ？
   </span>
   <span style="margin-inline-start: 2rem;">
-    {{/* 这是茶议的总品味数量 显示 */}}
-    <i class="bi bi-cup-hot-fill" style="font-size: 2rem; color: gray;" title="品味小计数量"></i>
-    {{ .ThreadBean.PostCount }}
-  </span>
-
-  <span style="margin-inline-start: 2rem;">
     {{/* 这是茶议的关注人数 数量显示 */}}
     <i class="bi bi-eye-fill" style="font-size: 2rem; color: gray;" title="关注人数"></i> ？
-
+  </span>
 </div>
 
 {{/* 展示全部管理员品味 */}}

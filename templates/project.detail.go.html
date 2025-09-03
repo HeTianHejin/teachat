@@ -111,24 +111,20 @@
         </span>
         <span style="margin-inline-start: 2rem;">
           <a href="/v1/see-seek/detail?uuid={{ .ProjectBean.Project.Uuid }}">看看</a>
-           {{ if .IsSeeSeekCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}
-        </span>
+           {{ if .IsSeeSeekCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
         <span style="margin-inline-start: 2rem;">
-          <a href="/v1/brian-fire/detail?uuid={{ .ProjectBean.Project.Uuid }}">脑火</a>
-           {{ if .IsBrainfireCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}
-        </span>
-        <span style="margin-inline-start: 2rem;">
-          <a href="/v1/suggestion/detail?uuid={{ .ProjectBean.Project.Uuid }}">建议</a> 
-           <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
-        </span>
-        <span style="margin-inline-start: 2rem;">
-          <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a> 
-           <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
-        </span>
-        <span style="margin-inline-start: 2rem;">
-          <a href="/v1/handicraft/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a> 
-           <i class="bi-bookmark" style="font-size: 1.2rem; color: black;"></i>
-        </span>
+          <a href="/v1/brain-fire/detail?uuid={{ .ProjectBean.Project.Uuid }}">脑火</a>
+           {{ if .IsBrainFireCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
+          <span style="margin-inline-start: 2rem;">
+            <a href="/v1/suggestion/detail?uuid={{ .ProjectBean.Project.Uuid }}">建议</a> 
+            {{ if .IsSuggestionCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
+            <span style="margin-inline-start: 2rem;">
+              <a href="/v1/goods/detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a> 
+              {{ if .IsGoodsReady }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
+              <span style="margin-inline-start: 2rem;">
+                <a href="/v1/handicraft/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a> 
+                {{ if .IsHandicraftCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
+         
       
         {{ if .IsEdited }}   {{/* 检查是否编辑过（补充内容） */}}
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>

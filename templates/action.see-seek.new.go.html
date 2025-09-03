@@ -195,7 +195,7 @@
           </div>
           
           <!-- 针对当前项目下的特殊环境，添加新环境条件链接 -->
-          <a href="/v1/environment/new?return_url=/v1/see-seek/new?uuid={{ .ProjectBean.Project.Uuid }}" class="list-group-item list-group-item-info">
+          <a href="/v1/environment/new?return_url=/v1/see-seek/new?uuid={{ .ProjectBean.Project.Uuid }}" target="_blank" class="list-group-item list-group-item-info">
             <span class="glyphicon glyphicon-plus"></span> 添加新的环境条件
           </a>
           
@@ -210,10 +210,7 @@
 </div>
 
 <script>
-  function toggleInviteIdsInput(show) {
-    document.getElementById('inviteIdsGroup').style.display = show ? 'block' : 'none';
-    if (!show) document.getElementById('invite_ids').value = '';
-  }
+ 
 
   function showEnvironmentModal() {
     $('#environmentModal').modal('show');
@@ -251,9 +248,12 @@
         selectEnvironment(parseInt(envId), envName);
       }
     }
-    
-   
   });
+
+   function toggleInviteIdsInput(show) {
+    document.getElementById('inviteIdsGroup').style.display = show ? 'block' : 'none';
+    if (!show) document.getElementById('invite_ids').value = '';
+  }
 </script>
 
 {{ end }}

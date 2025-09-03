@@ -143,3 +143,25 @@ func fetchSeeSeekBean(sS data.SeeSeek) (sSBean data.SeeSeekBean, err error) {
 
 	return sSBean, nil
 }
+
+// fetchBrainFireBean 获取完整的BrainFireBean
+func fetchBrainFireBean(brainFire data.BrainFire) (data.BrainFireBean, error) {
+	var bean data.BrainFireBean
+	bean.BrainFire = brainFire
+
+	// 获取环境信息
+	if brainFire.EnvironmentId > 0 {
+		env := data.Environment{Id: brainFire.EnvironmentId}
+		if err := env.GetByIdOrUUID(); err == nil {
+			bean.Environment = env
+		}
+	}
+
+	// 获取项目信息
+	project := data.Project{Id: brainFire.ProjectId}
+	if err := project.Get(); err == nil {
+		bean.Project = project
+	}
+
+	return bean, nil
+}

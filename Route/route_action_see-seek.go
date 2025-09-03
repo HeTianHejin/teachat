@@ -64,6 +64,20 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 尝试读取是否已经存在seeseek记录
+	existingSeeSeek, err := data.GetSeeSeekByProjectId(t_proj.Id, r.Context())
+	if err != nil && err != sql.ErrNoRows {
+		util.Debug(" failed to check existing see-seek by project_id", err)
+		report(w, r, "查询已有看看记录失败")
+		return
+	}
+	if err == nil && existingSeeSeek.Id > 0 {
+		// 已存在看看记录
+		if existingSeeSeek.Status == data.SeeSeekStatusCompleted {
+			report(w, r, "该项目的看看记录已完成，不能重复创建")
+			return
+		}
+	}
 	// 获取表单字段
 	name := r.FormValue("name")
 	nickname := r.FormValue("nickname")
