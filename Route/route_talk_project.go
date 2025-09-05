@@ -869,6 +869,8 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.IsSeeSeekCompleted = pr.IsSeeSeekCompleted(r.Context())
 	// 检查BrainFire是否完成
 	pD.IsBrainFireCompleted = pr.IsBrainFireCompleted(r.Context())
+	// 检查Suggestion是否完成
+	pD.IsSuggestionCompleted = pr.IsSuggestionCompleted(r.Context())
 
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path

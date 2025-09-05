@@ -401,3 +401,13 @@ func (p *Project) IsBrainFireCompleted(ctx context.Context) bool {
 	//return brainFire.Status == BrainFireStatusExtinguished
 	return brainFire.Status > BrainFireStatusUnlit //test mode
 }
+
+// 检查项目的Suggestion是否已完成
+func (p *Project) IsSuggestionCompleted(ctx context.Context) bool {
+	suggestion, err := GetSuggestionByProjectId(p.Id, ctx)
+	if err != nil {
+		return false
+	}
+	//return suggestion.Status == SuggestionStatusCompleted
+	return suggestion.Status >= int(SuggestionStatusSubmitted) //test mode
+}
