@@ -82,7 +82,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	g := data.Goods{Id: g_id}
-	if err = g.Get(); err != nil {
+	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug(s.Email, "Cannot get goods from database")
 		report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
@@ -254,20 +254,6 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	goods_expi_date := r.PostFormValue("expiration_date")
-	le = len(goods_expi_date)
-	if le > 50 {
-		report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
-		return
-	}
-
-	goods_state := r.PostFormValue("state")
-	le = len(goods_state)
-	if le > 50 {
-		report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
-		return
-	}
-
 	goods_manu_url_str := r.PostFormValue("official_website")
 	le = len(goods_manu_url_str)
 	if le > 256 {
@@ -298,18 +284,29 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
 		return
 	}
-	//check url
-	// if goods_purchase_url_str == "" {
-	// 	Report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
-	// 	return
-	// }
-	// _, err = url.Parse(goods_purchase_url_str)
-	// if err != nil {
-	// 	Report(w, r, "你好，茶博士表示物资的购买链接太长或者太短，请确认后再试。")
-	// 	return
-	// }
 
-	o_goods := data.Goods{
+	// Parse state fields
+	physical_state_str := r.PostFormValue("physical_state")
+	operational_state_str := r.PostFormValue("operational_state")
+	availability_str := r.PostFormValue("availability")
+
+	// Convert to enum values
+	physical_state := data.PhysicalNew
+	if ps, err := strconv.Atoi(physical_state_str); err == nil && ps >= 0 && ps <= 3 {
+		physical_state = data.PhysicalState(ps)
+	}
+
+	operational_state := data.OperationalNormal
+	if os, err := strconv.Atoi(operational_state_str); err == nil && os >= 0 && os <= 3 {
+		operational_state = data.OperationalState(os)
+	}
+
+	availability := data.Available
+	if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
+		availability = data.Availability(av)
+	}
+
+	old_goods := data.Goods{
 		Id:                    g.Id,
 		RecorderUserId:        s_u.Id,
 		Name:                  goods_name,
@@ -330,14 +327,16 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		NetworkConnectionType: goods_net_con_typ,
 		Features:              goods_features,
 		SerialNumber:          goods_sn,
-		State:                 goods_state,
+		PhysicalState:         physical_state,
+		OperationalState:      operational_state,
+		Availability:          availability,
 		Origin:                goods_origin,
 		Manufacturer:          goods_manufacturer,
 		ManufacturerURL:       goods_manu_url_str,
 		EngineType:            goods_engine_typ,
 		PurchaseURL:           goods_purchase_url_str,
 	}
-	if err := o_goods.Update(); err != nil {
+	if err := old_goods.Update(r.Context()); err != nil {
 		util.Debug(s.Email, "Cannot update goods from database")
 		report(w, r, "一脸蒙的茶博士，表示无法更新物资，请确认后再试一次。")
 		return
@@ -405,7 +404,7 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	g := data.Goods{Id: g_id}
-	if err = g.Get(); err != nil {
+	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug(s.Email, "Cannot get goods from database")
 		report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
@@ -484,7 +483,7 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	g := data.Goods{Id: g_id}
-	if err = g.Get(); err != nil {
+	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug(s.Email, "Cannot get goods from database")
 		report(w, r, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
@@ -830,20 +829,6 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	goods_expi_date := r.PostFormValue("expiration_date")
-	le = len(goods_expi_date)
-	if le > 50 {
-		report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
-		return
-	}
-
-	goods_state := r.PostFormValue("state")
-	le = len(goods_state)
-	if le > 50 {
-		report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
-		return
-	}
-
 	goods_manu_url_str := r.PostFormValue("official_website")
 	le = len(goods_manu_url_str)
 	if le > 256 {
@@ -885,6 +870,27 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
+	// Parse state fields
+	physical_state_str := r.PostFormValue("physical_state")
+	operational_state_str := r.PostFormValue("operational_state")
+	availability_str := r.PostFormValue("availability")
+
+	// Convert to enum values
+	physical_state := data.PhysicalNew
+	if ps, err := strconv.Atoi(physical_state_str); err == nil && ps >= 0 && ps <= 3 {
+		physical_state = data.PhysicalState(ps)
+	}
+
+	operational_state := data.OperationalNormal
+	if os, err := strconv.Atoi(operational_state_str); err == nil && os >= 0 && os <= 3 {
+		operational_state = data.OperationalState(os)
+	}
+
+	availability := data.Available
+	if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
+		availability = data.Availability(av)
+	}
+
 	new_goods := data.Goods{
 		RecorderUserId:        s_u.Id,
 		Name:                  goods_name,
@@ -905,14 +911,16 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		NetworkConnectionType: goods_net_con_typ,
 		Features:              goods_features,
 		SerialNumber:          goods_sn,
-		State:                 goods_state,
+		PhysicalState:         physical_state,
+		OperationalState:      operational_state,
+		Availability:          availability,
 		Origin:                goods_origin,
 		Manufacturer:          goods_manufacturer,
 		ManufacturerURL:       goods_manu_url_str,
 		EngineType:            goods_engine_typ,
 		PurchaseURL:           goods_purchase_url_str,
 	}
-	if err := new_goods.Create(); err != nil {
+	if err := new_goods.Create(r.Context()); err != nil {
 		util.Debug(s.Email, "Cannot create new goods")
 		report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return
@@ -1272,20 +1280,6 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	goods_expi_date := r.PostFormValue("expiration_date")
-	le = len(goods_expi_date)
-	if le > 50 {
-		report(w, r, "你好，茶博士表示物资的过期日期太长或者太短，请确认后再试。")
-		return
-	}
-
-	goods_state := r.PostFormValue("state")
-	le = len(goods_state)
-	if le > 50 {
-		report(w, r, "你好，茶博士表示物资的状态太长或者太短，请确认后再试。")
-		return
-	}
-
 	goods_manu_url_str := r.PostFormValue("official_website")
 	le = len(goods_manu_url_str)
 	if le > 256 {
@@ -1327,6 +1321,27 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
+	// Parse state fields
+	physical_state_str := r.PostFormValue("physical_state")
+	operational_state_str := r.PostFormValue("operational_state")
+	availability_str := r.PostFormValue("availability")
+
+	// Convert to enum values
+	physical_state := data.PhysicalNew
+	if ps, err := strconv.Atoi(physical_state_str); err == nil && ps >= 0 && ps <= 3 {
+		physical_state = data.PhysicalState(ps)
+	}
+
+	operational_state := data.OperationalNormal
+	if os, err := strconv.Atoi(operational_state_str); err == nil && os >= 0 && os <= 3 {
+		operational_state = data.OperationalState(os)
+	}
+
+	availability := data.Available
+	if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
+		availability = data.Availability(av)
+	}
+
 	new_goods := data.Goods{
 		RecorderUserId:        s_u.Id,
 		Name:                  goods_name,
@@ -1347,14 +1362,16 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		NetworkConnectionType: goods_net_con_typ,
 		Features:              goods_features,
 		SerialNumber:          goods_sn,
-		State:                 goods_state,
+		PhysicalState:         physical_state,
+		OperationalState:      operational_state,
+		Availability:          availability,
 		Origin:                goods_origin,
 		Manufacturer:          goods_manufacturer,
 		ManufacturerURL:       goods_manu_url_str,
 		EngineType:            goods_engine_typ,
 		PurchaseURL:           goods_purchase_url_str,
 	}
-	if err := new_goods.Create(); err != nil {
+	if err := new_goods.Create(r.Context()); err != nil {
 		util.Debug(s.Email, "Cannot create new goods")
 		report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return
@@ -1392,7 +1409,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 
 	t_goods := data.Goods{Uuid: goods_uuid}
 
-	if err = t_goods.GetByUuid(); err != nil {
+	if err = t_goods.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug(s.Email, "Cannot get goods from database")
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return

@@ -51,24 +51,48 @@
                                     <td><code>{{ .Goods.Uuid }}</code></td>
                                 </tr>
                                 <tr>
-                                    <th>状态</th>
+                                    <th>物理状态</th>
                                     <td>
-                                        {{ if eq .Goods.State "new" }}
+                                        {{ if eq .Goods.PhysicalState 0 }}
                                             <span class="label label-success">全新</span>
-                                        {{ else if eq .Goods.State "like_new" }}
-                                            <span class="label label-warning">九九新</span>
-                                        {{ else if eq .Goods.State "good" }}
-                                            <span class="label label-warning">良好</span>
-                                        {{ else if eq .Goods.State "used" }}
-                                            <span class="label label-warning">使用痕迹</span>
-                                        {{ else if eq .Goods.State "poor" }}
-                                            <span class="label label-warning">残旧</span>
-                                        {{ else if eq .Goods.State "lost" }}
-                                            <span class="label label-danger">报失</span>
-                                        {{ else if eq .Goods.State "scrapped" }}
+                                        {{ else if eq .Goods.PhysicalState 1 }}
+                                            <span class="label label-warning">已使用</span>
+                                        {{ else if eq .Goods.PhysicalState 2 }}
+                                            <span class="label label-warning">磨损</span>
+                                        {{ else if eq .Goods.PhysicalState 3 }}
+                                            <span class="label label-danger">损坏</span>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>功能状态</th>
+                                    <td>
+                                        {{ if eq .Goods.OperationalState 0 }}
+                                            <span class="label label-success">正常</span>
+                                        {{ else if eq .Goods.OperationalState 1 }}
+                                            <span class="label label-danger">故障</span>
+                                        {{ else if eq .Goods.OperationalState 2 }}
+                                            <span class="label label-warning">维修中</span>
+                                        {{ else if eq .Goods.OperationalState 3 }}
+                                            <span class="label label-default">已过期</span>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>可用性</th>
+                                    <td>
+                                        {{ if eq .Goods.Availability 0 }}
+                                            <span class="label label-success">可用</span>
+                                        {{ else if eq .Goods.Availability 1 }}
+                                            <span class="label label-info">使用中</span>
+                                        {{ else if eq .Goods.Availability 2 }}
+                                            <span class="label label-default">闲置</span>
+                                        {{ else if eq .Goods.Availability 3 }}
                                             <span class="label label-danger">已报废</span>
-                                        {{ else }}
-                                            {{ .Goods.State }}
+                                        {{ else if eq .Goods.Availability 4 }}
+                                            <span class="label label-danger">已遗失</span>
+                                        {{ else if eq .Goods.Availability 5 }}
+                                            <span class="label label-warning">已转让</span>
                                         {{ end }}
                                     </td>
                                 </tr>

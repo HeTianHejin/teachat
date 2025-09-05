@@ -77,16 +77,37 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="state" class="col-sm-2 control-label">新旧程度</label>
+                        <label for="physical_state" class="col-sm-2 control-label">物理状态</label>
                         <div class="col-sm-10">
-                            <select class="form-control" id="state" name="state">
-                                <option value="new" {{ if eq .Goods.State "new" }}selected{{ end }}>全新</option>
-                                <option value="like_new" {{ if eq .Goods.State "like_new" }}selected{{ end }}>九九新</option>
-                                <option value="good" {{ if eq .Goods.State "good" }}selected{{ end }}>良好</option>
-                                <option value="used" {{ if eq .Goods.State "used" }}selected{{ end }}>使用痕迹</option>
-                                <option value="poor" {{ if eq .Goods.State "poor" }}selected{{ end }}>残旧</option>
-                                <option value="lost" {{ if eq .Goods.State "lost" }}selected{{ end }}>报失</option>
-                                <option value="scrapped" {{ if eq .Goods.State "scrapped" }}selected{{ end }}>已报废</option>
+                            <select class="form-control" id="physical_state" name="physical_state">
+                                <option value="0" {{ if eq .Goods.PhysicalState 0 }}selected{{ end }}>全新</option>
+                                <option value="1" {{ if eq .Goods.PhysicalState 1 }}selected{{ end }}>已使用</option>
+                                <option value="2" {{ if eq .Goods.PhysicalState 2 }}selected{{ end }}>磨损</option>
+                                <option value="3" {{ if eq .Goods.PhysicalState 3 }}selected{{ end }}>损坏</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="operational_state" class="col-sm-2 control-label">功能状态</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="operational_state" name="operational_state">
+                                <option value="0" {{ if eq .Goods.OperationalState 0 }}selected{{ end }}>正常</option>
+                                <option value="1" {{ if eq .Goods.OperationalState 1 }}selected{{ end }}>故障</option>
+                                <option value="2" {{ if eq .Goods.OperationalState 2 }}selected{{ end }}>维修中</option>
+                                <option value="3" {{ if eq .Goods.OperationalState 3 }}selected{{ end }}>已过期</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="availability" class="col-sm-2 control-label">可用性</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="availability" name="availability">
+                                <option value="0" {{ if eq .Goods.Availability 0 }}selected{{ end }}>可用</option>
+                                <option value="1" {{ if eq .Goods.Availability 1 }}selected{{ end }}>使用中</option>
+                                <option value="2" {{ if eq .Goods.Availability 2 }}selected{{ end }}>闲置</option>
+                                <option value="3" {{ if eq .Goods.Availability 3 }}selected{{ end }}>已报废</option>
+                                <option value="4" {{ if eq .Goods.Availability 4 }}selected{{ end }}>已遗失</option>
+                                <option value="5" {{ if eq .Goods.Availability 5 }}selected{{ end }}>已转让</option>
                             </select>
                         </div>
                     </div>

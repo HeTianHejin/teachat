@@ -627,7 +627,7 @@ func CreateRequiredThreads(objective *Objective, project *Project, user_id int, 
 		{"看看", "在此记录“看看”作业情况。", ThreadCategorySeeSeek},
 		{"脑火", "在此记录“脑火”作业情况。", ThreadCategoryBrainFire},
 		{"建议", "在此记录根据「看看」的结果，提出对应建议。", ThreadCategorySuggestion},
-		{"宝贝", "在此记录逐一列出需要准备的物资", ThreadCategoryGoods},
+		{"宝贝", "在此记录需要准备的物资", ThreadCategoryGoods},
 		{"手艺", "在此记录“手艺”作业情况。", ThreadCategoryHandcraft},
 	}
 

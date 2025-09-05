@@ -237,18 +237,43 @@
                     maxlength="50" placeholder="例如：101X010" />
             </div>
 
-            <div class="form-group">
-                <label for="state">新旧程度：</label>
-                <select class="form-control" name="state" id="state">
-                    <option value="">-- 请选择 --</option>
-                    <option value="new">全新</option>
-                    <option value="like_new">九九新</option>
-                    <option value="good">良好</option>
-                    <option value="used">使用痕迹</option>
-                    <option value="poor">残旧</option>
-                    <option value="lost">报失</option>
-                    <option value="scrapped">报废</option>
-                </select>
+            <!-- 物资状态信息 -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="physical_state">物理状态：</label>
+                        <select class="form-control" name="physical_state" id="physical_state">
+                            <option value="0" selected>全新</option>
+                            <option value="1">已使用</option>
+                            <option value="2">磨损</option>
+                            <option value="3">损坏</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="operational_state">功能状态：</label>
+                        <select class="form-control" name="operational_state" id="operational_state">
+                            <option value="0" selected>正常</option>
+                            <option value="1">故障</option>
+                            <option value="2">维修中</option>
+                            <option value="3">已过期</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="availability">可用性：</label>
+                        <select class="form-control" name="availability" id="availability">
+                            <option value="0" selected>可用</option>
+                            <option value="1">使用中</option>
+                            <option value="2">闲置</option>
+                            <option value="3">已报废</option>
+                            <option value="4">已遗失</option>
+                            <option value="5">已转让</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
             <div class="form-group">
