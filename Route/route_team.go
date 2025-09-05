@@ -550,12 +550,12 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 	renderHTML(w, &ts, "layout", "navbar.private", "teams.employed", "component_teams_public", "component_team")
 }
 
-// GET /v1/team/detail?id=
+// GET /v1/team/detail?uuid=
 // 显示茶团详细信息
 func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	//获取茶团资料
 	vals := r.URL.Query()
-	uuid := vals.Get("id")
+	uuid := vals.Get("uuid")
 
 	if uuid == "" {
 		report(w, r, "你好，请提交有效的茶团编号，请稍后再试。")

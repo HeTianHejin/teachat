@@ -3,7 +3,7 @@
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
     <li><a href="/v1/goods/team?id={{ .Team.Uuid }}">装备物资</a></li>
     <li><a href="/v1/goods/team_detail?id={{ .Goods.Id }}&{{ .Team.Id }}">{{ .Goods.Name }}</a></li>
     <li class="active">编辑物资</li>
@@ -267,7 +267,7 @@
                 <div class="col-sm-offset-2 col-sm-10">
                     <button type="submit" class="btn btn-primary">保存更改</button>
                     <a href="/v1/goods/team_detail?id={{ .Goods.Id }}&team_id={{ .Team.Id }}" class="btn btn-default">取消</a>
-                    {{ if ne .Goods.State "scrapped" }}
+                    {{ if ne .Goods.Availability 3 }}
                     <button type="button" class="btn btn-danger pull-right" data-toggle="modal" data-target="#scrapModal">
                         标记为报废
                     </button>

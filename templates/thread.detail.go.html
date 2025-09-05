@@ -58,7 +58,7 @@
               （<a
                 href="/v1/family/detail?id={{ .ThreadBean.AuthorFamily.Uuid }}">{{ .ThreadBean.AuthorFamily.Name }}</a>，
               <a
-                href="/v1/team/detail?id={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>）
+                href="/v1/team/detail?uuid={{ .ThreadBean.AuthorTeam.Uuid }}">{{ .ThreadBean.AuthorTeam.Abbreviation }}</a>）
             </span>
           </div>
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -152,7 +152,7 @@
             <span style="margin-inline-end: 20px;">
               （<a href="/v1/family/detail?id={{ .QuotePostBean.AuthorFamily.Uuid }}"
                 style="color: black;">{{ .QuotePostBean.AuthorFamily.Name }}</a>，
-              <a href="/v1/team/detail?id={{ .QuotePostBean.AuthorTeam.Uuid }}"
+              <a href="/v1/team/detail?uuid={{ .QuotePostBean.AuthorTeam.Uuid }}"
                 style="color: black;">{{ .QuotePostBean.AuthorTeam.Abbreviation }}</a>）
             </span>
           </footer>
@@ -181,7 +181,7 @@
                 （<a
                   href="/v1/family/detail?id={{ .QuoteProjectBean.AuthorFamily.Uuid }}">{{ .QuoteProjectBean.AuthorFamily.Name }}</a>，
                 <a
-                  href="/v1/team/detail?id={{ .QuoteProjectBean.AuthorTeam.Uuid }}">{{ .QuoteProjectBean.AuthorTeam.Abbreviation }}</a>）
+                  href="/v1/team/detail?uuid={{ .QuoteProjectBean.AuthorTeam.Uuid }}">{{ .QuoteProjectBean.AuthorTeam.Abbreviation }}</a>）
               </span></cite>
           </footer>
         </blockquote>

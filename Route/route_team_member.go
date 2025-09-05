@@ -1350,7 +1350,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//返回此茶团页面给茶友，成员列表上有该茶友，示意已经加入该茶团成功
-		http.Redirect(w, r, "/v1/team/detail?id="+(team.Uuid), http.StatusFound)
+		http.Redirect(w, r, "/v1/team/detail?uuid="+(team.Uuid), http.StatusFound)
 		return
 
 	} else if reply_class_int == 0 {

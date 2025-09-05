@@ -3,7 +3,7 @@
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
     <li><a href="/v1/goods/team?id={{ .Team.Uuid }}">装备物资</a></li>
     <li class="active">{{ .Goods.Name }} 详情</li>
 </ol>
@@ -266,7 +266,7 @@
             <a href="/v1/goods/collect?id={{ .Goods.Uuid }}" class="btn btn-primary">
                 <i class="bi-clipboard-plus"></i>收藏宝贝
             </a>
-            <a href="/v1/goods/team_edit?id={{ .Goods.Id }}&team_id={{ .Team.Id }}" class="btn btn-default">
+            <a href="/v1/goods/team_update?id={{ .Goods.Id }}&team_id={{ .Team.Id }}" class="btn btn-default">
                 <i class="bi-pencil"></i> 编辑信息
             </a>
            

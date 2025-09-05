@@ -31,7 +31,7 @@
               （<a
                 href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
               <a
-                href="/v1/team/detail?id={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
+                href="/v1/team/detail?uuid={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
 
             </span>
           </div>
@@ -78,7 +78,7 @@
               <span style="margin-inline-end: 20px;">
                 （<a href="/v1/family/detail?id={{ .QuoteObjectiveBean.AuthorFamily.Uuid }}"
                   style="color: black;">{{ .QuoteObjectiveBean.AuthorFamily.Name }}</a>，
-                <a href="/v1/team/detail?id={{ .QuoteObjectiveBean.AuthorTeam.Uuid }}"
+                <a href="/v1/team/detail?uuid={{ .QuoteObjectiveBean.AuthorTeam.Uuid }}"
                   style="color: black;">{{ .QuoteObjectiveBean.AuthorTeam.Abbreviation }}</a>）
               </span>
             </cite>

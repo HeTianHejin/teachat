@@ -48,7 +48,7 @@
 
           <div class="col-xs-4">
             <span style="font-style: italic;"><a
-                  href="/v1/team/detail?id={{ .FamilyBean.FounderTeam.Uuid }}" title="团队详情">({{ .FamilyBean.FounderTeam.Abbreviation }})</a>
+                  href="/v1/team/detail?uuid={{ .FamilyBean.FounderTeam.Uuid }}" title="团队详情">({{ .FamilyBean.FounderTeam.Abbreviation }})</a>
                 </span>
           </div>
 
@@ -108,7 +108,7 @@
   <div class="media-body">
     <span style="font-style: italic;">
       （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
-      <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+      <a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
     </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
@@ -133,7 +133,7 @@
   <div class="media-body">
     <span style="font-style: italic;">
       （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
-      <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+      <a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
     </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
@@ -158,7 +158,7 @@
   <div class="media-body">
     <span style="font-style: italic;">
       （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
-      <a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
+      <a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
     </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>

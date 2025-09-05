@@ -27,7 +27,7 @@
                       {{ else }}
                       <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
                       {{ end }}
-                      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .SessUser.GetLastDefaultTeam.Uuid }}">{{ .SessUser.GetLastDefaultTeam.Abbreviation }}</a></span>
+                      <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .SessUser.GetLastDefaultTeam.Uuid }}">{{ .SessUser.GetLastDefaultTeam.Abbreviation }}</a></span>
                   </div>
                   <div class="panel-body">
                        <p>茶油号：{{ .SessUser.Id }}</p>

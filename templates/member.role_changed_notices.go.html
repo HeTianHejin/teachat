@@ -3,13 +3,13 @@
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
     <li class="active">已发布成员角色变动声明</li>
 </ol>
 
 <div style="margin: 2rem;">
     <ol class="nav nav-tabs">
-      <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">在座成员</a></li>
+      <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">在座成员</a></li>
       <li class="active"><a href="#">角色变动</a></li>
       <li><a href="/v1/team_member/resigned?id={{ .Team.Uuid }}">离开成员</a></li>
     </ol>
@@ -33,7 +33,7 @@
         {{ end }}
         </span>
 
-      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+      <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
  
       <h5>{{ .TeamMemberRoleNotice.Title }}</h5>
 

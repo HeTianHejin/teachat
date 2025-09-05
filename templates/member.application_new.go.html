@@ -6,7 +6,7 @@
 {{ with .TeamBean }}{{/* 这是 teamBeam非空检查-开始 */}}
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
     <li class="active">申请加盟茶团</li>
 </ol>
 
@@ -14,7 +14,7 @@
 
 <div class="media">
     <div class="media-left">
-        <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
             <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="团队团标">
         </a>
     </div>
@@ -25,7 +25,7 @@
             <div class="panel-heading">
                 <div class="row">
                     <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-                        <a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+                        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a>
                     </div>
 
                     <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">

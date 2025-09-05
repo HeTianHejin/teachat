@@ -81,7 +81,7 @@
     <div class="panel-heading">默认$事业茶团</div>
     <div class="panel-body">
         {{ with .DefaultTeamBean }}
-        @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
         无$纪录
         {{ end }}
@@ -90,7 +90,7 @@
     <div class="panel-heading">管理$事业茶团</div>
     <div class="panel-body">
         {{ range .ManageTeamBeanSlice }}
-        @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
         无&纪录
         {{ end }}
@@ -99,7 +99,7 @@
     <div class="panel-heading">普通$事业茶团</div>
     <div class="panel-body">
         {{ range .JoinTeamBeanSlice }}
-        @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
         无$纪录
         {{ end }}
@@ -108,7 +108,7 @@
     <div class="panel-heading">离开$事业茶团</div>
     <div class="panel-body">
         {{ range .ResignTeamBeanSlice }}
-        @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         {{ else }}
         无$纪录
         {{ end }}

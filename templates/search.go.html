@@ -81,7 +81,7 @@
   <div class="media-body">
       <span style="font-style: italic;">
         （<a href="/v1/family/detail?id={{ .DefaultFamilyBean.Family.Uuid }}">{{ .DefaultFamilyBean.Family.Name }}</a>，
-        <a href="/v1/team/detail?id={{ .DefaultTeamBean.Team.Uuid }}">{{ .DefaultTeamBean.Team.Abbreviation }}</a>）
+        <a href="/v1/team/detail?uuid={{ .DefaultTeamBean.Team.Uuid }}">{{ .DefaultTeamBean.Team.Abbreviation }}</a>）
       </span>
     </p>
     <p>茶友号：{{ .User.Id }}</p>

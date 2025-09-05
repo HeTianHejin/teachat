@@ -80,7 +80,7 @@
 
 <div class="media">
   <div class="media-left">
-    <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+    <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
       <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="茶团旗帜">
     </a>
   </div>
@@ -91,7 +91,7 @@
         <div class="row">
     
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            @<a href="/v1/team/detail?id={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+            @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
           </div>
           
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
@@ -111,7 +111,7 @@
             {{ end }}
               {{ .Author.Name }}
               <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
-              @<span style="font-size: small;"><a href="/v1/team/detail?id={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+              @<span style="font-size: small;"><a href="/v1/team/detail?uuid={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
         
               {{ .CreatedAtDate }}
             </div>
@@ -135,7 +135,7 @@
              {{ .Count }}
             </span>
         <div class="pull-right">
-          <a href="/v1/team/detail?id={{ .Team.Uuid }}">
+          <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
           <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
           </a>
         </div>

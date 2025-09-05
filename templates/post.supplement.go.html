@@ -31,7 +31,7 @@
 
             <span style="font-size: smaller;">
               (<a href="/v1/family/detail?id={{ .PostBean.AuthorFamily.Uuid }}">{{ .PostBean.AuthorFamily.Name }}</a>,
-              <a href="/v1/team/detail?id={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>)
+              <a href="/v1/team/detail?uuid={{ .PostBean.AuthorTeam.Uuid }}">{{ .PostBean.AuthorTeam.Abbreviation }}</a>)
             </span>
           </div>
 
@@ -67,7 +67,7 @@
               （<a
                 href="/v1/family/detail?id={{ .QuoteThreadBean.AuthorFamily.Uuid }}">{{ .QuoteThreadBean.AuthorFamily.Name }}</a>,
               <a
-                href="/v1/team/detail?id={{ .QuoteThreadBean.AuthorTeam.Uuid }}">{{ .QuoteThreadBean.AuthorTeam.Abbreviation }}</a>）
+                href="/v1/team/detail?uuid={{ .QuoteThreadBean.AuthorTeam.Uuid }}">{{ .QuoteThreadBean.AuthorTeam.Abbreviation }}</a>）
 
             </span>
             <span style="font-style: italic;">

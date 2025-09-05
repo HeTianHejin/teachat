@@ -49,7 +49,7 @@
           {{ end }}
       </span>
       
-      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+      <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
 
      
       <h4>{{ .TeamMember.Role }}</h4>
@@ -92,7 +92,7 @@
           {{ end }}
       </span>
       
-      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+      <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
 
      
       <h4>{{ .TeamMember.Role }}</h4>
@@ -139,7 +139,7 @@
         {{ end }}
         </span>
 
-      <span style="font-style: italic;"><a href="/v1/team/detail?id={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
+      <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
  
       <h5>{{ .TeamMember.Role }}</h5>
 
