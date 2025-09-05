@@ -1,0 +1,165 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">"建议"记录详情</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <i class="bi-lightbulb" style="font-size: 1.5rem; color: orange;"></i>
+      "建议"记录 #{{ .SuggestionBean.Suggestion.Id }}
+      <span class="label label-{{ if eq .SuggestionBean.Suggestion.Status 1 }}success{{ else }}default{{ end }} pull-right">
+        {{ .SuggestionBean.Suggestion.StatusString }}
+      </span>
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    <!-- 基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>基本信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>编号</strong></td>
+            <td>{{ .SuggestionBean.Suggestion.Id }}</td>
+          </tr>
+          <tr>
+            <td><strong>处置方案</strong></td>
+            <td>
+              <span class="label label-{{ if .SuggestionBean.Suggestion.Resolution }}success{{ else }}warning{{ end }}">
+                {{ .SuggestionBean.Suggestion.ResolutionString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>当前状态</strong></td>
+            <td>
+              <span class="label label-{{ if eq .SuggestionBean.Suggestion.Status 1 }}success{{ else }}default{{ end }}">
+                {{ .SuggestionBean.Suggestion.StatusString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>公开性</strong></td>
+            <td>
+              <span class="label label-{{ if eq .SuggestionBean.Suggestion.Category 0 }}info{{ else }}warning{{ end }}">
+                {{ .SuggestionBean.Suggestion.CategoryString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .SuggestionBean.Suggestion.CreatedDateTime }}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>处置方案说明</h4>
+        <div class="panel panel-{{ if .SuggestionBean.Suggestion.Resolution }}success{{ else }}warning{{ end }}">
+          <div class="panel-body text-center">
+            {{ if .SuggestionBean.Suggestion.Resolution }}
+            <i class="glyphicon glyphicon-ok-circle" style="font-size: 3rem; color: #5cb85c;"></i>
+            <h5><strong>建议处理</strong></h5>
+            <p class="text-muted">建议采取行动解决问题</p>
+            {{ else }}
+            <i class="glyphicon glyphicon-pause" style="font-size: 3rem; color: #f0ad4e;"></i>
+            <h5><strong>建议搁置</strong></h5>
+            <p class="text-muted">建议暂时不处理此问题</p>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 建议内容 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-comment"></span> 建议内容</h4>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <p style="white-space: pre-wrap; font-size: 14px; line-height: 1.6;">{{ .SuggestionBean.Suggestion.Body }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 见证者信息 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-stats"></span> 见证者信息</h4>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-4 text-center">
+                <h5>见证者ID</h5>
+                <span class="label label-primary" style="font-size: 1.2em;">
+                  {{ .SuggestionBean.Suggestion.UserId }}
+                </span>
+              </div>
+              <div class="col-md-4 text-center">
+                <h5>创建时间</h5>
+                <p>{{ .SuggestionBean.Suggestion.CreatedAt.Format "2006-01-02 15:04:05" }}</p>
+              </div>
+              <div class="col-md-4 text-center">
+                <h5>记录状态</h5>
+                <span class="label label-{{ if eq .SuggestionBean.Suggestion.Status 1 }}success{{ else }}default{{ end }}">
+                  {{ .SuggestionBean.Suggestion.StatusString }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回项目
+      </a>
+      {{ if and .IsVerifier (eq .SuggestionBean.Suggestion.Status 0) }}
+      <button class="btn btn-primary" onclick="updateSuggestionStatus(1)">
+        <span class="glyphicon glyphicon-ok"></span> 提交建议
+      </button>
+      {{ end }}
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-circle" style="font-size: 2rem; color: blue;"></i>
+    茶博士："建议"记录展示了基于检查或踏勘结果的最终处置方案，为问题解决提供了明确的指导方向。
+  </div>
+</div>
+
+<script>
+function updateSuggestionStatus(status) {
+  if (confirm('确定要更新建议状态吗？')) {
+    fetch('/v1/suggestion/update-status', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: 'uuid={{ .SuggestionBean.Suggestion.Uuid }}&status=' + status
+    }).then(response => {
+      if (response.ok) {
+        location.reload();
+      } else {
+        alert('更新失败，请重试');
+      }
+    });
+  }
+}
+</script>
+
+{{ end }}

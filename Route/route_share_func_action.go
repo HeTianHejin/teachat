@@ -165,3 +165,17 @@ func fetchBrainFireBean(brainFire data.BrainFire) (data.BrainFireBean, error) {
 
 	return bean, nil
 }
+
+// fetchSuggestionBean 获取完整的SuggestionBean
+func fetchSuggestionBean(suggestion data.Suggestion) (data.SuggestionBean, error) {
+	var bean data.SuggestionBean
+	bean.Suggestion = suggestion
+
+	// 获取项目信息
+	project := data.Project{Id: suggestion.ProjectId}
+	if err := project.Get(); err == nil {
+		bean.Project = project
+	}
+
+	return bean, nil
+}

@@ -1,0 +1,112 @@
+{{ define "content" }}
+
+{{/* 见证者提交新建"建议"数据表单-模版 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">+ 建议</li>
+  <li>{{ template "component_sess_capacity" . }}</li>
+</ol>
+
+{{/* 茶台简要信息 */}}
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <i class="bi-lightbulb" style="font-size: 1.5rem; color: orange;"></i>
+    新建"建议"
+  </div>
+  <div class="panel-body">
+    <form role="form" action="/v1/suggestion/new" method="post">
+
+      <!-- 处置方案选择 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">处置方案</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <div class="radio">
+              <label>
+                <input type="radio" name="resolution" value="true" required>
+                <span class="text-success"><strong>处理</strong></span> - 建议采取行动解决问题
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="resolution" value="false" required>
+                <span class="text-warning"><strong>搁置</strong></span> - 建议暂时不处理此问题
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 建议内容 -->
+      <div class="form-group">
+        <label for="body">建议内容（3-456字）</label>
+        <textarea class="form-control" name="body" id="body" rows="8" minlength="3" maxlength="456" 
+                  placeholder="请详细描述您的建议内容，包括问题分析、解决方案、预期效果等..." required></textarea>
+        <small class="text-muted">请提供具体、可操作的建议内容</small>
+      </div>
+
+      <!-- 分类设置 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">公开性设置</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <div class="radio">
+              <label>
+                <input type="radio" name="category" value="0" checked required>
+                <span class="text-info"><strong>公开</strong></span> - 所有相关人员可见
+              </label>
+            </div>
+            <div class="radio">
+              <label>
+                <input type="radio" name="category" value="1" required>
+                <span class="text-warning"><strong>保密</strong></span> - 仅当事家庭/团队可见
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <input type="hidden" name="project_uuid" value="{{ .ProjectBean.Project.Uuid }}">
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-ok"></span> 提交建议
+        </button>
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">
+          <span class="glyphicon glyphicon-arrow-left"></span> 取消
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-circle" style="font-size: 2rem; color: blue;"></i>
+    茶博士：建议是基于检查或踏勘结果，经过讨论后形成的最终处置方案，请慎重填写。
+  </div>
+</div>
+
+<script>
+  // 字数统计
+  $(document).ready(function() {
+    $('#body').on('input', function() {
+      var length = $(this).val().length;
+      var maxLength = 456;
+      var minLength = 3;
+      
+      if (length < minLength) {
+        $(this).removeClass('has-success').addClass('has-error');
+      } else if (length > maxLength) {
+        $(this).removeClass('has-success').addClass('has-error');
+      } else {
+        $(this).removeClass('has-error').addClass('has-success');
+      }
+    });
+  });
+</script>
+
+{{ end }}

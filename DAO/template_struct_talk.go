@@ -194,6 +194,9 @@ type ThreadSupplement struct {
 	AppointmentStatus int     // 约茶状态
 	SeeSeek           SeeSeek // SeeSeek
 	BrainFire         BrainFire
+	Suggestion        Suggestion
+	Goods             Goods
+	Handicraft        Handicraft
 }
 
 // 用于跟贴详情页面渲染

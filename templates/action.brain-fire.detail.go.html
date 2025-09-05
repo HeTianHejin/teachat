@@ -30,7 +30,7 @@
         <h4>基本信息</h4>
         <table class="table table-bordered">
           <tr>
-            <td><strong>记录ID</strong></td>
+            <td><strong>编号</strong></td>
             <td>{{ .BrainFireBean.BrainFire.Id }}</td>
           </tr>
           <tr>
@@ -62,8 +62,8 @@
             </td>
           </tr>
           <tr>
-            <td><strong>创建时间</strong></td>
-            <td>{{ .BrainFireBean.BrainFire.CreatedDateTime }}</td>
+            <td><strong>环境条件：</strong></td>
+            <td>{{ .BrainFireBean.Environment.Name }}</td>
           </tr>
           <tr>
             <td><strong>开始时间</strong></td>
@@ -77,14 +77,11 @@
       </div>
       
       <div class="col-md-6">
-        <h4>创建者信息</h4>
+        <h4>见证者信息</h4>
         <div class="panel panel-info">
           <div class="panel-body">
-            <p><strong>创建者ID：</strong>{{ .BrainFireBean.BrainFire.VerifierUserId }}</p>
+            <p><strong>见证者ID：</strong>{{ .BrainFireBean.BrainFire.VerifierUserId }}</p>
             <p><strong>创建时间：</strong>{{ .BrainFireBean.BrainFire.CreatedDateTime }}</p>
-            {{ if .BrainFireBean.Environment.Id }}
-            <p><strong>环境条件：</strong>{{ .BrainFireBean.Environment.Name }}</p>
-            {{ end }}
           </div>
         </div>
       </div>

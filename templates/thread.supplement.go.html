@@ -71,7 +71,7 @@
         
         {{ with .SeeSeek }}{{/* 看看非空检查-开始 */}}
         {{ if (eq  .Status 0) }}{{/* 未开始 */}}
-        <a class="btn btn-default" href="/v1/see-seek/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+
+        <a class="btn btn-default" href="/v1/see-seek/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+
           看看</a>
 
         {{ else if (eq  .Status 1) }}{{/* 进行中 */}}
@@ -88,7 +88,7 @@
         {{ else if (eq  .Status 2) }}{{/* 已暂停 */}}
         <a class="btn btn-warning" href="/v1/see-seek/step?uuid={{ .Uuid }}" role="button">恢复-看看</a>
         {{ else if (eq  .Status 3) }}{{/* 已半途终止（异常） */}}
-        <a class="btn btn-danger" href="/v1/see-seek/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">重新-看看</a>
+        <a class="btn btn-danger" href="/v1/see-seek/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">重新-看看</a>
         {{ else if (eq  .Status 4) }}{{/* 已完成（顺利结束） */}}
         <a class="btn btn-success" href="/v1/see-seek/detail?uuid={{ .Uuid }}"
           role="button">查看-已完成</a>
@@ -101,13 +101,22 @@
         {{ if ge .Status 1 }}
         <a class="btn btn-default" href="/v1/brain-fire/detail?uuid={{ .Uuid }}" role="button">查看-脑火</a>
         {{ else }}
-        <a class="btn btn-default" href="/v1/brain-fire/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+ 脑火</a>
+        <a class="btn btn-default" href="/v1/brain-fire/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+ 脑火</a>
         {{ end }}
         {{ end }}{{/* 脑火非空检查-结束 */}}
 
+
         {{ else if (eq .ThreadBean.Thread.Category 5) }} {{/* 检查茶议类型--建议 */}}
-        <a class="btn btn-default" href="/v1/suggestion/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+
+         {{ with .Suggestion }}{{/* 建议非空检查-开始 */}}
+         {{ if eq .Status 0 }}{{/* 未开始 */}}
+        <a class="btn btn-default" href="/v1/suggestion/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+
           建议</a>
+          {{ else }}
+          <a class="btn btn-default" href="/v1/suggestion/detail?uuid={{ .Uuid }}" role="button">查看-建议</a>
+          {{ end }}
+        {{ end }}{{/* 建议非空检查-结束 */}}
+
+
         {{ else if (eq .ThreadBean.Thread.Category 6) }} {{/* 检查茶议类型--宝贝 */}}
         <a class="btn btn-default" href="/v1/project_goods/new?uuid={{ .QuoteProjectBean.Project.Uuid }}"
           role="button">+ 宝贝</a>

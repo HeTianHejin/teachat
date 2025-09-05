@@ -77,7 +77,7 @@ func EnvironmentNewPost(w http.ResponseWriter, r *http.Request) {
 	env := data.Environment{
 		Name:        r.PostFormValue("name"),
 		Summary:     r.PostFormValue("summary"),
-		UserId:      s_u.Id, // 记录创建者ID
+		UserId:      s_u.Id, // 记录见证者ID
 		Temperature: parseInt(r.PostFormValue("temperature")),
 		Humidity:    parseInt(r.PostFormValue("humidity")),
 		PM25:        parseInt(r.PostFormValue("pm25")),

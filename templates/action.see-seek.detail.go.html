@@ -30,11 +30,11 @@
         <h4>基本信息</h4>
         <table class="table table-bordered">
           <tr>
-            <td><strong>记录ID</strong></td>
+            <td><strong>编号</strong></td>
             <td>{{ .SeeSeekBean.SeeSeek.Id }}</td>
           </tr>
           <tr>
-            <td><strong>记录名称</strong></td>
+            <td><strong>名称</strong></td>
             <td>{{ .SeeSeekBean.SeeSeek.Name }}</td>
           </tr>
           {{ if .SeeSeekBean.SeeSeek.Nickname }}
@@ -83,10 +83,22 @@
         </div>
         
         {{ if .SeeSeekBean.Place.Id }}
-        <h5>检查地点</h5>
-        <p><span class="label label-default">{{ .SeeSeekBean.Place.Name }}</span></p>
+        <h4>检查地点</h4>
+        <p><span class="label label-info">{{ .SeeSeekBean.Place.Name }}</span></p>
         {{ end }}
       </div>
+
+      <div class="col-md-6">
+        <h4>见证者信息</h4>
+        <div class="panel panel-info">
+          <div class="panel-body">
+            <p><strong>见证者ID：</strong>{{ .SeeSeekBean.SeeSeek.VerifierUserId }}</p>
+            <p><strong>创建时间：</strong>{{ .SeeSeekBean.SeeSeek.CreatedDateTime }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
     </div>
 
     <!-- 环境条件 -->

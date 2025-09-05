@@ -852,3 +852,20 @@ CREATE TABLE brain_fires (
 CREATE INDEX idx_brain_fires_project_id ON brain_fires(project_id);
 CREATE INDEX idx_brain_fires_status ON brain_fires(status);
 CREATE INDEX idx_brain_fires_start_time ON brain_fires(start_time);
+
+CREATE TABLE suggestions (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    user_id               INTEGER NOT NULL,
+    project_id            INTEGER NOT NULL,
+    resolution            BOOLEAN NOT NULL DEFAULT false,
+    body                  TEXT NOT NULL,
+    category              INTEGER DEFAULT 0,
+    status                INTEGER DEFAULT 0,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP
+);
+
+CREATE INDEX idx_suggestions_project_id ON suggestions(project_id);
+CREATE INDEX idx_suggestions_user_id ON suggestions(user_id);
+CREATE INDEX idx_suggestions_status ON suggestions(status);
