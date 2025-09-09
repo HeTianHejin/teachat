@@ -49,6 +49,14 @@
         <p style="white-space: pre-wrap;">
           {{ .ObjectiveBean.Objective.Body }}
         </p>
+        <p>
+          {{ if .IsAdmin }}
+          <a href="/v1/objective/supplement?uuid={{ .ObjectiveBean.Objective.Uuid }}">
+            <i class="bi-pencil-square" style="font-size: 1.5rem; color: black;"></i>
+            补充茶围目标</a>
+          &nbsp;&nbsp;&nbsp;
+          {{ end }}
+        </p>
 
       </div>
       <div class="panel-footer">

@@ -81,18 +81,38 @@
           {{ .ThreadBean.Thread.Title }}
         </h4>
 
-        {{ if eq .ThreadBean.Thread.Category 3 }}{{/* 茶议是否"看看"类型检查-开始 */}}
+        {{ if eq .ThreadBean.Thread.Category 2 }}{{/* 茶议是否"约茶"类型检查-开始 */}}
+        {{ with .Appointment }}{{/* "约茶"非空检查-开始 */}}
+        <div class="text-center" style="margin: 10px 0;">
+          <i class="bi-calendar-check" style="font-size: 1.5rem; color: green;" title="约茶"></i>
+          <!-- 约茶状态展示 -->
+           <span class="label label-info">{{ .StatusString }}</span>
+          <!-- 约茶时间展示 -->
+          <div style="margin: 10px 0;">
+            <i class="bi-clock" style="font-size: 1.2rem;color: black;" title="约茶时间"></i>
+            {{ .StartTimeString }}
+            至
+            {{ .EndTimeString }}
+          </div>
+          
+          <!-- 约茶详情按钮 -->
+          <a class="btn btn-sm btn-default" href="/v1/appointment/detail?uuid={{ .Uuid }}" role="button">详情</a>
+         
+          {{ end }}{{/* "约茶"非空检查-结束 */}}
+        </div>
+
+        
+
+        {{ else if eq .ThreadBean.Thread.Category 3 }}{{/* 茶议是否"看看"类型检查-开始 */}}
         {{ with .SeeSeek }}{{/* "看看"（see-seek）非空检查-开始 */}}
         <div class="text-center" style="margin: 10px 0;">
           <i class="bi-binoculars" style="font-size: 1.5rem; color: green;" title="看看"></i>
-
           <!-- 看看进度条 -->
           <div class="progress" style="margin: 10px 0;">
             <div class="progress-bar progress-bar-striped" role="progressbar" style="width: {{ mul .Step 20 }}%">
               已完成 {{ .Step }}/5 步骤
             </div>
           </div>
-
           <!-- 看看步骤导航 -->
           <ol class="breadcrumb" style="margin: 10px 0;">
             <li class="{{ if eq .Step 1 }}active{{ else if gt .Step 1 }}text-success{{ end }}">环境条件</li>
@@ -110,7 +130,39 @@
           {{ end }}{{/* 检查"看看"（see-seek）的状态完成 */}}
         </div>
         {{ end }}{{/* "看看"（see-seek）非空检查完成 */}}
-        {{ end }}{{/* 茶议是否"看看"类型检查完成 */}}
+        
+
+      {{ else if eq .ThreadBean.Thread.Category 4 }}{{/* 茶议是否"脑火"类型检查-开始 */}}
+        {{ with .BrainFire }}.{{/* "脑火"非空检查-开始 */}}
+        <div class="text-center" style="margin: 10px 0;">
+          <i class="bi-lightning-charge" style="font-size: 1.5rem; color: green;" title="脑火"></i>
+          <!-- 脑火状态展示 -->
+          <span class="label label-info">{{ .StatusString }}</span>
+          {{ if ge .Status 1 }}
+          <!-- 脑火详情按钮 -->
+          <a class="btn btn-sm btn-default" href="/v1/brain-fire/detail?uuid={{ .Uuid }}" role="button">详情</a>
+          {{ else }}
+          <a class="btn btn-sm btn-default" href="/v1/brain-fire/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+ 脑火</a>
+          {{ end }}
+        </div>
+        {{ end }} {{/* "脑火"非空检查-结束 */}}
+
+        {{ else if eq .ThreadBean.Thread.Category 5 }}{{/* 茶议是否"建议"类型检查-开始 */}}
+        {{ with .Suggestion }}{{/* "建议"非空检查-开始 */}}
+        <div class="text-center" style="margin: 10px 0;">
+          <i class="bi-journal-text" style="font-size: 1.5rem; color: green;" title="建议"></i>
+          <!-- 建议状态展示 -->
+          <span class="label label-info">{{ .StatusString }}</span>
+          {{ if gt .Status 0 }}
+          <!-- 建议详情按钮 -->
+          <a class="btn btn-sm btn-default" href="/v1/suggestion/detail?uuid={{ .Uuid }}" role="button">详情</a>
+          {{ else }}
+          <a class="btn btn-sm btn-default" href="/v1/suggestion/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+ 建议</a>
+          {{ end }}
+          {{ end }}{{/*  "建议"非空检查-完成 */}}
+          
+        {{ end }}{{/* 茶议是否"建议"类型检查完成 */}}
+        
 
         <span style="white-space: pre-wrap;">
           {{ .ThreadBean.Thread.Body }}

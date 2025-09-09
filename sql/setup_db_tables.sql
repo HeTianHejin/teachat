@@ -550,6 +550,7 @@ CREATE TABLE member_application_replies (
 
 CREATE TABLE project_appointments (
     id                    SERIAL PRIMARY KEY,
+    uuid                  varchar(64) not null unique DEFAULT gen_random_uuid(),
     project_id            INTEGER NOT NULL,
     note                  VARCHAR(255),
     start_time            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

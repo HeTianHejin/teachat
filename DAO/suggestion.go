@@ -100,8 +100,8 @@ func GetSuggestionByProjectId(projectId int, ctx context.Context) (Suggestion, e
 	var s Suggestion
 	statement := `SELECT id, uuid, user_id, project_id, resolution, body, category, status,
 		created_at, updated_at
-		FROM suggestions WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1`
-	stmt, err := db.Prepare(statement)
+		FROM suggestions WHERE project_id=$1 ORDER BY created_at DESC LIMIT 1`
+	stmt, err := db.PrepareContext(ctx, statement)
 	if err != nil {
 		return s, err
 	}

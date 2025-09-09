@@ -104,16 +104,16 @@ func (objective *Objective) UpdateClass() (err error) {
 }
 
 // objective.Delete() Delete the given objective struct{}
-func (objective *Objective) Delete() (err error) {
-	statement := "DELETE FROM objectives WHERE id = $1"
-	stmt, err := db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(objective.Id)
-	return
-}
+// func (objective *Objective) Delete() (err error) {
+// 	statement := "DELETE FROM objectives WHERE id = $1"
+// 	stmt, err := db.Prepare(statement)
+// 	if err != nil {
+// 		return
+// 	}
+// 	defer stmt.Close()
+// 	_, err = stmt.Exec(objective.Id)
+// 	return
+// }
 
 // objective.GetByUuid() Get the given objective by uuid
 func (objective *Objective) GetByUuid() (err error) {

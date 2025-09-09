@@ -467,7 +467,7 @@ func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) 
 		payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id,
 		verifier_user_id, verifier_team_id, verifier_family_id, category, status, step, created_at, updated_at
 		FROM see_seeks WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := db.PrepareContext(ctx, statement)
 	if err != nil {
 		return s, err
 	}

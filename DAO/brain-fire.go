@@ -143,7 +143,7 @@ func GetBrainFireByProjectId(projectId int, ctx context.Context) (BrainFire, err
 		verifier_user_id, verifier_family_id, verifier_team_id, status, brain_fire_class, brain_fire_type,
 		created_at, updated_at
 		FROM brain_fires WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := db.PrepareContext(ctx, statement)
 	if err != nil {
 		return bf, err
 	}

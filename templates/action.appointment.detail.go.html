@@ -136,6 +136,41 @@
     约茶详情
   </div>
   <div class="panel-body">
+    <!-- 约茶状态 - 置顶显示 -->
+    <div class="panel panel-info">
+      <div class="panel-heading">
+        <h4 class="panel-title">约茶状态</h4>
+      </div>
+      <div class="panel-body">
+        <div class="form-group">
+          <h3 class="text-center">
+            {{ if eq .Appointment.Status 0 }}
+              <span class="label label-warning">待处理</span>
+            {{ else if eq .Appointment.Status 1 }}
+              <span class="label label-success">已确认</span>
+            {{ else if eq .Appointment.Status 2 }}
+              <span class="label label-danger">已拒绝</span>
+            {{ else if eq .Appointment.Status 3 }}
+              <span class="label label-primary">已完成</span>
+            {{ else }}
+              <span class="label label-default">{{ .Appointment.StatusString }}</span>
+            {{ end }}
+          </h3>
+        </div>
+        
+        {{ if $.IsVerifier }}    {{/* 只有见证人可以修改约茶状态 */}}
+        <div class="form-group text-center">
+          {{ if eq .Appointment.Status 0 }}
+          <a href="/v1/appointment/accept?uuid={{ .Appointment.Uuid }}" class="btn btn-success">确认约茶</a>
+          <a href="/v1/appointment/reject?uuid={{ .Appointment.Uuid }}" class="btn btn-danger">拒绝约茶</a>
+          {{ else if eq .Appointment.Status 1 }}
+          <a href="/v1/appointment/complete?uuid={{ .Appointment.Uuid }}" class="btn btn-primary">完成约茶</a>
+          {{ end }}
+        </div>
+        {{ end }}
+      </div>
+    </div>
+
     <!-- 参与方信息 -->
     <div class="panel panel-default">
       <div class="panel-heading">出席双方信息</div>
@@ -241,11 +276,7 @@
       <p class="form-control-static">{{ .Appointment.PlaceId }}</p>
     </div>
 
-    <!-- 状态展示 -->
-    <div class="form-group">
-      <label>约茶状态</label>
-      <p class="form-control-static">{{ .Appointment.StatusString }}</p>
-    </div>
+
 
     <!-- 时间信息 -->
     <div class="form-group">
@@ -260,23 +291,7 @@
     </div>
     {{ end }}
 
-    <div class="form-group text-center">
-      {{ if $.IsVerifier }}    {{/* 只有见证人可以修改约茶状态 */}}
-      {{ if eq .Appointment.Status 0 }}
-      <a href="/v1/appointment/accept?id={{ .Appointment.Id }}" class="btn btn-success">接受约茶</a>
-      <a href="/v1/appointment/reject?id={{ .Appointment.Id }}" class="btn btn-danger">拒绝约茶</a>
-      {{ else if eq .Appointment.Status 1 }}
-      <a href="/v1/appointment/complete?id={{ .Appointment.Id }}" class="btn btn-primary">完成约茶</a>
-      {{ end }}
-      {{ end }}
 
-      {{ if or (eq $.SessUser.Id .Payer.Id) (eq $.SessUser.Id .Payee.Id) }}
-      {{/* 出茶叶方或收茶叶方可以取消约茶 */}}
-      {{ if or (eq .Appointment.Status 1) (eq .Appointment.Status 2) }}
-      <a href="/v1/appointment/cancel?id={{ .Appointment.Id }}" class="btn btn-warning">取消约茶</a>
-      {{ end }}
-      {{ end }}
-    </div>
   </div>
 </div>
 {{ else }}{{/* 约茶信息非空检查-空数据！ */}}

@@ -426,7 +426,14 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		// 检查当前是哪一种类型茶议
 		switch thread.Category {
 		case data.ThreadCategoryAppointment:
-			break
+			//检查是否已存在约茶记录
+			pr_appointment, err := data.GetAppointmentByProjectId(project.Id, r.Context())
+			if err != nil && err != sql.ErrNoRows {
+				util.Debug(" Cannot read appointment given project", err)
+				report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+				return
+			}
+			tD.Appointment = pr_appointment
 		case data.ThreadCategorySeeSeek:
 			//检查see-seek是否存在记录？
 			see_seek, err := data.GetSeeSeekByProjectId(project.Id, r.Context())
@@ -435,14 +442,35 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
-			tD.SeeSeek = see_seek
+			if see_seek.Id > 0 {
+				tD.SeeSeek = see_seek
+			}
 
 		case data.ThreadCategoryBrainFire:
-			break
+			// 检查BrainFire是否存在记录
+			brain_fire, err := data.GetBrainFireByProjectId(project.Id, r.Context())
+			if err != nil && err != sql.ErrNoRows {
+				util.Debug(" Cannot read brain-fire given project_id:", project.Id, err)
+				report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+				return
+			}
+			if brain_fire.Id > 0 {
+				tD.BrainFire = brain_fire
+			}
 		case data.ThreadCategorySuggestion:
-			break
+			// 检查Suggestion是否存在记录
+			suggestion, err := data.GetSuggestionByProjectId(project.Id, r.Context())
+			if err != nil && err != sql.ErrNoRows {
+				util.Debug("cannot read suggestion given project_id:", project.Id, err)
+				report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+				return
+			}
+			if suggestion.Id > 0 {
+				tD.Suggestion = suggestion
+			}
 		case data.ThreadCategoryGoods:
-			break
+			// 检查goods记录是否存在
+			//goods, er := data.GetG
 		case data.ThreadCategoryHandcraft:
 			break
 		default:
@@ -771,7 +799,15 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 
 	switch thread.Category {
 	case data.ThreadCategoryAppointment:
-		break
+		//检查是否已存在约茶记录
+		pr_appointment, err := data.GetAppointmentByProjectId(project.Id, ctx)
+		if err != nil && err != sql.ErrNoRows {
+			util.Debug(" Cannot read appointment given project", err)
+			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+			return
+		}
+		threSupp.Appointment = pr_appointment
+
 	case data.ThreadCategorySeeSeek:
 		//检查see-seek是否存在记录？
 		see_seek, err := data.GetSeeSeekByProjectId(project.Id, ctx)
@@ -793,7 +829,16 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		threSupp.BrainFire = brain_fire
 
 	case data.ThreadCategorySuggestion:
-		break
+		// 检查Suggestion是否存在记录
+		suggestion, err := data.GetSuggestionByProjectId(project.Id, r.Context())
+		if err != nil && err != sql.ErrNoRows {
+			util.Debug("cannot read suggestion given project_id:", project.Id, err)
+			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+			return
+		}
+		if suggestion.Id > 0 {
+			threSupp.Suggestion = suggestion
+		}
 	case data.ThreadCategoryGoods:
 		break
 	case data.ThreadCategoryHandcraft:

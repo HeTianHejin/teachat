@@ -1,0 +1,123 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}">{{ .ObjectiveBean.Objective.Title }}</a>@茶围</li>
+  <li class="active">完善茶围目标</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+<div class="media" style="margin-top: 20px;">
+  <div class="media-left">
+    {{ template "component_avatar_name_gender" .ObjectiveBean.Author }}
+  </div>
+
+  <div class="media-body">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span>
+              （<a href="/v1/family/detail?id={{ .ObjectiveBean.AuthorFamily.Uuid }}">{{ .ObjectiveBean.AuthorFamily.Name }}</a>，
+              <a href="/v1/team/detail?uuid={{ .ObjectiveBean.AuthorTeam.Uuid }}">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a>）
+            </span>
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+              <i class="bi bi-paint-bucket" style="font-size: large; color: red;"></i>
+            </span>
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: right;">{{ .ObjectiveBean.Objective.CreatedAtDate }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <h4><mark>茶围目标</mark>
+          {{ .ObjectiveBean.Objective.Title }}
+        </h4>
+
+        <span style="white-space: pre-wrap;">
+          {{ .ObjectiveBean.Objective.Body }}
+        </span>
+      </div>
+
+      <div class="panel-footer">
+        <i class="bi bi-eye-fill" style="color:gray;"></i>
+        <span style="font-size: smaller;">茶台数</span> {{ .ObjectiveBean.Objective.NumReplies }}
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    加水-补充完善茶围目标内容
+    <div class="pull-right">
+      <small>已写 <span class="text-info">{{ .CurrentLength }}</span> 字，还可写 <span class="text-success" id="remaining">{{ .RemainingLength }}</span> 字</small>
+    </div>
+  </div>
+  <div class="panel-body">
+    <form role="form" action="/v1/objective/supplement" method="post">
+      <div class="form-group">
+        <textarea class="form-control" name="additional" id="additional" rows="4" minlength="17" 
+          required placeholder="请输入补充内容..."></textarea>
+        <small class="help-block">
+          当前输入: <span id="inputCount">0</span> 字 | 
+          总字数: <span id="totalCount">{{ .CurrentLength }}</span> 字 | 
+          限制: {{ .MaxLength }} 字
+        </small>
+      </div>
+      <input type="hidden" name="uuid" value="{{ .ObjectiveBean.Objective.Uuid }}">
+      <div class="form-group col-xs-offset-5">
+        <button class="btn btn-warning" type="submit" id="submitBtn">提交</button>
+        <a href="/v1/objective/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// 中文字符计数函数
+function countChineseChars(str) {
+  return str.replace(/[^\u4e00-\u9fa5]/g, '').length + 
+         str.replace(/[\u4e00-\u9fa5]/g, '').replace(/\s/g, '').length;
+}
+
+// 实时更新字数统计
+document.getElementById('additional').addEventListener('input', function() {
+  var inputText = this.value;
+  var inputCount = countChineseChars(inputText);
+  var currentLength = {{ .CurrentLength }};
+  var maxLength = {{ .MaxLength }};
+  var totalCount = currentLength + inputCount;
+  var remaining = maxLength - totalCount;
+  
+  document.getElementById('inputCount').textContent = inputCount;
+  document.getElementById('totalCount').textContent = totalCount;
+  document.getElementById('remaining').textContent = remaining > 0 ? remaining : 0;
+  
+  // 更新颜色提示
+  var remainingSpan = document.getElementById('remaining');
+  if (remaining < 0) {
+    remainingSpan.className = 'text-danger';
+    document.getElementById('submitBtn').disabled = true;
+  } else if (remaining < 50) {
+    remainingSpan.className = 'text-warning';
+    document.getElementById('submitBtn').disabled = false;
+  } else {
+    remainingSpan.className = 'text-success';
+    document.getElementById('submitBtn').disabled = false;
+  }
+  
+  // 设置最大长度
+  if (totalCount > maxLength) {
+    this.value = inputText.substring(0, inputText.length - (totalCount - maxLength));
+  }
+});
+</script>
+
+{{ end }}

@@ -1048,6 +1048,8 @@ func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
 
 	renderHTML(w, &gL, "layout", "navbar.private", "goods.new")
 }
+
+// POST /v1/goods/family_new
 func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -1391,7 +1393,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/goods/collect?id=xxx
+// GET /v1/goods/collect?uuid=xxx
 func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -1405,7 +1407,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	goods_uuid := r.URL.Query().Get("id")
+	goods_uuid := r.URL.Query().Get("uuid")
 
 	t_goods := data.Goods{Uuid: goods_uuid}
 
@@ -1416,7 +1418,6 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查用户是否已经收藏过
-
 	t_goods_user := data.GoodsUser{
 		UserId:  s_u.Id,
 		GoodsId: t_goods.Id,
@@ -1441,12 +1442,62 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if count > 99 {
-		report(w, r, "你已经收藏太多了，地库都藏不下了。")
+		report(w, r, "你已经收藏太多了，三层地库都藏不下了。")
 		return
 	}
 	//insert
 	if err = t_goods_user.Create(); err != nil {
 		util.Debug(s.Email, "Cannot create goods user from database")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/goods/eye_on", http.StatusFound)
+}
+
+// GET /v1/goods/uncollect?uuid=xxx
+func GoodsUncollect(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	goods_uuid := r.URL.Query().Get("uuid")
+
+	t_goods := data.Goods{Uuid: goods_uuid}
+
+	if err = t_goods.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug(s.Email, "Cannot get goods from database")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
+		return
+	}
+
+	//检查用户是否已经收藏过
+	t_goods_user := data.GoodsUser{
+		UserId:  s_u.Id,
+		GoodsId: t_goods.Id,
+	}
+	exist, err := t_goods_user.CheckUserGoodsExist()
+	if err != nil {
+		util.Debug(s.Email, "Cannot check goods user from database")
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
+		return
+	}
+	//如果已经收藏过，就取消收藏
+	if !exist {
+		report(w, r, "你还没有收藏过，不用取消收藏了。")
+		return
+	}
+	//delete
+	if err = t_goods_user.Delete(); err != nil {
+		util.Debug(s.Email, "Cannot delete goods user from database")
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
@@ -1468,8 +1519,8 @@ func GoodsEyeOn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gu := data.GoodsUser{UserId: s_u.Id}
-	goods_slice, err := gu.GetGoodsByUserId()
+	g_u := data.GoodsUser{UserId: s_u.Id}
+	goods_slice, err := g_u.GetGoodsByUserId()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 无物资是正常情况

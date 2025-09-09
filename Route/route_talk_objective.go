@@ -1,12 +1,15 @@
 package route
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	data "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // 处理新建茶话会的操作处理器
@@ -413,4 +416,168 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	//配置私有导航条的茶话会详情页面
 	renderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
 
+}
+
+// 处理补充茶围目标的响应和数据提交保存,GET POST
+func HandleObjectiveSupplement(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		objectiveSupplementGet(w, r)
+	case http.MethodPost:
+		objectiveSupplementPost(w, r)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/objective/supplement?uuid=xxx
+// 打开指定的茶围目标追加（补充必需内容）页面
+func objectiveSupplementGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", sess.Email, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, r, "茶博士失魂鱼，未能读取茶围目标编号，请确认后再试。")
+		return
+	}
+
+	var obSupp data.ObjectiveSupplement
+	// 读取茶围目标内容
+	ob := data.Objective{Uuid: uuid}
+	if err = ob.GetByUuid(); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			report(w, r, "你好，茶博士竟然说该茶围目标不存在，请确认后再试一次。")
+			return
+		}
+		util.Debug(" Cannot read objective given uuid", uuid, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	//核对用户身份，是否具有完善操作权限
+	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
+	if err != nil {
+		util.Debug("objective Admin permission check failed:", "userId", s_u.Id, "objectiveId", ob.Id, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+	obSupp.IsAdmin = is_admin
+	obSupp.IsVerifier = isVerifier(s_u.Id)
+
+	// 读取茶围目标资料荚
+	obSupp.ObjectiveBean, err = fetchObjectiveBean(ob)
+	if err != nil {
+		util.Debug(" Cannot read objectiveBean", err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	// 计算字数信息
+	currentLength := cnStrLen(ob.Body)
+	maxLength := int(util.Config.ThreadMaxWord)
+	remainingLength := maxLength - currentLength
+	if remainingLength < 0 {
+		remainingLength = 0
+	}
+
+	// 添加字数统计信息到模板数据
+	obSupp.CurrentLength = currentLength
+	obSupp.MaxLength = maxLength
+	obSupp.RemainingLength = remainingLength
+
+	// 用户足迹
+	s_u.Footprint = r.URL.Path
+	s_u.Query = r.URL.RawQuery
+
+	obSupp.SessUser = s_u
+
+	renderHTML(w, &obSupp, "layout", "navbar.private", "objective.supplement", "component_sess_capacity", "component_avatar_name_gender")
+}
+
+// POST /v1/objective/supplement
+// 补充完整茶围目标内容
+func objectiveSupplementPost(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", sess.Email, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	//获取post方法提交的表单
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug(" Cannot parse form", err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+	o_uuid := r.PostFormValue("uuid")
+	if o_uuid == "" {
+		report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您补充的茶围目标编号不存在。")
+		return
+	}
+	//读取提交的additional
+	additional := r.PostFormValue("additional")
+
+	// 读取茶围目标内容
+	ob := data.Objective{Uuid: o_uuid}
+	if err = ob.GetByUuid(); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			report(w, r, "你好，茶博士竟然说该茶围目标不存在，请确认后再试一次。")
+			return
+		}
+		util.Debug(" Cannot read objective given uuid", o_uuid, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
+	if err != nil {
+		util.Debug("Admin permission check failed",
+			"userId", s_u.Id,
+			"objectiveId", ob.Id,
+			"error", err,
+		)
+		report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		return
+	}
+	if !is_admin {
+		report(w, r, "茶博士惊讶，陛下你没有权限补充该茶围目标，请确认后再试。")
+		return
+	}
+
+	//读取提交内容要求>int(util.Config.ThreadMinWord)中文字符，加上已有内容是否<=int(util.Config.ThreadMaxWord)
+	if ok := submitAdditionalContent(w, r, ob.Body, additional); !ok {
+		report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说陛下您补充的茶围目标内容太多了！请确认后再试。")
+		return
+	}
+	//当前"[中文时间字符 + 补充]" + body
+	//获取当前时间，格式化成中文时间字符
+	now := time.Now()
+	timeStr := now.Format("2006年1月2日 15:04:05")
+	name := s_u.Name
+	// 追加内容（另起一行）
+	t := "\n[" + timeStr + " " + name + " 补充] " + additional // 注意开头的 \n
+	ob.Body += t
+	//更新茶围目标内容
+	if err = ob.Update(); err != nil {
+		util.Debug(" Cannot update objective", err)
+		report(w, r, "你好，茶博士失魂鱼，墨水中断未能补充茶围目标。")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/objective/detail?uuid="+o_uuid, http.StatusFound)
 }

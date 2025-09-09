@@ -60,12 +60,20 @@
 
         {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，再检查茶议类型以决定功能按钮  */}}
         {{ if (eq .ThreadBean.Thread.Category 2) }} {{/* 检查茶议类型--约茶 */}}
+        {{ with .Appointment }}{{/* 约茶非空检查-开始 */}}
+        {{ if (gt  .Status 0) }}{{/* 已约茶 */}}
+        <a class="btn btn-default" href="/v1/appointment/detail?uuid={{ .Uuid }}" role="button">查看-约茶</a>
+        {{ else }}{{/* 未约茶 */}}
         <div style="display: flex; justify-content: space-between;">
-          <a class="btn btn-default" href="/v1/project/place_update?uuid={{ .QuoteProjectBean.Project.Uuid }}"
+          <a class="btn btn-default" href="/v1/project/place_update?uuid={{ $.QuoteProjectBean.Project.Uuid }}"
             role="button">+ 更新茶话会地点</a>
-          <a class="btn btn-default" href="/v1/appointment/new?uuid={{ .QuoteProjectBean.Project.Uuid }}"
+          <a class="btn btn-default" href="/v1/appointment/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}"
             role="button">+ 约茶</a>
         </div>
+        {{ end }}{{/* 约茶状态检查完成 */}}
+        {{ end }}{{/* 约茶非空检查-结束 */}}
+
+
         {{ else if (eq .ThreadBean.Thread.Category 3) }} {{/* 检查茶议类型--看看 */}}
         {{/* 检查“看看”（see-seek）的状态，如果没有记录，显示新建按钮，如果有记录，而且状态是进行中，显示“继续看看”按钮 */}}
         
@@ -104,18 +112,19 @@
         <a class="btn btn-default" href="/v1/brain-fire/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+ 脑火</a>
         {{ end }}
         {{ end }}{{/* 脑火非空检查-结束 */}}
+         
 
-
-        {{ else if (eq .ThreadBean.Thread.Category 5) }} {{/* 检查茶议类型--建议 */}}
-         {{ with .Suggestion }}{{/* 建议非空检查-开始 */}}
-         {{ if eq .Status 0 }}{{/* 未开始 */}}
-        <a class="btn btn-default" href="/v1/suggestion/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+
-          建议</a>
-          {{ else }}
-          <a class="btn btn-default" href="/v1/suggestion/detail?uuid={{ .Uuid }}" role="button">查看-建议</a>
-          {{ end }}
-        {{ end }}{{/* 建议非空检查-结束 */}}
-
+        {{ else if (eq .ThreadBean.Thread.Category 5) }} {{/* 检查茶议类型--“建议” */}}
+        {{ with .Suggestion }}{{/* “建议”非空检查-开始 */}}
+        {{ if gt .Status 0 }}
+         
+         <a class="btn btn-default" href="/v1/suggestion/detail?uuid={{ .Uuid }}" role="button">查看-建议</a>
+      
+         {{ else }}{{/* “建议”非空检查-是空值 */}}
+         <a class="btn btn-default" href="/v1/suggestion/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+ 建议</a>
+         {{ end }}
+        {{ end }}{{/* “建议”非空检查-结束 */}}
+        
 
         {{ else if (eq .ThreadBean.Thread.Category 6) }} {{/* 检查茶议类型--宝贝 */}}
         <a class="btn btn-default" href="/v1/project_goods/new?uuid={{ .QuoteProjectBean.Project.Uuid }}"

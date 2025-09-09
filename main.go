@@ -124,8 +124,7 @@ func main() {
 	mux.HandleFunc("/v1/objective/new", route.HandleNewObjective)
 	mux.HandleFunc("/v1/objective/square", route.ObjectiveSquare)
 	mux.HandleFunc("/v1/objective/detail", route.ObjectiveDetail)
-	//mux.HandleFunc("/v1/objective/edit", editObjective)
-	//mux.HandleFunc("/v1/objective/update", updateObjective)
+	mux.HandleFunc("/v1/objective/supplement", route.HandleObjectiveSupplement)
 
 	//defined in route_talk_project.go
 	mux.HandleFunc("/v1/project/new", route.HandleNewProject)
@@ -147,6 +146,8 @@ func main() {
 
 	//defined in route_action_appointment.go
 	mux.HandleFunc("/v1/appointment/new", route.HandleNewAppointment)
+	mux.HandleFunc("/v1/appointment/accept", route.AppointmentAccept)
+	mux.HandleFunc("/v1/appointment/reject", route.AppointmentReject)
 	mux.HandleFunc("/v1/appointment/detail", route.AppointmentDetail)
 
 	// defined in route_action_see-seek.go
@@ -175,6 +176,7 @@ func main() {
 	mux.HandleFunc("/v1/goods/team_detail", route.GoodsTeamDetail)
 	mux.HandleFunc("/v1/goods/team_update", route.HandleGoodsTeamUpdate)
 	mux.HandleFunc("/v1/goods/collect", route.GoodsCollect)
+	mux.HandleFunc("/v1/goods/uncollect", route.GoodsUncollect)
 	mux.HandleFunc("/v1/goods/eye_on", route.GoodsEyeOn)
 
 	//defined in route_action_handicraft.go

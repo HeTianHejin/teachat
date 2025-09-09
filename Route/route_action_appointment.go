@@ -331,7 +331,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 	renderHTML(w, &aPD, "layout", "navbar.private", "action.appointment.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
-// Get /v1/appointment/detail?uuid=xXx
+// GET /v1/appointment/detail?uuid=xxx
 func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
@@ -344,20 +344,53 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	// 获取提交的uuid
-	pr_uuid_string := r.URL.Query().Get("uuid")
-	if pr_uuid_string == "" {
-		util.Debug(" Cannot get uuid", err)
-		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, r, "你好，茶博士看不懂陕下提交的UUID参数，请稍后再试。")
 		return
 	}
-	// 获取项目
-	pr := data.Project{Uuid: pr_uuid_string}
-	if err = pr.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project", pr_uuid_string, err)
-		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
+
+	var pr data.Project
+	// 尝试直接获取预约记录
+	pr_appointment := data.ProjectAppointment{Uuid: uuid}
+	if err = pr_appointment.GetByIdOrUUID(r.Context()); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// 如果找不到预约记录，尝试用project uuid查找
+			pr = data.Project{Uuid: uuid}
+			if err = pr.GetByUuid(); err != nil {
+				util.Debug(" Cannot get project by uuid", uuid, err)
+				report(w, r, "你好，茶博士找不到指定的茶台或预约记录。")
+				return
+			}
+			// 用project id查找预约记录
+			pr_appointment, err = data.GetAppointmentByProjectId(pr.Id, r.Context())
+			if err != nil {
+				if errors.Is(err, sql.ErrNoRows) {
+					report(w, r, "这个茶台尚未约茶。")
+					return
+				}
+				util.Debug(" Cannot get appointment by project id", pr.Id, err)
+				report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+				return
+			}
+		} else {
+			util.Debug(" Cannot get appointment by uuid", uuid, err)
+			report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+			return
+		}
 	}
+
+	if !(pr.Id > 1) {
+		// 获取项目信息
+		pr = data.Project{Id: pr_appointment.ProjectId}
+		if err = pr.Get(); err != nil {
+			util.Debug(" Cannot get project", pr_appointment.ProjectId, err)
+			report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+			return
+		}
+	}
+
 	pr_bean, err := fetchProjectBean(pr)
 	if err != nil {
 		util.Debug(" Cannot get project bean", err)
@@ -365,24 +398,9 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 获取预约记录
-	p_a, err := data.GetAppointmentByProjectId(pr.Id, r.Context())
+	p_a_bean, err := fetchAppointmentBean(pr_appointment)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "这个茶台尚未约茶。")
-			return
-		}
-		if err.Error() == "没有找到相关的茶台预约" {
-			report(w, r, "没有找到相关的茶台预约")
-			return
-		}
-		util.Debug(" Cannot get project appointment", err)
-		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
-	p_a_bean, err := fetchAppointmentBean(p_a)
-	if err != nil {
-		util.Debug(" Cannot fetch project appointment bean", err)
+		util.Debug(" Cannot fetch appointment bean", err)
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -400,13 +418,138 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
+
 	aPD := data.AppointmentTemplateData{
-		SessUser:           s_u,                // TODO: 检查权限-是否为预约记录的相关茶团或审核者
-		IsVerifier:         isVerifier(s_u.Id), // TODO: 检查权限-是否为预约记录的审核者
+		SessUser:           s_u,
+		IsVerifier:         isVerifier(s_u.Id),
 		AppointmentBean:    p_a_bean,
 		ProjectBean:        pr_bean,
 		QuoteObjectiveBean: ob_bean,
 	}
 	renderHTML(w, &aPD, "layout", "navbar.private", "action.appointment.detail", "component_sess_capacity", "component_avatar_name_gender")
+}
 
+// GET /v1/appointment/accept?uuid=xxx
+// 确认约茶功能 - 接受预约
+func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug(" Cannot get user", err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, r, "你好，茶博士看不懂陛下提交的UUID参数，请稍后再试。")
+		return
+	}
+
+	// 获取预约记录
+	pr_appointment := data.ProjectAppointment{Uuid: uuid}
+	if err = pr_appointment.GetByIdOrUUID(r.Context()); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			report(w, r, "你好，茶博士找不到指定的预约记录。")
+			return
+		}
+		util.Debug(" Cannot get appointment", uuid, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	// 检查预约状态
+	if pr_appointment.Status != data.AppointmentStatusPending {
+		report(w, r, "该预约已处理，无需重复操作。")
+		return
+	}
+
+	// 检查权限 - 只有付费方或收费方可以确认
+	// if s_u.Id != pr_appointment.PayerUserId && s_u.Id != pr_appointment.PayeeUserId {
+	// 	report(w, r, "你好，茶博士说只有相关当事人才能确认约茶。")
+	// 	return
+	// }
+	// 检查权限 - 只有见证人可以确认
+	if !isVerifier(s_u.Id) {
+		report(w, r, "你好，茶博士说只有见证人才能确认约茶。")
+		return
+	}
+
+	// 更新预约状态为已确认
+	now := time.Now()
+	pr_appointment.Status = data.AppointmentStatusConfirmed
+	pr_appointment.ConfirmedAt = &now
+	pr_appointment.UpdatedAt = now
+
+	if err = pr_appointment.Update(r.Context()); err != nil {
+		util.Debug(" Cannot update appointment status", err)
+		report(w, r, "你好，茶博士墨水不够，未能确认约茶。")
+		return
+	}
+
+	// 重定向到预约详情页面
+	http.Redirect(w, r, "/v1/appointment/detail?uuid="+uuid, http.StatusFound)
+}
+// GET /v1/appointment/reject?uuid=xxx
+// 拒绝约茶功能 - 拒绝预约
+func AppointmentReject(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug(" Cannot get user", err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, r, "你好，茶博士看不懂陛下提交的UUID参数，请稍后再试。")
+		return
+	}
+
+	// 获取预约记录
+	pr_appointment := data.ProjectAppointment{Uuid: uuid}
+	if err = pr_appointment.GetByIdOrUUID(r.Context()); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			report(w, r, "你好，茶博士找不到指定的预约记录。")
+			return
+		}
+		util.Debug(" Cannot get appointment", uuid, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	// 检查预约状态
+	if pr_appointment.Status != data.AppointmentStatusPending {
+		report(w, r, "该预约已处理，无需重复操作。")
+		return
+	}
+
+	// 检查权限 - 只有见证人可以拒绝
+	if !isVerifier(s_u.Id) {
+		report(w, r, "你好，茶博士说只有见证人才能拒绝约茶。")
+		return
+	}
+
+	// 更新预约状态为已拒绝
+	now := time.Now()
+	pr_appointment.Status = data.AppointmentStatusRejected
+	pr_appointment.UpdatedAt = now
+
+	if err = pr_appointment.Update(r.Context()); err != nil {
+		util.Debug(" Cannot update appointment status", err)
+		report(w, r, "你好，茶博士墨水不够，未能拒绝约茶。")
+		return
+	}
+
+	// 重定向到预约详情页面
+	http.Redirect(w, r, "/v1/appointment/detail?uuid="+uuid, http.StatusFound)
 }

@@ -483,6 +483,7 @@ func (tg *GoodsTeam) CheckTeamGoodsExist() (exist bool, err error) {
 	return
 }
 
+// 用户看上（收藏/标记）的物质
 type GoodsUser struct {
 	Id        int
 	UserId    int

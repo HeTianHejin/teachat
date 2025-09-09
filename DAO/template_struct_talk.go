@@ -45,6 +45,17 @@ type ObjectiveBean struct {
 
 	ProjectCount int // 附属对象茶台计数
 }
+type ObjectiveSupplement struct {
+	SessUser   User // 当前会话用户
+	IsAdmin    bool // 是否为茶围管理员
+	IsMaster   bool // 是否为茶台管理员
+	IsVerifier bool // 是否为见证员
+
+	ObjectiveBean   ObjectiveBean // 茶围（目的/愿景）豆荚
+	CurrentLength   int           // 当前长度
+	MaxLength       int           //最大字数
+	RemainingLength int           //剩余字数长度
+}
 type ProjectBean struct {
 	Project       Project
 	Open          bool
@@ -191,12 +202,12 @@ type ThreadSupplement struct {
 	PostBeanSlice      []PostBean // 普通跟贴豆荚队列
 	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
-	AppointmentStatus int     // 约茶状态
-	SeeSeek           SeeSeek // SeeSeek
-	BrainFire         BrainFire
-	Suggestion        Suggestion
-	Goods             Goods
-	Handicraft        Handicraft
+	Appointment ProjectAppointment // 约茶状态
+	SeeSeek     SeeSeek            // SeeSeek
+	BrainFire   BrainFire
+	Suggestion  Suggestion
+	Goods       Goods
+	Handicraft  Handicraft
 }
 
 // 用于跟贴详情页面渲染
