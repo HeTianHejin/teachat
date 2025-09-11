@@ -37,9 +37,19 @@ type Project struct {
 	// 32: 已婉拒封闭式茶台 (Rejected close table)
 	Class int
 
+	Status int //0、待约茶，1、茶热 2、已收茶 3、茶凉
+
 	// 仅用于页面渲染，不保存到数据库
 	ActiveData PublicPData
 }
+
+const (
+	// Project.Status
+	ProjectStatusPendingAppointment int = iota // 0、待约茶
+	ProjectStatusHotTea                        // 1、茶热
+	ProjectStatusTeaReceived                   // 2、已收茶
+	ProjectStatusTeaCold                       // 3、茶凉
+)
 
 const (
 	PrClassPendingAppendReview int  = iota // 0: 追加待评草台 (Pending append review)
@@ -185,8 +195,24 @@ func (project *Project) InvitedTeamsCount() (count int, err error) {
 }
 
 // 获取茶台的属性
-func (project *Project) GetStatus() string {
+func (project *Project) ClassString() string {
 	return PrProperty[project.Class]
+}
+
+// Project.StatusString() 返回项目状态的中文描述
+func (project *Project) StatusString() string {
+	switch project.Status {
+	case ProjectStatusPendingAppointment:
+		return "待约茶"
+	case ProjectStatusHotTea:
+		return "茶热"
+	case ProjectStatusTeaReceived:
+		return "已收茶"
+	case ProjectStatusTeaCold:
+		return "茶凉"
+	default:
+		return "未知状态"
+	}
 }
 
 // farmat the CreatedAt date to display nicely on the screen
@@ -203,21 +229,21 @@ func (project *Project) EditAtDate() string {
 
 // Project.Create()  编写postgreSQL语句，插入新纪录，return （err error）
 func (project *Project) Create() (err error) {
-	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, cover, team_id, is_private, family_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
+	statement := "INSERT INTO projects (uuid, title, body, objective_id, user_id, created_at, class, cover, team_id, is_private, family_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), project.Title, project.Body, project.ObjectiveId, project.UserId, time.Now(), project.Class, project.Cover, project.TeamId, project.IsPrivate, project.FamilyId).
+	err = stmt.QueryRow(Random_UUID(), project.Title, project.Body, project.ObjectiveId, project.UserId, time.Now(), project.Class, project.Cover, project.TeamId, project.IsPrivate, project.FamilyId, project.Status).
 		Scan(&project.Id, &project.Uuid)
 	return
 }
 
 // Project.Get()  编写postgreSQL语句，根据id查询纪录，return （err error）
 func (project *Project) Get() (err error) {
-	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE id = $1", project.Id).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId)
+	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id, status FROM projects WHERE id = $1", project.Id).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId, &project.Status)
 	return
 }
 
@@ -225,16 +251,22 @@ func (project *Project) Get() (err error) {
 // 返回一个茶台对象，如果查询失败，则返回err不为nil
 func (project *Project) GetByUuid() (err error) {
 
-	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE uuid = $1", project.Uuid).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId)
+	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id, status FROM projects WHERE uuid = $1", project.Uuid).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId, &project.Status)
+	return
+}
+
+// Project.Update()  编写postgreSQL语句，更新纪录，return （err error）
+func (project *Project) Update() (err error) {
+	_, err = db.Exec("UPDATE projects SET title=$2, body=$3, objective_id=$4, user_id=$5, edit_at=$6, class=$7, cover=$8, team_id=$9, is_private=$10, family_id=$11, status=$12 WHERE id=$1", project.Id, project.Title, project.Body, project.ObjectiveId, project.UserId, time.Now(), project.Class, project.Cover, project.TeamId, project.IsPrivate, project.FamilyId, project.Status)
 	return
 }
 
 // 获取茶议所属的茶台
 func (t *Thread) Project() (project Project, err error) {
 	project = Project{}
-	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE id = $1", t.ProjectId).
-		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId)
+	err = db.QueryRow("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id, status FROM projects WHERE id = $1", t.ProjectId).
+		Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId, &project.Status)
 	return
 }
 
@@ -269,13 +301,13 @@ func (project *Project) NumReplies() (count int) {
 
 // 获取某个ID的茶话会下全部茶台
 func (objective *Objective) Projects() (projects []Project, err error) {
-	rows, err := db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE objective_id = $1", objective.Id)
+	rows, err := db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id, status FROM projects WHERE objective_id = $1", objective.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		project := Project{}
-		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId); err != nil {
+		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId, &project.Status); err != nil {
 			return
 		}
 		projects = append(projects, project)
@@ -286,13 +318,13 @@ func (objective *Objective) Projects() (projects []Project, err error) {
 
 // objective.GetPublicProjects() fetch project.Class=1 or 2,return projects
 func (objective *Objective) GetPublicProjects() (projects []Project, err error) {
-	rows, err := db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE objective_id = $1 AND class IN (1, 2)", objective.Id)
+	rows, err := db.Query("SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id, status FROM projects WHERE objective_id = $1 AND class IN (1, 2)", objective.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		project := Project{}
-		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId); err != nil {
+		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId, &project.Status); err != nil {
 			return
 		}
 		projects = append(projects, project)
@@ -362,13 +394,13 @@ func (proj *Project) IsInvitedMember(user_id int) (bool, error) {
 func SearchProjectByTitle(keyword string, limit int, ctx context.Context) (projects []Project, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id FROM projects WHERE title LIKE $1 LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := db.QueryContext(ctx, "SELECT id, uuid, title, body, objective_id, user_id, created_at, class, edit_at, cover, team_id, is_private, family_id, status FROM projects WHERE title LIKE $1 LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		project := Project{}
-		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId); err != nil {
+		if err = rows.Scan(&project.Id, &project.Uuid, &project.Title, &project.Body, &project.ObjectiveId, &project.UserId, &project.CreatedAt, &project.Class, &project.EditAt, &project.Cover, &project.TeamId, &project.IsPrivate, &project.FamilyId, &project.Status); err != nil {
 			return
 		}
 		projects = append(projects, project)
@@ -381,6 +413,15 @@ func SearchProjectByTitle(keyword string, limit int, ctx context.Context) (proje
 func (project *Project) PlaceId() (place_id int, err error) {
 	err = db.QueryRow("SELECT place_id FROM project_place WHERE project_id = $1", project.Id).Scan(&place_id)
 	return
+}
+
+// project.IsAppointmentCompleted()
+func (p *Project) IsAppointmentCompleted(ctx context.Context) bool {
+	appointment, err := GetAppointmentByProjectId(p.Id, ctx)
+	if err != nil {
+		return false
+	}
+	return appointment.Status == AppointmentStatusConfirmed
 }
 
 // 检查项目的SeeSeek是否已完成

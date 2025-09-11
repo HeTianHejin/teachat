@@ -490,10 +490,26 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士墨水不够，未能确认约茶。")
 		return
 	}
+	// 更新项目状态为已约茶
+	pr := data.Project{Id: pr_appointment.ProjectId}
+	if err = pr.Get(); err != nil {
+		util.Debug(" Cannot get project", pr_appointment.ProjectId, err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	} else {
+		pr.Status = data.ProjectStatusHotTea
+
+		if err = pr.Update(); err != nil {
+			util.Debug(" Cannot update project status", err)
+			report(w, r, "你好，茶博士墨水不够，未能确认约茶。")
+			return
+		}
+	}
 
 	// 重定向到预约详情页面
 	http.Redirect(w, r, "/v1/appointment/detail?uuid="+uuid, http.StatusFound)
 }
+
 // GET /v1/appointment/reject?uuid=xxx
 // 拒绝约茶功能 - 拒绝预约
 func AppointmentReject(w http.ResponseWriter, r *http.Request) {

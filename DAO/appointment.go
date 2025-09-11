@@ -120,8 +120,6 @@ func (t *ProjectAppointment) GetByIdOrUUID(ctx context.Context) (err error) {
 
 		if errors.Is(err, context.DeadlineExceeded) {
 			util.Debug("query ProjectAppointment timed out")
-		} else {
-			util.Debug("query ProjectAppointment failed: %v", err)
 		}
 		return err
 	}

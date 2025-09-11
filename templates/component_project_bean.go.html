@@ -64,6 +64,11 @@
             <a href="/v1/project/detail?uuid={{ .Project.Uuid }}">
               {{ .Project.Title }}
             </a>
+             {{/* 检查是否入围1 */}}{{if .IsApproved }}
+          {{/* 这个主意已被台主或者管理员选中入围 */}}
+          <span class="label label-info">{{ .Project.StatusString}}</span>
+          {{/* 检查是否入围1 */}}{{ end }}
+            
           </h4>
 
         {{ .Project.Body }} ...

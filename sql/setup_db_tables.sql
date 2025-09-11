@@ -289,7 +289,8 @@ create table projects (
   cover                  varchar(64) default 'default-pr-cover',
   team_id                integer not null default 2,
   is_private             boolean default false,
-  family_id              integer not null default 0
+  family_id              integer not null default 0,
+  status                 integer default 0
 );
 
 create table project_approved (

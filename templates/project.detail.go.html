@@ -107,7 +107,7 @@
       <div class="panel-footer">
         <span>
           <a href="/v1/appointment/detail?uuid={{ .ProjectBean.Project.Uuid }}">约茶</a> 
-           <i class="bi-bookmark-check" style="font-size: 1.2rem; color: black;"></i>
+           {{ if .IsAppointmentCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
         </span>
         <span style="margin-inline-start: 2rem;">
           <a href="/v1/see-seek/detail?uuid={{ .ProjectBean.Project.Uuid }}">看看</a>

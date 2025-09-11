@@ -42,7 +42,7 @@ func main() {
 	files := cacheControl(http.FileServer(http.Dir(util.Config.Static)))
 
 	// 添加Gzip压缩
-	handler := gziphandler.GzipHandler(files) // 直接使用，无需 nil 检查
+	handler := gziphandler.GzipHandler(files)
 
 	// 注册静态资源处理器
 	mux.Handle(staticPrefix, http.StripPrefix(staticPrefix, handler))

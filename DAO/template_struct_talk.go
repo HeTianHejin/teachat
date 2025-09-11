@@ -3,6 +3,7 @@ package data
 // 某个茶话页面渲染所需的动态数据
 type PublicPData struct {
 	IsAuthor bool // 是否为作者
+
 }
 
 // 某个茶话会详情页面渲染

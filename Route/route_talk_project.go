@@ -865,6 +865,8 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	}
 
+	// 检查Appointment是否完成
+	pD.IsAppointmentCompleted = pr.IsAppointmentCompleted(r.Context())
 	// 检查SeeSeek是否完成
 	pD.IsSeeSeekCompleted = pr.IsSeeSeekCompleted(r.Context())
 	// 检查BrainFire是否完成

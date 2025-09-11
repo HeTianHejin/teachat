@@ -181,6 +181,15 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "创建建议记录失败")
 		return
 	}
+	// 反馈结果到茶台项目状态，如果Resolution的值为false，搁置，更新项目状态
+	if !resolution {
+		t_proj.Status = int(data.ProjectStatusTeaCold)
+		if err := t_proj.Update(); err != nil {
+			util.Debug(" Cannot update project status to TeaCold", err)
+			report(w, r, "更新项目状态失败")
+			return
+		}
+	}
 
 	// 重定向到详情页面
 	http.Redirect(w, r, "/v1/suggestion/detail?uuid="+suggestion.Uuid, http.StatusFound)

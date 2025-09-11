@@ -288,7 +288,7 @@ func fetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 	} else {
 		pb.Open = false
 	}
-	pb.Status = project.GetStatus()
+	pb.Status = project.ClassString()
 	pb.ThreadCount = project.NumReplies()
 	pb.CreatedAtDate = project.CreatedAtDate()
 	author, err := project.User()
