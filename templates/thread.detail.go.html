@@ -94,9 +94,10 @@
             至
             {{ .EndTimeString }}
           </div>
-          
+          {{ if gt .Status 0 }}{{/* "约茶"是否已提交-开始 */}}
           <!-- 约茶详情按钮 -->
           <a class="btn btn-sm btn-default" href="/v1/appointment/detail?uuid={{ .Uuid }}" role="button">详情</a>
+          {{ end }}{{/* "约茶"是否已提交-结束 */}}
          
           {{ end }}{{/* "约茶"非空检查-结束 */}}
         </div>

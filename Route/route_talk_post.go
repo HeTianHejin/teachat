@@ -210,9 +210,9 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取针对的目标茶议
-	thre_uuid := r.PostFormValue("uuid")
+	thread_uuid := r.PostFormValue("uuid")
 	//检查uuid是否有效
-	t_thread, err := data.GetThreadByUUID(thre_uuid)
+	t_thread, err := data.GetThreadByUUID(thread_uuid)
 	if err != nil {
 		report(w, r, "你好，根据陛下的指示，却未能读取目标茶议。")
 		return
@@ -230,7 +230,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//读取陛下表态,立场是支持（true）或者反对(false)
+	//读取表态,立场是支持（true）或者反对(false)
 	post_attitude := r.PostFormValue("attitude") == "true"
 
 	body := r.PostFormValue("body")
@@ -271,7 +271,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	t_proj, err := t_thread.Project()
 	if err != nil {
 		util.Debug(" Cannot get project by project id", t_proj.Id, err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
+		report(w, r, "你好，未能读取专属茶台资料。")
 		return
 	}
 
@@ -285,7 +285,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		ok, err := t_proj.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug("Cannot check is invited member by project id", t_proj.Id, err)
-			report(w, r, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
+			report(w, r, "你好，未能读取专属茶台资料。")
 			return
 		}
 		if !ok {
@@ -294,7 +294,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		}
 
 	default:
-		report(w, r, "你好，茶博士满头大汗说，这个茶台状态异常无法使用。")
+		report(w, r, "你好，茶博士说，这个茶台状态异常无法使用。")
 		return
 	}
 
@@ -366,7 +366,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		t := fmt.Sprintf("你好，对“ %s ”发布的品味已准备妥当，稍等有缘茶友评审通过，即可昭告天下。", t_thread.Title)
-		// 提示陛下草稿保存成功
+		// 提示草稿保存成功
 		report(w, r, t)
 		return
 
@@ -377,7 +377,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 			switch {
 			case strings.Contains(err.Error(), "获取品味草稿失败"):
 				util.Debug("Cannot get draft-post", err)
-				report(w, r, "你好，茶博士失魂鱼，竟然说有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
+				report(w, r, "你好，茶博士竟然说，有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
 			case strings.Contains(err.Error(), "创建新品味失败"):
 				util.Debug("Cannot save post", err)
 				report(w, r, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")

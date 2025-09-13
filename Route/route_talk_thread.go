@@ -425,6 +425,15 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 		// 检查当前是哪一种类型茶议
 		switch thread.Category {
+		case data.ThreadCategoryNested:
+			//针对某个post的议中议，检查是否有权限访问
+			if thread.PostId == 0 {
+				util.Debug(" Invalid thread category and post_id not match", thread.Id, thread.Category, thread.PostId)
+				report(w, r, "你好，茶博士说，这个茶台状态异常无法使用。")
+				return
+			}
+			//检查当前用户是否有权限访问该议中议
+
 		case data.ThreadCategoryAppointment:
 			//检查是否已存在约茶记录
 			pr_appointment, err := data.GetAppointmentByProjectId(project.Id, r.Context())
@@ -433,7 +442,10 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
-			tD.Appointment = pr_appointment
+			// 可能没有记录
+			if pr_appointment.Id > 0 {
+				tD.Appointment = pr_appointment
+			}
 		case data.ThreadCategorySeeSeek:
 			//检查see-seek是否存在记录？
 			see_seek, err := data.GetSeeSeekByProjectId(project.Id, r.Context())
@@ -474,7 +486,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		case data.ThreadCategoryHandcraft:
 			break
 		default:
-			report(w, r, "你好，茶博士表示，陛下，普通茶议不能加水呢。")
+			report(w, r, "你好，茶博士表示，陛下，奇怪的茶不能喝。")
 			return
 
 		}

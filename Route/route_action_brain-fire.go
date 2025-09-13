@@ -314,8 +314,12 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 			}
 			brainFire, err = data.GetBrainFireByProjectId(project.Id, r.Context())
 			if err != nil {
+				if err == sql.ErrNoRows {
+					report(w, r, "该项目还没有脑火记录")
+					return
+				}
 				util.Debug("Cannot get BrainFire by project_id", project.Id, err)
-				report(w, r, "该项目还没有脑火记录")
+				report(w, r, "该项目脑火记录似乎被茶水泡糊了")
 				return
 			}
 		} else {

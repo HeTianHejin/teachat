@@ -32,10 +32,11 @@ type ProjectAppointment struct {
 	VerifierTeamId   int
 
 	// 状态管理：
-	// 0、"待确认"
-	// 1、"已确认"
-	// 2、"已拒绝"
-	// 3、"已取消"
+	// 0、"待约茶"
+	// 1、已提交
+	// 2、"已确认"
+	// 3、"已拒绝"
+	// 4、"已取消"
 	Status      AppointmentStatus // 枚举类型
 	ConfirmedAt *time.Time        // 明确记录确认时间
 	RejectedAt  *time.Time        // 记录拒绝时间（可选）
@@ -60,7 +61,7 @@ func (t *ProjectAppointment) IsCancelled() bool {
 	return t.Status == AppointmentStatusCancelled
 }
 
-// ProjectAppointment.IsPending() bool //待确认
+// ProjectAppointment.IsPending() bool //待约茶
 func (t *ProjectAppointment) IsPending() bool {
 	return t.Status == AppointmentStatusPending
 }
@@ -74,7 +75,9 @@ func (t *ProjectAppointment) IsExpired() bool {
 func (t *ProjectAppointment) StatusString() string {
 	switch t.Status {
 	case AppointmentStatusPending:
-		return "待确认"
+		return "待约茶"
+	case AppointmentStatusSubmitted:
+		return "已提交"
 	case AppointmentStatusConfirmed:
 		return "已确认"
 	case AppointmentStatusRejected:
@@ -152,10 +155,11 @@ func (t *ProjectAppointment) Update(ctx context.Context) (err error) {
 type AppointmentStatus int
 
 const (
-	AppointmentStatusPending   AppointmentStatus = iota // 0 待确认
-	AppointmentStatusConfirmed                          // 1 已确认
-	AppointmentStatusRejected                           // 2 已拒绝
-	AppointmentStatusCancelled                          // 3 已取消
+	AppointmentStatusPending   AppointmentStatus = iota // 0 待约茶
+	AppointmentStatusSubmitted                          // 1 已提交
+	AppointmentStatusConfirmed                          // 2 已确认
+	AppointmentStatusRejected                           // 3 已拒绝
+	AppointmentStatusCancelled                          // 4 已取消
 )
 
 // action.appoinmentStatusString() string读取茶台预约状态

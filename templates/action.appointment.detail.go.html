@@ -122,26 +122,19 @@
       <div class="panel-body">
         <div class="form-group">
           <h3 class="text-center">
-            {{ if eq .Appointment.Status 0 }}
-              <span class="label label-warning">待处理</span>
-            {{ else if eq .Appointment.Status 1 }}
-              <span class="label label-success">已确认</span>
-            {{ else if eq .Appointment.Status 2 }}
-              <span class="label label-danger">已拒绝</span>
-            {{ else if eq .Appointment.Status 3 }}
-              <span class="label label-primary">已完成</span>
-            {{ else }}
-              <span class="label label-default">{{ .Appointment.StatusString }}</span>
-            {{ end }}
+           
+              <span class="label label-info">{{ .Appointment.StatusString }}</span>
+            
           </h3>
         </div>
         
         {{ if $.IsVerifier }}    {{/* 只有见证人可以修改约茶状态 */}}
         <div class="form-group text-center">
-          {{ if eq .Appointment.Status 0 }}
+          {{ if eq .Appointment.Status 1 }}
           <a href="/v1/appointment/accept?uuid={{ .Appointment.Uuid }}" class="btn btn-success">确认约茶</a>
+          {{ else if eq .Appointment.Status 3 }}
           <a href="/v1/appointment/reject?uuid={{ .Appointment.Uuid }}" class="btn btn-danger">拒绝约茶</a>
-          {{ else if eq .Appointment.Status 1 }}
+          {{ else if eq .Appointment.Status 2 }}
           <a href="/v1/appointment/complete?uuid={{ .Appointment.Uuid }}" class="btn btn-primary">完成约茶</a>
           {{ end }}
         </div>

@@ -152,7 +152,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		AppointmentBean:    p_a,
 	}
 	// 渲染HTML页面
-	renderHTML(w, &pAD, "layout", "navbar.private", "action.appoinment.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	renderHTML(w, &pAD, "layout", "navbar.private", "action.appointment.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/appointment/new
@@ -257,31 +257,18 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	// 获取项目
-	pr := data.Project{Id: project_id}
-	if err = pr.Get(); err != nil {
-		util.Debug(" Cannot get project", err)
-		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
-	pr_bean, err := fetchProjectBean(pr)
-	if err != nil {
-		util.Debug(" Cannot get project bean", err)
-		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
-	ob := data.Objective{Id: pr.ObjectiveId}
-	if err = ob.Get(); err != nil {
-		util.Debug(" Cannot get objective", err)
-		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
-	ob_bean, err := fetchObjectiveBean(ob)
-	if err != nil {
-		util.Debug(" Cannot get objective bean", err)
-		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
+	// // 获取项目
+	// pr := data.Project{Id: project_id}
+	// if err = pr.Get(); err != nil {
+	// 	util.Debug(" Cannot get project", err)
+	// 	report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+	// 	return
+	// }
+	// if place_id != pr.PlaceId{
+	// 	report(w, r, "请选择正确的地点")
+	// 	return
+	// }
+
 	verifier_family_id := data.FamilyIdUnknown
 	verifier_team_id := data.TeamIdVerifier
 	now := time.Now()
@@ -302,7 +289,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		StartTime:        start_time,
 		EndTime:          end_time,
 		PlaceId:          place_id,
-		Status:           data.AppointmentStatusPending,
+		Status:           data.AppointmentStatusSubmitted,
 		ConfirmedAt:      &now,
 		UpdatedAt:        now,
 	}
@@ -313,22 +300,10 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	// 获取预约记录的bean
-	p_a_bean, err := fetchAppointmentBean(new_p_a)
-	if err != nil {
-		util.Debug(" Cannot fetch project appointment bean", err)
-		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
-	aPD := data.AppointmentTemplateData{
-		SessUser:           s_u,
-		IsVerifier:         true,
-		ProjectBean:        pr_bean,
-		QuoteObjectiveBean: ob_bean,
-		AppointmentBean:    p_a_bean,
-	}
 
-	renderHTML(w, &aPD, "layout", "navbar.private", "action.appointment.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	// 跳转约茶详情页面
+	http.Redirect(w, r, "/v1/appointment/detail?uuid="+new_p_a.Uuid, http.StatusSeeOther)
+
 }
 
 // GET /v1/appointment/detail?uuid=xxx
@@ -463,7 +438,7 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查预约状态
-	if pr_appointment.Status != data.AppointmentStatusPending {
+	if pr_appointment.Status != data.AppointmentStatusSubmitted {
 		report(w, r, "该预约已处理，无需重复操作。")
 		return
 	}

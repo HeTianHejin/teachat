@@ -317,8 +317,12 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 			}
 			seeSeek, err = data.GetSeeSeekByProjectId(project.Id, r.Context())
 			if err != nil {
+				if err == sql.ErrNoRows {
+					report(w, r, "该项目还没有“看看”记录")
+					return
+				}
 				util.Debug("Cannot get SeeSeek by project_id", project.Id, err)
-				report(w, r, "该项目还没有“看看”记录")
+				report(w, r, "该项目的“看看”记录似乎被水泡糊了")
 				return
 			}
 		} else {

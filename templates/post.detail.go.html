@@ -97,7 +97,7 @@
   </div>
 </div>
 
-{{/* 这是 针对某个post的“茶议中茶议” 撰写模版 */}}
+{{/* 这是 针对某个post的“议中议” 撰写模版 */}}
 {{ if .IsInput }}
 <button class="btn btn-default btn-block" type="button" data-toggle="collapse" data-target="#newThreadPanel">
   <i class="bi-patch-plus" style="font-size: 2rem; color: black;"></i> 新茶议
@@ -196,6 +196,43 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const teamSelect = document.getElementById('team_id');
+  const familySelect = document.getElementById('family_id');
+  const teamRadio = document.getElementById('team');
+  const familyRadio = document.getElementById('family');
+  const form = document.querySelector('form[action="/v1/thread/draft"]');
+  
+  function updateRadioSelection() {
+    const teamValue = teamSelect.value;
+    const familyValue = familySelect.value;
+    
+    if (teamValue === '2' && familyValue === '0') {
+      alert('无效选择：团队和家庭至少选择一项');
+      return false;
+    }
+    
+    if (teamValue === '2') {
+      familyRadio.checked = true;
+    } else if (familyValue === '0') {
+      teamRadio.checked = true;
+    }
+    
+    return true;
+  }
+  
+  teamSelect.addEventListener('change', updateRadioSelection);
+  familySelect.addEventListener('change', updateRadioSelection);
+  
+  form.addEventListener('submit', function(e) {
+    if (!updateRadioSelection()) {
+      e.preventDefault();
+    }
+  });
+});
+</script>
 
 {{ else }}
 <hr />

@@ -97,9 +97,7 @@
         <div style="text-align: center; margin-top: 10px;">
           {{/* 这是某个茶台（项目）的地址显示 */}}
           <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
-          
             <a href="/v1/place/detail?uuid={{ .ProjectBean.Place.Uuid }}">{{ .ProjectBean.Place.Name }}</a>
-          
         </div>
        
       </div>
@@ -268,18 +266,18 @@
 
   <span style="margin-inline-start: 2rem;">
     {{/* 这是茶台的总茶议数量 显示 */}}
-    <a href="/v1/place/detail?uuid={{ .ProjectBean.Place.Uuid }}">
+    
       <i class="bi bi-cup" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="茶议总数">
         {{ .ThreadCount }}</i>
-    </a>
+   
   </span>
 
   <span style="margin-inline-start: 2rem;">
     {{/* 这是茶台的已采纳茶议数量 显示 */}}
-    <a href="/v1/place/detail?uuid={{ .ProjectBean.Place.Uuid }}">
+    
       <i class="bi-bookmark-check" style="font-size: 1.5rem; color: black;margin-inline-end: 2rem;" title="已采纳数">
         {{ .ThreadIsApprovedCount }}</i>
-    </a>
+
   </span>
 
 </div>

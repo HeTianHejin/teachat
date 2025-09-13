@@ -228,8 +228,12 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 			}
 			suggestion, err = data.GetSuggestionByProjectId(project.Id, r.Context())
 			if err != nil {
+				if err == sql.ErrNoRows {
+					report(w, r, "该项目还没有建议记录")
+					return
+				}
 				util.Debug("Cannot get Suggestion by project_id", project.Id, err)
-				report(w, r, "该项目还没有建议记录")
+				report(w, r, "该项目的建议记录似乎被茶水泡糊了")
 				return
 			}
 		} else {
