@@ -36,10 +36,10 @@ type BrainFire struct {
 	CreatedAt        time.Time
 	UpdatedAt        *time.Time
 
-	//1、未点火
-	//2、已点火
-	//3、燃烧中
-	//4、已熄灭
+	//0、未点火
+	//1、已点火
+	//2、燃烧中
+	//3、已熄灭
 	Status BrainFireStatus
 
 	//1、文艺类
@@ -63,10 +63,10 @@ const (
 type BrainFireStatus int
 
 const (
-	BrainFireStatusUnlit        BrainFireStatus = iota + 1 // 未点火
-	BrainFireStatusLit                                     // 已点火
-	BrainFireStatusBurning                                 // 燃烧中
-	BrainFireStatusExtinguished                            // 已熄灭
+	BrainFireStatusUnlit        BrainFireStatus = iota // 未点火
+	BrainFireStatusLit                                 // 已点火
+	BrainFireStatusBurning                             // 燃烧中
+	BrainFireStatusExtinguished                        // 已熄灭
 )
 
 // BrainFire.Create() 创建一个BrainFire记录

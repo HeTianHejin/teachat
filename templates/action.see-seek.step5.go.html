@@ -182,6 +182,12 @@
             </ul>
           </div>
           
+          <div class="form-group">
+            <label for="end_time">完成时间</label>
+            <input type="datetime-local" class="form-control" name="end_time" id="end_time" required />
+            <small class="help-block">设置"看看"工作的完成时间</small>
+          </div>
+          
           <div class="form-group text-center">
             <button type="submit" class="btn btn-success btn-lg">
               <span class="glyphicon glyphicon-ok"></span> 完成"看看"工作
@@ -269,6 +275,16 @@ function updateRemoveButtons() {
 // 初始化时隐藏第一个项目的删除按钮
 document.addEventListener('DOMContentLoaded', function() {
   updateRemoveButtons();
+  
+  // 设置默认完成时间为当前时间
+  var now = new Date();
+  var year = now.getFullYear();
+  var month = String(now.getMonth() + 1).padStart(2, '0');
+  var day = String(now.getDate()).padStart(2, '0');
+  var hours = String(now.getHours()).padStart(2, '0');
+  var minutes = String(now.getMinutes()).padStart(2, '0');
+  var currentDateTime = year + '-' + month + '-' + day + 'T' + hours + ':' + minutes;
+  document.getElementById('end_time').value = currentDateTime;
 });
 </script>
 

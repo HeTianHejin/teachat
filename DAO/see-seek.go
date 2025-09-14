@@ -113,10 +113,10 @@ func (s *SeeSeek) GetByIdOrUUID(ctx context.Context) (err error) {
 	if s.Id < 0 || s.Uuid == "" {
 		return errors.New("invalid SeeSeek ID or UUID")
 	}
-	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id,
+	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id, start_time, end_time,
 		payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id,
 		verifier_user_id, verifier_team_id, verifier_family_id, category, status, step,
-		start_time, end_time, created_at, updated_at
+		created_at, updated_at
 		FROM see_seeks WHERE id=$1 OR uuid=$2`
 	stmt, err := db.PrepareContext(ctx, statement)
 	if err != nil {
@@ -124,10 +124,10 @@ func (s *SeeSeek) GetByIdOrUUID(ctx context.Context) (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, s.Id, s.Uuid).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description,
-		&s.PlaceId, &s.ProjectId, &s.PayerUserId, &s.PayerTeamId, &s.PayerFamilyId,
+		&s.PlaceId, &s.ProjectId, &s.StartTime, &s.EndTime, &s.PayerUserId, &s.PayerTeamId, &s.PayerFamilyId,
 		&s.PayeeUserId, &s.PayeeTeamId, &s.PayeeFamilyId, &s.VerifierUserId,
 		&s.VerifierTeamId, &s.VerifierFamilyId, &s.Category, &s.Status, &s.Step,
-		&s.StartTime, &s.EndTime, &s.CreatedAt, &s.UpdatedAt)
+		&s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -463,7 +463,7 @@ func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	var s SeeSeek
-	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id, 
+	statement := `SELECT id, uuid, name, nickname, description, place_id, project_id, start_time, end_time,
 		payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id,
 		verifier_user_id, verifier_team_id, verifier_family_id, category, status, step, created_at, updated_at
 		FROM see_seeks WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1`
@@ -473,7 +473,7 @@ func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) 
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, projectId).Scan(&s.Id, &s.Uuid, &s.Name, &s.Nickname, &s.Description,
-		&s.PlaceId, &s.ProjectId, &s.PayerUserId, &s.PayerTeamId, &s.PayerFamilyId,
+		&s.PlaceId, &s.ProjectId, &s.StartTime, &s.EndTime, &s.PayerUserId, &s.PayerTeamId, &s.PayerFamilyId,
 		&s.PayeeUserId, &s.PayeeTeamId, &s.PayeeFamilyId, &s.VerifierUserId,
 		&s.VerifierTeamId, &s.VerifierFamilyId, &s.Category, &s.Status, &s.Step, &s.CreatedAt, &s.UpdatedAt)
 

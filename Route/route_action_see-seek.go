@@ -82,13 +82,22 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	nickname := r.FormValue("nickname")
 	description := r.FormValue("description")
+	startTimeStr := r.FormValue("start_time")
 	placeIdStr := r.FormValue("place_id")
 	environmentIdStr := r.FormValue("environment_id")
 	categoryStr := r.FormValue("category")
 
 	// 验证必填字段
-	if name == "" || description == "" {
+	if name == "" || description == "" || startTimeStr == "" {
 		report(w, r, "请填写完整的基本信息")
+		return
+	}
+
+	// 解析开始时间
+	startTime, err := time.Parse("2006-01-02T15:04", startTimeStr)
+	if err != nil {
+		util.Debug(" Cannot parse start time", startTimeStr, err)
+		report(w, r, "开始时间格式不正确")
 		return
 	}
 
@@ -137,7 +146,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 		Category:         category,
 		Status:           data.SeeSeekStatusInProgress, // 进行中
 		Step:             data.SeeSeekStepEnvironment,  // 步骤1：环境条件
-		StartTime:        time.Now(),
+		StartTime:        startTime,
 	}
 
 	if err := seeSeek.Create(r.Context()); err != nil {
@@ -158,7 +167,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 重定向到步骤页面
-	http.Redirect(w, r, "/v1/see-seek/step?uuid="+seeSeek.Uuid, http.StatusFound)
+	http.Redirect(w, r, "/v1/see-seek/step2?uuid="+seeSeek.Uuid, http.StatusFound)
 }
 
 // GET /v1/see-seek/new?uuid=xXx

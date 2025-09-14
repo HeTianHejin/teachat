@@ -977,6 +977,21 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 获取完成时间
+	endTimeStr := r.PostFormValue("end_time")
+	if endTimeStr == "" {
+		report(w, r, "请选择完成时间")
+		return
+	}
+
+	// 解析完成时间
+	endTime, err := time.Parse("2006-01-02T15:04", endTimeStr)
+	if err != nil {
+		util.Debug(" Cannot parse end time", endTimeStr, err)
+		report(w, r, "完成时间格式不正确")
+		return
+	}
+
 	// 保存检测报告数据（可选）
 	reportTitle := strings.TrimSpace(r.PostFormValue("report_title"))
 	reportContent := strings.TrimSpace(r.PostFormValue("report_content"))
@@ -1074,7 +1089,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	// 更新步骤和状态
 	seeSeek.Step = data.SeeSeekStepReport
 	seeSeek.Status = data.SeeSeekStatusCompleted
-	seeSeek.EndTime = time.Now()
+	seeSeek.EndTime = endTime
 	if err := seeSeek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
 		report(w, r, "保存看看记录步骤时发生错误，请稍后再试")
