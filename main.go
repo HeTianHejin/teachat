@@ -169,8 +169,8 @@ func main() {
 
 	// defined in route_action_goods.go
 	mux.HandleFunc("/v1/goods/family_new", route.HandleGoodsFamilyNew)
-	//mux.HandleFunc("/v1/goods/family", route.GoodsFamily)
-	//mux.HandleFunc("/v1/goods/family_detail", route.GoodsFamilyDetail)
+	mux.HandleFunc("/v1/goods/family", route.GoodsFamily)
+	mux.HandleFunc("/v1/goods/family_detail", route.GoodsFamilyDetail)
 	mux.HandleFunc("/v1/goods/team_new", route.HandleGoodsTeamNew)
 	mux.HandleFunc("/v1/goods/team", route.GoodsTeam)
 	mux.HandleFunc("/v1/goods/team_detail", route.GoodsTeamDetail)
@@ -178,6 +178,7 @@ func main() {
 	mux.HandleFunc("/v1/goods/collect", route.GoodsCollect)
 	mux.HandleFunc("/v1/goods/uncollect", route.GoodsUncollect)
 	mux.HandleFunc("/v1/goods/eye_on", route.GoodsEyeOn)
+	mux.HandleFunc("/v1/goods/detail", route.GoodsDetail)
 
 	//defined in route_action_handicraft.go
 	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)

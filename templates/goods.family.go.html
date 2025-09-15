@@ -4,16 +4,16 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/goods/family?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>家庭物资</li>
+  <li><a href="/v1/goods/family?uuid={{ .Family.Uuid }}">{{ .Family.Name }}</a>家庭物资</li>
   <li class="active">清单</li>
 </ol>
 
 <hr />
 
 <p class="text-center">
-  <a href="/v1/goods/new">
+  <a href="/v1/goods/family_new?id={{ .Family.Id }}">
     <i class="bi-patch-plus" style="font-size: 2rem; color: black;"></i>
-      登记新物资</a>
+      登记家庭新物资</a>
 </p>
 
 {{ range .GoodsSlice }}
@@ -27,7 +27,7 @@
   </div>
   <div class="media-body">
     <h4 class="media-heading">
-      <a href="/v1/goods/detail?id={{ .Uuid }}">{{ .Name }}</a>
+      <a href="/v1/goods/detail?uuid={{ .Uuid }}">{{ .Name }}</a>
     </h4>
     <h5>别名：{{ .Nickname }}</h5>
     <p>编号：{{ .Id }}</p>

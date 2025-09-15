@@ -16,6 +16,7 @@ type SearchPageData struct {
 	EnvironmentSlice   []Environment //环境条件集合
 	HazardSlice        []Hazard      //隐患集合
 	RiskSlice          []Risk        //风险集合
+	GoodsSlice         []Goods       // 物资集合
 }
 
 // 我的地盘我做主
@@ -69,4 +70,8 @@ type GoodsUserSlice struct {
 	SessUser User
 
 	GoodsSlice []Goods
+}
+type GoodsDetail struct {
+	SessUser User
+	Goods    Goods
 }

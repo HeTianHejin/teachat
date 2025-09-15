@@ -188,7 +188,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
 	if uuid == "" {
-		util.Debug(" No uuid provided in query")
+		util.Debug(" No uuid provided in query", err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}

@@ -44,6 +44,9 @@
         <input type="radio" name="class" id="risk" style="width: fit-content;" value="8" required />
         <label for="risk">作业风险</label>
 
+  <input type="radio" name="class" id="goods" style="width: fit-content;" value="9" required />
+  <label for="goods">物资</label>
+
       </fieldset>
     </div>
 
@@ -188,6 +191,32 @@
   </div>
 </div>
 {{ end }}{{/* 这是查找到的 作业风险 结果队列迭代-结束 */}}
+
+{{/* 物资搜索结果展示 */}}
+{{ range .GoodsSlice }}
+<hr />
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>物资 #{{ .Id }}</strong> - {{ .Name }}
+    <a href="/v1/goods/detail?uuid={{ .Uuid }}" class="btn btn-xs btn-info pull-right">
+      <span class="glyphicon glyphicon-eye-open"></span> 查看详情
+    </a>
+  </div>
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left">
+        <img class="media-object" src="/v1/static/bootstrap-icons/bag.svg" alt="goods" width="48" height="48">
+      </div>
+      <div class="media-body">
+        <h4 class="media-heading">{{ .Name }} <small class="text-muted">{{ .Nickname }}</small></h4>
+        <p>{{ .Applicability }}</p>
+        {{ if gt .Price 0.0 }}<p>价格：¥{{ .Price }}</p>{{ end }}
+        <p><small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small></p>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}
 
 {{ end }}{{/* 这是查找结果非零 结束*/}}
 

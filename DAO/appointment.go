@@ -102,7 +102,7 @@ func (t *ProjectAppointment) Create(ctx context.Context) (err error) {
 	err = stmt.QueryRowContext(ctx, t.ProjectId, t.Note, t.StartTime, t.EndTime, t.PlaceId, t.PayerTeamId, t.PayerFamilyId, t.PayeeTeamId, t.PayeeFamilyId, t.VerifierUserId, t.VerifierFamilyId, t.VerifierTeamId, t.PayerUserId, t.PayeeUserId, t.Status).Scan(&t.Id, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
+			util.Debug("Query timed out", err)
 		}
 		return
 	}
@@ -122,7 +122,7 @@ func (t *ProjectAppointment) GetByIdOrUUID(ctx context.Context) (err error) {
 	if err != nil {
 
 		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("query ProjectAppointment timed out")
+			util.Debug("query ProjectAppointment timed out", err)
 		}
 		return err
 	}
@@ -143,7 +143,7 @@ func (t *ProjectAppointment) Update(ctx context.Context) (err error) {
 	_, err = stmt.ExecContext(ctx, t.Note, t.StartTime, t.EndTime, t.PlaceId, t.PayerTeamId, t.PayerFamilyId, t.PayeeTeamId, t.PayeeFamilyId, t.VerifierUserId, t.VerifierFamilyId, t.VerifierTeamId, t.PayerUserId, t.PayeeUserId, t.Status, t.ConfirmedAt, t.RejectedAt, time.Now(), t.Id)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
+			util.Debug("Query timed out", err)
 		}
 		return
 	}
@@ -203,7 +203,7 @@ func GetAppointmentByProjectId(project_id int, ctx context.Context) (p_a Project
 	err = stmt.QueryRowContext(ctx, project_id).Scan(&p_a.Id, &p_a.Uuid, &p_a.ProjectId, &p_a.Note, &p_a.StartTime, &p_a.EndTime, &p_a.PlaceId, &p_a.PayerTeamId, &p_a.PayerFamilyId, &p_a.PayeeTeamId, &p_a.PayeeFamilyId, &p_a.VerifierUserId, &p_a.VerifierFamilyId, &p_a.VerifierTeamId, &p_a.PayerUserId, &p_a.PayeeUserId, &p_a.Status, &p_a.ConfirmedAt, &p_a.RejectedAt, &p_a.CreatedAt, &p_a.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
+			util.Debug("Query timed out", err)
 		}
 		return
 	}

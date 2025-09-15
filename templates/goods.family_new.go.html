@@ -1,8 +1,8 @@
 {{ define "content" }}
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
-    <li class="active">登记团队新物资</li>
+    <li><a href="/v1/family/detail?uuid={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+    <li class="active">登记家庭新物资</li>
 </ol>
 
 <style>
@@ -32,18 +32,18 @@
 
 <div class="panel panel-default">
     <div class="panel-heading">
-        <h3 class="panel-title">{{ .Team.Abbreviation }} 登记新物资【*必填】</h3>
+        <h3 class="panel-title">{{ .Family.Abbreviation }} 登记家庭新物资【*必填】</h3>
     </div>
     <div class="panel-body">
-        <form role="form" action="/v1/goods/team_new" method="post" id="goodsForm" novalidate>
+        <form role="form" action="/v1/goods/family_new" method="post" id="goodsForm" novalidate>
 
-            <!-- 申报登记新物资的茶团id信息 -->
+            <!-- 申报登记新物资的家庭id信息 -->
             <div class="form-group">
-                <label for="team_id" class="required-field">茶团编号：</label>
-                <input type="number" class="form-control" name="team_id" id="team_id" value="{{ .Team.Id }}" readonly
+                <label for="family_id" class="required-field">家庭编号：</label>
+                <input type="number" class="form-control" name="family_id" id="family_id" value="{{ .Family.Id }}" readonly
                     required />
-                <small class="text-muted">注意核对当前$茶团的编号</small>
-                <div class="invalid-feedback">请提供茶团编号</div>
+                <small class="text-muted">注意核对当前$家庭的编号</small>
+                <div class="invalid-feedback">请提供家庭编号</div>
             </div>
 
             <!-- 物资基础信息 -->

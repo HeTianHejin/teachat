@@ -478,7 +478,7 @@ CREATE TABLE goods_users (
 
 CREATE TABLE goods_families (
     id            serial primary key,
-    user_id       integer,
+    family_id     integer,
     goods_id      integer,
     created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

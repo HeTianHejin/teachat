@@ -337,8 +337,14 @@ func (fg *GoodsFamily) GetAllByFamilyId() (goodsFamilySlice []GoodsFamily, err e
 }
 
 // GetGoodsByFamilyId()  获取家庭收集的所有物资记录
-func (fg *GoodsFamily) GetGoodsByFamilyId() (goodsSlice []Goods, err error) {
-	rows, err := db.Query("SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, physical_state, operational_state, availability, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_at, updated_at FROM goods WHERE id IN (SELECT goods_id FROM goods_families WHERE family_id = $1)", fg.FamilyId)
+func (fg *GoodsFamily) GetGoodsByFamilyId(ctx context.Context) (goodsSlice []Goods, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if fg.FamilyId == FamilyIdUnknown {
+		return nil, fmt.Errorf("无法获取四海为家的物资")
+	}
+	rows, err := db.QueryContext(ctx, "SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, physical_state, operational_state, availability, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_at, updated_at FROM goods WHERE id IN (SELECT goods_id FROM goods_families WHERE family_id = $1)", fg.FamilyId)
 	if err != nil {
 		return
 	}
@@ -597,4 +603,37 @@ func (gu *GoodsUser) GetGoodsByUserId() ([]Goods, error) {
 func (ug *GoodsUser) CheckUserGoodsExist() (exist bool, err error) {
 	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM goods_users WHERE user_id = $1 AND goods_id = $2)", ug.UserId, ug.GoodsId).Scan(&exist)
 	return
+}
+
+// SearchGoodsByName 按名称/别名/品牌/型号/规格搜索物资
+func SearchGoodsByName(keyword string, limit int, ctx context.Context) ([]Goods, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	const query = `
+		SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, physical_state, operational_state, availability, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_at, updated_at
+		FROM goods
+		WHERE name ILIKE $1 OR nickname ILIKE $1 OR brand_name ILIKE $1 OR model ILIKE $1 OR specification ILIKE $1
+		ORDER BY created_at DESC
+		LIMIT $2`
+
+	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var goodsSlice []Goods
+	for rows.Next() {
+		var g Goods
+		if err := rows.Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer, &g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName, &g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color, &g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.PhysicalState, &g.OperationalState, &g.Availability, &g.Origin, &g.Manufacturer, &g.ManufacturerURL, &g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt); err != nil {
+			return nil, err
+		}
+		goodsSlice = append(goodsSlice, g)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return goodsSlice, nil
 }

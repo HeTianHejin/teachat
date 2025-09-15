@@ -378,7 +378,6 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	// 读取提交的ID参数
 	ob_id_str := r.URL.Query().Get("id")
 	if ob_id_str == "" {
-		util.Debug("ID parameter is missing")
 		report(w, r, "你好，缺少编号参数，茶博士找不到茶叶的资料")
 		return
 	}

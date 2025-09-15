@@ -282,6 +282,20 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		renderHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
+	case data.SearchTypeGoods:
+		// 查询物资（goods）
+		goods_slice, err := data.SearchGoodsByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		if err != nil {
+			util.Debug(" failed to search goods by keyword", err)
+		}
+		if len(goods_slice) >= 1 {
+			fPD.Count = len(goods_slice)
+			fPD.GoodsSlice = goods_slice
+			fPD.IsEmpty = false
+		}
+		renderHTML(w, &fPD, "layout", "navbar.private", "search")
+		return
+
 	case 8: // SearchTypeRisk
 		//查询风险 risk
 		risk_slice, err := data.SearchRiskByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
