@@ -14,7 +14,7 @@
   <a href="/v1/goods/team_new?id={{ .Team.Id }}">
     <i class="bi-patch-plus" style="font-size: 2rem; color: black;"></i>
     
-      登记新物资</a>
+      登记团队新物资</a>
 </p>
 
 {{ range .GoodsSlice }}
@@ -28,7 +28,7 @@
   </div>
   <div class="media-body">
     <h4 class="media-heading">
-      <a href="/v1/goods/team_detail?id={{ .Id }}&team_id={{ $.Team.Id }}">{{ .Name }}</a>
+      <a href="/v1/goods/team_detail?id={{ .Id }}&team_id={{ $.Team.Id }}">{{ if .Name }}{{ .Name }}{{ else }}[无名称]{{ end }}</a>
     </h4>
     <h5>别名：{{ .Nickname }}</h5>
     <p>编号：{{ .Id }}</p>
@@ -39,15 +39,15 @@
 
 
 
-      {{ else }}
-      <div class="panel panel-default">
-        <div class="panel-heading">
-          茶博士
-        </div>
-        <div class="panel-body">
-          你好，目前没有登记的茶团物资记录。
-        </div>
-      </div>
-      {{ end }}
+{{ else }}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    茶博士
+  </div>
+  <div class="panel-body">
+    你好，目前没有登记的茶团物资记录。
+  </div>
+</div>
+{{ end }}
 
-      {{ end }}
+{{ end }}

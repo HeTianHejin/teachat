@@ -35,15 +35,17 @@ type GoodsTeamSlice struct {
 	SessUser User
 	IsAdmin  bool
 
-	Team Team
+	Team         Team
+	Availability []Availability
 
 	GoodsSlice []Goods
 }
 
 // 茶团物资详情
 type GoodsTeamDetail struct {
-	SessUser User
-	IsAdmin  bool
+	SessUser  User
+	IsAdmin   bool
+	GoodsTeam GoodsTeam
 
 	Team Team
 
@@ -54,13 +56,15 @@ type GoodsFamilySlice struct {
 	SessUser User
 	IsAdmin  bool
 
-	Family Family
+	Family       Family
+	Availability []Availability
 
 	GoodsSlice []Goods
 }
 type GoodsFamilyDetail struct {
-	SessUser User
-	IsAdmin  bool
+	SessUser    User
+	IsAdmin     bool
+	GoodsFamily GoodsFamily
 
 	Family Family
 

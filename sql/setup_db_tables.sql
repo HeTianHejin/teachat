@@ -452,7 +452,6 @@ create table goods (
     serial_number         varchar(255),
     physical_state        integer default 0,
     operational_state     integer default 0,
-    availability          integer default 0,
     origin                varchar(255),
     manufacturer          varchar(255),
     manufacturer_url      varchar(255),
@@ -466,7 +465,9 @@ CREATE TABLE goods_teams (
     id            serial primary key,
     team_id       integer,
     goods_id      integer,
+    availability INTEGER DEFAULT 0,
     created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at.   TIMESTAMP
 );
 
 CREATE TABLE goods_users (
@@ -480,7 +481,9 @@ CREATE TABLE goods_families (
     id            serial primary key,
     family_id     integer,
     goods_id      integer,
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    availability INTEGER DEFAULT 0,
+    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at    TIMESTAMP
 );
 
 CREATE TABLE thread_approved (

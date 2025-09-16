@@ -75,8 +75,8 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
 		return
 	}
-	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
-	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
+	g_t := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
+	if err = g_t.GetByTeamIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get team goods from database", err)
 		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
@@ -96,12 +96,12 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Get goods name
-	le := len(r.PostFormValue("goods_name"))
-	if le > 50 {
+	goods_name := r.PostFormValue("goods_name")
+	le := len(goods_name)
+	if le == 0 || le > 50 {
 		report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
 		return
 	}
-	goods_name := r.PostFormValue("goods_name")
 	//nickname
 	le = len(r.PostFormValue("nickname"))
 	if le > 50 {
@@ -288,7 +288,6 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	// Parse state fields
 	physical_state_str := r.PostFormValue("physical_state")
 	operational_state_str := r.PostFormValue("operational_state")
-	availability_str := r.PostFormValue("availability")
 
 	// Convert to enum values
 	physical_state := data.PhysicalNew
@@ -301,6 +300,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		operational_state = data.OperationalState(os)
 	}
 
+	availability_str := r.PostFormValue("availability")
 	availability := data.Available
 	if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
 		availability = data.Availability(av)
@@ -329,7 +329,6 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		SerialNumber:          goods_sn,
 		PhysicalState:         physical_state,
 		OperationalState:      operational_state,
-		Availability:          availability,
 		Origin:                goods_origin,
 		Manufacturer:          goods_manufacturer,
 		ManufacturerURL:       goods_manu_url_str,
@@ -341,6 +340,14 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "一脸蒙的茶博士，表示无法更新物资，请确认后再试一次。")
 		return
 	}
+	//更新使用状态
+	g_t.Availability = availability
+	if err := g_t.Update(r.Context()); err != nil {
+		util.Debug("cannot update team goods availability from database", err)
+		report(w, r, "一脸蒙的茶博士，表示无法更新物资，请确认后再试一次。")
+		return
+	}
+
 	http.Redirect(w, r, "/v1/goods/team_detail?id="+g_id_str+"&team_id="+team_id_str, http.StatusFound)
 }
 
@@ -398,7 +405,7 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
-	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
+	if err = tg.GetByTeamIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get team goods from database", err)
 		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
@@ -414,6 +421,7 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 
 	gTD.SessUser = s_u
 	gTD.IsAdmin = true
+	gTD.GoodsTeam = tg
 	gTD.Team = team
 	gTD.Goods = g
 
@@ -474,7 +482,7 @@ func GoodsFamilyDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	fg := data.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
-	if err = fg.GetByFamilyIdAndGoodsId(); err != nil {
+	if err = fg.GetByFamilyIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get family goods from database", s.Email, err)
 		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
@@ -494,6 +502,7 @@ func GoodsFamilyDetail(w http.ResponseWriter, r *http.Request) {
 	var fGD data.GoodsFamilyDetail
 	fGD.SessUser = s_u
 	fGD.IsAdmin = true
+	fGD.GoodsFamily = fg
 	fGD.Family = family
 	fGD.Goods = g
 	renderHTML(w, &fGD, "layout", "navbar.private", "goods.family_detail", "component_goods_detail")
@@ -555,8 +564,8 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
-	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
-	if err = tg.GetByTeamIdAndGoodsId(); err != nil {
+	g_t := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
+	if err = g_t.GetByTeamIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get team goods from database", s.Email, err)
 		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
@@ -572,6 +581,7 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	tGD.SessUser = s_u
 	tGD.IsAdmin = true
+	tGD.GoodsTeam = g_t
 	tGD.Team = team
 	tGD.Goods = g
 
@@ -622,9 +632,8 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get []goods from database
-	t_g := data.GoodsTeam{TeamId: team.Id}
-	t_goods_slice, err := t_g.GetAllGoodsByTeamId()
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+	t_goods_slice, availabilities, err := data.GetGoodsByTeamId(team.Id, r.Context())
+	if err != nil {
 		util.Debug("cannot get goods from database", err)
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
@@ -635,6 +644,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	gTS.SessUser = s_u
 	gTS.IsAdmin = true
 	gTS.Team = team
+	gTS.Availability = availabilities
 	gTS.GoodsSlice = t_goods_slice
 
 	renderHTML(w, &gTS, "layout", "navbar.private", "goods.team")
@@ -684,8 +694,7 @@ func GoodsFamily(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get []goods from database for this family
-	fg := data.GoodsFamily{FamilyId: family.Id}
-	f_goods_slice, err := fg.GetGoodsByFamilyId(r.Context())
+	f_goods_slice, availabilities, err := data.GetGoodsByFamilyId(family.Id, r.Context())
 	if err != nil {
 		util.Debug("cannot get goods from database: ", err)
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
@@ -697,10 +706,312 @@ func GoodsFamily(w http.ResponseWriter, r *http.Request) {
 	gFS.SessUser = s_u
 	gFS.IsAdmin = true
 	gFS.Family = family
+	gFS.Availability = availabilities
 	gFS.GoodsSlice = f_goods_slice
 
 	renderHTML(w, &gFS, "layout", "navbar.private", "goods.family")
 
+}
+
+// HandleGoodsFamilyUpdate() /v1/goods/family_update
+func HandleGoodsFamilyUpdate(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		GoodsFamilyUpdate(w, r)
+	case http.MethodPost:
+		GoodsFamilyUpdatePost(w, r)
+	default:
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+}
+
+// POST /v1/goods/family_update
+func GoodsFamilyUpdatePost(w http.ResponseWriter, r *http.Request) {
+	// Check session
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	g_id_str := r.PostFormValue("id")
+	if g_id_str == "" {
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+	g_id, err := strconv.Atoi(g_id_str)
+	if err != nil {
+		report(w, r, "一脸蒙的茶博士，看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+
+	family_id_str := r.PostFormValue("family_id")
+	if family_id_str == "" {
+		report(w, r, "茶博士耸耸肩说，你无法查看不存在的物资，请确认后再试一次。")
+		return
+	}
+	family_id, err := strconv.Atoi(family_id_str)
+	if err != nil {
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+	family, err := data.GetFamily(family_id)
+	if err != nil {
+		util.Debug("cannot get family from database", err)
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+	is_member, err := family.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug("cannot get family member from database", err)
+		report(w, r, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
+		return
+	}
+	if !is_member {
+		report(w, r, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
+		return
+	}
+	g_f := data.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
+	if err = g_f.GetByFamilyIdAndGoodsId(r.Context()); err != nil {
+		util.Debug("cannot get family goods from database", err)
+		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
+		return
+	}
+	g := data.Goods{Id: g_id}
+	if err = g.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug("cannot get goods from database", err)
+		report(w, r, "满头大汗的茶博士，表示找不到家庭物资，请稍后再试一次。")
+		return
+	}
+
+	// Parse and validate form data (same as team version)
+	category_int := 0
+	if cat := r.PostFormValue("category"); cat == "0" || cat == "1" {
+		category_int, _ = strconv.Atoi(cat)
+	} else {
+		report(w, r, "你好，茶博士表示无法理解物资的类型，请确认后再试。")
+		return
+	}
+
+	goods_name := r.PostFormValue("goods_name")
+	le := len(goods_name)
+	if le > 50 || le == 0 {
+		report(w, r, "你好，茶博士表示物资的名称太长或者太短，请确认后再试。")
+		return
+	}
+
+	goods_nickname := r.PostFormValue("nickname")
+	if len(goods_nickname) > 50 {
+		report(w, r, "你好，茶博士表示物资的昵称太长或者太短，请确认后再试。")
+		return
+	}
+
+	goods_features := 0
+	if fea := r.PostFormValue("features"); fea == "0" || fea == "1" {
+		goods_features, _ = strconv.Atoi(fea)
+	} else {
+		report(w, r, "你好，茶博士表示无法理解物资的特性，请确认后再试。")
+		return
+	}
+
+	goods_designer := r.PostFormValue("designer")
+	if len(goods_designer) > 45 {
+		report(w, r, "你好，茶博士表示物资的设计者太长或者太短，请确认后再试。")
+		return
+	}
+
+	describe := r.PostFormValue("describe")
+	if len(describe) > int(util.Config.ThreadMaxWord) {
+		report(w, r, "你好，茶博士表示物资的描述太长或者太短，请确认后再试。")
+		return
+	}
+
+	goods_applicability := r.PostFormValue("applicability")
+	if len(goods_applicability) > int(util.Config.ThreadMaxWord) {
+		report(w, r, "你好，茶博士表示物资的适用范围太长或者太短，请确认后再试。")
+		return
+	}
+
+	brand_name := r.PostFormValue("brandname")
+	goods_model := r.PostFormValue("model")
+	goods_color := r.PostFormValue("color")
+	goods_specification := r.PostFormValue("specification")
+	goods_manufacturer := r.PostFormValue("manufacturer")
+	goods_origin := r.PostFormValue("origin")
+
+	goods_price := 0.0
+	if goods_price_str := r.PostFormValue("price"); goods_price_str != "" {
+		if goods_price, err = strconv.ParseFloat(goods_price_str, 64); err != nil {
+			report(w, r, "你好，茶博士表示物资的价格转换失败，请确认后再试。")
+			return
+		}
+	}
+	if goods_price < 0 || goods_price > 100000000 {
+		report(w, r, "你好，茶博士表示物资的价格异常，请确认后再试。")
+		return
+	}
+
+	goods_weight := 0.0
+	if goods_weight_str := r.PostFormValue("weight"); goods_weight_str != "" {
+		if goods_weight, err = strconv.ParseFloat(goods_weight_str, 64); err != nil {
+			report(w, r, "你好，茶博士表示物资的重量转换失败，请确认后再试。")
+			return
+		}
+	}
+
+	goods_dimensions_str := r.PostFormValue("dimensions")
+	goods_material := r.PostFormValue("material")
+	goods_size := r.PostFormValue("size")
+	goods_net_con_typ := r.PostFormValue("connection_type")
+	goods_sn := r.PostFormValue("serial_number")
+	goods_manu_url_str := r.PostFormValue("official_website")
+	goods_engine_typ := r.PostFormValue("engine_type")
+	goods_purchase_url_str := r.PostFormValue("purchase_url")
+
+	// Parse state fields
+	physical_state := data.PhysicalNew
+	if ps, err := strconv.Atoi(r.PostFormValue("physical_state")); err == nil && ps >= 0 && ps <= 3 {
+		physical_state = data.PhysicalState(ps)
+	}
+
+	operational_state := data.OperationalNormal
+	if os, err := strconv.Atoi(r.PostFormValue("operational_state")); err == nil && os >= 0 && os <= 3 {
+		operational_state = data.OperationalState(os)
+	}
+
+	availability := data.Available
+	if av, err := strconv.Atoi(r.PostFormValue("availability")); err == nil && av >= 0 && av <= 5 {
+		availability = data.Availability(av)
+	}
+
+	// Update goods
+	old_goods := data.Goods{
+		Id:                    g.Id,
+		RecorderUserId:        s_u.Id,
+		Name:                  goods_name,
+		Nickname:              goods_nickname,
+		Designer:              goods_designer,
+		Describe:              describe,
+		Price:                 goods_price,
+		Applicability:         goods_applicability,
+		Category:              category_int,
+		Specification:         goods_specification,
+		BrandName:             brand_name,
+		Model:                 goods_model,
+		Weight:                goods_weight,
+		Dimensions:            goods_dimensions_str,
+		Material:              goods_material,
+		Size:                  goods_size,
+		Color:                 goods_color,
+		NetworkConnectionType: goods_net_con_typ,
+		Features:              goods_features,
+		SerialNumber:          goods_sn,
+		PhysicalState:         physical_state,
+		OperationalState:      operational_state,
+		Origin:                goods_origin,
+		Manufacturer:          goods_manufacturer,
+		ManufacturerURL:       goods_manu_url_str,
+		EngineType:            goods_engine_typ,
+		PurchaseURL:           goods_purchase_url_str,
+	}
+	if err := old_goods.Update(r.Context()); err != nil {
+		util.Debug("cannot update goods from database", err)
+		report(w, r, "一脸蒙的茶博士，表示无法更新物资，请确认后再试一次。")
+		return
+	}
+
+	// Update availability
+	g_f.Availability = availability
+	if err := g_f.Update(r.Context()); err != nil {
+		util.Debug("cannot update family goods availability from database", err)
+		report(w, r, "一脸蒙的茶博士，表示无法更新物资，请确认后再试一次。")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/goods/family_detail?id="+g_id_str+"&family_id="+family_id_str, http.StatusFound)
+}
+
+// GET /v1/goods/family_update?id=xxx&family_id=xxx
+func GoodsFamilyUpdate(w http.ResponseWriter, r *http.Request) {
+	// Check session
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	g_id_str := r.URL.Query().Get("id")
+	if g_id_str == "" {
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+	g_id, err := strconv.Atoi(g_id_str)
+	if err != nil {
+		report(w, r, "一脸蒙的茶博士，看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+
+	family_id_str := r.URL.Query().Get("family_id")
+	if family_id_str == "" {
+		report(w, r, "茶博士耸耸肩说，你无法查看不存在的物资，请确认后再试一次。")
+		return
+	}
+	family_id, err := strconv.Atoi(family_id_str)
+	if err != nil {
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+	family, err := data.GetFamily(family_id)
+	if err != nil {
+		util.Debug("cannot get family from database", err)
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
+		return
+	}
+	is_member, err := family.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug("cannot get family member from database", err)
+		report(w, r, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
+		return
+	}
+	if !is_member {
+		report(w, r, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
+		return
+	}
+	fg := data.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
+	if err = fg.GetByFamilyIdAndGoodsId(r.Context()); err != nil {
+		util.Debug("cannot get family goods from database", err)
+		report(w, r, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
+		return
+	}
+	g := data.Goods{Id: g_id}
+	if err = g.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug("cannot get goods from database", err)
+		report(w, r, "满头大汗的茶博士，表示找不到家庭物资，请稍后再试一次。")
+		return
+	}
+
+	var gFD data.GoodsFamilyDetail
+
+	gFD.SessUser = s_u
+	gFD.IsAdmin = true
+	gFD.GoodsFamily = fg
+	gFD.Family = family
+	gFD.Goods = g
+
+	renderHTML(w, &gFD, "layout", "navbar.private", "goods.family_update")
 }
 
 // HandleGoodsFamilyNew() /v1/goods/family_new
@@ -788,14 +1099,14 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Max goods count check
-	goods_teams := data.GoodsTeam{TeamId: team.Id}
-	count_teams_goods, err := goods_teams.CountByTeamId()
+	gt := data.GoodsTeam{TeamId: team.Id}
+	count_teams_goods, err := gt.CountByTeamId(r.Context())
 	if err != nil {
-		util.Debug("cannot get team goods from database", err)
+		util.Debug("cannot count team goods from database", err)
 		report(w, r, "你好，茶博士表示无法理解你的团队，请确认后再试。")
 		return
 	}
-	if count_teams_goods >= 9999 {
+	if count_teams_goods >= 999 {
 		report(w, r, "你好，茶博士表示你的团队已经达到最大物资数量，请确认后再试。")
 		return
 	}
@@ -1014,7 +1325,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	// Parse state fields
 	physical_state_str := r.PostFormValue("physical_state")
 	operational_state_str := r.PostFormValue("operational_state")
-	availability_str := r.PostFormValue("availability")
+	//availability_str := r.PostFormValue("availability")
 
 	// Convert to enum values
 	physical_state := data.PhysicalNew
@@ -1027,10 +1338,10 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		operational_state = data.OperationalState(os)
 	}
 
-	availability := data.Available
-	if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
-		availability = data.Availability(av)
-	}
+	// availability := data.Available
+	// if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
+	// 	availability = data.Availability(av)
+	// }
 
 	new_goods := data.Goods{
 		RecorderUserId:        s_u.Id,
@@ -1054,12 +1365,12 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		SerialNumber:          goods_sn,
 		PhysicalState:         physical_state,
 		OperationalState:      operational_state,
-		Availability:          availability,
-		Origin:                goods_origin,
-		Manufacturer:          goods_manufacturer,
-		ManufacturerURL:       goods_manu_url_str,
-		EngineType:            goods_engine_typ,
-		PurchaseURL:           goods_purchase_url_str,
+		//Availability:          availability,
+		Origin:          goods_origin,
+		Manufacturer:    goods_manufacturer,
+		ManufacturerURL: goods_manu_url_str,
+		EngineType:      goods_engine_typ,
+		PurchaseURL:     goods_purchase_url_str,
 	}
 	if err := new_goods.Create(r.Context()); err != nil {
 		util.Debug("cannot create new goods", err)
@@ -1072,7 +1383,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		TeamId:  team_id,
 		GoodsId: new_goods.Id,
 	}
-	if err := tg.Create(); err != nil {
+	if err := tg.Create(r.Context()); err != nil {
 		util.Debug("cannot create team goods", err)
 		report(w, r, "一脸蒙的茶博士，表示无法绑定团队物资，请确认后再试一次。")
 		return
@@ -1256,13 +1567,13 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fgCount := data.GoodsFamily{FamilyId: family.Id}
-	countFamilyGoods, err := fgCount.CountByFamilyId()
+	countFamilyGoods, err := fgCount.CountByFamilyId(r.Context())
 	if err != nil {
 		util.Debug("cannot get family goods count from database", err)
 		report(w, r, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
 		return
 	}
-	if countFamilyGoods >= 9999 {
+	if countFamilyGoods >= 999 {
 		report(w, r, "你好，茶博士表示你的家庭已经达到最大物资数量，请确认后再试。")
 		return
 	}
@@ -1481,7 +1792,6 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	// Parse state fields
 	physical_state_str := r.PostFormValue("physical_state")
 	operational_state_str := r.PostFormValue("operational_state")
-	availability_str := r.PostFormValue("availability")
 
 	// Convert to enum values
 	physical_state := data.PhysicalNew
@@ -1494,10 +1804,10 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		operational_state = data.OperationalState(os)
 	}
 
-	availability := data.Available
-	if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
-		availability = data.Availability(av)
-	}
+	// availability := data.Available
+	// if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
+	// 	availability = data.Availability(av)
+	// }
 
 	new_goods := data.Goods{
 		RecorderUserId:        s_u.Id,
@@ -1521,7 +1831,6 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		SerialNumber:          goods_sn,
 		PhysicalState:         physical_state,
 		OperationalState:      operational_state,
-		Availability:          availability,
 		Origin:                goods_origin,
 		Manufacturer:          goods_manufacturer,
 		ManufacturerURL:       goods_manu_url_str,
@@ -1538,7 +1847,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		FamilyId: family.Id,
 		GoodsId:  new_goods.Id,
 	}
-	if err := fg.Create(); err != nil {
+	if err := fg.Create(r.Context()); err != nil {
 		util.Debug("cannot create new goods family", err)
 		report(w, r, "一脸蒙的茶博士，表示无法创建物资，请确认后再试一次。")
 		return

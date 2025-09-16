@@ -70,24 +70,7 @@
                                         {{ end }}
                                     </td>
                                 </tr>
-                                <tr>
-                                    <th>可用性</th>
-                                    <td>
-                                        {{ if eq .Availability 0 }}
-                                            <span class="label label-success">可用</span>
-                                        {{ else if eq .Availability 1 }}
-                                            <span class="label label-info">使用中</span>
-                                        {{ else if eq .Availability 2 }}
-                                            <span class="label label-default">闲置</span>
-                                        {{ else if eq .Availability 3 }}
-                                            <span class="label label-danger">已报废</span>
-                                        {{ else if eq .Availability 4 }}
-                                            <span class="label label-danger">已遗失</span>
-                                        {{ else if eq .Availability 5 }}
-                                            <span class="label label-warning">已转让</span>
-                                        {{ end }}
-                                    </td>
-                                </tr>
+
                                 <tr>
                                     <th>设计者</th>
                                     <td>{{ .Designer }}</td>

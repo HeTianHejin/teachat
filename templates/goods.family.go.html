@@ -27,13 +27,16 @@
   </div>
   <div class="media-body">
     <h4 class="media-heading">
-      <a href="/v1/goods/detail?uuid={{ .Uuid }}">{{ .Name }}</a>
+      <a href="/v1/goods/detail?uuid={{ .Uuid }}">{{ if .Name }}{{ .Name }}{{ else }}[无名称]{{ end }}</a>
     </h4>
     <h5>别名：{{ .Nickname }}</h5>
     <p>编号：{{ .Id }}</p>
     <p>描述：{{ .Describe }}</p>
     <p>用途：{{ .Applicability }}</p>
   </div>
+
+
+  
 </div>
 
 

@@ -33,14 +33,14 @@ type Goods struct {
 	SerialNumber          string           // 物资的序列号，用于唯一标识每个物资。
 	PhysicalState         PhysicalState    // 物理状态
 	OperationalState      OperationalState // 运行状态
-	Availability          Availability     // 可用性状态
-	Origin                string           // 原产地
-	Manufacturer          string           // 生产商名称。
-	ManufacturerURL       string           // 制造商的官方网站或链接。
-	EngineType            string           // 动力类型，适用于有动力系统的物资。锂离子电池驱动？燃油内燃机？市电？
-	PurchaseURL           string           // 网购链接，方便用户直接购买。
-	CreatedAt             time.Time        // 物资记录的创建时间。
-	UpdatedAt             *time.Time       // 物资记录的最后更新时间。
+
+	Origin          string     // 原产地
+	Manufacturer    string     // 生产商名称。
+	ManufacturerURL string     // 制造商的官方网站或链接。
+	EngineType      string     // 动力类型，适用于有动力系统的物资。锂离子电池驱动？燃油内燃机？市电？
+	PurchaseURL     string     // 网购链接，方便用户直接购买。
+	CreatedAt       time.Time  // 物资记录的创建时间。
+	UpdatedAt       *time.Time // 物资记录的最后更新时间。
 }
 
 // 物理状态（物资的新旧程度）
@@ -63,7 +63,7 @@ const (
 	OperationalExpired                             // 已过期
 )
 
-// 可用性状态（管理状态）
+// 使用状态（管理状态）
 type Availability int
 
 const (
@@ -74,6 +74,26 @@ const (
 	Lost                            // 已遗失
 	Transferred                     // 已转让
 )
+
+// GoodsFamily 家庭物资关系
+type GoodsFamily struct {
+	Id           int
+	FamilyId     int
+	GoodsId      int
+	Availability Availability // 在该家庭中的使用状态
+	CreatedAt    time.Time
+	UpdatedAt    *time.Time
+}
+
+// GoodsTeam 团队物资关系
+type GoodsTeam struct {
+	Id           int
+	TeamId       int
+	GoodsId      int
+	Availability Availability // 在该团队中的使用状态
+	CreatedAt    time.Time
+	UpdatedAt    *time.Time
+}
 
 const (
 	GoodsCategoryPhysical = iota // 物理物资,受重力影响
@@ -93,8 +113,8 @@ func (g *Goods) Create(ctx context.Context) (err error) {
 		(uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, 
 		 specification, brand_name, model, weight, dimensions, material, size, color, 
 		 network_connection_type, features, serial_number, physical_state, operational_state, 
-		 availability, origin, manufacturer, manufacturer_url, engine_type, purchase_url) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28) 
+		 origin, manufacturer, manufacturer_url, engine_type, purchase_url) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27) 
 		RETURNING id, uuid`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
@@ -104,7 +124,7 @@ func (g *Goods) Create(ctx context.Context) (err error) {
 	err = stmt.QueryRowContext(ctx, Random_UUID(), g.RecorderUserId, g.Name, g.Nickname, g.Designer,
 		g.Describe, g.Price, g.Applicability, g.Category, g.Specification, g.BrandName, g.Model,
 		g.Weight, g.Dimensions, g.Material, g.Size, g.Color, g.NetworkConnectionType, g.Features,
-		g.SerialNumber, g.PhysicalState, g.OperationalState, g.Availability, g.Origin,
+		g.SerialNumber, g.PhysicalState, g.OperationalState, g.Origin,
 		g.Manufacturer, g.ManufacturerURL, g.EngineType, g.PurchaseURL).Scan(&g.Id, &g.Uuid)
 	return err
 }
@@ -118,9 +138,9 @@ func (g *Goods) Update(ctx context.Context) error {
 		describe = $6, price = $7, applicability = $8, category = $9, specification = $10, 
 		brand_name = $11, model = $12, weight = $13, dimensions = $14, material = $15, size = $16, 
 		color = $17, network_connection_type = $18, features = $19, serial_number = $20, 
-		physical_state = $21, operational_state = $22, availability = $23, origin = $24, 
-		manufacturer = $25, manufacturer_url = $26, engine_type = $27, purchase_url = $28, 
-		updated_at = $29 WHERE id = $1`
+		physical_state = $21, operational_state = $22, origin = $23, 
+		manufacturer = $24, manufacturer_url = $25, engine_type = $26, purchase_url = $27, 
+		updated_at = $28 WHERE id = $1`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return err
@@ -129,7 +149,7 @@ func (g *Goods) Update(ctx context.Context) error {
 	_, err = stmt.ExecContext(ctx, g.Id, g.RecorderUserId, g.Name, g.Nickname, g.Designer,
 		g.Describe, g.Price, g.Applicability, g.Category, g.Specification, g.BrandName, g.Model,
 		g.Weight, g.Dimensions, g.Material, g.Size, g.Color, g.NetworkConnectionType, g.Features,
-		g.SerialNumber, g.PhysicalState, g.OperationalState, g.Availability, g.Origin,
+		g.SerialNumber, g.PhysicalState, g.OperationalState, g.Origin,
 		g.Manufacturer, g.ManufacturerURL, g.EngineType, g.PurchaseURL, time.Now())
 	return err
 }
@@ -142,7 +162,7 @@ func (g *Goods) GetByIdOrUUID(ctx context.Context) (err error) {
 	statement := `SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, 
 		applicability, category, specification, brand_name, model, weight, dimensions, material, 
 		size, color, network_connection_type, features, serial_number, physical_state, 
-		operational_state, availability, origin, manufacturer, manufacturer_url, engine_type, 
+		operational_state, origin, manufacturer, manufacturer_url, engine_type, 
 		purchase_url, created_at, updated_at
 		FROM goods WHERE id=$1 OR uuid=$2`
 	stmt, err := db.PrepareContext(ctx, statement)
@@ -154,7 +174,7 @@ func (g *Goods) GetByIdOrUUID(ctx context.Context) (err error) {
 		&g.Name, &g.Nickname, &g.Designer, &g.Describe, &g.Price, &g.Applicability, &g.Category,
 		&g.Specification, &g.BrandName, &g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size,
 		&g.Color, &g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.PhysicalState,
-		&g.OperationalState, &g.Availability, &g.Origin, &g.Manufacturer, &g.ManufacturerURL,
+		&g.OperationalState, &g.Origin, &g.Manufacturer, &g.ManufacturerURL,
 		&g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt)
 	return err
 }
@@ -167,7 +187,7 @@ func GetGoodsByRecorderUserId(recorderUserId int, ctx context.Context) ([]Goods,
 	statement := `SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, 
 		applicability, category, specification, brand_name, model, weight, dimensions, material, 
 		size, color, network_connection_type, features, serial_number, physical_state, 
-		operational_state, availability, origin, manufacturer, manufacturer_url, engine_type, 
+		operational_state, origin, manufacturer, manufacturer_url, engine_type, 
 		purchase_url, created_at, updated_at
 		FROM goods WHERE recorder_user_id = $1 ORDER BY created_at DESC`
 	stmt, err := db.Prepare(statement)
@@ -189,7 +209,7 @@ func GetGoodsByRecorderUserId(recorderUserId int, ctx context.Context) ([]Goods,
 			&g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName,
 			&g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color,
 			&g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.PhysicalState,
-			&g.OperationalState, &g.Availability, &g.Origin, &g.Manufacturer, &g.ManufacturerURL,
+			&g.OperationalState, &g.Origin, &g.Manufacturer, &g.ManufacturerURL,
 			&g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt)
 		if err != nil {
 			return nil, err
@@ -236,9 +256,9 @@ func (g *Goods) OperationalStateString() string {
 	}
 }
 
-// Goods.AvailabilityString() 返回可用性状态的中文描述
-func (g *Goods) AvailabilityString() string {
-	switch g.Availability {
+// AvailabilityString 返回可用性状态的中文描述
+func AvailabilityString(availability Availability) string {
+	switch availability {
 	case Available:
 		return "可用"
 	case InUse:
@@ -256,237 +276,349 @@ func (g *Goods) AvailabilityString() string {
 	}
 }
 
+// GoodsFamily 方法
+
+// Create 创建家庭物资关系
+func (gf *GoodsFamily) Create(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `INSERT INTO goods_families (family_id, goods_id, availability, created_at) 
+		VALUES ($1, $2, $3, $4) RETURNING id`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRowContext(ctx, gf.FamilyId, gf.GoodsId, gf.Availability, time.Now()).Scan(&gf.Id)
+	return err
+}
+
+// UpdateAvailability 更新家庭物资的使用状态
+func (gf *GoodsFamily) UpdateAvailability(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `UPDATE goods_families SET availability = $1, updated_at = $2 WHERE id = $3`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, gf.Availability, time.Now(), gf.Id)
+	return err
+}
+
+// GoodsFamily.CountByFamilyId() 根据family_id统计家庭物资数量
+func (gf *GoodsFamily) CountByFamilyId(ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT COUNT(*) FROM goods_families WHERE family_id = $1`
+	var count int
+	err := db.QueryRowContext(ctx, statement, gf.FamilyId).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GoodsTeam 方法
+
+// Create 创建团队物资关系
+func (gt *GoodsTeam) Create(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `INSERT INTO goods_teams (team_id, goods_id, availability, created_at) 
+		VALUES ($1, $2, $3, $4) RETURNING id`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRowContext(ctx, gt.TeamId, gt.GoodsId, gt.Availability, time.Now()).Scan(&gt.Id)
+	return err
+}
+
+// UpdateAvailability 更新团队物资的使用状态
+func (gt *GoodsTeam) UpdateAvailability(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `UPDATE goods_teams SET availability = $1, updated_at = $2 WHERE id = $3`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, gt.Availability, time.Now(), gt.Id)
+	return err
+}
+
+// 查询方法
+
+// GetGoodsFamilyByIds 根据家庭ID和物资ID获取家庭物资关系
+func GetGoodsFamilyByIds(familyId, goodsId int, ctx context.Context) (*GoodsFamily, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	gf := &GoodsFamily{}
+	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
+		FROM goods_families WHERE family_id = $1 AND goods_id = $2`
+	err := db.QueryRowContext(ctx, statement, familyId, goodsId).Scan(
+		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return gf, nil
+}
+
+// GetGoodsTeamByIds 根据团队ID和物资ID获取团队物资关系
+func GetGoodsTeamByIds(teamId, goodsId int, ctx context.Context) (*GoodsTeam, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	gt := &GoodsTeam{}
+	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
+		FROM goods_teams WHERE team_id = $1 AND goods_id = $2`
+	err := db.QueryRowContext(ctx, statement, teamId, goodsId).Scan(
+		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return gt, nil
+}
+
+// GetGoodsByFamilyId 获取家庭的所有物资
+func GetGoodsByFamilyId(familyId int, ctx context.Context) ([]Goods, []Availability, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT g.id, g.uuid, g.recorder_user_id, g.name, g.nickname, g.designer, 
+		g.describe, g.price, g.applicability, g.category, g.specification, g.brand_name, 
+		g.model, g.weight, g.dimensions, g.material, g.size, g.color, 
+		g.network_connection_type, g.features, g.serial_number, g.physical_state, 
+		g.operational_state, g.origin, g.manufacturer, g.manufacturer_url, g.engine_type, 
+		g.purchase_url, g.created_at, g.updated_at, gf.availability
+		FROM goods g JOIN goods_families gf ON g.id = gf.goods_id 
+		WHERE gf.family_id = $1 ORDER BY g.created_at DESC`
+
+	rows, err := db.QueryContext(ctx, statement, familyId)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var goodsList []Goods
+	var availabilities []Availability
+	for rows.Next() {
+		var g Goods
+		var availability Availability
+		err = rows.Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer,
+			&g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName,
+			&g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color,
+			&g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.PhysicalState,
+			&g.OperationalState, &g.Origin, &g.Manufacturer, &g.ManufacturerURL,
+			&g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt, &availability)
+		if err != nil {
+			return nil, nil, err
+		}
+		goodsList = append(goodsList, g)
+		availabilities = append(availabilities, availability)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return goodsList, availabilities, nil
+}
+
+// GoodsTeam.CountByTeamId()
+func (gt *GoodsTeam) CountByTeamId(ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT COUNT(*) FROM goods_teams WHERE team_id = $1`
+	var count int
+	err := db.QueryRowContext(ctx, statement, gt.TeamId).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GetGoodsByTeamId 获取团队的所有物资
+func GetGoodsByTeamId(teamId int, ctx context.Context) ([]Goods, []Availability, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT g.id, g.uuid, g.recorder_user_id, g.name, g.nickname, g.designer, 
+		g.describe, g.price, g.applicability, g.category, g.specification, g.brand_name, 
+		g.model, g.weight, g.dimensions, g.material, g.size, g.color, 
+		g.network_connection_type, g.features, g.serial_number, g.physical_state, 
+		g.operational_state, g.origin, g.manufacturer, g.manufacturer_url, g.engine_type, 
+		g.purchase_url, g.created_at, g.updated_at, gt.availability
+		FROM goods g JOIN goods_teams gt ON g.id = gt.goods_id 
+		WHERE gt.team_id = $1 ORDER BY g.created_at DESC`
+
+	rows, err := db.QueryContext(ctx, statement, teamId)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var goodsList []Goods
+	var availabilities []Availability
+	for rows.Next() {
+		var g Goods
+		var availability Availability
+		err = rows.Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer,
+			&g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName,
+			&g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color,
+			&g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.PhysicalState,
+			&g.OperationalState, &g.Origin, &g.Manufacturer, &g.ManufacturerURL,
+			&g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt, &availability)
+		if err != nil {
+			return nil, nil, err
+		}
+		goodsList = append(goodsList, g)
+		availabilities = append(availabilities, availability)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return goodsList, availabilities, nil
+}
+
 // Goods.CreatedDateTime() 返回格式化的创建时间
 func (g *Goods) CreatedDateTime() string {
 	return g.CreatedAt.Format(FMT_DATE_TIME_CN)
 }
 
-type GoodsFamily struct {
-	Id        int
-	FamilyId  int
-	GoodsId   int
-	CreatedAt time.Time
-}
-
-// GoodsFamily.Create() 保存1家庭收集的物资记录
-func (fg *GoodsFamily) Create() (err error) {
-	statement := "INSERT INTO goods_families (family_id, goods_id, created_at) VALUES ($1, $2, $3) RETURNING id"
-	stmt, err := db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	err = stmt.QueryRow(fg.FamilyId, fg.GoodsId, time.Now()).Scan(&fg.Id)
-	return
-}
-
-// GoodsFamily.Get() 获取1家庭收集的物资记录
-func (fg *GoodsFamily) Get() (err error) {
-	err = db.QueryRow("SELECT id, family_id, goods_id, created_at FROM goods_families WHERE id = $1", fg.Id).
-		Scan(&fg.Id, &fg.FamilyId, &fg.GoodsId, &fg.CreatedAt)
-	return
-}
-
-// GoodsFamily.Update() 更新1家庭收集的物资记录
-func (fg *GoodsFamily) Update() (err error) {
-	statement := "UPDATE goods_families SET family_id = $2, goods_id = $3, created_at = $4 WHERE id = $1"
-	stmt, err := db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(fg.Id, fg.FamilyId, fg.GoodsId, fg.CreatedAt)
-	return
-}
-
-// GoodsFamily.Delete() 删除1家庭收集的物资记录
-func (fg *GoodsFamily) Delete() (err error) {
-	statement := "DELETE FROM goods_families WHERE id = $1"
-	stmt, err := db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.Exec(fg.Id)
-	return
-}
-
-// GoodsFamily.GetByFamilyIdAndGoodsId() 获取1家庭收集的物资记录
-func (fg *GoodsFamily) GetByFamilyIdAndGoodsId() (err error) {
-	err = db.QueryRow("SELECT id, family_id, goods_id, created_at FROM goods_families WHERE family_id = $1 AND goods_id = $2", fg.FamilyId, fg.GoodsId).
-		Scan(&fg.Id, &fg.FamilyId, &fg.GoodsId, &fg.CreatedAt)
-	return
-}
-
-// GoodsFamily.GetAllByFamilyId()  获取家庭收集的所有物资记录
-func (fg *GoodsFamily) GetAllByFamilyId() (goodsFamilySlice []GoodsFamily, err error) {
-	rows, err := db.Query("SELECT id, family_id, goods_id, created_at FROM goods_families WHERE family_id = $1", fg.FamilyId)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var goodsFamily GoodsFamily
-		err = rows.Scan(&goodsFamily.Id, &goodsFamily.FamilyId, &goodsFamily.GoodsId, &goodsFamily.CreatedAt)
-		if err != nil {
-			return
-		}
-		goodsFamilySlice = append(goodsFamilySlice, goodsFamily)
-	}
-	return
-}
-
-// GetGoodsByFamilyId()  获取家庭收集的所有物资记录
-func (fg *GoodsFamily) GetGoodsByFamilyId(ctx context.Context) (goodsSlice []Goods, err error) {
+// Get 获取家庭物资关系
+func (gf *GoodsFamily) Get(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if fg.FamilyId == FamilyIdUnknown {
-		return nil, fmt.Errorf("无法获取四海为家的物资")
-	}
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, physical_state, operational_state, availability, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_at, updated_at FROM goods WHERE id IN (SELECT goods_id FROM goods_families WHERE family_id = $1)", fg.FamilyId)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var goods Goods
-		err = rows.Scan(&goods.Id, &goods.Uuid, &goods.RecorderUserId, &goods.Name, &goods.Nickname, &goods.Designer, &goods.Describe, &goods.Price, &goods.Applicability, &goods.Category, &goods.Specification, &goods.BrandName, &goods.Model, &goods.Weight, &goods.Dimensions, &goods.Material, &goods.Size, &goods.Color, &goods.NetworkConnectionType, &goods.Features, &goods.SerialNumber, &goods.PhysicalState, &goods.OperationalState, &goods.Availability, &goods.Origin, &goods.Manufacturer, &goods.ManufacturerURL, &goods.EngineType, &goods.PurchaseURL, &goods.CreatedAt, &goods.UpdatedAt)
-		if err != nil {
-			return
-		}
-		goodsSlice = append(goodsSlice, goods)
-	}
-	return
+	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
+		FROM goods_families WHERE id = $1`
+	err := db.QueryRowContext(ctx, statement, gf.Id).Scan(
+		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
+	return err
 }
 
-// CheckGoodsByFamilyId()  检查家庭收集的物资记录是否存在
-func (fg *GoodsFamily) CheckGoodsByFamilyId() (exists bool, err error) {
-	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM goods_families WHERE family_id = $1 AND goods_id = $2", fg.FamilyId, fg.GoodsId).Scan(&count)
-	if err != nil {
-		return
-	}
-	exists = count > 0
-	return
+// GetByFamilyIdAndGoodsId 根据家庭ID和物资ID获取关系
+func (gf *GoodsFamily) GetByFamilyIdAndGoodsId(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
+		FROM goods_families WHERE family_id = $1 AND goods_id = $2`
+	err := db.QueryRowContext(ctx, statement, gf.FamilyId, gf.GoodsId).Scan(
+		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
+	return err
 }
 
-// GoodsFamily.CountByFamilyId()
-func (fg *GoodsFamily) CountByFamilyId() (count int, err error) {
-	err = db.QueryRow("SELECT COUNT(*) FROM goods_families WHERE family_id = $1", fg.FamilyId).Scan(&count)
-	return
-}
+// Update 更新家庭物资关系
+func (gf *GoodsFamily) Update(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 
-type GoodsTeam struct {
-	Id        int
-	TeamId    int
-	GoodsId   int
-	CreatedAt time.Time
-}
-
-// GoodsTeam.Create() 保存1团队收集的物资记录
-func (tg *GoodsTeam) Create() (err error) {
-	statement := "INSERT INTO goods_teams (team_id, goods_id, created_at) VALUES ($1, $2, $3) RETURNING id"
+	statement := `UPDATE goods_families SET family_id = $2, goods_id = $3, availability = $4, updated_at = $5 WHERE id = $1`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
-		return
+		return err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(tg.TeamId, tg.GoodsId, time.Now()).Scan(&tg.Id)
-	return
+
+	_, err = stmt.ExecContext(ctx, gf.Id, gf.FamilyId, gf.GoodsId, gf.Availability, time.Now())
+	return err
 }
 
-// GoodsTeam.Get() 获取1团队收集的物资记录
-func (tg *GoodsTeam) Get() (err error) {
-	err = db.QueryRow("SELECT id, team_id, goods_id, created_at FROM goods_teams WHERE id = $1", tg.Id).
-		Scan(&tg.Id, &tg.TeamId, &tg.GoodsId, &tg.CreatedAt)
-	return
-}
+// Delete 删除家庭物资关系
+func (gf *GoodsFamily) Delete(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 
-// GoodsTeam.GetByTeamIdAndGoodsId() 获取1团队收集的物资记录
-func (tg *GoodsTeam) GetByTeamIdAndGoodsId() (err error) {
-	err = db.QueryRow("SELECT id, team_id, goods_id, created_at FROM goods_teams WHERE team_id = $1 AND goods_id = $2", tg.TeamId, tg.GoodsId).
-		Scan(&tg.Id, &tg.TeamId, &tg.GoodsId, &tg.CreatedAt)
-	return
-}
-
-// GoodsTeam.Update() 更新1团队收集的物资记录
-func (tg *GoodsTeam) Update() (err error) {
-	statement := "UPDATE goods_teams SET team_id = $2, goods_id = $3, created_at = $4 WHERE id = $1"
+	statement := `DELETE FROM goods_families WHERE id = $1`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
-		return
+		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(tg.Id, tg.TeamId, tg.GoodsId, tg.CreatedAt)
-	return
+
+	_, err = stmt.ExecContext(ctx, gf.Id)
+	return err
 }
 
-// GoodsTeam.Delete() 删除1团队收集的物资记录
-func (tg *GoodsTeam) Delete() (err error) {
-	statement := "DELETE FROM goods_teams WHERE id = $1"
+// Get 获取团队物资关系
+func (gt *GoodsTeam) Get(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
+		FROM goods_teams WHERE id = $1`
+	err := db.QueryRowContext(ctx, statement, gt.Id).Scan(
+		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
+	return err
+}
+
+// GetByTeamIdAndGoodsId 根据团队ID和物资ID获取关系
+func (gt *GoodsTeam) GetByTeamIdAndGoodsId(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
+		FROM goods_teams WHERE team_id = $1 AND goods_id = $2`
+	err := db.QueryRowContext(ctx, statement, gt.TeamId, gt.GoodsId).Scan(
+		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
+	return err
+}
+
+// Update 更新团队物资关系
+func (gt *GoodsTeam) Update(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `UPDATE goods_teams SET team_id = $2, goods_id = $3, availability = $4, updated_at = $5 WHERE id = $1`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
-		return
+		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(tg.Id)
-	return
+
+	_, err = stmt.ExecContext(ctx, gt.Id, gt.TeamId, gt.GoodsId, gt.Availability, time.Now())
+	return err
 }
 
-// GoodsTeam.GetAllByTeamId()  获取团队收集的所有物资记录
-func (tg *GoodsTeam) GetAllByTeamId() (goodsTeamSlice []GoodsTeam, err error) {
-	rows, err := db.Query("SELECT id, team_id, goods_id, created_at FROM goods_teams WHERE team_id = $1", tg.TeamId)
+// Delete 删除团队物资关系
+func (gt *GoodsTeam) Delete(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `DELETE FROM goods_teams WHERE id = $1`
+	stmt, err := db.Prepare(statement)
 	if err != nil {
-		return
+		return err
 	}
-	defer rows.Close()
-	for rows.Next() {
-		var goodsTeam GoodsTeam
-		err = rows.Scan(&goodsTeam.Id, &goodsTeam.TeamId, &goodsTeam.GoodsId, &goodsTeam.CreatedAt)
-		if err != nil {
-			return
-		}
-		goodsTeamSlice = append(goodsTeamSlice, goodsTeam)
-	}
-	return
-}
+	defer stmt.Close()
 
-// 根据团队收集的所有物资记录，获取全部团队物资，return []Goods
-func (tg *GoodsTeam) GetAllGoodsByTeamId() (goodsSlice []Goods, err error) {
-	rows, err := db.Query("SELECT id, team_id, goods_id, created_at FROM goods_teams WHERE team_id = $1", tg.TeamId)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-	for rows.Next() {
-		var goodsTeam GoodsTeam
-		err = rows.Scan(&goodsTeam.Id, &goodsTeam.TeamId, &goodsTeam.GoodsId, &goodsTeam.CreatedAt)
-		if err != nil {
-			return
-		}
-		var goods Goods
-		goods.Id = goodsTeam.GoodsId
-		ctx := context.Background()
-		err = goods.GetByIdOrUUID(ctx)
-		if err != nil {
-			return
-		}
-		goodsSlice = append(goodsSlice, goods)
-	}
-	return
-}
-
-// GoodsTeam.CountByTeamId()  获取团队收集的物资记录数量
-func (tg *GoodsTeam) CountByTeamId() (count int, err error) {
-	err = db.QueryRow("SELECT COUNT(*) FROM goods_teams WHERE team_id = $1", tg.TeamId).Scan(&count)
-	return
-}
-
-// CheckTeamGoodsExist() 检查团队收集的物资记录是否存在
-func (tg *GoodsTeam) CheckTeamGoodsExist() (exist bool, err error) {
-	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM goods_teams WHERE team_id = $1 AND goods_id = $2)", tg.TeamId, tg.GoodsId).Scan(&exist)
-	return
+	_, err = stmt.ExecContext(ctx, gt.Id)
+	return err
 }
 
 // 用户看上（收藏/标记）的物质
@@ -566,7 +698,7 @@ func (gu *GoodsUser) CountByUserId() (count int, err error) {
 func (gu *GoodsUser) GetGoodsByUserId() ([]Goods, error) {
 	// 使用JOIN一次性获取所有数据，避免N+1查询
 	query := `
-        SELECT g.id, g.uuid, g.recorder_user_id, g.name, g.nickname, g.designer, g.describe, g.price, g.applicability, g.category, g.specification, g.brand_name, g.model, g.weight, g.dimensions, g.material, g.size, g.color, g.network_connection_type, g.features, g.serial_number, g.physical_state, g.operational_state, g.availability, g.origin, g.manufacturer, g.manufacturer_url, g.engine_type, g.purchase_url, g.created_at, g.updated_at
+        SELECT g.id, g.uuid, g.recorder_user_id, g.name, g.nickname, g.designer, g.describe, g.price, g.applicability, g.category, g.specification, g.brand_name, g.model, g.weight, g.dimensions, g.material, g.size, g.color, g.network_connection_type, g.features, g.serial_number, g.physical_state, g.operational_state, g.origin, g.manufacturer, g.manufacturer_url, g.engine_type, g.purchase_url, g.created_at, g.updated_at
         FROM goods g
         JOIN goods_users gu ON g.id = gu.goods_id
         WHERE gu.user_id = $1
@@ -581,7 +713,7 @@ func (gu *GoodsUser) GetGoodsByUserId() ([]Goods, error) {
 	var goodsSlice []Goods
 	for rows.Next() {
 		var goods Goods
-		if err := rows.Scan(&goods.Id, &goods.Uuid, &goods.RecorderUserId, &goods.Name, &goods.Nickname, &goods.Designer, &goods.Describe, &goods.Price, &goods.Applicability, &goods.Category, &goods.Specification, &goods.BrandName, &goods.Model, &goods.Weight, &goods.Dimensions, &goods.Material, &goods.Size, &goods.Color, &goods.NetworkConnectionType, &goods.Features, &goods.SerialNumber, &goods.PhysicalState, &goods.OperationalState, &goods.Availability, &goods.Origin, &goods.Manufacturer, &goods.ManufacturerURL, &goods.EngineType, &goods.PurchaseURL, &goods.CreatedAt, &goods.UpdatedAt); err != nil {
+		if err := rows.Scan(&goods.Id, &goods.Uuid, &goods.RecorderUserId, &goods.Name, &goods.Nickname, &goods.Designer, &goods.Describe, &goods.Price, &goods.Applicability, &goods.Category, &goods.Specification, &goods.BrandName, &goods.Model, &goods.Weight, &goods.Dimensions, &goods.Material, &goods.Size, &goods.Color, &goods.NetworkConnectionType, &goods.Features, &goods.SerialNumber, &goods.PhysicalState, &goods.OperationalState, &goods.Origin, &goods.Manufacturer, &goods.ManufacturerURL, &goods.EngineType, &goods.PurchaseURL, &goods.CreatedAt, &goods.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("scan row failed: %w", err)
 		}
 		goodsSlice = append(goodsSlice, goods)
@@ -611,7 +743,7 @@ func SearchGoodsByName(keyword string, limit int, ctx context.Context) ([]Goods,
 	defer cancel()
 
 	const query = `
-		SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, physical_state, operational_state, availability, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_at, updated_at
+		SELECT id, uuid, recorder_user_id, name, nickname, designer, describe, price, applicability, category, specification, brand_name, model, weight, dimensions, material, size, color, network_connection_type, features, serial_number, physical_state, operational_state, origin, manufacturer, manufacturer_url, engine_type, purchase_url, created_at, updated_at
 		FROM goods
 		WHERE name ILIKE $1 OR nickname ILIKE $1 OR brand_name ILIKE $1 OR model ILIKE $1 OR specification ILIKE $1
 		ORDER BY created_at DESC
@@ -626,7 +758,7 @@ func SearchGoodsByName(keyword string, limit int, ctx context.Context) ([]Goods,
 	var goodsSlice []Goods
 	for rows.Next() {
 		var g Goods
-		if err := rows.Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer, &g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName, &g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color, &g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.PhysicalState, &g.OperationalState, &g.Availability, &g.Origin, &g.Manufacturer, &g.ManufacturerURL, &g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt); err != nil {
+		if err := rows.Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer, &g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName, &g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color, &g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.PhysicalState, &g.OperationalState, &g.Origin, &g.Manufacturer, &g.ManufacturerURL, &g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt); err != nil {
 			return nil, err
 		}
 		goodsSlice = append(goodsSlice, g)
@@ -636,4 +768,46 @@ func SearchGoodsByName(keyword string, limit int, ctx context.Context) ([]Goods,
 		return nil, err
 	}
 	return goodsSlice, nil
+}
+
+func (gt *GoodsTeam) GetAllGoodsByTeamId(ctx context.Context) ([]Goods, []Availability, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `
+		SELECT g.id, g.uuid, g.recorder_user_id, g.name, g.nickname, g.designer, g.describe, g.price, g.applicability, g.category, g.specification, g.brand_name, g.model, g.weight, g.dimensions, g.material, g.size, g.color, g.network_connection_type, g.features, g.serial_number, g.physical_state, g.operational_state, g.origin, g.manufacturer, g.manufacturer_url, g.engine_type, g.purchase_url, g.created_at, g.updated_at, gf.availability
+		FROM goods g
+		LEFT JOIN goods_families gf ON g.id = gf.goods_id
+		WHERE gf.team_id = $1
+		ORDER BY g.created_at DESC`
+
+	rows, err := db.QueryContext(ctx, statement, gt.TeamId)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var goodsList []Goods
+	var availabilities []Availability
+	for rows.Next() {
+		var g Goods
+		var availability Availability
+		err = rows.Scan(&g.Id, &g.Uuid, &g.RecorderUserId, &g.Name, &g.Nickname, &g.Designer,
+			&g.Describe, &g.Price, &g.Applicability, &g.Category, &g.Specification, &g.BrandName,
+			&g.Model, &g.Weight, &g.Dimensions, &g.Material, &g.Size, &g.Color,
+			&g.NetworkConnectionType, &g.Features, &g.SerialNumber, &g.PhysicalState,
+			&g.OperationalState, &g.Origin, &g.Manufacturer, &g.ManufacturerURL,
+			&g.EngineType, &g.PurchaseURL, &g.CreatedAt, &g.UpdatedAt, &availability)
+		if err != nil {
+			return nil, nil, err
+		}
+		goodsList = append(goodsList, g)
+		availabilities = append(availabilities, availability)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return goodsList, availabilities, nil
 }

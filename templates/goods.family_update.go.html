@@ -1,11 +1,11 @@
 {{ define "content" }}
-{{/* 这是茶团物资编辑页面 */}}
+{{/* 这是家庭物资编辑页面 */}}
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
-    <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
-    <li><a href="/v1/goods/team_detail?id={{ .Goods.Id }}&{{ .Team.Id }}">{{ .Goods.Name }}</a></li>
+    <li><a href="/v1/family/detail?uuid={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+    <li><a href="/v1/goods/family?uuid={{ .Family.Uuid }}">装备物资</a></li>
+    <li><a href="/v1/goods/family_detail?id={{ .Goods.Id }}&family_id={{ .Family.Id }}">{{ .Goods.Name }}</a></li>
     <li class="active">编辑物资</li>
 </ol>
 
@@ -14,9 +14,9 @@
         <h3 class="panel-title">编辑物资信息</h3>
     </div>
     <div class="panel-body">
-        <form action="/v1/goods/team_update" method="post" class="form-horizontal">
+        <form action="/v1/goods/family_update" method="post" class="form-horizontal">
             <input type="hidden" name="id" value="{{ .Goods.Id }}">
-            <input type="hidden" name="team_id" value="{{ .Team.Id }}">
+            <input type="hidden" name="family_id" value="{{ .Family.Id }}">
 
             <!-- 基础信息 -->
             <div class="panel panel-default">
@@ -33,7 +33,7 @@
                     <div class="form-group">
                         <label for="nickname" class="col-sm-2 control-label">昵称/别名</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="nickname" name="nickname" value="{{ .Goods.Nickname }}" required>
+                            <input type="text" class="form-control" id="nickname" name="nickname" value="{{ .Goods.Nickname }}">
                         </div>
                     </div>
                     <div class="form-group">
@@ -102,12 +102,12 @@
                         <label for="availability" class="col-sm-2 control-label">可用性</label>
                         <div class="col-sm-10">
                             <select class="form-control" id="availability" name="availability">
-                                <option value="0" {{ if eq .GoodsTeam.Availability 0 }}selected{{ end }}>可用</option>
-                                <option value="1" {{ if eq .GoodsTeam.Availability 1 }}selected{{ end }}>使用中</option>
-                                <option value="2" {{ if eq .GoodsTeam.Availability 2 }}selected{{ end }}>闲置</option>
-                                <option value="3" {{ if eq .GoodsTeam.Availability 3 }}selected{{ end }}>已报废</option>
-                                <option value="4" {{ if eq .GoodsTeam.Availability 4 }}selected{{ end }}>已遗失</option>
-                                <option value="5" {{ if eq .GoodsTeam.Availability 5 }}selected{{ end }}>已转让</option>
+                                <option value="0" {{ if eq .GoodsFamily.Availability 0 }}selected{{ end }}>可用</option>
+                                <option value="1" {{ if eq .GoodsFamily.Availability 1 }}selected{{ end }}>使用中</option>
+                                <option value="2" {{ if eq .GoodsFamily.Availability 2 }}selected{{ end }}>闲置</option>
+                                <option value="3" {{ if eq .GoodsFamily.Availability 3 }}selected{{ end }}>已报废</option>
+                                <option value="4" {{ if eq .GoodsFamily.Availability 4 }}selected{{ end }}>已遗失</option>
+                                <option value="5" {{ if eq .GoodsFamily.Availability 5 }}selected{{ end }}>已转让</option>
                             </select>
                         </div>
                     </div>
@@ -117,7 +117,7 @@
                             <div class="input-group">
                                 <span class="input-group-addon">¥</span>
                                 <input type="number" class="form-control" id="price" name="price" 
-                                       step="0.01" min="0" value="{{ .Goods.Price }}" required>
+                                       step="0.01" min="0" value="{{ .Goods.Price }}">
                             </div>
                         </div>
                     </div>
@@ -131,9 +131,9 @@
                 </div>
                 <div class="panel-body">
                     <div class="form-group">
-                        <label for="brand_name" class="col-sm-2 control-label">品牌</label>
+                        <label for="brandname" class="col-sm-2 control-label">品牌</label>
                         <div class="col-sm-10">
-                            <input type="text" class="form-control" id="brand_name" name="brand_name" value="{{ .Goods.BrandName }}">
+                            <input type="text" class="form-control" id="brandname" name="brandname" value="{{ .Goods.BrandName }}">
                         </div>
                     </div>
                     <div class="form-group">
@@ -213,9 +213,9 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="network_connection_type" class="col-sm-2 control-label">联网方式</label>
+                        <label for="connection_type" class="col-sm-2 control-label">联网方式</label>
                         <div class="col-sm-10">
-                            <select class="form-control" id="network_connection_type" name="network_connection_type">
+                            <select class="form-control" id="connection_type" name="connection_type">
                                 <option value="">-- 请选择 --</option>
                                 <option value="wifi" {{ if eq .Goods.NetworkConnectionType "wifi" }}selected{{ end }}>Wi-Fi</option>
                                 <option value="bluetooth" {{ if eq .Goods.NetworkConnectionType "bluetooth" }}selected{{ end }}>蓝牙</option>
@@ -227,9 +227,9 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="manufacturer_url" class="col-sm-2 control-label">厂商链接</label>
+                        <label for="official_website" class="col-sm-2 control-label">厂商链接</label>
                         <div class="col-sm-10">
-                            <input type="url" class="form-control" id="manufacturer_url" name="manufacturer_url" value="{{ .Goods.ManufacturerURL }}">
+                            <input type="url" class="form-control" id="official_website" name="official_website" value="{{ .Goods.ManufacturerURL }}">
                         </div>
                     </div>
                     <div class="form-group">
@@ -266,8 +266,8 @@
             <div class="form-group">
                 <div class="col-sm-offset-2 col-sm-10">
                     <button type="submit" class="btn btn-primary">保存更改</button>
-                    <a href="/v1/goods/team_detail?id={{ .Goods.Id }}&team_id={{ .Team.Id }}" class="btn btn-default">取消</a>
-                    {{ if ne .GoodsTeam.Availability 3 }}
+                    <a href="/v1/goods/family_detail?id={{ .Goods.Id }}&family_id={{ .Family.Id }}" class="btn btn-default">取消</a>
+                    {{ if ne .GoodsFamily.Availability 3 }}
                     <button type="button" class="btn btn-danger pull-right" data-toggle="modal" data-target="#scrapModal">
                         标记为报废
                     </button>
@@ -294,9 +294,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
-                <form action="/v1/goods/team_scrap" method="post" style="display: inline;">
+                <form action="/v1/goods/family_scrap" method="post" style="display: inline;">
                     <input type="hidden" name="uuid" value="{{ .Goods.Uuid }}">
-                    <input type="hidden" name="team_id" value="{{ .Team.Id }}">
+                    <input type="hidden" name="family_id" value="{{ .Family.Id }}">
                     <button type="submit" class="btn btn-danger">确认报废</button>
                 </form>
             </div>
