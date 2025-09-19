@@ -32,7 +32,7 @@ func LoginGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// t := ParseTemplateFiles("layout", "navbar.public", "login")
 		// t.Execute(w, nil)
-		renderHTML(w, &aopD, "layout", "navbar.public", "login")
+		generateHTML(w, &aopD, "layout", "navbar.public", "login")
 		return
 	}
 	http.Redirect(w, r, "/v1/", http.StatusFound)
@@ -41,7 +41,7 @@ func LoginGet(w http.ResponseWriter, r *http.Request) {
 // GET /SignupGet
 // 新用户注册页面
 func SignupGet(w http.ResponseWriter, r *http.Request) {
-	renderHTML(w, nil, "layout", "navbar.public", "signup")
+	generateHTML(w, nil, "layout", "navbar.public", "signup")
 }
 
 // POST /signup

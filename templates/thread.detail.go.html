@@ -142,8 +142,6 @@
           {{ if ge .Status 1 }}
           <!-- 脑火详情按钮 -->
           <a class="btn btn-sm btn-default" href="/v1/brain-fire/detail?uuid={{ .Uuid }}" role="button">详情</a>
-          {{ else }}
-          <a class="btn btn-sm btn-default" href="/v1/brain-fire/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+ 脑火</a>
           {{ end }}
         </div>
         {{ end }} {{/* "脑火"非空检查-结束 */}}
@@ -157,8 +155,6 @@
           {{ if gt .Status 0 }}
           <!-- 建议详情按钮 -->
           <a class="btn btn-sm btn-default" href="/v1/suggestion/detail?uuid={{ .Uuid }}" role="button">详情</a>
-          {{ else }}
-          <a class="btn btn-sm btn-default" href="/v1/suggestion/new?uuid={{ $.QuoteProjectBean.Project.Uuid }}" role="button">+ 建议</a>
           {{ end }}
           {{ end }}{{/*  "建议"非空检查-完成 */}}
           

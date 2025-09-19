@@ -51,7 +51,7 @@ func EnvironmentNewGet(w http.ResponseWriter, r *http.Request) {
 	envData.SessUser = user
 	envData.ReturnURL = r.URL.Query().Get("return_url")
 
-	renderHTML(w, &envData, "layout", "navbar.private", "project.environment.new")
+	generateHTML(w, &envData, "layout", "navbar.private", "project.environment.new")
 }
 
 // POST /v1/environment/new
@@ -169,7 +169,7 @@ func EnvironmentDetailGet(w http.ResponseWriter, r *http.Request) {
 	envData.Environment = env
 	envData.Recorder = recorder
 
-	renderHTML(w, &envData, "layout", "navbar.private", "project.environment.detail")
+	generateHTML(w, &envData, "layout", "navbar.private", "project.environment.detail")
 }
 
 func parseInt(s string) int {

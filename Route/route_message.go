@@ -43,7 +43,7 @@ func Letterbox(w http.ResponseWriter, r *http.Request) {
 	lbPD.InvitationBeanSlice = i_b_slice
 
 	//向用户返回接收邀请函的表单页面
-	renderHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")
+	generateHTML(w, &lbPD, "layout", "navbar.private", "message.letterbox")
 }
 
 // Get /v1/message/accetp
@@ -73,6 +73,6 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//向用户返回表单页面
-	renderHTML(w, &amPD, "layout", "navbar.private", "message.accept")
+	generateHTML(w, &amPD, "layout", "navbar.private", "message.accept")
 
 }

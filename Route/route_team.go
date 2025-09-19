@@ -166,7 +166,7 @@ func MemberApplyCheck(w http.ResponseWriter, r *http.Request) {
 	mAL.MemberApplicationBeanSlice = apply_bean_slice
 
 	// 渲染页面
-	renderHTML(w, &mAL, "layout", "navbar.private", "team.applications")
+	generateHTML(w, &mAL, "layout", "navbar.private", "team.applications")
 
 }
 
@@ -208,7 +208,7 @@ func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 	mAL.MemberApplicationBeanSlice = apply_bean_slice
 
 	// 渲染页面
-	renderHTML(w, &mAL, "layout", "navbar.private", "teams.application")
+	generateHTML(w, &mAL, "layout", "navbar.private", "teams.application")
 
 }
 
@@ -228,7 +228,7 @@ func NewTeamGet(w http.ResponseWriter, r *http.Request) {
 	}
 	var tSPD data.TeamSquare
 	tSPD.SessUser = s_u
-	renderHTML(w, &tSPD, "layout", "navbar.private", "team.new")
+	generateHTML(w, &tSPD, "layout", "navbar.private", "team.new")
 }
 
 // POST /v1/team/create
@@ -394,12 +394,12 @@ func OpenTeams(w http.ResponseWriter, r *http.Request) {
 			Id:   data.UserId_None,
 			Name: "游客",
 		}
-		renderHTML(w, &tS, "layout", "navbar.public", "teams.open", "component_teams_public", "component_team")
+		generateHTML(w, &tS, "layout", "navbar.public", "teams.open", "component_teams_public", "component_team")
 		return
 	}
 	sUser, _ := s.User()
 	tS.SessUser = sUser
-	renderHTML(w, &tS, "layout", "navbar.private", "teams.open", "component_teams_public", "component_team")
+	generateHTML(w, &tS, "layout", "navbar.private", "teams.open", "component_teams_public", "component_team")
 
 }
 
@@ -428,12 +428,12 @@ func ClosedTeams(w http.ResponseWriter, r *http.Request) {
 			Id:   data.UserId_None,
 			Name: "游客",
 		}
-		renderHTML(w, &tS, "layout", "navbar.public", "teams.closed", "component_teams_public", "component_team")
+		generateHTML(w, &tS, "layout", "navbar.public", "teams.closed", "component_teams_public", "component_team")
 		return
 	}
 	tS.SessUser = s_u
 
-	renderHTML(w, &tS, "layout", "navbar.private", "teams.closed", "component_teams_public", "component_team")
+	generateHTML(w, &tS, "layout", "navbar.private", "teams.closed", "component_teams_public", "component_team")
 
 }
 
@@ -464,7 +464,7 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ts.SessUser = s_u
-	renderHTML(w, &ts, "layout", "navbar.private", "teams.hold", "component_teams_public", "component_team")
+	generateHTML(w, &ts, "layout", "navbar.private", "teams.hold", "component_teams_public", "component_team")
 }
 
 // GET /v1/teams/joined
@@ -520,7 +520,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		tS.TeamBeanSlice = teamBeanSlice
 	}
 
-	renderHTML(w, &tS, "layout", "navbar.private", "teams.joined", "component_teams_public", "component_team")
+	generateHTML(w, &tS, "layout", "navbar.private", "teams.joined", "component_teams_public", "component_team")
 }
 
 // GET /v1/teams/employed
@@ -547,7 +547,7 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
 		return
 	}
-	renderHTML(w, &ts, "layout", "navbar.private", "teams.employed", "component_teams_public", "component_team")
+	generateHTML(w, &ts, "layout", "navbar.private", "teams.employed", "component_teams_public", "component_team")
 }
 
 // GET /v1/team/detail?uuid=
@@ -677,7 +677,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-		renderHTML(w, &tD, "layout", "navbar.public", "team.detail", "component_avatar_name_gender")
+		generateHTML(w, &tD, "layout", "navbar.public", "team.detail", "component_avatar_name_gender")
 		return
 	}
 	s_u, err := s.User()
@@ -740,7 +740,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	renderHTML(w, &tD, "layout", "navbar.private", "team.detail", "component_avatar_name_gender")
+	generateHTML(w, &tD, "layout", "navbar.private", "team.detail", "component_avatar_name_gender")
 
 }
 
@@ -869,7 +869,7 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 
 	tD.SessUser = s_u
 
-	renderHTML(w, &tD, "layout", "navbar.private", "team.manage")
+	generateHTML(w, &tD, "layout", "navbar.private", "team.manage")
 }
 
 // CoreManage() 处理用户管理团队核心成员角色事务（例如：表决事项）
@@ -1025,7 +1025,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 	if s_u.Id == team.FounderId {
 		//如果是创建者，那么就可以上传图标
 
-		renderHTML(w, &uuid, "layout", "navbar.private", "team_avatar.upload")
+		generateHTML(w, &uuid, "layout", "navbar.private", "team_avatar.upload")
 		return
 	}
 	report(w, r, "你好，茶博士摸摸头，居然说只有团建人可以修改这个茶团相关资料。")
@@ -1105,7 +1105,7 @@ func InvitationsBrowse(w http.ResponseWriter, r *http.Request) {
 
 	if IsCoreMember {
 		//say yes,向用户返回接收邀请函的表单页面
-		renderHTML(w, &isPD, "layout", "navbar.private", "team.invitations")
+		generateHTML(w, &isPD, "layout", "navbar.private", "team.invitations")
 		return
 	} else {
 		// say no
@@ -1193,7 +1193,7 @@ func InvitationView(w http.ResponseWriter, r *http.Request) {
 
 	if IsCoreMember {
 		//say yes,向用户返回接收邀请函的表单页面
-		renderHTML(w, &iD, "layout", "navbar.private", "team.invitation_view")
+		generateHTML(w, &iD, "layout", "navbar.private", "team.invitation_view")
 		return
 	} else {
 		// say no

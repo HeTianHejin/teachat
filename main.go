@@ -167,7 +167,7 @@ func main() {
 	mux.HandleFunc("/v1/suggestion/new", route.HandleNewSuggestion)
 	mux.HandleFunc("/v1/suggestion/detail", route.SuggestionDetail)
 
-	// defined in route_action_goods.go
+	// defined in route_goods.go
 	mux.HandleFunc("/v1/goods/family_new", route.HandleGoodsFamilyNew)
 	mux.HandleFunc("/v1/goods/family", route.GoodsFamily)
 	mux.HandleFunc("/v1/goods/family_detail", route.GoodsFamilyDetail)
@@ -179,6 +179,8 @@ func main() {
 	mux.HandleFunc("/v1/goods/uncollect", route.GoodsUncollect)
 	mux.HandleFunc("/v1/goods/eye_on", route.GoodsEyeOn)
 	mux.HandleFunc("/v1/goods/detail", route.GoodsDetail)
+	// defined in route_action_goods.go
+	mux.HandleFunc("/v1/goods/project_new", route.HandleGoodsProjectNew)
 
 	//defined in route_action_handicraft.go
 	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)

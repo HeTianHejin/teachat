@@ -281,7 +281,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	sSDpD.ProjectAppointment = proj_appointment_bean
 	sSDpD.Environments = environments
 
-	renderHTML(w, &sSDpD, "layout", "navbar.private", "action.see-seek.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &sSDpD, "layout", "navbar.private", "action.see-seek.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // Handler /v1/see-seek/detail
@@ -388,5 +388,5 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 		QuoteObjectiveBean: objectiveBean,
 	}
 
-	renderHTML(w, &templateData, "layout", "navbar.private", "action.see-seek.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &templateData, "layout", "navbar.private", "action.see-seek.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }

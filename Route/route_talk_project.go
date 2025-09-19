@@ -176,7 +176,7 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 	pD.QuoteObjectiveBean = obBean
 
 	//渲染页面
-	renderHTML(w, &pD, "layout", "navbar.private", "project.place_update", "component_sess_capacity", "component_project_bean")
+	generateHTML(w, &pD, "layout", "navbar.private", "project.place_update", "component_sess_capacity", "component_project_bean")
 }
 
 // POST /v1/project/approve
@@ -605,7 +605,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 7. 渲染创建表单
-	renderHTML(w, &obPageData, "layout", "navbar.private", "project.new", "component_avatar_name_gender")
+	generateHTML(w, &obPageData, "layout", "navbar.private", "project.new", "component_avatar_name_gender")
 }
 
 // GET /v1/project/detail?uuid=
@@ -787,7 +787,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.RawQuery,
 		}
 		// 返回茶台详情游客页面
-		renderHTML(w, &pD, "layout", "navbar.public", "project.detail", "component_thread_bean_approved", "component_thread_bean", "component_avatar_name_gender", "component_sess_capacity")
+		generateHTML(w, &pD, "layout", "navbar.public", "project.detail", "component_thread_bean_approved", "component_thread_bean", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
 
@@ -878,5 +878,5 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.SessUser.Footprint = r.URL.Path
 	pD.SessUser.Query = r.URL.RawQuery
 
-	renderHTML(w, &pD, "layout", "navbar.private", "project.detail", "component_thread_bean_approved", "component_thread_bean", "component_avatar_name_gender", "component_sess_capacity")
+	generateHTML(w, &pD, "layout", "navbar.private", "project.detail", "component_thread_bean_approved", "component_thread_bean", "component_avatar_name_gender", "component_sess_capacity")
 }

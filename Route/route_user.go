@@ -51,12 +51,12 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	if user.Id == s_u.Id {
 		//是本人,则打开编辑页
 		uB.IsAuthor = true
-		renderHTML(w, &uB, "layout", "navbar.private", "biography.private")
+		generateHTML(w, &uB, "layout", "navbar.private", "biography.private")
 		return
 	} else {
 		//不是简介主人,打开公开介绍页
 		uB.IsAuthor = false
-		renderHTML(w, &uB, "layout", "navbar.private", "biography.public")
+		generateHTML(w, &uB, "layout", "navbar.private", "biography.public")
 	}
 
 }
@@ -155,7 +155,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	var lB data.LetterboxPageData
 	lB.SessUser = s_u
 
-	renderHTML(w, &lB, "layout", "navbar.private", "avatar.upload")
+	generateHTML(w, &lB, "layout", "navbar.private", "avatar.upload")
 }
 
 // GET
@@ -172,12 +172,12 @@ func Reset(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/users/connection_follow
 func Follow(w http.ResponseWriter, r *http.Request) {
-	renderHTML(w, nil, "layout", "navbar.private", "connection.follow")
+	generateHTML(w, nil, "layout", "navbar.private", "connection.follow")
 }
 
 // GET /v1/users/connection_fans
 func Fans(w http.ResponseWriter, r *http.Request) {
-	renderHTML(w, nil, "layout", "navbar.private", "connection.fans")
+	generateHTML(w, nil, "layout", "navbar.private", "connection.fans")
 }
 
 // GET /v1/users/connection_friend
@@ -197,5 +197,5 @@ func Friend(w http.ResponseWriter, r *http.Request) {
 	var cFPData data.ConnectionFriendPageData
 	cFPData.SessUser = s_u
 
-	renderHTML(w, &cFPData, "layout", "navbar.private", "connection.friend")
+	generateHTML(w, &cFPData, "layout", "navbar.private", "connection.friend")
 }

@@ -36,7 +36,7 @@ type GoodsTeamSlice struct {
 	IsAdmin  bool
 
 	Team         Team
-	Availability []Availability
+	Availability []GoodsAvailability
 
 	GoodsSlice []Goods
 }
@@ -57,7 +57,7 @@ type GoodsFamilySlice struct {
 	IsAdmin  bool
 
 	Family       Family
-	Availability []Availability
+	Availability []GoodsAvailability
 
 	GoodsSlice []Goods
 }
@@ -78,4 +78,23 @@ type GoodsUserSlice struct {
 type GoodsDetail struct {
 	SessUser User
 	Goods    Goods
+}
+
+type GoodsProjectSlice struct {
+	SessUser User
+	IsAdmin  bool
+
+	Project Project
+
+	GoodsSlice []Goods
+}
+
+type GoodsProjectDetail struct {
+	SessUser     User
+	IsAdmin      bool
+	GoodsProject GoodsProject
+
+	Project Project
+
+	Goods Goods
 }

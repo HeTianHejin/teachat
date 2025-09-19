@@ -51,7 +51,7 @@ func HazardNewGet(w http.ResponseWriter, r *http.Request) {
 	hazardData.SessUser = user
 	hazardData.ReturnURL = r.URL.Query().Get("return_url")
 
-	renderHTML(w, &hazardData, "layout", "navbar.private", "hazard.new")
+	generateHTML(w, &hazardData, "layout", "navbar.private", "hazard.new")
 }
 
 // POST /v1/hazard/new
@@ -179,5 +179,5 @@ func HazardDetailGet(w http.ResponseWriter, r *http.Request) {
 	hazardData.Hazard = hazard
 	hazardData.Recorder = recorder
 
-	renderHTML(w, &hazardData, "layout", "navbar.private", "hazard.detail")
+	generateHTML(w, &hazardData, "layout", "navbar.private", "hazard.detail")
 }

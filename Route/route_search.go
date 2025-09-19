@@ -112,7 +112,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.IsEmpty = false
 			}
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
 		return
 
 	case data.SearchTypeUserId:
@@ -127,7 +127,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				fPD.IsEmpty = true
-				renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
+				generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
 				return
 			} else {
 				util.Debug("failed to get user given user_id: ", keyword_int, err)
@@ -148,7 +148,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.IsEmpty = false
 			}
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
 		return
 	case data.SearchTypeTeamAbbr:
 		//查询，茶团简称，team.abbreviation
@@ -172,7 +172,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.IsEmpty = false
 			}
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_team", "component_avatar_name_gender")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_team", "component_avatar_name_gender")
 		return
 
 	case data.SearchTypeThreadTitle:
@@ -194,7 +194,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.ThreadBeanSlice = thread_bean_slice
 			fPD.IsEmpty = false
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_thread_bean", "component_avatar_name_gender")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_thread_bean", "component_avatar_name_gender")
 		return
 
 	case data.SearchTypeObjectiveTitle:
@@ -216,7 +216,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.ObjectiveBeanSlice = objective_bean_slice
 			fPD.IsEmpty = false
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_objective_bean", "component_avatar_name_gender")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_objective_bean", "component_avatar_name_gender")
 		return
 
 	case data.SearchTypeProjectTitle:
@@ -225,7 +225,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			util.Debug(" failed to search project by title", err)
 			fPD.IsEmpty = true
-			renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
+			generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
 			return
 		} else {
 			if len(project_slice) >= 1 {
@@ -237,7 +237,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.ProjectBeanSlice = project_bean_slice
 				fPD.IsEmpty = false
 			}
-			renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
+			generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
 			return
 		}
 	case data.SearchTypePlaceName:
@@ -251,7 +251,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.PlaceSlice = place_slice
 			fPD.IsEmpty = false
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search", "component_place")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_place")
 		return
 
 	case data.SearchTypeEnvironment:
@@ -265,7 +265,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.EnvironmentSlice = environment_slice
 			fPD.IsEmpty = false
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
 	case data.SearchTypeHazard:
@@ -279,7 +279,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.HazardSlice = hazard_slice
 			fPD.IsEmpty = false
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
 	case data.SearchTypeGoods:
@@ -293,7 +293,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.GoodsSlice = goods_slice
 			fPD.IsEmpty = false
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
 	case 8: // SearchTypeRisk
@@ -307,7 +307,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.RiskSlice = risk_slice
 			fPD.IsEmpty = false
 		}
-		renderHTML(w, &fPD, "layout", "navbar.private", "search")
+		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
 	default:
@@ -334,5 +334,5 @@ func SearchGet(w http.ResponseWriter, r *http.Request) {
 	f.SessUser = s_u
 
 	// 打开查询页面
-	renderHTML(w, &f, "layout", "navbar.private", "search")
+	generateHTML(w, &f, "layout", "navbar.private", "search")
 }

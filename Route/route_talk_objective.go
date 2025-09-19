@@ -57,7 +57,7 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	oD.SessUserDefaultPlace = s_default_place
 	oD.SessUserBindPlaces = s_places
 	// 给请求用户返回新建茶话会页面
-	renderHTML(w, &oD, "layout", "navbar.private", "objective.new")
+	generateHTML(w, &oD, "layout", "navbar.private", "objective.new")
 }
 
 // POST /objective/create
@@ -277,7 +277,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//返回页面
-		renderHTML(w, &oSpD, "layout", "navbar.public", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
+		generateHTML(w, &oSpD, "layout", "navbar.public", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
 		return
 	}
 	//已登录，读取用户信息
@@ -296,7 +296,7 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 			oSpD.ObjectiveBeanSlice[i].Objective.ActiveData.IsAuthor = false
 		}
 	}
-	renderHTML(w, &oSpD, "layout", "navbar.private", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
+	generateHTML(w, &oSpD, "layout", "navbar.private", "objectives.square", "component_objective_bean", "component_avatar_name_gender")
 
 }
 
@@ -363,7 +363,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 			Query:     r.URL.RawQuery,
 		}
 		//配置公开导航条的茶话会详情页面
-		renderHTML(w, &oD, "layout", "navbar.public", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
+		generateHTML(w, &oD, "layout", "navbar.public", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
 		return
 	}
 
@@ -414,7 +414,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//配置私有导航条的茶话会详情页面
-	renderHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
+	generateHTML(w, &oD, "layout", "navbar.private", "objective.detail", "component_project_bean", "component_avatar_name_gender", "component_sess_capacity")
 
 }
 
@@ -500,7 +500,7 @@ func objectiveSupplementGet(w http.ResponseWriter, r *http.Request) {
 
 	obSupp.SessUser = s_u
 
-	renderHTML(w, &obSupp, "layout", "navbar.private", "objective.supplement", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &obSupp, "layout", "navbar.private", "objective.supplement", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/objective/supplement

@@ -19,7 +19,7 @@ import (
 )
 
 // 处理器把页面模版和需求数据揉合后，由这个方法，将填写好的页面“制作“成HTML格式，调用http响应方法，发送给浏览器端客户
-func renderHTML(w http.ResponseWriter, template_data any, filenames ...string) {
+func generateHTML(w http.ResponseWriter, template_data any, filenames ...string) {
 	var files []string
 	for _, file := range filenames {
 		files = append(files, fmt.Sprintf("templates/%s.go.html", file))
@@ -507,7 +507,7 @@ func report(w http.ResponseWriter, r *http.Request, msg ...any) {
 			Id:   data.UserId_None,
 			Name: "游客",
 		}
-		renderHTML(w, &userBPD, "layout", "navbar.public", "feedback")
+		generateHTML(w, &userBPD, "layout", "navbar.public", "feedback")
 		return
 	}
 	s_u, err := s.User()
@@ -518,7 +518,7 @@ func report(w http.ResponseWriter, r *http.Request, msg ...any) {
 	}
 	userBPD.SessUser = s_u
 
-	renderHTML(w, &userBPD, "layout", "navbar.private", "feedback")
+	generateHTML(w, &userBPD, "layout", "navbar.private", "feedback")
 }
 
 // Checks if the user is logged in and has a session, if not err is not nil

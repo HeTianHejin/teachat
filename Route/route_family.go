@@ -162,7 +162,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	fSPD.SessUser = s_u
 
 	// 3. render
-	renderHTML(w, &fSPD, "layout", "navbar.private", "families.home")
+	generateHTML(w, &fSPD, "layout", "navbar.private", "families.home")
 }
 
 // GET /v1/family/detail?id=XXX
@@ -326,7 +326,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	fD.OtherMemberBeanSlice = other_member_bean_slice
 
 	// 4. render
-	renderHTML(w, &fD, "layout", "navbar.private", "family.detail", "component_avatar_name_gender")
+	generateHTML(w, &fD, "layout", "navbar.private", "family.detail", "component_avatar_name_gender")
 }
 
 // HandleNewFamily() /v1/family/new
@@ -500,5 +500,5 @@ func NewFamily(w http.ResponseWriter, r *http.Request) {
 	var fSPD data.FamilySquare
 	fSPD.SessUser = s_u
 
-	renderHTML(w, &fSPD, "layout", "navbar.private", "family.new")
+	generateHTML(w, &fSPD, "layout", "navbar.private", "family.new")
 }

@@ -132,7 +132,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 		DefaultHazards:     defaultHazards,
 	}
 
-	renderHTML(w, &sssTD, "layout", "navbar.private", "action.see-seek.step2", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &sssTD, "layout", "navbar.private", "action.see-seek.step2", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/see-seek/step2
@@ -391,7 +391,7 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 		DefaultRisks:   defaultRisks,
 	}
 
-	renderHTML(w, &sssTD, "layout", "navbar.private", "action.see-seek.step3", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &sssTD, "layout", "navbar.private", "action.see-seek.step3", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/see-seek/step3
@@ -615,7 +615,7 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 		CurrentStep:        currentStep,
 	}
 
-	renderHTML(w, &sssTD, "layout", "navbar.private", "action.see-seek.step4", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &sssTD, "layout", "navbar.private", "action.see-seek.step4", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/see-seek/step4
@@ -928,7 +928,7 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 		CurrentStep:        currentStep,
 	}
 
-	renderHTML(w, &sssTD, "layout", "navbar.private", "action.see-seek.step5", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &sssTD, "layout", "navbar.private", "action.see-seek.step5", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/see-seek/step5

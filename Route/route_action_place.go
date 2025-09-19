@@ -116,7 +116,7 @@ func NewPlace(w http.ResponseWriter, r *http.Request) {
 	}
 	var pL data.PlaceSlice
 	pL.SessUser = s_u
-	renderHTML(w, &pL, "layout", "navbar.private", "place.new")
+	generateHTML(w, &pL, "layout", "navbar.private", "place.new")
 
 }
 
@@ -250,7 +250,7 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 	}
 	pL.PlaceSlice = places
 	pL.SessUser = s_u
-	renderHTML(w, &pL, "layout", "navbar.private", "places.my", "component_place")
+	generateHTML(w, &pL, "layout", "navbar.private", "places.my", "component_place")
 }
 
 // GET  /v1/place/detail?uuid=
@@ -295,5 +295,5 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		pD.IsAuthor = false
 	}
-	renderHTML(w, &pD, "layout", "navbar.private", "place.detail", "component_place")
+	generateHTML(w, &pD, "layout", "navbar.private", "place.detail", "component_place")
 }

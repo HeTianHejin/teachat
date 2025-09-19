@@ -51,7 +51,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			thread_slice[i].ActiveData.IsAuthor = false
 		}
 		//展示游客首页
-		renderHTML(w, &indexPD, "layout", "navbar.public", "index", "component_avatar_name_gender")
+		generateHTML(w, &indexPD, "layout", "navbar.public", "index", "component_avatar_name_gender")
 		return
 	}
 	//已登录
@@ -70,7 +70,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	//展示茶客的首页
-	renderHTML(w, &indexPD, "layout", "navbar.private", "index", "component_avatar_name_gender")
+	generateHTML(w, &indexPD, "layout", "navbar.private", "index", "component_avatar_name_gender")
 
 }
 
@@ -86,13 +86,13 @@ func About(w http.ResponseWriter, r *http.Request) {
 			Id:   0,
 			Name: "游客",
 		}
-		renderHTML(w, &uB, "layout", "navbar.public", "about")
+		generateHTML(w, &uB, "layout", "navbar.public", "about")
 		return
 	} else {
 		//已登录
 		uB.SessUser, _ = sess.User()
 		//展示tea客的首页
-		renderHTML(w, &uB, "layout", "navbar.private", "about")
+		generateHTML(w, &uB, "layout", "navbar.private", "about")
 	}
 
 }

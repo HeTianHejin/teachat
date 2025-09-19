@@ -48,7 +48,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 
 	iD.InvitationBean.InviteUser = invi_user
 
-	renderHTML(w, &iD, "layout", "navbar.private", "pilot.invite")
+	generateHTML(w, &iD, "layout", "navbar.private", "pilot.invite")
 
 }
 

@@ -29,7 +29,7 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 			util.Debug(" Cannot get pilots", err)
 			http.Redirect(w, r, "/v1/", http.StatusFound)
 		}
-		renderHTML(w, &pilots, "layout", "navbar.private", "pilot.office")
+		generateHTML(w, &pilots, "layout", "navbar.private", "pilot.office")
 	}
 	//如果不是，则显示错误信息
 	report(w, r, "你好，欢迎光临茶博士服务室！")
@@ -38,7 +38,7 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 // GET /pilot/new
 // 返回添加飞行员页面
 func NewPilot(w http.ResponseWriter, r *http.Request) {
-	renderHTML(w, nil, "layout", "navbar.private", "pilot.new")
+	generateHTML(w, nil, "layout", "navbar.private", "pilot.new")
 }
 
 // POST /pilot/add

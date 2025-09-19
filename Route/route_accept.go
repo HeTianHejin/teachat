@@ -519,5 +519,5 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		util.Debug("Cannot subtract 1 user message", err)
 	}
 
-	renderHTML(w, &aopd, "layout", "navbar.private", "watch_your_language")
+	generateHTML(w, &aopd, "layout", "navbar.private", "watch_your_language")
 }

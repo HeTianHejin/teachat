@@ -95,7 +95,7 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 	suggestionData.ProjectBean = projBean
 	suggestionData.QuoteObjectiveBean = objeBean
 
-	renderHTML(w, &suggestionData, "layout", "navbar.private", "action.suggestion.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &suggestionData, "layout", "navbar.private", "action.suggestion.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/suggestion/new
@@ -333,5 +333,5 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	renderHTML(w, &templateData, "layout", "navbar.private", "action.suggestion.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &templateData, "layout", "navbar.private", "action.suggestion.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }

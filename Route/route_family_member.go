@@ -68,7 +68,7 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 	fms.FamilyMemberUser = family_member_user
 
 	//渲染页面
-	renderHTML(w, &fms, "layout", "navbar.private", "family_member.sign_in")
+	generateHTML(w, &fms, "layout", "navbar.private", "family_member.sign_in")
 
 }
 
@@ -345,7 +345,7 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 	fMSID.FamilyMemberSignInBean = family_member_sign_in_bean
 
 	//渲染页面给用户
-	renderHTML(w, &fMSID, "layout", "navbar.private", "family_member.sign_in_read")
+	generateHTML(w, &fMSID, "layout", "navbar.private", "family_member.sign_in_read")
 
 }
 

@@ -109,7 +109,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
 		}
-		renderHTML(w, &pD, "layout", "navbar.public", "post.detail", "component_sess_capacity", "component_avatar_name_gender")
+		generateHTML(w, &pD, "layout", "navbar.public", "post.detail", "component_sess_capacity", "component_avatar_name_gender")
 		return
 	}
 	// 读取已登陆陛下资料
@@ -184,7 +184,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsAuthor = false
 	}
 
-	renderHTML(w, &pD, "layout", "navbar.private", "post.detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &pD, "layout", "navbar.private", "post.detail", "component_sess_capacity", "component_avatar_name_gender")
 
 }
 
@@ -372,7 +372,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 
-		post, err := acceptNewDraftPost(new_draft_post.Id)
+		_, err := acceptNewDraftPost(new_draft_post.Id)
 		if err != nil {
 			switch {
 			case strings.Contains(err.Error(), "获取品味草稿失败"):
@@ -387,7 +387,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-		http.Redirect(w, r, fmt.Sprintf("/v1/post/detail?uuid=%s", post.Uuid), http.StatusFound)
+		http.Redirect(w, r, "/v1/thread/detail?uuid="+thread_uuid, http.StatusFound)
 		return
 	}
 }
@@ -617,7 +617,7 @@ func SupplementPostGet(w http.ResponseWriter, r *http.Request) {
 	}
 	if ok {
 		//显示编辑页面
-		renderHTML(w, &pD, "layout", "navbar.private", "post.supplement", "component_avatar_name_gender")
+		generateHTML(w, &pD, "layout", "navbar.private", "post.supplement", "component_avatar_name_gender")
 	} else {
 		//提示陛下无权编辑
 		report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说陛下您没有权限加水呢。")

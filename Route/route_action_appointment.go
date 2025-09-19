@@ -152,7 +152,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		AppointmentBean:    p_a,
 	}
 	// 渲染HTML页面
-	renderHTML(w, &pAD, "layout", "navbar.private", "action.appointment.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &pAD, "layout", "navbar.private", "action.appointment.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/appointment/new
@@ -401,7 +401,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		ProjectBean:        pr_bean,
 		QuoteObjectiveBean: ob_bean,
 	}
-	renderHTML(w, &aPD, "layout", "navbar.private", "action.appointment.detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &aPD, "layout", "navbar.private", "action.appointment.detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // GET /v1/appointment/accept?uuid=xxx

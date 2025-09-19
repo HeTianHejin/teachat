@@ -200,7 +200,7 @@ func MemberResign(w http.ResponseWriter, r *http.Request) {
 	tmqPD.Team = t_team
 
 	//渲染退出声明撰写页面
-	renderHTML(w, &tmqPD, "layout", "navbar.private", "member.resign_new")
+	generateHTML(w, &tmqPD, "layout", "navbar.private", "member.resign_new")
 
 }
 
@@ -253,7 +253,7 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 	tmrcnpd.TeamMemberRoleNoticeBeanSlice = tmrnBeanSlice
 
 	//渲染茶团成员角色调整通知页面
-	renderHTML(w, &tmrcnpd, "layout", "navbar.private", "member.role_changed_notices")
+	generateHTML(w, &tmrcnpd, "layout", "navbar.private", "member.role_changed_notices")
 
 }
 
@@ -397,7 +397,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	tmrcnP.TeamMemberRoleNoticeBean.TeamMemberRoleNotice.MemberCurrentRole = m_c_role
 
 	//渲染茶团角色调整页面
-	renderHTML(w, &tmrcnP, "layout", "navbar.private", "member.role_change_new")
+	generateHTML(w, &tmrcnP, "layout", "navbar.private", "member.role_change_new")
 }
 
 // POST /v1/team_member/role
@@ -985,7 +985,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//渲染页面
-	renderHTML(w, &aR, "layout", "navbar.private", "team.application_review")
+	generateHTML(w, &aR, "layout", "navbar.private", "team.application_review")
 }
 
 // POST /v1/team_member/application/new
@@ -1129,7 +1129,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	tD.SessUser = s_u
 	tD.TeamBean.Team = team
 	//渲染页面
-	renderHTML(w, &tD, "layout", "navbar.private", "member.application_new")
+	generateHTML(w, &tD, "layout", "navbar.private", "member.application_new")
 
 }
 
@@ -1587,7 +1587,7 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 	for _, f_te := range founder_teams {
 		if f_te.FounderId == s_u.Id {
 			//向茶友返回指定的团队邀请函创建表单页面
-			renderHTML(w, &iD, "layout", "navbar.private", "member.invite")
+			generateHTML(w, &iD, "layout", "navbar.private", "member.invite")
 			return
 		}
 	}
@@ -1608,7 +1608,7 @@ func InviteMemberNew(w http.ResponseWriter, r *http.Request) {
 		}
 		if ceo.UserId == s_u.Id {
 			//向茶友返回指定的团队邀请函创建表单页面
-			renderHTML(w, &iD, "layout", "navbar.private", "member.invite")
+			generateHTML(w, &iD, "layout", "navbar.private", "member.invite")
 			return
 		}
 	}
@@ -1682,5 +1682,5 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	iD.InvitationBean = i_b
 
 	//向茶友返回该邀请函的详细信息
-	renderHTML(w, &iD, "layout", "navbar.private", "member.invitation_read")
+	generateHTML(w, &iD, "layout", "navbar.private", "member.invitation_read")
 }

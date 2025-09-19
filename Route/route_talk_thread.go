@@ -414,7 +414,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			}
 
 			//show the thread and the posts展示页面
-			renderHTML(w, &tD, "layout", "navbar.public", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
+			generateHTML(w, &tD, "layout", "navbar.public", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
 			return
 		} else {
 			report(w, r, "茶水温度太高了，不适合品味，请稍后再试。")
@@ -556,7 +556,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				//data.SaveReadedUserId(tD.ThreadBean.Thread.Id, s_u.Id)
 
 				//展示撰写者视角茶议详情页面
-				renderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
+				generateHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
 				return
 			} else {
 				//不是茶议撰写者
@@ -596,7 +596,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 				//展示非撰写者视角茶议详情页面
-				renderHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
+				generateHTML(w, &tD, "layout", "navbar.private", "thread.detail", "component_sess_capacity", "component_post_left", "component_post_right", "component_avatar_name_gender")
 				return
 			}
 		} else {
@@ -867,7 +867,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 
 	threSupp.SessUser = s_u
 
-	renderHTML(w, &threSupp, "layout", "navbar.private", "thread.supplement", "component_post_left", "component_post_right", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &threSupp, "layout", "navbar.private", "thread.supplement", "component_post_left", "component_post_right", "component_sess_capacity", "component_avatar_name_gender")
 
 }
 

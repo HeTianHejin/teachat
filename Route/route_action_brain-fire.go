@@ -137,7 +137,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	bfDtD.ProjectAppointment = proj_appointment_bean
 	bfDtD.Environments = environments
 
-	renderHTML(w, &bfDtD, "layout", "navbar.private", "action.brain-fire.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &bfDtD, "layout", "navbar.private", "action.brain-fire.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // POST /v1/brain-fire/new
@@ -417,5 +417,5 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	renderHTML(w, &templateData, "layout", "navbar.private", "action.brain-fire.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &templateData, "layout", "navbar.private", "action.brain-fire.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }

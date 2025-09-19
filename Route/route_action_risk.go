@@ -51,7 +51,7 @@ func RiskNewGet(w http.ResponseWriter, r *http.Request) {
 	riskData.SessUser = user
 	riskData.ReturnURL = r.URL.Query().Get("return_url")
 
-	renderHTML(w, &riskData, "layout", "navbar.private", "risk.new")
+	generateHTML(w, &riskData, "layout", "navbar.private", "risk.new")
 }
 
 // POST /v1/risk/new
@@ -173,5 +173,5 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 	riskData.Risk = risk
 	riskData.Recorder = recorder
 
-	renderHTML(w, &riskData, "layout", "navbar.private", "risk.detail")
+	generateHTML(w, &riskData, "layout", "navbar.private", "risk.detail")
 }
