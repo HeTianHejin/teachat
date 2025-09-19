@@ -857,16 +857,23 @@ type GoodsProject struct {
 	Id                int
 	ProjectId         int
 	ResponsibleUserId int               // 物资在项目中的责任人
-	GoodsId           int               //物资id
+	GoodsId           int               // 物资id
+	ProviderType      int               // 物资提供方：1-出茶方，2-收茶方
 	ExpectedUsage     string            // 预期用途说明
 	Quantity          int               // 数量
-	Category          int               //1:工具or装备, 2:消耗品
+	Category          int               // 1:工具or装备, 2:消耗品
 	Status            GoodsAvailability // 物资在项目中的状态
 	Notes             string            // 物资在项目中的备注
 	CreatedAt         time.Time
 	UpdatedAt         *time.Time
-	DeletedAt         *time.Time //软删除
+	DeletedAt         *time.Time // 软删除
 }
+
+// 物资提供方类型
+const (
+	ProviderTypePayee = iota + 1 // 出茶方
+	ProviderTypePayer            // 收茶方
+)
 
 // 项目物资类别
 const (
@@ -882,7 +889,22 @@ func (gp *GoodsProject) Validate() error {
 	if gp.Category < 1 || gp.Category > 2 {
 		return fmt.Errorf("类别值无效")
 	}
+	if gp.ProviderType < 1 || gp.ProviderType > 2 {
+		return fmt.Errorf("提供方类型无效")
+	}
 	return nil
+}
+
+// ProviderTypeString 返回提供方类型的中文描述
+func (gp *GoodsProject) ProviderTypeString() string {
+	switch gp.ProviderType {
+	case ProviderTypePayee:
+		return "出茶方"
+	case ProviderTypePayer:
+		return "收茶方"
+	default:
+		return "未知提供方"
+	}
 }
 
 // CategoryString 返回类别的中文描述
@@ -907,15 +929,15 @@ func (gp *GoodsProject) Create(ctx context.Context) error {
 	defer cancel()
 
 	statement := `INSERT INTO goods_projects 
-		(project_id, responsible_user_id, goods_id, expected_usage, quantity, category, status, notes, created_at) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`
+		(project_id, responsible_user_id, goods_id, provider_type, expected_usage, quantity, category, status, notes, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 
-	err = stmt.QueryRowContext(ctx, gp.ProjectId, gp.ResponsibleUserId, gp.GoodsId,
+	err = stmt.QueryRowContext(ctx, gp.ProjectId, gp.ResponsibleUserId, gp.GoodsId, gp.ProviderType,
 		gp.ExpectedUsage, gp.Quantity, gp.Category, gp.Status, gp.Notes, time.Now()).Scan(&gp.Id)
 	return err
 }
@@ -929,8 +951,8 @@ func (gp *GoodsProject) Update(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `UPDATE goods_projects SET responsible_user_id = $2, goods_id = $3, 
-		expected_usage = $4, quantity = $5, category = $6, status = $7, notes = $8, updated_at = $9 
+	statement := `UPDATE goods_projects SET responsible_user_id = $2, goods_id = $3, provider_type = $4,
+		expected_usage = $5, quantity = $6, category = $7, status = $8, notes = $9, updated_at = $10 
 		WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
@@ -939,7 +961,7 @@ func (gp *GoodsProject) Update(ctx context.Context) error {
 	defer stmt.Close()
 
 	now := time.Now()
-	_, err = stmt.ExecContext(ctx, gp.Id, gp.ResponsibleUserId, gp.GoodsId,
+	_, err = stmt.ExecContext(ctx, gp.Id, gp.ResponsibleUserId, gp.GoodsId, gp.ProviderType,
 		gp.ExpectedUsage, gp.Quantity, gp.Category, gp.Status, gp.Notes, now)
 	gp.UpdatedAt = &now
 	return err
@@ -968,7 +990,7 @@ func GetGoodsByProjectId(projectId int, ctx context.Context) ([]GoodsProject, er
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, project_id, responsible_user_id, goods_id, expected_usage, 
+	statement := `SELECT id, project_id, responsible_user_id, goods_id, provider_type, expected_usage, 
 		quantity, category, status, notes, created_at, updated_at, deleted_at 
 		FROM goods_projects WHERE project_id = $1 AND deleted_at IS NULL 
 		ORDER BY created_at DESC`
@@ -982,7 +1004,7 @@ func GetGoodsByProjectId(projectId int, ctx context.Context) ([]GoodsProject, er
 	var projectGoods []GoodsProject
 	for rows.Next() {
 		var gp GoodsProject
-		err = rows.Scan(&gp.Id, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId,
+		err = rows.Scan(&gp.Id, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ProviderType,
 			&gp.ExpectedUsage, &gp.Quantity, &gp.Category, &gp.Status, &gp.Notes,
 			&gp.CreatedAt, &gp.UpdatedAt, &gp.DeletedAt)
 		if err != nil {
@@ -1003,11 +1025,11 @@ func (gp *GoodsProject) GetByProjectIdAndGoodsId(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, project_id, responsible_user_id, goods_id, expected_usage, 
+	statement := `SELECT id, project_id, responsible_user_id, goods_id, provider_type, expected_usage, 
 		quantity, category, status, notes, created_at, updated_at, deleted_at 
 		FROM goods_projects WHERE project_id = $1 AND goods_id = $2 AND deleted_at IS NULL`
 	err := db.QueryRowContext(ctx, statement, gp.ProjectId, gp.GoodsId).Scan(
-		&gp.Id, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ExpectedUsage,
+		&gp.Id, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ProviderType, &gp.ExpectedUsage,
 		&gp.Quantity, &gp.Category, &gp.Status, &gp.Notes, &gp.CreatedAt, &gp.UpdatedAt, &gp.DeletedAt)
 	return err
 }

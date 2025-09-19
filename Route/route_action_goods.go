@@ -68,7 +68,8 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 	f_id := 0
 	t_id := 0
 	t_s_id := 0
-	goods_slice := []data.Goods{}
+	var goods_slice_payer []data.Goods
+	var goods_slice_payee []data.Goods
 	if project.IsPrivate {
 		t_id = p_a.PayeeTeamId
 		f_id = p_a.PayerFamilyId
@@ -84,8 +85,8 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 			report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
-		goods_slice = append(goods_slice, goods_slice_t...)
-		goods_slice = append(goods_slice, goods_slice_f...)
+		goods_slice_payee = goods_slice_t
+		goods_slice_payer = goods_slice_f
 
 	} else {
 		t_id = p_a.PayerTeamId
@@ -102,16 +103,16 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 			report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
-		goods_slice = append(goods_slice, goods_slice_t...)
-		goods_slice = append(goods_slice, goods_slice_t_s...)
-
+		goods_slice_payer = goods_slice_t
+		goods_slice_payee = goods_slice_t_s
 	}
 
 	var gPD data.GoodsProjectSlice
 	gPD.SessUser = s_u
 	gPD.IsAdmin = true
 	gPD.Project = project
-	gPD.GoodsSlice = goods_slice
+	gPD.GoodsSlicePayee = goods_slice_payee
+	gPD.GoodsSlicePayer = goods_slice_payer
 
 	generateHTML(w, &gPD, "layout", "navbar.private", "goods.project_new")
 }
@@ -200,6 +201,18 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 		return
 	}
 
+	// 获取提供方类型
+	provider_type_str := r.PostFormValue("provider_type")
+	if provider_type_str == "" {
+		report(w, r, "你好，茶博士表示提供方类型不能为空，请确认后再试。")
+		return
+	}
+	provider_type, err := strconv.Atoi(provider_type_str)
+	if err != nil || (provider_type != data.ProviderTypePayee && provider_type != data.ProviderTypePayer) {
+		report(w, r, "你好，茶博士表示提供方类型格式错误，请确认后再试。")
+		return
+	}
+
 	// 获取备注
 	notes := r.PostFormValue("notes")
 	le = len(notes)
@@ -213,6 +226,7 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 		ProjectId:         project_id,
 		ResponsibleUserId: responsible_user_id,
 		GoodsId:           goods_id,
+		ProviderType:      provider_type,
 		ExpectedUsage:     expected_usage,
 		Quantity:          quantity,
 		Category:          category_int,

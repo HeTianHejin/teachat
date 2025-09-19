@@ -2025,6 +2025,10 @@ func GoodsDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	t_goods := data.Goods{Uuid: goods_uuid}
 	if err = t_goods.GetByIdOrUUID(r.Context()); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			report(w, r, "一脸蒙的茶博士，表示找不到这个物资，请确认后再试。")
+			return
+		}
 		util.Debug("cannot get goods from database", err)
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
