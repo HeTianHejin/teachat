@@ -181,6 +181,7 @@ func main() {
 	mux.HandleFunc("/v1/goods/detail", route.GoodsDetail)
 	// defined in route_action_goods.go
 	mux.HandleFunc("/v1/goods/project_new", route.HandleGoodsProjectNew)
+	mux.HandleFunc("/v1/goods/project_detail", route.HandleGoodsProjectDetail)
 
 	//defined in route_action_handicraft.go
 	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)

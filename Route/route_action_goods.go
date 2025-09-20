@@ -240,5 +240,122 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 		return
 	}
 
-	http.Redirect(w, r, "/v1/project/detail?id="+project_id_str, http.StatusFound)
+	http.Redirect(w, r, "/v1/goods/project_detail?uuid="+project.Uuid, http.StatusFound)
+}
+
+// HandleGoodsProjectDetail 处理项目物资详情页面
+func HandleGoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		GoodsProjectDetail(w, r)
+	default:
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
+		return
+	}
+}
+
+// GET /v1/goods/project_detail?uuid=xxx
+func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	// 获取项目信息
+	project := data.Project{Uuid: uuid}
+	if err := project.GetByUuid(); err != nil {
+		util.Debug("Cannot get project by uuid", uuid, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+
+	// 获取目标信息
+	ob, err := project.Objective()
+	if err != nil {
+		util.Debug("Cannot get objective", err)
+		report(w, r, "获取目标信息失败")
+		return
+	}
+
+	// 获取项目物资列表
+	goodsProjectList, err := data.GetGoodsByProjectId(project.Id, r.Context())
+	if err != nil {
+		util.Debug("Cannot get goods by project id", project.Id, err)
+		report(w, r, "获取项目物资列表失败")
+		return
+	}
+
+	// 获取物资详细信息
+	var goodsList []data.Goods
+	for _, gp := range goodsProjectList {
+		goods := data.Goods{Id: gp.GoodsId}
+		if err := goods.GetByIdOrUUID(r.Context()); err != nil {
+			util.Debug("Cannot get goods by id", gp.GoodsId, err)
+			continue
+		}
+		goodsList = append(goodsList, goods)
+	}
+
+	// 获取ProjectBean和ObjectiveBean
+	projectBean, err := fetchProjectBean(project)
+	if err != nil {
+		util.Debug("Cannot fetch project bean", err)
+		report(w, r, "获取项目详情失败")
+		return
+	}
+
+	objectiveBean, err := fetchObjectiveBean(ob)
+	if err != nil {
+		util.Debug("Cannot fetch objective bean", err)
+		report(w, r, "获取目标详情失败")
+		return
+	}
+
+	// 准备页面数据
+	templateData := data.GoodsProjectList{
+		SessUser:           s_u,
+		ProjectBean:        projectBean,
+		QuoteObjectiveBean: objectiveBean,
+		GoodsProjectList:   goodsProjectList,
+		GoodsList:          goodsList,
+	}
+
+	// 权限检查
+	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
+	if err != nil {
+		util.Debug("Admin permission check failed", "userId", s_u.Id, "objectiveId", ob.Id, "error", err)
+		report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		return
+	}
+	templateData.IsAdmin = is_admin
+
+	if !is_admin {
+		is_master, err := checkProjectMasterPermission(&project, s_u.Id)
+		if err != nil {
+			util.Debug("Permission check failed", "user_id:", s_u.Id, "error:", err)
+			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
+			return
+		}
+		templateData.IsMaster = is_master
+	}
+
+	if !is_admin && !templateData.IsMaster {
+		is_verifier := isVerifier(s_u.Id)
+		templateData.IsVerifier = is_verifier
+	}
+
+	generateHTML(w, &templateData, "layout", "navbar.private", "goods.project_detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }

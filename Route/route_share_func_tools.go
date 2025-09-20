@@ -39,6 +39,7 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 			return stars
 		},
 		"RiskSeverityLevelString": data.RiskSeverityLevelString,
+		"AvailabilityString": data.AvailabilityString,
 		"mul": func(a, b int) int {
 			return a * b
 		},

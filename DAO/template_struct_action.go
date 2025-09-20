@@ -158,16 +158,15 @@ type BrainFireBean struct {
 	Environment Environment //场所环境
 	Project     Project
 }
+
 // 新建"建议"页面
 // 展示"建议"详情页面数据
 type SuggestionDetailTemplateData struct {
-	SessUser       User
-	IsVerifier     bool
-	IsAdmin        bool
-	IsMaster       bool
-	IsInvited      bool
-	SessUserFamily Family
-	SessUserTeam   Team
+	SessUser   User
+	IsVerifier bool
+	IsAdmin    bool
+	IsMaster   bool
+	IsInvited  bool
 
 	SuggestionBean     SuggestionBean
 	ProjectBean        ProjectBean

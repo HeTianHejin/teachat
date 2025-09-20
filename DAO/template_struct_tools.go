@@ -90,12 +90,17 @@ type GoodsProjectSlice struct {
 	GoodsSlicePayer []Goods //收茶方可用物资
 }
 
-type GoodsProjectDetail struct {
-	SessUser     User
-	IsAdmin      bool
-	GoodsProject GoodsProject
+type GoodsProjectList struct {
+	SessUser   User
+	IsAdmin    bool
+	IsMaster   bool
+	IsVerifier bool
+	IsInvited  bool
 
-	Project Project
+	ProjectBean        ProjectBean
+	QuoteObjectiveBean ObjectiveBean
 
-	Goods Goods
+	GoodsProjectList []GoodsProject
+
+	GoodsList []Goods
 }
