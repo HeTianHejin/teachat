@@ -41,17 +41,17 @@
             <!-- 选择物资 -->
             <div class="form-group">
                 <label class="required-field">选择物资：</label>
-                <!-- 收茶方物资 -->
+                <!-- 出茶方物资 -->
                 {{ if .GoodsSlicePayer }}
                 <div class="panel panel-success" style="margin-bottom: 10px;">
                     <div class="panel-heading" style="padding: 5px 10px;">
-                        <h4 class="panel-title" style="font-size: 14px;">收茶方可用物资</h4>
+                        <h4 class="panel-title" style="font-size: 14px;">出茶方可用物资</h4>
                     </div>
                     <div class="panel-body" style="padding: 10px;">
                         {{ range .GoodsSlicePayer }}
                         <div class="radio">
                             <label>
-                                <input type="radio" name="goods_id" value="{{ .Id }}" data-provider-type="2" required>
+                                <input type="radio" name="goods_id" value="{{ .Id }}" data-provider-type="1" required>
                                 {{ .Name }} ({{ .Nickname }}) - {{ .Describe }}
                             </label>
                         </div>
@@ -59,17 +59,17 @@
                     </div>
                 </div>
                 {{ end }}
-                <!-- 出茶方物资 -->
+                <!-- 收茶方物资 -->
                 {{ if .GoodsSlicePayee }}
                 <div class="panel panel-info" style="margin-bottom: 10px;">
                     <div class="panel-heading" style="padding: 5px 10px;">
-                        <h4 class="panel-title" style="font-size: 14px;">出茶方可用物资</h4>
+                        <h4 class="panel-title" style="font-size: 14px;">收茶方可用物资</h4>
                     </div>
                     <div class="panel-body" style="padding: 10px;">
                         {{ range .GoodsSlicePayee }}
                         <div class="radio">
                             <label>
-                                <input type="radio" name="goods_id" value="{{ .Id }}" data-provider-type="1" required>
+                                <input type="radio" name="goods_id" value="{{ .Id }}" data-provider-type="2" required>
                                 {{ .Name }} ({{ .Nickname }}) - {{ .Describe }}
                             </label>
                         </div>
@@ -96,13 +96,13 @@
         <label class="required-field">物资类别：</label>
         <div class="radio">
             <label>
-                <input type="radio" name="category" value="1" checked required>
+                <input type="radio" name="category" value="2"  required>
                 投入物资（消耗型）
             </label>
         </div>
         <div class="radio">
             <label>
-                <input type="radio" name="category" value="2" required>
+                <input type="radio" name="category" value="1" required>
                 工具物资（重复使用型）
             </label>
         </div>

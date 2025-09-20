@@ -92,7 +92,9 @@
               {{ $goods := index $.GoodsList $index }}
               <tr>
                 <td>
-                  <strong>{{ $goods.Name }}</strong>
+                  <strong>
+                    <a href="/v1/goods/detail?uuid={{ $goods.Uuid }}">
+                        {{ $goods.Name }}</strong></a>
                   {{ if $goods.Nickname }}
                   <br><small class="text-muted">{{ $goods.Nickname }}</small>
                   {{ end }}

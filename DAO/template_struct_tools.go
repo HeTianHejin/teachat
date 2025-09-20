@@ -86,8 +86,8 @@ type GoodsProjectSlice struct {
 
 	Project Project
 
-	GoodsSlicePayee []Goods //出茶方可用物资
-	GoodsSlicePayer []Goods //收茶方可用物资
+	GoodsSlicePayee []Goods //收茶方可用物资
+	GoodsSlicePayer []Goods //出茶方可用物资
 }
 
 type GoodsProjectList struct {
