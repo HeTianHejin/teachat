@@ -102,12 +102,12 @@ type ProjectDetail struct {
 	ThreadCount           int // project下所有Threads个数
 	ThreadIsApprovedCount int //project（茶台）已采纳茶议数量
 
-	IsAppointmentCompleted bool // 约茶是否完成
-	IsSeeSeekCompleted     bool // 看看是否完成
-	IsBrainFireCompleted   bool // 脑火是否完成
-	IsSuggestionCompleted  bool // 建议是否完成
-	IsGoodsReady           bool // 物资是否备齐
-	IsHandicraftCompleted  bool // 手工艺是否完成
+	IsAppointmentCompleted    bool // 约茶是否完成
+	IsSeeSeekCompleted        bool // 看看是否完成
+	IsBrainFireCompleted      bool // 脑火是否完成
+	IsSuggestionCompleted     bool // 建议是否完成
+	IsGoodsReadinessCompleted bool // 物资是否完成
+	IsHandicraftCompleted     bool // 手工艺是否完成
 
 	IsOverTwelve bool //是否超过12个
 }
@@ -203,12 +203,12 @@ type ThreadSupplement struct {
 	PostBeanSlice      []PostBean // 普通跟贴豆荚队列
 	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
-	Appointment ProjectAppointment // 约茶状态
-	SeeSeek     SeeSeek            // SeeSeek
-	BrainFire   BrainFire
-	Suggestion  Suggestion
-	Goods       Goods
-	Handicraft  Handicraft
+	Appointment               ProjectAppointment // 约茶状态
+	SeeSeek                   SeeSeek            // SeeSeek
+	BrainFire                 BrainFire
+	Suggestion                Suggestion
+	IsGoodsReadinessCompleted bool
+	Handicraft                Handicraft
 }
 
 // 用于跟贴详情页面渲染

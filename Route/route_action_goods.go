@@ -1,6 +1,7 @@
 package route
 
 import (
+	"database/sql"
 	"net/http"
 	"strconv"
 
@@ -42,11 +43,13 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 
 	project_id_str := r.URL.Query().Get("project_id")
 	if project_id_str == "" {
+		util.Debug("project_id is empty")
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
 	project_id, err := strconv.Atoi(project_id_str)
 	if err != nil {
+		util.Debug("cannot convert project_id to int", err)
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
@@ -270,6 +273,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
+		util.Debug("Project UUID is empty")
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -291,11 +295,24 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取项目物资列表
-	goodsProjectList, err := data.GetGoodsByProjectId(project.Id, r.Context())
+	goodsProjectList, err := data.GetGoodsProjectByProjectId(project.Id, r.Context())
 	if err != nil {
 		util.Debug("Cannot get goods by project id", project.Id, err)
 		report(w, r, "获取项目物资列表失败")
 		return
+	}
+
+	// 获取物资准备状态
+	var goodsReadiness data.GoodsProjectReadiness
+	var hasReadinessRecord bool
+	if readiness, err := data.GetGoodsProjectReadinessByProjectId(project.Id, r.Context()); err != nil {
+		if err != sql.ErrNoRows {
+			util.Debug("Cannot get goods readiness by project id", project.Id, err)
+		}
+		hasReadinessRecord = false
+	} else {
+		goodsReadiness = readiness
+		hasReadinessRecord = true
 	}
 
 	// 获取物资详细信息
@@ -326,11 +343,13 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	// 准备页面数据
 	templateData := data.GoodsProjectList{
-		SessUser:           s_u,
-		ProjectBean:        projectBean,
-		QuoteObjectiveBean: objectiveBean,
-		GoodsProjectList:   goodsProjectList,
-		GoodsList:          goodsList,
+		SessUser:              s_u,
+		ProjectBean:           projectBean,
+		QuoteObjectiveBean:    objectiveBean,
+		GoodsProjectList:      goodsProjectList,
+		GoodsProjectReadiness: goodsReadiness,
+		HasReadinessRecord:    hasReadinessRecord,
+		GoodsList:             goodsList,
 	}
 
 	// 权限检查
@@ -358,4 +377,87 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	generateHTML(w, &templateData, "layout", "navbar.private", "goods.project_detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+}
+
+// POST /v1/goods/project_readiness
+// HandleGoodsProjectReadiness 处理物资准备状态操作
+func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
+	util.Debug("HandleGoodsProjectReadiness called with method:", r.Method)
+	if r.Method != http.MethodPost {
+		report(w, r, "一脸蒙的茶博士，表示看不懂你的操作。")
+		return
+	}
+
+	s, err := session(r)
+	if err != nil {
+		util.Debug("Session error:", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	util.Debug("Checking verifier status for user ID:", s_u.Id)
+	if !isVerifier(s_u.Id) {
+		util.Debug("User is not a verifier:", s_u.Id)
+		report(w, r, "只有见证员才可以设置物资准备状态。")
+		return
+	}
+
+	// 解析表单
+	util.Debug("Starting form parsing")
+	if err := r.ParseForm(); err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, r, "表单数据解析失败")
+		return
+	}
+
+	// 获取项目信息
+	projectUuid := r.FormValue("project_uuid")
+	if projectUuid == "" {
+		util.Debug("Project UUID is empty")
+		report(w, r, "项目信息缺失")
+		return
+	}
+
+	project := data.Project{Uuid: projectUuid}
+	if err := project.GetByUuid(); err != nil {
+		util.Debug("Cannot get project by uuid", projectUuid, err)
+		report(w, r, "项目不存在")
+		return
+	}
+
+	// 获取表单字段
+	isReadyStr := r.FormValue("is_ready")
+	notes := r.FormValue("notes")
+
+	// 验证必填字段
+	if isReadyStr == "" {
+		util.Debug("is_ready field is empty")
+		report(w, r, "请选择准备状态")
+		return
+	}
+
+	isReady := isReadyStr == "true"
+
+	// 创建或更新物资准备状态
+	readiness := data.GoodsProjectReadiness{
+		ProjectId: project.Id,
+		IsReady:   isReady,
+		UserId:    s_u.Id,
+		Notes:     notes,
+	}
+
+	if err := readiness.CreateOrUpdate(r.Context()); err != nil {
+		util.Debug("Cannot create or update goods readiness", err)
+		report(w, r, "设置物资准备状态失败")
+		return
+	}
+
+	// 重定向到详情页面
+	http.Redirect(w, r, "/v1/goods/project_detail?uuid="+project.Uuid, http.StatusFound)
 }

@@ -873,6 +873,8 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.IsBrainFireCompleted = pr.IsBrainFireCompleted(r.Context())
 	// 检查Suggestion是否完成
 	pD.IsSuggestionCompleted = pr.IsSuggestionCompleted(r.Context())
+	// 检查Goods是否完成
+	pD.IsGoodsReadinessCompleted = pr.IsGoodsReadinessCompleted(r.Context())
 
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path

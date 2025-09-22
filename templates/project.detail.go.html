@@ -118,7 +118,7 @@
             {{ if .IsSuggestionCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
             <span style="margin-inline-start: 2rem;">
               <a href="/v1/goods/project_detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a> 
-              {{ if .IsGoodsReady }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
+              {{ if .IsGoodsReadinessCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
               <span style="margin-inline-start: 2rem;">
                 <a href="/v1/handicraft/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a> 
                 {{ if .IsHandicraftCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>

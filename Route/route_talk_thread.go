@@ -744,18 +744,12 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//核对用户身份，是否具有完善操作权限
-	verifier_team := data.Team{Id: data.TeamIdVerifier}
-	ok, err := verifier_team.IsMember(s_u.Id)
-	if err != nil {
-		util.Debug(" Cannot check team membership", verifier_team.Id, err)
-		report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说陛下您没有权限补充该茶议。")
-		return
-	}
+	ok := isVerifier(s_u.Id)
 	if !ok {
 		report(w, r, "茶博士惊讶，陛下你没有权限补充该茶议，请确认后再试。")
 		return
 	}
-	threSupp.IsVerifier = true
+	threSupp.IsVerifier = ok
 
 	// 读取茶议资料荚
 	threSupp.ThreadBean, err = fetchThreadBean(thread, r)
@@ -852,9 +846,10 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 			threSupp.Suggestion = suggestion
 		}
 	case data.ThreadCategoryGoods:
-		break
+		// 检查全部物资是否准备完成
+		threSupp.IsGoodsReadinessCompleted = project.IsGoodsReadinessCompleted(ctx)
 	case data.ThreadCategoryHandcraft:
-		break
+		// 检查手艺作业状态
 	default:
 		report(w, r, "你好，茶博士表示，陛下，普通茶议不能加水呢。")
 		return

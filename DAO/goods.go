@@ -985,8 +985,8 @@ func (gp *GoodsProject) SoftDelete(ctx context.Context) error {
 	return err
 }
 
-// GetByProjectId 获取项目所有物资
-func GetGoodsByProjectId(projectId int, ctx context.Context) ([]GoodsProject, error) {
+// GoodsProjects.GetByProjectId 获取项目所有物资记录
+func GetGoodsProjectByProjectId(projectId int, ctx context.Context) ([]GoodsProject, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -1032,4 +1032,88 @@ func (gp *GoodsProject) GetByProjectIdAndGoodsId(ctx context.Context) error {
 		&gp.Id, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ProviderType, &gp.ExpectedUsage,
 		&gp.Quantity, &gp.Category, &gp.Status, &gp.Notes, &gp.CreatedAt, &gp.UpdatedAt, &gp.DeletedAt)
 	return err
+}
+
+// 项目物资准备状态
+type GoodsProjectReadiness struct {
+	Id        int
+	ProjectId int
+	IsReady   bool   // 是否全部物资已备齐
+	UserId    int    // 确认人ID
+	Notes     string // 备注说明
+	CreatedAt time.Time
+	UpdatedAt *time.Time
+}
+
+// 物资准备状态常量
+const (
+	GoodsReadinessNotReady = false // 未备齐
+	GoodsReadinessReady    = true  // 已备齐
+)
+
+// Create 创建物资准备状态记录
+func (gpr *GoodsProjectReadiness) Create(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `INSERT INTO goods_project_readiness 
+		(project_id, is_ready, user_id, notes, created_at) 
+		VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	err = stmt.QueryRowContext(ctx, gpr.ProjectId, gpr.IsReady, gpr.UserId, gpr.Notes, time.Now()).Scan(&gpr.Id)
+	return err
+}
+
+// Update 更新物资准备状态
+func (gpr *GoodsProjectReadiness) Update(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `UPDATE goods_project_readiness SET is_ready = $1, user_id = $2, notes = $3, updated_at = $4 
+		WHERE project_id = $5`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	now := time.Now()
+	_, err = stmt.ExecContext(ctx, gpr.IsReady, gpr.UserId, gpr.Notes, now, gpr.ProjectId)
+	gpr.UpdatedAt = &now
+	return err
+}
+
+// GetByProjectId 根据项目ID获取物资准备状态
+func GetGoodsProjectReadinessByProjectId(projectId int, ctx context.Context) (GoodsProjectReadiness, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	gpr := GoodsProjectReadiness{}
+	statement := `SELECT id, project_id, is_ready, user_id, notes, created_at, updated_at 
+		FROM goods_project_readiness WHERE project_id = $1`
+	err := db.QueryRowContext(ctx, statement, projectId).Scan(
+		&gpr.Id, &gpr.ProjectId, &gpr.IsReady, &gpr.UserId, &gpr.Notes, &gpr.CreatedAt, &gpr.UpdatedAt)
+	if err != nil {
+		return gpr, err
+	}
+	return gpr, nil
+}
+
+// GoodsProjectReadiness.CreateOrUpdate 创建或更新物资准备状态
+func (gpr *GoodsProjectReadiness) CreateOrUpdate(ctx context.Context) error {
+	_, err := GetGoodsProjectReadinessByProjectId(gpr.ProjectId, ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			// 不存在则创建
+			return gpr.Create(ctx)
+		}
+		return err
+	}
+	// 存在则更新
+	return gpr.Update(ctx)
 }

@@ -133,13 +133,19 @@
         {{ end }}{{/* “建议”非空检查-结束 */}}
 
         {{ else if (eq .ThreadBean.Thread.Category 6) }} {{/* 检查茶议类型--宝贝 */}}
-        <a class="btn btn-default" href="/v1/goods/project_new?project_id={{ .QuoteProjectBean.Project.Id }}"
-          role="button">+ 宝贝</a>
+        {{/* 提供添加物资的按钮 */}}
+        {{ if .IsGoodsReadinessCompleted }}
+        <a class="btn btn-default" href="/v1/goods/project_detail?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">查看-宝贝</a>
+        {{ else }}
+        <a class="btn btn-default" href="/v1/goods/project_new?project_id={{ .QuoteProjectBean.Project.Id }}" role="button">+ 宝贝</a>
+        <a class="btn btn-default" href="/v1/goods/project_detail?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">查看-宝贝</a>
+        {{ end }}
         {{ else if (eq .ThreadBean.Thread.Category 7) }} {{/* 检查茶议类型--手艺 */}}
         <div style="display: flex; justify-content: space-between;">
-          <a class="btn btn-default" href="/v1/handicraft/project_new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+
+          <a class="btn btn-default" href="/v1/handicraft/project_new?uuid={{ .QuoteProjectBean.Project.Uuid }}"
+            role="button">+
             手艺</a>
-          
+
         </div>
         {{ end }} {{/* 检查茶议类型以决定处理方法--完成 */}}
         {{ end }} {{/* 检查是否见证者--完成 */}}

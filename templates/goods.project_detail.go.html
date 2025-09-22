@@ -159,16 +159,65 @@
     </div>
     {{ end }}
 
+    <!-- 物资准备状态 -->
+    {{ if .HasReadinessRecord }}
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-check"></span> 物资准备状态</h4>
+        <div class="panel panel-{{ if .GoodsProjectReadiness.IsReady }}success{{ else }}warning{{ end }}">
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-3 text-center">
+                <h5>准备状态</h5>
+                {{ if .GoodsProjectReadiness.IsReady }}
+                <i class="glyphicon glyphicon-ok-circle" style="font-size: 3rem; color: #5cb85c;"></i>
+                <p><strong>已备齐</strong></p>
+                {{ else }}
+                <i class="glyphicon glyphicon-time" style="font-size: 3rem; color: #f0ad4e;"></i>
+                <p><strong>准备中</strong></p>
+                {{ end }}
+              </div>
+              <div class="col-md-6">
+                <h5>备注说明</h5>
+                <p>{{ if .GoodsProjectReadiness.Notes }}{{ .GoodsProjectReadiness.Notes }}{{ else }}<span class="text-muted">无备注</span>{{ end }}</p>
+              </div>
+              <div class="col-md-3">
+                <h5>确认时间</h5>
+                <p>{{ .GoodsProjectReadiness.CreatedAt.Format "2006-01-02 15:04" }}</p>
+                {{ if .IsVerifier }}
+                <button class="btn btn-{{ if .GoodsProjectReadiness.IsReady }}warning{{ else }}success{{ end }} btn-sm" onclick="toggleReadiness()">
+                  {{ if .GoodsProjectReadiness.IsReady }}标记未备齐{{ else }}标记已备齐{{ end }}
+                </button>
+                {{ end }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{ else if .IsVerifier }}
+    <!-- 初始状态设置 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-check"></span> 物资准备状态</h4>
+        <div class="panel panel-default">
+          <div class="panel-body text-center">
+            <p class="text-muted">尚未设置物资准备状态</p>
+            <button class="btn btn-primary" onclick="setInitialReadiness()">
+              <span class="glyphicon glyphicon-plus"></span> 设置准备状态
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{ end }}
+
     <!-- 操作按钮 -->
     <div class="text-center" style="margin-top: 20px;">
       <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">
         <span class="glyphicon glyphicon-arrow-left"></span> 返回项目
       </a>
-      {{ if .IsAdmin }}
-      <a href="/v1/goods/project_new?project_id={{ .ProjectBean.Project.Id }}" class="btn btn-primary">
-        <span class="glyphicon glyphicon-plus"></span> 添加物资
-      </a>
-      {{ end }}
+     
     </div>
   </div>
 
@@ -177,5 +226,85 @@
     茶博士：项目物资清单展示了该项目所需的全部物资信息，包括数量、类别、提供方和使用状态等详细信息。
   </div>
 </div>
+
+<!-- 物资准备状态操作模态框 -->
+<div class="modal fade" id="readinessModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">设置物资准备状态</h4>
+      </div>
+      <div class="modal-body">
+        <form id="readinessForm">
+          <div class="form-group">
+            <label>准备状态</label>
+            <select class="form-control" id="isReady" name="is_ready">
+              <option value="false">准备中</option>
+              <option value="true">已备齐</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>备注说明</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="请输入备注说明..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" onclick="submitReadiness()">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function setInitialReadiness() {
+  $('#isReady').val('false');
+  $('#notes').val('');
+  $('#readinessModal').modal('show');
+}
+
+function toggleReadiness() {
+  {{ if .HasReadinessRecord }}
+  $('#isReady').val('{{ if .GoodsProjectReadiness.IsReady }}false{{ else }}true{{ end }}');
+  $('#notes').val('{{ .GoodsProjectReadiness.Notes }}');
+  {{ end }}
+  $('#readinessModal').modal('show');
+}
+
+function submitReadiness() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const projectUuid = urlParams.get('uuid');
+  
+  if (!projectUuid) {
+    alert('项目信息缺失，请刷新页面重试');
+    return;
+  }
+  
+  const params = new URLSearchParams();
+  params.append('project_uuid', projectUuid);
+  params.append('is_ready', $('#isReady').val());
+  params.append('notes', $('#notes').val());
+  
+  fetch('/v1/goods/project_readiness', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params,
+    credentials: 'same-origin'
+  }).then(response => {
+    if (response.ok) {
+      $('#readinessModal').modal('hide');
+      location.reload();
+    } else {
+      alert('操作失败，请重试');
+    }
+  }).catch(error => {
+    alert('操作失败，请重试');
+  });
+}
+</script>
 
 {{ end }}

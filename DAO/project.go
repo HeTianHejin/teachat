@@ -452,3 +452,13 @@ func (p *Project) IsSuggestionCompleted(ctx context.Context) bool {
 	//return suggestion.Status == SuggestionStatusCompleted
 	return suggestion.Status >= int(SuggestionStatusSubmitted) //test mode
 }
+
+// 检查项目的全部Goods准备工作是否已完成
+func (p *Project) IsGoodsReadinessCompleted(ctx context.Context) bool {
+	goods_project_readiness, err := GetGoodsProjectReadinessByProjectId(p.Id, ctx)
+
+	if err != nil {
+		return false
+	}
+	return goods_project_readiness.IsReady
+}

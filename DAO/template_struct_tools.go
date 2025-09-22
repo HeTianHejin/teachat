@@ -100,7 +100,9 @@ type GoodsProjectList struct {
 	ProjectBean        ProjectBean
 	QuoteObjectiveBean ObjectiveBean
 
-	GoodsProjectList []GoodsProject
+	GoodsProjectList      []GoodsProject
+	GoodsProjectReadiness GoodsProjectReadiness
+	HasReadinessRecord    bool
 
 	GoodsList []Goods
 }
