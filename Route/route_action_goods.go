@@ -382,7 +382,6 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 // POST /v1/goods/project_readiness
 // HandleGoodsProjectReadiness 处理物资准备状态操作
 func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
-	util.Debug("HandleGoodsProjectReadiness called with method:", r.Method)
 	if r.Method != http.MethodPost {
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的操作。")
 		return
@@ -401,7 +400,6 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.Debug("Checking verifier status for user ID:", s_u.Id)
 	if !isVerifier(s_u.Id) {
 		util.Debug("User is not a verifier:", s_u.Id)
 		report(w, r, "只有见证员才可以设置物资准备状态。")
@@ -409,7 +407,6 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 解析表单
-	util.Debug("Starting form parsing")
 	if err := r.ParseForm(); err != nil {
 		util.Debug("Cannot parse form", err)
 		report(w, r, "表单数据解析失败")

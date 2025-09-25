@@ -164,12 +164,12 @@ type ThreadDetail struct {
 
 	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
-	Appointment ProjectAppointment // 约茶
-	SeeSeek     SeeSeek            // 看看
-	BrainFire   BrainFire          //脑火
-	Suggestion  Suggestion         //建议
-	Goods       Goods              //物资
-	Handicraft  Handicraft         //手工艺
+	Appointment               ProjectAppointment // 约茶
+	SeeSeek                   SeeSeek            // 看看
+	BrainFire                 BrainFire          //脑火
+	Suggestion                Suggestion         //建议
+	IsGoodsReadinessCompleted bool               //物资已备齐
+	Handicraft                Handicraft         //手工艺
 
 	StatsSet StatsSet //涉及人事统计值集合
 }

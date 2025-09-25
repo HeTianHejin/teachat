@@ -481,8 +481,8 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				tD.Suggestion = suggestion
 			}
 		case data.ThreadCategoryGoods:
-			// 检查goods记录是否存在
-			//goods, er := data.GetG
+			// 检查goods准备是否已经完成
+			tD.IsGoodsReadinessCompleted = project.IsGoodsReadinessCompleted(r.Context())
 		case data.ThreadCategoryHandcraft:
 			break
 		default:

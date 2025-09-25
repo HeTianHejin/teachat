@@ -81,7 +81,8 @@
           {{ .ThreadBean.Thread.Title }}
         </h4>
 
-        {{ if eq .ThreadBean.Thread.Category 2 }}{{/* 茶议是否"约茶"类型检查-开始 */}}
+        {{ if eq .ThreadBean.Thread.Category 2 }}{{/* 根据茶议类型决定显示何种功能按钮 --检查开始 */}}
+        {{/* 茶议是否"约茶"类型检查-开始 */}}
         {{ with .Appointment }}{{/* "约茶"非空检查-开始 */}}
         <div class="text-center" style="margin: 10px 0;">
           <i class="bi-calendar-check" style="font-size: 1.5rem; color: green;" title="约茶"></i>
@@ -147,7 +148,7 @@
         {{ end }} {{/* "脑火"非空检查-结束 */}}
 
         {{ else if eq .ThreadBean.Thread.Category 5 }}{{/* 茶议是否"建议"类型检查-开始 */}}
-        {{ with .Suggestion }}{{/* "建议"非空检查-开始 */}}
+          {{ with .Suggestion }}{{/* "建议"非空检查-开始 */}}
         <div class="text-center" style="margin: 10px 0;">
           <i class="bi-journal-text" style="font-size: 1.5rem; color: green;" title="建议"></i>
           <!-- 建议状态展示 -->
@@ -158,7 +159,29 @@
           {{ end }}
           {{ end }}{{/*  "建议"非空检查-完成 */}}
           
-        {{ end }}{{/* 茶议是否"建议"类型检查完成 */}}
+
+        {{ else if eq .ThreadBean.Thread.Category 6 }} {{/* 茶议是否"物资"类型检查-开始 */}}
+        <div class="text-center" style="margin: 10px 0;">
+          <i class="bi-box-seam" style="font-size: 1.5rem; color: green;" title="物资"></i>
+          <!-- 物资准备状态展示 -->
+          <span class="label label-info">{{ if .IsGoodsReadinessCompleted }}已准备好{{ else }}未准备好{{ end }}</span>
+          <!-- 物资准备详情按钮 -->
+          <a class="btn btn-default" href="/v1/goods/project_detail?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">查看-宝贝</a>
+        </div>
+
+        {{ else if eq .ThreadBean.Thread.Category 7 }}  {{/* 茶议是否"手工艺"类型检查-开始 */}}
+        <div class="text-center" style="margin: 10px 0;">
+          <i class="bi-scissors" style="font-size: 1.5rem; color: green;" title="手工艺"></i>
+          <!-- 手工艺状态展示 -->
+          <span class="label label-info">{{ if .Handicraft.IsCompleted }}已完成{{ else }}未完成{{ end }}</span>
+          {{ if .Handicraft.IsCompleted }}
+          <!-- 手工艺详情按钮 -->
+          <a class="btn btn-sm btn-default" href="/v1/handicraft/detail?uuid={{ .Handicraft.Uuid }}" role="button">详情</a>
+          {{ end }}
+        </div>
+
+
+        {{ end }}{{/* 根据茶议类型以决定显示何种功能按钮 --检查完成 */}}
         
 
         <span style="white-space: pre-wrap;">

@@ -140,6 +140,7 @@
         <a class="btn btn-default" href="/v1/goods/project_new?project_id={{ .QuoteProjectBean.Project.Id }}" role="button">+ 宝贝</a>
         <a class="btn btn-default" href="/v1/goods/project_detail?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">查看-宝贝</a>
         {{ end }}
+        
         {{ else if (eq .ThreadBean.Thread.Category 7) }} {{/* 检查茶议类型--手艺 */}}
         <div style="display: flex; justify-content: space-between;">
           <a class="btn btn-default" href="/v1/handicraft/project_new?uuid={{ .QuoteProjectBean.Project.Uuid }}"
