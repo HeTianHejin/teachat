@@ -173,10 +173,10 @@
         <div class="text-center" style="margin: 10px 0;">
           <i class="bi-scissors" style="font-size: 1.5rem; color: green;" title="手工艺"></i>
           <!-- 手工艺状态展示 -->
-          <span class="label label-info">{{ if .Handicraft.IsCompleted }}已完成{{ else }}未完成{{ end }}</span>
-          {{ if .Handicraft.IsCompleted }}
+          <span class="label label-info">{{ if .IsHandicraftsCompleted }}已完成{{ else }}未完成{{ end }}</span>
+          {{ if .IsHandicraftsCompleted }}
           <!-- 手工艺详情按钮 -->
-          <a class="btn btn-sm btn-default" href="/v1/handicraft/detail?uuid={{ .Handicraft.Uuid }}" role="button">详情</a>
+          <a class="btn btn-sm btn-default" href="/v1/handicraft/project_detail?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">详情</a>
           {{ end }}
         </div>
 

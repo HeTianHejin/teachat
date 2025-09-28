@@ -117,12 +117,15 @@
             <a href="/v1/suggestion/detail?uuid={{ .ProjectBean.Project.Uuid }}">建议</a> 
             {{ if .IsSuggestionCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
             <span style="margin-inline-start: 2rem;">
+              {{/* 如果茶凉 */}}
+              {{ if eq .ProjectBean.Project.Status 3 }}
+              {{ else }}
               <a href="/v1/goods/project_detail?uuid={{ .ProjectBean.Project.Uuid }}">宝贝</a> 
               {{ if .IsGoodsReadinessCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
               <span style="margin-inline-start: 2rem;">
-                <a href="/v1/handicraft/detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a> 
-                {{ if .IsHandicraftCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
-         
+                <a href="/v1/handicrafts/project_detail?uuid={{ .ProjectBean.Project.Uuid }}">手艺</a> 
+                {{ if .IsHandicraftsCompleted }}<i class="bi-check-circle-fill" style="font-size: 1.2rem; color: green;"></i>{{ else }}<i class="bi-circle" style="font-size: 1.2rem; color: gray;"></i>{{ end }}</span>
+               {{ end }}
       
         {{ if .IsEdited }}   {{/* 检查是否编辑过（补充内容） */}}
         <span class="glyphicon glyphicon-edit" aria-hidden="true"></span>

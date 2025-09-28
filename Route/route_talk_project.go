@@ -272,9 +272,9 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 预填充约茶...6部曲
-	if err = data.CreateRequiredThreads(&ob, &pr, data.UserId_Verifier, r.Context()); err != nil {
-		util.Debug(" Cannot create required 6 threads", err)
+	// 预填充约茶、看看、脑火、建议 4部曲
+	if err = data.CreateRequiredThreads(&ob, &pr, data.UserId_Verifier, data.Templates4step, r.Context()); err != nil {
+		util.Debug(" Cannot create required 4-threads", err)
 		report(w, r, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 		return
 	}
@@ -875,8 +875,14 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.IsSuggestionCompleted = pr.IsSuggestionCompleted(r.Context())
 	// 检查Goods是否完成
 	pD.IsGoodsReadinessCompleted = pr.IsGoodsReadinessCompleted(r.Context())
-	// 检查Handicraft是否完成
-	//pD.IsHandicraftCompleted = pr.IsHandicraftCompleted(r.Context())
+	// 检查Handicrafts是否完成
+	all_done, err := data.IsAllHandicraftsCompleted(pr.Id, r.Context())
+	if err != nil && err != sql.ErrNoRows {
+		util.Debug("Handicraft check failed", "error:", err)
+		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
+		return
+	}
+	pD.IsHandicraftsCompleted = all_done
 
 	// 用户足迹
 	pD.SessUser.Footprint = r.URL.Path

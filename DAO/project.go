@@ -462,3 +462,12 @@ func (p *Project) IsGoodsReadinessCompleted(ctx context.Context) bool {
 	}
 	return goods_project_readiness.IsReady
 }
+
+// 检查项目的手工艺handicraft是否已完成
+func (p *Project) IsHandicraftCompleted(ctx context.Context) (bool, error) {
+	ok, err := IsAllHandicraftsCompleted(p.Id, ctx)
+	if err != nil {
+		return false, err
+	}
+	return ok, nil
+}

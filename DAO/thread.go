@@ -596,12 +596,30 @@ func (project *Project) ThreadsHandicraft(ctx context.Context) (threads []Thread
 }
 
 func (t *Thread) IsEdited() bool {
-
 	return t.EditAt != nil && !t.EditAt.Equal(t.CreatedAt)
 }
 
-// 填写入围茶台约茶等6部曲
-func CreateRequiredThreads(objective *Objective, project *Project, user_id int, ctx context.Context) error {
+// 明确定义入围茶议模板类型
+type threadTemplate struct {
+	Title    string
+	Body     string
+	Category int
+}
+
+var Templates4step = []threadTemplate{
+	{"约茶", "在此记录具体的茶会时间、地址和出席人员", ThreadCategoryAppointment},
+	{"看看", "在此记录「看看」作业情况。", ThreadCategorySeeSeek},
+	{"脑火", "在此记录「脑火」作业情况。", ThreadCategoryBrainFire},
+	{"建议", "在此记录根据「看看」的结果，提出对应建议。", ThreadCategorySuggestion},
+}
+
+var Templates2step = []threadTemplate{
+	{"宝贝", "在此记录需要准备的物资", ThreadCategoryGoods},
+	{"手艺", "在此记录「手艺」作业情况。", ThreadCategoryHandcraft},
+}
+
+// 填写入围茶台4或者2预设定茶议（步骤）曲
+func CreateRequiredThreads(objective *Objective, project *Project, user_id int, templates []threadTemplate, ctx context.Context) error {
 	// 使用传入的上下文创建超时控制
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -614,22 +632,6 @@ func CreateRequiredThreads(objective *Objective, project *Project, user_id int, 
 
 	// 简化事务处理：确保在函数退出时回滚（如果未提交）
 	defer tx.Rollback()
-
-	// 明确定义线程模板类型
-	type threadTemplate struct {
-		Title    string
-		Body     string
-		Category int
-	}
-
-	templates := []threadTemplate{
-		{"约茶", "在此记录具体的茶会时间、地址和出席人员", ThreadCategoryAppointment},
-		{"看看", "在此记录“看看”作业情况。", ThreadCategorySeeSeek},
-		{"脑火", "在此记录“脑火”作业情况。", ThreadCategoryBrainFire},
-		{"建议", "在此记录根据「看看」的结果，提出对应建议。", ThreadCategorySuggestion},
-		{"宝贝", "在此记录需要准备的物资", ThreadCategoryGoods},
-		{"手艺", "在此记录“手艺”作业情况。", ThreadCategoryHandcraft},
-	}
 
 	for _, template := range templates {
 		thread := Thread{
@@ -660,7 +662,7 @@ func CreateRequiredThreads(objective *Objective, project *Project, user_id int, 
 	return nil
 }
 
-// 事务创建约茶作业6部曲
+// 事务预填充创建入围作业
 func (t *Thread) CreateInTx(tx *sql.Tx) error {
 	query := `
         INSERT INTO threads (uuid, body, user_id, created_at, class, title, project_id, family_id, type, post_id, team_id, is_private, category)

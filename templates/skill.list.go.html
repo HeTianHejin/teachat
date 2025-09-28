@@ -1,0 +1,40 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">技能列表</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-cog"></span> 技能列表
+      <a href="/v1/skill/new" class="btn btn-primary btn-sm pull-right">
+        <span class="glyphicon glyphicon-plus"></span> 添加技能
+      </a>
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    {{ if .Skills }}
+      {{ range .Skills }}
+        {{ template "component_skill_bean" . }}
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info text-center">
+        <h4>暂无技能记录</h4>
+        <p>点击上方"添加技能"按钮开始记录您的技能。</p>
+        <a href="/v1/skill/new" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span> 添加第一个技能
+        </a>
+      </div>
+    {{ end }}
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：技能是个人能力的重要体现，记录和管理技能有助于个人发展规划。
+  </div>
+</div>
+
+{{ end }}

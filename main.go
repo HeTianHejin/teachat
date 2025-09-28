@@ -184,10 +184,6 @@ func main() {
 	mux.HandleFunc("/v1/goods/project_detail", route.HandleGoodsProjectDetail)
 	mux.HandleFunc("/v1/goods/project_readiness", route.HandleGoodsProjectReadiness)
 
-	//defined in route_action_handicraft.go
-	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)
-	mux.HandleFunc("/v1/handicraft/detail", route.HandicraftDetail)
-
 	//defined in route_pilot.go
 	mux.HandleFunc("/v1/pilot/new", route.NewPilot)
 	mux.HandleFunc("/v1/pilot/add", route.AddPilot)
@@ -216,6 +212,22 @@ func main() {
 	//defined in route_action_hazard.go
 	mux.HandleFunc("/v1/hazard/new", route.HandleNewHazard)
 	mux.HandleFunc("/v1/hazard/detail", route.HandleHazardDetail)
+
+	//defined in route_action_skill.go
+	mux.HandleFunc("/v1/skill/new", route.HandleNewSkill)
+	mux.HandleFunc("/v1/skill/detail", route.HandleSkillDetail)
+
+	mux.HandleFunc("/v1/skills/user_list", route.HandleSkillList)
+
+	//defined in route_action_magic.go
+	mux.HandleFunc("/v1/magic/new", route.HandleNewMagic)
+	mux.HandleFunc("/v1/magic/detail", route.HandleMagicDetail)
+	mux.HandleFunc("/v1/magic/list", route.HandleMagicList)
+
+	//defined in route_action_handicraft.go
+	mux.HandleFunc("/v1/handicraft/project_new", route.HandleNewHandicraft)
+	mux.HandleFunc("/v1/handicraft/project_detail", route.HandleHandicraftDetail)
+	mux.HandleFunc("/v1/handicrafts/project_list", route.HandleHandicraftList)
 
 	//defined in route_action_risk.go
 	mux.HandleFunc("/v1/risk/new", route.HandleNewRisk)

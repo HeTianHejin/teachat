@@ -1,6 +1,11 @@
 package data
 
-import "time"
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"time"
+)
 
 // 手工艺（作业），技能操作，需要集中注意力身体手眼协调平衡配合完成的动作。
 // 例如：制作特色食品，补牙洞，高空攀爬作业...
@@ -18,13 +23,17 @@ type Handicraft struct {
 	InitiatorId int // 策动人ID
 	OwnerId     int // 主理/执行人ID
 
-	Category         HandicraftCategory // 分类
-	Status           HandicraftStatus   // 状态
-	SkillDifficulty  int                // 技能操作难度(1-5)，引用 skill.DifficultyLevel
-	MagicDifficulty  int                // 创意思维难度(1-5)，引用 magic.DifficultyLevel
+	Category        HandicraftCategory // 分类
+	Status          HandicraftStatus   // 状态
+	SkillDifficulty int                // 技能操作难度(1-5)，引用 skill.DifficultyLevel
+	MagicDifficulty int                // 创意思维难度(1-5)，引用 magic.DifficultyLevel
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
+	DeletedAt *time.Time //软删除
+
+	// 统计字段
+	ContributorCount int // 协助者/助攻人计数
 }
 
 // 协助者/助攻人ID列表
@@ -58,15 +67,17 @@ type HandicraftSkill struct {
 	DeletedAt    *time.Time //软删除
 }
 
-// 手工艺分类
+// 手工艺分类 - 根据体力需求和技能复杂度划分
 type HandicraftCategory int
 
 const (
-	UnknownWork    HandicraftCategory = iota //初始化默认值
-	LightWork                                // 轻体力（普通人都可以完成）
-	HeavyWork                                // 重体力（需要较高强度体能才能完成）
-	SkillfulWork                             // 轻巧力（需要特定体能加上精细手艺）
-	HeavySkillWork                           // 重巧力（需要特定体能加上载重力）
+	UnknownWork     HandicraftCategory = iota // 未知类型/初始化默认值
+	LightWork                                 // 轻体力（普通人都可以完成，如：喂水、简单清洁）
+	MediumWork                                // 中等体力（介于轻重之间，如：给饮水机更换水桶、搬家具）
+	HeavyWork                                 // 重体力（需要较高强度体能才能完成，如：搬运洗衣机、重物搬运）
+	SkillfulWork                              // 轻巧力（需要特定体能加上精细手艺，如：刺绣、精细木工）
+	MediumSkillWork                           // 中巧力（中等体力+中等技能，如：家电维修、普通木工）
+	HeavySkillWork                            // 重巧力（需要特定体能加上载重力，如：铁艺制作、大型雕塑）
 )
 
 // 手工艺状态
@@ -125,6 +136,7 @@ type Ending struct {
 	CreatedAt      time.Time
 	UpdatedAt      *time.Time
 }
+
 // HandicraftDifficulty 手工艺二维难度结构
 type HandicraftDifficulty struct {
 	SkillLevel int // 技能操作难度(1-5)
@@ -146,10 +158,11 @@ func (h *Handicraft) GetOverallDifficulty() int {
 	total := h.SkillDifficulty + h.MagicDifficulty
 	return (total + 1) / 2
 }
+
 // GetDifficultyType 获取难度类型特征
 func (h *Handicraft) GetDifficultyType() string {
 	skill, magic := h.SkillDifficulty, h.MagicDifficulty
-	
+
 	if skill >= 4 && magic >= 4 {
 		return "高技能高创意" // 大师级作业
 	} else if skill >= 4 && magic <= 2 {
@@ -165,4 +178,339 @@ func (h *Handicraft) GetDifficultyType() string {
 // IsHighDifficulty 判断是否为高难度作业
 func (h *Handicraft) IsHighDifficulty() bool {
 	return h.SkillDifficulty >= 4 || h.MagicDifficulty >= 4
+}
+
+// CRUD 操作方法
+
+// Create 创建新的手工艺记录
+func (h *Handicraft) Create(ctx context.Context) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `INSERT INTO handicrafts 
+		(uuid, recorder_user_id, name, nickname, description, project_id, initiator_id, owner_id, 
+		 category, status, skill_difficulty, magic_difficulty, contributor_count) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
+		RETURNING id, uuid`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRowContext(ctx, Random_UUID(), h.RecorderUserId, h.Name, h.Nickname, h.Description,
+		h.ProjectId, h.InitiatorId, h.OwnerId, h.Category, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount).Scan(&h.Id, &h.Uuid)
+	return err
+}
+
+// GetByIdOrUUID 根据ID或UUID获取手工艺记录
+func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if h.Id <= 0 && h.Uuid == "" {
+		return errors.New("invalid Handicraft ID or UUID")
+	}
+	statement := `SELECT id, uuid, recorder_user_id, name, nickname, description, project_id, 
+		initiator_id, owner_id, category, status, skill_difficulty, magic_difficulty, 
+		contributor_count, created_at, updated_at, deleted_at
+		FROM handicrafts WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRowContext(ctx, h.Id, h.Uuid).Scan(&h.Id, &h.Uuid, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
+		&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
+		&h.ContributorCount, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
+	return err
+}
+
+// Update 更新手工艺记录
+func (h *Handicraft) Update() error {
+	statement := `UPDATE handicrafts SET name = $2, nickname = $3, description = $4, 
+		status = $5, skill_difficulty = $6, magic_difficulty = $7, contributor_count = $8, updated_at = $9  
+		WHERE id = $1 AND deleted_at IS NULL`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(h.Id, h.Name, h.Nickname, h.Description, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount, time.Now())
+	return err
+}
+
+// Delete 软删除手工艺记录
+func (h *Handicraft) Delete() error {
+	statement := `UPDATE handicrafts SET deleted_at = $2 WHERE id = $1`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	now := time.Now()
+	_, err = stmt.Exec(h.Id, now)
+	if err == nil {
+		h.DeletedAt = &now
+	}
+	return err
+}
+
+// CreatedDateTime 格式化创建时间
+func (h *Handicraft) CreatedDateTime() string {
+	return h.CreatedAt.Format(FMT_DATE_TIME_CN)
+}
+
+// StatusString 获取状态字符串
+func (h *Handicraft) StatusString() string {
+	switch h.Status {
+	case NotStarted:
+		return "未开始"
+	case InProgress:
+		return "进行中"
+	case Paused:
+		return "已暂停"
+	case Completed:
+		return "已完成"
+	case Abandoned:
+		return "已放弃"
+	default:
+		return "未知状态"
+	}
+}
+
+// CategoryString 返回分类的名称字符串
+func (h HandicraftCategory) CategoryString() string {
+	switch h {
+	case UnknownWork:
+		return "未知类型"
+	case LightWork:
+		return "轻体力"
+	case MediumWork:
+		return "中等体力"
+	case HeavyWork:
+		return "重体力"
+	case SkillfulWork:
+		return "轻巧力"
+	case MediumSkillWork:
+		return "中巧力"
+	case HeavySkillWork:
+		return "重巧力"
+	default:
+		return "未定义"
+	}
+}
+
+// Description 返回分类的详细描述
+func (h HandicraftCategory) Description() string {
+	switch h {
+	case UnknownWork:
+		return "未知工作类型"
+	case LightWork:
+		return "普通人都可以完成的轻体力工作，如：喂水、简单清洁"
+	case MediumWork:
+		return "介于轻重之间的中等体力工作，如：更换水桶、搬家具"
+	case HeavyWork:
+		return "需要较高强度体能才能完成的重体力工作，如：搬运洗衣机"
+	case SkillfulWork:
+		return "需要精细手艺的轻巧工作，如：刺绣、精细木工"
+	case MediumSkillWork:
+		return "中等体力加中等技能的工作，如：家电维修、普通木工"
+	case HeavySkillWork:
+		return "需要特定体能加上载重力的工作，如：铁艺制作、大型雕塑"
+	default:
+		return "未定义的工作类型"
+	}
+}
+
+// 根据项目ID获取手工艺记录
+func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, uuid, recorder_user_id, name, nickname, description, project_id, 
+		initiator_id, owner_id, category, status, skill_difficulty, magic_difficulty, 
+		contributor_count, created_at, updated_at, deleted_at
+		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
+	rows, err := db.QueryContext(ctx, statement, projectId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var handicrafts []Handicraft
+	for rows.Next() {
+		var h Handicraft
+		err := rows.Scan(&h.Id, &h.Uuid, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
+			&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
+			&h.ContributorCount, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		handicrafts = append(handicrafts, h)
+	}
+	return handicrafts, nil
+}
+
+// IsAllHandicraftsCompleted 判断项目的全部手工艺作业是否已完成
+func IsAllHandicraftsCompleted(projectId int, ctx context.Context) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT COUNT(*) as total, 
+		COUNT(CASE WHEN status = $2 THEN 1 END) as completed
+		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return false, err
+	}
+	defer stmt.Close()
+
+	var total, completed int
+	err = stmt.QueryRowContext(ctx, projectId, Completed).Scan(&total, &completed)
+	if err != nil {
+		return false, err
+	}
+
+	// 如果没有手工艺作业，返回false,ErrNoRows
+	if total == 0 {
+		return false, sql.ErrNoRows
+	}
+
+	// 全部完成返回true
+	return total == completed, nil
+}
+
+// HandicraftContributor CRUD 操作
+
+// Create 创建协助者记录
+func (hc *HandicraftContributor) Create() (err error) {
+	statement := `INSERT INTO handicraft_contributors 
+		(handicraft_id, user_id, created_at) 
+		VALUES ($1, $2, $3) 
+		RETURNING id`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(hc.HandicraftId, hc.UserId, time.Now()).Scan(&hc.Id)
+	return err
+}
+
+// Delete 删除协助者记录
+func (hc *HandicraftContributor) Delete() error {
+	statement := `UPDATE handicraft_contributors SET deleted_at = $2 WHERE id = $1`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	now := time.Now()
+	_, err = stmt.Exec(hc.Id, now)
+	if err == nil {
+		hc.DeletedAt = &now
+	}
+	return err
+}
+
+// 获取手工艺的协助者列表
+func (h *Handicraft) GetContributors() ([]HandicraftContributor, error) {
+	rows, err := db.Query("SELECT id, handicraft_id, user_id, created_at, deleted_at FROM handicraft_contributors WHERE handicraft_id = $1 AND deleted_at IS NULL", h.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var contributors []HandicraftContributor
+	for rows.Next() {
+		var hc HandicraftContributor
+		err := rows.Scan(&hc.Id, &hc.HandicraftId, &hc.UserId, &hc.CreatedAt, &hc.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		contributors = append(contributors, hc)
+	}
+	return contributors, nil
+}
+
+// HandicraftMagic CRUD 操作
+
+// Create 创建手工艺法力关联
+func (hm *HandicraftMagic) Create() (err error) {
+	statement := `INSERT INTO handicraft_magics 
+		(uuid, handicraft_id, magic_id, created_at) 
+		VALUES ($1, $2, $3, $4) 
+		RETURNING id, uuid`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), hm.HandicraftId, hm.MagicId, time.Now()).Scan(&hm.Id, &hm.Uuid)
+	return err
+}
+
+// Delete 删除手工艺法力关联
+func (hm *HandicraftMagic) Delete() error {
+	statement := `UPDATE handicraft_magics SET deleted_at = $2 WHERE id = $1`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	now := time.Now()
+	_, err = stmt.Exec(hm.Id, now)
+	if err == nil {
+		hm.DeletedAt = &now
+	}
+	return err
+}
+
+// HandicraftSkill CRUD 操作
+
+// Create 创建手工艺技能关联
+func (hs *HandicraftSkill) Create() (err error) {
+	statement := `INSERT INTO handicraft_skills 
+		(uuid, handicraft_id, skill_id, created_at) 
+		VALUES ($1, $2, $3, $4) 
+		RETURNING id, uuid`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), hs.HandicraftId, hs.SkillId, time.Now()).Scan(&hs.Id, &hs.Uuid)
+	return err
+}
+
+// Delete 删除手工艺技能关联
+func (hs *HandicraftSkill) Delete() error {
+	statement := `UPDATE handicraft_skills SET deleted_at = $2 WHERE id = $1`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	now := time.Now()
+	_, err = stmt.Exec(hs.Id, now)
+	if err == nil {
+		hs.DeletedAt = &now
+	}
+	return err
+}
+
+// GetHandicraftCompletionStatus 获取项目手工艺完成状态统计
+func GetHandicraftCompletionStatus(projectId int, ctx context.Context) (total, completed, inProgress, notStarted int, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT 
+		COUNT(*) as total,
+		COUNT(CASE WHEN status = $2 THEN 1 END) as completed,
+		COUNT(CASE WHEN status = $3 THEN 1 END) as in_progress,
+		COUNT(CASE WHEN status = $4 THEN 1 END) as not_started
+		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRowContext(ctx, projectId, Completed, InProgress, NotStarted).Scan(&total, &completed, &inProgress, &notStarted)
+	return
 }

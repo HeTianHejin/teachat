@@ -178,3 +178,52 @@ type SuggestionBean struct {
 	IsOpen     bool
 	Project    Project
 }
+
+type SkillDetailTemplateData struct {
+	SessUser User
+
+	Skill Skill
+}
+type MagicDetailTemplateData struct {
+	SessUser User
+	// IsVerifier bool
+	// IsAdmin    bool
+	// IsMaster   bool
+	// IsInvited  bool
+
+	Magics Magic
+}
+
+type HandicraftDetailTemplateData struct {
+	SessUser   User
+	IsVerifier bool
+	IsAdmin    bool
+	IsMaster   bool
+	IsInvited  bool
+
+	HandicraftBean     HandicraftBean
+	ProjectBean        ProjectBean
+	QuoteObjectiveBean ObjectiveBean
+	Skills             []Skill
+	Magics             []Magic
+	EvidenceBean       []EvidenceBean
+}
+type HandicraftBean struct {
+	Handicraft Handicraft
+	IsOpen     bool
+	Project    Project
+}
+
+//	type SkillBean struct {
+//		Skill  Skill
+//		IsOpen bool
+//	}
+//
+//	type MagicBean struct {
+//		Magic  Magic
+//		IsOpen bool
+//	}
+type EvidenceBean struct {
+	Evidence Evidence
+	IsOpen   bool
+}

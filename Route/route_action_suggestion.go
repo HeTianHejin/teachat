@@ -136,6 +136,12 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "项目不存在")
 		return
 	}
+	ob, err := t_proj.Objective()
+	if err != nil {
+		util.Debug(" Cannot get objective given proj_id", t_proj.Id, err)
+		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
 
 	// 检查是否已存在当前project_id的suggestion记录
 	existingSuggestion, err := data.GetSuggestionByProjectId(t_proj.Id, r.Context())
@@ -187,6 +193,13 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 		if err := t_proj.Update(); err != nil {
 			util.Debug(" Cannot update project status to TeaCold", err)
 			report(w, r, "更新项目状态失败")
+			return
+		}
+	} else {
+		// 预填充物资、手艺 2部曲
+		if err = data.CreateRequiredThreads(&ob, &t_proj, data.UserId_Verifier, data.Templates2step, r.Context()); err != nil {
+			util.Debug(" Cannot create required 2-threads", err)
+			report(w, r, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 			return
 		}
 	}

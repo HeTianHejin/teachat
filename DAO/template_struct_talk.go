@@ -107,7 +107,8 @@ type ProjectDetail struct {
 	IsBrainFireCompleted      bool // 脑火是否完成
 	IsSuggestionCompleted     bool // 建议是否完成
 	IsGoodsReadinessCompleted bool // 物资是否完成
-	IsHandicraftCompleted     bool // 手工艺是否完成
+
+	IsHandicraftsCompleted bool // 手工艺是否全部完成
 
 	IsOverTwelve bool //是否超过12个
 }
@@ -169,7 +170,7 @@ type ThreadDetail struct {
 	BrainFire                 BrainFire          //脑火
 	Suggestion                Suggestion         //建议
 	IsGoodsReadinessCompleted bool               //物资已备齐
-	Handicraft                Handicraft         //手工艺
+	IsHandicraftsCompleted    bool               // 所有手工艺已完成
 
 	StatsSet StatsSet //涉及人事统计值集合
 }

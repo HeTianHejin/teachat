@@ -1,0 +1,200 @@
+{{ define "content" }}
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a
+      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a>
+  </li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">+ 手艺</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/handicraft/project_new" class="form-horizontal">
+      <input type="hidden" name="project_uuid" value="{{ .ProjectBean.Project.Uuid }}">
+      
+      <!-- 项目信息 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">关联项目</div>
+        <div class="panel-body">
+          <div class="well">
+            <h4>{{ .ProjectBean.Project.Title }}</h4>
+            <p>{{ .ProjectBean.Project.Body }}</p>
+            <small class="text-muted">目标：{{ .QuoteObjectiveBean.Objective.Title }}</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- 基本信息 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">基本信息</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label class="col-sm-2 control-label">记录人</label>
+            <div class="col-sm-10">
+              <p class="form-control-static">
+                <strong>{{ .SessUser.Name }}</strong> 
+                <small class="text-muted">(ID: {{ .SessUser.Id }})</small>
+              </p>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="name" class="col-sm-2 control-label">手艺名称 *</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="name" id="name" 
+                     placeholder="如：制作特色食品、高空攀爬作业等" required maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nickname" class="col-sm-2 control-label">手艺别名</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="nickname" id="nickname" 
+                     placeholder="行业术语或简称" maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="col-sm-2 control-label">详细描述 *</label>
+            <div class="col-sm-10">
+              <textarea class="form-control" name="description" id="description" rows="4" 
+                        placeholder="详细描述手艺内容、操作要点、注意事项等" required></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 手艺分级 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">手艺分级</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="category" class="col-sm-2 control-label">手艺类型 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="category" id="category" required>
+                <option value="1" selected>轻体力</option>
+                <option value="2">中等体力</option>
+                <option value="3">重体力</option>
+                <option value="4">轻巧力</option>
+                <option value="5">中巧力</option>
+                <option value="6">重巧力</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="skill_difficulty" class="col-sm-2 control-label">技能难度 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="skill_difficulty" id="skill_difficulty" required>
+                <option value="1">极易</option>
+                <option value="2">较易</option>
+                <option value="3" selected>中等</option>
+                <option value="4">较难</option>
+                <option value="5">极难</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="magic_difficulty" class="col-sm-2 control-label">创意难度 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="magic_difficulty" id="magic_difficulty" required>
+                <option value="1">极低</option>
+                <option value="2">较低</option>
+                <option value="3" selected>中等</option>
+                <option value="4">较高</option>
+                <option value="5">极高</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 人员配置 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">人员配置</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="initiator_id" class="col-sm-2 control-label">策动人ID</label>
+            <div class="col-sm-10">
+              <input type="number" class="form-control" name="initiator_id" id="initiator_id" 
+                     value="{{ .SessUser.Id }}" min="1">
+              <small class="help-block">默认为当前用户</small>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="owner_id" class="col-sm-2 control-label">主理人ID</label>
+            <div class="col-sm-10">
+              <input type="number" class="form-control" name="owner_id" id="owner_id" 
+                     value="{{ .SessUser.Id }}" min="1">
+              <small class="help-block">默认为当前用户</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 技能选择 -->
+      {{ if .SkillBean }}
+      <div class="panel panel-default">
+        <div class="panel-heading">相关技能</div>
+        <div class="panel-body">
+          <div class="row">
+            {{ range .SkillBean }}
+            <div class="col-md-6">
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="skill_ids" value="{{ .Skill.Id }}">
+                  {{ .Skill.Name }}
+                  <small class="text-muted">({{ .Skill.CategoryString }})</small>
+                </label>
+              </div>
+            </div>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+      {{ end }}
+
+      <!-- 法力选择 -->
+      {{ if .MagicBean }}
+      <div class="panel panel-default">
+        <div class="panel-heading">相关法力</div>
+        <div class="panel-body">
+          <div class="row">
+            {{ range .MagicBean }}
+            <div class="col-md-6">
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="magic_ids" value="{{ .Magic.Id }}">
+                  {{ .Magic.Name }}
+                  <small class="text-muted">({{ .Magic.CategoryString }})</small>
+                </label>
+              </div>
+            </div>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+      {{ end }}
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span> 创建手艺
+          </button>
+          <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：手艺是技能与法力的综合体现，记录手艺有助于项目管理和能力提升。
+  </div>
+</div>
+{{ end }}

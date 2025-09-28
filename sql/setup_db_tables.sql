@@ -876,3 +876,186 @@ CREATE TABLE suggestions (
 CREATE INDEX idx_suggestions_project_id ON suggestions(project_id);
 CREATE INDEX idx_suggestions_user_id ON suggestions(user_id);
 CREATE INDEX idx_suggestions_status ON suggestions(status);
+
+-- 技能表
+CREATE TABLE skills (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    user_id               INTEGER REFERENCES users(id),
+    name                  VARCHAR(255) NOT NULL,
+    nickname              VARCHAR(255),
+    description           TEXT NOT NULL,
+    strength_level        INTEGER NOT NULL DEFAULT 3,
+    difficulty_level      INTEGER NOT NULL DEFAULT 3,
+    category              INTEGER NOT NULL DEFAULT 2,
+    level                 INTEGER NOT NULL DEFAULT 1,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 创建索引
+CREATE INDEX idx_skills_category ON skills(category);
+CREATE INDEX idx_skills_strength_level ON skills(strength_level);
+CREATE INDEX idx_skills_difficulty_level ON skills(difficulty_level);
+CREATE INDEX idx_skills_level ON skills(level);
+CREATE INDEX idx_skills_deleted_at ON skills(deleted_at);
+
+-- 法力表
+CREATE TABLE magics (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    user_id               INTEGER REFERENCES users(id),
+    name                  VARCHAR(255) NOT NULL,
+    nickname              VARCHAR(255),
+    description           TEXT NOT NULL,
+    intelligence_level    INTEGER NOT NULL DEFAULT 3,
+    difficulty_level      INTEGER NOT NULL DEFAULT 3,
+    category              INTEGER NOT NULL DEFAULT 1,
+    level                 INTEGER NOT NULL DEFAULT 1,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 创建索引
+CREATE INDEX idx_magics_category ON magics(category);
+CREATE INDEX idx_magics_intelligence_level ON magics(intelligence_level);
+CREATE INDEX idx_magics_difficulty_level ON magics(difficulty_level);
+CREATE INDEX idx_magics_level ON magics(level);
+CREATE INDEX idx_magics_deleted_at ON magics(deleted_at);
+
+-- 手艺相关表
+CREATE TABLE handicrafts (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    recorder_user_id      INTEGER REFERENCES users(id),
+    name                  VARCHAR(255) NOT NULL,
+    nickname              VARCHAR(255),
+    description           TEXT NOT NULL,
+    project_id            INTEGER REFERENCES projects(id),
+    initiator_id          INTEGER REFERENCES users(id),
+    owner_id              INTEGER REFERENCES users(id),
+    category              INTEGER NOT NULL DEFAULT 1,
+    status                INTEGER NOT NULL DEFAULT 0,
+    skill_difficulty      INTEGER NOT NULL DEFAULT 3,
+    magic_difficulty      INTEGER NOT NULL DEFAULT 3,
+    contributor_count     INTEGER DEFAULT 0,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+CREATE TABLE handicraft_contributors (
+    id                    SERIAL PRIMARY KEY,
+    handicraft_id         INTEGER REFERENCES handicrafts(id),
+    user_id               INTEGER REFERENCES users(id),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+CREATE TABLE handicraft_skills (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    handicraft_id         INTEGER REFERENCES handicrafts(id),
+    skill_id              INTEGER REFERENCES skills(id),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+CREATE TABLE handicraft_magics (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    handicraft_id         INTEGER REFERENCES handicrafts(id),
+    magic_id              INTEGER REFERENCES magics(id),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+CREATE TABLE handicraft_evidences (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    handicraft_id         INTEGER REFERENCES handicrafts(id),
+    evidence_id           INTEGER REFERENCES evidences(id),
+    note                  TEXT,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 创建索引
+CREATE INDEX idx_handicrafts_project_id ON handicrafts(project_id);
+CREATE INDEX idx_handicrafts_recorder_user_id ON handicrafts(recorder_user_id);
+CREATE INDEX idx_handicrafts_category ON handicrafts(category);
+CREATE INDEX idx_handicrafts_status ON handicrafts(status);
+CREATE INDEX idx_handicrafts_deleted_at ON handicrafts(deleted_at);
+
+CREATE INDEX idx_handicraft_contributors_handicraft_id ON handicraft_contributors(handicraft_id);
+CREATE INDEX idx_handicraft_contributors_user_id ON handicraft_contributors(user_id);
+
+CREATE INDEX idx_handicraft_skills_handicraft_id ON handicraft_skills(handicraft_id);
+CREATE INDEX idx_handicraft_skills_skill_id ON handicraft_skills(skill_id);
+
+CREATE INDEX idx_handicraft_magics_handicraft_id ON handicraft_magics(handicraft_id);
+CREATE INDEX idx_handicraft_magics_magic_id ON handicraft_magics(magic_id);
+
+CREATE INDEX idx_handicraft_evidences_handicraft_id ON handicraft_evidences(handicraft_id);
+CREATE INDEX idx_handicraft_evidences_evidence_id ON handicraft_evidences(evidence_id);
+-- 用户技能记录表
+CREATE TABLE skill_users (
+    id                    SERIAL PRIMARY KEY,
+    skill_id              INTEGER REFERENCES skills(id),
+    user_id               INTEGER REFERENCES users(id),
+    level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
+    status                INTEGER NOT NULL DEFAULT 2,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 创建索引
+CREATE INDEX idx_skill_users_user_id ON skill_users(user_id);
+CREATE INDEX idx_skill_users_skill_id ON skill_users(skill_id);
+CREATE INDEX idx_skill_users_status ON skill_users(status);
+CREATE INDEX idx_skill_users_deleted_at ON skill_users(deleted_at);
+
+-- 添加注释
+COMMENT ON TABLE skill_users IS '用户技能记录表';
+COMMENT ON COLUMN skill_users.id IS '主键ID';
+COMMENT ON COLUMN skill_users.skill_id IS '技能ID';
+COMMENT ON COLUMN skill_users.user_id IS '用户ID';
+COMMENT ON COLUMN skill_users.level IS '用户掌握该技能的等级(1-9)';
+COMMENT ON COLUMN skill_users.status IS '用户技能状态(0-失能,1-弱能,2-中能,3-强能)';
+COMMENT ON COLUMN skill_users.created_at IS '创建时间';
+COMMENT ON COLUMN skill_users.updated_at IS '更新时间';
+COMMENT ON COLUMN skill_users.deleted_at IS '软删除时间';
+-- 用户法力记录表
+CREATE TABLE magic_users (
+    id                    SERIAL PRIMARY KEY,
+    magic_id              INTEGER REFERENCES magics(id),
+    user_id               INTEGER REFERENCES users(id),
+    level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
+    status                INTEGER NOT NULL DEFAULT 1,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 创建索引
+CREATE INDEX idx_magic_users_user_id ON magic_users(user_id);
+CREATE INDEX idx_magic_users_magic_id ON magic_users(magic_id);
+CREATE INDEX idx_magic_users_status ON magic_users(status);
+CREATE INDEX idx_magic_users_deleted_at ON magic_users(deleted_at);
+
+-- 添加注释
+COMMENT ON TABLE magic_users IS '用户法力记录表';
+COMMENT ON COLUMN magic_users.id IS '主键ID';
+COMMENT ON COLUMN magic_users.magic_id IS '法力ID';
+COMMENT ON COLUMN magic_users.user_id IS '用户ID';
+COMMENT ON COLUMN magic_users.level IS '用户掌握该法力的段位(1-9)';
+COMMENT ON COLUMN magic_users.status IS '用户法力状态(0-迷糊,1-清醒,2-专注,3-灵感迸发)';
+COMMENT ON COLUMN magic_users.created_at IS '创建时间';
+COMMENT ON COLUMN magic_users.updated_at IS '更新时间';
+COMMENT ON COLUMN magic_users.deleted_at IS '软删除时间';

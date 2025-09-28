@@ -58,5 +58,31 @@ INSERT INTO risks (id, uuid, user_id, name, nickname, keywords, description, sou
 (2, 'risk-002-uuid', 1, '高温烫伤', '烫伤险', '高温,烫伤,防护', '接触高温设备或介质时可能造成皮肤烫伤，温度≥60℃时触发', '设备', 4, NOW()),
 (3, 'risk-003-uuid', 1, '触电风险', '电击险', '触电,电击,绝缘', '接触带电设备或线路时可能发生电击事故，电压≥36V时存在风险', '设备', 5, NOW());
 
+-- 插入默认通用技能
+-- 通用硬技能
+INSERT INTO skills (id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, category, level, created_at) VALUES
+(1, 'skill-001-self-care', 1, '生活自理', '基础生活技能', '包括穿衣、吃饭、洗澡、个人卫生等基本生活技能，是成年人应具备的基础能力', 1, 1, 2, 1, NOW()),
+(2, 'skill-002-walking', 1, '行走', '步行技能', '正常的步行能力，包括平地行走、上下楼梯、保持平衡等基本移动技能', 2, 1, 2, 1, NOW()),
+(3, 'skill-003-basic-communication', 1, '基础沟通', '日常交流', '基本的语言表达和理解能力，能够进行日常对话和信息交换', 1, 2, 2, 1, NOW());
+
+-- 通用软技能
+INSERT INTO skills (id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, category, level, created_at) VALUES
+(4, 'skill-004-smile', 1, '微笑', '情绪表达', '通过面部表情表达友善和积极情绪，是基本的社交和情绪管理技能', 1, 1, 1, 1, NOW()),
+(5, 'skill-005-patience', 1, '耐心', '情绪控制', '在面对困难或等待时保持冷静和坚持的能力，是重要的情绪管理技能', 1, 3, 1, 1, NOW()),
+(6, 'skill-006-empathy', 1, '共情', '理解他人', '理解和感受他人情感的能力，是良好人际关系的基础技能', 1, 3, 1, 1, NOW());
+
+-- 插入默认通用法力
+-- 理性法力
+INSERT INTO magics (id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at) VALUES
+(1, 'magic-001-observation', 1, '观察', '观察力', '通过感官收集和分析环境信息的能力，是认知和学习的基础', 2, 2, 1, 1, NOW()),
+(2, 'magic-002-memory', 1, '记忆', '记忆力', '存储和回忆信息的能力，包括短期记忆和长期记忆', 3, 2, 1, 1, NOW()),
+(3, 'magic-003-logic', 1, '逻辑思维', '推理能力', '运用逻辑规则进行推理和分析的思维能力', 4, 4, 1, 1, NOW());
+
+-- 感性法力
+INSERT INTO magics (id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level, category, level, created_at) VALUES
+(4, 'magic-004-intuition', 1, '直觉', '第六感', '不经过逻辑推理而直接感知和判断的能力', 3, 4, 2, 1, NOW()),
+(5, 'magic-005-creativity', 1, '创造力', '创新思维', '产生新颖想法和解决方案的能力，是艺术和创新的基础', 4, 5, 2, 1, NOW()),
+(6, 'magic-006-aesthetic', 1, '审美', '美感', '感受和欣赏美的能力，包括对艺术、自然等的审美判断', 3, 3, 2, 1, NOW());
+
 -- 保持数据但修复序列与数据的一致性（如果使用PostgreSQL）
 -- SELECT setval('table-name_id_seq', (SELECT MAX(id) FROM table-name);

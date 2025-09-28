@@ -34,7 +34,7 @@ type SeeSeek struct {
 	VerifierFamilyId int
 	VerifierTeamId   int
 
-	Category int           //分类：0、公开，1、保密，仅当事家庭/团队可见内容
+	Category int           //分类：0、公开，1、私密，仅当事家庭/团队可见内容
 	Status   SeeSeekStatus //状态：0、未开始，1、进行中，2、暂停，3、已终止，4、已结束
 	Step     int           //当前步骤：1、环境条件，2、场所隐患，3、风险评估，4、感官观察，5、检测报告
 
@@ -44,7 +44,7 @@ type SeeSeek struct {
 
 const (
 	SeeSeekCategoryPublic = iota // 公开
-	SeeSeekCategorySecret        // 保密
+	SeeSeekCategorySecret        // 私密
 )
 
 type SeeSeekStatus int
