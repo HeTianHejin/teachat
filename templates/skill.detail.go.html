@@ -8,9 +8,9 @@
 <div class="panel panel-default">
   <div class="panel-heading">
     <span class="glyphicon glyphicon-cog"></span>
-    技能 #{{ .SkillBean.Skill.Id }} - {{ .SkillBean.Skill.Name }}
-    <span class="label label-{{ if .SkillBean.Skill.IsHighLevel }}success{{ else }}default{{ end }} pull-right">
-      {{ .SkillBean.Skill.Level }}级
+    技能 #{{ .Skill.Id }} - {{ .Skill.Name }}
+    <span class="label label-{{ if .Skill.IsHighLevel }}success{{ else }}default{{ end }} pull-right">
+      {{ .Skill.Level }}级
     </span>
   </div>
   <div class="panel-body">
@@ -22,51 +22,51 @@
         <table class="table table-bordered">
           <tr>
             <td><strong>ID</strong></td>
-            <td>{{ .SkillBean.Skill.Id }}</td>
+            <td>{{ .Skill.Id }}</td>
           </tr>
           <tr>
             <td><strong>技能名称</strong></td>
-            <td>{{ .SkillBean.Skill.Name }}</td>
+            <td>{{ .Skill.Name }}</td>
           </tr>
-          {{ if .SkillBean.Skill.Nickname }}
+          {{ if .Skill.Nickname }}
           <tr>
             <td><strong>技能别名</strong></td>
-            <td>{{ .SkillBean.Skill.Nickname }}</td>
+            <td>{{ .Skill.Nickname }}</td>
           </tr>
           {{ end }}
           <tr>
             <td><strong>技能类型</strong></td>
             <td>
-              <span class="label label-default">{{ .SkillBean.Skill.CategoryString }}</span>
+              <span class="label label-default">{{ .Skill.CategoryString }}</span>
             </td>
           </tr>
           <tr>
             <td><strong>技能等级</strong></td>
             <td>
-              <span class="label label-{{ if .SkillBean.Skill.IsHighLevel }}success{{ else }}default{{ end }}">
-                {{ .SkillBean.Skill.Level }}级
+              <span class="label label-{{ if .Skill.IsHighLevel }}success{{ else }}default{{ end }}">
+                {{ .Skill.Level }}级
               </span>
             </td>
           </tr>
           <tr>
             <td><strong>体力要求</strong></td>
             <td>
-              <span class="label label-{{ if .SkillBean.Skill.IsHighStrength }}warning{{ else }}info{{ end }}">
-                {{ .SkillBean.Skill.StrengthLevelString }}
+              <span class="label label-{{ if .Skill.IsHighStrength }}warning{{ else }}info{{ end }}">
+                {{ .Skill.StrengthLevelString }}
               </span>
             </td>
           </tr>
           <tr>
             <td><strong>掌握难度</strong></td>
             <td>
-              <span class="label label-{{ if .SkillBean.Skill.IsHighDifficulty }}danger{{ else }}info{{ end }}">
-                {{ .SkillBean.Skill.DifficultyLevelString }}
+              <span class="label label-{{ if .Skill.IsHighDifficulty }}danger{{ else }}info{{ end }}">
+                {{ .Skill.DifficultyLevelString }}
               </span>
             </td>
           </tr>
           <tr>
             <td><strong>创建时间</strong></td>
-            <td>{{ .SkillBean.Skill.CreatedDateTime }}</td>
+            <td>{{ .Skill.CreatedDateTime }}</td>
           </tr>
         </table>
       </div>
@@ -74,7 +74,7 @@
       <div class="col-md-6">
         <h4>详细描述</h4>
         <div class="well">
-          <p>{{ .SkillBean.Skill.Description }}</p>
+          <p>{{ .Skill.Description }}</p>
         </div>
         
         <h5>技能特征</h5>
@@ -83,9 +83,9 @@
             <div class="text-center">
               <h6>体力要求</h6>
               <div class="progress">
-                <div class="progress-bar progress-bar-{{ if .SkillBean.Skill.IsHighStrength }}warning{{ else }}info{{ end }}" 
-                     style="width: {{ .SkillBean.Skill.StrengthLevel }}0%">
-                  {{ .SkillBean.Skill.StrengthLevelString }}
+                <div class="progress-bar progress-bar-{{ if .Skill.IsHighStrength }}warning{{ else }}info{{ end }}" 
+                     style="width: {{ .Skill.StrengthLevel }}0%">
+                  {{ .Skill.StrengthLevelString }}
                 </div>
               </div>
             </div>
@@ -94,9 +94,9 @@
             <div class="text-center">
               <h6>掌握难度</h6>
               <div class="progress">
-                <div class="progress-bar progress-bar-{{ if .SkillBean.Skill.IsHighDifficulty }}danger{{ else }}info{{ end }}" 
-                     style="width: {{ .SkillBean.Skill.DifficultyLevel }}0%">
-                  {{ .SkillBean.Skill.DifficultyLevelString }}
+                <div class="progress-bar progress-bar-{{ if .Skill.IsHighDifficulty }}danger{{ else }}info{{ end }}" 
+                     style="width: {{ .Skill.DifficultyLevel }}0%">
+                  {{ .Skill.DifficultyLevelString }}
                 </div>
               </div>
             </div>
@@ -105,9 +105,9 @@
             <div class="text-center">
               <h6>技能等级</h6>
               <div class="progress">
-                <div class="progress-bar progress-bar-{{ if .SkillBean.Skill.IsHighLevel }}success{{ else }}default{{ end }}" 
-                     style="width: {{ .SkillBean.Skill.Level }}0%">
-                  {{ .SkillBean.Skill.Level }}级
+                <div class="progress-bar progress-bar-{{ if .Skill.IsHighLevel }}success{{ else }}default{{ end }}" 
+                     style="width: {{ .Skill.Level }}0%">
+                  {{ .Skill.Level }}级
                 </div>
               </div>
             </div>
@@ -120,15 +120,15 @@
     <div class="row">
       <div class="col-md-12">
         <h4>技能等级说明</h4>
-        <div class="alert alert-{{ if .SkillBean.Skill.IsHighLevel }}success{{ else }}info{{ end }}">
-          <strong>{{ .SkillBean.Skill.Level }}级技能：</strong>
-          {{ if eq .SkillBean.Skill.Level 5 }}
+        <div class="alert alert-{{ if .Skill.IsHighLevel }}success{{ else }}info{{ end }}">
+          <strong>{{ .Skill.Level }}级技能：</strong>
+          {{ if eq .Skill.Level 5 }}
             专家级别，具备深厚的理论基础和丰富的实践经验，能够指导他人并解决复杂问题。
-          {{ else if eq .SkillBean.Skill.Level 4 }}
+          {{ else if eq .Skill.Level 4 }}
             高级水平，能够独立完成复杂任务，具备较强的问题解决能力。
-          {{ else if eq .SkillBean.Skill.Level 3 }}
+          {{ else if eq .Skill.Level 3 }}
             中级水平，能够熟练完成常规任务，具备一定的独立工作能力。
-          {{ else if eq .SkillBean.Skill.Level 2 }}
+          {{ else if eq .Skill.Level 2 }}
             初级水平，掌握基本操作，能够在指导下完成任务。
           {{ else }}
             入门级别，刚开始学习，需要持续练习和指导。
@@ -150,13 +150,13 @@
   
   <div class="panel-footer">
     <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
-    茶博士：技能是个人能力的重要体现，持续学习和实践是提升技能的关键。技能ID：{{ .SkillBean.Skill.Id }}
+    茶博士：技能是个人能力的重要体现，持续学习和实践是提升技能的关键。技能ID：{{ .Skill.Id }}
   </div>
 </div>
 
 <script>
   function copySkillId() {
-    var skillId = "{{ .SkillBean.Skill.Id }}";
+    var skillId = "{{ .Skill.Id }}";
     if (navigator.clipboard) {
       navigator.clipboard.writeText(skillId).then(function() {
         alert('技能ID已复制到剪贴板：' + skillId);

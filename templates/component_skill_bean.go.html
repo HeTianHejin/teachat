@@ -6,51 +6,51 @@
   <div class="panel-body">
     <div class="media">
       <div class="media-left">
-        <a href="/v1/skill/detail?id={{ .Skill.Id }}">
+        <a href="/v1/skill/detail?id={{ .Id }}">
           <img class="media-object" src="/v1/static/bootstrap-icons/gear.svg" alt="技能图标" width=40 height=40>
         </a>
       </div>
 
       <div class="media-body">
         <p>
-          <span class="label label-{{ if .Skill.IsHighLevel }}success{{ else }}default{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
-            {{ .Skill.Level }}级
+          <span class="label label-{{ if .IsHighLevel }}success{{ else }}default{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ .Level }}级
           </span>
 
           <span class="label label-default" style="margin-inline-end: 30px;font-size: smaller;">
-            {{ .Skill.CategoryString }}
+            {{ .CategoryString }}
           </span>
 
           <span style="font-size: smaller;">
-            {{ .Skill.CreatedDateTime }}
+            {{ .CreatedDateTime }}
           </span>
         </p>
 
         <h4>
-          <a href="/v1/skill/detail?id={{ .Skill.Id }}">
-            {{ .Skill.Name }}
+          <a href="/v1/skill/detail?id={{ .Id }}">
+            {{ .Name }}
           </a>
-          {{ if .Skill.IsHighLevel }}
+          {{ if .IsHighLevel }}
           <span class="label label-success">高级</span>
           {{ end }}
         </h4>
 
-        <p>{{ .Skill.Description }}</p>
+        <p>{{ .Description }}</p>
 
         <p>
           <div style="text-align: center; margin-top: 10px;">
             <span style="margin-right: 15px;">
-              <i class="bi-lightning" style="font-size: 1.2rem; color: {{ if .Skill.IsHighStrength }}orange{{ else }}gray{{ end }};"></i>
-              <span style="font-size: smaller;">体力: {{ .Skill.StrengthLevelString }}</span>
+              <i class="bi-lightning" style="font-size: 1.2rem; color: {{ if .IsHighStrength }}orange{{ else }}gray{{ end }};"></i>
+              <span style="font-size: smaller;">体力: {{ .StrengthLevelString }}</span>
             </span>
             <span style="margin-right: 15px;">
-              <i class="bi-graph-up" style="font-size: 1.2rem; color: {{ if .Skill.IsHighDifficulty }}red{{ else }}gray{{ end }};"></i>
-              <span style="font-size: smaller;">难度: {{ .Skill.DifficultyLevelString }}</span>
+              <i class="bi-graph-up" style="font-size: 1.2rem; color: {{ if .IsHighDifficulty }}red{{ else }}gray{{ end }};"></i>
+              <span style="font-size: smaller;">难度: {{ .DifficultyLevelString }}</span>
             </span>
-            {{ if .Skill.Nickname }}
+            {{ if .Nickname }}
             <span>
               <i class="bi-tag" style="font-size: 1.2rem; color: gray;"></i>
-              <span style="font-size: smaller;">{{ .Skill.Nickname }}</span>
+              <span style="font-size: smaller;">{{ .Nickname }}</span>
             </span>
             {{ end }}
           </div>

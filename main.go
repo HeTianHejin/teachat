@@ -217,7 +217,7 @@ func main() {
 	mux.HandleFunc("/v1/skill/new", route.HandleNewSkill)
 	mux.HandleFunc("/v1/skill/detail", route.HandleSkillDetail)
 
-	mux.HandleFunc("/v1/skills/user_list", route.HandleSkillList)
+	mux.HandleFunc("/v1/skills/user_list", route.HandleSkillsUserList)
 
 	//defined in route_action_magic.go
 	mux.HandleFunc("/v1/magic/new", route.HandleNewMagic)

@@ -214,11 +214,11 @@ type HandicraftBean struct {
 	Project    Project
 }
 
-//	type SkillBean struct {
-//		Skill  Skill
-//		IsOpen bool
-//	}
-//
+// type SkillBean struct {
+// 	Skill  Skill
+// 	IsOpen bool
+// }
+
 //	type MagicBean struct {
 //		Magic  Magic
 //		IsOpen bool

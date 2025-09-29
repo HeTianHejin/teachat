@@ -554,3 +554,33 @@ func (u *User) LoadAllSkills(ctx context.Context) ([]Skill, error) {
 	}
 	return skills, nil
 }
+// EnsureDefaultSkills 确保用户拥有默认技能
+func EnsureDefaultSkills(userId int, ctx context.Context) error {
+	// 检查用户是否已有技能记录
+	count, err := CountUserSkills(userId, ctx)
+	if err != nil {
+		return err
+	}
+	
+	// 如果用户已有技能记录，跳过初始化
+	if count > 0 {
+		return nil
+	}
+	
+	// 默认技能ID列表（对应setup_default_values.sql中的前6个技能）
+	defaultSkillIds := []int{1, 2, 3, 4, 5, 6}
+	
+	for _, skillId := range defaultSkillIds {
+		skillUser := SkillUser{
+			SkillId: skillId,
+			UserId:  userId,
+			Level:   1,                          // 默认等级1
+			Status:  NormalSkillUserStatus,      // 默认中能状态
+		}
+		if err := skillUser.Create(ctx); err != nil {
+			// 记录错误但继续处理其他技能
+			continue
+		}
+	}
+	return nil
+}

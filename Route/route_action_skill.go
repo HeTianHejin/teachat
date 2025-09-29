@@ -54,7 +54,7 @@ func HandleSkillDetail(w http.ResponseWriter, r *http.Request) {
 }
 
 // Handler /v1/skills/user_list
-func HandleSkillList(w http.ResponseWriter, r *http.Request) {
+func HandleSkillsUserList(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -70,7 +70,7 @@ func HandleSkillList(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
-	SkillUserListGet(s_u, w, r)
+	SkillsUserListGet(s_u, w, r)
 }
 
 // GET /v1/skill/new
@@ -214,7 +214,12 @@ func SkillDetailGet(user data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/skills/user_list
-func SkillUserListGet(user data.User, w http.ResponseWriter, r *http.Request) {
+func SkillsUserListGet(user data.User, w http.ResponseWriter, r *http.Request) {
+
+	// 确保用户拥有默认技能
+	if err := data.EnsureDefaultSkills(user.Id, r.Context()); err != nil {
+		util.Debug("cannot ensure default skills for user:", user.Id, err)
+	}
 
 	// 获取用户声明拥有的所有技能队列
 	skills, err := user.LoadAllSkills(r.Context())
@@ -224,12 +229,31 @@ func SkillUserListGet(user data.User, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 按技能类型分组
+	var hardSkills, softSkills []data.Skill
+	for _, skill := range skills {
+		switch skill.Category {
+		case data.GeneralHardSkill:
+			hardSkills = append(hardSkills, skill)
+		case data.GeneralSoftSkill:
+			softSkills = append(softSkills, skill)
+		}
+	}
+
 	var SkillDetailTemplateData struct {
-		SessUser data.User
-		Skills   []data.Skill
+		SessUser       data.User
+		Skills         []data.Skill
+		HardSkills     []data.Skill
+		SoftSkills     []data.Skill
+		HardSkillCount int
+		SoftSkillCount int
 	}
 	SkillDetailTemplateData.SessUser = user
 	SkillDetailTemplateData.Skills = skills
+	SkillDetailTemplateData.HardSkills = hardSkills
+	SkillDetailTemplateData.SoftSkills = softSkills
+	SkillDetailTemplateData.HardSkillCount = len(hardSkills)
+	SkillDetailTemplateData.SoftSkillCount = len(softSkills)
 
-	generateHTML(w, &SkillDetailTemplateData, "layout", "navbar.private", "skill.list")
+	generateHTML(w, &SkillDetailTemplateData, "layout", "navbar.private", "skill.list", "component_skill_bean")
 }

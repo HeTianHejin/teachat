@@ -17,9 +17,52 @@
 
   <div class="panel-body">
     {{ if .Skills }}
-      {{ range .Skills }}
-        {{ template "component_skill_bean" . }}
-      {{ end }}
+      <!-- 分页选项卡 -->
+      <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active">
+          <a href="#hard-skills" aria-controls="hard-skills" role="tab" data-toggle="tab">
+            <span class="glyphicon glyphicon-wrench"></span> 通用硬技能
+            <span class="badge">{{ .HardSkillCount }}</span>
+          </a>
+        </li>
+        <li role="presentation">
+          <a href="#soft-skills" aria-controls="soft-skills" role="tab" data-toggle="tab">
+            <span class="glyphicon glyphicon-heart"></span> 通用软技能
+            <span class="badge">{{ .SoftSkillCount }}</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- 选项卡内容 -->
+      <div class="tab-content" style="margin-top: 15px;">
+        <!-- 硬技能选项卡 -->
+        <div role="tabpanel" class="tab-pane active" id="hard-skills">
+          {{ if .HardSkills }}
+            {{ range .HardSkills }}
+              {{ template "component_skill_bean" . }}
+            {{ end }}
+          {{ else }}
+            <div class="alert alert-info text-center">
+              <h4>暂无硬技能记录</h4>
+              <p>硬技能包括可以设立试卷考试的智商类技能。</p>
+            </div>
+          {{ end }}
+        </div>
+
+        <!-- 软技能选项卡 -->
+        <div role="tabpanel" class="tab-pane" id="soft-skills">
+          {{ if .SoftSkills }}
+            {{ range .SoftSkills }}
+              {{ template "component_skill_bean" . }}
+            {{ end }}
+          {{ else }}
+            <div class="alert alert-info text-center">
+              <h4>暂无软技能记录</h4>
+              <p>软技能包括沟通、情绪管理等情商类技能。</p>
+            </div>
+          {{ end }}
+        </div>
+      </div>
     {{ else }}
       <div class="alert alert-info text-center">
         <h4>暂无技能记录</h4>
