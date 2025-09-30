@@ -17,6 +17,8 @@ type SearchPageData struct {
 	HazardSlice        []Hazard      //隐患集合
 	RiskSlice          []Risk        //风险集合
 	GoodsSlice         []Goods       // 物资集合
+	SkillSlice         []Skill       // 技能集合
+	MagicSlice         []Magic       // 法力集合
 }
 
 // 我的地盘我做主

@@ -296,7 +296,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
-	case 8: // SearchTypeRisk
+	case data.SearchTypeRisk: // SearchTypeRisk
 		//查询风险 risk
 		risk_slice, err := data.SearchRiskByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
@@ -305,6 +305,34 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if len(risk_slice) >= 1 {
 			fPD.Count = len(risk_slice)
 			fPD.RiskSlice = risk_slice
+			fPD.IsEmpty = false
+		}
+		generateHTML(w, &fPD, "layout", "navbar.private", "search")
+		return
+
+	case data.SearchTypeSkill:
+		//查询技能 skill
+		skill_slice, err := data.SearchSkillByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		if err != nil {
+			util.Debug(" failed to search skill by keyword", err)
+		}
+		if len(skill_slice) >= 1 {
+			fPD.Count = len(skill_slice)
+			fPD.SkillSlice = skill_slice
+			fPD.IsEmpty = false
+		}
+		generateHTML(w, &fPD, "layout", "navbar.private", "search")
+		return
+
+	case data.SearchTypeMagic:
+		//查询法力 magic
+		magic_slice, err := data.SearchMagicByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		if err != nil {
+			util.Debug(" failed to search magic by keyword", err)
+		}
+		if len(magic_slice) >= 1 {
+			fPD.Count = len(magic_slice)
+			fPD.MagicSlice = magic_slice
 			fPD.IsEmpty = false
 		}
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")

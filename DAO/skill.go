@@ -597,3 +597,62 @@ func (su *SkillUser) GetById(id int, ctx context.Context) error {
 	defer stmt.Close()
 	return stmt.QueryRowContext(ctx, id).Scan(&su.Id, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
 }
+
+// SearchSkillByName 按名称搜索技能
+func SearchSkillByName(keyword string, limit int, ctx context.Context) ([]Skill, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	query := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
+              category, level, created_at, updated_at, deleted_at FROM skills 
+              WHERE (name ILIKE $1 OR nickname ILIKE $1 OR description ILIKE $1) AND deleted_at IS NULL
+              ORDER BY name 
+              LIMIT $2`
+
+	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var skills []Skill
+	for rows.Next() {
+		var skill Skill
+		err := rows.Scan(&skill.Id, &skill.Uuid, &skill.UserId, &skill.Name, &skill.Nickname, &skill.Description,
+			&skill.StrengthLevel, &skill.DifficultyLevel, &skill.Category, &skill.Level, &skill.CreatedAt, &skill.UpdatedAt, &skill.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		skills = append(skills, skill)
+	}
+
+	return skills, nil
+}
+
+// GetAllSkills 获取所有技能
+func GetAllSkills(ctx context.Context) ([]Skill, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	query := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
+              category, level, created_at, updated_at, deleted_at FROM skills 
+              WHERE deleted_at IS NULL
+              ORDER BY category, name`
+
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var skills []Skill
+	for rows.Next() {
+		var skill Skill
+		err := rows.Scan(&skill.Id, &skill.Uuid, &skill.UserId, &skill.Name, &skill.Nickname, &skill.Description,
+			&skill.StrengthLevel, &skill.DifficultyLevel, &skill.Category, &skill.Level, &skill.CreatedAt, &skill.UpdatedAt, &skill.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		skills = append(skills, skill)
+	}
+
+	return skills, nil
+}

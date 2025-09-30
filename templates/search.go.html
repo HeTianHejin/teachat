@@ -47,6 +47,12 @@
   <input type="radio" name="class" id="goods" style="width: fit-content;" value="9" required />
   <label for="goods">物资</label>
 
+        <input type="radio" name="class" id="skill" style="width: fit-content;" value="11" required />
+        <label for="skill">技能</label>
+
+        <input type="radio" name="class" id="magic" style="width: fit-content;" value="12" required />
+        <label for="magic">法力</label>
+
       </fieldset>
     </div>
 
@@ -217,6 +223,50 @@
   </div>
 </div>
 {{ end }}
+
+{{ range .SkillSlice }}{{/* 这是查找到的 技能 结果队列迭代-开始 */}}
+<hr />
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>技能 #{{ .Id }}</strong> - {{ .Name }}
+    <span class="label label-{{ if eq .Category 2 }}primary{{ else if eq .Category 1 }}success{{ else }}default{{ end }}">
+      {{ .CategoryString }}
+    </span>
+    <a href="/v1/skill/detail?id={{ .Id }}" class="btn btn-xs btn-info pull-right">
+      <span class="glyphicon glyphicon-eye-open"></span> 查看详情
+    </a>
+  </div>
+  <div class="panel-body">
+    <p>{{ .Description }}</p>
+    {{ if .Nickname }}<p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
+    <p><strong>体力等级：</strong>{{ .StrengthLevelString }}</p>
+    <p><strong>难度等级：</strong>{{ .DifficultyLevelString }}</p>
+    <small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
+  </div>
+</div>
+{{ end }}{{/* 这是查找到的 技能 结果队列迭代-结束 */}}
+
+{{ range .MagicSlice }}{{/* 这是查找到的 法力 结果队列迭代-开始 */}}
+<hr />
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>法力 #{{ .Id }}</strong> - {{ .Name }}
+    <span class="label label-{{ if eq .Category 2 }}warning{{ else if eq .Category 1 }}info{{ else }}default{{ end }}">
+      {{ .CategoryString }}
+    </span>
+    <a href="/v1/magic/detail?id={{ .Id }}" class="btn btn-xs btn-info pull-right">
+      <span class="glyphicon glyphicon-eye-open"></span> 查看详情
+    </a>
+  </div>
+  <div class="panel-body">
+    <p>{{ .Description }}</p>
+    {{ if .Nickname }}<p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
+    <p><strong>智力等级：</strong>{{ .IntelligenceLevelString }}</p>
+    <p><strong>难度等级：</strong>{{ .DifficultyLevelString }}</p>
+    <small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
+  </div>
+</div>
+{{ end }}{{/* 这是查找到的 法力 结果队列迭代-结束 */}}
 
 {{ end }}{{/* 这是查找结果非零 结束*/}}
 

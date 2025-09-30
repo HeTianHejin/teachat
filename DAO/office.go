@@ -341,6 +341,9 @@ const (
 	SearchTypePlaceName       = 5  // 按茶室地方名称查询
 	SearchTypeEnvironment     = 6  // 按环境条件名称查询
 	SearchTypeHazard          = 7  // 按隐患名称查询
+	SearchTypeRisk            = 8  //按风险名称查询
 	SearchTypeGoods           = 9  // 按物资名称查询
 	SearchTypeUserId          = 10 // 按用户id查询
+	SearchTypeSkill           = 11 // 按技能名称查询
+	SearchTypeMagic           = 12 // 按法力名称查询
 )

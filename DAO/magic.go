@@ -467,6 +467,36 @@ func (mu *MagicUser) GetById(id int, ctx context.Context) error {
 	return stmt.QueryRowContext(ctx, id).Scan(&mu.Id, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
 }
 
+// SearchMagicByName 按名称搜索法力
+func SearchMagicByName(keyword string, limit int, ctx context.Context) ([]Magic, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	query := `SELECT id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level, 
+              category, level, created_at, updated_at, deleted_at FROM magics 
+              WHERE (name ILIKE $1 OR nickname ILIKE $1 OR description ILIKE $1) AND deleted_at IS NULL
+              ORDER BY name 
+              LIMIT $2`
+
+	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var magics []Magic
+	for rows.Next() {
+		var magic Magic
+		err := rows.Scan(&magic.Id, &magic.Uuid, &magic.UserId, &magic.Name, &magic.Nickname, &magic.Description,
+			&magic.IntelligenceLevel, &magic.DifficultyLevel, &magic.Category, &magic.Level, &magic.CreatedAt, &magic.UpdatedAt, &magic.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		magics = append(magics, magic)
+	}
+
+	return magics, nil
+}
+
 // EnsureDefaultMagics 确保用户拥有默认法力
 func EnsureDefaultMagics(userId int, ctx context.Context) error {
 	// 检查用户是否已有法力记录

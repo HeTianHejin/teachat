@@ -188,9 +188,11 @@ func MagicDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建MagicBean结构
-	magicBean := struct {
+	type MagicBean struct {
 		Magic data.Magic
-	}{
+	}
+
+	magicBean := MagicBean{
 		Magic: magic,
 	}
 
@@ -200,7 +202,7 @@ func MagicDetailGet(w http.ResponseWriter, r *http.Request) {
 		IsAdmin    bool
 		IsMaster   bool
 		IsInvited  bool
-		MagicBean  interface{}
+		MagicBean  MagicBean
 	}
 	magicData.SessUser = user
 	magicData.MagicBean = magicBean
