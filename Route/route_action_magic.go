@@ -253,3 +253,250 @@ func MagicListGet(w http.ResponseWriter, r *http.Request) {
 
 	generateHTML(w, &magicData, "layout", "navbar.private", "magic.list")
 }
+// Handler /v1/magics/user_list
+func HandleMagicsUserList(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+	MagicsUserListGet(s_u, w, r)
+}
+
+// Handler /v1/magic_user/edit
+func HandleMagicUserEdit(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+	switch r.Method {
+	case http.MethodGet:
+		MagicUserEditGet(s_u, w, r)
+	case http.MethodPost:
+		MagicUserEditPost(s_u, w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/magics/user_list
+func MagicsUserListGet(user data.User, w http.ResponseWriter, r *http.Request) {
+	// 确保用户拥有默认法力
+	if err := data.EnsureDefaultMagics(user.Id, r.Context()); err != nil {
+		util.Debug("cannot ensure default magics for user:", user.Id, err)
+	}
+
+	// 获取MagicUserBean
+	magicUserBean, err := fetchMagicUserBean(user, r.Context())
+	if err != nil {
+		util.Debug("cannot fetch magic user bean:", user.Id, err)
+		report(w, r, "获取茶友法力列表失败，请重试。")
+		return
+	}
+
+	// 创建法力与用户法力的映射
+	magicUserMap := make(map[int]data.MagicUser)
+	for _, magicUser := range magicUserBean.MagicUsers {
+		magicUserMap[magicUser.MagicId] = magicUser
+	}
+
+	// 创建包含法力和用户信息的结构
+	type MagicWithUserInfo struct {
+		Magic     data.Magic
+		MagicUser data.MagicUser
+	}
+
+	// 按法力类型分组
+	var rationalMagics, sensualMagics []MagicWithUserInfo
+	for _, magic := range magicUserBean.Magics {
+		if magicUser, exists := magicUserMap[magic.Id]; exists {
+			magicWithInfo := MagicWithUserInfo{
+				Magic:     magic,
+				MagicUser: magicUser,
+			}
+			switch magic.Category {
+			case data.Rational:
+				rationalMagics = append(rationalMagics, magicWithInfo)
+			case data.Sensual:
+				sensualMagics = append(sensualMagics, magicWithInfo)
+			}
+		}
+	}
+
+	var MagicDetailTemplateData struct {
+		SessUser           data.User
+		MagicUserBean      data.MagicUserBean
+		RationalMagics     []MagicWithUserInfo
+		SensualMagics      []MagicWithUserInfo
+		RationalMagicCount int
+		SensualMagicCount  int
+	}
+
+	MagicDetailTemplateData.SessUser = user
+	MagicDetailTemplateData.MagicUserBean = magicUserBean
+	MagicDetailTemplateData.RationalMagics = rationalMagics
+	MagicDetailTemplateData.SensualMagics = sensualMagics
+	MagicDetailTemplateData.RationalMagicCount = len(rationalMagics)
+	MagicDetailTemplateData.SensualMagicCount = len(sensualMagics)
+
+	generateHTML(w, &MagicDetailTemplateData, "layout", "navbar.private", "magics.user_list", "component_user_magic_bean")
+}
+
+// GET /v1/magic_user/edit?id=123
+func MagicUserEditGet(user data.User, w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		report(w, r, "缺少法力记录ID参数。")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		report(w, r, "无效的法力记录ID。")
+		return
+	}
+
+	// 获取法力用户记录
+	var magicUser data.MagicUser
+	if err := magicUser.GetById(id, r.Context()); err != nil {
+		util.Debug("cannot get magic user by id", id, err)
+		report(w, r, "法力记录不存在。")
+		return
+	}
+
+	// 权限检查：只有同一家庭的parents成员可以编辑
+	if magicUser.UserId != user.Id {
+		// 获取目标用户的默认家庭
+		targetUser, err := data.GetUser(magicUser.UserId)
+		if err != nil {
+			report(w, r, "权限验证失败。")
+			return
+		}
+
+		targetFamily, err := targetUser.GetLastDefaultFamily()
+		if err != nil {
+			report(w, r, "权限验证失败。")
+			return
+		}
+
+		// 检查当前用户是否为该家庭的parent成员
+		isParent, err := targetFamily.IsParentMember(user.Id)
+		if err != nil || !isParent {
+			report(w, r, "您没有权限编辑此法力记录。")
+			return
+		}
+	}
+
+	// 获取法力信息
+	var magic data.Magic
+	magic.Id = magicUser.MagicId
+	if err := magic.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug("cannot get magic by id", magicUser.MagicId, err)
+		report(w, r, "法力信息获取失败。")
+		return
+	}
+
+	var editData struct {
+		SessUser  data.User
+		MagicUser data.MagicUser
+		Magic     data.Magic
+		ReturnURL string
+	}
+	editData.SessUser = user
+	editData.MagicUser = magicUser
+	editData.Magic = magic
+	editData.ReturnURL = r.URL.Query().Get("return_url")
+
+	generateHTML(w, &editData, "layout", "navbar.private", "magic_user.edit")
+}
+
+// POST /v1/magic_user/edit
+func MagicUserEditPost(user data.User, w http.ResponseWriter, r *http.Request) {
+	idStr := r.PostFormValue("id")
+	if idStr == "" {
+		report(w, r, "缺少法力记录ID参数。")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		report(w, r, "无效的法力记录ID。")
+		return
+	}
+
+	// 获取原始法力用户记录
+	var magicUser data.MagicUser
+	if err := magicUser.GetById(id, r.Context()); err != nil {
+		util.Debug("cannot get magic user by id", id, err)
+		report(w, r, "法力记录不存在。")
+		return
+	}
+
+	// 权限检查
+	if magicUser.UserId != user.Id {
+		targetUser, err := data.GetUser(magicUser.UserId)
+		if err != nil {
+			report(w, r, "权限验证失败。")
+			return
+		}
+
+		targetFamily, err := targetUser.GetLastDefaultFamily()
+		if err != nil {
+			report(w, r, "权限验证失败。")
+			return
+		}
+
+		isParent, err := targetFamily.IsParentMember(user.Id)
+		if err != nil || !isParent {
+			report(w, r, "您没有权限编辑此法力记录。")
+			return
+		}
+	}
+
+	// 解析表单数据
+	level, _ := strconv.Atoi(r.PostFormValue("level"))
+	if level < 1 || level > 9 {
+		report(w, r, "法力等级必须在1-9之间。")
+		return
+	}
+
+	status, _ := strconv.Atoi(r.PostFormValue("status"))
+	if status < 0 || status > 3 {
+		report(w, r, "法力状态值无效。")
+		return
+	}
+
+	// 更新法力用户记录
+	magicUser.Level = level
+	magicUser.Status = data.MagicUserStatus(status)
+
+	if err := magicUser.Update(); err != nil {
+		util.Debug("cannot update magic user", err)
+		report(w, r, "更新法力记录失败，请重试。")
+		return
+	}
+
+	// 获取返回URL
+	returnURL := r.PostFormValue("return_url")
+	if returnURL == "" {
+		returnURL = "/v1/magics/user_list"
+	}
+	http.Redirect(w, r, returnURL, http.StatusFound)
+}

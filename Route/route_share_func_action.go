@@ -202,3 +202,24 @@ func fetchSkillUserBean(user data.User, ctx context.Context) (data.SkillUserBean
 
 	return bean, nil
 }
+// fetchMagicUserBean 获取完整的MagicUserBean
+func fetchMagicUserBean(user data.User, ctx context.Context) (data.MagicUserBean, error) {
+	var bean data.MagicUserBean
+	bean.User = user
+
+	// 获取用户法力记录
+	userMagics, err := data.GetUserMagics(user.Id, ctx)
+	if err != nil {
+		return bean, err
+	}
+	bean.MagicUsers = userMagics
+
+	// 获取对应的法力信息
+	magics, err := data.GetMagicsByMagicUsers(userMagics, ctx)
+	if err != nil {
+		return bean, err
+	}
+	bean.Magics = magics
+
+	return bean, nil
+}

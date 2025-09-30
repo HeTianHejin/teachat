@@ -220,10 +220,10 @@ type SkillUserBean struct {
 	SkillUsers []SkillUser
 }
 
-type MagicBean struct {
-	User      User
-	Magics    []Magic
-	MagicUser []MagicUser
+type MagicUserBean struct {
+	User       User
+	Magics     []Magic
+	MagicUsers []MagicUser
 }
 type EvidenceSeeSeekBean struct {
 	Evidences []Evidence

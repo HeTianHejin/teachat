@@ -224,6 +224,9 @@ func main() {
 	mux.HandleFunc("/v1/magic/new", route.HandleNewMagic)
 	mux.HandleFunc("/v1/magic/detail", route.HandleMagicDetail)
 	mux.HandleFunc("/v1/magic/list", route.HandleMagicList)
+	mux.HandleFunc("/v1/magic_user/edit", route.HandleMagicUserEdit)
+
+	mux.HandleFunc("/v1/magics/user_list", route.HandleMagicsUserList)
 
 	//defined in route_action_handicraft.go
 	mux.HandleFunc("/v1/handicraft/project_new", route.HandleNewHandicraft)

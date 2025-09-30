@@ -1,0 +1,79 @@
+{{ define "component_user_magic_bean" }}
+
+{{/* 组件：用户法力展示 - 需要传入magic和对应的magicUser */}}
+
+{{ $magic := .Magic }}
+{{ $magicUser := .MagicUser }}
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left">
+        <a href="/v1/magic/detail?id={{ $magic.Id }}">
+          <img class="media-object" src="/v1/static/bootstrap-icons/lightning.svg" alt="法力图标" width=40 height=40>
+        </a>
+      </div>
+
+      <div class="media-body">
+        <p>
+          <span class="label label-{{ if $magic.IsHighLevel }}success{{ else }}default{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ $magic.Level }}级
+          </span>
+
+          <span class="label label-primary" style="margin-inline-end: 30px;font-size: smaller;">
+            我的等级: {{ $magicUser.Level }}
+          </span>
+
+          <span class="label label-{{ if eq $magicUser.Status 3 }}success{{ else if eq $magicUser.Status 2 }}info{{ else if eq $magicUser.Status 1 }}warning{{ else }}danger{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ $magicUser.StatusString }}
+          </span>
+
+          <span class="label label-default" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ $magic.CategoryString }}
+          </span>
+
+          <span style="font-size: smaller;">
+            {{ $magic.CreatedDateTime }}
+          </span>
+        </p>
+
+        <h4>
+          <a href="/v1/magic/detail?id={{ $magic.Id }}">
+            {{ $magic.Name }}
+          </a>
+          {{ if $magic.IsHighLevel }}
+          <span class="label label-success">高级</span>
+          {{ end }}
+          <a href="/v1/magic_user/edit?id={{ $magicUser.Id }}" class="btn btn-xs btn-default pull-right">
+            <span class="glyphicon glyphicon-edit"></span> 编辑
+          </a>
+        </h4>
+
+        <p>{{ $magic.Description }}</p>
+
+        <p>
+          <div style="text-align: center; margin-top: 10px;">
+            <span style="margin-right: 15px;">
+              <i class="bi-cpu" style="font-size: 1.2rem; color: {{ if $magic.IsHighIntelligence }}orange{{ else }}gray{{ end }};"></i>
+              <span style="font-size: smaller;">智力: {{ $magic.IntelligenceLevelString }}</span>
+            </span>
+            <span style="margin-right: 15px;">
+              <i class="bi-graph-up" style="font-size: 1.2rem; color: {{ if $magic.IsHighDifficulty }}red{{ else }}gray{{ end }};"></i>
+              <span style="font-size: smaller;">难度: {{ $magic.DifficultyLevelString }}</span>
+            </span>
+            {{ if $magic.Nickname }}
+            <span>
+              <i class="bi-tag" style="font-size: 1.2rem; color: gray;"></i>
+              <span style="font-size: smaller;">{{ $magic.Nickname }}</span>
+            </span>
+            {{ end }}
+          </div>
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{{ end }}

@@ -1,0 +1,84 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/office">办公室</a></li>
+  <li class="active">我的法力列表</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-flash"></span> 法力列表
+      <a href="/v1/magic/new" class="btn btn-primary btn-sm pull-right">
+        <span class="glyphicon glyphicon-plus"></span> 添加法力
+      </a>
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    {{ if .MagicUserBean.Magics }}
+      <!-- 分页选项卡 -->
+      <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active">
+          <a href="#rational-magics" aria-controls="rational-magics" role="tab" data-toggle="tab">
+            <span class="glyphicon glyphicon-cog"></span> 理性法力
+            <span class="badge">{{ .RationalMagicCount }}</span>
+          </a>
+        </li>
+        <li role="presentation">
+          <a href="#sensual-magics" aria-controls="sensual-magics" role="tab" data-toggle="tab">
+            <span class="glyphicon glyphicon-heart"></span> 感性法力
+            <span class="badge">{{ .SensualMagicCount }}</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- 选项卡内容 -->
+      <div class="tab-content" style="margin-top: 15px;">
+        <!-- 理性法力选项卡 -->
+        <div role="tabpanel" class="tab-pane active" id="rational-magics">
+          {{ if .RationalMagics }}
+            {{ range .RationalMagics }}
+              {{ template "component_user_magic_bean" . }}
+            {{ end }}
+          {{ else }}
+            <div class="alert alert-info text-center">
+              <h4>暂无理性法力记录</h4>
+              <p>理性法力包括观察、记忆、逻辑思维等能力。</p>
+            </div>
+          {{ end }}
+        </div>
+
+        <!-- 感性法力选项卡 -->
+        <div role="tabpanel" class="tab-pane" id="sensual-magics">
+          {{ if .SensualMagics }}
+            {{ range .SensualMagics }}
+              {{ template "component_user_magic_bean" . }}
+            {{ end }}
+          {{ else }}
+            <div class="alert alert-info text-center">
+              <h4>暂无感性法力记录</h4>
+              <p>感性法力包括直觉、创造力、审美等能力。</p>
+            </div>
+          {{ end }}
+        </div>
+      </div>
+    {{ else }}
+      <div class="alert alert-info text-center">
+        <h4>暂无法力记录</h4>
+        <p>点击上方"添加法力"按钮开始记录您的法力。</p>
+        <a href="/v1/magic/new" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span> 添加第一个法力
+        </a>
+      </div>
+    {{ end }}
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：法力是个人智慧的重要体现，记录和管理法力有助于个人思维发展。
+  </div>
+</div>
+
+{{ end }}

@@ -3,6 +3,8 @@ package data
 import (
 	"context"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -353,6 +355,7 @@ func GetAllMagics(ctx context.Context) ([]Magic, error) {
 	}
 	return magics, nil
 }
+
 // MagicUser CRUD 方法
 
 // MagicUser.Create 创建用户法力记录
@@ -448,4 +451,106 @@ func GetUserMagics(userId int, ctx context.Context) ([]MagicUser, error) {
 		userMagics = append(userMagics, mu)
 	}
 	return userMagics, nil
+}
+
+// MagicUser.GetById 根据ID获取用户法力记录
+func (mu *MagicUser) GetById(id int, ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, magic_id, user_id, level, status, created_at, updated_at, deleted_at
+		FROM magic_users WHERE id = $1 AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	return stmt.QueryRowContext(ctx, id).Scan(&mu.Id, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
+}
+
+// EnsureDefaultMagics 确保用户拥有默认法力
+func EnsureDefaultMagics(userId int, ctx context.Context) error {
+	// 检查用户是否已有法力记录
+	count, err := CountUserMagics(userId, ctx)
+	if err != nil {
+		return err
+	}
+
+	// 如果用户已有法力记录，跳过初始化
+	if count > 0 {
+		return nil
+	}
+
+	// 默认法力ID列表（对应setup_default_values.sql中的法力）
+	defaultMagicIds := []int{1, 2, 3, 4, 5, 6}
+
+	for _, magicId := range defaultMagicIds {
+		magicUser := MagicUser{
+			MagicId: magicId,
+			UserId:  userId,
+			Level:   1,     // 默认等级1
+			Status:  Clear, // 默认清醒状态
+		}
+		if err := magicUser.Create(ctx); err != nil {
+			// 记录错误但继续处理其他法力
+			continue
+		}
+	}
+	return nil
+}
+
+// CountUserMagics 统计用户有的法力记录数量
+func CountUserMagics(userId int, ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT COUNT(*) FROM magic_users WHERE user_id = $1 AND deleted_at IS NULL`
+	var count int
+	err := db.QueryRowContext(ctx, statement, userId).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// GetMagicsByMagicUsers 根据用户法力记录获取法力列表
+func GetMagicsByMagicUsers(magicUsers []MagicUser, ctx context.Context) ([]Magic, error) {
+	if len(magicUsers) == 0 {
+		return []Magic{}, nil
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	magicIds := make([]int, len(magicUsers))
+	for i, mu := range magicUsers {
+		magicIds[i] = mu.MagicId
+	}
+
+	placeholders := make([]string, len(magicIds))
+	args := make([]interface{}, len(magicIds))
+	for i, id := range magicIds {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	statement := fmt.Sprintf(`SELECT id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level,
+		category, level, created_at, updated_at, deleted_at
+		FROM magics WHERE id IN (%s) AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`,
+		strings.Join(placeholders, ","))
+
+	rows, err := db.QueryContext(ctx, statement, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var magics []Magic
+	for rows.Next() {
+		var m Magic
+		err := rows.Scan(&m.Id, &m.Uuid, &m.UserId, &m.Name, &m.Nickname, &m.Description,
+			&m.IntelligenceLevel, &m.DifficultyLevel, &m.Category, &m.Level, &m.CreatedAt, &m.UpdatedAt, &m.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		magics = append(magics, m)
+	}
+	return magics, nil
 }
