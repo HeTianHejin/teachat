@@ -102,13 +102,13 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := data.HandicraftDetailTemplateData{
-		SessUser:           user,
-		IsVerifier:         isVerifier(user.Id),
-		ProjectBean:        projectBean,
-		QuoteObjectiveBean: objectiveBean,
-		Skills:             skills,
-		Magics:             magics,
-		EvidenceBean:       []data.EvidenceBean{},
+		SessUser:               user,
+		IsVerifier:             isVerifier(user.Id),
+		ProjectBean:            projectBean,
+		QuoteObjectiveBean:     objectiveBean,
+		Skills:                 skills,
+		Magics:                 magics,
+		EvidenceHandicraftBean: []data.EvidenceHandicraftBean{},
 	}
 
 	generateHTML(w, &templateData, "layout", "navbar.private", "handicraft.new", "component_sess_capacity")
@@ -290,14 +290,14 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := data.HandicraftDetailTemplateData{
-		SessUser:           user,
-		IsVerifier:         isVerifier(user.Id),
-		HandicraftBean:     handicraftBean,
-		ProjectBean:        projectBean,
-		QuoteObjectiveBean: objectiveBean,
-		Skills:             []data.Skill{},
-		Magics:             []data.Magic{},
-		EvidenceBean:       []data.EvidenceBean{},
+		SessUser:               user,
+		IsVerifier:             isVerifier(user.Id),
+		HandicraftBean:         handicraftBean,
+		ProjectBean:            projectBean,
+		QuoteObjectiveBean:     objectiveBean,
+		Skills:                 []data.Skill{},
+		Magics:                 []data.Magic{},
+		EvidenceHandicraftBean: []data.EvidenceHandicraftBean{},
 	}
 
 	generateHTML(w, &templateData, "layout", "navbar.private", "handicraft.detail")

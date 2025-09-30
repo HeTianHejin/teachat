@@ -2,7 +2,8 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li class="active">技能列表</li>
+  <li><a href="/v1/office">办公室</a></li>
+  <li class="active">我的技能列表</li>
 </ol>
 
 <div class="panel panel-default">
@@ -16,7 +17,7 @@
   </div>
 
   <div class="panel-body">
-    {{ if .Skills }}
+    {{ if .SkillUserBean.Skills }}
       <!-- 分页选项卡 -->
       <ul class="nav nav-tabs" role="tablist">
         <li role="presentation" class="active">
@@ -39,7 +40,7 @@
         <div role="tabpanel" class="tab-pane active" id="hard-skills">
           {{ if .HardSkills }}
             {{ range .HardSkills }}
-              {{ template "component_skill_bean" . }}
+              {{ template "component_user_skill_bean" . }}
             {{ end }}
           {{ else }}
             <div class="alert alert-info text-center">
@@ -53,7 +54,7 @@
         <div role="tabpanel" class="tab-pane" id="soft-skills">
           {{ if .SoftSkills }}
             {{ range .SoftSkills }}
-              {{ template "component_skill_bean" . }}
+              {{ template "component_user_skill_bean" . }}
             {{ end }}
           {{ else }}
             <div class="alert alert-info text-center">

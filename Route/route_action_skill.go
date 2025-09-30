@@ -1,7 +1,6 @@
 package route
 
 import (
-	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -221,39 +220,223 @@ func SkillsUserListGet(user data.User, w http.ResponseWriter, r *http.Request) {
 		util.Debug("cannot ensure default skills for user:", user.Id, err)
 	}
 
-	// 获取用户声明拥有的所有技能队列
-	skills, err := user.LoadAllSkills(r.Context())
-	if err != nil && err != sql.ErrNoRows {
-		util.Debug("cannot get skills by user_id:", user.Id, err)
+	// 获取SkillUserBean
+	skillUserBean, err := fetchSkillUserBean(user, r.Context())
+	if err != nil {
+		util.Debug("cannot fetch skill user bean:", user.Id, err)
 		report(w, r, "获取茶友技能列表失败，请重试。")
 		return
 	}
 
+	// 创建技能与用户技能的映射
+	skillUserMap := make(map[int]data.SkillUser)
+	for _, skillUser := range skillUserBean.SkillUsers {
+		skillUserMap[skillUser.SkillId] = skillUser
+	}
+
+	// 创建包含技能和用户信息的结构
+	type SkillWithUserInfo struct {
+		Skill     data.Skill
+		SkillUser data.SkillUser
+	}
+
 	// 按技能类型分组
-	var hardSkills, softSkills []data.Skill
-	for _, skill := range skills {
-		switch skill.Category {
-		case data.GeneralHardSkill:
-			hardSkills = append(hardSkills, skill)
-		case data.GeneralSoftSkill:
-			softSkills = append(softSkills, skill)
+	var hardSkills, softSkills []SkillWithUserInfo
+	for _, skill := range skillUserBean.Skills {
+		if skillUser, exists := skillUserMap[skill.Id]; exists {
+			skillWithInfo := SkillWithUserInfo{
+				Skill:     skill,
+				SkillUser: skillUser,
+			}
+			switch skill.Category {
+			case data.GeneralHardSkill:
+				hardSkills = append(hardSkills, skillWithInfo)
+			case data.GeneralSoftSkill:
+				softSkills = append(softSkills, skillWithInfo)
+			}
 		}
 	}
 
 	var SkillDetailTemplateData struct {
 		SessUser       data.User
-		Skills         []data.Skill
-		HardSkills     []data.Skill
-		SoftSkills     []data.Skill
+		SkillUserBean  data.SkillUserBean
+		HardSkills     []SkillWithUserInfo
+		SoftSkills     []SkillWithUserInfo
 		HardSkillCount int
 		SoftSkillCount int
 	}
+
 	SkillDetailTemplateData.SessUser = user
-	SkillDetailTemplateData.Skills = skills
+	SkillDetailTemplateData.SkillUserBean = skillUserBean
 	SkillDetailTemplateData.HardSkills = hardSkills
 	SkillDetailTemplateData.SoftSkills = softSkills
 	SkillDetailTemplateData.HardSkillCount = len(hardSkills)
 	SkillDetailTemplateData.SoftSkillCount = len(softSkills)
 
-	generateHTML(w, &SkillDetailTemplateData, "layout", "navbar.private", "skill.list", "component_skill_bean")
+	generateHTML(w, &SkillDetailTemplateData, "layout", "navbar.private", "skills.user_list", "component_user_skill_bean")
+}
+
+// Handler /v1/skill_user/edit
+func HandleSkillUserEdit(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+	switch r.Method {
+	case http.MethodGet:
+		SkillUserEditGet(s_u, w, r)
+	case http.MethodPost:
+		SkillUserEditPost(s_u, w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/skill_user/edit?id=123
+func SkillUserEditGet(user data.User, w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		report(w, r, "缺少技能记录ID参数。")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		report(w, r, "无效的技能记录ID。")
+		return
+	}
+
+	// 获取技能用户记录
+	var skillUser data.SkillUser
+	if err := skillUser.GetById(id, r.Context()); err != nil {
+		util.Debug("cannot get skill user by id", id, err)
+		report(w, r, "技能记录不存在。")
+		return
+	}
+
+	// 权限检查：只有同一家庭的parents成员可以编辑
+	if skillUser.UserId != user.Id {
+		// 获取目标用户的默认家庭
+		targetUser, err := data.GetUser(skillUser.UserId)
+		if err != nil {
+			report(w, r, "权限验证失败。")
+			return
+		}
+
+		targetFamily, err := targetUser.GetLastDefaultFamily()
+		if err != nil {
+			report(w, r, "权限验证失败。")
+			return
+		}
+
+		// 检查当前用户是否为该家庭的parent成员
+		isParent, err := targetFamily.IsParentMember(user.Id)
+		if err != nil || !isParent {
+			report(w, r, "您没有权限编辑此技能记录。")
+			return
+		}
+	}
+
+	// 获取技能信息
+	var skill data.Skill
+	skill.Id = skillUser.SkillId
+	if err := skill.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug("cannot get skill by id", skillUser.SkillId, err)
+		report(w, r, "技能信息获取失败。")
+		return
+	}
+
+	var editData struct {
+		SessUser  data.User
+		SkillUser data.SkillUser
+		Skill     data.Skill
+		ReturnURL string
+	}
+	editData.SessUser = user
+	editData.SkillUser = skillUser
+	editData.Skill = skill
+	editData.ReturnURL = r.URL.Query().Get("return_url")
+
+	generateHTML(w, &editData, "layout", "navbar.private", "skill_user.edit")
+}
+
+// POST /v1/skill_user/edit
+func SkillUserEditPost(user data.User, w http.ResponseWriter, r *http.Request) {
+	idStr := r.PostFormValue("id")
+	if idStr == "" {
+		report(w, r, "缺少技能记录ID参数。")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		report(w, r, "无效的技能记录ID。")
+		return
+	}
+
+	// 获取原始技能用户记录
+	var skillUser data.SkillUser
+	if err := skillUser.GetById(id, r.Context()); err != nil {
+		util.Debug("cannot get skill user by id", id, err)
+		report(w, r, "技能记录不存在。")
+		return
+	}
+
+	// 权限检查
+	if skillUser.UserId != user.Id {
+		targetUser, err := data.GetUser(skillUser.UserId)
+		if err != nil {
+			report(w, r, "权限验证失败。")
+			return
+		}
+
+		targetFamily, err := targetUser.GetLastDefaultFamily()
+		if err != nil {
+			report(w, r, "权限验证失败。")
+			return
+		}
+
+		isParent, err := targetFamily.IsParentMember(user.Id)
+		if err != nil || !isParent {
+			report(w, r, "您没有权限编辑此技能记录。")
+			return
+		}
+	}
+
+	// 解析表单数据
+	level, _ := strconv.Atoi(r.PostFormValue("level"))
+	if level < 1 || level > 9 {
+		report(w, r, "技能等级必须在1-9之间。")
+		return
+	}
+
+	status, _ := strconv.Atoi(r.PostFormValue("status"))
+	if status < 0 || status > 3 {
+		report(w, r, "技能状态值无效。")
+		return
+	}
+
+	// 更新技能用户记录
+	skillUser.Level = level
+	skillUser.Status = data.SkillUserStatus(status)
+
+	if err := skillUser.Update(); err != nil {
+		util.Debug("cannot update skill user", err)
+		report(w, r, "更新技能记录失败，请重试。")
+		return
+	}
+
+	// 获取返回URL
+	returnURL := r.PostFormValue("return_url")
+	if returnURL == "" {
+		returnURL = "/v1/skills/user_list"
+	}
+	http.Redirect(w, r, returnURL, http.StatusFound)
 }

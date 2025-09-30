@@ -1,0 +1,79 @@
+{{ define "component_user_skill_bean" }}
+
+{{/* 组件：用户技能展示 - 需要传入skill和对应的skillUser */}}
+
+{{ $skill := .Skill }}
+{{ $skillUser := .SkillUser }}
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left">
+        <a href="/v1/skill/detail?id={{ $skill.Id }}">
+          <img class="media-object" src="/v1/static/bootstrap-icons/gear.svg" alt="技能图标" width=40 height=40>
+        </a>
+      </div>
+
+      <div class="media-body">
+        <p>
+          <span class="label label-{{ if $skill.IsHighLevel }}success{{ else }}default{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ $skill.Level }}级
+          </span>
+
+          <span class="label label-primary" style="margin-inline-end: 30px;font-size: smaller;">
+            我的等级: {{ $skillUser.Level }}
+          </span>
+
+          <span class="label label-{{ if eq $skillUser.Status 3 }}success{{ else if eq $skillUser.Status 2 }}info{{ else if eq $skillUser.Status 1 }}warning{{ else }}danger{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ $skillUser.StatusString }}
+          </span>
+
+          <span class="label label-default" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ $skill.CategoryString }}
+          </span>
+
+          <span style="font-size: smaller;">
+            {{ $skill.CreatedDateTime }}
+          </span>
+        </p>
+
+        <h4>
+          <a href="/v1/skill/detail?id={{ $skill.Id }}">
+            {{ $skill.Name }}
+          </a>
+          {{ if $skill.IsHighLevel }}
+          <span class="label label-success">高级</span>
+          {{ end }}
+          <a href="/v1/skill_user/edit?id={{ $skillUser.Id }}" class="btn btn-xs btn-default pull-right">
+            <span class="glyphicon glyphicon-edit"></span> 编辑
+          </a>
+        </h4>
+
+        <p>{{ $skill.Description }}</p>
+
+        <p>
+          <div style="text-align: center; margin-top: 10px;">
+            <span style="margin-right: 15px;">
+              <i class="bi-lightning" style="font-size: 1.2rem; color: {{ if $skill.IsHighStrength }}orange{{ else }}gray{{ end }};"></i>
+              <span style="font-size: smaller;">体力: {{ $skill.StrengthLevelString }}</span>
+            </span>
+            <span style="margin-right: 15px;">
+              <i class="bi-graph-up" style="font-size: 1.2rem; color: {{ if $skill.IsHighDifficulty }}red{{ else }}gray{{ end }};"></i>
+              <span style="font-size: smaller;">难度: {{ $skill.DifficultyLevelString }}</span>
+            </span>
+            {{ if $skill.Nickname }}
+            <span>
+              <i class="bi-tag" style="font-size: 1.2rem; color: gray;"></i>
+              <span style="font-size: smaller;">{{ $skill.Nickname }}</span>
+            </span>
+            {{ end }}
+          </div>
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{{ end }}

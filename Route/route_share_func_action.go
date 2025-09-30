@@ -1,6 +1,7 @@
 package route
 
 import (
+	"context"
 	"fmt"
 	data "teachat/DAO"
 )
@@ -176,6 +177,28 @@ func fetchSuggestionBean(suggestion data.Suggestion) (data.SuggestionBean, error
 	if err := project.Get(); err == nil {
 		bean.Project = project
 	}
+
+	return bean, nil
+}
+
+// fetchSkillUserBean 获取完整的SkillUserBean
+func fetchSkillUserBean(user data.User, ctx context.Context) (data.SkillUserBean, error) {
+	var bean data.SkillUserBean
+	bean.User = user
+
+	// 获取用户技能记录
+	userSkills, err := data.GetUserSkills(user.Id, ctx)
+	if err != nil {
+		return bean, err
+	}
+	bean.SkillUsers = userSkills
+
+	// 获取对应的技能信息
+	skills, err := data.GetSkillsBySkillUsers(userSkills, ctx)
+	if err != nil {
+		return bean, err
+	}
+	bean.Skills = skills
 
 	return bean, nil
 }

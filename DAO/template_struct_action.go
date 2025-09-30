@@ -201,12 +201,12 @@ type HandicraftDetailTemplateData struct {
 	IsMaster   bool
 	IsInvited  bool
 
-	HandicraftBean     HandicraftBean
-	ProjectBean        ProjectBean
-	QuoteObjectiveBean ObjectiveBean
-	Skills             []Skill
-	Magics             []Magic
-	EvidenceBean       []EvidenceBean
+	HandicraftBean         HandicraftBean
+	ProjectBean            ProjectBean
+	QuoteObjectiveBean     ObjectiveBean
+	Skills                 []Skill
+	Magics                 []Magic
+	EvidenceHandicraftBean []EvidenceHandicraftBean
 }
 type HandicraftBean struct {
 	Handicraft Handicraft
@@ -214,16 +214,22 @@ type HandicraftBean struct {
 	Project    Project
 }
 
-// type SkillBean struct {
-// 	Skill  Skill
-// 	IsOpen bool
-// }
+type SkillUserBean struct {
+	User       User
+	Skills     []Skill
+	SkillUsers []SkillUser
+}
 
-//	type MagicBean struct {
-//		Magic  Magic
-//		IsOpen bool
-//	}
-type EvidenceBean struct {
-	Evidence Evidence
-	IsOpen   bool
+type MagicBean struct {
+	User      User
+	Magics    []Magic
+	MagicUser []MagicUser
+}
+type EvidenceSeeSeekBean struct {
+	Evidences []Evidence
+	SeeSeek   SeeSeek
+}
+type EvidenceHandicraftBean struct {
+	Evidences  []Evidence
+	Handicraft Handicraft
 }

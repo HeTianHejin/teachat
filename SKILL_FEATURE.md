@@ -15,7 +15,7 @@
 ### 模板文件
 - `templates/skill.new.go.html` - 新建技能页面
 - `templates/skill.detail.go.html` - 技能详情页面
-- `templates/skill.list.go.html` - 技能列表页面
+- `templates/skill.user_list.go.html` - 用户个人技能列表页面
 - `templates/component_skill_bean.go.html` - 技能组件模板
 
 ### 数据库
@@ -67,7 +67,7 @@
 ```go
 mux.HandleFunc("/v1/skill/new", route.HandleNewSkill)
 mux.HandleFunc("/v1/skill/detail", route.HandleSkillDetail)
-mux.HandleFunc("/v1/skills/user_list", route.HandleSkillList)
+mux.HandleFunc("/v1/skills/user_list", route.HandleSkillsUserList)
 ```
 
 ## 数据结构

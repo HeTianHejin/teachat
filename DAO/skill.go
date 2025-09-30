@@ -584,3 +584,16 @@ func EnsureDefaultSkills(userId int, ctx context.Context) error {
 	}
 	return nil
 }
+// SkillUser.GetById 根据ID获取用户技能记录
+func (su *SkillUser) GetById(id int, ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, skill_id, user_id, level, status, created_at, updated_at, deleted_at
+		FROM skill_users WHERE id = $1 AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	return stmt.QueryRowContext(ctx, id).Scan(&su.Id, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
+}
