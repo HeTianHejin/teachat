@@ -107,6 +107,21 @@ type Inauguration struct {
 	UpdatedAt      *time.Time
 }
 
+// Create 创建开工仪式记录
+func (i *Inauguration) Create() (err error) {
+	statement := `INSERT INTO inaugurations 
+		(uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+		RETURNING id, uuid`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), i.HandicraftId, i.Name, i.Description, i.RecorderUserId, i.EvidenceId, i.Status, time.Now()).Scan(&i.Id, &i.Uuid)
+	return err
+}
+
 // 事中，过程
 // 作业记录仪记录
 type ProcessRecord struct {
@@ -123,6 +138,21 @@ type ProcessRecord struct {
 	DeletedAt      *time.Time //软删除
 }
 
+// Create 创建过程记录
+func (p *ProcessRecord) Create() (err error) {
+	statement := `INSERT INTO process_records 
+		(uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+		RETURNING id, uuid`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), p.HandicraftId, p.Name, p.Description, p.RecorderUserId, p.EvidenceId, p.Status, time.Now()).Scan(&p.Id, &p.Uuid)
+	return err
+}
+
 // 事终，收尾，
 // 手工艺作业结束仪式，离手（场）快照。
 type Ending struct {
@@ -136,6 +166,21 @@ type Ending struct {
 	Status         int    // 状态：0、未记录，1、已记录（提交）
 	CreatedAt      time.Time
 	UpdatedAt      *time.Time
+}
+
+// Create 创建结束仪式记录
+func (e *Ending) Create() (err error) {
+	statement := `INSERT INTO endings 
+		(uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+		RETURNING id, uuid`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), e.HandicraftId, e.Name, e.Description, e.RecorderUserId, e.EvidenceId, e.Status, time.Now()).Scan(&e.Id, &e.Uuid)
+	return err
 }
 
 // HandicraftDifficulty 手工艺二维难度结构

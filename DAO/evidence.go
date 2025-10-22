@@ -25,11 +25,11 @@ type Evidence struct {
 	Width          int              // 图片/视频宽度，单位：像素
 	Height         int              // 图片/视频高度，单位：像素
 	Duration       int              // 视频/音频时长，单位：秒
+	Visibility     int              //可见性：0、公开，1、私有，仅当事家庭/团队可见
 	CreatedAt      time.Time
 	UpdatedAt      *time.Time
 	DeletedAt      *time.Time //软删除
 
-	Visibility int //可见性：0、公开，1、私有，仅当事家庭/团队可见
 }
 
 const (
@@ -76,12 +76,12 @@ func (ec EvidenceCategory) IsValid() bool {
 type HandicraftEvidence struct {
 	Id           int
 	Uuid         string
-	HandicraftId int // 手工艺Id
-	EvidenceId   int // 指向 Evidence{}
+	HandicraftId int    // 手工艺Id
+	EvidenceId   int    // 指向 Evidence{}
+	Note         string //备注,特别说明
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
 	DeletedAt    *time.Time //软删除
-	Note         string     //备注,特别说明
 }
 
 // Create 创建手工艺凭据关联
@@ -319,12 +319,12 @@ func GetEvidencesByCategory(category EvidenceCategory, limit int, ctx context.Co
 type SeeSeekLookEvidence struct {
 	Id         int
 	Uuid       string
-	SeeSeekId  int // 缺省值 0，标记属于那一个“看看”，see-seek.go -> SeeSeek{}
-	EvidenceId int // 缺省值 0，指向 Evidence{}
+	SeeSeekId  int    // 缺省值 0，标记属于那一个“看看”，see-seek.go -> SeeSeek{}
+	EvidenceId int    // 缺省值 0，指向 Evidence{}
+	Note       string //备注,特别说明
 	CreatedAt  time.Time
 	UpdatedAt  *time.Time
 	DeletedAt  *time.Time //软删除
-	Note       string     //备注,特别说明
 }
 
 // Create 创建“看看”凭据关联

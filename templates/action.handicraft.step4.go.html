@@ -1,0 +1,65 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">手工艺 - 步骤4</li>
+  <li>{{ template "component_sess_capacity" . }}</li>
+</ol>
+
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">手工艺记录 - 过程记录</h3>
+  </div>
+
+  <div class="panel-body">
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" style="width: 80%">
+        步骤 4/5
+      </div>
+    </div>
+    
+    <ol class="breadcrumb">
+      <li class="text-success">基本信息</li>
+      <li class="text-success">难度评估</li>
+      <li class="text-success">开工仪式</li>
+      <li class="active">过程记录</li>
+      <li>结束仪式</li>
+    </ol>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/handicraft/step4">
+      <input type="hidden" name="handicraft_uuid" value="{{ .Handicraft.Uuid }}">
+
+      <div class="form-group">
+        <label for="process_name">过程记录名称（可选）</label>
+        <input type="text" class="form-control" name="process_name" id="process_name" maxlength="50" />
+        <small class="help-block">例如：制作过程、操作步骤等</small>
+      </div>
+
+      <div class="form-group">
+        <label for="process_desc">过程记录描述（可选）</label>
+        <textarea class="form-control" name="process_desc" id="process_desc" rows="5" maxlength="456"></textarea>
+        <small class="help-block">记录作业过程中的关键步骤和注意事项</small>
+      </div>
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-arrow-right"></span> 下一步
+        </button>
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：过程记录有助于总结经验和改进方法。
+  </div>
+</div>
+
+{{ end }}

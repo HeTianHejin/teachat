@@ -62,19 +62,19 @@
 
 ## 页面功能
 
-### 1. 新建手艺 (`/v1/handicraft/project_new?project_uuid=xxx`)
+### 1. 新建手艺 (`/v1/handicraft/new?project_uuid=xxx`)
 - 基于项目创建手艺
 - 设置手艺基本信息和分级
 - 选择相关技能和法力
 - 配置人员角色
 
-### 2. 手艺详情 (`/v1/handicraft/project_detail?uuid=xxx`)
+### 2. 手艺详情 (`/v1/handicraft/detail?uuid=xxx`)
 - 展示手艺完整信息
 - 显示难度分析和特征
 - 展示关联的技能、法力和凭据
 - 提供项目跳转链接
 
-### 3. 手艺列表 (`/v1/handicrafts/project_list`)
+### 3. 手艺列表 (`/v1/handicrafts/list`)
 - 展示所有手艺记录
 - 使用组件化展示
 - 支持状态和难度筛选
@@ -88,16 +88,16 @@
 ```
 
 ### 2. 访问功能
-- 新建手艺: `http://localhost:8000/v1/handicraft/project_new?project_uuid=xxx`
-- 手艺列表: `http://localhost:8000/v1/handicrafts/project_list`
-- 手艺详情: `http://localhost:8000/v1/handicraft/project_detail?uuid=xxx`
+- 新建手艺: `http://localhost:8000/v1/handicraft/new?project_uuid=xxx`
+- 手艺列表: `http://localhost:8000/v1/handicrafts/list`
+- 手艺详情: `http://localhost:8000/v1/handicraft/detail?uuid=xxx`
 
 ### 3. 路由注册
 在 `main.go` 中已注册以下路由：
 ```go
-mux.HandleFunc("/v1/handicraft/project_new", route.HandleNewHandicraft)
-mux.HandleFunc("/v1/handicraft/project_detail", route.HandleHandicraftDetail)
-mux.HandleFunc("/v1/handicrafts/project_list", route.HandleHandicraftList)
+mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)
+mux.HandleFunc("/v1/handicraft/detail", route.HandleHandicraftDetail)
+mux.HandleFunc("/v1/handicrafts/list", route.HandleHandicraftList)
 ```
 
 ## 数据结构

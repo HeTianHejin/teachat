@@ -1,4 +1,11 @@
--- 手艺相关表
+-- 删除所有手艺相关表（按依赖顺序）
+DROP TABLE IF EXISTS handicraft_evidences CASCADE;
+DROP TABLE IF EXISTS handicraft_magics CASCADE;
+DROP TABLE IF EXISTS handicraft_skills CASCADE;
+DROP TABLE IF EXISTS handicraft_contributors CASCADE;
+DROP TABLE IF EXISTS handicrafts CASCADE;
+
+-- 重新创建手艺表
 CREATE TABLE handicrafts (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -24,6 +31,7 @@ CREATE TABLE handicraft_contributors (
     id                    SERIAL PRIMARY KEY,
     handicraft_id         INTEGER REFERENCES handicrafts(id),
     user_id               INTEGER REFERENCES users(id),
+    contribution_rate     INTEGER DEFAULT 50,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted_at            TIMESTAMP
 );
@@ -83,20 +91,5 @@ CREATE INDEX idx_handicraft_evidences_evidence_id ON handicraft_evidences(eviden
 
 -- 添加注释
 COMMENT ON TABLE handicrafts IS '手艺表';
-COMMENT ON COLUMN handicrafts.id IS '主键ID';
-COMMENT ON COLUMN handicrafts.uuid IS '唯一标识符';
 COMMENT ON COLUMN handicrafts.recorder_user_id IS '记录人用户ID';
-COMMENT ON COLUMN handicrafts.name IS '手艺名称';
-COMMENT ON COLUMN handicrafts.nickname IS '手艺别名';
-COMMENT ON COLUMN handicrafts.description IS '手艺描述';
-COMMENT ON COLUMN handicrafts.project_id IS '关联项目ID';
-COMMENT ON COLUMN handicrafts.initiator_id IS '策动人ID';
-COMMENT ON COLUMN handicrafts.owner_id IS '主理人ID';
-COMMENT ON COLUMN handicrafts.category IS '手艺分类';
-COMMENT ON COLUMN handicrafts.status IS '状态';
-COMMENT ON COLUMN handicrafts.skill_difficulty IS '技能难度(1-5)';
-COMMENT ON COLUMN handicrafts.magic_difficulty IS '创意难度(1-5)';
-COMMENT ON COLUMN handicrafts.contributor_count IS '协助者数量';
-COMMENT ON COLUMN handicrafts.created_at IS '创建时间';
-COMMENT ON COLUMN handicrafts.updated_at IS '更新时间';
-COMMENT ON COLUMN handicrafts.deleted_at IS '软删除时间';
+COMMENT ON COLUMN handicraft_contributors.contribution_rate IS '贡献值(1-100)';

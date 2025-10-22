@@ -1,0 +1,74 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">手工艺 - 步骤5</li>
+  <li>{{ template "component_sess_capacity" . }}</li>
+</ol>
+
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">手工艺记录 - 结束仪式</h3>
+  </div>
+
+  <div class="panel-body">
+    <div class="progress">
+      <div class="progress-bar progress-bar-success" role="progressbar" style="width: 100%">
+        步骤 5/5
+      </div>
+    </div>
+    
+    <ol class="breadcrumb">
+      <li class="text-success">基本信息</li>
+      <li class="text-success">难度评估</li>
+      <li class="text-success">开工仪式</li>
+      <li class="text-success">过程记录</li>
+      <li class="active">结束仪式</li>
+    </ol>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/handicraft/step5">
+      <input type="hidden" name="handicraft_uuid" value="{{ .Handicraft.Uuid }}">
+
+      <div class="form-group">
+        <label for="ending_name">结束仪式名称（可选）</label>
+        <input type="text" class="form-control" name="ending_name" id="ending_name" maxlength="50" />
+        <small class="help-block">例如：收尾工作、清理现场等</small>
+      </div>
+
+      <div class="form-group">
+        <label for="ending_desc">结束仪式描述（可选）</label>
+        <textarea class="form-control" name="ending_desc" id="ending_desc" rows="3" maxlength="456"></textarea>
+        <small class="help-block">记录作业结束后的状态和成果</small>
+      </div>
+
+      <div class="form-group">
+        <label for="status">最终状态</label>
+        <select class="form-control" name="status" id="status" required>
+          <option value="3">已完成（顺利结束）</option>
+          <option value="2">已暂停</option>
+          <option value="4">已放弃（因故未完成）</option>
+        </select>
+      </div>
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-success">
+          <span class="glyphicon glyphicon-ok"></span> 完成
+        </button>
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：恭喜！完成所有步骤后，手工艺记录将被保存。
+  </div>
+</div>
+
+{{ end }}

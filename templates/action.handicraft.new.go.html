@@ -1,16 +1,16 @@
 {{ define "content" }}
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a
-      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a>
-  </li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
   <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
-  <li class="active">+ 手艺</li>
-  <li>
-    {{ template "component_sess_capacity" . }}
-  </li>
+  <li class="active">+ 手工艺</li>
+  <li>{{ template "component_sess_capacity" . }}</li>
 </ol>
 
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">新建手工艺记录</h3>
+  </div>
   <div class="panel-body">
     <form method="post" action="/v1/handicraft/new" class="form-horizontal">
       <input type="hidden" name="project_uuid" value="{{ .ProjectBean.Project.Uuid }}">
@@ -42,18 +42,18 @@
           </div>
 
           <div class="form-group">
-            <label for="name" class="col-sm-2 control-label">手艺名称 *</label>
+            <label for="name" class="col-sm-2 control-label">手工艺名称 *</label>
             <div class="col-sm-10">
               <input type="text" class="form-control" name="name" id="name" 
-                     placeholder="如：制作特色食品、高空攀爬作业等" required maxlength="255">
+                     placeholder="如：制作特色食品、高空攀爬作业等" required minlength="2" maxlength="24">
             </div>
           </div>
 
           <div class="form-group">
-            <label for="nickname" class="col-sm-2 control-label">手艺别名</label>
+            <label for="nickname" class="col-sm-2 control-label">手工艺别名</label>
             <div class="col-sm-10">
               <input type="text" class="form-control" name="nickname" id="nickname" 
-                     placeholder="行业术语或简称" maxlength="255">
+                     placeholder="行业术语或简称" maxlength="24">
             </div>
           </div>
 
@@ -61,18 +61,18 @@
             <label for="description" class="col-sm-2 control-label">详细描述 *</label>
             <div class="col-sm-10">
               <textarea class="form-control" name="description" id="description" rows="4" 
-                        placeholder="详细描述手艺内容、操作要点、注意事项等" required></textarea>
+                        placeholder="详细描述手工艺内容、操作要点、注意事项等" required minlength="17" maxlength="456"></textarea>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- 手艺分级 -->
+      <!-- 手工艺分级 -->
       <div class="panel panel-default">
-        <div class="panel-heading">手艺分级</div>
+        <div class="panel-heading">手工艺分级</div>
         <div class="panel-body">
           <div class="form-group">
-            <label for="category" class="col-sm-2 control-label">手艺类型 *</label>
+            <label for="category" class="col-sm-2 control-label">手工艺类型 *</label>
             <div class="col-sm-10">
               <select class="form-control" name="category" id="category" required>
                 <option value="1" selected>轻体力</option>
@@ -236,9 +236,7 @@
 
       <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-primary">
-            <span class="glyphicon glyphicon-plus"></span> 创建手艺
-          </button>
+          <button type="submit" class="btn btn-primary">下一步</button>
           <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
         </div>
       </div>
@@ -247,7 +245,8 @@
 
   <div class="panel-footer">
     <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
-    茶博士：手艺是技能与法力的综合体现，记录手艺有助于项目管理和能力提升。
+    茶博士：手工艺记录需要分步骤完成，确保每个环节都得到充分记录。
   </div>
 </div>
+
 {{ end }}

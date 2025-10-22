@@ -233,9 +233,16 @@ func main() {
 	mux.HandleFunc("/v1/magics/team_list", route.HandleMagicsTeamList)
 
 	//defined in route_action_handicraft.go
-	mux.HandleFunc("/v1/handicraft/project_new", route.HandleNewHandicraft)
-	mux.HandleFunc("/v1/handicraft/project_detail", route.HandleHandicraftDetail)
-	mux.HandleFunc("/v1/handicrafts/project_list", route.HandleHandicraftList)
+	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)
+	mux.HandleFunc("/v1/handicraft/detail", route.HandleHandicraftDetail)
+	// defined in route_handicraft_step.go
+	mux.HandleFunc("/v1/handicraft/step2", route.HandleHandicraftStep2)
+	mux.HandleFunc("/v1/handicraft/step3", route.HandleHandicraftStep3)
+	mux.HandleFunc("/v1/handicraft/step4", route.HandleHandicraftStep4)
+	mux.HandleFunc("/v1/handicraft/step5", route.HandleHandicraftStep5)
+
+	//defined in route_evidence.go
+	mux.HandleFunc("/v1/evidence/new", route.HandleNewEvidence)
 
 	//defined in route_action_risk.go
 	mux.HandleFunc("/v1/risk/new", route.HandleNewRisk)
