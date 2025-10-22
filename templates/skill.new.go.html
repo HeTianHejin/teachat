@@ -102,9 +102,9 @@
         </div>
       </div>
 
-      <!-- 个人技能选项 -->
+      <!-- 技能绑定选项 -->
       <div class="panel panel-default">
-        <div class="panel-heading">个人技能选项</div>
+        <div class="panel-heading">技能绑定选项</div>
         <div class="panel-body">
           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
@@ -115,13 +115,29 @@
                   <small class="text-muted">- 勾选表示将此技能注册为自己掌握的技能</small>
                 </label>
               </div>
-              <div class="help-block">
-                <small class="text-info">
-                  <span class="glyphicon glyphicon-info-sign"></span>
-                  不勾选时仅登记共享技能，不会添加到个人技能列表
-                </small>
-              </div>
             </div>
+          </div>
+          {{ if .UserTeams }}
+          <div class="form-group">
+            <label class="col-sm-2 control-label">团队技能</label>
+            <div class="col-sm-10">
+              {{ range .UserTeams }}
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="add_to_team_skills" value="{{ .Id }}">
+                  <strong>添加到 {{ .Name }}</strong>
+                  <small class="text-muted">- 将此技能注册为团队掌握的技能</small>
+                </label>
+              </div>
+              {{ end }}
+            </div>
+          </div>
+          {{ end }}
+          <div class="help-block">
+            <small class="text-info">
+              <span class="glyphicon glyphicon-info-sign"></span>
+              不勾选任何选项时仅登记共享技能，不会添加到个人或团队技能列表
+            </small>
           </div>
         </div>
       </div>

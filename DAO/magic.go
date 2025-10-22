@@ -60,6 +60,33 @@ const (
 	Inspired                        // 灵感迸发，妙笔生花
 )
 
+// 团队【法力记录】
+type MagicTeam struct {
+	Id      int
+	MagicId int // 法力ID
+	TeamId  int // 团队ID
+	Level   int // 团队掌握该法力的段位(1-9)
+
+	// 团队法力状态:
+	// 0、混乱 --团队内部冲突、沟通不畅、目标不明
+	// 1、清晰 --团队思路清晰、目标明确
+	// 2、协同 --团队配合默契、高效协作
+	// 3、创新 --团队创新力强、突破性思维
+	Status    MagicTeamStatus
+	CreatedAt time.Time // 创建时间
+	UpdatedAt *time.Time
+	DeletedAt *time.Time //软删除
+}
+
+type MagicTeamStatus int
+
+const (
+	ChaoticMagicTeamStatus      MagicTeamStatus = iota // 0、混乱
+	ClearMagicTeamStatus                               // 1、清晰
+	CollaborativeMagicTeamStatus                       // 2、协同
+	InnovativeMagicTeamStatus                          // 3、创新
+)
+
 // IntelligenceLevel 智力耗费等级
 // 用于估量完成任务所需的学习成本、推理深度和创造性思维需求
 // 等级范围从1到5，数值越高表示智力需求越复杂
@@ -467,6 +494,130 @@ func (mu *MagicUser) GetById(id int, ctx context.Context) error {
 	return stmt.QueryRowContext(ctx, id).Scan(&mu.Id, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
 }
 
+// MagicTeam CRUD 方法
+
+// MagicTeam.Create 创建团队【法力记录】
+func (mt *MagicTeam) Create(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `INSERT INTO magic_teams (magic_id, team_id, level, status) VALUES ($1, $2, $3, $4) RETURNING id`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	return stmt.QueryRowContext(ctx, mt.MagicId, mt.TeamId, mt.Level, mt.Status).Scan(&mt.Id)
+}
+
+// MagicTeam.GetByTeamAndMagic 根据团队ID和法力ID获取团队【法力记录】
+func (mt *MagicTeam) GetByTeamAndMagic(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
+		FROM magic_teams WHERE team_id = $1 AND magic_id = $2 AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	return stmt.QueryRowContext(ctx, mt.TeamId, mt.MagicId).Scan(&mt.Id, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
+}
+
+// MagicTeam.Update 更新团队【法力记录】
+func (mt *MagicTeam) Update() error {
+	statement := `UPDATE magic_teams SET level = $2, status = $3, updated_at = $4 WHERE id = $1 AND deleted_at IS NULL`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(mt.Id, mt.Level, mt.Status, time.Now())
+	return err
+}
+
+// MagicTeam.Delete 软删除团队【法力记录】
+func (mt *MagicTeam) Delete() error {
+	statement := `UPDATE magic_teams SET deleted_at = $2 WHERE id = $1`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	now := time.Now()
+	_, err = stmt.Exec(mt.Id, now)
+	if err == nil {
+		mt.DeletedAt = &now
+	}
+	return err
+}
+
+// MagicTeam.StatusString 获取【法力记录】状态字符串
+func (mt *MagicTeam) StatusString() string {
+	switch mt.Status {
+	case ChaoticMagicTeamStatus:
+		return "混乱"
+	case ClearMagicTeamStatus:
+		return "清晰"
+	case CollaborativeMagicTeamStatus:
+		return "协同"
+	case InnovativeMagicTeamStatus:
+		return "创新"
+	default:
+		return "未知状态"
+	}
+}
+
+// GetTeamMagics 获取团队的所有法力记录
+func GetTeamMagics(teamId int, ctx context.Context) ([]MagicTeam, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
+		FROM magic_teams WHERE team_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
+	rows, err := db.QueryContext(ctx, statement, teamId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var teamMagics []MagicTeam
+	for rows.Next() {
+		var mt MagicTeam
+		err := rows.Scan(&mt.Id, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		teamMagics = append(teamMagics, mt)
+	}
+	return teamMagics, nil
+}
+
+// CountTeamMagics 统计团队有的法力记录数量
+func CountTeamMagics(teamId int, ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT COUNT(*) FROM magic_teams WHERE team_id = $1 AND deleted_at IS NULL`
+	var count int
+	err := db.QueryRowContext(ctx, statement, teamId).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// MagicTeam.GetById 根据ID获取团队法力记录
+func (mt *MagicTeam) GetById(id int, ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
+		FROM magic_teams WHERE id = $1 AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	return stmt.QueryRowContext(ctx, id).Scan(&mt.Id, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
+}
+
 // SearchMagicByName 按名称搜索法力
 func SearchMagicByName(keyword string, limit int, ctx context.Context) ([]Magic, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -552,6 +703,50 @@ func GetMagicsByMagicUsers(magicUsers []MagicUser, ctx context.Context) ([]Magic
 	magicIds := make([]int, len(magicUsers))
 	for i, mu := range magicUsers {
 		magicIds[i] = mu.MagicId
+	}
+
+	placeholders := make([]string, len(magicIds))
+	args := make([]interface{}, len(magicIds))
+	for i, id := range magicIds {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = id
+	}
+
+	statement := fmt.Sprintf(`SELECT id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level,
+		category, level, created_at, updated_at, deleted_at
+		FROM magics WHERE id IN (%s) AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`,
+		strings.Join(placeholders, ","))
+
+	rows, err := db.QueryContext(ctx, statement, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var magics []Magic
+	for rows.Next() {
+		var m Magic
+		err := rows.Scan(&m.Id, &m.Uuid, &m.UserId, &m.Name, &m.Nickname, &m.Description,
+			&m.IntelligenceLevel, &m.DifficultyLevel, &m.Category, &m.Level, &m.CreatedAt, &m.UpdatedAt, &m.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		magics = append(magics, m)
+	}
+	return magics, nil
+}
+
+// GetMagicsByMagicTeams 根据团队法力记录获取法力列表
+func GetMagicsByMagicTeams(magicTeams []MagicTeam, ctx context.Context) ([]Magic, error) {
+	if len(magicTeams) == 0 {
+		return []Magic{}, nil
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	magicIds := make([]int, len(magicTeams))
+	for i, mt := range magicTeams {
+		magicIds[i] = mt.MagicId
 	}
 
 	placeholders := make([]string, len(magicIds))

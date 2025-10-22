@@ -202,6 +202,7 @@ func fetchSkillUserBean(user data.User, ctx context.Context) (data.SkillUserBean
 
 	return bean, nil
 }
+
 // fetchMagicUserBean 获取完整的MagicUserBean
 func fetchMagicUserBean(user data.User, ctx context.Context) (data.MagicUserBean, error) {
 	var bean data.MagicUserBean
@@ -220,6 +221,62 @@ func fetchMagicUserBean(user data.User, ctx context.Context) (data.MagicUserBean
 		return bean, err
 	}
 	bean.Magics = magics
+
+	return bean, nil
+}
+
+// fetchSkillTeamBean 根据团队获取完整的SkillTeamBean
+func fetchSkillTeamBean(team data.Team, ctx context.Context) (data.SkillTeamBean, error) {
+	var bean data.SkillTeamBean
+	bean.Team = team
+
+	// 获取团队技能记录
+	teamSkills, err := data.GetTeamSkills(team.Id, ctx)
+	if err != nil {
+		return bean, err
+	}
+	bean.SkillTeams = teamSkills
+
+	// 获取对应的技能信息
+	if len(teamSkills) > 0 {
+		var skillUsers []data.SkillUser
+		for _, ts := range teamSkills {
+			skillUsers = append(skillUsers, data.SkillUser{SkillId: ts.SkillId})
+		}
+		skills, err := data.GetSkillsBySkillUsers(skillUsers, ctx)
+		if err != nil {
+			return bean, err
+		}
+		bean.Skills = skills
+	}
+
+	return bean, nil
+}
+
+// fetchMagicTeamBean 根据团队获取完整的MagicTeamBean
+func fetchMagicTeamBean(team data.Team, ctx context.Context) (data.MagicTeamBean, error) {
+	var bean data.MagicTeamBean
+	bean.Team = team
+
+	// 获取团队法力记录
+	teamMagics, err := data.GetTeamMagics(team.Id, ctx)
+	if err != nil {
+		return bean, err
+	}
+	bean.MagicTeams = teamMagics
+
+	// 获取对应的法力信息
+	if len(teamMagics) > 0 {
+		var magicUsers []data.MagicUser
+		for _, tm := range teamMagics {
+			magicUsers = append(magicUsers, data.MagicUser{MagicId: tm.MagicId})
+		}
+		magics, err := data.GetMagicsByMagicUsers(magicUsers, ctx)
+		if err != nil {
+			return bean, err
+		}
+		bean.Magics = magics
+	}
 
 	return bean, nil
 }

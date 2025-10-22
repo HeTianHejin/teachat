@@ -85,4 +85,7 @@ INSERT INTO magics (id, uuid, user_id, name, nickname, description, intelligence
 (6, 'magic-006-aesthetic', 1, '审美', '美感', '感受和欣赏美的能力，包括对艺术、自然等的审美判断', 3, 3, 2, 1, NOW());
 
 -- 保持数据但修复序列与数据的一致性（如果使用PostgreSQL）
--- SELECT setval('table-name_id_seq', (SELECT MAX(id) FROM table-name);
+SELECT setval('hazards_id_seq', (SELECT MAX(id) FROM hazards));
+SELECT setval('risks_id_seq', (SELECT MAX(id) FROM risks));
+SELECT setval('skills_id_seq', (SELECT MAX(id) FROM skills));
+SELECT setval('magics_id_seq', (SELECT MAX(id) FROM magics));

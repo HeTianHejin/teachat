@@ -884,6 +884,25 @@ func (team *Team) IsMember(user_id int) (is_member bool, err error) {
 	return team_member.UserId > 0, nil
 }
 
+// team *Team.IsCoreMember() 检查当前用户是否$事业茶团核心成员（CEO/CTO/CMO/CFO）
+func (team *Team) IsCoreMember(user_id int) (bool, error) {
+	if team.Id == TeamIdNone {
+		return false, fmt.Errorf("team not found with id: %d", team.Id)
+	}
+	if team.Id == TeamIdFreelancer {
+		return false, nil
+	}
+	team_member, err := GetMemberByTeamIdUserId(team.Id, user_id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+	// 检查是否为核心成员角色
+	return team_member.Role == RoleCEO || team_member.Role == "CTO" || team_member.Role == RoleCMO || team_member.Role == RoleCFO, nil
+}
+
 // 查询一个$事业茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 (team_member TeamMember,err error)
 // AWS CodeWhisperer assist in writing
 func (team *Team) MemberCEO() (team_member TeamMember, err error) {

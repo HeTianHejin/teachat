@@ -119,9 +119,11 @@
       <!-- 使用margin-y: 4单位 -->
       <ol class="nav nav-tabs nav-justified">
         <li class="active"><a href="#">在座成员</a></li>
+        <li><a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}">技能</a></li>
+        <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">法力</a></li>
+        <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
         <li><a href="/v1/team_member/role_changed?id={{ .Team.Uuid }}">角色变动</a></li>
         <li><a href="/v1/team_member/resigned?id={{ .Team.Uuid }}">离开成员</a></li>
-        <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
       </ol>
     </div>
 

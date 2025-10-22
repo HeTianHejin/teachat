@@ -38,11 +38,12 @@ type Handicraft struct {
 
 // 协助者/助攻人ID列表
 type HandicraftContributor struct {
-	Id           int
-	HandicraftId int
-	UserId       int // 助攻人ID
-	CreatedAt    time.Time
-	DeletedAt    *time.Time //软删除
+	Id               int
+	HandicraftId     int
+	UserId           int // 助攻人ID
+	ContributionRate int // 贡献值(1-100)
+	CreatedAt        time.Time
+	DeletedAt        *time.Time //软删除
 }
 
 // MagicSlice 手工艺作业的法力集合id
@@ -382,15 +383,15 @@ func IsAllHandicraftsCompleted(projectId int, ctx context.Context) (bool, error)
 // Create 创建协助者记录
 func (hc *HandicraftContributor) Create() (err error) {
 	statement := `INSERT INTO handicraft_contributors 
-		(handicraft_id, user_id, created_at) 
-		VALUES ($1, $2, $3) 
+		(handicraft_id, user_id, contribution_rate, created_at) 
+		VALUES ($1, $2, $3, $4) 
 		RETURNING id`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(hc.HandicraftId, hc.UserId, time.Now()).Scan(&hc.Id)
+	err = stmt.QueryRow(hc.HandicraftId, hc.UserId, hc.ContributionRate, time.Now()).Scan(&hc.Id)
 	return err
 }
 
@@ -410,9 +411,9 @@ func (hc *HandicraftContributor) Delete() error {
 	return err
 }
 
-// 获取手工艺的协助者列表
+// 获取手工艺的协助者列表，按贡献值降序排列
 func (h *Handicraft) GetContributors() ([]HandicraftContributor, error) {
-	rows, err := db.Query("SELECT id, handicraft_id, user_id, created_at, deleted_at FROM handicraft_contributors WHERE handicraft_id = $1 AND deleted_at IS NULL", h.Id)
+	rows, err := db.Query("SELECT id, handicraft_id, user_id, contribution_rate, created_at, deleted_at FROM handicraft_contributors WHERE handicraft_id = $1 AND deleted_at IS NULL ORDER BY contribution_rate DESC", h.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +422,7 @@ func (h *Handicraft) GetContributors() ([]HandicraftContributor, error) {
 	var contributors []HandicraftContributor
 	for rows.Next() {
 		var hc HandicraftContributor
-		err := rows.Scan(&hc.Id, &hc.HandicraftId, &hc.UserId, &hc.CreatedAt, &hc.DeletedAt)
+		err := rows.Scan(&hc.Id, &hc.HandicraftId, &hc.UserId, &hc.ContributionRate, &hc.CreatedAt, &hc.DeletedAt)
 		if err != nil {
 			return nil, err
 		}

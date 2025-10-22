@@ -102,6 +102,46 @@
         </div>
       </div>
 
+      <!-- 法力绑定选项 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">法力绑定选项</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="add_to_my_magics" value="1" checked>
+                  <strong>添加到我的法力</strong>
+                  <small class="text-muted">- 勾选表示将此法力注册为自己掌握的法力</small>
+                </label>
+              </div>
+            </div>
+          </div>
+          {{ if .UserTeams }}
+          <div class="form-group">
+            <label class="col-sm-2 control-label">团队法力</label>
+            <div class="col-sm-10">
+              {{ range .UserTeams }}
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="add_to_team_magics" value="{{ .Id }}">
+                  <strong>添加到 {{ .Name }}</strong>
+                  <small class="text-muted">- 将此法力注册为团队掌握的法力</small>
+                </label>
+              </div>
+              {{ end }}
+            </div>
+          </div>
+          {{ end }}
+          <div class="help-block">
+            <small class="text-info">
+              <span class="glyphicon glyphicon-info-sign"></span>
+              不勾选任何选项时仅登记共享法力，不会添加到个人或团队法力列表
+            </small>
+          </div>
+        </div>
+      </div>
+
       {{ if .ReturnURL }}
       <input type="hidden" name="return_url" value="{{ .ReturnURL }}">
       {{ end }}

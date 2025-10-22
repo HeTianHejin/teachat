@@ -74,12 +74,20 @@ func HandleSkillsUserList(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/skill/new
 func SkillNewGet(user data.User, w http.ResponseWriter, r *http.Request) {
+	// 获取用户所在的团队
+	userTeams, err := user.SurvivalTeams()
+	if err != nil {
+		util.Debug("cannot get user teams", err)
+		userTeams = []data.Team{} // 如果获取失败，使用空列表
+	}
 
 	var skillData struct {
 		SessUser  data.User
+		UserTeams []data.Team
 		ReturnURL string
 	}
 	skillData.SessUser = user
+	skillData.UserTeams = userTeams
 	skillData.ReturnURL = r.URL.Query().Get("return_url")
 
 	generateHTML(w, &skillData, "layout", "navbar.private", "skill.new")
@@ -150,6 +158,35 @@ func SkillNewPost(user data.User, w http.ResponseWriter, r *http.Request) {
 		}
 		if err := skillUser.Create(r.Context()); err != nil {
 			util.Debug("cannot create skill user record", err)
+			// 不阻止流程，仅记录错误
+		}
+	}
+
+	// 检查是否添加到团队技能列表
+	teamSkillIds := r.Form["add_to_team_skills"]
+	for _, teamIdStr := range teamSkillIds {
+		teamId, err := strconv.Atoi(teamIdStr)
+		if err != nil || teamId <= 0 {
+			continue
+		}
+		// 验证用户是否为该团队成员
+		team, err := data.GetTeam(teamId)
+		if err != nil {
+			continue
+		}
+		isMember, err := team.IsMember(user.Id)
+		if err != nil || !isMember {
+			continue
+		}
+		// 创建团队技能记录
+		skillTeam := data.SkillTeam{
+			SkillId: skill.Id,
+			TeamId:  teamId,
+			Level:   1,                          // 默认等级1
+			Status:  data.NormalSkillTeamStatus, // 默认正常状态
+		}
+		if err := skillTeam.Create(r.Context()); err != nil {
+			util.Debug("cannot create skill team record", err)
 			// 不阻止流程，仅记录错误
 		}
 	}
@@ -437,6 +474,257 @@ func SkillUserEditPost(user data.User, w http.ResponseWriter, r *http.Request) {
 	returnURL := r.PostFormValue("return_url")
 	if returnURL == "" {
 		returnURL = "/v1/skills/user_list"
+	}
+	http.Redirect(w, r, returnURL, http.StatusFound)
+}
+
+// Handler /v1/skills/team_list
+func HandleSkillsTeamList(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+	SkillsTeamListGet(s_u, w, r)
+}
+
+// GET /v1/skills/team_list?uuid=xxx
+func SkillsTeamListGet(user data.User, w http.ResponseWriter, r *http.Request) {
+	uuidStr := r.URL.Query().Get("uuid")
+	if uuidStr == "" {
+		report(w, r, "缺少团队UUID参数。")
+		return
+	}
+
+	// 获取团队信息
+	team, err := data.GetTeamByUUID(uuidStr)
+	if err != nil {
+		util.Debug("cannot get team by uuid", uuidStr, err)
+		report(w, r, "团队不存在。")
+		return
+	}
+
+	// 检查权限：只有团队成员可以查看
+	// isMember, err := team.IsMember(user.Id)
+	// if err != nil || !isMember {
+	// 	report(w, r, "您没有权限查看此团队的技能列表。")
+	// 	return
+	// }
+
+	// 获取SkillTeamBean
+	skillTeamBean, err := fetchSkillTeamBean(team, r.Context())
+	if err != nil {
+		util.Debug("cannot fetch skill team bean:", team.Id, err)
+		report(w, r, "获取团队技能列表失败，请重试。")
+		return
+	}
+
+	// 创建技能与团队技能的映射
+	skillTeamMap := make(map[int]data.SkillTeam)
+	for _, skillTeam := range skillTeamBean.SkillTeams {
+		skillTeamMap[skillTeam.SkillId] = skillTeam
+	}
+
+	// 创建包含技能和团队信息的结构
+	type SkillWithTeamInfo struct {
+		Skill     data.Skill
+		SkillTeam data.SkillTeam
+	}
+
+	// 按技能类型分组
+	var hardSkills, softSkills []SkillWithTeamInfo
+	for _, skill := range skillTeamBean.Skills {
+		if skillTeam, exists := skillTeamMap[skill.Id]; exists {
+			skillWithInfo := SkillWithTeamInfo{
+				Skill:     skill,
+				SkillTeam: skillTeam,
+			}
+			switch skill.Category {
+			case data.GeneralHardSkill:
+				hardSkills = append(hardSkills, skillWithInfo)
+			case data.GeneralSoftSkill:
+				softSkills = append(softSkills, skillWithInfo)
+			}
+		}
+	}
+
+	var SkillDetailTemplateData struct {
+		SessUser       data.User
+		Team           data.Team
+		SkillTeamBean  data.SkillTeamBean
+		HardSkills     []SkillWithTeamInfo
+		SoftSkills     []SkillWithTeamInfo
+		HardSkillCount int
+		SoftSkillCount int
+	}
+
+	SkillDetailTemplateData.SessUser = user
+	SkillDetailTemplateData.Team = team
+	SkillDetailTemplateData.SkillTeamBean = skillTeamBean
+	SkillDetailTemplateData.HardSkills = hardSkills
+	SkillDetailTemplateData.SoftSkills = softSkills
+	SkillDetailTemplateData.HardSkillCount = len(hardSkills)
+	SkillDetailTemplateData.SoftSkillCount = len(softSkills)
+
+	generateHTML(w, &SkillDetailTemplateData, "layout", "navbar.private", "skills.team_list", "component_team_skill_bean")
+}
+
+// Handler /v1/skill_team/edit
+func HandleSkillTeamEdit(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+	switch r.Method {
+	case http.MethodGet:
+		SkillTeamEditGet(s_u, w, r)
+	case http.MethodPost:
+		SkillTeamEditPost(s_u, w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/skill_team/edit?id=123
+func SkillTeamEditGet(user data.User, w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		report(w, r, "缺少技能记录ID参数。")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		report(w, r, "无效的技能记录ID。")
+		return
+	}
+
+	// 获取团队技能记录
+	var skillTeam data.SkillTeam
+	if err := skillTeam.GetById(id, r.Context()); err != nil {
+		util.Debug("cannot get skill team by id", id, err)
+		report(w, r, "技能记录不存在。")
+		return
+	}
+
+	// 获取团队信息
+	team, err := data.GetTeam(skillTeam.TeamId)
+	if err != nil {
+		report(w, r, "团队信息获取失败。")
+		return
+	}
+
+	// 权限检查：只有团队核心成员可以编辑
+	isCoreMember, err := team.IsCoreMember(user.Id)
+	if err != nil || !isCoreMember {
+		report(w, r, "您没有权限编辑此技能记录。")
+		return
+	}
+
+	// 获取技能信息
+	var skill data.Skill
+	skill.Id = skillTeam.SkillId
+	if err := skill.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug("cannot get skill by id", skillTeam.SkillId, err)
+		report(w, r, "技能信息获取失败。")
+		return
+	}
+
+	var editData struct {
+		SessUser  data.User
+		Team      data.Team
+		SkillTeam data.SkillTeam
+		Skill     data.Skill
+		ReturnURL string
+	}
+	editData.SessUser = user
+	editData.Team = team
+	editData.SkillTeam = skillTeam
+	editData.Skill = skill
+	editData.ReturnURL = r.URL.Query().Get("return_url")
+
+	generateHTML(w, &editData, "layout", "navbar.private", "skill_team.edit")
+}
+
+// POST /v1/skill_team/edit
+func SkillTeamEditPost(user data.User, w http.ResponseWriter, r *http.Request) {
+	idStr := r.PostFormValue("id")
+	if idStr == "" {
+		report(w, r, "缺少技能记录ID参数。")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil || id <= 0 {
+		report(w, r, "无效的技能记录ID。")
+		return
+	}
+
+	// 获取原始团队技能记录
+	var skillTeam data.SkillTeam
+	if err := skillTeam.GetById(id, r.Context()); err != nil {
+		util.Debug("cannot get skill team by id", id, err)
+		report(w, r, "技能记录不存在。")
+		return
+	}
+
+	// 获取团队信息并检查权限
+	team, err := data.GetTeam(skillTeam.TeamId)
+	if err != nil {
+		report(w, r, "团队信息获取失败。")
+		return
+	}
+
+	isCoreMember, err := team.IsCoreMember(user.Id)
+	if err != nil || !isCoreMember {
+		report(w, r, "您没有权限编辑此技能记录。")
+		return
+	}
+
+	// 解析表单数据
+	level, _ := strconv.Atoi(r.PostFormValue("level"))
+	if level < 1 || level > 9 {
+		report(w, r, "技能等级必须在1-9之间。")
+		return
+	}
+
+	status, _ := strconv.Atoi(r.PostFormValue("status"))
+	if status < 0 || status > 3 {
+		report(w, r, "技能状态值无效。")
+		return
+	}
+
+	// 更新团队技能记录
+	skillTeam.Level = level
+	skillTeam.Status = data.SkillTeamStatus(status)
+
+	if err := skillTeam.Update(); err != nil {
+		util.Debug("cannot update skill team", err)
+		report(w, r, "更新技能记录失败，请重试。")
+		return
+	}
+
+	// 获取返回URL
+	returnURL := r.PostFormValue("return_url")
+	if returnURL == "" {
+		returnURL = fmt.Sprintf("/v1/skills/team_list?uuid=%s", team.Uuid)
 	}
 	http.Redirect(w, r, returnURL, http.StatusFound)
 }

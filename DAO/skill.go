@@ -82,6 +82,33 @@ const (
 	StrongSkillUserStatus                          // 3、强能
 )
 
+// 团队【技能记录】
+type SkillTeam struct {
+	Id      int
+	SkillId int // 技能ID
+	TeamId  int // 团队ID
+	Level   int // 团队掌握该技能的等级，1-9
+
+	// 团队技能状态:
+	// 0、不可用 --团队解散、设备损坏、人员离职
+	// 1、低效 --人员不足、设备老化、经验不足
+	// 2、正常 --团队正常运作水平
+	// 3、高效 --专业团队、设备先进、经验丰富
+	Status    SkillTeamStatus
+	CreatedAt time.Time // 创建时间
+	UpdatedAt *time.Time
+	DeletedAt *time.Time //软删除
+}
+
+type SkillTeamStatus int
+
+const (
+	UnavailableSkillTeamStatus    SkillTeamStatus = iota // 0、不可用
+	LowEfficiencySkillTeamStatus                         // 1、低效
+	NormalSkillTeamStatus                                // 2、正常
+	HighEfficiencySkillTeamStatus                        // 3、高效
+)
+
 // CRUD 操作方法
 
 // Skill.Create 创建新的技能
@@ -554,6 +581,7 @@ func (u *User) LoadAllSkills(ctx context.Context) ([]Skill, error) {
 	}
 	return skills, nil
 }
+
 // EnsureDefaultSkills 确保用户拥有默认技能
 func EnsureDefaultSkills(userId int, ctx context.Context) error {
 	// 检查用户是否已有技能记录
@@ -561,21 +589,21 @@ func EnsureDefaultSkills(userId int, ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	
+
 	// 如果用户已有技能记录，跳过初始化
 	if count > 0 {
 		return nil
 	}
-	
+
 	// 默认技能ID列表（对应setup_default_values.sql中的前6个技能）
 	defaultSkillIds := []int{1, 2, 3, 4, 5, 6}
-	
+
 	for _, skillId := range defaultSkillIds {
 		skillUser := SkillUser{
 			SkillId: skillId,
 			UserId:  userId,
-			Level:   1,                          // 默认等级1
-			Status:  NormalSkillUserStatus,      // 默认中能状态
+			Level:   1,                     // 默认等级1
+			Status:  NormalSkillUserStatus, // 默认中能状态
 		}
 		if err := skillUser.Create(ctx); err != nil {
 			// 记录错误但继续处理其他技能
@@ -584,7 +612,8 @@ func EnsureDefaultSkills(userId int, ctx context.Context) error {
 	}
 	return nil
 }
-// SkillUser.GetById 根据ID获取用户技能记录
+
+// SkillUser.GetById 根据ID获取【用户技能记录】
 func (su *SkillUser) GetById(id int, ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -596,6 +625,130 @@ func (su *SkillUser) GetById(id int, ctx context.Context) error {
 	}
 	defer stmt.Close()
 	return stmt.QueryRowContext(ctx, id).Scan(&su.Id, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
+}
+
+// SkillTeam CRUD 方法
+
+// SkillTeam.Create 创建【团队技能记录】
+func (st *SkillTeam) Create(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `INSERT INTO skill_teams (skill_id, team_id, level, status) VALUES ($1, $2, $3, $4) RETURNING id`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	return stmt.QueryRowContext(ctx, st.SkillId, st.TeamId, st.Level, st.Status).Scan(&st.Id)
+}
+
+// SkillTeam.GetByTeamAndSkill 根据团队ID和技能ID获取【团队技能记录】
+func (st *SkillTeam) GetByTeamAndSkill(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
+		FROM skill_teams WHERE team_id = $1 AND skill_id = $2 AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	return stmt.QueryRowContext(ctx, st.TeamId, st.SkillId).Scan(&st.Id, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
+}
+
+// SkillTeam.Update 更新团队【团队技能记录】
+func (st *SkillTeam) Update() error {
+	statement := `UPDATE skill_teams SET level = $2, status = $3, updated_at = $4 WHERE id = $1 AND deleted_at IS NULL`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(st.Id, st.Level, st.Status, time.Now())
+	return err
+}
+
+// SkillTeam.Delete 软删除【团队技能记录】
+func (st *SkillTeam) Delete() error {
+	statement := `UPDATE skill_teams SET deleted_at = $2 WHERE id = $1`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	now := time.Now()
+	_, err = stmt.Exec(st.Id, now)
+	if err == nil {
+		st.DeletedAt = &now
+	}
+	return err
+}
+
+// SkillTeam.StatusString 获取【团队技能记录】状态字符串
+func (st *SkillTeam) StatusString() string {
+	switch st.Status {
+	case UnavailableSkillTeamStatus:
+		return "不可用"
+	case LowEfficiencySkillTeamStatus:
+		return "低效"
+	case NormalSkillTeamStatus:
+		return "正常"
+	case HighEfficiencySkillTeamStatus:
+		return "高效"
+	default:
+		return "未知状态"
+	}
+}
+
+// GetTeamSkills 获取【团队技能记录】列表
+func GetTeamSkills(teamId int, ctx context.Context) ([]SkillTeam, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
+		FROM skill_teams WHERE team_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
+	rows, err := db.QueryContext(ctx, statement, teamId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var teamSkills []SkillTeam
+	for rows.Next() {
+		var st SkillTeam
+		err := rows.Scan(&st.Id, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		teamSkills = append(teamSkills, st)
+	}
+	return teamSkills, nil
+}
+
+// CountTeamSkills 统计团队拥有的【团队技能记录】数量
+func CountTeamSkills(teamId int, ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT COUNT(*) FROM skill_teams WHERE team_id = $1 AND deleted_at IS NULL`
+	var count int
+	err := db.QueryRowContext(ctx, statement, teamId).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// SkillTeam.GetById 根据ID获取【团队技能记录】
+func (st *SkillTeam) GetById(id int, ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
+		FROM skill_teams WHERE id = $1 AND deleted_at IS NULL`
+	stmt, err := db.PrepareContext(ctx, statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	return stmt.QueryRowContext(ctx, id).Scan(&st.Id, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
 }
 
 // SearchSkillByName 按名称搜索技能

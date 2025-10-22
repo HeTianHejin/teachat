@@ -121,35 +121,88 @@
             <label for="initiator_id" class="col-sm-2 control-label">策动人ID</label>
             <div class="col-sm-10">
               <input type="number" class="form-control" name="initiator_id" id="initiator_id" 
-                     value="{{ .SessUser.Id }}" min="1">
-              <small class="help-block">默认为当前用户</small>
+                     value="{{ .DefaultInitiatorId }}" min="1">
+              <small class="help-block">默认为收茶叶方团队CEO</small>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="owner_id" class="col-sm-2 control-label">主理人ID</label>
+            <label for="owner_id" class="col-sm-2 control-label">主理人ID *</label>
             <div class="col-sm-10">
               <input type="number" class="form-control" name="owner_id" id="owner_id" 
-                     value="{{ .SessUser.Id }}" min="1">
-              <small class="help-block">默认为当前用户</small>
+                     placeholder="请填写主理人用户ID" min="1" required>
+              <small class="help-block">请填写实际主理人的用户ID</small>
             </div>
           </div>
+
+          <div class="form-group">
+            <label class="col-sm-2 control-label">协助者</label>
+            <div class="col-sm-10">
+              <div id="contributors-container">
+                <div class="contributor-item" style="margin-bottom: 10px;">
+                  <div class="row">
+                    <div class="col-sm-6">
+                      <input type="number" class="form-control" name="contributor_ids[]" 
+                             placeholder="协助者用户ID" min="1">
+                    </div>
+                    <div class="col-sm-6">
+                      <input type="number" class="form-control" name="contributor_rates[]" 
+                             placeholder="贡献值(1-100)" min="1" max="100">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-sm btn-default" onclick="addContributor()">
+                <span class="glyphicon glyphicon-plus"></span> 添加协助者
+              </button>
+              <small class="help-block">按贡献值排序，贡献值越高排序越靠前</small>
+            </div>
+          </div>
+
+          <script>
+          function addContributor() {
+            var container = document.getElementById('contributors-container');
+            var newItem = document.createElement('div');
+            newItem.className = 'contributor-item';
+            newItem.style.marginBottom = '10px';
+            newItem.innerHTML = `
+              <div class="row">
+                <div class="col-sm-6">
+                  <input type="number" class="form-control" name="contributor_ids[]" 
+                         placeholder="协助者用户ID" min="1">
+                </div>
+                <div class="col-sm-6">
+                  <div class="input-group">
+                    <input type="number" class="form-control" name="contributor_rates[]" 
+                           placeholder="贡献值(1-100)" min="1" max="100">
+                    <span class="input-group-btn">
+                      <button type="button" class="btn btn-danger" onclick="this.closest('.contributor-item').remove()">
+                        <span class="glyphicon glyphicon-remove"></span>
+                      </button>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            `;
+            container.appendChild(newItem);
+          }
+          </script>
         </div>
       </div>
 
       <!-- 技能选择 -->
-      {{ if .SkillBean }}
+      {{ if .Skills }}
       <div class="panel panel-default">
         <div class="panel-heading">相关技能</div>
         <div class="panel-body">
           <div class="row">
-            {{ range .SkillBean }}
+            {{ range .Skills }}
             <div class="col-md-6">
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="skill_ids" value="{{ .Skill.Id }}">
-                  {{ .Skill.Name }}
-                  <small class="text-muted">({{ .Skill.CategoryString }})</small>
+                  <input type="checkbox" name="skill_ids" value="{{ .Id }}">
+                  {{ .Name }}
+                  <small class="text-muted">({{ .CategoryString }})</small>
                 </label>
               </div>
             </div>
@@ -160,18 +213,18 @@
       {{ end }}
 
       <!-- 法力选择 -->
-      {{ if .MagicBean }}
+      {{ if .Magics }}
       <div class="panel panel-default">
         <div class="panel-heading">相关法力</div>
         <div class="panel-body">
           <div class="row">
-            {{ range .MagicBean }}
+            {{ range .Magics }}
             <div class="col-md-6">
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="magic_ids" value="{{ .Magic.Id }}">
-                  {{ .Magic.Name }}
-                  <small class="text-muted">({{ .Magic.CategoryString }})</small>
+                  <input type="checkbox" name="magic_ids" value="{{ .Id }}">
+                  {{ .Name }}
+                  <small class="text-muted">({{ .CategoryString }})</small>
                 </label>
               </div>
             </div>
