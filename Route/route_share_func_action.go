@@ -280,3 +280,38 @@ func fetchMagicTeamBean(team data.Team, ctx context.Context) (data.MagicTeamBean
 
 	return bean, nil
 }
+
+// fetchHandicraftBean 根据handicraft，获取完整的HandicraftBean
+func fetchHandicraftBean(handicraft data.Handicraft) (data.HandicraftBean, error) {
+	var bean data.HandicraftBean
+	bean.Handicraft = handicraft
+	bean.IsOpen = (handicraft.Category == data.HandicraftCategoryPublic)
+
+	// 获取项目信息
+	project := data.Project{Id: handicraft.ProjectId}
+	if err := project.Get(); err == nil {
+		bean.Project = project
+	}
+
+	// 获取协助者列表
+	if contributors, err := handicraft.GetContributors(); err == nil {
+		bean.Contributors = contributors
+	}
+
+	// 获取开工仪式（允许为空）
+	if inaugurations, err := data.GetInaugurationsByHandicraftId(handicraft.Id); err == nil && len(inaugurations) > 0 {
+		bean.Inauguration = &inaugurations[0]
+	}
+
+	// 获取过程记录（允许为空）
+	if processRecords, err := data.GetProcessRecordsByHandicraftId(handicraft.Id); err == nil {
+		bean.ProcessRecords = processRecords
+	}
+
+	// 获取结束仪式（允许为空）
+	if endings, err := data.GetEndingsByHandicraftId(handicraft.Id); err == nil && len(endings) > 0 {
+		bean.Ending = &endings[0]
+	}
+
+	return bean, nil
+}

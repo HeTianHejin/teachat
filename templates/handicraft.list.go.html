@@ -13,8 +13,8 @@
   </div>
 
   <div class="panel-body">
-    {{ if .Handicrafts }}
-      {{ range .Handicrafts }}
+    {{ if .HandicraftBeans }}
+      {{ range .HandicraftBeans }}
         {{ template "component_handicraft_bean" . }}
       {{ end }}
     {{ else }}

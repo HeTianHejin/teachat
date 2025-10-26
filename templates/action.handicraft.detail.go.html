@@ -2,69 +2,388 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
-  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
-  <li class="active">手工艺详情</li>
-  <li>{{ template "component_sess_capacity" . }}</li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}</a></li>
+  <li class="active">手艺详情</li>
 </ol>
-
-{{ template "component_project_simple_detail" . }}
 
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h3 class="panel-title">手工艺记录详情</h3>
+    <span class="glyphicon glyphicon-wrench"></span>
+    手艺 #{{ .HandicraftBean.Handicraft.Id }} - {{ .HandicraftBean.Handicraft.Name }}
+    <span class="label label-{{ if eq .HandicraftBean.Handicraft.Status 3 }}success{{ else if eq .HandicraftBean.Handicraft.Status 1 }}info{{ else }}default{{ end }} pull-right">
+      {{ .HandicraftBean.Handicraft.StatusString }}
+    </span>
   </div>
-
   <div class="panel-body">
-    <dl class="dl-horizontal">
-      <dt>名称</dt>
-      <dd>{{ .Handicraft.Name }}</dd>
+    
+    <!-- 基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>基本信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>ID</strong></td>
+            <td>{{ .HandicraftBean.Handicraft.Id }}</td>
+          </tr>
+          <tr>
+            <td><strong>手艺名称</strong></td>
+            <td>{{ .HandicraftBean.Handicraft.Name }}</td>
+          </tr>
+          {{ if .HandicraftBean.Handicraft.Nickname }}
+          <tr>
+            <td><strong>手艺别名</strong></td>
+            <td>{{ .HandicraftBean.Handicraft.Nickname }}</td>
+          </tr>
+          {{ end }}
+          <tr>
+            <td><strong>手艺类型</strong></td>
+            <td>
+              <span class="label label-default">{{ .HandicraftBean.Handicraft.Type.TypeString }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>分类</strong></td>
+            <td>
+              <span class="label label-{{ if eq .HandicraftBean.Handicraft.Category 0 }}info{{ else }}warning{{ end }}">
+                {{ if eq .HandicraftBean.Handicraft.Category 0 }}公开{{ else }}私密{{ end }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>状态</strong></td>
+            <td>
+              <span class="label label-{{ if eq .HandicraftBean.Handicraft.Status 3 }}success{{ else if eq .HandicraftBean.Handicraft.Status 1 }}info{{ else }}default{{ end }}">
+                {{ .HandicraftBean.Handicraft.StatusString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>记录人ID</strong></td>
+            <td>{{ .HandicraftBean.Handicraft.RecorderUserId }}</td>
+          </tr>
+          <tr>
+            <td><strong>策动人ID</strong></td>
+            <td>{{ .HandicraftBean.Handicraft.InitiatorId }}</td>
+          </tr>
+          <tr>
+            <td><strong>主理人ID</strong></td>
+            <td>{{ .HandicraftBean.Handicraft.OwnerId }}</td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .HandicraftBean.Handicraft.CreatedDateTime }}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>详细描述</h4>
+        <div class="well">
+          <p>{{ .HandicraftBean.Handicraft.Description }}</p>
+        </div>
+        
+        <h5>难度分析</h5>
+        <div class="row">
+          <div class="col-sm-6">
+            <div class="text-center">
+              <h6>技能难度</h6>
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ if ge .HandicraftBean.Handicraft.SkillDifficulty 4 }}danger{{ else }}info{{ end }}" 
+                     style="width: {{ .HandicraftBean.Handicraft.SkillDifficulty }}0%">
+                  {{ .HandicraftBean.Handicraft.SkillDifficulty }}/5
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-center">
+              <h6>创意难度</h6>
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ if ge .HandicraftBean.Handicraft.MagicDifficulty 4 }}warning{{ else }}info{{ end }}" 
+                     style="width: {{ .HandicraftBean.Handicraft.MagicDifficulty }}0%">
+                  {{ .HandicraftBean.Handicraft.MagicDifficulty }}/5
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {{ if .Handicraft.Nickname }}
-      <dt>昵称</dt>
-      <dd>{{ .Handicraft.Nickname }}</dd>
-      {{ end }}
+        <div class="alert alert-info">
+          <strong>难度特征：</strong>{{ .HandicraftBean.Handicraft.GetDifficultyType }}
+          <br>
+          <strong>综合难度：</strong>{{ .HandicraftBean.Handicraft.GetOverallDifficulty }}/5
+        </div>
 
-      <dt>描述</dt>
-      <dd>{{ .Handicraft.Description }}</dd>
+        <h5>类型说明</h5>
+        <div class="alert alert-default">
+          <small>{{ .HandicraftBean.Handicraft.Type.Description }}</small>
+        </div>
+      </div>
+    </div>
 
-      <dt>分类</dt>
-      <dd>{{ .Handicraft.Category.CategoryString }}</dd>
+    <!-- 关联项目 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>关联项目</h4>
+        <div class="well">
+          <h5><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}</a></h5>
+          <p>{{ .ProjectBean.Project.Body }}</p>
+          <small class="text-muted">目标：{{ .QuoteObjectiveBean.Objective.Title }}</small>
+        </div>
+      </div>
+    </div>
 
-      <dt>状态</dt>
-      <dd>
-        <span class="label label-{{ if eq .Handicraft.Status 3 }}success{{ else if eq .Handicraft.Status 1 }}info{{ else if eq .Handicraft.Status 2 }}warning{{ else if eq .Handicraft.Status 4 }}danger{{ else }}default{{ end }}">
-          {{ .Handicraft.StatusString }}
-        </span>
-      </dd>
-
-      <dt>技能难度</dt>
-      <dd>
-        {{ range $i := iterate .Handicraft.SkillDifficulty }}
-        <span class="glyphicon glyphicon-star" style="color: gold;"></span>
+    <!-- 协助者 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>协助者 <span class="badge">{{ .HandicraftBean.Handicraft.ContributorCount }}</span></h4>
+        {{ if .HandicraftBean.Contributors }}
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>用户ID</th>
+                <th>贡献值</th>
+                <th>创建时间</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{ range .HandicraftBean.Contributors }}
+              <tr>
+                <td>{{ .UserId }}</td>
+                <td>
+                  <div class="progress" style="margin-bottom: 0;">
+                    <div class="progress-bar progress-bar-success" style="width: {{ .ContributionRate }}%">
+                      {{ .ContributionRate }}%
+                    </div>
+                  </div>
+                </td>
+                <td><small>{{ .CreatedAt.Format "2006-01-02 15:04" }}</small></td>
+              </tr>
+              {{ end }}
+            </tbody>
+          </table>
+        {{ else }}
+          <p class="text-muted">暂无协助者</p>
         {{ end }}
-        ({{ .Handicraft.SkillDifficulty }}/5)
-      </dd>
+      </div>
+    </div>
 
-      <dt>创意难度</dt>
-      <dd>
-        {{ range $i := iterate .Handicraft.MagicDifficulty }}
-        <span class="glyphicon glyphicon-star" style="color: gold;"></span>
+    <!-- 相关技能和法力 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>相关技能</h4>
+        {{ if .Skills }}
+          {{ range .Skills }}
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <h5><a href="/v1/skill/detail?id={{ .Id }}">{{ .Name }}</a></h5>
+              <p>{{ .Description }}</p>
+              <small class="text-muted">{{ .CategoryString }} - {{ .Level }}级</small>
+            </div>
+          </div>
+          {{ end }}
+        {{ else }}
+          <p class="text-muted">暂无关联技能</p>
         {{ end }}
-        ({{ .Handicraft.MagicDifficulty }}/5)
-      </dd>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>相关法力</h4>
+        {{ if .Magics }}
+          {{ range .Magics }}
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <h5><a href="/v1/magic/detail?id={{ .Id }}">{{ .Name }}</a></h5>
+              <p>{{ .Description }}</p>
+              <small class="text-muted">{{ .CategoryString }} - {{ .Level }}级</small>
+            </div>
+          </div>
+          {{ end }}
+        {{ else }}
+          <p class="text-muted">暂无关联法力</p>
+        {{ end }}
+      </div>
+    </div>
 
-      <dt>难度类型</dt>
-      <dd>{{ .Handicraft.GetDifficultyType }}</dd>
+    <!-- 事前、事中、事终记录 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>作业记录</h4>
+        <div class="panel-group" id="accordion">
+          <!-- 开工仪式 -->
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#inauguration">
+                  <span class="glyphicon glyphicon-play"></span> 开工仪式
+                  {{ if .HandicraftBean.Inauguration }}
+                  <span class="label label-success">已记录</span>
+                  {{ else }}
+                  <span class="label label-default">未记录</span>
+                  {{ end }}
+                </a>
+              </h4>
+            </div>
+            <div id="inauguration" class="panel-collapse collapse">
+              <div class="panel-body">
+                {{ if .HandicraftBean.Inauguration }}
+                  <p><strong>名称：</strong>{{ .HandicraftBean.Inauguration.Name }}</p>
+                  <p><strong>描述：</strong>{{ .HandicraftBean.Inauguration.Description }}</p>
+                  <p><strong>记录人：</strong>{{ .HandicraftBean.Inauguration.RecorderUserId }}</p>
+                  {{ if gt .HandicraftBean.Inauguration.EvidenceId 0 }}
+                  <p><a href="/v1/evidence/detail?id={{ .HandicraftBean.Inauguration.EvidenceId }}" class="btn btn-sm btn-info">
+                    <span class="glyphicon glyphicon-file"></span> 查看凭证
+                  </a></p>
+                  {{ end }}
+                  <small class="text-muted">{{ .HandicraftBean.Inauguration.CreatedAt.Format "2006-01-02 15:04:05" }}</small>
+                {{ else }}
+                  <p class="text-muted">暂无开工仪式记录</p>
+                  <a href="/v1/handicraft/step2?uuid={{ .HandicraftBean.Handicraft.Uuid }}" class="btn btn-sm btn-primary">
+                    <span class="glyphicon glyphicon-plus"></span> 添加记录
+                  </a>
+                {{ end }}
+              </div>
+            </div>
+          </div>
 
-      <dt>创建时间</dt>
-      <dd>{{ .Handicraft.CreatedDateTime }}</dd>
-    </dl>
+          <!-- 过程记录 -->
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#process">
+                  <span class="glyphicon glyphicon-refresh"></span> 过程记录
+                  {{ if .HandicraftBean.ProcessRecords }}
+                  <span class="badge">{{ len .HandicraftBean.ProcessRecords }}</span>
+                  {{ else }}
+                  <span class="label label-default">未记录</span>
+                  {{ end }}
+                </a>
+              </h4>
+            </div>
+            <div id="process" class="panel-collapse collapse">
+              <div class="panel-body">
+                {{ if .HandicraftBean.ProcessRecords }}
+                  {{ range .HandicraftBean.ProcessRecords }}
+                  <div class="well well-sm">
+                    <p><strong>{{ .Name }}</strong></p>
+                    <p>{{ .Description }}</p>
+                    <p><strong>记录人：</strong>{{ .RecorderUserId }}</p>
+                    {{ if gt .EvidenceId 0 }}
+                    <p><a href="/v1/evidence/detail?id={{ .EvidenceId }}" class="btn btn-xs btn-info">
+                      <span class="glyphicon glyphicon-file"></span> 查看凭证
+                    </a></p>
+                    {{ end }}
+                    <small class="text-muted">{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
+                  </div>
+                  {{ end }}
+                {{ else }}
+                  <p class="text-muted">暂无过程记录</p>
+                {{ end }}
+                <a href="/v1/handicraft/step3?uuid={{ .HandicraftBean.Handicraft.Uuid }}" class="btn btn-sm btn-primary">
+                  <span class="glyphicon glyphicon-plus"></span> 添加记录
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- 结束仪式 -->
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion" href="#ending">
+                  <span class="glyphicon glyphicon-stop"></span> 结束仪式
+                  {{ if .HandicraftBean.Ending }}
+                  <span class="label label-success">已记录</span>
+                  {{ else }}
+                  <span class="label label-default">未记录</span>
+                  {{ end }}
+                </a>
+              </h4>
+            </div>
+            <div id="ending" class="panel-collapse collapse">
+              <div class="panel-body">
+                {{ if .HandicraftBean.Ending }}
+                  <p><strong>名称：</strong>{{ .HandicraftBean.Ending.Name }}</p>
+                  <p><strong>描述：</strong>{{ .HandicraftBean.Ending.Description }}</p>
+                  <p><strong>记录人：</strong>{{ .HandicraftBean.Ending.RecorderUserId }}</p>
+                  {{ if gt .HandicraftBean.Ending.EvidenceId 0 }}
+                  <p><a href="/v1/evidence/detail?id={{ .HandicraftBean.Ending.EvidenceId }}" class="btn btn-sm btn-info">
+                    <span class="glyphicon glyphicon-file"></span> 查看凭证
+                  </a></p>
+                  {{ end }}
+                  <small class="text-muted">{{ .HandicraftBean.Ending.CreatedAt.Format "2006-01-02 15:04:05" }}</small>
+                {{ else }}
+                  <p class="text-muted">暂无结束仪式记录</p>
+                  <a href="/v1/handicraft/step4?uuid={{ .HandicraftBean.Handicraft.Uuid }}" class="btn btn-sm btn-primary">
+                    <span class="glyphicon glyphicon-plus"></span> 添加记录
+                  </a>
+                {{ end }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 凭据证据 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>凭据证据</h4>
+        {{ if .EvidenceHandicraftBean }}
+          {{ range .EvidenceHandicraftBean }}
+          <div class="panel panel-default">
+            <div class="panel-body">
+              <h5>{{ .Evidence.Description }}</h5>
+              <p><strong>类型：</strong>{{ .Evidence.CategoryString }}</p>
+              <p><strong>文件名：</strong>{{ .Evidence.FileName }}</p>
+              <small class="text-muted">{{ .Evidence.CreatedDateTime }}</small>
+            </div>
+          </div>
+          {{ end }}
+        {{ else }}
+          <p class="text-muted">暂无凭据证据</p>
+        {{ end }}
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="javascript:history.back()" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回
+      </a>
+      <button type="button" class="btn btn-info" onclick="copyHandicraftId()">
+        <span class="glyphicon glyphicon-copy"></span> 复制ID
+      </button>
+      <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-primary">
+        <span class="glyphicon glyphicon-eye-open"></span> 查看项目
+      </a>
+    </div>
   </div>
-
+  
   <div class="panel-footer">
-    <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">返回项目</a>
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：手艺是技能与创意的完美结合，每一项手艺都是智慧与实践的结晶。手艺ID：{{ .HandicraftBean.Handicraft.Id }}
   </div>
 </div>
+
+<script>
+  function copyHandicraftId() {
+    var handicraftId = "{{ .HandicraftBean.Handicraft.Id }}";
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(handicraftId).then(function() {
+        alert('手艺ID已复制到剪贴板：' + handicraftId);
+      });
+    } else {
+      // 兼容旧浏览器
+      var textArea = document.createElement("textarea");
+      textArea.value = handicraftId;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('手艺ID已复制到剪贴板：' + handicraftId);
+    }
+  }
+</script>
 
 {{ end }}

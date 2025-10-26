@@ -2,11 +2,18 @@
 
 ## 简介
 
-假设人有机地构聚在一起成为茶团，把团与团之间的合作，看成是茶话会活动，以这样明文格式化形式，交流茶团之间的协作信息。  
-茶团分有两种，构成二维社会坐标形式：（&，$）  
+把用户有机地构聚在一起成为茶团，把茶团与茶团之间的供需协作，看成是茶话会活动，以预设结构化数据形式，交流（共享）茶团之间的装备技能协作信息。  
+茶团分有两种，构成二维社会坐标形式(`&家庭family`,`$事业team`);  
 1、以血缘关系划分为家庭&，每个人都有所属的家庭茶团；  
 2、以事业关系划分为团队$，每个人都有所属的事业茶团。  
-*使用golang+postgresql+bootstrap3编造。
+
+*使用 golang+postgresql+bootstrap3 开源技术  
+*目录架构简要说明：
+util文件夹存放通用工具函数；public文件夹存放静态资源文件（css/js/image/help等）；  
+templates文件夹存放*.go.html模版文件。  
+DAO文件夹存放数据库连接属性；定义所需的原始数据结构type * struct，分类属性定义声明，相关的CURD方法；模版相关包装数据结构（TemplateData/bean）声明在template_struct_*；  
+Route文件夹存放路由处理函数，核心方法generateHTML方法，route_share_func_*存放共享的从数据库获取包装数据方法（fetch*Bean）/辅助函数；  
+sql文件夹存放创建数据库建表语句 *.sql，预填充数据。  
 
 ### 是非特点
 
@@ -47,11 +54,11 @@
 2、尝试查看相关书籍；  
 3、尝试问可用的编程AI助手或者网络寻求解答；  
 
-## 关于这应用的来源  
+## 关于这应用的源头  
 《Go Web Programming》Sau Sheong Chang 著 黄健宏 译 一书的教学作品之一chitchat休闲聊<https://github.com/sausheong/chitchat>。由于众所周知的原因，实际获取源代码地址是<https://gitee.com/tickCoder-mirrors/sausheong-gwp/>  
 以此应用为起始基础，修修剪剪……  
 > 改动主要的地方有  
-1、为了~~适应~~西域流沙河渡河困难的问题，把data文件夹改为本地，根据DataAccessOperation改名DAO，data包名没变。  
+1、为了添油加醋建设，把原云端data文件夹改为本地文件夹，根据DataAccessOperation改名DAO，data包名没变。  
 2、随着route文件数量越来越多，为了简化分类，从main包中分离出来，集合到Route文件夹中，作为route包。同样地，util文件也独立进一个文件夹，作为util包。
 3、升级bootstrap3和jquery到2024年的新版本。  
 4、去掉了原来的注册专用的布局模版，共用单个布局模版。  

@@ -1,0 +1,81 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">凭证详情</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-file"></span> 凭证 #{{ .Evidence.Id }}
+    </h3>
+  </div>
+  <div class="panel-body">
+    <dl class="dl-horizontal">
+      <dt>ID</dt>
+      <dd>{{ .Evidence.Id }}</dd>
+
+      <dt>描述</dt>
+      <dd>{{ .Evidence.Description }}</dd>
+
+      {{ if .Evidence.Note }}
+      <dt>备注</dt>
+      <dd>{{ .Evidence.Note }}</dd>
+      {{ end }}
+
+      <dt>类型</dt>
+      <dd>{{ .Evidence.CategoryString }}</dd>
+
+      <dt>可见性</dt>
+      <dd>
+        <span class="label label-{{ if eq .Evidence.Visibility 0 }}info{{ else }}warning{{ end }}">
+          {{ if eq .Evidence.Visibility 0 }}公开{{ else }}私密{{ end }}
+        </span>
+      </dd>
+
+      {{ if .Evidence.FileName }}
+      <dt>文件名</dt>
+      <dd>{{ .Evidence.FileName }}</dd>
+
+      <dt>文件大小</dt>
+      <dd>{{ .Evidence.FileSize }} 字节</dd>
+
+      <dt>文件类型</dt>
+      <dd>{{ .Evidence.MimeType }}</dd>
+      {{ end }}
+
+      {{ if .Evidence.OriginalURL }}
+      <dt>原始链接</dt>
+      <dd><a href="{{ .Evidence.OriginalURL }}" target="_blank">{{ .Evidence.OriginalURL }}</a></dd>
+      {{ end }}
+
+      <dt>上传者</dt>
+      <dd>用户 #{{ .Evidence.RecorderUserId }}</dd>
+
+      <dt>创建时间</dt>
+      <dd>{{ .Evidence.CreatedAt.Format "2006-01-02 15:04:05" }}</dd>
+    </dl>
+
+    {{ if .Evidence.Path }}
+    <div class="text-center" style="margin-top: 20px;">
+      <h4>预览</h4>
+      <img src="/v1/static/{{ .Evidence.Path }}" alt="{{ .Evidence.FileName }}" class="img-responsive" style="max-width: 100%; max-height: 600px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+      <div style="display:none;" class="alert alert-warning">
+        <p>图片无法显示，请下载查看</p>
+        <a href="/v1/static/{{ .Evidence.Path }}" class="btn btn-primary" download="{{ .Evidence.FileName }}">
+          <span class="glyphicon glyphicon-download"></span> 下载文件
+        </a>
+      </div>
+    </div>
+    {{ end }}
+
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="javascript:history.back()" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回
+      </a>
+    </div>
+  </div>
+</div>
+
+{{ end }}

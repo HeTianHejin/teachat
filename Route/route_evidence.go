@@ -28,6 +28,8 @@ func saveUploadedFile(file multipart.File, header *multipart.FileHeader, userId 
 	io.WriteString(hash, fmt.Sprintf("%d_%d_%s", userId, time.Now().UnixNano(), header.Filename))
 	fileName := fmt.Sprintf("%x%s", hash.Sum(nil), ext)
 	filePath := filepath.Join(uploadDir, fileName)
+	// 返回相对于 static 目录的路径（去掉 public/ 前缀）
+	relativePath := filepath.Join("uploads", "evidence", time.Now().Format("2006-01"), fileName)
 
 	// 保存文件
 	dst, err := os.Create(filePath)
@@ -41,7 +43,7 @@ func saveUploadedFile(file multipart.File, header *multipart.FileHeader, userId 
 		return "", 0, err
 	}
 
-	return filePath, fileSize, nil
+	return relativePath, fileSize, nil
 }
 
 // Handler /v1/evidence/new
@@ -158,4 +160,57 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 	// 返回 JSON 响应，方便前端获取新创建的证据ID
 	w.Header().Set("Content-Type", "application/json")
 	w.Write([]byte(`{"success": true, "id": ` + strconv.Itoa(evidence.Id) + `, "message": "证据创建成功"}`))
+}
+
+// Handler /v1/evidence/detail
+func HandleEvidenceDetail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	EvidenceDetailGet(w, r)
+}
+
+// GET /v1/evidence/detail?id=xxx
+func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	idStr := r.URL.Query().Get("id")
+	if idStr == "" {
+		report(w, r, "凭证ID缺失")
+		return
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		report(w, r, "无效的凭证ID")
+		return
+	}
+
+	evidence := data.Evidence{Id: id}
+	if err := evidence.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug("Cannot get evidence by id", id, err)
+		report(w, r, "凭证不存在")
+		return
+	}
+
+	templateData := struct {
+		SessUser data.User
+		Evidence data.Evidence
+	}{
+		SessUser: s_u,
+		Evidence: evidence,
+	}
+
+	generateHTML(w, &templateData, "layout", "navbar.private", "evidence.detail")
 }

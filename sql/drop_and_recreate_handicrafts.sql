@@ -16,7 +16,8 @@ CREATE TABLE handicrafts (
     project_id            INTEGER REFERENCES projects(id),
     initiator_id          INTEGER REFERENCES users(id),
     owner_id              INTEGER REFERENCES users(id),
-    category              INTEGER NOT NULL DEFAULT 1,
+    type                  INTEGER NOT NULL DEFAULT 1,
+    category              INTEGER NOT NULL DEFAULT 0,
     status                INTEGER NOT NULL DEFAULT 0,
     skill_difficulty      INTEGER NOT NULL DEFAULT 3,
     magic_difficulty      INTEGER NOT NULL DEFAULT 3,
@@ -73,6 +74,7 @@ CREATE TABLE handicraft_evidences (
 -- 创建索引
 CREATE INDEX idx_handicrafts_project_id ON handicrafts(project_id);
 CREATE INDEX idx_handicrafts_recorder_user_id ON handicrafts(recorder_user_id);
+CREATE INDEX idx_handicrafts_type ON handicrafts(type);
 CREATE INDEX idx_handicrafts_category ON handicrafts(category);
 CREATE INDEX idx_handicrafts_status ON handicrafts(status);
 CREATE INDEX idx_handicrafts_deleted_at ON handicrafts(deleted_at);
@@ -92,4 +94,6 @@ CREATE INDEX idx_handicraft_evidences_evidence_id ON handicraft_evidences(eviden
 -- 添加注释
 COMMENT ON TABLE handicrafts IS '手艺表';
 COMMENT ON COLUMN handicrafts.recorder_user_id IS '记录人用户ID';
+COMMENT ON COLUMN handicrafts.type IS '类型：1轻体力,2中等体力,3重体力,4轻巧力,5中巧力,6重巧力';
+COMMENT ON COLUMN handicrafts.category IS '分类：0公开,1私密';
 COMMENT ON COLUMN handicraft_contributors.contribution_rate IS '贡献值(1-100)';

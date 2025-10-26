@@ -33,6 +33,7 @@ __debug_bin*
 *.jpg
 *.png
 *.gif
+*.webp
 *.zip
 *.tar
 *.tar.gz

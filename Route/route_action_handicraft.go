@@ -239,6 +239,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	nickname := r.FormValue("nickname")
 	description := r.FormValue("description")
+	typeStr := r.FormValue("type")
 	categoryStr := r.FormValue("category")
 	skillDifficultyStr := r.FormValue("skill_difficulty")
 	magicDifficultyStr := r.FormValue("magic_difficulty")
@@ -250,6 +251,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	handicraftType, _ := strconv.Atoi(typeStr)
 	category, _ := strconv.Atoi(categoryStr)
 	skillDifficulty, _ := strconv.Atoi(skillDifficultyStr)
 	magicDifficulty, _ := strconv.Atoi(magicDifficultyStr)
@@ -277,7 +279,8 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 		ProjectId:       t_proj.Id,
 		InitiatorId:     initiatorId,
 		OwnerId:         ownerId,
-		Category:        data.HandicraftCategory(category),
+		Type:            data.HandicraftType(handicraftType),
+		Category:        category,
 		Status:          data.NotStarted,
 		SkillDifficulty: skillDifficulty,
 		MagicDifficulty: magicDifficulty,
@@ -303,6 +306,8 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 			}
 			if err := contributor.Create(); err != nil {
 				util.Debug("Cannot create handicraft contributor", err)
+				report(w, r, "创建协助者失败")
+				return
 			}
 		}
 	}
@@ -356,7 +361,7 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
 		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
@@ -369,10 +374,18 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 先尝试作为手工艺UUID查询
 	handicraft := data.Handicraft{Uuid: uuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
+		// 如果不是手工艺UUID，尝试作为项目UUID查询
 		if err == sql.ErrNoRows {
-			report(w, r, "手工艺记录不存在")
+			project := data.Project{Uuid: uuid}
+			if err := project.GetByUuid(); err == nil {
+				// 是项目UUID，重定向到项目的手工艺列表页面
+				http.Redirect(w, r, "/v1/handicraft/list?project_uuid="+uuid, http.StatusFound)
+				return
+			}
+			report(w, r, "手工艺记录或项目不存在")
 			return
 		}
 		util.Debug("Cannot get handicraft by uuid", uuid, err)
@@ -408,17 +421,176 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	handicraft_bean, err := fetchHandicraftBean(handicraft)
+	if err != nil {
+		util.Debug("Cannot fetch handicraft bean", err)
+		report(w, r, "获取手工艺详情失败")
+		return
+	}
+
+	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
+	if err != nil {
+		util.Debug("Cannot check project master permission", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+	is_admin, err := checkObjectiveAdminPermission(&objective, s_u.Id)
+	if err != nil {
+		util.Debug("Cannot check objective admin permission", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+	is_verifier := isVerifier(s_u.Id)
+	is_invited := false
+	if handicraft.Category == data.HandicraftCategorySecret {
+		if !is_master && !is_admin && !is_invited {
+			is_invited, err = objective.IsInvitedMember(s_u.Id)
+			if err != nil {
+				util.Debug("Cannot check objective invited member", err)
+				report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+				return
+			}
+			if !is_invited {
+				report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+				return
+			}
+		}
+	}
+
+	// 获取相关技能
+	var skills []data.Skill
+	if skillRelations, err := data.GetHandicraftSkills(handicraft.Id); err == nil {
+		for _, sr := range skillRelations {
+			skill := data.Skill{Id: sr.SkillId}
+			if err := skill.GetByIdOrUUID(r.Context()); err == nil {
+				skills = append(skills, skill)
+			}
+		}
+	}
+
+	// 获取相关法力
+	var magics []data.Magic
+	if magicRelations, err := data.GetHandicraftMagics(handicraft.Id); err == nil {
+		for _, mr := range magicRelations {
+			magic := data.Magic{Id: mr.MagicId}
+			if err := magic.GetByIdOrUUID(r.Context()); err == nil {
+				magics = append(magics, magic)
+			}
+		}
+	}
+
+	// 获取相关凭证
+	var evidenceHandicraftBean []data.EvidenceHandicraftBean
+	if evidences, err := data.GetEvidencesByHandicraftId(handicraft.Id); err == nil {
+		evidenceHandicraftBean = append(evidenceHandicraftBean, data.EvidenceHandicraftBean{
+			Evidences:  evidences,
+			Handicraft: handicraft,
+		})
+	}
+
+	templateData := data.HandicraftDetailTemplateData{
+		SessUser:               s_u,
+		IsMaster:               is_master,
+		IsAdmin:                is_admin,
+		IsVerifier:             is_verifier,
+		IsInvited:              is_invited,
+		HandicraftBean:         handicraft_bean,
+		ProjectBean:            projectBean,
+		QuoteObjectiveBean:     objectiveBean,
+		Skills:                 skills,
+		Magics:                 magics,
+		EvidenceHandicraftBean: evidenceHandicraftBean,
+	}
+
+	generateHTML(w, &templateData, "layout", "navbar.private", "action.handicraft.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+}
+
+// Handler /v1/handicraft/list
+func HandleHandicraftList(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	HandicraftListGet(w, r)
+}
+
+// GET /v1/handicraft/list?project_uuid=xxx
+func HandicraftListGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	user, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	projectUuid := r.URL.Query().Get("project_uuid")
+	if projectUuid == "" {
+		report(w, r, "项目信息缺失")
+		return
+	}
+
+	project := data.Project{Uuid: projectUuid}
+	if err := project.GetByUuid(); err != nil {
+		util.Debug("Cannot get project by uuid", projectUuid, err)
+		report(w, r, "项目不存在")
+		return
+	}
+
+	objective, err := project.Objective()
+	if err != nil {
+		util.Debug("Cannot get objective", err)
+		report(w, r, "获取目标信息失败")
+		return
+	}
+
+	projectBean, err := fetchProjectBean(project)
+	if err != nil {
+		util.Debug("Cannot fetch project bean", err)
+		report(w, r, "获取项目详情失败")
+		return
+	}
+
+	objectiveBean, err := fetchObjectiveBean(objective)
+	if err != nil {
+		util.Debug("Cannot fetch objective bean", err)
+		report(w, r, "获取目标详情失败")
+		return
+	}
+
+	// 获取项目的所有手工艺记录
+	handicrafts, err := data.GetHandicraftsByProjectId(project.Id, r.Context())
+	if err != nil {
+		util.Debug("Cannot get handicrafts by project id", project.Id, err)
+		handicrafts = []data.Handicraft{}
+	}
+
+	// 将 Handicraft 转换为 HandicraftBean
+	var handicraftBeans []data.HandicraftBean
+	for _, h := range handicrafts {
+		bean, err := fetchHandicraftBean(h)
+		if err != nil {
+			util.Debug("Cannot fetch handicraft bean", err)
+			continue
+		}
+		handicraftBeans = append(handicraftBeans, bean)
+	}
+
 	templateData := struct {
 		SessUser           data.User
-		Handicraft         data.Handicraft
+		HandicraftBeans    []data.HandicraftBean
 		ProjectBean        data.ProjectBean
 		QuoteObjectiveBean data.ObjectiveBean
 	}{
 		SessUser:           user,
-		Handicraft:         handicraft,
+		HandicraftBeans:    handicraftBeans,
 		ProjectBean:        projectBean,
 		QuoteObjectiveBean: objectiveBean,
 	}
 
-	generateHTML(w, &templateData, "layout", "navbar.private", "action.handicraft.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &templateData, "layout", "navbar.private", "handicraft.list", "component_handicraft_bean", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }

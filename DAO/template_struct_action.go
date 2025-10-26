@@ -214,6 +214,11 @@ type HandicraftBean struct {
 	Handicraft Handicraft
 	IsOpen     bool
 	Project    Project
+
+	Contributors   []HandicraftContributor
+	Inauguration   *Inauguration
+	ProcessRecords []ProcessRecord
+	Ending         *Ending
 }
 
 type SkillUserBean struct {

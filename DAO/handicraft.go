@@ -23,10 +23,11 @@ type Handicraft struct {
 	InitiatorId int // 策动人ID
 	OwnerId     int // 主理/执行人ID
 
-	Category        HandicraftCategory // 分类
-	Status          HandicraftStatus   // 状态
-	SkillDifficulty int                // 技能操作难度(1-5)，引用 skill.DifficultyLevel
-	MagicDifficulty int                // 创意思维难度(1-5)，引用 magic.DifficultyLevel
+	Type            HandicraftType   // 类型
+	Category        int              // 分类：0、公开，1、私密，仅当事家庭/团队可见内容
+	Status          HandicraftStatus // 状态
+	SkillDifficulty int              // 技能操作难度(1-5)，引用 skill.DifficultyLevel
+	MagicDifficulty int              // 创意思维难度(1-5)，引用 magic.DifficultyLevel
 
 	CreatedAt time.Time
 	UpdatedAt *time.Time
@@ -68,17 +69,22 @@ type HandicraftSkill struct {
 	DeletedAt    *time.Time //软删除
 }
 
-// 手工艺分类 - 根据体力需求和技能复杂度划分
-type HandicraftCategory int
+const (
+	HandicraftCategoryPublic = iota // 公开
+	HandicraftCategorySecret        // 私密
+)
+
+// 手工艺类型 - 根据体力需求和技能复杂度划分
+type HandicraftType int
 
 const (
-	UnknownWork     HandicraftCategory = iota // 未知类型/初始化默认值
-	LightWork                                 // 轻体力（普通人都可以完成，如：喂水、简单清洁）
-	MediumWork                                // 中等体力（介于轻重之间，如：给饮水机更换水桶、搬家具）
-	HeavyWork                                 // 重体力（需要较高强度体能才能完成，如：搬运洗衣机、重物搬运）
-	SkillfulWork                              // 轻巧力（需要特定体能加上精细手艺，如：刺绣、精细木工）
-	MediumSkillWork                           // 中巧力（中等体力+中等技能，如：家电维修、普通木工）
-	HeavySkillWork                            // 重巧力（需要特定体能加上载重力，如：铁艺制作、大型雕塑）
+	UnknownWork     HandicraftType = iota // 未知类型/初始化默认值
+	LightWork                             // 轻体力（普通人都可以完成，如：喂水、简单清洁）
+	MediumWork                            // 中等体力（介于轻重之间，如：给饮水机更换水桶、搬家具）
+	HeavyWork                             // 重体力（需要较高强度体能才能完成，如：搬运洗衣机、重物搬运）
+	SkillfulWork                          // 轻巧力（需要特定体能加上精细手艺，如：刺绣、精细木工）
+	MediumSkillWork                       // 中巧力（中等体力+中等技能，如：家电维修、普通木工）
+	HeavySkillWork                        // 重巧力（需要特定体能加上载重力，如：铁艺制作、大型雕塑）
 )
 
 // 手工艺状态
@@ -235,8 +241,8 @@ func (h *Handicraft) Create(ctx context.Context) (err error) {
 
 	statement := `INSERT INTO handicrafts 
 		(uuid, recorder_user_id, name, nickname, description, project_id, initiator_id, owner_id, 
-		 category, status, skill_difficulty, magic_difficulty, contributor_count) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
+		 type, category, status, skill_difficulty, magic_difficulty, contributor_count) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) 
 		RETURNING id, uuid`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
@@ -244,7 +250,7 @@ func (h *Handicraft) Create(ctx context.Context) (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, Random_UUID(), h.RecorderUserId, h.Name, h.Nickname, h.Description,
-		h.ProjectId, h.InitiatorId, h.OwnerId, h.Category, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount).Scan(&h.Id, &h.Uuid)
+		h.ProjectId, h.InitiatorId, h.OwnerId, h.Type, h.Category, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount).Scan(&h.Id, &h.Uuid)
 	return err
 }
 
@@ -256,7 +262,7 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 		return errors.New("invalid Handicraft ID or UUID")
 	}
 	statement := `SELECT id, uuid, recorder_user_id, name, nickname, description, project_id, 
-		initiator_id, owner_id, category, status, skill_difficulty, magic_difficulty, 
+		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
 		contributor_count, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
 	stmt, err := db.PrepareContext(ctx, statement)
@@ -265,7 +271,7 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, h.Id, h.Uuid).Scan(&h.Id, &h.Uuid, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
-		&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
+		&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
 		&h.ContributorCount, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
 	return err
 }
@@ -323,8 +329,8 @@ func (h *Handicraft) StatusString() string {
 	}
 }
 
-// CategoryString 返回分类的名称字符串
-func (h HandicraftCategory) CategoryString() string {
+// TypeString 返回类型的名称字符串
+func (h HandicraftType) TypeString() string {
 	switch h {
 	case UnknownWork:
 		return "未知类型"
@@ -345,8 +351,8 @@ func (h HandicraftCategory) CategoryString() string {
 	}
 }
 
-// Description 返回分类的详细描述
-func (h HandicraftCategory) Description() string {
+// Description 返回类型的详细描述
+func (h HandicraftType) Description() string {
 	switch h {
 	case UnknownWork:
 		return "未知工作类型"
@@ -372,7 +378,7 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `SELECT id, uuid, recorder_user_id, name, nickname, description, project_id, 
-		initiator_id, owner_id, category, status, skill_difficulty, magic_difficulty, 
+		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
 		contributor_count, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
 	rows, err := db.QueryContext(ctx, statement, projectId)
@@ -385,7 +391,7 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 	for rows.Next() {
 		var h Handicraft
 		err := rows.Scan(&h.Id, &h.Uuid, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
-			&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
+			&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
 			&h.ContributorCount, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
 		if err != nil {
 			return nil, err
@@ -437,6 +443,16 @@ func (hc *HandicraftContributor) Create() (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRow(hc.HandicraftId, hc.UserId, hc.ContributionRate, time.Now()).Scan(&hc.Id)
+	if err != nil {
+		return
+	}
+
+	// 更新 handicrafts 表的 contributor_count
+	updateStmt := `UPDATE handicrafts SET contributor_count = (
+		SELECT COUNT(*) FROM handicraft_contributors 
+		WHERE handicraft_id = $1 AND deleted_at IS NULL
+	) WHERE id = $1`
+	_, err = db.Exec(updateStmt, hc.HandicraftId)
 	return err
 }
 
@@ -559,4 +575,132 @@ func GetHandicraftCompletionStatus(projectId int, ctx context.Context) (total, c
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, projectId, Completed, InProgress, NotStarted).Scan(&total, &completed, &inProgress, &notStarted)
 	return
+}
+
+// GetInaugurationsByHandicraftId 根据手工艺ID获取开工仪式记录
+func GetInaugurationsByHandicraftId(handicraftId int) ([]Inauguration, error) {
+	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM inaugurations WHERE handicraft_id = $1 ORDER BY created_at DESC", handicraftId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var inaugurations []Inauguration
+	for rows.Next() {
+		var i Inauguration
+		err := rows.Scan(&i.Id, &i.Uuid, &i.HandicraftId, &i.Name, &i.Description, &i.RecorderUserId, &i.EvidenceId, &i.Status, &i.CreatedAt, &i.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		inaugurations = append(inaugurations, i)
+	}
+	return inaugurations, nil
+}
+
+// GetProcessRecordsByHandicraftId 根据手工艺ID获取过程记录
+func GetProcessRecordsByHandicraftId(handicraftId int) ([]ProcessRecord, error) {
+	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at, deleted_at FROM process_records WHERE handicraft_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC", handicraftId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []ProcessRecord
+	for rows.Next() {
+		var p ProcessRecord
+		err := rows.Scan(&p.Id, &p.Uuid, &p.HandicraftId, &p.Name, &p.Description, &p.RecorderUserId, &p.EvidenceId, &p.Status, &p.CreatedAt, &p.UpdatedAt, &p.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, p)
+	}
+	return records, nil
+}
+
+// GetEndingsByHandicraftId 根据手工艺ID获取结束仪式记录
+func GetEndingsByHandicraftId(handicraftId int) ([]Ending, error) {
+	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM endings WHERE handicraft_id = $1 ORDER BY created_at DESC", handicraftId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var endings []Ending
+	for rows.Next() {
+		var e Ending
+		err := rows.Scan(&e.Id, &e.Uuid, &e.HandicraftId, &e.Name, &e.Description, &e.RecorderUserId, &e.EvidenceId, &e.Status, &e.CreatedAt, &e.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		endings = append(endings, e)
+	}
+	return endings, nil
+}
+
+// GetHandicraftSkills 根据手工艺ID获取技能关联
+func GetHandicraftSkills(handicraftId int) ([]HandicraftSkill, error) {
+	rows, err := db.Query("SELECT id, uuid, handicraft_id, skill_id, created_at, updated_at, deleted_at FROM handicraft_skills WHERE handicraft_id = $1 AND deleted_at IS NULL", handicraftId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var skills []HandicraftSkill
+	for rows.Next() {
+		var hs HandicraftSkill
+		err := rows.Scan(&hs.Id, &hs.Uuid, &hs.HandicraftId, &hs.SkillId, &hs.CreatedAt, &hs.UpdatedAt, &hs.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		skills = append(skills, hs)
+	}
+	return skills, nil
+}
+
+// GetHandicraftMagics 根据手工艺ID获取法力关联
+func GetHandicraftMagics(handicraftId int) ([]HandicraftMagic, error) {
+	rows, err := db.Query("SELECT id, uuid, handicraft_id, magic_id, created_at, updated_at, deleted_at FROM handicraft_magics WHERE handicraft_id = $1 AND deleted_at IS NULL", handicraftId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var magics []HandicraftMagic
+	for rows.Next() {
+		var hm HandicraftMagic
+		err := rows.Scan(&hm.Id, &hm.Uuid, &hm.HandicraftId, &hm.MagicId, &hm.CreatedAt, &hm.UpdatedAt, &hm.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		magics = append(magics, hm)
+	}
+	return magics, nil
+}
+
+// GetEvidencesByHandicraftId 根据手工艺ID获取凭证列表
+func GetEvidencesByHandicraftId(handicraftId int) ([]Evidence, error) {
+	rows, err := db.Query(`SELECT DISTINCT e.id, e.uuid, e.file_name, e.file_path, e.file_size, e.mime_type, 
+		e.description, e.category, e.uploader_user_id, e.created_at, e.updated_at, e.deleted_at 
+		FROM evidences e 
+		LEFT JOIN inaugurations i ON e.id = i.evidence_id 
+		LEFT JOIN process_records p ON e.id = p.evidence_id 
+		LEFT JOIN endings en ON e.id = en.evidence_id 
+		WHERE (i.handicraft_id = $1 OR p.handicraft_id = $1 OR en.handicraft_id = $1) 
+		AND e.deleted_at IS NULL`, handicraftId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var evidences []Evidence
+	for rows.Next() {
+		var e Evidence
+		err := rows.Scan(&e.Id, &e.Uuid, &e.FileName, &e.Path, &e.FileSize, &e.MimeType,
+			&e.Description, &e.Category, &e.RecorderUserId, &e.CreatedAt, &e.UpdatedAt, &e.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		evidences = append(evidences, e)
+	}
+	return evidences, nil
 }

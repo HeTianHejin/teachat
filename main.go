@@ -235,6 +235,7 @@ func main() {
 	//defined in route_action_handicraft.go
 	mux.HandleFunc("/v1/handicraft/new", route.HandleNewHandicraft)
 	mux.HandleFunc("/v1/handicraft/detail", route.HandleHandicraftDetail)
+	mux.HandleFunc("/v1/handicraft/list", route.HandleHandicraftList)
 	// defined in route_handicraft_step.go
 	mux.HandleFunc("/v1/handicraft/step2", route.HandleHandicraftStep2)
 	mux.HandleFunc("/v1/handicraft/step3", route.HandleHandicraftStep3)
@@ -243,6 +244,7 @@ func main() {
 
 	//defined in route_evidence.go
 	mux.HandleFunc("/v1/evidence/new", route.HandleNewEvidence)
+	mux.HandleFunc("/v1/evidence/detail", route.HandleEvidenceDetail)
 
 	//defined in route_action_risk.go
 	mux.HandleFunc("/v1/risk/new", route.HandleNewRisk)

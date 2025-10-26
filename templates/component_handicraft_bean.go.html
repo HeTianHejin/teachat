@@ -6,7 +6,7 @@
   <div class="panel-body">
     <div class="media">
       <div class="media-left">
-        <a href="/v1/handicraft/project_detail?uuid={{ .Handicraft.Uuid }}">
+        <a href="/v1/handicraft/detail?uuid={{ .Handicraft.Uuid }}">
           <img class="media-object" src="/v1/static/bootstrap-icons/tools.svg" alt="手艺图标" width=40 height=40>
         </a>
       </div>
@@ -18,7 +18,11 @@
           </span>
 
           <span class="label label-default" style="margin-inline-end: 30px;font-size: smaller;">
-            {{ .Handicraft.Category.CategoryString }}
+            {{ .Handicraft.Type.TypeString }}
+          </span>
+
+          <span class="label label-{{ if eq .Handicraft.Category 0 }}info{{ else }}warning{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ if eq .Handicraft.Category 0 }}公开{{ else }}私密{{ end }}
           </span>
 
           <span style="font-size: smaller;">
@@ -27,7 +31,7 @@
         </p>
 
         <h4>
-          <a href="/v1/handicraft/project_detail?uuid={{ .Handicraft.Uuid }}">
+          <a href="/v1/handicraft/detail?uuid={{ .Handicraft.Uuid }}">
             {{ .Handicraft.Name }}
           </a>
           {{ if .Handicraft.IsHighDifficulty }}

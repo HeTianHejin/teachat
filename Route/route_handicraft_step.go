@@ -410,6 +410,7 @@ func HandicraftStep4Post(w http.ResponseWriter, r *http.Request) {
 	handicraftUuid := r.PostFormValue("handicraft_uuid")
 	processName := strings.TrimSpace(r.PostFormValue("process_name"))
 	processDesc := strings.TrimSpace(r.PostFormValue("process_desc"))
+	evidenceIdStr := r.PostFormValue("evidence_id")
 
 	handicraft := data.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
@@ -418,11 +419,13 @@ func HandicraftStep4Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if processName != "" {
+		evidenceId, _ := strconv.Atoi(evidenceIdStr)
 		processRecord := data.ProcessRecord{
 			HandicraftId:   handicraft.Id,
 			Name:           processName,
 			Description:    processDesc,
 			RecorderUserId: s_u.Id,
+			EvidenceId:     evidenceId,
 			Status:         1,
 		}
 		if err := processRecord.Create(); err != nil {
@@ -496,14 +499,26 @@ func HandicraftStep5Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
+	if err != nil {
+		util.Debug("Cannot check project master permission", err)
+		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
 	templateData := struct {
 		SessUser           data.User
+		IsMaster           bool
+		IsAdmin            bool
+		IsVerifier         bool
 		Handicraft         data.Handicraft
 		ProjectBean        data.ProjectBean
 		QuoteObjectiveBean data.ObjectiveBean
 		CurrentStep        int
 	}{
 		SessUser:           s_u,
+		IsMaster:           is_master,
+		IsVerifier:         isVerifier(s_u.Id),
 		Handicraft:         handicraft,
 		ProjectBean:        projectBean,
 		QuoteObjectiveBean: objectiveBean,
@@ -529,6 +544,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 	handicraftUuid := r.PostFormValue("handicraft_uuid")
 	endingName := strings.TrimSpace(r.PostFormValue("ending_name"))
 	endingDesc := strings.TrimSpace(r.PostFormValue("ending_desc"))
+	evidenceIdStr := r.PostFormValue("evidence_id")
 	statusStr := r.PostFormValue("status")
 
 	handicraft := data.Handicraft{Uuid: handicraftUuid}
@@ -538,11 +554,13 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if endingName != "" {
+		evidenceId, _ := strconv.Atoi(evidenceIdStr)
 		ending := data.Ending{
 			HandicraftId:   handicraft.Id,
 			Name:           endingName,
 			Description:    endingDesc,
 			RecorderUserId: s_u.Id,
+			EvidenceId:     evidenceId,
 			Status:         1,
 		}
 		if err := ending.Create(); err != nil {

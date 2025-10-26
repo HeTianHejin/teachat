@@ -47,6 +47,19 @@
         <small class="help-block">记录作业过程中的关键步骤和注意事项</small>
       </div>
 
+      <div class="form-group">
+        <label for="evidence_id">视觉证据ID（可选）</label>
+        <div class="input-group">
+          <input type="number" class="form-control" name="evidence_id" id="evidence_id" min="0" placeholder="音视频等视觉证据ID，默认0表示无" />
+          <span class="input-group-btn">
+            <button type="button" class="btn btn-default" onclick="openEvidenceWindow()">
+              <span class="glyphicon glyphicon-plus"></span> 新建证据
+            </button>
+          </span>
+        </div>
+        <small class="help-block">如果有相关的音视频证据，请填写证据ID或点击按钮新建</small>
+      </div>
+
       <div class="form-group text-center">
         <button type="submit" class="btn btn-primary">
           <span class="glyphicon glyphicon-arrow-right"></span> 下一步
@@ -61,5 +74,19 @@
     茶博士：过程记录有助于总结经验和改进方法。
   </div>
 </div>
+
+<script>
+function openEvidenceWindow() {
+  window.open('/v1/evidence/new', 'newEvidence', 'width=800,height=600,scrollbars=yes');
+}
+
+// 监听来自子窗口的消息
+window.addEventListener('message', function(event) {
+  if (event.data.type === 'evidenceCreated') {
+    document.getElementById('evidence_id').value = event.data.id;
+    alert('证据已创建，ID: ' + event.data.id);
+  }
+});
+</script>
 
 {{ end }}

@@ -483,6 +483,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		case data.ThreadCategoryGoods:
 			// 检查goods准备是否已经完成
 			tD.IsGoodsReadinessCompleted = project.IsGoodsReadinessCompleted(r.Context())
+
 		case data.ThreadCategoryHandcraft:
 			all_done, err := data.IsAllHandicraftsCompleted(project.Id, r.Context())
 			if err != nil && err != sql.ErrNoRows {
@@ -491,6 +492,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			tD.IsHandicraftsCompleted = all_done
+
 		default:
 			report(w, r, "你好，茶博士表示，陛下，奇怪的茶不能喝。")
 			return
