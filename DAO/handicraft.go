@@ -677,6 +677,66 @@ func GetHandicraftMagics(handicraftId int) ([]HandicraftMagic, error) {
 	return magics, nil
 }
 
+// GetInaugurationsByEvidenceId 根据凭证ID获取开工仪式
+func GetInaugurationsByEvidenceId(evidenceId int) ([]Inauguration, error) {
+	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM inaugurations WHERE evidence_id = $1", evidenceId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var inaugurations []Inauguration
+	for rows.Next() {
+		var i Inauguration
+		err := rows.Scan(&i.Id, &i.Uuid, &i.HandicraftId, &i.Name, &i.Description, &i.RecorderUserId, &i.EvidenceId, &i.Status, &i.CreatedAt, &i.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		inaugurations = append(inaugurations, i)
+	}
+	return inaugurations, nil
+}
+
+// GetProcessRecordsByEvidenceId 根据凭证ID获取过程记录
+func GetProcessRecordsByEvidenceId(evidenceId int) ([]ProcessRecord, error) {
+	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at, deleted_at FROM process_records WHERE evidence_id = $1 AND deleted_at IS NULL", evidenceId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var records []ProcessRecord
+	for rows.Next() {
+		var p ProcessRecord
+		err := rows.Scan(&p.Id, &p.Uuid, &p.HandicraftId, &p.Name, &p.Description, &p.RecorderUserId, &p.EvidenceId, &p.Status, &p.CreatedAt, &p.UpdatedAt, &p.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, p)
+	}
+	return records, nil
+}
+
+// GetEndingsByEvidenceId 根据凭证ID获取结束仪式
+func GetEndingsByEvidenceId(evidenceId int) ([]Ending, error) {
+	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM endings WHERE evidence_id = $1", evidenceId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var endings []Ending
+	for rows.Next() {
+		var e Ending
+		err := rows.Scan(&e.Id, &e.Uuid, &e.HandicraftId, &e.Name, &e.Description, &e.RecorderUserId, &e.EvidenceId, &e.Status, &e.CreatedAt, &e.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		endings = append(endings, e)
+	}
+	return endings, nil
+}
+
 // GetEvidencesByHandicraftId 根据手工艺ID获取凭证列表
 func GetEvidencesByHandicraftId(handicraftId int) ([]Evidence, error) {
 	rows, err := db.Query(`SELECT DISTINCT e.id, e.uuid, e.file_name, e.file_path, e.file_size, e.mime_type, 

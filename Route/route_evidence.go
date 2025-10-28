@@ -204,12 +204,45 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 检查权限：如果是私密凭证，需要验证权限
+	if evidence.Visibility == data.VisibilityPrivate {
+		// 获取凭证关联的手工艺
+		var handicraft data.Handicraft
+		if inaugurations, err := data.GetInaugurationsByEvidenceId(evidence.Id); err == nil && len(inaugurations) > 0 {
+			handicraft.Id = inaugurations[0].HandicraftId
+		} else if processRecords, err := data.GetProcessRecordsByEvidenceId(evidence.Id); err == nil && len(processRecords) > 0 {
+			handicraft.Id = processRecords[0].HandicraftId
+		} else if endings, err := data.GetEndingsByEvidenceId(evidence.Id); err == nil && len(endings) > 0 {
+			handicraft.Id = endings[0].HandicraftId
+		}
+
+		if handicraft.Id > 0 {
+			if err := handicraft.GetByIdOrUUID(r.Context()); err == nil {
+				project := data.Project{Id: handicraft.ProjectId}
+				if err := project.Get(); err == nil {
+					objective, err := project.Objective()
+					if err == nil {
+						is_master, _ := checkProjectMasterPermission(&project, s_u.Id)
+						is_admin, _ := checkObjectiveAdminPermission(&objective, s_u.Id)
+						is_invited, _ := objective.IsInvitedMember(s_u.Id)
+						if !is_master && !is_admin && !is_invited {
+							report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+							return
+						}
+					}
+				}
+			}
+		}
+	}
+
 	templateData := struct {
-		SessUser data.User
-		Evidence data.Evidence
+		SessUser   data.User
+		Evidence   data.Evidence
+		IsVerifier bool
 	}{
-		SessUser: s_u,
-		Evidence: evidence,
+		SessUser:   s_u,
+		Evidence:   evidence,
+		IsVerifier: isVerifier(s_u.Id),
 	}
 
 	generateHTML(w, &templateData, "layout", "navbar.private", "evidence.detail")
