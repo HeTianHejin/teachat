@@ -303,28 +303,20 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士失魂鱼，未能读取茶议资料荚。")
 		return
 	}
-	tD.NumSupport = thread.NumSupport()
-	tD.NumOppose = thread.NumOppose()
-	//品味中颔首的合计得分与总得分的比值，取整数，用于客户端页面进度条设置，正反双方进展形势对比
-	// n1, err := tD.ThreadBean.Thread.PostsScoreSupport()
-	// if n1 != 0 && err != nil {
+	numSupport := thread.NumSupport()
+	numOppose := thread.NumOppose()
+	if (numSupport + numOppose) <= 0 {
+		numSupport = 1
+		numOppose = 1
+		tD.NumSupport = 0
+		tD.NumOppose = 0
+	} else {
+		tD.NumSupport = numSupport
+		tD.NumOppose = numOppose
+	}
 
-	// 	util.PanicTea(util.LogError(err), " Cannot get posts score support")
-	// 	Report(w, r, "你好，莫失莫忘，仙寿永昌，有些资料被黑风怪瓜州了。")
-	// 	return
-
-	// }
-	// n2, err := tD.ThreadBean.Thread.PostsScore()
-	// if n2 != 0 && err != nil {
-
-	// 	util.PanicTea(util.LogError(err), " Cannot get posts score oppose")
-	// 	Report(w, r, "你好，莫失莫忘，仙寿永昌，有些资料,被黑风怪瓜州了。")
-	// 	return
-
-	// }
-	n1 := 60  //测试临时值
-	n2 := 120 //测试临时值
-	tD.ProgressSupport = progressRound(n1, n2)
+	//品味中颔首支持与摇头反对的比值，取整数，用于客户端页面进度条设置，正反双方进展形势对比
+	tD.ProgressSupport = progressRound(numSupport, numSupport+numOppose)
 	tD.ProgressOppose = 100 - tD.ProgressSupport
 
 	post_admin_slice, err := tD.ThreadBean.Thread.PostsAdmin()
