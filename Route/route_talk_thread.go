@@ -417,6 +417,14 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 		// 检查当前是哪一种类型茶议
 		switch thread.Category {
+		case data.ThreadCategoryNormal:
+			//普通茶议，无需额外检查
+			if thread.PostId != 0 {
+				util.Debug(" Invalid thread category and post_id not match", thread.Id, thread.Category, thread.PostId)
+				report(w, r, "你好，茶博士说，这个茶台状态异常无法使用。")
+				return
+			}
+
 		case data.ThreadCategoryNested:
 			//针对某个post的议中议，检查是否有权限访问
 			if thread.PostId == 0 {
