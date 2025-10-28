@@ -19,43 +19,13 @@ const (
 	RoleTaster = "taster"
 )
 const (
-	TeamIdNone          = iota // 0
-	TeamIdSpaceshipCrew        // 1   飞船茶棚团队，系统保留
-	TeamIdFreelancer           // 2  默认的系统“自由人”$事业茶团
+	TeamIdNone          = 0 // 0
+	TeamIdSpaceshipCrew = 1 // 1   飞船茶棚团队，系统保留
+	TeamIdFreelancer    = 2 // 2  系统预设“自由人”$事业茶团
 
-	TeamIdVerifier = 18 // 18 见证者团队，系统保留
+	TeamIdVerifier = 3 // 3 见证者团队，系统保留
 
 )
-
-// 默认的系统“自由人”$事业茶团
-// 刚注册或者没有声明加入任何$事业团队的茶友，属于未确定的$事业茶团
-// 自由职业者集合也是一个“团队”
-var TeamFreelancer = Team{
-	Id:                TeamIdFreelancer,
-	Uuid:              "72c06442-2b60-418a-6493-a91bd03ae4k8",
-	Name:              "自由人",
-	Mission:           "星际旅行特立独行的自由人，不属于任何$事业茶团。",
-	FounderId:         UserId_Captain_Spaceship, //表示系统预设的值
-	Class:             TeamClassSpaceship,
-	Abbreviation:      "自由人",
-	Logo:              "teamLogo",
-	SuperiorTeamId:    TeamIdNone,
-	SubordinateTeamId: TeamIdNone,
-}
-
-// 验证者团队，系统保留
-var TeamVerifier = Team{
-	Id:                TeamIdVerifier,
-	Uuid:              TeamUUIDVerifier,
-	Name:              "见证者茶团",
-	Mission:           "见证者团队，系统保留。",
-	FounderId:         UserId_Captain_Spaceship, //表示系统预设的值
-	Class:             TeamClassSpaceship,
-	Abbreviation:      "见证者",
-	Logo:              "teamLogo",
-	SuperiorTeamId:    TeamIdNone,
-	SubordinateTeamId: TeamIdNone,
-}
 
 var (
 	TeamUUIDSpaceshipCrew = "dcbe3046-b192-44b6-7afb-bc55817c13a9"
@@ -63,36 +33,8 @@ var (
 	TeamUUIDVerifier      = "38be3046-b192-44b6-7afb-bc55817c13c4"
 )
 
-// GetTeam retrieves team by ID
-func GetTeam(teamID int) (Team, error) {
-	switch teamID {
-	case TeamIdNone:
-		return Team{}, fmt.Errorf("team ID not set")
-	case TeamIdFreelancer:
-		return getFreelancerTeam(), nil
-	default:
-		return queryTeamFromDB(teamID)
-	}
-}
-
-// 获取系统预设的“自由人”$事业茶团,这是未加入任何团队的状态
-func getFreelancerTeam() Team {
-	return Team{
-		Id:                TeamIdFreelancer,
-		Uuid:              TeamUUIDFreelancer,
-		Name:              "自由人",
-		Mission:           "星际旅行特立独行的自由人，不属于任何$事业茶团。",
-		FounderId:         1,
-		Class:             0,
-		Abbreviation:      "自由人",
-		Logo:              "teamLogo",
-		SuperiorTeamId:    0,
-		SubordinateTeamId: 0,
-	}
-}
-
 // 从数据库查询获取团队
-func queryTeamFromDB(teamID int) (Team, error) {
+func GetTeam(teamID int) (Team, error) {
 	const query = `SELECT id, uuid, name, mission, founder_id, 
                   created_at, class, abbreviation, logo, updated_at, 
                   superior_team_id, subordinate_team_id 
@@ -489,13 +431,12 @@ func (user *User) GetLastDefaultTeam() (team Team, err error) {
 		return Team{}, err
 	}
 	if count == 0 {
-		return TeamFreelancer, nil
+		return GetTeam(TeamIdFreelancer)
 	}
 	team = Team{}
 	err = db.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.updated_at, teams.superior_team_id, teams.subordinate_team_id FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
 	if errors.Is(err, sql.ErrNoRows) {
-		team = TeamFreelancer
-		err = nil
+		return GetTeam(TeamIdFreelancer)
 	}
 	return
 }
@@ -756,9 +697,7 @@ func (user *User) CountTeamsByFounderId() (count int, err error) {
 // 根据用户提交的当前Uuid获取一个$事业茶团详情
 // AWS CodeWhisperer assist in writing
 func GetTeamByUUID(uuid string) (team Team, err error) {
-	if uuid == TeamUUIDFreelancer {
-		return getFreelancerTeam(), nil
-	}
+
 	team = Team{}
 	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE uuid = $1", uuid).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)
@@ -769,10 +708,6 @@ func GetTeamByUUID(uuid string) (team Team, err error) {
 func (team *Team) Get() (err error) {
 	if team.Id == TeamIdNone {
 		return fmt.Errorf("team not found with id: %d", team.Id)
-	}
-	if team.Id == TeamIdFreelancer {
-		*team = TeamFreelancer
-		return nil
 	}
 	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, superior_team_id, subordinate_team_id FROM teams WHERE id = $1", team.Id).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.SuperiorTeamId, &team.SubordinateTeamId)

@@ -116,13 +116,20 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 		defaultHazards = hazards
 	}
 
+	// 获取验证者团队
+	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	if err != nil {
+		util.Debug("Cannot get verifier team", err)
+		report(w, r, "获取验证者团队失败，请稍后再试")
+		return
+	}
 	// 准备页面数据
 	sssTD := data.SeeSeekStepTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         is_verifier,
 		Verifier:           s_u,
 		VerifierFamily:     data.FamilyUnknown,
-		VerifierTeam:       data.TeamVerifier,
+		VerifierTeam:       verifier_team,
 		ProjectBean:        project_bean,
 		QuoteObjectiveBean: objective_bean,
 		SeeSeekBean:        see_seek_bean,
@@ -375,12 +382,19 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 		defaultRisks = risks
 	}
 
+	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	if err != nil {
+		util.Debug("Cannot get verifier team", err)
+		report(w, r, "获取验证者团队失败，请稍后再试")
+		return
+	}
+
 	sssTD := data.SeeSeekStepTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         is_verifier,
 		Verifier:           s_u,
 		VerifierFamily:     data.FamilyUnknown,
-		VerifierTeam:       data.TeamVerifier,
+		VerifierTeam:       verifier_team,
 		ProjectBean:        project_bean,
 		QuoteObjectiveBean: objective_bean,
 		SeeSeekBean:        see_seek_bean,
@@ -601,12 +615,19 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 	currentStep := data.SeeSeekStepObservation
 	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
 
+	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	if err != nil {
+		util.Debug("Cannot get verifier team", err)
+		report(w, r, "获取验证者团队失败，请稍后再试")
+		return
+	}
+
 	sssTD := data.SeeSeekStepTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         is_verifier,
 		Verifier:           s_u,
 		VerifierFamily:     data.FamilyUnknown,
-		VerifierTeam:       data.TeamVerifier,
+		VerifierTeam:       verifier_team,
 		ProjectBean:        project_bean,
 		QuoteObjectiveBean: objective_bean,
 		SeeSeekBean:        see_seek_bean,
@@ -914,12 +935,19 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 	currentStep := data.SeeSeekStepReport
 	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
 
+	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	if err != nil {
+		util.Debug("Cannot get verifier team", err)
+		report(w, r, "获取验证者团队失败，请稍后再试")
+		return
+	}
+
 	sssTD := data.SeeSeekStepTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         is_verifier,
 		Verifier:           s_u,
 		VerifierFamily:     data.FamilyUnknown,
-		VerifierTeam:       data.TeamVerifier,
+		VerifierTeam:       verifier_team,
 		ProjectBean:        project_bean,
 		QuoteObjectiveBean: objective_bean,
 		SeeSeekBean:        see_seek_bean,

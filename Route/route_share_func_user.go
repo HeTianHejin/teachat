@@ -169,7 +169,12 @@ func fetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 		}
 	}
 	// 把系统默认团队资料加入teams
-	survivalTeams = append(survivalTeams, data.TeamFreelancer)
+	teamFreelancer, err := data.GetTeam(data.TeamIdFreelancer)
+	if err != nil {
+		util.Debug("cannot fetch team by id", data.TeamIdFreelancer, err)
+		return
+	}
+	survivalTeams = append(survivalTeams, teamFreelancer)
 
 	default_place, err := s_u.GetLastDefaultPlace()
 	if err != nil && errors.Is(err, sql.ErrNoRows) {

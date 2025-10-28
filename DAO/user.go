@@ -32,7 +32,7 @@ type User struct {
 const (
 	UserId_None              = 0
 	UserId_Captain_Spaceship = 1
-	UserId_Verifier          = 67 // 见证团队代表人id
+	UserId_Verifier          = 2 // 见证团队代表人id
 )
 const sessionDuration = 7 * 24 * time.Hour
 
@@ -92,34 +92,6 @@ type UserUnactivated struct {
 	Avatar    string
 }
 
-// 朋友
-type Friend struct {
-	Id                int
-	Uuid              string
-	UserId            int
-	FriendUserId      int    //朋友的用户号
-	Nickname          string //绰号，备注名
-	Note              string //备注事项
-	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
-	IsRival           bool   //是否竞争对手
-	CreatedAt         time.Time
-	UpdatedAt         *time.Time
-}
-
-// fans 粉丝
-type Fan struct {
-	Id                int
-	Uuid              string
-	UserId            int
-	FanUserId         int
-	Nickname          string //绰号，备注名
-	Note              string //备注事项
-	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
-	IsBlackSlice      bool   //是否黑名单
-	CreatedAt         time.Time
-	UpdatedAt         *time.Time
-}
-
 // follow 关注的
 type Follow struct {
 	Id                int
@@ -160,15 +132,17 @@ type UserStar struct {
 // 茶议=3或者茶话会=1,茶台=2,茶团=5，品味post=4， 好东西=6，魔法=7，宝物=8，
 // 未知=9=？
 var ObjectName = map[int]string{
-	1: "objective",
-	2: "project",
-	3: "thread",
-	4: "post",
-	5: "team",
-	6: "goody",
-	7: "magic",
-	8: "treasure",
-	9: "?",
+	1:  "objective",
+	2:  "project",
+	3:  "thread",
+	4:  "post",
+	5:  "team",
+	6:  "goods",
+	7:  "magic",
+	8:  "skill",
+	9:  "family",
+	10: "user",
+	//...
 }
 
 // Create a new session for an existing user

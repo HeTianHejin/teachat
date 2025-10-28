@@ -563,7 +563,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if uuid == data.TeamUUIDFreelancer {
-		report(w, r, "转会自由人，星际旅行特立独行的自由职业者大集合，不属于任何$事业茶团。")
+		report(w, r, "转会自由人，星际旅行特立独行的散客大集合，不属于任何$事业茶团。")
 		return
 	}
 

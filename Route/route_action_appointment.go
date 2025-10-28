@@ -129,6 +129,13 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
+	// 获取验证者团队
+	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	if err != nil {
+		util.Debug(" Cannot get verifier team", err)
+		report(w, r, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
 	// 创建项目预约的bean
 	p_a := data.ProjectAppointmentBean{
 		Appointment:    data.ProjectAppointment{},
@@ -141,7 +148,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		PayeeTeam:      admin_team,
 		Verifier:       s_u,
 		VerifierFamily: data.FamilyUnknown,
-		VerifierTeam:   data.TeamVerifier,
+		VerifierTeam:   verifier_team,
 	}
 	// 创建预约页面数据
 	pAD := data.AppointmentTemplateData{
