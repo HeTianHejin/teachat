@@ -20,7 +20,7 @@ const (
 	RoleTaster = "taster"
 )
 
-// 检查茶围管理权限
+// 检查茶围目标管理权限，即用户是否属于茶围归属团队有效成员
 func checkObjectiveAdminPermission(ob *data.Objective, userID int) (bool, error) {
 
 	//家庭管理的
@@ -28,10 +28,7 @@ func checkObjectiveAdminPermission(ob *data.Objective, userID int) (bool, error)
 		if ob.FamilyId == data.FamilyIdUnknown {
 			return false, fmt.Errorf("checkObjectiveAdminPermission()-> invalid family id %d", ob.FamilyId)
 		}
-		// family, err := data.GetFamily(ob.FamilyId)
-		// if err != nil {
-		// 	return false, fmt.Errorf("failed to get family (ID: %d): %v", ob.FamilyId, err)
-		// }
+
 		family := data.Family{Id: ob.FamilyId}
 		return family.IsParentMember(userID)
 	}
@@ -40,25 +37,19 @@ func checkObjectiveAdminPermission(ob *data.Objective, userID int) (bool, error)
 	if ob.TeamId == data.TeamIdNone || ob.TeamId == data.TeamIdFreelancer || ob.TeamId == data.TeamIdSpaceshipCrew {
 		return false, fmt.Errorf("checkProjectMasterPermission()-> invalid team id %d", ob.TeamId)
 	}
-	// team, err := data.GetTeam(ob.TeamId)
-	// if err != nil {
-	// 	return false, fmt.Errorf("failed to get team (ID: %d): %v", ob.TeamId, err)
-	// }
+
 	team := data.Team{Id: ob.TeamId}
 	return team.IsMember(userID)
 }
 
-// 检查茶台管理权限
+// 检查茶台项目管理权限，即用户是否茶台项目归属团队有权成员
 func checkProjectMasterPermission(pr *data.Project, user_id int) (bool, error) {
 
 	if pr.IsPrivate {
 		if pr.FamilyId == data.FamilyIdUnknown {
 			return false, fmt.Errorf("checkProjectMasterPermission()-> invalid family id %d", pr.FamilyId)
 		}
-		// pr_family, err := data.GetFamily(pr.FamilyId)
-		// if err != nil {
-		// 	return false, fmt.Errorf("failed to get family %d: %v", pr.FamilyId, err)
-		// }
+
 		pr_family := data.Family{Id: pr.FamilyId}
 		return pr_family.IsParentMember(user_id)
 	}
@@ -67,10 +58,7 @@ func checkProjectMasterPermission(pr *data.Project, user_id int) (bool, error) {
 	if pr.TeamId == data.TeamIdNone || pr.TeamId == data.TeamIdFreelancer || pr.TeamId == data.TeamIdSpaceshipCrew {
 		return false, fmt.Errorf("checkProjectMasterPermission()-> invalid team id %d", pr.TeamId)
 	}
-	// pr_team, err := data.GetTeam(pr.TeamId)
-	// if err != nil {
-	// 	return false, fmt.Errorf("failed to get team %d: %v", pr.TeamId, err)
-	// }
+
 	pr_team := data.Team{Id: pr.TeamId}
 	return pr_team.IsMember(user_id)
 }
@@ -146,7 +134,7 @@ func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 
 	tB.PostCount = thread.NumReplies()
 	//作者资料
-	tB.Author, err = thread.User()
+	tB.Author, err = thread.Author()
 	if err != nil {
 		util.Debug(fmt.Sprintf("Failed to read thread author for thread ID %d: %v", thread.Id, err))
 		return tB, fmt.Errorf("failed to read thread author: %w", err)
@@ -239,7 +227,7 @@ func fetchObjectiveBean(ob data.Objective) (ObjectiveBean data.ObjectiveBean, er
 	oB.Status = ob.GetStatus()
 	oB.ProjectCount = ob.NumReplies()
 	oB.CreatedAtDate = ob.CreatedAtDate()
-	user, err := ob.User()
+	user, err := ob.Admin()
 	if err != nil {
 		util.Debug(" Cannot read objective author", err)
 		return
@@ -291,7 +279,7 @@ func fetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 	pb.Status = project.ClassString()
 	pb.ThreadCount = project.NumReplies()
 	pb.CreatedAtDate = project.CreatedAtDate()
-	author, err := project.User()
+	author, err := project.Master()
 	if err != nil {
 		util.Debug(" Cannot read project author", err)
 		return
@@ -346,7 +334,7 @@ func fetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 	PostBean.Attitude = post.Atti()
 	PostBean.ThreadCount = post.NumReplies()
 	PostBean.CreatedAtDate = post.CreatedAtDate()
-	author, err := post.User()
+	author, err := post.Author()
 	if err != nil {
 		util.Debug(" Cannot read post author", err)
 		return

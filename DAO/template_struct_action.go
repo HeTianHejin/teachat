@@ -4,7 +4,7 @@ package data
 type AppointmentTemplateData struct {
 	SessUser   User
 	IsVerifier bool
-	IsAdmin    bool
+	IsAdmin    bool // 是否为茶围目标管理员
 	IsMaster   bool
 	IsInvited  bool
 

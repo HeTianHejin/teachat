@@ -83,16 +83,6 @@ func isEmail(email string) bool {
 	return reg.MatchString(email)
 }
 
-// // 验证提交的string是否 1 正整数？
-// func verifyPositiveIntegerFormat(str string) bool {
-// 	if str == "" {
-// 		return false
-// 	}
-// 	pattern := `^[1-9]\d*$`
-// 	reg := regexp.MustCompile(pattern)
-// 	return reg.MatchString(str)
-// }
-
 // 验证id_slice，必需是非零正整数而且不重复的逗号分隔的"2,19,87..."字符串格式，是否正确，正确返回true，错误返回false。
 // 预编译正则表达式提高性能（deepSeek.com）
 var idSliceRegex = regexp.MustCompile(`^[1-9][0-9]*(,[1-9][0-9]*)*$`)
@@ -181,20 +171,6 @@ func progressRound(numerator, denominator int) int {
 		return 100
 	}
 	ratio := float64(numerator) / float64(denominator) * 100
-
-	// if numerator > denominator {
-	// 	// 分子大于分母时，表示统计数据输入错误，返回一个中间值
-	// 	return 50
-	// } else if ratio < 0 {
-	// 	// 分子小于分母且比例为负数，表示统计数据输入错误，返回一个中间值
-	// 	return 50
-	// } else if ratio < 1 {
-	// 	// 比例小于1时，返回最低限度值1
-	// 	return 1
-	// }
-
-	// 其他情况，使用math.Floor确保向下取整，然后四舍五入
-	//return int(math.Floor(ratio + 0.5))
 	return int(math.Round(ratio))
 }
 
@@ -223,57 +199,6 @@ func getWidthHeightForJpeg(imgBytes []byte) (int, int, error) {
 	width := int(imgBytes[offset+2])<<8 + int(imgBytes[offset+3])
 	return width, height, nil
 }
-
-// randomInt() 生成count个随机且不重复的整数，范围在[start, end)之间，按升序排列
-// func randomInt(start, end, count int) []int {
-// 	// 检查参数有效性
-// 	if count <= 0 || start >= end {
-// 		return nil
-// 	}
-
-// 	// 初始化包含所有可能随机数的切片
-// 	nums := make([]int, end-start)
-// 	for i := range nums {
-// 		nums[i] = start + i
-// 	}
-
-// 	// 使用Fisher-Yates洗牌算法打乱切片顺序
-// 	r := mrand.New(mrand.NewSource(time.Now().UnixNano()))
-// 	for i := len(nums) - 1; i > 0; i-- {
-// 		j := r.Intn(i + 1)
-// 		nums[i], nums[j] = nums[j], nums[i]
-// 	}
-
-// 	// 切片只需要前count个元素
-// 	nums = nums[:count]
-
-// 	// 对切片进行排序
-// 	sort.Ints(nums)
-
-// 	return nums
-// }
-
-// // 生成“火星文”替换下标队列
-// func staRepIntSlice(str_len, ratio int) (numSlice []int, err error) {
-
-// 	half := str_len / 2
-// 	substandard := str_len * ratio / 100
-// 	// 存放结果的slice
-// 	numSlice = make([]int, str_len)
-
-// 	// 随机生成替换下标
-// 	switch {
-// 	case ratio < 50:
-// 		numSlice = []int{}
-// 		return numSlice, errors.New("ratio must be not less than 50")
-// 	case ratio == 50:
-// 		numSlice = randomInt(0, str_len, half)
-// 	case ratio > 50:
-// 		numSlice = randomInt(0, str_len, substandard)
-// 	}
-
-// 	return
-// }
 
 // 1. 校验茶议已有内容是否不超限,false == 超限
 func submitAdditionalContent(w http.ResponseWriter, r *http.Request, body, additional string) bool {
@@ -305,28 +230,6 @@ func cnStrLen(str string) int {
 	return utf8.RuneCountInString(str)
 }
 
-// // 对未经蒙评的草稿进行“火星文”遮盖隐秘处理，即用星号替换50%或者指定更高比例文字
-// func marsString(str string, ratio int) string {
-// 	len := cnStrLen(str)
-// 	// 获取替换字符的下标队列
-// 	nslice, err := staRepIntSlice(len, ratio)
-// 	if err != nil {
-// 		return str
-// 	}
-// 	// 把字符串转换为[]rune
-// 	rstr := []rune(str)
-// 	// 遍历替换字符的下标队列
-
-// 	for _, n := range nslice {
-// 		// 替换下标指定的字符为星号
-// 		rstr[n] = '*'
-// 	}
-
-// 	// 将[]rune转换为字符串
-
-// 	return string(rstr)
-// }
-
 // 入参string，截取前面一段指定长度文字，返回string，作为预览文字
 // CodeBuddy修改
 func subStr(s string, length int) string {
@@ -348,29 +251,6 @@ func subStr(s string, length int) string {
 	_, size := utf8.DecodeRuneInString(s[end:])
 	return s[:end+size]
 }
-
-// 截取一段指定开始和结束位置的文字，用range迭代方法。入参string，返回string“...”
-// 注意，输入负数=最大值
-// func subStr2(str string, start, end int) string {
-
-// 	//str += "." //这是根据range的特性加的，如果不加，截取不到最后一个字（end+1=意外，因为1中文=3字节！）
-
-// 	var cnt, s, e int
-// 	for s = range str {
-// 		if cnt == start {
-// 			break
-// 		}
-// 		cnt++
-// 	}
-// 	cnt = 0
-// 	for e = range str {
-// 		if cnt == end {
-// 			break
-// 		}
-// 		cnt++
-// 	}
-// 	return str[s:e]
-// }
 
 // sanitizeRedirectPath 只允许站内路径（如 /v1/home），禁止外部域名
 // --- DeeSeek
@@ -487,9 +367,6 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	return nil
 }
 
-// 茶博士——古时专指陆羽。陆羽著《茶经》，唐德宗李适曾当面称陆羽为“茶博士”。
-// 茶博士-teaOffice，是古代中华传统文化对茶馆工作人员的昵称，如：富家宴会，犹有专供茶事之人，谓之茶博士。——唐代《西湖志馀》
-// 现在多指精通茶艺的师傅，尤其是四川的长嘴壶茶艺，茶博士个个都是身怀绝技的“高手”。
 // 茶博士向茶客报告信息的方法，包括但不限于意外事件和通知、感谢等等提示。
 func report(w http.ResponseWriter, r *http.Request, msg ...any) {
 	var userBPD data.UserBean
@@ -540,33 +417,6 @@ func session(r *http.Request) (data.Session, error) {
 
 	return sess, nil
 }
-
-// parse HTML templates
-// pass in a slice of file names, and get a template
-// func parseTemplateFiles(filenames ...string) *template.Template {
-// 	var files []string
-// 	t := template.New("layout")
-// 	for _, file := range filenames {
-// 		// 使用 filepath.Join 安全拼接路径,unix+windows
-// 		filePath := filepath.Join(util.Config.TemplateExt, file+util.Config.TemplateExt)
-// 		files = append(files, filePath)
-// 	}
-// 	t = template.Must(t.ParseFiles(files...))
-// 	return t
-// }
-
-// 记录用户最后的查询路径和参数
-// func recordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
-// 	lq := data.LastQuery{
-// 		UserId: sess_user_id,
-// 		Path:   path,
-// 		Query:  raw_query,
-// 	}
-// 	if err = lq.Create(); err != nil {
-// 		return err
-// 	}
-// 	return
-// }
 
 func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]data.TeamBean, error) {
 	newSlice := make([]data.TeamBean, 0, len(teamSlice))

@@ -2,6 +2,14 @@
 -- 用于开发和测试环境的初始数据
 
 -- ============================================
+-- 预设用户数据
+-- ============================================
+
+INSERT INTO users (id, uuid, name, email, password, biography, role, gender, avatar) VALUES
+(1, '396d7fac-2f29-44a7-7f77-63cbaf423438', '太空船长', 'teachat-captain@spacetravels.com', 'df2983700ffecb52e6649f0cb3981b66537083a4', '我是太空船长，欢迎来到星际茶会！', 'captain', 1, 'captain'),
+(2, '070a7e98-d5ab-4506-4e59-093a053bc32b', '稻香老农', 'teachat-verifier@storetravels.com', 'df2983700ffecb52e6649f0cb3981b66537083a4', '我是见证团队，欢迎来到星际茶会！', 'verifier', 0, 'teaSet');
+
+-- ============================================
 -- 预设团队数据
 -- ============================================
 
@@ -74,6 +82,7 @@ INSERT INTO magics (uuid, user_id, name, nickname, description, intelligence_lev
 -- 修复序列
 -- ============================================
 
+SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
 SELECT setval('teams_id_seq', (SELECT MAX(id) FROM teams));
 SELECT setval('hazards_id_seq', (SELECT MAX(id) FROM hazards));
 SELECT setval('risks_id_seq', (SELECT MAX(id) FROM risks));

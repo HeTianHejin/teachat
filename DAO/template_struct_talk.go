@@ -10,8 +10,8 @@ type PublicPData struct {
 type ObjectiveDetail struct {
 	SessUser User // 当前会话用户
 	//IsAuthor   bool // 是否为作者
-	IsAdmin    bool // 是否为管理员
-	IsMaster   bool // 是否为管理员
+	IsAdmin    bool // 是否为茶围目标管理员
+	IsMaster   bool // 是否为茶台项目管理员
 	IsVerifier bool // 是否为见证员
 	IsGuest    bool // 是否为游客
 	IsInvited  bool // 是否受邀请茶友
@@ -76,8 +76,8 @@ type ProjectBean struct {
 // 某个茶台详情页面渲染所需的动态数据
 type ProjectDetail struct {
 	SessUser                 User   // 当前会话用户
-	IsAdmin                  bool   // 是否为茶围管理员
-	IsMaster                 bool   // 是否为茶台管理员
+	IsAdmin                  bool   // 是否为茶围目标管理员
+	IsMaster                 bool   // 是否为茶台项目管理员
 	IsVerifier               bool   // 是否为见证员
 	IsInvited                bool   // 是否受邀请茶友
 	IsGuest                  bool   // 是否为游客
@@ -217,9 +217,9 @@ type PostDetail struct {
 	SessUser                 User     // 当前会话用户
 	IsGuest                  bool     // 是否为游客
 	IsAuthor                 bool     // 是否为品味作者
-	IsAdmin                  bool     // 是否为茶围管理成员
-	IsMaster                 bool     // 是否为茶台管理成员
-	IsVerifier               bool     // 是否为见证员
+	IsAdmin                  bool     // 是否为茶围（目标）管理成员
+	IsMaster                 bool     // 是否为茶台（项目）管理成员
+	IsVerifier               bool     // 是否为见证团队成员
 	SessUserDefaultFamily    Family   // 当前会话用户默认&家庭茶团
 	SessUserSurvivalFamilies []Family // 当前会话用户全部&家庭茶团
 	SessUserDefaultTeam      Team

@@ -1,8 +1,10 @@
 package route
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strconv"
 	data "teachat/DAO"
 	util "teachat/Util"
@@ -24,14 +26,9 @@ func LoginGet(w http.ResponseWriter, r *http.Request) {
 	var aopD data.AcceptObjectPageData
 	aopD.SessUser.Footprint = footprint
 	aopD.SessUser.Query = query
-	// aopD.SessUser = data.User{
-	// 	Id:   0,
-	// 	Name: "游客",
-	// }
+
 	_, err = session(r)
 	if err != nil {
-		// t := ParseTemplateFiles("layout", "navbar.public", "login")
-		// t.Execute(w, nil)
 		generateHTML(w, &aopD, "layout", "navbar.public", "login")
 		return
 	}
@@ -50,6 +47,8 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
+		report(w, r, "你好，茶博士正在为你服务的路上极速行动，请稍安勿躁。")
+		return
 	}
 	// 读取用户提交的资料
 	name := r.PostFormValue("name")
@@ -61,7 +60,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
-	if gender != 0 && gender != 1 {
+	if gender != data.User_Gender_Female && gender != data.User_Gender_Male {
 		report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
@@ -70,7 +69,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	newU := data.User{
 		Name:      name,
 		Email:     email,
-		Password:  password,
+		Password:  data.Encrypt(password),
 		Biography: biography,
 		Role:      "traveller",
 		Gender:    gender,
@@ -114,7 +113,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	//设置茶棚预设的默认团队（自由人）
 	udt := data.UserDefaultTeam{
 		UserId: newU.Id,
-		TeamId: 2,
+		TeamId: data.TeamIdFreelancer,
 	}
 	if err = udt.Create(); err != nil {
 		util.Debug(" Cannot create default team", err)
@@ -145,88 +144,78 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 读取用户提交的资料
-
 	watchword := r.PostFormValue("watchword")
 	pw := r.PostFormValue("password")
-
 	email := r.PostFormValue("email")
 
-	s_u := data.User{}
+	sessionUser := data.User{}
 
 	// 口令检查，提示用户这是茶话会
 	wordValid := watchword == "闻香识茶" || watchword == "Recognizing Tea by Its Aroma"
 
 	if wordValid {
-		// 口令正确
-		// Check if the email parameter is a positive integer (user ID)
-		if s_u_id, convErr := strconv.Atoi(email); convErr == nil && s_u_id > 0 {
-			// Retrieve user by ID
-			t_user, userErr := data.UserById(s_u_id)
-			if userErr != nil {
+		// 口令正确，获取用户信息
+		if userID, convErr := strconv.Atoi(email); convErr == nil && userID > 0 {
+			sessionUser, err = data.GetUser(userID)
+			if err != nil {
 				report(w, r, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
 				return
 			}
-			s_u = t_user
 		} else if isEmail(email) {
-			// Retrieve user by email
-			t_u, userErr := data.GetUserByEmail(email, r.Context())
-			if userErr != nil {
+			sessionUser, err = data.GetUserByEmail(email, r.Context())
+			if err != nil {
 				report(w, r, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
 				return
 			}
-			s_u = t_u
 		} else {
-			// Invalid email format
 			report(w, r, "茶博士嘀咕说，请确认握笔姿势正确,而且身姿健美。")
 			return
 		}
 
-		if s_u.Password == data.Encrypt(pw) {
-
-			//创建新的会话
-			session, err := s_u.CreateSession()
+		encryptedPw := data.Encrypt(pw)
+		if subtle.ConstantTimeCompare([]byte(sessionUser.Password), []byte(encryptedPw)) == 1 {
+			// 创建新的会话
+			session, err := sessionUser.CreateSession()
 			if err != nil {
 				util.Debug(" Cannot create session", err)
 				report(w, r, "你好，茶博士因找不到笔导致登船验证失败，请确认情况后重试。")
 				return
 			}
-			//设置cookie
+			// 设置cookie
 			cookie := http.Cookie{
 				Name:     "_cookie",
 				Value:    session.Uuid,
 				HttpOnly: true,
-				MaxAge:   60 * 60 * 24 * 7, // 7 days,
-				//Secure:   true,                 //https only
-				SameSite: http.SameSiteLaxMode, //宽松模式 or http.SameSiteStrictMode -严格
+				MaxAge:   60 * 60 * 24 * 7, // 7 days
+				//Secure:   true, // 生产环境应启用HTTPS
+				SameSite: http.SameSiteLaxMode,
 			}
 
 			http.SetCookie(w, &cookie)
 
 			// 安全重定向⚠️本站
-			footprint := sanitizeRedirectPath(r.FormValue("footprint")) // 避免开放重定向漏洞
-			//http.Redirect(w, r, footprint, http.StatusFound)
+			footprint := sanitizeRedirectPath(r.FormValue("footprint"))
+			query := r.FormValue("query")
 
-			//下面是测试
-			query := r.FormValue("query") //查询参数
-			path := footprint + "?" + query
-			http.Redirect(w, r, path, http.StatusFound)
+			// 安全构建URL，防止注入攻击
+			redirectURL, err := url.Parse(footprint)
+			if err != nil || query == "" {
+				http.Redirect(w, r, footprint, http.StatusFound)
+				return
+			}
+			redirectURL.RawQuery = query
+			http.Redirect(w, r, redirectURL.String(), http.StatusFound)
 			return
 
 		} else {
-			//密码和用户名不匹配?
-			//如果连续输错密码，需要采取一些防暴力冲击措施？
-			// 使用限流中间件（如github.com/ulule/limiter）
-			// rate := limiter.Rate{
-			//     Limit:  5,               // 每分钟5次尝试
-			//     Period: 1 * time.Minute,
-			// }
-			util.Debug(s_u.Email, "密码和用户名不匹配。")
+			// 密码不匹配
+			util.Debug(sessionUser.Email, "密码和用户名不匹配。")
 			report(w, r, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 			return
 		}
 
 	} else {
-		//输入了错误的口令
+		// 输入了错误的口令
 		report(w, r, "你好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
 		return
 	}
@@ -281,7 +270,6 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	// 4. 清除客户端Cookie并重定向
 	clearSessionCookie(w)
-	//	util.Debug(operation, "用户登出顺利", "uuid", cookie.Value)
 	http.Redirect(w, r, "/v1/", http.StatusFound)
 }
 
@@ -293,7 +281,7 @@ func clearSessionCookie(w http.ResponseWriter) {
 		Path:     "/",
 		MaxAge:   -1,   // 立即过期
 		HttpOnly: true, // 防止XSS
-		//Secure:   true, // 仅在HTTPS下传输
+		//Secure:   true, // 生产环境应启用HTTPS
 		SameSite: http.SameSiteLaxMode,
 	})
 }
