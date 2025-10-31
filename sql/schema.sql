@@ -41,6 +41,7 @@ CREATE TABLE families (
 );
 
 -- 团队表
+-- 层级关系通过groups和group_members表管理
 CREATE TABLE teams (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -48,12 +49,44 @@ CREATE TABLE teams (
     mission               TEXT,
     founder_id            INTEGER REFERENCES users(id),
     class                 INTEGER,
-    abbreviation          INTEGER,
+    abbreviation          VARCHAR(255),
     logo                  VARCHAR(255),
-    superior_team_id      INTEGER DEFAULT 0,
-    subordinate_team_id   INTEGER DEFAULT 0,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 集团表
+-- 用于管理多个团队的集合，支持复杂的多团队协作场景
+CREATE TABLE groups (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    name                  VARCHAR(255) NOT NULL,
+    abbreviation          VARCHAR(255),
+    mission               TEXT,
+    founder_id            INTEGER REFERENCES users(id),
+    first_team_id         INTEGER REFERENCES teams(id),
+    class                 INTEGER DEFAULT 1,
+    logo                  VARCHAR(255),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 集团成员表
+-- 记录团队在集团中的成员资格和层级关系
+CREATE TABLE group_members (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    group_id              INTEGER REFERENCES groups(id),
+    team_id               INTEGER REFERENCES teams(id),
+    level                 INTEGER DEFAULT 1,
+    role                  VARCHAR(255),
+    status                INTEGER DEFAULT 1,
+    user_id               INTEGER REFERENCES users(id),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
 );
 
 -- ============================================
@@ -1378,3 +1411,45 @@ COMMENT ON TABLE safety_protections IS '安全防护表';
 COMMENT ON TABLE see_seeks IS '看看检查表';
 COMMENT ON TABLE brain_fires IS '脑火(头脑风暴)表';
 COMMENT ON TABLE suggestions IS '建议表';
+
+-- ============================================
+-- 索引优化
+-- ============================================
+
+-- 团队表索引
+CREATE INDEX idx_teams_deleted_at ON teams(deleted_at);
+CREATE INDEX idx_teams_class ON teams(class);
+CREATE INDEX idx_teams_founder_id ON teams(founder_id);
+CREATE INDEX idx_teams_abbreviation ON teams(abbreviation);
+
+-- 团队成员表索引
+CREATE INDEX idx_team_members_team_id ON team_members(team_id);
+CREATE INDEX idx_team_members_user_id ON team_members(user_id);
+CREATE INDEX idx_team_members_status ON team_members(class);
+CREATE INDEX idx_team_members_role ON team_members(role);
+
+-- 集团表索引
+CREATE INDEX idx_groups_deleted_at ON groups(deleted_at);
+CREATE INDEX idx_groups_class ON groups(class);
+CREATE INDEX idx_groups_founder_id ON groups(founder_id);
+CREATE INDEX idx_groups_first_team_id ON groups(first_team_id);
+
+-- 集团成员表索引
+CREATE INDEX idx_group_members_group_id ON group_members(group_id);
+CREATE INDEX idx_group_members_team_id ON group_members(team_id);
+CREATE INDEX idx_group_members_status ON group_members(status);
+CREATE INDEX idx_group_members_deleted_at ON group_members(deleted_at);
+CREATE INDEX idx_group_members_level ON group_members(level);
+
+-- 用户表索引
+CREATE INDEX idx_users_email ON users(email);
+
+-- 会话表索引
+CREATE INDEX idx_sessions_user_id ON sessions(user_id);
+CREATE INDEX idx_sessions_uuid ON sessions(uuid);
+
+-- 复合索引优化常见查询
+CREATE INDEX idx_team_members_team_user ON team_members(team_id, user_id);
+CREATE INDEX idx_group_members_group_team ON group_members(group_id, team_id);
+CREATE INDEX idx_teams_class_deleted ON teams(class, deleted_at);
+CREATE INDEX idx_groups_class_deleted ON groups(class, deleted_at);
