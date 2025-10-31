@@ -76,18 +76,18 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		Avatar:    "teaSet",
 	}
 	// 用正则表达式匹配一下提交的邮箱格式是否正确
-	if ok := isEmail(newU.Email); !ok {
+	if ok_email := isEmail(newU.Email); !ok_email {
 		report(w, r, "你好，请确认邮箱拼写是否正确。")
 		return
 	}
 	// 检查提交的邮箱是否已经注册过了
-	exist, err := data.UserExistByEmail(newU.Email)
+	exist_email, err := data.UserExistByEmail(newU.Email)
 	if err != nil {
 		util.Debug((fmt.Errorf("检查邮箱存在性时出错: %v, 邮箱: %s", err, newU.Email)), "数据库查询错误")
 		report(w, r, "你好，茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
-	if exist {
+	if exist_email {
 		util.Debug((fmt.Errorf("重复注册尝试: 邮箱 %s 已注册", newU.Email)), "重复注册")
 		report(w, r, "你好，提交注册的邮箱地址已经注册,请确认后再试。")
 		return
@@ -103,7 +103,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		TeamId: data.TeamIdFreelancer,
 		UserId: newU.Id,
 		Role:   "taster",
-		Status: 1,
+		Status: data.TeMemberStatusActive,
 	}
 	if err = team_member.Create(); err != nil {
 		util.Debug(" Cannot create default_free team_member", err)
@@ -124,7 +124,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	util.Debug(newU.Email, "注册新账号ok")
 
 	t := ""
-	if newU.Gender == 0 {
+	if newU.Gender == data.User_Gender_Female {
 		t = fmt.Sprintf("%s 女士，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
 	} else {
 		t = fmt.Sprintf("%s 先生，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
