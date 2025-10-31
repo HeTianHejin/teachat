@@ -335,14 +335,12 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 
 	logo := "teamLogo"
 	new_team := data.Team{
-		Name:              new_name,
-		Abbreviation:      abbr + "$",
-		Mission:           mission,
-		Logo:              logo,
-		Class:             class,
-		FounderId:         s_u.Id,
-		SuperiorTeamId:    data.TeamIdSpaceshipCrew,
-		SubordinateTeamId: data.TeamIdNone,
+		Name:         new_name,
+		Abbreviation: abbr + "$",
+		Mission:      mission,
+		Logo:         logo,
+		Class:        class,
+		FounderId:    s_u.Id,
 	}
 	if err := new_team.Create(); err != nil {
 		util.Debug(" At create team", err)
