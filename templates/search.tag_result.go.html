@@ -1,0 +1,125 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/tags/hot">标签搜索</a></li>
+  <li class="active">{{ .Tag }}</li>
+</ol>
+
+<div class="page-header">
+  <h3>
+    <i class="glyphicon glyphicon-tags"></i> 
+    标签搜索结果：<span class="label label-info">{{ .Tag }}</span>
+  </h3>
+</div>
+
+<!-- 搜索框 -->
+<div class="well">
+  <form action="/v1/search/by_tag" method="get" class="form-inline">
+    <div class="form-group">
+      <input type="text" class="form-control" name="tag" 
+             placeholder="输入标签搜索..." value="{{ .Tag }}" />
+    </div>
+    <div class="form-group">
+      <select class="form-control" name="type">
+        <option value="team" {{ if ne .SearchType "group" }}selected{{ end }}>搜索团队</option>
+        <option value="group" {{ if eq .SearchType "group" }}selected{{ end }}>搜索集团</option>
+      </select>
+    </div>
+    <button type="submit" class="btn btn-primary">
+      <i class="glyphicon glyphicon-search"></i> 搜索
+    </button>
+  </form>
+</div>
+
+{{ if eq .SearchType "group" }}
+  <!-- 集团搜索结果 -->
+  {{ if .GroupBeanSlice }}
+  <h4>找到 {{ len .GroupBeanSlice }} 个集团</h4>
+  {{ range .GroupBeanSlice }}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <div class="row">
+        <div class="col-xs-6">
+          <a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Name }}</a>
+        </div>
+        <div class="col-xs-6 text-right">
+          <span class="label {{ if .Open }}label-success{{ else }}label-default{{ end }}">
+            {{ .Group.Property }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body">
+      {{ .Group.Mission }}
+    </div>
+    <div class="panel-footer">
+      {{ if .Group.Tags }}
+      <i class="glyphicon glyphicon-tags"></i>
+      {{ range .Group.GetTags }}
+      <a href="/v1/search/by_tag?tag={{ . }}&type=group">
+        <span class="label label-info" style="margin-right: 5px;">{{ . }}</span>
+      </a>
+      {{ end }}
+      {{ end }}
+    </div>
+  </div>
+  {{ end }}
+  {{ else }}
+  <div class="alert alert-warning">
+    <i class="glyphicon glyphicon-info-sign"></i> 
+    未找到包含"{{ .Tag }}"标签的集团
+  </div>
+  {{ end }}
+
+{{ else }}
+  <!-- 团队搜索结果 -->
+  {{ if .TeamBeanSlice }}
+  <h4>找到 {{ len .TeamBeanSlice }} 个团队</h4>
+  {{ range .TeamBeanSlice }}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <div class="row">
+        <div class="col-xs-6">
+          <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        </div>
+        <div class="col-xs-6 text-right">
+          <span class="label {{ if .Open }}label-success{{ else }}label-default{{ end }}">
+            {{ .Team.TeamProperty }}
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="panel-body">
+      {{ .Team.Mission }}
+    </div>
+    <div class="panel-footer">
+      <span style="margin-right: 10px;">
+        <i class="glyphicon glyphicon-user"></i> {{ .MemberCount }}
+      </span>
+      {{ if .Team.Tags }}
+      <i class="glyphicon glyphicon-tags"></i>
+      {{ range .Team.GetTags }}
+      <a href="/v1/search/by_tag?tag={{ . }}">
+        <span class="label label-info" style="margin-right: 5px;">{{ . }}</span>
+      </a>
+      {{ end }}
+      {{ end }}
+    </div>
+  </div>
+  {{ end }}
+  {{ else }}
+  <div class="alert alert-warning">
+    <i class="glyphicon glyphicon-info-sign"></i> 
+    未找到包含"{{ .Tag }}"标签的团队
+  </div>
+  {{ end }}
+{{ end }}
+
+<div class="text-center" style="margin-top: 20px;">
+  <a href="/v1/tags/hot" class="btn btn-default">
+    <i class="glyphicon glyphicon-fire"></i> 查看热门标签
+  </a>
+</div>
+
+{{ end }}

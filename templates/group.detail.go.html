@@ -68,6 +68,15 @@
           {{ .GroupBean.TeamsCount }}
         </span>
 
+        {{ if .GroupBean.Group.Tags }}
+        <div style="margin-top: 10px;">
+          <i class="glyphicon glyphicon-tags"></i>
+          {{ range .GroupBean.Group.GetTags }}
+          <span class="label label-info" style="margin-right: 5px;">{{ . }}</span>
+          {{ end }}
+        </div>
+        {{ end }}
+
       </div>
     </div>
 

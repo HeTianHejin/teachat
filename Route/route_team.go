@@ -301,7 +301,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 
 	//检测class是否合规
 	switch class {
-	case data.TeamClassOpenStraw, data.TeamClassCloseStraw:
+	case data.TeamClassOpenDraft, data.TeamClassCloseDraft:
 		break
 	default:
 		report(w, r, "你好，茶博士摸摸头，竟然说茶团类别太多或者太少，未能创建新茶团。")

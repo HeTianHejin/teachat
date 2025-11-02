@@ -1,0 +1,247 @@
+{{ define "content" }}
+<div class="container mt-4">
+    <!-- 集团基本信息 -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="bi bi-building"></i> {{ .Group.Name }}
+                <span class="badge bg-light text-dark ms-2">{{ .Group.Abbreviation }}</span>
+            </h4>
+            {{ if .CanManage }}
+            <div class="btn-group">
+                <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#editGroupModal">
+                    <i class="bi bi-pencil"></i> 编辑
+                </button>
+                {{ if .IsFounder }}
+                <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteGroupModal">
+                    <i class="bi bi-trash"></i> 删除
+                </button>
+                {{ end }}
+            </div>
+            {{ end }}
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <h6 class="text-muted">集团使命</h6>
+                    <p>{{ .Group.Mission }}</p>
+                    
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>集团类型：</strong> {{ .Group.Property }}</p>
+                            <p class="mb-1"><strong>创建时间：</strong> {{ .Group.CreatedAtDate }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>成员团队数：</strong> {{ len .Teams }}</p>
+                            <p class="mb-1"><strong>集团状态：</strong> 
+                                {{ if .Group.IsActive }}
+                                <span class="badge bg-success">活跃</span>
+                                {{ else }}
+                                <span class="badge bg-secondary">非活跃</span>
+                                {{ end }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4 text-center">
+                    <img src="/static/images/{{ .Group.Logo }}.png" 
+                         alt="集团标志" 
+                         class="img-fluid rounded"
+                         style="max-width: 150px;"
+                         onerror="this.src='/static/images/default-group-logo.png'">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 成员团队列表 -->
+    <div class="card">
+        <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">
+                <i class="bi bi-people"></i> 成员团队
+            </h5>
+            {{ if .CanManage }}
+            <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addTeamModal">
+                <i class="bi bi-plus-circle"></i> 添加团队
+            </button>
+            {{ end }}
+        </div>
+        <div class="card-body">
+            {{ if .Teams }}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>团队名称</th>
+                            <th>简称</th>
+                            <th>使命</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ range .Teams }}
+                        <tr>
+                            <td>
+                                <i class="bi bi-shield-check text-primary"></i>
+                                {{ .Name }}
+                            </td>
+                            <td><span class="badge bg-info">{{ .Abbreviation }}</span></td>
+                            <td>{{ .Mission }}</td>
+                            <td>{{ .CreatedAtDate }}</td>
+                            <td>
+                                <a href="/v1/team/read?uuid={{ .Uuid }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-eye"></i> 查看
+                                </a>
+                            </td>
+                        </tr>
+                        {{ end }}
+                    </tbody>
+                </table>
+            </div>
+            {{ else }}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                <p class="mt-3">暂无成员团队</p>
+                {{ if .CanManage }}
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTeamModal">
+                    <i class="bi bi-plus-circle"></i> 添加第一个团队
+                </button>
+                {{ end }}
+            </div>
+            {{ end }}
+        </div>
+    </div>
+
+    <!-- 返回按钮 -->
+    <div class="mt-3">
+        <a href="/v1/groups" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> 返回集团列表
+        </a>
+    </div>
+
+    <!-- 权限提示 -->
+    {{ if .IsFounder }}
+    <div class="alert alert-info mt-3">
+        <i class="bi bi-shield-check"></i> 您是该集团的创建者，拥有全部管理权限。
+    </div>
+    {{ else if .CanManage }}
+    <div class="alert alert-success mt-3">
+        <i class="bi bi-person-check"></i> 您是最高管理团队成员，可以管理该集团。
+    </div>
+    {{ end }}
+</div>
+
+<!-- 编辑集团模态框 -->
+{{ if .CanManage }}
+<div class="modal fade" id="editGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">编辑集团信息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/v1/group/edit" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="group_id" value="{{ .Group.Id }}">
+                    
+                    <div class="mb-3">
+                        <label for="edit_name" class="form-label">集团名称</label>
+                        <input type="text" class="form-control" id="edit_name" name="name" 
+                               value="{{ .Group.Name }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_abbreviation" class="form-label">集团简称</label>
+                        <input type="text" class="form-control" id="edit_abbreviation" name="abbreviation" 
+                               value="{{ .Group.Abbreviation }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="edit_mission" class="form-label">集团使命</label>
+                        <textarea class="form-control" id="edit_mission" name="mission" 
+                                  rows="4" required>{{ .Group.Mission }}</textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{ end }}
+
+<!-- 删除集团模态框 -->
+{{ if .IsFounder }}
+<div class="modal fade" id="deleteGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">删除集团</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/v1/group/delete" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="group_id" value="{{ .Group.Id }}">
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>警告！</strong>此操作将删除集团 <strong>{{ .Group.Name }}</strong>。
+                    </div>
+                    <p>请确认您要删除该集团吗？</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-danger">确认删除</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{ end }}
+
+<!-- 添加团队模态框 -->
+<div class="modal fade" id="addTeamModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加团队到集团</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/v1/group/add_team" method="post">
+                <div class="modal-body">
+                    <input type="hidden" name="group_id" value="{{ .Group.Id }}">
+                    
+                    <div class="mb-3">
+                        <label for="team_id" class="form-label">选择团队</label>
+                        <select class="form-select" id="team_id" name="team_id" required>
+                            <option value="">请选择团队</option>
+                            <!-- TODO: 这里需要传入可选的团队列表 -->
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="level" class="form-label">团队等级</label>
+                        <select class="form-select" id="level" name="level">
+                            <option value="1">最高级</option>
+                            <option value="2" selected>次级</option>
+                            <option value="3">次次级</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="role" class="form-label">角色描述</label>
+                        <input type="text" class="form-control" id="role" name="role" 
+                               placeholder="例如：核心团队、协作团队" value="成员团队">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">添加</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{{ end }}
