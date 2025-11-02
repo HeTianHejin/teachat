@@ -341,6 +341,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		Logo:         logo,
 		Class:        class,
 		FounderId:    s_u.Id,
+		Tags:         r.PostFormValue("tags"),
 	}
 	if err := new_team.Create(); err != nil {
 		util.Debug(" At create team", err)
@@ -348,7 +349,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = createAndSendAcceptMessage(new_team.Id, data.AcceptObjectTypeTe, s_u.Id); err != nil {
+	if err = createAndSendAcceptMessage(new_team.Id, data.AcceptObjectTypeTeam, s_u.Id); err != nil {
 		if strings.Contains(err.Error(), "创建AcceptObject失败") {
 			report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 		} else {
@@ -866,6 +867,23 @@ func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
 	tD.NormalMemberBeanSlice = tNMBSlice
 
 	tD.SessUser = s_u
+
+	// 查询团队所属集团
+	group, err := data.GetGroupByTeamId(team.Id)
+	if err == nil && group != nil {
+		// 团队已加入集团
+		groupBean := data.GroupBean{
+			Group:         *group,
+			CreatedAtDate: group.CreatedAtDate(),
+			Open:          group.Class == data.GroupClassOpen,
+		}
+		// 获取集团创建者
+		founder, err := data.GetUser(group.FounderId)
+		if err == nil {
+			groupBean.Founder = founder
+		}
+		tD.GroupBean = &groupBean
+	}
 
 	generateHTML(w, &tD, "layout", "navbar.private", "team.manage")
 }

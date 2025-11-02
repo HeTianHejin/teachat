@@ -207,7 +207,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if util.Config.PoliteMode {
-		if err = createAndSendAcceptMessage(new_ob.Id, data.AcceptObjectTypeOb, s_u.Id); err != nil {
+		if err = createAndSendAcceptMessage(new_ob.Id, data.AcceptObjectTypeObjective, s_u.Id); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {

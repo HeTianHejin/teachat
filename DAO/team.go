@@ -103,6 +103,7 @@ type Team struct {
 	Class        int    // 团队类型：0-系统团队，1-开放式，2-封闭式，10-开放式草团，20-封闭式草团，31-已婉拒开放式，32-已婉拒封闭式
 	Abbreviation string // 队名简称
 	Logo         string // $事业茶团标志
+	Tags         string // 分类标签，逗号分隔，如"诗词书法,文化艺术"
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
 	DeletedAt    *time.Time // 软删除时间戳，NULL表示未删除

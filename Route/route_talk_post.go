@@ -356,7 +356,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	if util.Config.PoliteMode {
 		// 友邻蒙评模式
-		if err := createAndSendAcceptMessage(new_draft_post.Id, data.AcceptObjectTypePo, s_u.Id); err != nil {
+		if err := createAndSendAcceptMessage(new_draft_post.Id, data.AcceptObjectTypePost, s_u.Id); err != nil {
 			// 根据错误类型返回不同提示
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")

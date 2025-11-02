@@ -107,6 +107,16 @@ func main() {
 	mux.HandleFunc("/v1/team_member/role_changed", route.MemberRoleChanged)
 	mux.HandleFunc("/v1/team_member/resign", route.HandleMemberResign)
 
+	// 集团管理路由
+	mux.HandleFunc("/v1/group/new", route.NewGroupGet)
+	mux.HandleFunc("/v1/group/create", route.CreateGroupPost)
+	mux.HandleFunc("/v1/groups", route.GroupsGet)
+	mux.HandleFunc("/v1/group/read", route.GroupReadGet)
+	mux.HandleFunc("/v1/group/detail", route.GroupDetailGet)
+	mux.HandleFunc("/v1/group/add_team", route.AddTeamToGroupPost)
+	mux.HandleFunc("/v1/group/edit", route.EditGroupPost)
+	mux.HandleFunc("/v1/group/delete", route.DeleteGroupPost)
+
 	//defined in route_family.go
 	//处理家庭茶团事务
 	mux.HandleFunc("/v1/family/new", route.HandleNewFamily)
