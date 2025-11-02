@@ -78,6 +78,8 @@ type TeamDetail struct {
 	NormalMemberBeanSlice []TeamMemberBean //普通成员资料夹
 
 	HasApplication bool //是否有新的加盟申请书
+	
+	GroupBean *GroupBean //所属集团资料夹（如果有）
 }
 
 // 茶团成员资料荚

@@ -48,19 +48,17 @@ func (lq *LastQuery) Get() (err error) {
 // AcceptObject 友邻蒙评对象
 type AcceptObject struct {
 	Id         int
-	ObjectType int // 1:茶话会，2:茶台， 3:茶议，4: 品味， 5:茶团
+	ObjectType int // 1:茶话会，2:茶台， 3:茶议，4: 品味， 5:茶团， 6:集团
 	ObjectId   int
-
-	// 页面动态数据,不存储到数据库中
-	// PageData AcceptObjectPageData
 }
 
 const (
-	AcceptObjectTypeOb = 1 //objective
-	AcceptObjectTypePr = 2 //project
-	AcceptObjectTypeTh = 3 //thread
-	AcceptObjectTypePo = 4 //post
-	AcceptObjectTypeTe = 5 //team
+	AcceptObjectTypeObjective = iota + 1 //objective （目标）
+	AcceptObjectTypeProject              //project （项目）
+	AcceptObjectTypeThread               //thread （茶议）
+	AcceptObjectTypePost                 //post （品味）
+	AcceptObjectTypeTeam                 //team （茶团）
+	AcceptObjectTypeGroup                //group（集团）
 )
 
 // 用户新消息统计
