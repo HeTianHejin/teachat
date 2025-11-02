@@ -400,9 +400,9 @@ func acceptNewProject(objectId int) error {
 	}
 
 	switch pr.Class {
-	case data.PrClassOpenStraw:
+	case data.PrClassOpenDraft:
 		pr.Class = data.PrClassOpen
-	case data.PrClassCloseStraw:
+	case data.PrClassCloseDraft:
 		pr.Class = data.PrClassClose
 	default:
 		return errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
@@ -426,9 +426,9 @@ func acceptNewObjective(objectId int) (*data.Objective, error) {
 	}
 	// 检查当前茶围的状态
 	switch ob.Class {
-	case data.ObClassOpenStraw:
+	case data.ObClassOpenDraft:
 		ob.Class = data.ObClassOpen
-	case data.ObClassCloseStraw:
+	case data.ObClassCloseDraft:
 		ob.Class = data.ObClassClose
 	default:
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
@@ -449,9 +449,9 @@ func acceptNewTeam(objectId int) (*data.Team, error) {
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说没有找到新茶茶叶的资料未必是怪事。")
 	}
 	switch t.Class {
-	case data.TeamClassOpenStraw:
+	case data.TeamClassOpenDraft:
 		t.Class = data.TeamClassOpen
-	case data.TeamClassCloseStraw:
+	case data.TeamClassCloseDraft:
 		t.Class = data.TeamClassClose
 	default:
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")

@@ -169,7 +169,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch class {
-	case data.ObClassOpenStraw:
+	case data.ObClassOpenDraft:
 		//如果class=10开放式茶话会草围
 		//尝试保存新茶话会
 		if err = new_ob.Create(); err != nil {
@@ -179,7 +179,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case data.ObClassCloseStraw:
+	case data.ObClassCloseDraft:
 		//如果class=20封闭式茶话会(草围)，需要读取指定茶团号TeamIds列表
 		tIds_str := r.PostFormValue("invite_ids")
 		if tIds_str == "" {
@@ -323,7 +323,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	switch ob.Class {
 	case data.ObClassOpen, data.ObClassClose:
 		break
-	case data.ObClassOpenStraw, data.ObClassCloseStraw:
+	case data.ObClassOpenDraft, data.ObClassCloseDraft:
 		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	default:

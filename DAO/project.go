@@ -29,9 +29,9 @@ type Project struct {
 	// 1: 开放式茶台 (Open tea table)
 	// 2: 封闭式茶台 (Closed tea table)
 	// 跳过 3-9
-	// 10: 开放式草台 (Open straw table)
+	// 10: 开放式草台 (Open draft table)
 	// 跳过 11-19
-	// 20: 封闭式草台 (Closed straw table)
+	// 20: 封闭式草台 (Closed draft table)
 	// 跳过 21-30
 	// 31: 已婉拒开放式茶台 (Rejected open table)
 	// 32: 已婉拒封闭式茶台 (Rejected close table)
@@ -56,9 +56,9 @@ const (
 	PrClassOpen                            // 1: 开放式茶台 (Open tea table)
 	PrClassClose                           // 2: 封闭式茶台 (Closed tea table)
 	_                                      // 跳过 3-9
-	PrClassOpenStraw           = 10        // 10: 开放式草台 (Open straw table)
+	PrClassOpenDraft           = 10        // 10: 开放式草台 (Open draft table)
 	_                                      // 跳过 11-19
-	PrClassCloseStraw          = 20        // 20: 封闭式草台 (Closed straw table)
+	PrClassCloseDraft          = 20        // 20: 封闭式草台 (Closed draft table)
 	_                                      // 跳过 21-30
 	PrClassRejectedOpen        = 31        // 31: 已婉拒开放式茶台 (Rejected open table)
 	PrClassRejectedClose       = 32        // 32: 已婉拒封闭式茶台 (Rejected close table)

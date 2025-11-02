@@ -113,10 +113,10 @@ const (
 	TeamClassSpaceship          = 0  //飞船茶棚团队，系统保留
 	TeamClassOpen               = 1  //开放式$事业茶团
 	TeamClassClose              = 2  // 封闭式$事业茶团
-	TeamClassOpenStraw          = 10 //开放式草团
-	TeamClassCloseStraw         = 20 // 封闭式草团
-	TeamClassRejectedOpenStraw  = 31 //已婉拒开放式草团
-	TeamClassRejectedCloseStraw = 32 // 已婉拒封闭式草团
+	TeamClassOpenDraft          = 10 //开放式草团
+	TeamClassCloseDraft         = 20 // 封闭式草团
+	TeamClassRejectedOpenDraft  = 31 //已婉拒开放式草团
+	TeamClassRejectedCloseDraft = 32 // 已婉拒封闭式草团
 )
 
 // TeamMemberStatus 团队成员状态类型

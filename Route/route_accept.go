@@ -172,9 +172,9 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch ob.Class {
-			case data.ObClassOpenStraw:
+			case data.ObClassOpenDraft:
 				ob.Class = data.ObClassNeighborRejectOpen
-			case data.ObClassCloseStraw:
+			case data.ObClassCloseDraft:
 				ob.Class = data.ObClassNeighborRejectClose
 			}
 			// 更新茶话会，友邻蒙评未通过！
@@ -193,9 +193,9 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch pr.Class {
-			case data.PrClassOpenStraw:
+			case data.PrClassOpenDraft:
 				pr.Class = data.PrClassRejectedOpen
-			case data.PrClassCloseStraw:
+			case data.PrClassCloseDraft:
 				pr.Class = data.PrClassClose
 			}
 			// 更新茶台属性，
@@ -242,10 +242,10 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			switch team.Class {
-			case data.TeamClassOpenStraw:
-				team.Class = data.TeamClassRejectedOpenStraw
-			case data.TeamClassCloseStraw:
-				team.Class = data.TeamClassRejectedCloseStraw
+			case data.TeamClassOpenDraft:
+				team.Class = data.TeamClassRejectedOpenDraft
+			case data.TeamClassCloseDraft:
+				team.Class = data.TeamClassRejectedCloseDraft
 			}
 			if err = team.UpdateClass(); err != nil {
 				util.Debug("Cannot update team class", err)
@@ -506,6 +506,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(s_u.Id, ao.Id); err != nil {
 			util.Debug("Cannot update team accept-message class", err)
+			return
 		}
 
 	case data.AcceptObjectTypeGroup:
@@ -519,6 +520,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptMessage.Update(s_u.Id, ao.Id); err != nil {
 			util.Debug("Cannot update group accept-message class", err)
+			return
 		}
 
 	default:

@@ -38,9 +38,9 @@ const (
 	ObClassOpen                            // 1: 开放式茶话会 (Open tea talk)
 	ObClassClose                           // 2: 封闭式茶话会 (Closed tea talk)
 	_                                      // 跳过 3-9
-	ObClassOpenStraw           = 10        // 10: 开放式草围 (Open straw ring)
+	ObClassOpenDraft           = 10        // 10: 开放式草围 (Open draft ring)
 	_                                      // 跳过 11-19
-	ObClassCloseStraw          = 20        // 20: 封闭式草围 (Closed straw ring)
+	ObClassCloseDraft          = 20        // 20: 封闭式草围 (Closed draft ring)
 	_                                      // 跳过 21-30
 	ObClassNeighborRejectOpen  = 31        // 31: 友邻婉拒开围 (Neighbor rejected opening)
 	ObClassNeighborRejectClose = 32        // 32: 友邻婉拒闭围 (Neighbor rejected closing)

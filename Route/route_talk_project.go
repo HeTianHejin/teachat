@@ -412,7 +412,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 根据茶话会属性判断
 	// 检查一下该茶话会是否草围（待蒙评审核状态）
 	switch t_ob.Class {
-	case data.ObClassOpenStraw, data.ObClassCloseStraw:
+	case data.ObClassOpenDraft, data.ObClassCloseDraft:
 		// 该茶话会是草围,尚未启用，不能新开茶台
 		report(w, r, "你好，这个茶话会尚未启用。")
 		return
@@ -421,7 +421,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		// 该茶话会是开放式茶话会，可以新开茶台
 		// 检查提交的class值是否有效，必须为10或者20
 		switch class {
-		case data.ObClassOpenStraw:
+		case data.ObClassOpenDraft:
 			// 创建开放式草台
 			if err = new_proj.Create(); err != nil {
 				util.Debug(" Cannot create open project", err)
@@ -429,7 +429,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case data.ObClassCloseStraw:
+		case data.ObClassCloseDraft:
 			tIds_str := r.PostFormValue("invite_ids")
 			if tIds_str == "" {
 				report(w, r, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")
@@ -475,11 +475,11 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		if class == data.ObClassOpenStraw {
+		if class == data.ObClassOpenDraft {
 			report(w, r, "你好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
 			return
 		}
-		if class == data.ObClassCloseStraw {
+		if class == data.ObClassCloseDraft {
 			tIds_str := r.PostFormValue("invite_ids")
 			if tIds_str == "" {
 				report(w, r, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")

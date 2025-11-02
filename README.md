@@ -7,7 +7,7 @@
 1、以血缘关系划分为家庭&，每个人都有所属的家庭茶团；  
 2、以事业关系划分为团队$，每个人都有所属的事业茶团。  
 
-*使用 golang+postgresql+bootstrap3 开源技术  
+*使用 golang，postgresql，bootstrap 3，开源技术支持。  
 *目录架构简要说明：
 util文件夹存放通用工具函数；public文件夹存放静态资源文件（css/js/image/help等）；  
 templates文件夹存放*.go.html模版文件。  
