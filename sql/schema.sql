@@ -51,6 +51,7 @@ CREATE TABLE teams (
     class                 INTEGER,
     abbreviation          VARCHAR(255),
     logo                  VARCHAR(255),
+    tags                  VARCHAR(500),
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP,
     deleted_at            TIMESTAMP
@@ -68,6 +69,7 @@ CREATE TABLE groups (
     first_team_id         INTEGER REFERENCES teams(id),
     class                 INTEGER DEFAULT 1,
     logo                  VARCHAR(255),
+    tags                  VARCHAR(500),
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP,
     deleted_at            TIMESTAMP
@@ -1412,6 +1414,10 @@ COMMENT ON TABLE see_seeks IS '看看检查表';
 COMMENT ON TABLE brain_fires IS '脑火(头脑风暴)表';
 COMMENT ON TABLE suggestions IS '建议表';
 
+-- 字段注释
+COMMENT ON COLUMN teams.tags IS '分类标签，逗号分隔，如"诗词书法,文化艺术"';
+COMMENT ON COLUMN groups.tags IS '分类标签，逗号分隔，如"诗词书法,文化艺术"';
+
 -- ============================================
 -- 索引优化
 -- ============================================
@@ -1453,3 +1459,7 @@ CREATE INDEX idx_team_members_team_user ON team_members(team_id, user_id);
 CREATE INDEX idx_group_members_group_team ON group_members(group_id, team_id);
 CREATE INDEX idx_teams_class_deleted ON teams(class, deleted_at);
 CREATE INDEX idx_groups_class_deleted ON groups(class, deleted_at);
+
+-- tags字段全文搜索索引（使用GIN索引提高搜索性能）
+CREATE INDEX IF NOT EXISTS idx_teams_tags ON teams USING gin(to_tsvector('simple', tags));
+CREATE INDEX IF NOT EXISTS idx_groups_tags ON groups USING gin(to_tsvector('simple', tags));
