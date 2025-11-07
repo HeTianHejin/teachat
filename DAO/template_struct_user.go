@@ -78,7 +78,7 @@ type TeamDetail struct {
 	NormalMemberBeanSlice []TeamMemberBean //普通成员资料夹
 
 	HasApplication bool //是否有新的加盟申请书
-	
+
 	GroupBean *GroupBean //所属集团资料夹（如果有）
 }
 
@@ -98,11 +98,13 @@ type TeamMemberBean struct {
 
 // 集团队列页面动态渲染
 type GroupDetail struct {
-	SessUser      User
+	SessUser  User
+	CanManage bool //有管理权
+
 	GroupBean     GroupBean
 	TeamBeanSlice []TeamBean
-	FirstTeamBean TeamBean // 集团第一/顶级管理团队（董事会？）
-	IsOverTwelve  bool
+	//FirstTeamBean TeamBean // 集团第一/顶级管理团队（董事会？）
+	IsOverTwelve bool
 }
 
 // 集团详情资料荚

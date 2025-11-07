@@ -147,8 +147,8 @@ func (group *Group) Restore() error {
 
 // Create 创建集团
 func (group *Group) Create() error {
-	statement := `INSERT INTO groups (uuid, name, abbreviation, mission, founder_id, 
-	              first_team_id, class, logo, created_at) 
+	statement := `INSERT INTO groups (name, abbreviation, mission, founder_id, 
+	              first_team_id, class, logo, tags, created_at) 
 	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
 	              RETURNING id, uuid, created_at`
 	stmt, err := db.Prepare(statement)
@@ -156,8 +156,8 @@ func (group *Group) Create() error {
 		return err
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), group.Name, group.Abbreviation, group.Mission,
-		group.FounderId, group.FirstTeamId, group.Class, group.Logo, time.Now()).Scan(
+	err = stmt.QueryRow(group.Name, group.Abbreviation, group.Mission,
+		group.FounderId, group.FirstTeamId, group.Class, group.Logo, group.Tags, time.Now()).Scan(
 		&group.Id, &group.Uuid, &group.CreatedAt)
 	return err
 }
@@ -345,7 +345,7 @@ func (group *Group) IsFirstTeamMember(userId int) (bool, error) {
 
 	var count int
 	query := `SELECT COUNT(*) FROM team_members 
-	          WHERE team_id = $1 AND user_id = $2 AND class = $3`
+	          WHERE team_id = $1 AND user_id = $2 AND status = $3`
 	err := db.QueryRow(query, group.FirstTeamId, userId, TeMemberStatusActive).Scan(&count)
 	if err != nil {
 		return false, err

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	data "teachat/DAO"
 	util "teachat/Util"
@@ -94,9 +95,6 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 	firstTeamIdStr := r.PostFormValue("first_team_id")
 	classStr := r.PostFormValue("class")
 
-	// 调试输出
-	util.Debug("CreateGroupPost - class value:", classStr)
-
 	// 转换团队ID
 	firstTeamId, err := strconv.Atoi(firstTeamIdStr)
 	if err != nil {
@@ -180,21 +178,54 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 发送友邻蒙评请求
-	if err = createAndSendAcceptMessage(group.Id, data.AcceptObjectTypeGroup, sessUser.Id); err != nil {
-		util.Debug("Cannot create accept message for group", err)
-		report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
-		return
+	// 自动将第一团队注册为集团成员
+	firstMember := data.GroupMember{
+		GroupId: group.Id,
+		TeamId:  firstTeamId,
+		Level:   1,
+		Role:    "最高管理团队",
+		Status:  data.GroupMemberStatusActive,
+		UserId:  sessUser.Id,
+	}
+	if err := firstMember.Create(); err != nil {
+		util.Debug("Cannot create first group member", err)
 	}
 
-	// 提示用户新集团草稿保存成功
-	text := ""
-	if sessUser.Gender == data.User_Gender_Female {
-		text = fmt.Sprintf("%s 女士，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", sessUser.Name, group.Name)
+	if util.Config.PoliteMode {
+		//启用了友邻蒙评
+		if err = createAndSendAcceptMessage(group.Id, data.AcceptObjectTypeGroup, sessUser.Id); err != nil {
+			if strings.Contains(err.Error(), "创建AcceptObject失败") {
+				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+			} else {
+				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+			}
+			return
+		}
+
+		// 提示用户新集团草稿保存成功
+		text := ""
+		if sessUser.Gender == data.User_Gender_Female {
+			text = fmt.Sprintf("%s 女士，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", sessUser.Name, group.Name)
+		} else {
+			text = fmt.Sprintf("%s 先生，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", sessUser.Name, group.Name)
+		}
+		report(w, r, text)
 	} else {
-		text = fmt.Sprintf("%s 先生，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", sessUser.Name, group.Name)
+		switch group.Class {
+		case data.GroupClassOpenDraft:
+			group.Class = data.GroupClassOpen
+		case data.GroupClassCloseDraft:
+			group.Class = data.GroupClassClose
+		}
+		if err := group.Update(); err != nil {
+			util.Debug("Cannot update group class", err)
+			report(w, r, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
+			return
+		}
+
+		// 跳转到集团详情页面
+		http.Redirect(w, r, "/v1/group/read?uuid="+group.Uuid, http.StatusFound)
 	}
-	report(w, r, text)
 }
 
 // GET /v1/groups
@@ -508,33 +539,59 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户权限
-	// canManage, err := group.CanManage(sessUser.Id)
-	// if err != nil {
-	// 	util.Debug("Cannot check manage permission", err)
-	// 	canManage = false
-	// }
+	canManage, err := group.CanManage(sessUser.Id)
+	if err != nil {
+		util.Debug("Cannot check manage permission", err)
+		canManage = false
+	}
+
+	// 获取创建者的默认团队
+	founderTeam, err := founder.GetLastDefaultTeam()
+	if err != nil {
+		util.Debug("Cannot get founder default team", err)
+		founderTeam = data.Team{Id: data.TeamIdNone}
+	}
 
 	// 准备页面数据
 	var pageData data.GroupDetail
 	pageData.SessUser = sessUser
+	pageData.CanManage = canManage
+
 	pageData.GroupBean = data.GroupBean{
 		Group:         *group,
 		CreatedAtDate: group.CreatedAtDate(),
 		Open:          group.Class == data.GroupClassOpen,
 		Founder:       founder,
+		FounderTeam:   founderTeam,
+		TeamsCount:    len(teams),
 	}
 
-	// 获取团队Bean列表
+	// 获取第一团队（最高管理团队）
+	// if group.FirstTeamId > 0 {
+	// 	firstTeam, err := data.GetTeam(group.FirstTeamId)
+	// 	if err == nil {
+	// 		pageData.FirstTeamBean, err = fetchTeamBean(firstTeam)
+	// 		if err != nil {
+	// 			util.Debug("Cannot fetch first team bean", err)
+	// 		}
+	// 	}
+	// }
+
+	// 获取团队Bean列表（排除第一团队）
 	teamBeans := make([]data.TeamBean, 0, len(teams))
 	for _, t := range teams {
+		// if t.Id == group.FirstTeamId {
+		// 	continue // 跳过第一团队，因为已经单独显示
+		// }
 		tb, err := fetchTeamBean(t)
 		if err == nil {
 			teamBeans = append(teamBeans, tb)
 		}
 	}
 	pageData.TeamBeanSlice = teamBeans
+	pageData.IsOverTwelve = len(teamBeans) > 12
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "group.detail")
+	generateHTML(w, &pageData, "layout", "navbar.private", "group.detail", "component_team")
 }
 
 // POST /v1/group/delete
