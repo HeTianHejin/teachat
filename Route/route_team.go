@@ -337,6 +337,11 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		FounderId:    s_u.Id,
 		Tags:         r.PostFormValue("tags"),
 	}
+	if err := new_team.Create(); err != nil {
+		util.Debug("cannot create team", err)
+		report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
+		return
+	}
 
 	if util.Config.PoliteMode {
 		//启用了友邻蒙评
@@ -348,7 +353,6 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 			}
 			return
 		}
-
 		// 提示用户新茶团草稿保存成功
 		text := ""
 		if s_u.Gender == data.User_Gender_Female {
@@ -358,9 +362,15 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		}
 		report(w, r, text)
 	} else {
-		if err := new_team.Create(); err != nil {
-			util.Debug("cannot create team", err)
-			report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
+		switch new_team.Class {
+		case data.TeamClassOpenDraft:
+			new_team.Class = data.TeamClassOpen
+		case data.TeamClassCloseDraft:
+			new_team.Class = data.TeamClassClose
+		}
+		if err := new_team.Update(); err != nil {
+			util.Debug("Cannot update team", err)
+			report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 			return
 		}
 		//跳转到团队详情页面
@@ -736,6 +746,21 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		if count > 0 {
 			tD.HasApplication = true
 		}
+	}
+
+	// 查询团队所属集团
+	group, err := data.GetGroupByTeamId(team.Id)
+	if err == nil && group != nil {
+		groupBean := data.GroupBean{
+			Group:         *group,
+			CreatedAtDate: group.CreatedAtDate(),
+			Open:          group.Class == data.GroupClassOpen,
+		}
+		founder, err := data.GetUser(group.FounderId)
+		if err == nil {
+			groupBean.Founder = founder
+		}
+		tD.GroupBean = &groupBean
 	}
 
 	generateHTML(w, &tD, "layout", "navbar.private", "team.detail", "component_avatar_name_gender")

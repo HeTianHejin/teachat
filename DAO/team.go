@@ -1096,62 +1096,79 @@ func (team *Team) TeamProperty() string {
 	return TeamProperty[team.Class]
 }
 
-// UpdateClass()
+// Update 更新团队信息
+func (team *Team) Update() error {
+	now := time.Now()
+	team.UpdatedAt = &now
+	statement := `UPDATE teams SET name = $1, mission = $2, class = $3, 
+	              abbreviation = $4, logo = $5, tags = $6, updated_at = $7 
+	              WHERE id = $8`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(team.Name, team.Mission, team.Class, team.Abbreviation, 
+		team.Logo, team.Tags, now, team.Id)
+	return err
+}
+
+// UpdateClass 更新团队类型
 func (team *Team) UpdateClass() (err error) {
-	statement := `UPDATE teams SET class = $1 WHERE id = $2`
+	statement := `UPDATE teams SET class = $1, updated_at = $2 WHERE id = $3`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(team.Class, team.Id)
+	_, err = stmt.Exec(team.Class, time.Now(), team.Id)
 	return
 }
 
-// UpdateLogo()
+// UpdateLogo 更新团队标志
 func (team *Team) UpdateLogo() (err error) {
-	statement := `UPDATE teams SET logo = $1 WHERE id = $2`
+	statement := `UPDATE teams SET logo = $1, updated_at = $2 WHERE id = $3`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(team.Logo, team.Id)
+	_, err = stmt.Exec(team.Logo, time.Now(), team.Id)
 	return
 }
 
-// UpdateAbbreviation()
+// UpdateAbbreviation 更新团队简称
 func (team *Team) UpdateAbbreviation() (err error) {
-	statement := `UPDATE teams SET abbreviation = $1 WHERE id = $2`
+	statement := `UPDATE teams SET abbreviation = $1, updated_at = $2 WHERE id = $3`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(team.Abbreviation, team.Id)
+	_, err = stmt.Exec(team.Abbreviation, time.Now(), team.Id)
 	return
 }
 
-// UpdateName()
+// UpdateName 更新团队名称
 func (team *Team) UpdateName() (err error) {
-	statement := `UPDATE teams SET name = $1 WHERE id = $2`
+	statement := `UPDATE teams SET name = $1, updated_at = $2 WHERE id = $3`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(team.Name, team.Id)
+	_, err = stmt.Exec(team.Name, time.Now(), team.Id)
 	return
 }
 
-// UpdateMission()
+// UpdateMission 更新团队使命
 func (team *Team) UpdateMission() (err error) {
-	statement := `UPDATE teams SET mission = $1 WHERE id = $2`
+	statement := `UPDATE teams SET mission = $1, updated_at = $2 WHERE id = $3`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(team.Mission, team.Id)
+	_, err = stmt.Exec(team.Mission, time.Now(), team.Id)
 	return
 }

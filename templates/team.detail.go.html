@@ -91,8 +91,11 @@
         <div class="text-center" style="font-size: large;">
           {{ .Team.Name }}
           @<span style="font-style: italic;">
-           {{/* <a href="/v1/group/detail?id={{ .Team.Group.Uuid }}">{{ .Team.Group.Abbreviation }}</a> */}}
-            <a href="#">喝茶集团</a>
+            {{ if $.GroupBean }}
+            <a href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}">{{ $.GroupBean.Group.Abbreviation }}</a>
+            {{ else }}
+            喝茶集团
+            {{ end }}
           </span>
         </div>
 
