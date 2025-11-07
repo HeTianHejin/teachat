@@ -311,7 +311,8 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			//把草团转为正式$事业茶团
 			team, err := acceptNewTeam(ao.ObjectId)
 			if err != nil {
-				report(w, r, err.Error())
+				util.Debug("Cannot accept new team", err)
+				report(w, r, "盛世无饥馑，何须耕织忙？不急不急。")
 				return
 			}
 
@@ -339,26 +340,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		// case 6:
-		// 	//集团
-		// 	group, err := data.GetGroup(ao.ObjectId)
-		// 	if err != nil {
-		// 		util.Debug("Cannot get group", err)
-		// 		Report(w, r, "你好，满头大汗的茶博士请教你，错里错以错劝哥哥，是什么茶品种？")
-		// 		return
-		// 	}
-		// 	switch group.Class {
-		// 	case 10:
-		// 		group.Class = 1
-		// 	case 20:
-		// 		group.Class = 2
-		// 	}
-		// 	// 更新，友评已通过！
-		// 	if err = group.Update(); err != nil {
-		// 		util.Debug("Cannot update group class", err)
-		// 		Report(w, r, "你好，满头大汗的茶博士问，情中情因情感妹妹是么意思？")
-		// 		return
-		// 	}
+		case data.AcceptObjectTypeGroup:
+			// 接纳新集团
+			_, err := acceptNewGroup(ao.ObjectId)
+			if err != nil {
+				util.Debug("Cannot accept new team", err)
+				report(w, r, "盛世无饥馑，何须耕织忙？不急不急。")
+			}
 
 		default:
 			util.Debug("Cannot get object", err)

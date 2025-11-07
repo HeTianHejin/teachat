@@ -292,12 +292,6 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 		return
 	}
-	// group_id, err := strconv.Atoi(r.PostFormValue("group_id"))
-	// if err != nil {
-	// 	util.PanicTea(util.LogError(err), " Cannot convert group_id to int")
-	// 	Report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
-	// 	return
-	// }
 
 	//检测class是否合规
 	switch class {
@@ -343,30 +337,35 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		FounderId:    s_u.Id,
 		Tags:         r.PostFormValue("tags"),
 	}
-	if err := new_team.Create(); err != nil {
-		util.Debug(" At create team", err)
-		report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
-		return
-	}
 
-	if err = createAndSendAcceptMessage(new_team.Id, data.AcceptObjectTypeTeam, s_u.Id); err != nil {
-		if strings.Contains(err.Error(), "创建AcceptObject失败") {
-			report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
-		} else {
-			report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+	if util.Config.PoliteMode {
+		//启用了友邻蒙评
+		if err = createAndSendAcceptMessage(new_team.Id, data.AcceptObjectTypeTeam, s_u.Id); err != nil {
+			if strings.Contains(err.Error(), "创建AcceptObject失败") {
+				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+			} else {
+				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+			}
+			return
 		}
-		return
-	}
 
-	// 提示用户新茶团保存成功
-	text := ""
-	if s_u.Gender == 0 {
-		text = fmt.Sprintf("%s 女士，你好，登记 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
+		// 提示用户新茶团草稿保存成功
+		text := ""
+		if s_u.Gender == data.User_Gender_Female {
+			text = fmt.Sprintf("%s 女士，你好，登记 %s 草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
+		} else {
+			text = fmt.Sprintf("%s 先生，你好，登记 %s 草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
+		}
+		report(w, r, text)
 	} else {
-		text = fmt.Sprintf("%s 先生，你好，登记 %s 已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
+		if err := new_team.Create(); err != nil {
+			util.Debug("cannot create team", err)
+			report(w, r, "你好，茶博士失魂鱼，暂未能创建你的天命使团，请稍后再试。")
+			return
+		}
+		//跳转到团队详情页面
+		http.Redirect(w, r, fmt.Sprintf("/v1/team/detail?uuid=%s", new_team.Uuid), http.StatusFound)
 	}
-	report(w, r, text)
-
 }
 
 // GET /v1/teams/open
@@ -747,7 +746,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 func HandleManageTeam(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		ManageTeamGet(w, r)
+		ManageTeamIndexGet(w, r)
 	case http.MethodPost:
 		ManageTeamPost(w, r)
 	default:
@@ -757,7 +756,7 @@ func HandleManageTeam(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/team/manage
-// 根据提交的参数，处理管理某支团队事务，例如：冰封团队，调整状态等
+// 根据提交的参数，处理管理某支团队事务，例如：注销团队，调整状态等
 func ManageTeamPost(w http.ResponseWriter, r *http.Request) {
 	report(w, r, "您好，茶博士正在忙碌建设这个功能中。。。")
 
@@ -765,7 +764,7 @@ func ManageTeamPost(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/team/manage?id=
 // 显示管理茶团的表单(首页-角色调整)页面
-func ManageTeamGet(w http.ResponseWriter, r *http.Request) {
+func ManageTeamIndexGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)

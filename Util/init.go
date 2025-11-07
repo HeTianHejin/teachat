@@ -39,7 +39,7 @@ type Configuration struct {
 	MaxTeamMembers         int64 // 团队最大成员数
 	MaxTeamsCount          int64 // 个人创建的团队数上限
 	MaxSurvivalTeams       int64 // 个人最大活跃团队数
-	PoliteMode             bool  // Debug模式
+	PoliteMode             bool  // Debug模式(是否启用“友邻蒙评”审茶)
 	DefaultSearchResultNum int64 // 默认搜索结果数
 
 	// SysMail_Username string
