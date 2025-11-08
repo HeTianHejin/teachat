@@ -404,3 +404,211 @@ func GetGroupByTeamId(teamId int) (*Group, error) {
 	}
 	return &group, nil
 }
+
+// GetGroupMemberByGroupIdAndTeamId 根据集团ID和团队ID获取成员记录
+func GetGroupMemberByGroupIdAndTeamId(groupId, teamId int) (GroupMember, error) {
+	var member GroupMember
+	query := `SELECT id, uuid, group_id, team_id, level, role, status, 
+	          user_id, created_at, updated_at, deleted_at 
+	          FROM group_members WHERE group_id = $1 AND team_id = $2 AND deleted_at IS NULL`
+	err := db.QueryRow(query, groupId, teamId).Scan(
+		&member.Id, &member.Uuid, &member.GroupId, &member.TeamId,
+		&member.Level, &member.Role, &member.Status, &member.UserId,
+		&member.CreatedAt, &member.UpdatedAt, &member.DeletedAt)
+	return member, err
+}
+
+// SoftDelete 软删除集团成员
+func (gm *GroupMember) SoftDelete() error {
+	now := time.Now()
+	gm.DeletedAt = &now
+	statement := "UPDATE group_members SET deleted_at = $1, updated_at = $2 WHERE id = $3"
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(now, now, gm.Id)
+	return err
+}
+
+// GroupInvitation 集团邀请函
+type GroupInvitation struct {
+	Id           int
+	Uuid         string
+	GroupId      int
+	TeamId       int
+	InviteWord   string
+	Role         string
+	Level        int
+	Status       int // 0: 待处理, 1: 已查看, 2: 已接受, 3: 已拒绝, 4: 已过期
+	AuthorUserId int
+	CreatedAt    time.Time
+}
+
+// GroupInvitationReply 集团邀请函回复
+type GroupInvitationReply struct {
+	Id           int
+	Uuid         string
+	InvitationId int
+	UserId       int
+	ReplyWord    string
+	CreatedAt    time.Time
+}
+
+var GroupInvitationStatus = map[int]string{
+	0: "待处理",
+	1: "已查看",
+	2: "已接受",
+	3: "已拒绝",
+	4: "已过期",
+}
+
+// GetStatus 返回邀请函状态的中文描述
+func (gi *GroupInvitation) GetStatus() string {
+	return GroupInvitationStatus[gi.Status]
+}
+
+// CreatedAtDate 返回邀请函创建时间的格式化字符串
+func (gi *GroupInvitation) CreatedAtDate() string {
+	return gi.CreatedAt.Format(FMT_DATE_TIME_CN)
+}
+
+// Create 创建集团邀请函
+func (gi *GroupInvitation) Create() error {
+	statement := `INSERT INTO group_invitations (uuid, group_id, team_id, invite_word, 
+	              role, level, status, author_user_id, created_at) 
+	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+	              RETURNING id, uuid, created_at`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), gi.GroupId, gi.TeamId, gi.InviteWord,
+		gi.Role, gi.Level, gi.Status, gi.AuthorUserId, time.Now()).Scan(
+		&gi.Id, &gi.Uuid, &gi.CreatedAt)
+	return err
+}
+
+// UpdateStatus 更新邀请函状态
+func (gi *GroupInvitation) UpdateStatus() error {
+	statement := `UPDATE group_invitations SET status = $1 WHERE id = $2`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(gi.Status, gi.Id)
+	return err
+}
+
+// GetGroupInvitationByUuid 根据UUID获取集团邀请函
+func GetGroupInvitationByUuid(uuid string) (GroupInvitation, error) {
+	var gi GroupInvitation
+	statement := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
+	              status, author_user_id, created_at 
+	              FROM group_invitations WHERE uuid = $1`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return gi, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(uuid).Scan(&gi.Id, &gi.Uuid, &gi.GroupId, &gi.TeamId,
+		&gi.InviteWord, &gi.Role, &gi.Level, &gi.Status, &gi.AuthorUserId, &gi.CreatedAt)
+	return gi, err
+}
+
+// GetGroupInvitationById 根据ID获取集团邀请函
+func GetGroupInvitationById(id int) (GroupInvitation, error) {
+	var gi GroupInvitation
+	statement := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
+	              status, author_user_id, created_at 
+	              FROM group_invitations WHERE id = $1`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return gi, err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(id).Scan(&gi.Id, &gi.Uuid, &gi.GroupId, &gi.TeamId,
+		&gi.InviteWord, &gi.Role, &gi.Level, &gi.Status, &gi.AuthorUserId, &gi.CreatedAt)
+	return gi, err
+}
+
+// Create 创建集团邀请函回复
+func (gir *GroupInvitationReply) Create() error {
+	statement := `INSERT INTO group_invitation_replies (uuid, invitation_id, user_id, 
+	              reply_word, created_at) 
+	              VALUES ($1, $2, $3, $4, $5) 
+	              RETURNING id, uuid, created_at`
+	stmt, err := db.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(Random_UUID(), gir.InvitationId, gir.UserId,
+		gir.ReplyWord, time.Now()).Scan(&gir.Id, &gir.Uuid, &gir.CreatedAt)
+	return err
+}
+
+// GetInvitationsByTeamId 获取团队收到的所有集团邀请函
+func GetInvitationsByTeamId(teamId int) ([]GroupInvitation, error) {
+	query := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
+	          status, author_user_id, created_at 
+	          FROM group_invitations WHERE team_id = $1 ORDER BY created_at DESC`
+	rows, err := db.Query(query, teamId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	invitations := make([]GroupInvitation, 0)
+	for rows.Next() {
+		var gi GroupInvitation
+		if err = rows.Scan(&gi.Id, &gi.Uuid, &gi.GroupId, &gi.TeamId,
+			&gi.InviteWord, &gi.Role, &gi.Level, &gi.Status, &gi.AuthorUserId,
+			&gi.CreatedAt); err != nil {
+			return nil, err
+		}
+		invitations = append(invitations, gi)
+	}
+	return invitations, rows.Err()
+}
+
+// GetGroupInvitationsByUserId 获取用户所在担任CEO的团队收到的所有集团邀请函
+func GetGroupInvitationsByUserId(userId int) ([]GroupInvitation, error) {
+	query := `SELECT DISTINCT gi.id, gi.uuid, gi.group_id, gi.team_id, gi.invite_word, 
+	          gi.role, gi.level, gi.status, gi.author_user_id, gi.created_at 
+	          FROM group_invitations gi 
+	          INNER JOIN team_members tm ON gi.team_id = tm.team_id 
+	          WHERE tm.user_id = $1 AND tm.role = 'CEO' 
+	          ORDER BY gi.created_at DESC`
+	rows, err := db.Query(query, userId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	invitations := make([]GroupInvitation, 0)
+	for rows.Next() {
+		var gi GroupInvitation
+		if err = rows.Scan(&gi.Id, &gi.Uuid, &gi.GroupId, &gi.TeamId,
+			&gi.InviteWord, &gi.Role, &gi.Level, &gi.Status, &gi.AuthorUserId,
+			&gi.CreatedAt); err != nil {
+			return nil, err
+		}
+		invitations = append(invitations, gi)
+	}
+	return invitations, rows.Err()
+}
+
+// CountGroupInvitationsByUserIdAndStatus 统计用户收到的指定状态的集团邀请函数量
+func CountGroupInvitationsByUserIdAndStatus(userId int, status int) (int, error) {
+	var count int
+	query := `SELECT COUNT(DISTINCT gi.id) 
+	          FROM group_invitations gi 
+	          INNER JOIN team_members tm ON gi.team_id = tm.team_id 
+	          WHERE tm.user_id = $1 AND gi.status = $2`
+	err := db.QueryRow(query, userId, status).Scan(&count)
+	return count, err
+}

@@ -91,6 +91,43 @@ CREATE TABLE group_members (
     deleted_at            TIMESTAMP
 );
 
+-- 集团邀请函表
+CREATE TABLE group_invitations (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    group_id              INTEGER REFERENCES groups(id),
+    team_id               INTEGER REFERENCES teams(id),
+    invite_word           TEXT,
+    role                  VARCHAR(255),
+    level                 INTEGER DEFAULT 2,
+    status                INTEGER DEFAULT 0,
+    author_user_id        INTEGER REFERENCES users(id),
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 集团邀请函回复表
+CREATE TABLE group_invitation_replies (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    invitation_id         INTEGER REFERENCES group_invitations(id),
+    user_id               INTEGER REFERENCES users(id),
+    reply_word            TEXT,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_group_invitations_group_id ON group_invitations(group_id);
+CREATE INDEX IF NOT EXISTS idx_group_invitations_team_id ON group_invitations(team_id);
+CREATE INDEX IF NOT EXISTS idx_group_invitations_status ON group_invitations(status);
+CREATE INDEX IF NOT EXISTS idx_group_invitation_replies_invitation_id ON group_invitation_replies(invitation_id);
+CREATE INDEX IF NOT EXISTS idx_group_invitation_replies_user_id ON group_invitation_replies(user_id);
+
+-- 添加注释
+COMMENT ON TABLE group_invitations IS '集团邀请函表';
+COMMENT ON TABLE group_invitation_replies IS '集团邀请函回复表';
+COMMENT ON COLUMN group_invitations.status IS '0: 待处理, 1: 已查看, 2: 已接受, 3: 已拒绝, 4: 已过期';
+COMMENT ON COLUMN group_invitations.level IS '团队在集团中的等级：1-最高级，2-次级，3-次次级...';
+
 -- ============================================
 -- 地址与场所表
 -- ============================================

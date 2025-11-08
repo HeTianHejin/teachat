@@ -63,9 +63,7 @@ func main() {
 	mux.HandleFunc("/v1/user/avatar", route.UserAvatar)
 	mux.HandleFunc("/v1/user/invite", route.Invite)
 
-	mux.HandleFunc("/v1/users/connection_friend", route.Friend)
 	mux.HandleFunc("/v1/users/connection_follow", route.Follow)
-	mux.HandleFunc("/v1/users/connection_fans", route.Fans)
 
 	// defined in route_auth.go
 	mux.HandleFunc("/v1/login", route.LoginGet)
@@ -116,6 +114,12 @@ func main() {
 	mux.HandleFunc("/v1/group/add_team", route.AddTeamToGroupPost)
 	mux.HandleFunc("/v1/group/edit", route.EditGroupPost)
 	mux.HandleFunc("/v1/group/delete", route.DeleteGroupPost)
+	// 集团成员管理路由
+	mux.HandleFunc("/v1/group/member_add", route.GroupMemberAddGet)
+	mux.HandleFunc("/v1/group/search_team", route.HandleGroupSearchTeam)
+	mux.HandleFunc("/v1/group/member_remove", route.HandleGroupMemberRemove)
+	mux.HandleFunc("/v1/group/member_invite", route.HandleGroupMemberInvite)
+	mux.HandleFunc("/v1/group/member_invitation", route.HandleGroupMemberInvitation)
 
 	//defined in route_family.go
 	//处理家庭茶团事务
@@ -205,8 +209,9 @@ func main() {
 	mux.HandleFunc("/v1/office/draftThread", route.ActivateDraftThread)
 
 	//defined in route_message.go
-	mux.HandleFunc("/v1/message/letterbox", route.Letterbox)
 	mux.HandleFunc("/v1/message/accept", route.AcceptMessages)
+	mux.HandleFunc("/v1/message/invitation_team", route.InvitationsTeam)
+	mux.HandleFunc("/v1/message/invitation_group", route.InvitationGroup)
 
 	//defined in route_place.go
 	mux.HandleFunc("/v1/place/new", route.NewPlace)

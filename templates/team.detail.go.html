@@ -17,6 +17,19 @@
 <a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
 {{ end }} {{/* 检查是否团队管理员结束  */}}
 
+{{ if or $.IsCEO $.IsFounder }}
+{{ if $.GroupBean }}
+<a class="btn btn-info" href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}" role="button">
+  <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span> 查看所属集团
+</a>
+{{ else }}
+<a class="btn btn-success" href="/v1/group/new?team_id={{ .Team.Uuid }}" role="button">
+  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 创建集团
+</a>
+{{ end }}
+{{ end }}
+
+
 {{ if $.HasApplication }}
 
 <div class="alert alert-info" role="alert" style="margin-top: 1rem;">你好，有待处理的加盟申请书！
