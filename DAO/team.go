@@ -444,13 +444,13 @@ func SearchTeamByAbbreviation(keyword string, limit int, ctx context.Context) ([
 	defer cancel()
 
 	teams := []Team{}
-	rows, err := db.QueryContext(ctx, "SELECT * FROM teams WHERE abbreviation LIKE $1 AND deleted_at IS NULL LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := db.QueryContext(ctx, "SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, updated_at, deleted_at, tags FROM teams WHERE abbreviation LIKE $1 AND deleted_at IS NULL LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return teams, err
 	}
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.UpdatedAt, &team.DeletedAt, &team.Tags); err != nil {
 			return teams, err
 		}
 		teams = append(teams, team)
