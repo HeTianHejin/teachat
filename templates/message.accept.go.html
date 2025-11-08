@@ -8,9 +8,14 @@
 
 <div style="margin: 20px;">
   <ol class="nav nav-tabs nav-justified">
-    <li><a href="/v1/message/letterbox">茶团邀请
+    <li><a href="/v1/message/invitation_team">茶团邀请
       {{ if .SessUser.InvitationUnviewedCount }}
       <span class="badge">{{ .SessUser.InvitationUnviewedCount }}</span>
+      {{ end }}
+    </a></li>
+    <li><a href="/v1/message/invitation_group">集团邀请
+      {{ if .GroupInvitationUnreadCount }}
+      <span class="badge">{{ .GroupInvitationUnreadCount }}</span>
       {{ end }}
     </a></li>
     <li class="active">

@@ -174,28 +174,3 @@ func Reset(w http.ResponseWriter, r *http.Request) {
 func Follow(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, nil, "layout", "navbar.private", "connection.follow")
 }
-
-// GET /v1/users/connection_fans
-func Fans(w http.ResponseWriter, r *http.Request) {
-	generateHTML(w, nil, "layout", "navbar.private", "connection.fans")
-}
-
-// GET /v1/users/connection_friend
-func Friend(w http.ResponseWriter, r *http.Request) {
-	s, err := session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	// 根据会话读取当前用户信息
-	s_u, err := s.User()
-	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	var cFPData data.ConnectionFriendPageData
-	cFPData.SessUser = s_u
-
-	generateHTML(w, &cFPData, "layout", "navbar.private", "connection.friend")
-}
