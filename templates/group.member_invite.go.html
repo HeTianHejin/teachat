@@ -1,0 +1,92 @@
+
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li class="active">邀请团队加入</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>邀请团队加入集团</strong>
+  </div>
+
+  <div class="panel-body">
+    <form class="form-horizontal" role="form" action="/v1/group/member_invite" method="post">
+      <input type="hidden" name="group_id" value="{{ .Group.Id }}" />
+
+      {{ if .InviteTeam }}
+      <div class="form-group">
+        <label for="team_name" class="col-sm-2 control-label">团队名称：</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="team_name" value="{{ .InviteTeam.Name }}" readonly disabled />
+          <input type="hidden" name="team_id" value="{{ .InviteTeam.Id }}" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="team_abbr" class="col-sm-2 control-label">团队简称：</label>
+        <div class="col-sm-10">
+          <input type="text" class="form-control" id="team_abbr" value="{{ .InviteTeam.Abbreviation }}" readonly disabled />
+        </div>
+      </div>
+      {{ else }}
+      <div class="form-group">
+        <label for="team_id" class="col-sm-2 control-label">选择团队：</label>
+        <div class="col-sm-10">
+          <input type="number" name="team_id" class="form-control" id="team_id" placeholder="请输入团队ID" required />
+          <p class="help-block">提示：请先搜索团队，然后在团队详情页面点击邀请按钮</p>
+        </div>
+      </div>
+      {{ end }}
+
+      <div class="form-group">
+        <label for="invite_word" class="col-sm-2 control-label">邀请函正文：</label>
+        <div class="col-sm-10">
+          <textarea class="form-control" name="invite_word" id="invite_word" rows="5" 
+                    minlength="2" maxlength="239" placeholder="请输入邀请话语，说明邀请该团队加入集团的原因和期望" required></textarea>
+          <p class="help-block">2-239个字符</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="role" class="col-sm-2 control-label">团队角色：</label>
+        <div class="col-sm-10">
+          <input type="text" name="role" class="form-control" id="role" value="成员团队" 
+                 placeholder="如：核心成员、协作团队、支持团队等" maxlength="50" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="level" class="col-sm-2 control-label">团队等级：</label>
+        <div class="col-sm-10">
+          <select name="level" class="form-control" id="level">
+            <option value="2" selected>次级（普通成员）</option>
+            <option value="3">三级</option>
+            <option value="4">四级</option>
+            <option value="5">五级</option>
+          </select>
+          <p class="help-block">等级1为最高管理团队，不可选择</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">
+            <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 发送邀请函
+          </button>
+          <a href="/v1/group/detail?id={{ .Group.Uuid }}" class="btn btn-default">
+            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 取消
+          </a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    提示：团队收到邀请后，其创建人或CEO可以决定是否接受邀请加入集团。
+  </div>
+</div>
+
+{{ end }}

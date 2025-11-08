@@ -1,0 +1,69 @@
+
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li class="active">移除成员</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>移除集团成员团队</strong>
+  </div>
+
+  <div class="panel-body">
+    {{ if .Teams }}
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead>
+          <tr>
+            <th>团队名称</th>
+            <th>简称</th>
+            <th>加入时间</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Teams }}
+          <tr>
+            <td>
+              <a href="/v1/team/detail?uuid={{ .Uuid }}">{{ .Name }}</a>
+            </td>
+            <td>{{ .Abbreviation }}</td>
+            <td>{{ .CreatedAtDate }}</td>
+            <td>
+              {{ if ne .Id $.Group.FirstTeamId }}
+              <form method="post" action="/v1/group/member_remove" style="display: inline;">
+                <input type="hidden" name="group_id" value="{{ $.Group.Id }}" />
+                <input type="hidden" name="team_id" value="{{ .Id }}" />
+                <button type="submit" class="btn btn-danger btn-sm" 
+                        onclick="return confirm('确定要将团队 {{ .Name }} 移出集团吗？');">
+                  <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 移除
+                </button>
+              </form>
+              {{ else }}
+              <span class="label label-primary">最高管理团队</span>
+              {{ end }}
+            </td>
+          </tr>
+          {{ end }}
+        </tbody>
+      </table>
+    </div>
+    {{ else }}
+    <div class="alert alert-info" role="alert">
+      <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+      暂无可移除的成员团队。
+    </div>
+    {{ end }}
+  </div>
+
+  <div class="panel-footer">
+    <a href="/v1/group/detail?id={{ .Group.Uuid }}" class="btn btn-default">
+      <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span> 返回集团详情
+    </a>
+  </div>
+</div>
+
+{{ end }}

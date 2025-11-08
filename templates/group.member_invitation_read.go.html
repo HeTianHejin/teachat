@@ -1,0 +1,108 @@
+
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}@团队</a></li>
+  <li class="active">集团邀请函</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div class="row">
+      <div class="col-xs-8">
+        <strong>来自 {{ .Group.Name }} 的邀请</strong>
+      </div>
+      <div class="col-xs-4 text-right">
+        <span class="label {{ if eq .Invitation.Status 0 }}label-warning{{ else if eq .Invitation.Status 1 }}label-info{{ else if eq .Invitation.Status 2 }}label-success{{ else if eq .Invitation.Status 3 }}label-danger{{ else }}label-default{{ end }}">
+          {{ .Invitation.GetStatus }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body">
+    <div class="well">
+      <h4>集团信息</h4>
+      <dl class="dl-horizontal">
+        <dt>集团名称：</dt>
+        <dd><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Name }}</a></dd>
+        <dt>集团简称：</dt>
+        <dd>{{ .Group.Abbreviation }}</dd>
+        <dt>集团类型：</dt>
+        <dd>{{ .Group.Property }}</dd>
+      </dl>
+    </div>
+
+    <div class="well">
+      <h4>邀请内容</h4>
+      <p style="white-space: pre-wrap;">{{ .Invitation.InviteWord }}</p>
+    </div>
+
+    <div class="well">
+      <h4>拟任角色</h4>
+      <dl class="dl-horizontal">
+        <dt>团队角色：</dt>
+        <dd>{{ .Invitation.Role }}</dd>
+        <dt>团队等级：</dt>
+        <dd>{{ .Invitation.Level }}级</dd>
+      </dl>
+    </div>
+
+    <div class="text-muted">
+      <small>邀请时间：{{ .Invitation.CreatedAtDate }}</small>
+    </div>
+
+    {{ if le .Invitation.Status 1 }}
+    <hr />
+    <form method="post" action="/v1/group/member_invitation">
+      <input type="hidden" name="invitation_id" value="{{ .Invitation.Id }}" />
+
+      <div class="form-group">
+        <label for="reply_word">回复内容：</label>
+        <textarea class="form-control" name="reply_word" id="reply_word" rows="4" 
+                  minlength="2" maxlength="456" placeholder="请输入回复内容" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>您的决定：</label>
+        <div class="radio">
+          <label>
+            <input type="radio" name="reply" value="1" required />
+            接受邀请，加入该集团
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="reply" value="0" required />
+            婉拒邀请
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 提交回复
+        </button>
+        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" class="btn btn-default">
+          <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span> 返回
+        </a>
+      </div>
+    </form>
+    {{ else }}
+    <hr />
+    <div class="alert alert-info" role="alert">
+      该邀请函已处理，状态：{{ .Invitation.GetStatus }}
+    </div>
+    <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" class="btn btn-default">
+      <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span> 返回团队详情
+    </a>
+    {{ end }}
+  </div>
+
+  <div class="panel-footer">
+    提示：接受邀请后，您的团队将成为该集团的成员，可以参与集团的协作活动。
+  </div>
+</div>
+
+{{ end }}
