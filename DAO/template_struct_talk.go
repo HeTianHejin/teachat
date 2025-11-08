@@ -257,8 +257,9 @@ type IndexPageData struct {
 
 // 接纳茶语消息页面数据
 type AcceptMessagePageData struct {
-	SessUser           User
-	AcceptMessageSlice []AcceptMessage
+	SessUser                   User
+	AcceptMessageSlice         []AcceptMessage
+	GroupInvitationUnreadCount int
 }
 
 // 接纳茶语对象页面数据
