@@ -43,7 +43,6 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 
 	project_id_str := r.URL.Query().Get("project_id")
 	if project_id_str == "" {
-		util.Debug("project_id is empty")
 		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
@@ -273,7 +272,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		util.Debug("Project UUID is empty")
+		util.Debug("Project UUID is empty", err)
 		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -401,7 +400,7 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !isVerifier(s_u.Id) {
-		util.Debug("User is not a verifier:", s_u.Id)
+		util.Debug("User is not a verifier:", err)
 		report(w, r, "只有见证员才可以设置物资准备状态。")
 		return
 	}
@@ -416,7 +415,7 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 	// 获取项目信息
 	projectUuid := r.FormValue("project_uuid")
 	if projectUuid == "" {
-		util.Debug("Project UUID is empty")
+		util.Debug("Project UUID is empty", err)
 		report(w, r, "项目信息缺失")
 		return
 	}
@@ -434,7 +433,7 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 
 	// 验证必填字段
 	if isReadyStr == "" {
-		util.Debug("is_ready field is empty")
+		util.Debug("is_ready field is empty", err)
 		report(w, r, "请选择准备状态")
 		return
 	}

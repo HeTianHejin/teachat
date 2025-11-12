@@ -6,7 +6,7 @@ import (
 	util "teachat/Util"
 )
 
-// GET /user/biography?id=
+// GET /user/biography?uuid=
 // 展示用户个人主页
 func Biography(w http.ResponseWriter, r *http.Request) {
 	//检查是否已经登录
@@ -26,7 +26,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	var uB data.UserBean
 
 	vals := r.URL.Query()
-	uuid := vals.Get("id")
+	uuid := vals.Get("uuid")
 	//没有id参数，读取自己的资料
 	if uuid == "" {
 		uuid = s_u.Uuid

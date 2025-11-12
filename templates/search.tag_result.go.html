@@ -84,7 +84,7 @@
           <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
         </div>
         <div class="col-xs-6 text-right">
-          <span class="label {{ if .Open }}label-success{{ else }}label-default{{ end }}">
+          <span class="label {{ if .Team.IsOpen }}label-success{{ else }}label-default{{ end }}">
             {{ .Team.TeamProperty }}
           </span>
         </div>
@@ -95,7 +95,7 @@
     </div>
     <div class="panel-footer">
       <span style="margin-right: 10px;">
-        <i class="glyphicon glyphicon-user"></i> {{ .MemberCount }}
+        <i class="glyphicon glyphicon-user"></i> {{ .MembersCount }}
       </span>
       {{ if .Team.Tags }}
       <i class="glyphicon glyphicon-tags"></i>

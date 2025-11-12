@@ -73,36 +73,40 @@ func main() {
 	mux.HandleFunc("/v1/authenticate", route.Authenticate)
 
 	// defined in route_team.go
+	// 团队杂项
 	mux.HandleFunc("/v1/team/new", route.NewTeamGet)
 	mux.HandleFunc("/v1/team/create", route.CreateTeamPost)
 	mux.HandleFunc("/v1/team/detail", route.TeamDetail)
 	mux.HandleFunc("/v1/team/avatar", route.TeamAvatar)
-	mux.HandleFunc("/v1/team/invitations", route.InvitationsBrowse)
-	mux.HandleFunc("/v1/team/invitation", route.InvitationView)
-	mux.HandleFunc("/v1/team/members/fired", route.MemberFired)
+	mux.HandleFunc("/v1/team/invitations", route.TeamInvitations)
+	mux.HandleFunc("/v1/team/applications", route.TeamApplications)
 
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
 	mux.HandleFunc("/v1/team/core_manage", route.CoreManage)
-	mux.HandleFunc("/v1/team/default", route.SetDefaultTeam)
+	mux.HandleFunc("/v1/team/new_applications/check", route.TeamNewApplicationsCheck)
 
-	mux.HandleFunc("/v1/teams/open", route.OpenTeams)
-	mux.HandleFunc("/v1/teams/closed", route.ClosedTeams)
+	mux.HandleFunc("/v1/team_member/role", route.HandleMemberRole)
+	mux.HandleFunc("/v1/team_member/role_changed", route.MemberRoleChanged)
+	mux.HandleFunc("/v1/team_members/fired", route.MemberFired)
+
+	// 茶友个人与团队关系
+	mux.HandleFunc("/v1/team/default", route.SetDefaultTeam)
 	mux.HandleFunc("/v1/teams/hold", route.HoldTeams)
 	mux.HandleFunc("/v1/teams/joined", route.JoinedTeams)
 	mux.HandleFunc("/v1/teams/employed", route.EmployedTeams)
-	mux.HandleFunc("/v1/teams/application", route.ApplyTeams)
-
 	//mux.HandleFunc("/v1/teams/rejected", route.RejectedTeams)
 
 	//defined in route_team_member.go
-	//处理茶团成员个人事务
+	//处理茶团成员事务
+	// 1-申请加盟书-团队管理员
 	mux.HandleFunc("/v1/team_member/application/new", route.HandleNewMemberApplication)
-	mux.HandleFunc("/v1/team_member/application/review", route.HandleMemberApplication)
-	mux.HandleFunc("/v1/team_member/application/check", route.MemberApplyCheck)
+	mux.HandleFunc("/v1/team_member/application/review", route.HandleMemberApplicationReview)
+	mux.HandleFunc("/v1/team_member/application/detail", route.MemberApplicationDetail)
+	// 1-申请加盟书-成员个人
+	mux.HandleFunc("/v1/applications/member", route.ApplyTeams)
+	// 2-邀请函相关
 	mux.HandleFunc("/v1/team_member/invite", route.HandleInviteMember)
 	mux.HandleFunc("/v1/team_member/invitation", route.HandleMemberInvitation)
-	mux.HandleFunc("/v1/team_member/role", route.HandleMemberRole)
-	mux.HandleFunc("/v1/team_member/role_changed", route.MemberRoleChanged)
 	mux.HandleFunc("/v1/team_member/resign", route.HandleMemberResign)
 
 	// 集团管理路由
@@ -111,8 +115,10 @@ func main() {
 	mux.HandleFunc("/v1/groups", route.GroupsGet)
 	mux.HandleFunc("/v1/group/read", route.GroupReadGet)
 	mux.HandleFunc("/v1/group/detail", route.GroupDetailGet)
+	mux.HandleFunc("/v1/group/manage", route.GroupManageGet)
+	mux.HandleFunc("/v1/group/invitations", route.GroupInvitationsGet)
 	mux.HandleFunc("/v1/group/add_team", route.AddTeamToGroupPost)
-	mux.HandleFunc("/v1/group/edit", route.EditGroupPost)
+	mux.HandleFunc("/v1/group/edit", route.HandleEditGroup)
 	mux.HandleFunc("/v1/group/delete", route.DeleteGroupPost)
 	// 集团成员管理路由
 	mux.HandleFunc("/v1/group/member_add", route.GroupMemberAddGet)
@@ -122,7 +128,7 @@ func main() {
 	mux.HandleFunc("/v1/group/member_invitation", route.HandleGroupMemberInvitation)
 
 	//defined in route_family.go
-	//处理家庭茶团事务
+	//家庭茶团杂项
 	mux.HandleFunc("/v1/family/new", route.HandleNewFamily)
 	mux.HandleFunc("/v1/family/detail", route.FamilyDetail)
 	mux.HandleFunc("/v1/family/default", route.SetDefaultFamily)
