@@ -3,7 +3,7 @@
 <div class="media">
   <div class="media-left">
     <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" title="查看团队详情">
-      {{ if .Open }}
+      {{ if .Team.IsOpen }}
       <img class="media-object" src="/v1/static/bootstrap-icons/people.svg" alt="茶团标志" height="32" width="32">
       {{ else }}
       <img class="media-object" src="/v1/static/bootstrap-icons/people-fill.svg" alt="茶团标志" height="32" width="32">
@@ -22,7 +22,7 @@
           </div>
 
           <div class="col-xs-4 text-center">
-            {{ if .Open }}
+            {{ if .Team.IsOpen }}
             <span class="label label-success">{{ .Team.TeamProperty }}</span>
             {{ else }}
             <span class="label label-default">{{ .Team.TeamProperty }}</span>
@@ -56,7 +56,7 @@
 
         <span style="margin-inline-end: 20px;">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-          {{ .MemberCount }}
+          {{ .MembersCount }}
         </span>
         <div class="pull-right">
           <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">

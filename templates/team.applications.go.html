@@ -1,44 +1,80 @@
 {{ define "content"}}
-{{/*  这是指定茶团申请书列表面包屑导航栏  */}}
+{{/*  这是指定茶团,(未来新)成员申请书列表面包屑导航栏  */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li>{{ .Team.Abbreviation }}@茶团</li>
-  <li class="=active">全部加盟申请书</li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}@茶团</a></li>
+  <li class="active">全部加盟申请书</li>
 </ol>
 
 <div style="margin: 2rem;">
   <ol class="nav nav-tabs">
-      <li><a href="/v1/team_member/role?id={{ .Team.Uuid }}">调整角色</a></li>
-      <li><a href="/v1/team/edit?id={{ .Team.Uuid }}">修改资料</a></li>
+      <li><a href="/v1/team/manage?uuid={{ .Team.Uuid }}">调整角色</a></li>
+      <li><a href="/v1/team/edit?uuid={{ .Team.Uuid }}">修改资料</a></li>
       <li><a href="/v1/search">邀请新人</a></li>
-      <li><a href="/v1/team/invitations?id={{ .Team.Uuid }}">看邀请函</a></li>
-      <li class="active"><a href="/v1/team/applications?id={{ .Team.Uuid }}">看申请书</a></li>
-      <li><a href="/v1/team_member/fire?id={{ .Team.Uuid }}">移除成员</a></li>
-      <li><a href="#">冰封团队</a></li>
+      <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">看邀请函</a></li>
+      <li class="active"><a href="#">看申请书</a></li>
+      <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">离队成员</a></li>
+      <li><a href="#">注销团队</a></li>
   </ol>
 </div>
 
 {{/*  这是指定茶团的，全部加盟申请书列表页面  */}}
 
+{{ if .MemberApplicationBeanSlice }}
+
 {{ range .MemberApplicationBeanSlice }}
+{{ template "component_member_application_bean" . }}
+{{ end }}
 
-<hr />
+{{/* 分页导航 */}}
+{{ if gt .TotalPages 1 }}
+<nav aria-label="申请书分页" style="margin: 2rem 0;">
+  <ul class="pagination" style="justify-content: center;">
+    {{ if .HasPrev }}
+    <li>
+      <a href="/v1/team/applications?uuid={{ .Team.Uuid }}&page={{ sub .CurrentPage 1 }}" aria-label="上一页">
+        <span aria-hidden="true">&laquo; 上一页</span>
+      </a>
+    </li>
+    {{ else }}
+    <li class="disabled">
+      <span>&laquo; 上一页</span>
+    </li>
+    {{ end }}
 
-{{template "component_team" . }}
+    {{ range $i := iterate .TotalPages }}
+      {{ if eq (add $i 1) $.CurrentPage }}
+      <li class="active"><span>{{ add $i 1 }}</span></li>
+      {{ else }}
+      <li><a href="/v1/team/applications?uuid={{ $.Team.Uuid }}&page={{ add $i 1 }}">{{ add $i 1 }}</a></li>
+      {{ end }}
+    {{ end }}
 
-  <hr />
+    {{ if .HasNext }}
+    <li>
+      <a href="/v1/team/applications?uuid={{ .Team.Uuid }}&page={{ add .CurrentPage 1 }}" aria-label="下一页">
+        <span aria-hidden="true">下一页 &raquo;</span>
+      </a>
+    </li>
+    {{ else }}
+    <li class="disabled">
+      <span>下一页 &raquo;</span>
+    </li>
+    {{ end }}
+  </ul>
+</nav>
+{{ end }}
 
-  {{ else }}
+{{ else }}
 <div class="panel panel-default">
   <div class="panel-heading">
     茶博士
   </div>
   <div class="panel-body">
-    你好，没有待处理的加盟申请书记录。
+    你好，没有加盟申请书记录。
   </div>
 </div>
-
 {{ end }}
 
 {{ end }}

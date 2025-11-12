@@ -166,6 +166,10 @@ func (team *Team) IsDeleted() bool {
 	return team.DeletedAt != nil
 }
 
+func (team *Team) IsOpen() bool {
+	return team.Class == TeamClassOpen || team.Class == TeamClassOpenDraft
+}
+
 // SoftDelete 软删除团队
 func (team *Team) SoftDelete() error {
 	now := time.Now()
@@ -1108,7 +1112,7 @@ func (team *Team) Update() error {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(team.Name, team.Mission, team.Class, team.Abbreviation, 
+	_, err = stmt.Exec(team.Name, team.Mission, team.Class, team.Abbreviation,
 		team.Logo, team.Tags, now, team.Id)
 	return err
 }
@@ -1170,5 +1174,17 @@ func (team *Team) UpdateMission() (err error) {
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(team.Mission, time.Now(), team.Id)
+	return
+}
+
+// CreateWithTx 在事务中创建$事业茶团
+func (team *Team) CreateWithTx(tx *sql.Tx) (err error) {
+	err = tx.QueryRow("INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, abbreviation, logo, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid", Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Abbreviation, team.Logo, team.Tags).Scan(&team.Id, &team.Uuid)
+	return
+}
+
+// CreateWithTx 在事务中创建团队成员
+func (tM *TeamMember) CreateWithTx(tx *sql.Tx) (err error) {
+	err = tx.QueryRow(`INSERT INTO team_members (uuid, team_id, user_id, role, created_at, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id,uuid`, Random_UUID(), tM.TeamId, tM.UserId, tM.Role, time.Now(), tM.Status).Scan(&tM.Id, &tM.Uuid)
 	return
 }

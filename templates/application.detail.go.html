@@ -1,0 +1,113 @@
+{{ define "content" }}
+{{/* 个人加盟茶团申请书详情页面 */}}
+
+<ol class="breadcrumb">
+
+  <li>大堂</li>
+  <li>团队管理</li>
+  <li class="active">详情 @加盟茶团申请书</li>
+
+</ol>
+
+<div class="media">
+    <div class="media-left">
+        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
+            <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="团队团标">
+        </a>
+    </div>
+
+    <div class="media-body">
+        <div class="panel panel-info">
+
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; font-size: smaller;text-align: center;">
+                            {{ .Team.CreatedAtDate }}
+                        </span>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; text-align: right;">
+                            <span class="label label-success">{{ .Team.TeamProperty }}
+                            </span>
+                        </span>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <h4 class="text-center">加盟茶团申请书</h4>
+                
+                <!-- 申请状态 -->
+                <div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+                    <strong><i class="glyphicon glyphicon-info-sign"></i> 申请状态：</strong>
+                    <span class="label {{ if eq .Application.Status 0 }}label-warning{{ else if eq .Application.Status 1 }}label-info{{ else if eq .Application.Status 2 }}label-success{{ else if eq .Application.Status 3 }}label-danger{{ else }}label-default{{ end }}">
+                        {{ .Application.GetStatus }}
+                    </span>
+                </div>
+                
+                <p>
+                    致 <strong>{{ .Team.Name }}</strong> 团队：
+                </p>
+                <p>
+                    {{ .Application.Content }}
+                </p>
+                <p class="text-right">申请人：
+                    <a href="/v1/user/biography?id={{ .Applicant.Uuid }}">{{ .Applicant.Name }}</a>
+                    {{if .Applicant.Gender }}
+                    <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+                    {{ else }}
+                    <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+                    {{ end }}
+                    <a href="/v1/team/detail?uuid={{ .ApplicantDefaultTeam.Uuid }}" style="color: black;">{{ .ApplicantDefaultTeam.Abbreviation }}</a>
+      
+                </p>
+                <p class="text-right">
+                    {{ .Application.CreatedAtDate }}
+                </p>
+                
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{{/* 如果申请已被处理（状态>=2），显示答复信息 */}}
+{{ if ge .Application.Status 2 }}
+<div class="panel panel-default" style="margin-top: 20px;">
+    <div class="panel-heading" style="background-color: {{ if eq .Application.Status 2 }}#dff0d8{{ else if eq .Application.Status 3 }}#f2dede{{ else }}#f5f5f5{{ end }};">
+        <h4 style="margin: 0;">
+            <i class="glyphicon glyphicon-{{ if eq .Application.Status 2 }}ok-sign{{ else if eq .Application.Status 3 }}remove-sign{{ else }}info-sign{{ end }}"></i>
+            茶团审查答复
+        </h4>
+    </div>
+    <div class="panel-body">
+        <!-- 答复状态 -->
+        <div style="margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-left: 4px solid {{ if eq .Application.Status 2 }}#5cb85c{{ else if eq .Application.Status 3 }}#d9534f{{ else }}#5bc0de{{ end }}; border-radius: 4px;">
+            <strong><i class="glyphicon glyphicon-flag"></i> 答复状态：</strong>
+            <span class="label {{ if eq .Application.Status 2 }}label-success{{ else if eq .Application.Status 3 }}label-danger{{ else }}label-default{{ end }}">
+                {{ .Application.GetStatus }}
+            </span>
+        </div>
+        
+        {{/* 这里可以添加答复内容，需要从数据库获取MemberApplicationReply */}}
+        <p style="color: #666; font-style: italic;">
+            {{/* 展示申请书回复 */}}
+            <strong><i class="glyphicon glyphicon-flag"></i> 答复内容：</strong>
+            <p>答复人ID：{{ .Application.Reply.UserId }}</p>
+            <p>{{ .Application.Reply.ReplyContent }}</p>
+        <span style="font-size: smaller;"> {{ .Application.ReplyCreatedAtDate }}</span>
+        {{/* 展示申请书回复 */}}
+        </p>
+
+    </div>
+</div>
+{{ end }}
+
+{{ end }}

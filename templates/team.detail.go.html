@@ -12,9 +12,9 @@
 {{ if $.IsCoreMember }}
 
 {{ if $.IsCEO }}{{/* 检查是否团队管理员开始  */}}
-<a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
+<a class="btn btn-default" href="/v1/team/manage?uuid={{ .Team.Uuid }}" role="button">管理团队</a>
 {{ else if $.IsFounder }}
-<a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
+<a class="btn btn-default" href="/v1/team/manage?uuid={{ .Team.Uuid }}" role="button">管理团队</a>
 {{ end }} {{/* 检查是否团队管理员结束  */}}
 
 {{ if or $.IsCEO $.IsFounder }}
@@ -34,14 +34,14 @@
 
 <div class="alert alert-info" role="alert" style="margin-top: 1rem;">你好，有待处理的加盟申请书！
   <i class="bi bi-envelope"></i>
-  <a href="/v1/team_member/application/check?uuid={{ .Team.Uuid }}">查看 >></a>
+  <a href="/v1/team/new_applications/check?uuid={{ .Team.Uuid }}">查看 >></a>
 </div>
 
 {{ end }}{{/* 检查是否有新的加盟申请书结束  */}}
 {{ end }}{{/* 检查是否团队管理员结束  */}}
 
 <hr />
-{{ if .Open }}
+{{ if .Team.IsOpen }}
 {{ if $.IsMember }}
 {{ if $.IsCoreMember }}
 <div class="text-center">
@@ -83,7 +83,7 @@
           </div>
 
           <div class="col-xs-4 text-center">
-            {{ if .Open }}
+            {{ if .Team.IsOpen }}
             <i class="bi-people" style="font-size: 2rem;"></i>
 
             <span class="label label-success">{{ .Team.TeamProperty }}
@@ -125,7 +125,7 @@
 
         <span style="margin-inline-end: 20px;" title="成员数">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-          {{ .MemberCount }}
+          {{ .MembersCount }}
         </span>
 
         {{ if .Team.Tags }}
