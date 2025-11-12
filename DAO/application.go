@@ -77,9 +77,9 @@ func GetMemberApplicationByTeamIdAndStatusCount(team_id int) (count int, err err
 	return
 }
 
-// 检测当前用户是否向指定茶团，已经提交过加盟申请？而且申请书状态为等待处理（Status<=1）
-func CheckMemberApplicationByTeamIdAndUserId(team_id int, user_id int) (member_application MemberApplication, err error) {
-	err = db.QueryRow("SELECT * FROM member_applications WHERE team_id = $1 AND user_id = $2 AND status <= 1", team_id, user_id).Scan(&member_application.Id, &member_application.Uuid, &member_application.TeamId, &member_application.UserId, &member_application.Content, &member_application.Status, &member_application.CreatedAt, &member_application.UpdatedAt)
+// 检测当前用户是否向指定茶团，已经提交过加盟申请？而且申请书状态为<=指定状态
+func CheckMemberApplicationByTeamIdAndUserId(team_id int, user_id int, status int) (member_application MemberApplication, err error) {
+	err = db.QueryRow("SELECT * FROM member_applications WHERE team_id = $1 AND user_id = $2 AND status <= $3", team_id, user_id, status).Scan(&member_application.Id, &member_application.Uuid, &member_application.TeamId, &member_application.UserId, &member_application.Content, &member_application.Status, &member_application.CreatedAt, &member_application.UpdatedAt)
 	if err != nil {
 		return
 	}

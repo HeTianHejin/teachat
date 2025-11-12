@@ -32,7 +32,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，请提供需要查找茶友的识别码。")
 		return
 	}
-	//有id参数，读取指定用户资料
+	//有uuid参数，读取指定用户资料
 	user, err := data.GetUserByUUID(uuid)
 	if err != nil {
 		report(w, r, "报告，大王，未能找到茶友的资料！")
@@ -40,7 +40,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	}
 	uB, err = fetchUserBean(user)
 	if err != nil {
-		util.Debug("Cannot get user Bean given id", user.Id, err)
+		util.Debug("Cannot get user Bean given uuid", user.Uuid, err)
 		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}

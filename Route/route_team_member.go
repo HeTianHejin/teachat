@@ -1152,8 +1152,8 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//检测当前用户是否向指定茶团，已经提交过加盟申请？而且申请书状态为等待处理（Status<=1）
-	_, err = data.CheckMemberApplicationByTeamIdAndUserId(team.Id, s_u.Id)
+	//检测当前用户是否向指定茶团，已经提交过加盟申请？而且申请书状态为（Status<=status）
+	_, err = data.CheckMemberApplicationByTeamIdAndUserId(team.Id, s_u.Id, data.MemberApplicationStatusViewed)
 	if err != nil {
 		switch err {
 		case sql.ErrNoRows:
