@@ -44,7 +44,7 @@
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
             {{ end }}
-              <a href="/v1/user/biography?id={{ .GroupBean.Founder.Uuid }}">{{ .GroupBean.Founder.Name }}</a>
+              <a href="/v1/user/biography?uuid={{ .GroupBean.Founder.Uuid }}">{{ .GroupBean.Founder.Name }}</a>
               @<span style="font-style: italic;"><a href="/v1/group/detail?id={{ .GroupBean.FounderTeam.Uuid }}">{{ .GroupBean.FounderTeam.Abbreviation }}</a></span>
 
               {{ .GroupBean.CreatedAtDate }}

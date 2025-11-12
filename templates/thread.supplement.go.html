@@ -159,7 +159,7 @@
                 class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
           </p>
           <footer style="font-size: small;">
-            <a href="/v1/user/biography?id={{ .QuotePostBean.Author.Uuid }}"
+            <a href="/v1/user/biography?uuid={{ .QuotePostBean.Author.Uuid }}"
               style="color: black;">{{ .QuotePostBean.Author.Name }}</a>
             {{if .QuotePostBean.Author.Gender }}
             <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
@@ -188,7 +188,7 @@
           <footer style="font-size: small;">
 
             <cite title="Source Title"> <a
-                href="/v1/user/biography?id={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
+                href="/v1/user/biography?uuid={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
               {{if .QuoteProjectBean.Author.Gender }}
               <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
               {{ else }}

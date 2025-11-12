@@ -52,7 +52,7 @@
   {{ range .CoreMemberBeanSlice }}{{/*  这是可管理的茶团核心成员展示  */}}
   <div class="media">
     <div class="media-left">
-      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <a href="/v1/user/biography?uuid={{ .Member.Uuid }}">
         <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
       </a>
     </div>
@@ -95,7 +95,7 @@
 
   <div class="media">
     <div class="media-left">
-      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <a href="/v1/user/biography?uuid={{ .Member.Uuid }}">
         <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
       </a>
     </div>
@@ -143,7 +143,7 @@
 
   <div class="media">
     <div class="media-left">
-      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <a href="/v1/user/biography?uuid={{ .Member.Uuid }}">
         <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
       </a>
     </div>

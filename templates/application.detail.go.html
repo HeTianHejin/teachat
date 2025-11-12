@@ -59,7 +59,7 @@
                     {{ .Application.Content }}
                 </p>
                 <p class="text-right">申请人：
-                    <a href="/v1/user/biography?id={{ .Applicant.Uuid }}">{{ .Applicant.Name }}</a>
+                    <a href="/v1/user/biography?uuid={{ .Applicant.Uuid }}">{{ .Applicant.Name }}</a>
                     {{if .Applicant.Gender }}
                     <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
                     {{ else }}

@@ -30,7 +30,7 @@
           </div>
 
           <div class="col-xs-4 text-right">
-              <a href="/v1/user/biography?id={{ .Founder.Uuid }}" title="查看茶友详情">{{ .Founder.Name }}</a>
+              <a href="/v1/user/biography?uuid={{ .Founder.Uuid }}" title="查看茶友详情">{{ .Founder.Name }}</a>
               {{if .Founder.Gender }}
               <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
               {{ else }}

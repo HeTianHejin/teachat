@@ -6,7 +6,7 @@ import (
 	util "teachat/Util"
 )
 
-// GET /user/biography?uuid=
+// GET /v1/user/biography?uuid=
 // 展示用户个人主页
 func Biography(w http.ResponseWriter, r *http.Request) {
 	//检查是否已经登录
@@ -27,9 +27,10 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
-	//没有id参数，读取自己的资料
+	//没有id参数，报告uuid没有提及
 	if uuid == "" {
-		uuid = s_u.Uuid
+		report(w, r, "你好，请提供需要查找茶友的识别码。")
+		return
 	}
 	//有id参数，读取指定用户资料
 	user, err := data.GetUserByUUID(uuid)
@@ -98,7 +99,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/v1/user/biography?id="+s_u.Uuid, http.StatusFound)
+		http.Redirect(w, r, "/v1/user/biography?uuid="+s_u.Uuid, http.StatusFound)
 		//Report(w, r, "你好，茶博士低声说，花名或者简介更新成功啦。")
 
 	}
