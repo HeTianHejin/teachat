@@ -160,7 +160,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 创建集团
+	// 使用事务创建集团并添加第一团队为成员
 	group := data.Group{
 		Name:         name,
 		Abbreviation: abbreviation,
@@ -172,23 +172,10 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 		Tags:         r.PostFormValue("tags"),
 	}
 
-	if err := group.Create(); err != nil {
-		util.Debug("Cannot create group", err)
+	if err := createGroupWithFirstMember(&group, firstTeamId, sessUser.Id); err != nil {
+		util.Debug("Cannot create group with first member", err)
 		report(w, r, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 		return
-	}
-
-	// 自动将第一团队注册为集团成员
-	firstMember := data.GroupMember{
-		GroupId: group.Id,
-		TeamId:  firstTeamId,
-		Level:   1,
-		Role:    "最高管理团队",
-		Status:  data.GroupMemberStatusActive,
-		UserId:  sessUser.Id,
-	}
-	if err := firstMember.Create(); err != nil {
-		util.Debug("Cannot create first group member", err)
 	}
 
 	if util.Config.PoliteMode {
@@ -421,6 +408,64 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 	report(w, r, "你好，团队已成功添加到集团！")
 }
 
+// GET /v1/group/edit?id=xxx
+// 显示编辑集团信息表单
+func EditGroupGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		report(w, r, "你好，缺少集团标识。")
+		return
+	}
+
+	group, err := data.GetGroupByUUID(id)
+	if err != nil {
+		util.Debug("Cannot get group by uuid", err)
+		report(w, r, "你好，未能找到该集团。")
+		return
+	}
+
+	// 检查编辑权限
+	canEdit, err := group.CanEdit(sessUser.Id)
+	if err != nil || !canEdit {
+		report(w, r, "你好，您没有权限编辑该集团。")
+		return
+	}
+
+	var pageData struct {
+		SessUser data.User
+		Group    data.Group
+	}
+	pageData.SessUser = sessUser
+	pageData.Group = group
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "group.edit")
+}
+
+// HandleEditGroup GET/POST /v1/group/edit
+// 处理集团编辑
+func HandleEditGroup(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		EditGroupGet(w, r)
+	case http.MethodPost:
+		EditGroupPost(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
 // POST /v1/group/edit
 // 编辑集团信息
 func EditGroupPost(w http.ResponseWriter, r *http.Request) {
@@ -479,7 +524,7 @@ func EditGroupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	report(w, r, "你好，集团信息已成功更新！")
+	http.Redirect(w, r, "/v1/group/manage?id="+group.Uuid, http.StatusFound)
 }
 
 // GET /v1/group/detail?id=xxx
@@ -594,6 +639,167 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "group.detail", "component_team")
 }
 
+// GET /v1/group/manage?id=xxx
+// 显示集团管理页面
+func GroupManageGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		report(w, r, "你好，缺少集团标识。")
+		return
+	}
+
+	group, err := data.GetGroupByUUID(id)
+	if err != nil {
+		util.Debug("Cannot get group by uuid", err)
+		report(w, r, "你好，未能找到该集团。")
+		return
+	}
+
+	// 检查管理权限
+	canManage, err := group.CanManage(sessUser.Id)
+	if err != nil {
+		util.Debug("Cannot check manage permission", err)
+		canManage = false
+	}
+	if !canManage {
+		report(w, r, "你好，您没有权限管理该集团。")
+		return
+	}
+
+	// 获取集团的所有团队
+	teams, err := data.GetTeamsByGroupId(group.Id)
+	if err != nil {
+		util.Debug("Cannot get teams by group id", err)
+	}
+
+	// 准备页面数据
+	var pageData struct {
+		SessUser      data.User
+		GroupBean     data.GroupBean
+		TeamBeanSlice []data.TeamBean
+	}
+	pageData.SessUser = sessUser
+	pageData.GroupBean = data.GroupBean{
+		Group:         group,
+		CreatedAtDate: group.CreatedAtDate(),
+		Open:          group.Class == data.GroupClassOpen,
+		TeamsCount:    len(teams),
+	}
+
+	// 获取团队Bean列表
+	teamBeans := make([]data.TeamBean, 0, len(teams))
+	for _, t := range teams {
+		tb, err := fetchTeamBean(t)
+		if err == nil {
+			teamBeans = append(teamBeans, tb)
+		}
+	}
+	pageData.TeamBeanSlice = teamBeans
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "group.manage")
+}
+
+// GET /v1/group/invitations?id=xxx
+// 显示集团发出的所有邀请函列表
+func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		report(w, r, "你好，缺少集团标识。")
+		return
+	}
+
+	group, err := data.GetGroupByUUID(id)
+	if err != nil {
+		util.Debug("Cannot get group by uuid", err)
+		report(w, r, "你好，未能找到该集团。")
+		return
+	}
+
+	// 检查管理权限
+	canManage, err := group.CanManage(sessUser.Id)
+	if err != nil || !canManage {
+		report(w, r, "你好，只有集团管理者才能查看邀请函列表。")
+		return
+	}
+
+	// 获取集团发出的所有邀请函
+	invitations, err := data.GetInvitationsByGroupId(group.Id)
+	if err != nil {
+		util.Debug("Cannot get group invitations", err)
+	}
+
+	// 构建邀请函Bean列表
+	invitationBeans := make([]data.GroupInvitationBean, 0)
+	for _, inv := range invitations {
+		team, err := data.GetTeam(inv.TeamId)
+		if err != nil {
+			continue
+		}
+
+		author, err := data.GetUser(inv.AuthorUserId)
+		if err != nil {
+			continue
+		}
+
+		bean := data.GroupInvitationBean{
+			Invitation: inv,
+			Group:      group,
+			AuthorCEO:  author,
+			InviteUser: data.User{}, // 受邀请团队CEO，
+			Team:       team,
+			Status:     inv.GetStatus(),
+		}
+
+		// 获取团队CEO信息
+		if ceo, err := team.MemberCEO(); err == nil {
+			if ceoUser, err := data.GetUser(ceo.UserId); err == nil {
+				bean.InviteUser = ceoUser
+			}
+		}
+		// 获取团队信息
+		if team, err := data.GetTeam(inv.TeamId); err == nil {
+			bean.Team = team
+		}
+
+		invitationBeans = append(invitationBeans, bean)
+	}
+
+	var pageData struct {
+		SessUser        data.User
+		Group           data.Group
+		InvitationBeans []data.GroupInvitationBean
+	}
+	pageData.SessUser = sessUser
+	pageData.Group = group
+	pageData.InvitationBeans = invitationBeans
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "group.invitations")
+}
+
 // POST /v1/group/delete
 // 删除集团（软删除）
 func DeleteGroupPost(w http.ResponseWriter, r *http.Request) {
@@ -648,4 +854,31 @@ func DeleteGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	report(w, r, "你好，集团已成功删除！")
+}
+
+// createGroupWithFirstMember 使用事务创建集团并将第一团队登记为成员
+func createGroupWithFirstMember(group *data.Group, firstTeamId int, userId int) error {
+	tx, err := data.BeginTx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := group.CreateWithTx(tx); err != nil {
+		return err
+	}
+
+	firstMember := data.GroupMember{
+		GroupId: group.Id,
+		TeamId:  firstTeamId,
+		Level:   1,
+		Role:    "最高管理团队",
+		Status:  data.GroupMemberStatusActive,
+		UserId:  userId,
+	}
+	if err := firstMember.CreateWithTx(tx); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

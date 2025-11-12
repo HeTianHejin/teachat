@@ -71,9 +71,9 @@ func GroupMemberInviteGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser    data.User
-		Group       data.Group
-		InviteTeam  *data.Team
+		SessUser   data.User
+		Group      data.Group
+		InviteTeam *data.Team
 	}
 	pageData.SessUser = sessUser
 	pageData.Group = group
@@ -233,7 +233,7 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	canReply := false
 	if team.FounderId == sessUser.Id {
 		canReply = true
-	} else if ceo, err := team.MemberCEO(); err == nil && ceo.UserId == sessUser.Id {
+	} else if member_ceo, err := team.MemberCEO(); err == nil && member_ceo.UserId == sessUser.Id {
 		canReply = true
 	}
 
@@ -249,6 +249,7 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
+	ceo, _ := data.GetUser(invitation.AuthorUserId)
 
 	// 如果是未读状态，更新为已读
 	if invitation.Status == 0 {
@@ -266,11 +267,13 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 		SessUser   data.User
 		Invitation data.GroupInvitation
 		Group      data.Group
+		CEO        data.User
 		Team       data.Team
 	}
 	pageData.SessUser = sessUser
 	pageData.Invitation = invitation
 	pageData.Group = group
+	pageData.CEO = ceo
 	pageData.Team = team
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "group.member_invitation_read")

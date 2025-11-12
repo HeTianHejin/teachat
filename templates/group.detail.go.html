@@ -81,15 +81,14 @@
     </div>
 
 
+    {{ if .CanManage }}
+      <a class="btn btn-default" href="/v1/group/manage?id={{ .GroupBean.Group.Uuid }}" role="button">管理集团</a>
+    {{ end }}
     
     
     <div style="margin: 20px;">
       <ol class="nav nav-tabs">
         <li class="active"><a href="#">在座成员</a></li>
-        {{ if .CanManage }}
-        <li><a href="/v1/group/member_add?uuid={{ .GroupBean.Group.Uuid }}">增加成员</a></li>
-        <li><a href="/v1/group/member_remove?uuid={{ .GroupBean.Group.Uuid }}">移除成员</a></li>
-        {{ end }}
     <li><a href="/v1/group/member_resigned?uuid={{ .GroupBean.Group.Uuid }}">已退成员</a></li>
   </ol>
 </div>

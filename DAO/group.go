@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"time"
 )
 
@@ -353,15 +354,33 @@ func (group *Group) IsFirstTeamMember(userId int) (bool, error) {
 	return count > 0, nil
 }
 
-// CanManage 检查用户是否有管理集团的权限（创建者或最高管理团队成员）
+// IsFirstTeamCoreMember()
+func (group *Group) IsFirstTeamCoreMember(userId int) (bool, error) {
+	if group.FirstTeamId == 0 {
+		return false, nil
+	}
+
+	var count int
+	query := `SELECT COUNT(*) FROM team_members
+	          WHERE team_id = $1 AND user_id = $2 AND status = $3 
+	          AND role IN ($4, $5, $6, $7)`
+	err := db.QueryRow(query, group.FirstTeamId, userId, TeMemberStatusActive, 
+		RoleCEO, RoleCTO, RoleCMO, RoleCFO).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+// CanManage 检查用户是否有管理集团的权限（创建者或最高管理团队核心成员）
 func (group *Group) CanManage(userId int) (bool, error) {
 	// 创建者有权限
 	if group.IsFounder(userId) {
 		return true, nil
 	}
 
-	// 最高管理团队成员有权限
-	return group.IsFirstTeamMember(userId)
+	// 最高管理团队核心成员有权限
+	return group.IsFirstTeamCoreMember(userId)
 }
 
 // CanAddTeam 检查用户是否有添加团队的权限
@@ -551,6 +570,30 @@ func (gir *GroupInvitationReply) Create() error {
 	return err
 }
 
+// GetInvitationsByGroupId 获取集团发出的所有邀请函
+func GetInvitationsByGroupId(groupId int) ([]GroupInvitation, error) {
+	query := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
+	          status, author_user_id, created_at 
+	          FROM group_invitations WHERE group_id = $1 ORDER BY created_at DESC`
+	rows, err := db.Query(query, groupId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	invitations := make([]GroupInvitation, 0)
+	for rows.Next() {
+		var gi GroupInvitation
+		if err = rows.Scan(&gi.Id, &gi.Uuid, &gi.GroupId, &gi.TeamId,
+			&gi.InviteWord, &gi.Role, &gi.Level, &gi.Status, &gi.AuthorUserId,
+			&gi.CreatedAt); err != nil {
+			return nil, err
+		}
+		invitations = append(invitations, gi)
+	}
+	return invitations, rows.Err()
+}
+
 // GetInvitationsByTeamId 获取团队收到的所有集团邀请函
 func GetInvitationsByTeamId(teamId int) ([]GroupInvitation, error) {
 	query := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
@@ -611,4 +654,16 @@ func CountGroupInvitationsByUserIdAndStatus(userId int, status int) (int, error)
 	          WHERE tm.user_id = $1 AND gi.status = $2`
 	err := db.QueryRow(query, userId, status).Scan(&count)
 	return count, err
+}
+
+// CreateWithTx 在事务中创建集团
+func (group *Group) CreateWithTx(tx *sql.Tx) error {
+	err := tx.QueryRow(`INSERT INTO groups (uuid, name, abbreviation, mission, founder_id, first_team_id, class, logo, tags, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid, created_at`, Random_UUID(), group.Name, group.Abbreviation, group.Mission, group.FounderId, group.FirstTeamId, group.Class, group.Logo, group.Tags, time.Now()).Scan(&group.Id, &group.Uuid, &group.CreatedAt)
+	return err
+}
+
+// CreateWithTx 在事务中创建集团成员
+func (gm *GroupMember) CreateWithTx(tx *sql.Tx) error {
+	err := tx.QueryRow(`INSERT INTO group_members (uuid, group_id, team_id, level, role, status, user_id, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, uuid, created_at`, Random_UUID(), gm.GroupId, gm.TeamId, gm.Level, gm.Role, gm.Status, gm.UserId, time.Now()).Scan(&gm.Id, &gm.Uuid, &gm.CreatedAt)
+	return err
 }

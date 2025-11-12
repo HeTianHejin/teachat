@@ -1,0 +1,58 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li><a href="/v1/group/manage?id={{ .Group.Uuid }}">管理</a></li>
+  <li class="active">查看邀请</li>
+</ol>
+
+<h3>{{ .Group.Name }} - 邀请函列表</h3>
+
+{{ if .InvitationBeans }}
+{{ range .InvitationBeans }}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div class="row">
+      <div class="col-xs-8">
+        邀请团队：<strong>{{ .Team.Abbreviation }}</strong>
+      </div>
+      <div class="col-xs-4 text-right">
+        <span class="label {{ if eq .Invitation.Status 2 }}label-success{{ else if eq .Invitation.Status 3 }}label-danger{{ else if eq .Invitation.Status 1 }}label-info{{ else }}label-default{{ end }}">
+          {{ .Status }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-body">
+
+    <p><strong>受邀请人：</strong>{{ .InviteUser.Name }}</p>
+    <p><strong>邀请内容：</strong>{{ .Invitation.InviteWord }}</p>
+    <p style="font-size: small;">
+      <span style="margin-inline-end: 20px;">
+        <strong>等级：</strong>{{ .Invitation.Level }}
+      </span>
+      <span style="margin-inline-end: 20px;">
+        <strong>角色：</strong>{{ .Invitation.Role }}
+      </span>
+    </p>
+  </div>
+  <div class="panel-footer">
+    <span style="font-size: small;">
+      发起人：<a href="/v1/user/biography?id={{ .AuthorCEO.Uuid }}">{{ .AuthorCEO.Name }}</a>
+      | 发送时间：{{ .Invitation.CreatedAtDate }}
+    </span>
+  </div>
+</div>
+{{ end }}
+{{ else }}
+<div class="alert alert-info">
+  <p>暂无邀请函记录。</p>
+</div>
+{{ end }}
+
+<div style="margin-top: 20px;">
+  <a class="btn btn-default" href="/v1/group/manage?id={{ .Group.Uuid }}" role="button">返回管理</a>
+</div>
+
+{{ end }}

@@ -1,0 +1,64 @@
+{{ define "content" }}
+
+{{/* 这是某个集团管理首页，默认"成员管理"tab标签页，内容是展示全部成员团队列表 */}}
+
+{{ with .GroupBean }}
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li class="active">管理</li>
+</ol>
+{{ end }}
+
+{{ with .GroupBean }}
+<div style="margin: 2rem;">
+  <ol class="nav nav-tabs">
+    <li class="active"><a href="#top">成员管理</a></li>
+    <li><a href="/v1/group/invitations?id={{ .Group.Uuid }}">查看邀请</a></li>
+    <li><a href="/v1/group/edit?id={{ .Group.Uuid }}">修改资料</a></li>
+    <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">查看详情</a></li>
+    <li><a href="#">注销集团</a></li>
+  </ol>
+</div>
+{{ end }}
+
+<div class="well">
+  说明：集团创建人和创建团队的核心成员可以管理集团，包括增加成员、移除成员等操作。
+</div>
+
+{{/* 展示集团成员团队列表 */}}
+{{ range .TeamBeanSlice }}
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
+      <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="团队旗帜">
+    </a>
+  </div>
+  <div class="media-body">
+    <h4 class="media-heading">
+      <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+      <small>{{ .Team.Abbreviation }}</small>
+    </h4>
+    <p>{{ .Team.Mission }}</p>
+    <p style="font-size: small;">
+      <span style="margin-inline-end: 20px;">
+        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+        {{ .MembersCount }} 人
+      </span>
+      <span>加入时间：{{ .CreatedAtDate }}</span>
+    </p>
+  </div>
+</div>
+
+<div style="margin: 2rem;">
+  <a class="btn btn-default" href="/v1/group/member_remove?uuid={{ $.GroupBean.Group.Uuid }}&team_id={{ .Team.Uuid }}" role="button">移除团队</a>
+</div>
+
+<hr />
+{{ end }}
+
+<div style="margin: 2rem;">
+  <a class="btn btn-primary" href="/v1/group/member_add?uuid={{ .GroupBean.Group.Uuid }}" role="button">增加成员</a>
+</div>
+
+{{ end }}
