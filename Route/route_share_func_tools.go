@@ -39,12 +39,22 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 			return stars
 		},
 		"RiskSeverityLevelString": data.RiskSeverityLevelString,
-		"AvailabilityString":      data.AvailabilityString,
+		"AvailabilityString":      data.GoodsAvailabilityString,
 		"mul": func(a, b int) int {
 			return a * b
 		},
 		"sub": func(a, b int) int {
 			return a - b
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"iterate": func(count int) []int {
+			var items []int
+			for i := 0; i < count; i++ {
+				items = append(items, i)
+			}
+			return items
 		},
 		"split": func(s, sep string) []string {
 			return strings.Split(s, sep)

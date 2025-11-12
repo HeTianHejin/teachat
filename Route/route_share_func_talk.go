@@ -164,8 +164,8 @@ func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 		tB.StatsSet.PersonCount = p_f_count
 		tB.StatsSet.FamilyCount = 1
 	} else {
-		teamMemberCount := tB.AuthorTeam.NumMembers()
-		tB.StatsSet.PersonCount = teamMemberCount
+		teamMembersCount := tB.AuthorTeam.NumMembers()
+		tB.StatsSet.PersonCount = teamMembersCount
 	}
 
 	if tB.AuthorTeam.Id > data.TeamIdFreelancer {

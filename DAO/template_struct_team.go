@@ -3,9 +3,11 @@ package data
 // 集团邀请团队加盟邀请函
 type GroupInvitationBean struct {
 	Invitation GroupInvitation
-	Group      Group  //发出邀请函的集团
-	AuthorCEO  User   //集团首席执行官
-	InviteUser User   //邀请对象
+	Group      Group //发出邀请函的集团
+	AuthorCEO  User  //集团首席执行官
+
+	InviteUser User   //受邀请的团队CEO
+	Team       Team   //手邀请团队
 	Status     string //邀请函目前状态
 }
 
@@ -35,7 +37,7 @@ type GroupBean struct {
 type InvitationBean struct {
 	Invitation Invitation
 	Team       Team   //发出邀请函的团队
-	AuthorCEO  User   //团队首席执行官
+	AuthorCEO  User   //撰写邀请函的时任团队首席执行官
 	InviteUser User   //邀请对象
 	Status     string //邀请函目前状态
 }
@@ -155,9 +157,9 @@ type TeamSquare struct {
 	TeamBeanSlice []TeamBean
 }
 type TeamBean struct {
-	Team                 Team
-	CreatedAtDate        string
-	Open                 bool
+	Team          Team
+	CreatedAtDate string
+	//Open                 bool
 	Founder              User
 	FounderDefaultFamily Family //发起人默认&家庭茶团
 	FounderTeam          Team   // 发起人默认所在的团队
@@ -165,7 +167,7 @@ type TeamBean struct {
 	CEOTeam              Team   // CEO所在默认团队
 	CEODefaultFamily     Family // CEO默认&家庭茶团
 
-	MemberCount int //成员计数
+	MembersCount int //成员计数
 }
 
 // 用于某个茶团详情页面渲染

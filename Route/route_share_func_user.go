@@ -284,11 +284,6 @@ func fetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 		return TeamBean, fmt.Errorf("team id is none")
 	}
 
-	if team.Class == 1 || team.Class == 0 {
-		TeamBean.Open = true
-	} else {
-		TeamBean.Open = false
-	}
 	TeamBean.Team = team
 	TeamBean.CreatedAtDate = team.CreatedAtDate()
 
@@ -311,7 +306,7 @@ func fetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 		return
 	}
 
-	TeamBean.MemberCount = team.NumMembers()
+	TeamBean.MembersCount = team.NumMembers()
 
 	if team.Id == data.TeamIdFreelancer {
 		//茶友的默认团队还是“自由人”的情况
@@ -588,6 +583,7 @@ func fetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBea
 		util.Debug(" Cannot read team given author", err)
 		return MemberApplicationBean, err
 	}
+
 	MemberApplicationBean.Team = team
 
 	MemberApplicationBean.Author, err = data.GetUser(ma.UserId)
