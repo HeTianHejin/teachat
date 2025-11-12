@@ -13,15 +13,15 @@ func ExampleGoodsAvailabilityUsage() {
 
 	// 1. 创建一个物资
 	goods := &data.Goods{
-		RecorderUserId: 1,
-		Name:          "笔记本电脑",
-		Nickname:      "工作本",
-		Category:      data.GoodsCategoryPhysical,
-		PhysicalState: data.PhysicalNew,
+		RecorderUserId:   1,
+		Name:             "笔记本电脑",
+		Nickname:         "工作本",
+		Category:         data.GoodsCategoryPhysical,
+		PhysicalState:    data.PhysicalNew,
 		OperationalState: data.OperationalNormal,
 		// 注意：不再有 Availability 字段
 	}
-	
+
 	err := goods.Create(ctx)
 	if err != nil {
 		fmt.Printf("创建物资失败: %v\n", err)
@@ -34,7 +34,7 @@ func ExampleGoodsAvailabilityUsage() {
 		GoodsId:      goods.Id,
 		Availability: data.Available,
 	}
-	
+
 	err = goodsFamily.Create(ctx)
 	if err != nil {
 		fmt.Printf("创建家庭物资关系失败: %v\n", err)
@@ -47,7 +47,7 @@ func ExampleGoodsAvailabilityUsage() {
 		GoodsId:      goods.Id,
 		Availability: data.InUse,
 	}
-	
+
 	err = goodsTeam.Create(ctx)
 	if err != nil {
 		fmt.Printf("创建团队物资关系失败: %v\n", err)
@@ -60,9 +60,9 @@ func ExampleGoodsAvailabilityUsage() {
 		fmt.Printf("查询家庭物资关系失败: %v\n", err)
 		return
 	}
-	
+
 	if familyRelation != nil {
-		fmt.Printf("物资在家庭中的状态: %s\n", data.AvailabilityString(familyRelation.Availability))
+		fmt.Printf("物资在家庭中的状态: %s\n", data.GoodsAvailabilityString(familyRelation.Availability))
 	}
 
 	// 5. 查询物资在团队中的状态
@@ -71,9 +71,9 @@ func ExampleGoodsAvailabilityUsage() {
 		fmt.Printf("查询团队物资关系失败: %v\n", err)
 		return
 	}
-	
+
 	if teamRelation != nil {
-		fmt.Printf("物资在团队中的状态: %s\n", data.AvailabilityString(teamRelation.Availability))
+		fmt.Printf("物资在团队中的状态: %s\n", data.GoodsAvailabilityString(teamRelation.Availability))
 	}
 
 	// 6. 更新物资在家庭中的状态
@@ -90,9 +90,9 @@ func ExampleGoodsAvailabilityUsage() {
 		fmt.Printf("获取家庭物资失败: %v\n", err)
 		return
 	}
-	
+
 	fmt.Printf("家庭拥有 %d 个物资:\n", len(familyGoods))
 	for i, g := range familyGoods {
-		fmt.Printf("- %s: %s\n", g.Name, data.AvailabilityString(availabilities[i]))
+		fmt.Printf("- %s: %s\n", g.Name, data.GoodsAvailabilityString(availabilities[i]))
 	}
 }

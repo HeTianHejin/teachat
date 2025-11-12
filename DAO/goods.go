@@ -256,8 +256,8 @@ func (g *Goods) OperationalStateString() string {
 	}
 }
 
-// AvailabilityString 返回可用性状态的中文描述
-func AvailabilityString(availability GoodsAvailability) string {
+// GoodsAvailabilityString 返回可用性状态的中文描述
+func GoodsAvailabilityString(availability GoodsAvailability) string {
 	switch availability {
 	case Available:
 		return "可用"
