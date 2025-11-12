@@ -128,3 +128,8 @@ func contains(slice []int, item int) bool {
 	}
 	return false
 }
+
+// BeginTx 开始一个数据库事务
+func BeginTx() (*sql.Tx, error) {
+	return db.Begin()
+}
