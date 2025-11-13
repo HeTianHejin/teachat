@@ -11,11 +11,11 @@
 
 {{ if $.IsCoreMember }}
 
-{{ if $.IsCEO }}{{/* 检查是否团队管理员开始  */}}
+{{ if $.IsCEO }}{{/* 检查是否团队最高管理员开始  */}}
 <a class="btn btn-default" href="/v1/team/manage?uuid={{ .Team.Uuid }}" role="button">管理团队</a>
 {{ else if $.IsFounder }}
 <a class="btn btn-default" href="/v1/team/manage?uuid={{ .Team.Uuid }}" role="button">管理团队</a>
-{{ end }} {{/* 检查是否团队管理员结束  */}}
+{{ end }} {{/* 检查是否团队最高管理员结束  */}}
 
 {{ if or $.IsCEO $.IsFounder }}
 {{ if $.GroupBean }}
@@ -42,18 +42,13 @@
 
 <hr />
 {{ if .Team.IsOpen }}
-{{ if $.IsMember }}
-{{ if $.IsCoreMember }}
-<div class="text-center">
-  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
-  茶博士提示： 邀请茶友加入团队的方法：先 <strong><a href="/v1/search">查找</a></strong> 该茶友，然后在其个人页面点击“邀请加盟”按钮。
-</div>
-{{ end }}{{/* 检查是否核心管理成员结束  */}}
-{{ else }}{{/* 不是茶团成员  */}}
-<div class="text-right">
-  <a href="/v1/team_member/application/new?id={{ .Team.Uuid }}">申请加盟</a>
-</div>
-{{ end }}{{/* 检查是否团队成员结束  */}}
+  {{ if $.IsMember }}
+
+  {{ else }}{{/* 不是茶团成员  */}}
+     <div class="text-right">
+      <a href="/v1/team_member/application/new?uuid={{ .Team.Uuid }}">申请加盟</a>
+    </div>
+  {{ end }}{{/* 检查是否团队成员结束  */}}
 
 {{ else }}{{/* 是封闭式茶团  */}}
 <p class="text-center">
@@ -107,7 +102,7 @@
             {{ if $.GroupBean }}
             <a href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}">{{ $.GroupBean.Group.Abbreviation }}</a>
             {{ else }}
-            喝茶集团
+              喝茶集团
             {{ end }}
           </span>
         </div>
@@ -147,8 +142,8 @@
         <li><a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}">技能</a></li>
         <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">法力</a></li>
         <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
-        <li><a href="/v1/team_member/role_changed?id={{ .Team.Uuid }}">角色变动</a></li>
-        <li><a href="/v1/team_member/resigned?id={{ .Team.Uuid }}">离开成员</a></li>
+        <li><a href="/v1/team_member/role_changed?uuid={{ .Team.Uuid }}">角色变动</a></li>
+        <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">离开成员</a></li>
       </ol>
     </div>
 

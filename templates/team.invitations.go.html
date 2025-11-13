@@ -11,12 +11,12 @@
 
 <div style="margin: 2rem;">
   <ol class="nav nav-tabs">
-      <li><a href="/v1/team_member/role?id={{ .Team.Uuid }}">调整角色</a></li>
-      <li><a href="/v1/team/edit?id={{ .Team.Uuid }}">修改资料</a></li>
+      <li><a href="/v1/team_member/role?uuid={{ .Team.Uuid }}">调整角色</a></li>
+      <li><a href="/v1/team/edit?uuid={{ .Team.Uuid }}">修改资料</a></li>
       <li><a href="/v1/search">邀请新人</a></li>
       <li class="active"><a href="#">看邀请函</a></li>
       <li><a href="/v1/team/new_applications/check?uuid={{ .Team.Uuid }}">加盟申请</a></li>
-      <li><a href="/v1/team_member/fire?id={{ .Team.Uuid }}">移除成员</a></li>
+      <li><a href="/v1/team_member/fire?uuid={{ .Team.Uuid }}">移除成员</a></li>
       <li><a href="#">冰封团队</a></li>
   </ol>
 </div>

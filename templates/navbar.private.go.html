@@ -35,13 +35,13 @@
                         <li><a href="/v1/goods/eye_on">宝贝</a></li>
                         <li><a href="/v1/place/my">地盘</a></li>
                         <li role="separator" class="divider"></li>
-                        <li><a href="/v1/user/biography?uuid={{  .Uuid }}">资料</a></li>
+                        <li><a href="/v1/user/biography?uuid={{ .Uuid }}">资料</a></li>
                         <li><a href="/v1/logout">退出登录</a></li>
                     </ul>
                 </li>
 
                 <li>
-                    <a href="/v1/user/biography?uuid={{  .Uuid }}">
+                    <a href="/v1/user/biography?uuid={{ .Uuid }}">
                         <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
                         {{ .Name }}
                         {{if .Gender }}
