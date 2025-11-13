@@ -1051,6 +1051,187 @@ func canManageTeam(team *data.Team, userId int, w http.ResponseWriter, r *http.R
 	return true
 }
 
+// GET /v1/team/edit?uuid=
+// 显示编辑茶团资料表单
+func EditTeamGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, r, "你好，缺少茶团标识。")
+		return
+	}
+
+	team, err := data.GetTeamByUUID(uuid)
+	if err != nil {
+		util.Debug("Cannot get team by uuid", err)
+		report(w, r, "你好，未能找到该茶团。")
+		return
+	}
+
+	// 检查编辑权限：必须是创建人或CEO
+	canEdit := false
+	if sessUser.Id == team.FounderId {
+		canEdit = true
+	} else {
+		ceo, err := team.MemberCEO()
+		if err == nil && ceo.UserId == sessUser.Id {
+			canEdit = true
+		}
+	}
+
+	if !canEdit {
+		report(w, r, "你好，只有茶团创建人或CEO才能编辑茶团资料。")
+		return
+	}
+
+	var pageData struct {
+		SessUser data.User
+		Team     data.Team
+	}
+	pageData.SessUser = sessUser
+	pageData.Team = team
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.edit")
+}
+
+// HandleEditTeam GET/POST /v1/team/edit
+// 处理茶团编辑
+func HandleEditTeam(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		EditTeamGet(w, r)
+	case http.MethodPost:
+		EditTeamPost(w, r)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+// POST /v1/team/edit
+// 编辑茶团资料
+func EditTeamPost(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, r, "你好，茶博士失魂鱼，未能编辑茶团。")
+		return
+	}
+
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		report(w, r, "你好，茶博士失魂鱼，未能编辑茶团。")
+		return
+	}
+
+	teamIdStr := r.PostFormValue("team_id")
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		report(w, r, "你好，茶团ID无效。")
+		return
+	}
+
+	// 获取茶团并检查权限
+	team, err := data.GetTeam(teamId)
+	if err != nil {
+		util.Debug("Cannot get team", err)
+		report(w, r, "你好，未找到该茶团。")
+		return
+	}
+
+	// 检查编辑权限
+	canEdit := false
+	if sessUser.Id == team.FounderId {
+		canEdit = true
+	} else {
+		ceo, err := team.MemberCEO()
+		if err == nil && ceo.UserId == sessUser.Id {
+			canEdit = true
+		}
+	}
+
+	if !canEdit {
+		report(w, r, "你好，只有茶团创建人或CEO才能编辑茶团资料。")
+		return
+	}
+
+	// 读取表单数据
+	name := r.PostFormValue("name")
+	abbreviation := r.PostFormValue("abbreviation")
+	mission := r.PostFormValue("mission")
+
+	// 验证茶团名称长度
+	nameLen := cnStrLen(name)
+	if nameLen < 4 || nameLen > 24 {
+		report(w, r, "你好，茶团名称应在4-24个中文字符之间。")
+		return
+	}
+
+	// 验证简称长度（去掉$符号后验证）
+	abbrWithoutSymbol := strings.TrimSuffix(abbreviation, "$")
+	abbrLen := cnStrLen(abbrWithoutSymbol)
+	if abbrLen < 4 || abbrLen > 6 {
+		report(w, r, "你好，队名简称应在4-6个中文字符之间。")
+		return
+	}
+
+	// 验证使命长度
+	missionLen := cnStrLen(mission)
+	if missionLen < int(util.Config.ThreadMinWord) || missionLen > int(util.Config.ThreadMaxWord) {
+		report(w, r, "你好，团队使命字数不符合要求。")
+		return
+	}
+
+	// 检查名称是否与其他茶团重复（排除自己）
+	if name != team.Name {
+		existingTeam := data.Team{Name: name}
+		if err := existingTeam.GetByName(); err == nil {
+			report(w, r, "你好，这个茶团名称已经被占用，请换一个更响亮的团名。")
+			return
+		}
+	}
+
+	// 检查简称是否与其他茶团重复（排除自己）
+	if !strings.HasSuffix(abbreviation, "$") {
+		abbreviation = abbreviation + "$"
+	}
+	if abbreviation != team.Abbreviation {
+		existingTeam := data.Team{Abbreviation: abbreviation}
+		if err := existingTeam.GetByAbbreviation(); err == nil {
+			report(w, r, "你好，这个茶团简称已经被占用，请换一个更响亮的团名简称。")
+			return
+		}
+	}
+
+	// 更新茶团信息
+	team.Name = name
+	team.Abbreviation = abbreviation
+	team.Mission = mission
+
+	if err := team.Update(); err != nil {
+		util.Debug("Cannot update team", err)
+		report(w, r, "你好，茶博士失魂鱼，未能更新茶团信息。")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/team/manage?uuid="+team.Uuid, http.StatusFound)
+}
+
 // createTeamWithFounderMember 使用事务创建团队并将创建人登记为第一个成员（CEO）
 func createTeamWithFounderMember(team *data.Team, founderUserId int) error {
 	tx, err := data.BeginTx()

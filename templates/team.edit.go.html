@@ -1,0 +1,39 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/office">茶团管理</a></li>
+  <li><a href="/v1/team/manage?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+  <li class="active">编辑资料</li>
+</ol>
+
+<h3>编辑茶团资料</h3>
+
+<form action="/v1/team/edit" method="post">
+  <input type="hidden" name="team_id" value="{{ .Team.Id }}">
+  
+  <div class="form-group">
+    <label for="name">茶团名称</label>
+    <input type="text" class="form-control" id="name" name="name" value="{{ .Team.Name }}" required>
+    <p class="help-block">4-24个中文字符</p>
+  </div>
+
+  <div class="form-group">
+    <label for="abbreviation">队名简称</label>
+    <input type="text" class="form-control" id="abbreviation" name="abbreviation" value="{{ .Team.Abbreviation }}" required>
+    <p class="help-block">4-6个中文字符</p>
+  </div>
+
+  <div class="form-group">
+    <label for="mission">团队使命</label>
+    <textarea class="form-control" id="mission" name="mission" rows="5" required>{{ .Team.Mission }}</textarea>
+    <p class="help-block">请描述团队的使命和目标</p>
+  </div>
+
+  <div class="form-group">
+    <button type="submit" class="btn btn-primary">保存修改</button>
+    <a href="/v1/team/manage?uuid={{ .Team.Uuid }}" class="btn btn-default">取消</a>
+  </div>
+</form>
+
+{{ end }}

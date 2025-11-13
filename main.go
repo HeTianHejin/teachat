@@ -82,6 +82,7 @@ func main() {
 	mux.HandleFunc("/v1/team/applications", route.TeamApplications)
 
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
+	mux.HandleFunc("/v1/team/edit", route.HandleEditTeam)
 	mux.HandleFunc("/v1/team/core_manage", route.CoreManage)
 	mux.HandleFunc("/v1/team/new_applications/check", route.TeamNewApplicationsCheck)
 
