@@ -1,5 +1,5 @@
 {{ define "content"}}
-{{/*  这是指定茶团,(未来新)成员申请书列表面包屑导航栏  */}}
+{{/*  团队管理员视角，这是指定茶团,(未来新)成员申请书列表，页面  */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
@@ -11,7 +11,7 @@
   <ol class="nav nav-tabs">
       <li><a href="/v1/team/manage?uuid={{ .Team.Uuid }}">调整角色</a></li>
       <li><a href="/v1/team/edit?uuid={{ .Team.Uuid }}">修改资料</a></li>
-      <li><a href="/v1/search">邀请新人</a></li>
+      <li><a href="/v1/team/member_add?uuid={{ .Team.Uuid }}">邀请新人</a></li>
       <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">看邀请函</a></li>
       <li class="active"><a href="#">看申请书</a></li>
       <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">离队成员</a></li>

@@ -621,7 +621,7 @@ func fetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error)
 		return I_B, err
 	}
 
-	I_B.AuthorCEO, err = i.AuthorCEO()
+	I_B.Author, err = i.AuthorCEO()
 	if err != nil {
 		util.Debug(" Cannot fetch team CEO given invitation", err)
 		return I_B, err

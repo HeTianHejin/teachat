@@ -15,6 +15,14 @@ type Invitation struct {
 	AuthorUserId int //邀请函的撰写者茶友id，就是现任团队CEO
 }
 
+const (
+	InvitationStatusPending = iota
+	InvitationStatusViewed
+	InvitationStatusAccepted
+	InvitationStatusRejected
+	InvitationStatusExpired
+)
+
 // 茶团邀请函答复
 type InvitationReply struct {
 	Id           int

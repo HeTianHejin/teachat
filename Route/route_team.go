@@ -972,8 +972,8 @@ func TeamApplications(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "team.applications", "component_member_application_bean")
 }
 
-// GET /v1/team/invitations?uuid=
-// 查询根据Uuid指定茶团team发送的全部邀请函
+// GET /v1/team/invitations?uuid=&page=
+// 查询根据Uuid指定茶团team发送的全部邀请函，支持分页
 func TeamInvitations(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := session(r)
@@ -998,10 +998,18 @@ func TeamInvitations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var isPD data.InvitationsPageData
-	/// 填写页面资料
-	isPD.SessUser = s_u
-	isPD.Team = team
+	// 检查用户是否可以查看，FOUNDER，CEO，CTO，CFO，CMO核心成员可以
+	if !canManageTeam(&team, s_u.Id, w, r) {
+		return
+	}
+
+	// 获取分页参数
+	page := 1
+	if pageStr := v.Get("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
 
 	// 根据用户提交的Uuid，查询该茶团发送的全部邀请函
 	t_invi_slice, err := team.Invitations()
@@ -1011,14 +1019,47 @@ func TeamInvitations(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//填写页面资料
-	isPD.InvitationSlice = t_invi_slice
-
-	// 检查用户是否可以查看，FOUNDER，CEO，CTO，CFO，CMO核心成员可以
-	if !canManageTeam(&team, s_u.Id, w, r) {
-		return
+	// 分页处理
+	pageSize := 12
+	totalCount := len(t_invi_slice)
+	totalPages := (totalCount + pageSize - 1) / pageSize
+	if page > totalPages && totalPages > 0 {
+		page = totalPages
 	}
-	generateHTML(w, &isPD, "layout", "navbar.private", "team.invitations")
+
+	start := (page - 1) * pageSize
+	end := start + pageSize
+	if end > totalCount {
+		end = totalCount
+	}
+
+	var pageInvitations []data.Invitation
+	if totalCount > 0 {
+		pageInvitations = t_invi_slice[start:end]
+	}
+
+	// 分页信息
+	type PageData struct {
+		data.InvitationsPageData
+		CurrentPage int
+		TotalPages  int
+		HasPrev     bool
+		HasNext     bool
+	}
+
+	pageData := PageData{
+		InvitationsPageData: data.InvitationsPageData{
+			SessUser:        s_u,
+			Team:            team,
+			InvitationSlice: pageInvitations,
+		},
+		CurrentPage: page,
+		TotalPages:  totalPages,
+		HasPrev:     page > 1,
+		HasNext:     page < totalPages,
+	}
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.invitations")
 
 }
 
@@ -1230,6 +1271,173 @@ func EditTeamPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/v1/team/manage?uuid="+team.Uuid, http.StatusFound)
+}
+
+// GET /v1/team/member_add?uuid=
+// 显示团队搜索用户页面
+func TeamMemberAddGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, r, "你好，缺少茶团标识。")
+		return
+	}
+
+	team, err := data.GetTeamByUUID(uuid)
+	if err != nil {
+		util.Debug("Cannot get team by uuid", err)
+		report(w, r, "你好，未能找到该茶团。")
+		return
+	}
+
+	// 检查权限：必须是CEO或创建人
+	canManage := false
+	if sessUser.Id == team.FounderId {
+		canManage = true
+	} else if ceo, err := team.MemberCEO(); err == nil && ceo.UserId == sessUser.Id {
+		canManage = true
+	}
+
+	if !canManage {
+		report(w, r, "你好，只有茶团创建人或CEO才能邀请新成员。")
+		return
+	}
+
+	var pageData struct {
+		SessUser data.User
+		Team     data.Team
+	}
+	pageData.SessUser = sessUser
+	pageData.Team = team
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.member_add")
+}
+
+// HandleTeamSearchUser POST /v1/team/search_user
+// 处理团队搜索用户请求
+func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, r, "你好，茶博士失魂鱼，未能理解你的话语，请稍后再试。")
+		return
+	}
+
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	teamUuid := r.PostFormValue("team_uuid")
+	searchType := r.PostFormValue("search_type")
+	keyword := r.PostFormValue("keyword")
+
+	// 验证关键词长度
+	if len(keyword) < 1 || len(keyword) > 32 {
+		report(w, r, "你好，茶博士摸摸头，说关键词太长了记不住呢，请确认后再试。")
+		return
+	}
+
+	// 获取团队信息
+	team, err := data.GetTeamByUUID(teamUuid)
+	if err != nil {
+		util.Debug("Cannot get team by uuid", err)
+		report(w, r, "你好，未能找到该茶团。")
+		return
+	}
+
+	// 检查权限
+	canManage := false
+	if sessUser.Id == team.FounderId {
+		canManage = true
+	} else if ceo, err := team.MemberCEO(); err == nil && ceo.UserId == sessUser.Id {
+		canManage = true
+	}
+
+	if !canManage {
+		report(w, r, "你好，只有茶团创建人或CEO才能邀请新成员。")
+		return
+	}
+
+	var pageData struct {
+		SessUser      data.User
+		Team          data.Team
+		UserBeanSlice []data.UserBean
+		IsEmpty       bool
+	}
+	pageData.SessUser = sessUser
+	pageData.Team = team
+	pageData.IsEmpty = true
+
+	switch searchType {
+	case "user_id":
+		// 按茶友号查询
+		userId, err := strconv.Atoi(keyword)
+		if err != nil || userId <= 0 {
+			report(w, r, "茶友号必须是正整数")
+			return
+		}
+
+		user, err := data.GetUser(userId)
+		if err == nil && user.Id > 0 {
+			userBean, err := fetchUserBean(user)
+			if err == nil {
+				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
+				pageData.IsEmpty = false
+			}
+		}
+
+	case "user_email":
+		// 按邮箱查询
+		if !isEmail(keyword) {
+			report(w, r, "你好，请输入有效的电子邮箱地址。")
+			return
+		}
+
+		user, err := data.GetUserByEmail(keyword, r.Context())
+		if err == nil && user.Id > 0 {
+			userBean, err := fetchUserBean(user)
+			if err == nil {
+				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
+				pageData.IsEmpty = false
+			}
+		}
+
+	case "user_name":
+		// 按花名查询
+		userSlice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		if err == nil && len(userSlice) >= 1 {
+			userBeanSlice, err := fetchUserBeanSlice(userSlice)
+			if err == nil && len(userBeanSlice) >= 1 {
+				pageData.UserBeanSlice = userBeanSlice
+				pageData.IsEmpty = false
+			}
+		}
+
+	default:
+		report(w, r, "你好，请选择正确的查询方式。")
+		return
+	}
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.search_user_result", "component_avatar_name_gender")
 }
 
 // createTeamWithFounderMember 使用事务创建团队并将创建人登记为第一个成员（CEO）

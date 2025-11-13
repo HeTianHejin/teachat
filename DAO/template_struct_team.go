@@ -37,20 +37,14 @@ type GroupBean struct {
 type InvitationBean struct {
 	Invitation Invitation
 	Team       Team   //发出邀请函的团队
-	AuthorCEO  User   //撰写邀请函的时任团队首席执行官
+	Author     User   //撰写邀请函的时任团队首席执行官或者团队创建人
 	InviteUser User   //邀请对象
 	Status     string //邀请函目前状态
 }
 
 // 茶团加盟邀请函详情页面数据
 type InvitationDetail struct {
-	SessUser              User
-	SessUserDefaultFamily Family
-	SessUserAllFamilies   []Family
-	SessUserDefaultTeam   Team
-	SessUserSurvivalTeams []Team
-	SessUserDefaultPlace  Place
-	SessUserBindPlaces    []Place
+	SessUser User
 
 	InvitationBean InvitationBean //邀请函资料夹
 

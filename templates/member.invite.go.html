@@ -5,6 +5,7 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/manage?uuid={{ .InvitationBean.Team.Uuid }}">{{ .InvitationBean.Team.Abbreviation }} @增加团队新成员</a></li>
   <li class="active">撰写茶团邀请函</li>
 </ol>
 
@@ -19,6 +20,8 @@
     <div class="panel-body">
 
         <form class="form-horizontal" role="form" action="/v1/team_member/invite" method="post">
+            <input type="hidden" name="team_uuid" value="{{ .InvitationBean.Team.Uuid }}" />
+            <input type="hidden" name="author_uuid" value="{{ .InvitationBean.Author.Uuid }}" />
 
            {{ with .InvitationBean }}{{/* 检查邀请函资料夹非空，填写受邀对象 - 开始 */}}
            
@@ -75,15 +78,16 @@
 
 
             <div class="form-group">
-                <label for="team_uuid" class="col-sm-2 control-label"> 选择茶团：</label>
+                <label for="team_name" class="col-sm-2 control-label">邀请茶团：</label>
                 <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
-                  <select name="team_uuid" class="form-control" id="team_uuid" required>
-                    <option value="{{ .SessUserDefaultTeam.Uuid }}">{{ .SessUserDefaultTeam.Name }}
-                    </option>
-                    {{ range .SessUserSurvivalTeams }}
-                    <option value="{{ .Uuid }}">{{ .Name }}</option>
-                    {{ end }}
-                  </select>
+                  <input type="text" class="form-control" id="team_name" value="{{ .InvitationBean.Team.Name }}" readonly disabled />
+                </div>
+              </div>
+
+            <div class="form-group">
+                <label for="author_name" class="col-sm-2 control-label">邀请人：</label>
+                <div class="col-xs-10 col-sm-10 col-md-10 col-lg-10">
+                  <input type="text" class="form-control" id="author_name" value="{{ .InvitationBean.Author.Name }}" readonly disabled />
                 </div>
               </div>
 

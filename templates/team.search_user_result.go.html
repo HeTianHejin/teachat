@@ -1,0 +1,61 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/manage?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+  <li><a href="/v1/team/member_add?uuid={{ .Team.Uuid }}">邀请新人</a></li>
+  <li class="active">搜索结果</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>搜索结果</strong>
+  </div>
+
+  <div class="panel-body">
+    {{ if .IsEmpty }}
+    <p>未找到匹配的茶友。</p>
+    <a href="/v1/team/member_add?uuid={{ .Team.Uuid }}" class="btn btn-default">返回搜索</a>
+    {{ else }}
+    {{ range .UserBeanSlice }}
+    <div class="media">
+      <div class="media-left">
+        <a href="/v1/user/biography?uuid={{ .User.Uuid }}">
+          <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像" width="64" height="64">
+        </a>
+      </div>
+      <div class="media-body">
+        <h4>
+          {{ .User.Name }}
+          {{ if .User.Gender }}
+          <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+          {{ else }}
+          <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+          {{ end }}
+        </h4>
+        <p>
+          <span style="font-style: italic;">
+            （<a href="/v1/family/detail?id={{ .DefaultFamilyBean.Family.Uuid }}">{{ .DefaultFamilyBean.Family.Name }}</a>，
+            <a href="/v1/team/detail?uuid={{ .DefaultTeamBean.Team.Uuid }}">{{ .DefaultTeamBean.Team.Abbreviation }}</a>）
+          </span>
+        </p>
+        <p>茶友号：{{ .User.Id }}</p>
+        <p>邮箱：{{ .User.Email }}</p>
+        <div style="margin-top: 10px;">
+          <a href="/v1/team_member/invite?uuid={{ .User.Uuid }}&team_uuid={{ $.Team.Uuid }}" class="btn btn-primary">
+            <span class="glyphicon glyphicon-send"></span> 邀请加入
+          </a>
+          <a href="/v1/user/biography?uuid={{ .User.Uuid }}" class="btn btn-default">
+            <span class="glyphicon glyphicon-user"></span> 查看资料
+          </a>
+        </div>
+      </div>
+    </div>
+    <hr />
+    {{ end }}
+    <a href="/v1/team/member_add?uuid={{ $.Team.Uuid }}" class="btn btn-default">继续搜索</a>
+    {{ end }}
+  </div>
+</div>
+
+{{ end }}

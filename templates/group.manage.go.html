@@ -26,6 +26,10 @@
   说明：集团创建人和创建团队的核心成员可以管理集团，包括增加成员、移除成员等操作。
 </div>
 
+<div style="margin: 2rem;">
+  <a class="btn btn-primary" href="/v1/group/member_add?uuid={{ .GroupBean.Group.Uuid }}" role="button">增加成员</a>
+</div>
+
 {{/* 展示集团成员团队列表 */}}
 {{ range .TeamBeanSlice }}
 <div class="media">
@@ -57,8 +61,6 @@
 <hr />
 {{ end }}
 
-<div style="margin: 2rem;">
-  <a class="btn btn-primary" href="/v1/group/member_add?uuid={{ .GroupBean.Group.Uuid }}" role="button">增加成员</a>
-</div>
+
 
 {{ end }}

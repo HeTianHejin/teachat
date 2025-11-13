@@ -22,7 +22,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取当前用户的相关资料
-	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := fetchSessionUserRelatedData(s)
+	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot fetch user related data", err)
 		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -39,13 +39,8 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	var iD data.InvitationDetail
 	// 填写页面资料
 	iD.SessUser = s_u
-	iD.SessUserDefaultFamily = s_d_family
-	iD.SessUserAllFamilies = s_all_families
-	iD.SessUserDefaultTeam = s_d_team
-	iD.SessUserSurvivalTeams = s_survival_teams
-	iD.SessUserDefaultPlace = s_d_place
-	iD.SessUserBindPlaces = s_places
 
+	iD.InvitationBean.Author = s_u
 	iD.InvitationBean.InviteUser = invi_user
 
 	generateHTML(w, &iD, "layout", "navbar.private", "pilot.invite")
