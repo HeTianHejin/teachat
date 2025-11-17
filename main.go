@@ -80,6 +80,7 @@ func main() {
 	mux.HandleFunc("/v1/team/avatar", route.TeamAvatar)
 	mux.HandleFunc("/v1/team/invitations", route.TeamInvitations)
 	mux.HandleFunc("/v1/team/applications", route.TeamApplications)
+	mux.HandleFunc("/v1/team/members/left", route.TeamMembersLeft)
 
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
 	mux.HandleFunc("/v1/team/edit", route.HandleEditTeam)
@@ -107,12 +108,18 @@ func main() {
 	mux.HandleFunc("/v1/team_member/application/detail", route.MemberApplicationDetail)
 	// 申请加盟书-2成员个人
 	mux.HandleFunc("/v1/applications/member", route.ApplyTeams)
+	// 邀请函-成员个人
+	mux.HandleFunc("/v1/invitations/member", route.InvitationsReceived)
+	// 退出声明-成员个人
+	mux.HandleFunc("/v1/resignations/member", route.ResignationsReceived)
 	// 邀请函相关
 	mux.HandleFunc("/v1/team_member/invite", route.HandleInviteMember)
 	mux.HandleFunc("/v1/team_member/invitation/read", route.HandleMemberInvitationRead)
 	mux.HandleFunc("/v1/team_member/invitation/detail", route.MemberInvitationDetail)
 
 	mux.HandleFunc("/v1/team_member/resign", route.HandleMemberResign)
+	mux.HandleFunc("/v1/team_member/resigned", route.TeamMemberResigned)
+	mux.HandleFunc("/v1/team_member/resignation/detail", route.TeamMemberResignationDetail)
 
 	// 集团管理路由
 	mux.HandleFunc("/v1/group/new", route.NewGroupGet)

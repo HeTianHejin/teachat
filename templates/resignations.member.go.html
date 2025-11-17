@@ -1,0 +1,86 @@
+{{ define "content" }}
+
+{{/* 这是成员个人视角，查看自己的全部退出茶团声明页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/myoffice">我的@个人办公室</a></li>
+  <li class="active">@我的茶团关系</li>
+</ol>
+
+<div style="margin: 20px;">
+  <ul class="nav nav-tabs nav-justified">
+    <li role="presentation"><a href="/v1/teams/hold">我建的团</a></li>
+    <li role="presentation"><a href="/v1/teams/joined">已经加入</a></li>
+    <li role="presentation"><a href="/v1/teams/employed">核心管理</a></li>
+    <li role="presentation"><a href="/v1/applications/member">查看申请</a></li>
+    <li role="presentation"><a href="/v1/invitations/member">查看邀请</a></li>
+    <li role="presentation" class="active"><a href="#">查看退团</a></li>
+  </ul>
+</div>
+
+{{ if .IsEmpty }}
+{{/* 显示没有退出声明 */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="lead">茶博士</span>
+  </div>
+  <div class="panel-body">
+    你好，目前没有退出茶团声明记录。
+  </div>
+</div>
+
+{{ else }}
+{{/* 显示退出声明列表 */}}
+
+{{ range .ResignationBeans }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4>
+      <i class="glyphicon glyphicon-log-out"></i>
+      退出 <strong>{{ .Team.Name }}</strong> 的声明
+      <span class="label {{ if eq .Resignation.Status 0 }}label-warning{{ else if eq .Resignation.Status 1 }}label-info{{ else if eq .Resignation.Status 2 }}label-primary{{ else if eq .Resignation.Status 3 }}label-success{{ else if eq .Resignation.Status 4 }}label-danger{{ else }}label-default{{ end }}" style="margin-left: 10px;">
+        {{ .Resignation.GetStatus }}
+      </span>
+    </h4>
+  </div>
+  
+  <div class="panel-body">
+    <p>
+      <i class="glyphicon glyphicon-briefcase"></i> 
+      <strong>当时角色：</strong>
+      <span class="label label-info">{{ .Resignation.MemberCurrentRole }}</span>
+    </p>
+    
+    <p>
+      <i class="glyphicon glyphicon-time"></i> 
+      <strong>提交时间：</strong>{{ .Resignation.CreatedAtDate }}
+    </p>
+    
+    <p>
+      <i class="glyphicon glyphicon-text-background"></i> 
+      <strong>声明标题：</strong>{{ .Resignation.Title }}
+    </p>
+    
+    <p>
+      <i class="glyphicon glyphicon-comment"></i> 
+      <strong>声明内容：</strong>
+    </p>
+    <blockquote style="margin-top: 10px;">
+      {{ .Resignation.Content }}
+    </blockquote>
+    
+    <div style="margin-top: 15px;">
+      <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" class="btn btn-info">
+        <i class="glyphicon glyphicon-eye-open"></i> 查看茶团
+      </a>
+    </div>
+  </div>
+</div>
+
+{{ end }}
+
+{{ end }}
+
+{{ end }}

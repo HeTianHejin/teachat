@@ -1,0 +1,94 @@
+{{ define "content" }}
+
+{{/* 这是成员个人视角，查看自己收到的全部茶团邀请函页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/myoffice">我的@个人办公室</a></li>
+  <li class="active">@我的茶团关系</li>
+</ol>
+
+<div style="margin: 20px;">
+  <ul class="nav nav-tabs nav-justified">
+    <li role="presentation"><a href="/v1/teams/hold">我建的团</a></li>
+    <li role="presentation"><a href="/v1/teams/joined">已经加入</a></li>
+    <li role="presentation"><a href="/v1/teams/employed">核心管理</a></li>
+    <li role="presentation"><a href="/v1/applications/member">查看申请</a></li>
+    <li role="presentation" class="active"><a href="#">查看邀请</a></li>
+    <li role="presentation"><a href="/v1/resignations/member">查看退团</a></li>
+  </ul>
+</div>
+
+{{ if .IsEmpty }}
+{{/* 显示没有收到邀请函 */}}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="lead">茶博士</span>
+  </div>
+  <div class="panel-body">
+    你好，目前没有收到茶团邀请函。
+  </div>
+</div>
+
+{{ else }}
+{{/* 显示收到的邀请函列表 */}}
+
+{{ range .InvitationBeans }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4>
+      <i class="glyphicon glyphicon-envelope"></i>
+      来自 <strong>{{ .Team.Name }}</strong> 的邀请
+      <span class="label {{ if eq .Invitation.Status 0 }}label-warning{{ else if eq .Invitation.Status 1 }}label-info{{ else if eq .Invitation.Status 2 }}label-success{{ else if eq .Invitation.Status 3 }}label-danger{{ else }}label-default{{ end }}" style="margin-left: 10px;">
+        {{ .Invitation.GetStatus }}
+      </span>
+    </h4>
+  </div>
+  
+  <div class="panel-body">
+    <p>
+      <i class="glyphicon glyphicon-briefcase"></i> 
+      <strong>拟任角色：</strong>
+      <span class="label label-primary">{{ .Invitation.Role }}</span>
+    </p>
+    
+    <p>
+      <i class="glyphicon glyphicon-user"></i> 
+      <strong>邀请人：</strong>{{ .Author.Name }}
+    </p>
+    
+    <p>
+      <i class="glyphicon glyphicon-time"></i> 
+      <strong>邀请时间：</strong>{{ .Invitation.CreatedAtDate }}
+    </p>
+    
+    <p>
+      <i class="glyphicon glyphicon-comment"></i> 
+      <strong>邀请内容：</strong>
+    </p>
+    <blockquote style="margin-top: 10px;">
+      {{ .Invitation.InviteWord }}
+    </blockquote>
+    
+    <div style="margin-top: 15px;">
+      {{ if le .Invitation.Status 1 }}
+      {{/* 待处理或已查看状态，显示处理按钮 */}}
+      <a href="/v1/team_member/invitation/read?uuid={{ .Invitation.Uuid }}" class="btn btn-primary">
+        <i class="glyphicon glyphicon-edit"></i> 查看并答复
+      </a>
+      {{ else }}
+      {{/* 已处理状态，显示查看详情按钮 */}}
+      <a href="/v1/team_member/invitation/read?uuid={{ .Invitation.Uuid }}" class="btn btn-info">
+        <i class="glyphicon glyphicon-eye-open"></i> 查看详情
+      </a>
+      {{ end }}
+    </div>
+  </div>
+</div>
+
+{{ end }}
+
+{{ end }}
+
+{{ end }}

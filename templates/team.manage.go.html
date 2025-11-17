@@ -5,7 +5,7 @@
 {{ with .TeamBean }}{{/*  检测Teambean非空 --开始  */}}
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="#">{{ .Team.Abbreviation }}</a></li>
+    <li><a href="#">{{ .Team.Abbreviation }}@办公室</a></li>
     <li class="active">@茶团管理</li>
   </ol>
 
@@ -35,7 +35,7 @@
         <li><a href="/v1/team/member_add?uuid={{ .Team.Uuid }}">邀请新人</a></li>
         <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">看邀请函</a></li>
         <li><a href="/v1/team/applications?uuid={{ .Team.Uuid }}">看申请书</a></li>
-        <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">离队成员</a></li>
+        <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">退出声明</a></li>
         <li><a href="#">注销团队</a></li>
     </ol>
   </div>

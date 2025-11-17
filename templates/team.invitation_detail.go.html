@@ -40,7 +40,7 @@
             </div>
 
             <div class="panel-body">
-                <h4 class="text-center">诚邀加盟-邀请函</h4>
+                <h4 class="text-center">加盟邀请函</h4>
                 
                 <!-- 邀请函状态 -->
                 <div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
@@ -107,15 +107,20 @@
         </div>
         
         {{/* 展示邀请函回复 */}}
+        {{ if .Reply.ReplyWord }}
         <p style="color: #666;">
             <strong><i class="glyphicon glyphicon-comment"></i> 答复内容：</strong>
         </p>
         <p style="white-space: pre-wrap; padding: 15px; background-color: #f9f9f9; border-left: 4px solid {{ if eq .InvitationBean.Invitation.Status 2 }}#5cb85c{{ else }}#d9534f{{ end }}; border-radius: 4px;">
-            {{ .InvitationBean.Invitation.Reply.ReplyWord }}
+            {{ .Reply.ReplyWord }}
         </p>
         <p class="text-right" style="font-size: smaller; color: #999;">
-            答复时间：{{ .InvitationBean.Invitation.ReplyCreatedAtDate }}
+            答复时间：{{ .Reply.CreatedAtDate }}
         </p>
+        {{ else }}
+        <p style="color: #999; font-style: italic;">暂无答复内容</p>
+        {{ end }}
+        
     </div>
 </div>
 {{ end }}

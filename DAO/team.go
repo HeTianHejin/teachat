@@ -205,20 +205,31 @@ func (team *Team) IsActive() bool {
 
 // 成员“退出$事业茶团声明书”（相当于辞职信？）
 type TeamMemberResignation struct {
-	Id                int
-	Uuid              string
-	TeamId            int    //“声明退出$事业茶团”所指向的$事业茶团id
-	CeoUserId         int    //时任$事业茶团CEO茶友id
-	CoreMemberUserId  int    //时任核心成员茶友id
-	MemberId          int    //成员id(team_member.id)
+	Id               int
+	Uuid             string
+	TeamId           int //“声明退出$事业茶团”所指向的$事业茶团id
+	CeoUserId        int //时任$事业茶团CEO茶友id，
+	CoreMemberUserId int //时任核心成员茶友id，要求双确认，如果有核心成员，也要同意退出
+
+	MemberId          int    //声明退出$事业茶团的成员id(team_member.id)
 	MemberUserId      int    //声明退出$事业茶团的茶友id
 	MemberCurrentRole string //时任角色
-	Title             string //标题
-	Content           string //内容
-	Status            int    //声明状态： 0、未读，1、已读，2、已核对，3、已批准，4、挽留中(未批准)，5、强行退出
-	CreatedAt         time.Time
-	UpdatedAt         *time.Time
+
+	Title     string //标题
+	Content   string //内容
+	Status    int    //声明状态： 0、未读，1、已读，2、已核对，3、已批准，4、挽留中(未批准)，5、强行退出
+	CreatedAt time.Time
+	UpdatedAt *time.Time
 }
+
+const (
+	ResignationStatusUnread          = iota // 0 未阅读
+	ResignationStatusRead                   // 1 已阅读
+	ResignationStatusCoreMemberAgree        // 2 核心成员同意
+	ResignationStatusApproved               // 3 CEO批准
+	ResignationStatusPending                // 4 挽留中
+	ResignationStatusForced                 // 5 强行退出
+)
 
 // TeamMemberResignation.GetStatus()
 func (resignation *TeamMemberResignation) GetStatus() string {
@@ -228,9 +239,9 @@ func (resignation *TeamMemberResignation) GetStatus() string {
 	case 1:
 		return "已阅读"
 	case 2:
-		return "已核对"
+		return "核心成员同意"
 	case 3:
-		return "已批准"
+		return "CEO批准"
 	case 4:
 		return "挽留中"
 	case 5:
@@ -311,7 +322,24 @@ func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []Team
 
 // TeamMemberResignations.GetByTeamId() 获取某个$事业茶团的全部“退出$事业茶团声明书”
 func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation, err error) {
-	rows, err := db.Query("SELECT * FROM team_member_resignations WHERE team_id = $1", team_id)
+	rows, err := db.Query("SELECT * FROM team_member_resignations WHERE team_id = $1 ORDER BY created_at DESC", team_id)
+	if err != nil {
+		return
+	}
+	for rows.Next() {
+		resignation := TeamMemberResignation{}
+		if err = rows.Scan(&resignation.Id, &resignation.Uuid, &resignation.TeamId, &resignation.CeoUserId, &resignation.CoreMemberUserId, &resignation.MemberId, &resignation.MemberUserId, &resignation.MemberCurrentRole, &resignation.Title, &resignation.Content, &resignation.Status, &resignation.CreatedAt, &resignation.UpdatedAt); err != nil {
+			return
+		}
+		resignations = append(resignations, resignation)
+	}
+	rows.Close()
+	return
+}
+
+// GetResignationsByUserId() 获取某个用户的全部"退出$事业茶团声明书"
+func GetResignationsByUserId(user_id int) (resignations []TeamMemberResignation, err error) {
+	rows, err := db.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 ORDER BY created_at DESC", user_id)
 	if err != nil {
 		return
 	}
@@ -721,7 +749,7 @@ func GetNumAllTeams() (count int) {
 // 统计某个$事业茶团的成员数
 // AWS CodeWhisperer assist in writing
 func (team *Team) NumMembers() (count int) {
-	rows, _ := db.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1", team.Id)
+	rows, _ := db.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND status < $2", team.Id, TeMemberStatusResigned)
 	for rows.Next() {
 		if err := rows.Scan(&count); err != nil {
 			return
@@ -766,7 +794,7 @@ func (team *Team) Get() (err error) {
 	return
 }
 
-// 获取$事业茶团，查询普通成员，role=“品茶师”（taster）的方法
+// 获取$事业茶团，查询普通成员，role=“品茶师”（taster）,status = TeMemberStatusActive的方法
 func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 
 	if team.Id == TeamIdNone {
@@ -775,7 +803,7 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
-	rows, err := db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, "taster")
+	rows, err := db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2 AND status = $3", team.Id, "taster", TeMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -790,7 +818,7 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	return
 }
 
-// coreMember() 返回$事业茶团核心成员,teamMember.Role = “CEO” and “CTO” and “CMO” and “CFO”
+// coreMember() 返回$事业茶团核心成员,teamMember.Role = “CEO” and “CTO” and “CMO” and “CFO”,status = TeMemberStatusActive
 func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdNone {
 		return nil, fmt.Errorf("team not found with id: %d", team.Id)
@@ -798,7 +826,7 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
-	rows, err := db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5)", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO)
+	rows, err := db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5) AND status = $6", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO, TeMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -970,15 +998,15 @@ func (teamMember *TeamMember) Get() (err error) {
 	return
 }
 
-// teamMemberUpdate() 更新$事业茶团成员的角色和属性
-func (teamMember *TeamMember) UpdateRoleClass() (err error) {
-	statement := `UPDATE team_members SET role = $1, updated_at = $2, class = $3 WHERE id = $4`
+// teamMemberUpdate() 更新$事业茶团成员的角色和状态
+func (teamMember *TeamMember) UpdateRoleStatus() (err error) {
+	statement := `UPDATE team_members SET role = $2, updated_at = $3, status = $4 WHERE id = $1`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(teamMember.Role, time.Now(), teamMember.Status, teamMember.Id)
+	_, err = stmt.Exec(teamMember.Id, teamMember.Role, time.Now(), teamMember.Status)
 	return
 }
 
@@ -1187,4 +1215,23 @@ func (team *Team) CreateWithTx(tx *sql.Tx) (err error) {
 func (tM *TeamMember) CreateWithTx(tx *sql.Tx) (err error) {
 	err = tx.QueryRow(`INSERT INTO team_members (uuid, team_id, user_id, role, created_at, status) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id,uuid`, Random_UUID(), tM.TeamId, tM.UserId, tM.Role, time.Now(), tM.Status).Scan(&tM.Id, &tM.Uuid)
 	return
+}
+
+// GetResignedMembersByTeamId 获取已离开的成员列表
+func GetResignedMembersByTeamId(teamId int) ([]TeamMember, error) {
+	rows, err := db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND status = $2 ORDER BY updated_at DESC", teamId, TeMemberStatusResigned)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var members []TeamMember
+	for rows.Next() {
+		var member TeamMember
+		if err = rows.Scan(&member.Id, &member.Uuid, &member.TeamId, &member.UserId, &member.Role, &member.CreatedAt, &member.Status, &member.UpdatedAt); err != nil {
+			return nil, err
+		}
+		members = append(members, member)
+	}
+	return members, rows.Err()
 }

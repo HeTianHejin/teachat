@@ -46,8 +46,8 @@ type InvitationBean struct {
 type InvitationDetail struct {
 	SessUser User
 
-	InvitationBean InvitationBean //邀请函资料夹
-
+	InvitationBean InvitationBean  //邀请函资料夹
+	Reply          InvitationReply //邀请函回复
 }
 
 // 茶团加盟申请书审查页面数据
@@ -179,6 +179,7 @@ type TeamDetail struct {
 	NormalMemberBeanSlice []TeamMemberBean //普通成员资料夹
 
 	HasApplication bool //是否有新的加盟申请书
+	HasResignation bool //是否有待处理的退出声明
 
 	GroupBean *GroupBean //所属集团资料夹（如果有）
 }

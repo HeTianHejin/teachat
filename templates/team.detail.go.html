@@ -31,13 +31,18 @@
 
 
 {{ if $.HasApplication }}
-
 <div class="alert alert-info" role="alert" style="margin-top: 1rem;">你好，有待处理的加盟申请书！
   <i class="bi bi-envelope"></i>
   <a href="/v1/team/new_applications/check?uuid={{ .Team.Uuid }}">查看 >></a>
 </div>
-
 {{ end }}{{/* 检查是否有新的加盟申请书结束  */}}
+
+{{ if $.HasResignation }}
+<div class="alert alert-warning" role="alert" style="margin-top: 1rem;">你好，有待处理的退出声明！
+  <i class="bi bi-box-arrow-right"></i>
+  <a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">查看 >></a>
+</div>
+{{ end }}{{/* 检查是否有待处理的退出声明结束  */}}
 {{ end }}{{/* 检查是否团队管理员结束  */}}
 
 <hr />
@@ -143,7 +148,7 @@
         <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">法力</a></li>
         <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
         <li><a href="/v1/team_member/role_changed?uuid={{ .Team.Uuid }}">角色变动</a></li>
-        <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">离开成员</a></li>
+        <li><a href="/v1/team/members/left?uuid={{ .Team.Uuid }}">离开成员</a></li>
       </ol>
     </div>
 
@@ -164,7 +169,13 @@
         </span>
 
         
-        <p>团队角色： <span style="font-size:  large;">{{ .TeamMember.Role }}</span></p>
+        <p>团队角色： <span class="label label-primary">{{ .TeamMember.Role }}</span></p>
+        
+        <p>成员状态： 
+          <span class="label {{ if eq .TeamMember.Status 0 }}label-danger{{ else if eq .TeamMember.Status 1 }}label-success{{ else if eq .TeamMember.Status 2 }}label-warning{{ else if eq .TeamMember.Status 3 }}label-default{{ else }}label-info{{ end }}">
+            {{ .TeamMember.GetStatus }}
+          </span>
+        </p>
         
         <p>茶友号：{{ .Member.Id }}</p>
         <p style="font-style: italic;">{{ .Member.Email }}</p>
@@ -191,7 +202,13 @@
         </span>
 
         
-        <p>团队角色： <span style="font-size:  large;">{{ .TeamMember.Role }}</span></p>
+        <p>团队角色： <span class="label label-primary">{{ .TeamMember.Role }}</span></p>
+        
+        <p>成员状态： 
+          <span class="label {{ if eq .TeamMember.Status 0 }}label-danger{{ else if eq .TeamMember.Status 1 }}label-success{{ else if eq .TeamMember.Status 2 }}label-warning{{ else if eq .TeamMember.Status 3 }}label-default{{ else }}label-info{{ end }}">
+            {{ .TeamMember.GetStatus }}
+          </span>
+        </p>
         
         <p>茶友号：{{ .Member.Id }}</p>
         <p style="font-style: italic;">{{ .Member.Email }}</p>

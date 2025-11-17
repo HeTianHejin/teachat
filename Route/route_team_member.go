@@ -15,17 +15,17 @@ import (
 func HandleMemberResign(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		MemberResign(w, r)
+		MemberResignGet(w, r)
 	case http.MethodPost:
-		MemberResignReply(w, r)
+		MemberResignPost(w, r)
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
 // POST /v1/team_member/resign
-// 处理成员提交“退出茶团声明”事务
-func MemberResignReply(w http.ResponseWriter, r *http.Request) {
+// 接收1个团队成员提交“退出茶团声明”资料
+func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := session(r)
 	if err != nil {
@@ -48,9 +48,9 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 	}
 	// 提交的声明标题
 	titl := r.PostFormValue("title")
-	// 检查提交的声明标题字数是否>3 and <32
+	// 检查提交的声明标题字数是否>2 and <64
 	lenTit := cnStrLen(titl)
-	if lenTit < 3 || lenTit > 32 {
+	if lenTit < 2 || lenTit > 64 {
 		report(w, r, "你好，茶博士认为标题字数太长或者太短，请确认后再试。")
 		return
 	}
@@ -101,41 +101,52 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 	t_member, err := data.GetMemberByTeamIdUserId(t_team.Id, t_user.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "你好，茶博士嘀咕，你不是茶团成员，不接受退出声明噢。")
+			report(w, r, "你好，你不是茶团成员，不接受退出声明噢。")
 			return
 		} else {
 			util.Debug(t_team.Id, t_user.Id, "Cannot get team member by team id and user id", err)
-			report(w, r, "你好，茶博士失魂鱼，未能获取拟退出的茶团资料，请稍后再试。")
+			report(w, r, "你好，未能获取拟退出的茶团资料，请稍后再试。")
 			return
 		}
 	}
 
-	//查看成员角色，分类处理：1、CEO，2、核心成员：CTO、CFO、CMO，3、普通成员：taster
-	switch t_member.Role {
-	case "taster":
-		break
-	case "CTO", RoleCFO, RoleCMO:
-		report(w, r, "你好，请先联系CEO，将你目前角色核心成员调整为普通成员品茶师，然后再声明退出。")
-		return
-	case RoleCEO:
-		report(w, r, "你好，请先联系茶团创建人，将你目前角色调整为品茶师，然后再声明退出。")
-		return
-	default:
-		report(w, r, "你好，满头大汗的茶博士表示找不到这个茶友角色，请确认后再试。")
-		return
+	// //查看成员角色，分类处理：1、CEO，2、核心成员：CTO、CFO、CMO，3、普通成员：taster
+	// switch t_member.Role {
+	// case "taster":
+	// 	break
+	// case "CTO", RoleCFO, RoleCMO:
+	// 	report(w, r, "你好，请先联系CEO，将你目前角色核心成员调整为普通成员品茶师，然后再声明退出。")
+	// 	return
+	// case RoleCEO:
+	// 	report(w, r, "你好，请先联系茶团创建人，将你目前角色调整为普通成员品茶师，然后再声明退出。")
+	// 	return
+	// default:
+	// 	report(w, r, "你好，满头大汗的茶博士表示找不到这个茶友角色，请确认后再试。")
+	// 	return
+	// }
+
+	// 检查是否为核心成员（非CEO），如果是则先降级为普通成员
+	if t_member.Role != data.RoleCEO && t_member.Role != "taster" {
+		// 是核心成员（CTO/CFO/CMO），先降级为普通成员
+		t_member.Role = "taster"
+		if err := t_member.UpdateRoleStatus(); err != nil {
+			util.Debug("Cannot update member role to taster", err)
+			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			return
+		}
 	}
 
 	//声明一份茶团成员退出声明书
 	tmqD := data.TeamMemberResignation{
 		TeamId:            t_team.Id,
-		CeoUserId:         0,
-		CoreMemberUserId:  0,
+		CeoUserId:         data.UserId_None,
+		CoreMemberUserId:  data.UserId_None,
 		MemberId:          t_member.Id,
 		MemberUserId:      t_user.Id,
 		MemberCurrentRole: t_member.Role,
 		Title:             titl,
 		Content:           cont,
-		Status:            0,
+		Status:            data.ResignationStatusUnread,
 	}
 
 	//尝试保存退出声明
@@ -146,16 +157,20 @@ func MemberResignReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//返回成功保存声明的报告
-	report(w, r, "你好，茶博士已经收到了你的退出声明，我们会尽快处理。")
+	if t_member.Role == "taster" && tmqD.MemberCurrentRole != "taster" {
+		report(w, r, "你好，作为核心成员，你的角色已自动调整为普通成员，退出声明已提交，请等待管理员审批。")
+	} else {
+		report(w, r, "你好，茶博士已经保存了你的退出声明，请等待管理员答复。")
+	}
 
 	//返回茶团主页
 	//http.Redirect(w, r, fmt.Sprintf("/v1/team?uuid=%s", t_team.Uuid), http.StatusFound)
 
 }
 
-// MemberResign() GET /v1/team_member/resign?uuid=XXX
+// MemberResignGet() GET /v1/team_member/resign?uuid=XXX
 // 取出一张空白茶团成员“退出茶团声明”撰写页面
-func MemberResign(w http.ResponseWriter, r *http.Request) {
+func MemberResignGet(w http.ResponseWriter, r *http.Request) {
 	// 读取会话
 	s, err := session(r)
 	if err != nil {
@@ -186,7 +201,7 @@ func MemberResign(w http.ResponseWriter, r *http.Request) {
 	_, err = data.GetMemberByTeamIdUserId(t_team.Id, s_u.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "你好，满头大汗的茶博士表示这个不是茶团的成员，稍后再试。")
+			report(w, r, "你好，您不是本茶团的成员，稍后再试。")
 			return
 		} else {
 			util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
@@ -553,7 +568,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		}
 		//更新成员角色
 		member.Role = new_role
-		if err = member.UpdateRoleClass(); err != nil {
+		if err = member.UpdateRoleStatus(); err != nil {
 			util.Debug(member, "Cannot update member", err)
 			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 			return
@@ -579,7 +594,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		}
 		// 更新成员角色
 		member.Role = new_role
-		if err = member.UpdateRoleClass(); err != nil {
+		if err = member.UpdateRoleStatus(); err != nil {
 			util.Debug(member, "Cannot update member", err)
 			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 			return
@@ -1754,11 +1769,18 @@ func MemberInvitationDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
+	// 读取答复
+	reply, err := invi.Reply()
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		util.Debug(invi.Id, "Cannot get invitation reply", err)
+		report(w, r, "你好，茶博士正在努力的查找邀请函答复资料，请稍后再试。")
+		return
+	}
 
 	var iD data.InvitationDetail
 	iD.SessUser = s_u
 	iD.InvitationBean = i_b
-
+	iD.Reply = reply
 	generateHTML(w, &iD, "layout", "navbar.private", "team.invitation_detail")
 }
 
@@ -1912,6 +1934,501 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 // 显示被开除的成员的表单页面
 func MemberFired(w http.ResponseWriter, r *http.Request) {
 	report(w, r, "您好，茶博士正在忙碌建设这个功能中。。。")
+}
+
+// GET /v1/team_member/resigned?uuid=
+// 团队最高管理员查看本茶团全部退出声明，支持分页
+func TeamMemberResigned(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	vals := r.URL.Query()
+	team_uuid := vals.Get("uuid")
+	team, err := data.GetTeamByUUID(team_uuid)
+	if err != nil {
+		util.Debug(team_uuid, "Cannot get team by uuid", err)
+		report(w, r, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
+		return
+	}
+
+	if !canManageTeam(&team, s_u.Id, w, r) {
+		return
+	}
+
+	page := 1
+	if pageStr := vals.Get("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	resignations, err := data.GetResignationsByTeamId(team.Id)
+	if err != nil {
+		util.Debug(team.Id, "Cannot get resignations by team id", err)
+		report(w, r, "你好，茶博士正在努力的查找退出声明，请稍后再试。")
+		return
+	}
+
+	pageSize := 12
+	totalCount := len(resignations)
+	totalPages := (totalCount + pageSize - 1) / pageSize
+	if page > totalPages && totalPages > 0 {
+		page = totalPages
+	}
+
+	start := (page - 1) * pageSize
+	end := start + pageSize
+	if end > totalCount {
+		end = totalCount
+	}
+
+	var pageResignations []data.TeamMemberResignation
+	if totalCount > 0 {
+		pageResignations = resignations[start:end]
+	}
+
+	type PageData struct {
+		SessUser         data.User
+		Team             data.Team
+		ResignationSlice []data.TeamMemberResignation
+		CurrentPage      int
+		TotalPages       int
+		HasPrev          bool
+		HasNext          bool
+	}
+
+	pageData := PageData{
+		SessUser:         s_u,
+		Team:             team,
+		ResignationSlice: pageResignations,
+		CurrentPage:      page,
+		TotalPages:       totalPages,
+		HasPrev:          page > 1,
+		HasNext:          page < totalPages,
+	}
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.resignations")
+}
+
+// /v1/team_member/resignation/detail
+// 团队管理员查看和处理退出声明
+func TeamMemberResignationDetail(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		TeamMemberResignationDetailGet(w, r)
+	case http.MethodPost:
+		TeamMemberResignationProcess(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/team_member/resignation/detail?uuid=
+// 团队管理员查看退出声明详情
+func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	vals := r.URL.Query()
+	resignation_uuid := vals.Get("uuid")
+	resignation := data.TeamMemberResignation{Uuid: resignation_uuid}
+	if err = resignation.GetByUuid(); err != nil {
+		util.Debug(resignation_uuid, "Cannot get resignation by uuid", err)
+		report(w, r, "你好，茶博士正在努力的查找退出声明，请稍后再试。")
+		return
+	}
+
+	team, err := data.GetTeam(resignation.TeamId)
+	if err != nil {
+		util.Debug(resignation.TeamId, "Cannot get team by id", err)
+		report(w, r, "你好，茶博士正在努力的查找退出声明资料，请稍后再试。")
+		return
+	}
+
+	if !canManageTeam(&team, s_u.Id, w, r) {
+		return
+	}
+
+	member, err := data.GetUser(resignation.MemberUserId)
+	if err != nil {
+		util.Debug(resignation.MemberUserId, "Cannot get user by id", err)
+		report(w, r, "你好，茶博士正在努力的查找退出声明资料，请稍后再试。")
+		return
+	}
+
+	// 检查团队成员数量
+	memberCount := team.NumMembers()
+
+	// 获取CEO
+	ceoMember, err := team.MemberCEO()
+	if err != nil {
+		util.Debug("Cannot get CEO", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	// 获取核心成员
+	coreMembers, err := team.CoreMembers()
+	if err != nil {
+		util.Debug("Cannot get core members", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	// 判断是否需要双重审批
+	needDoubleApproval := memberCount >= 3 && len(coreMembers) > 1
+
+	// 判断当前用户角色
+	isCEO := ceoMember.UserId == s_u.Id
+	isCoreMember := false
+	for _, cm := range coreMembers {
+		if cm.UserId == s_u.Id && cm.Role != data.RoleCEO {
+			isCoreMember = true
+			break
+		}
+	}
+
+	type PageData struct {
+		SessUser           data.User
+		Team               data.Team
+		Resignation        data.TeamMemberResignation
+		Member             data.User
+		NeedDoubleApproval bool
+		IsCEO              bool
+		IsCoreMember       bool
+	}
+
+	pageData := PageData{
+		SessUser:           s_u,
+		Team:               team,
+		Resignation:        resignation,
+		Member:             member,
+		NeedDoubleApproval: needDoubleApproval,
+		IsCEO:              isCEO,
+		IsCoreMember:       isCoreMember,
+	}
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.resignation_detail")
+}
+
+// GET /v1/invitations/member
+// 某个成员，查看自己收到的全部茶团邀请函列表
+func InvitationsReceived(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	// 查询用户收到的全部邀请函
+	invitations, err := s_u.Invitations()
+	if err != nil {
+		util.Debug("Cannot get invitations by user email", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	// 获取邀请函Bean列表
+	invitationBeans := make([]data.InvitationBean, 0)
+	for _, inv := range invitations {
+		bean, err := fetchInvitationBean(inv)
+		if err != nil {
+			util.Debug("Cannot fetch invitation bean", err)
+			continue
+		}
+		invitationBeans = append(invitationBeans, bean)
+	}
+
+	type PageData struct {
+		SessUser        data.User
+		InvitationBeans []data.InvitationBean
+		IsEmpty         bool
+	}
+
+	pageData := PageData{
+		SessUser:        s_u,
+		InvitationBeans: invitationBeans,
+		IsEmpty:         len(invitationBeans) == 0,
+	}
+
+	// 渲染页面
+	generateHTML(w, &pageData, "layout", "navbar.private", "invitations.member")
+}
+
+// POST /v1/team_member/resignation/detail
+// 团队管理员处理退出声明（双重审批：核心成员同意 + CEO批准）
+func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	resignation_uuid := r.PostFormValue("resignation_uuid")
+	resignation := data.TeamMemberResignation{Uuid: resignation_uuid}
+	if err = resignation.GetByUuid(); err != nil {
+		util.Debug(resignation_uuid, "Cannot get resignation by uuid", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	team, err := data.GetTeam(resignation.TeamId)
+	if err != nil {
+		util.Debug(resignation.TeamId, "Cannot get team by id", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	// 检查团队成员数量
+	memberCount := team.NumMembers()
+
+	// 获取CEO
+	ceoMember, err := team.MemberCEO()
+	if err != nil {
+		util.Debug("Cannot get CEO", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	// 获取核心成员
+	coreMembers, err := team.CoreMembers()
+	if err != nil {
+		util.Debug("Cannot get core members", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	// 判断是否需要双重审批：团队成员>=3 且 有CEO以外的核心成员
+	needDoubleApproval := memberCount >= 3 && len(coreMembers) > 1
+
+	action := r.PostFormValue("action")
+
+	if needDoubleApproval {
+		// 需要双重审批
+		switch action {
+		case "core_agree":
+			// 核心成员同意
+			if resignation.Status >= data.ResignationStatusCoreMemberAgree {
+				report(w, r, "你好，该声明已经处理过了。")
+				return
+			}
+			// 检查是否为核心成员（非CEO）
+			isCoreMember := false
+			for _, cm := range coreMembers {
+				if cm.UserId == s_u.Id && cm.Role != data.RoleCEO {
+					isCoreMember = true
+					break
+				}
+			}
+			if !isCoreMember {
+				report(w, r, "你好，只有核心成员（非CEO）才能同意退出声明。")
+				return
+			}
+			resignation.Status = data.ResignationStatusCoreMemberAgree
+			resignation.CoreMemberUserId = s_u.Id
+			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
+				util.Debug("Cannot update resignation status", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			report(w, r, "你好，已同意该成员退出，等待CEO批准。")
+
+		case "ceo_approve":
+			// CEO批准
+			if ceoMember.UserId != s_u.Id {
+				report(w, r, "你好，只有CEO才能批准退出声明。")
+				return
+			}
+			if resignation.Status != data.ResignationStatusCoreMemberAgree {
+				report(w, r, "你好，需要核心成员先同意后，CEO才能批准。")
+				return
+			}
+			resignation.Status = data.ResignationStatusApproved
+			resignation.CeoUserId = s_u.Id
+			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
+				util.Debug("Cannot update resignation status", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			// 更新成员状态为已退出
+			member, err := data.GetMemberByTeamIdUserId(team.Id, resignation.MemberUserId)
+			if err != nil {
+				util.Debug("Cannot get team member", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			member.Status = data.TeMemberStatusResigned
+			if err = member.UpdateRoleStatus(); err != nil {
+				util.Debug("Cannot update member status", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			report(w, r, "你好，CEO已批准该成员退出茶团。")
+
+		case "retain":
+			// 挡留
+			if !canManageTeam(&team, s_u.Id, w, r) {
+				return
+			}
+			if resignation.Status >= data.ResignationStatusApproved {
+				report(w, r, "你好，该声明已经批准，无法挡留。")
+				return
+			}
+			resignation.Status = data.ResignationStatusPending
+			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
+				util.Debug("Cannot update resignation status", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			report(w, r, "你好，已标记为挡留中，请与成员沟通。")
+
+		default:
+			report(w, r, "你好，无效的操作。")
+		}
+	} else {
+		// 不需要双重审批，管理员直接处理
+		if !canManageTeam(&team, s_u.Id, w, r) {
+			return
+		}
+		if resignation.Status >= data.ResignationStatusApproved {
+			report(w, r, "你好，该退出声明已经处理过了。")
+			return
+		}
+
+		switch action {
+		case "approve", "core_agree", "ceo_approve":
+			// 批准退出
+			resignation.Status = data.ResignationStatusApproved
+			resignation.CeoUserId = s_u.Id
+			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
+				util.Debug("Cannot update resignation status", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			// 更新成员状态为已退出
+			member, err := data.GetMemberByTeamIdUserId(team.Id, resignation.MemberUserId)
+			if err != nil {
+				util.Debug("Cannot get team member", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			member.Status = data.TeMemberStatusResigned
+			if err = member.UpdateRoleStatus(); err != nil {
+				util.Debug("Cannot update member status", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			report(w, r, "你好，已批准该成员退出茶团。")
+
+		case "retain":
+			// 挡留
+			resignation.Status = data.ResignationStatusPending
+			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
+				util.Debug("Cannot update resignation status", err)
+				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			report(w, r, "你好，已标记为挡留中，请与成员沟通。")
+
+		default:
+			report(w, r, "你好，无效的操作。")
+		}
+	}
+}
+
+// GET /v1/resignations/member
+// 某个成员，查看自己的全部退出茶团声明列表
+func ResignationsReceived(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	// 查询用户的全部退出声明
+	resignations, err := data.GetResignationsByUserId(s_u.Id)
+	if err != nil {
+		util.Debug("Cannot get resignations by user id", err)
+		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+
+	// 获取每个退出声明对应的茶团信息
+	type ResignationBean struct {
+		Resignation data.TeamMemberResignation
+		Team        data.Team
+	}
+
+	resignationBeans := make([]ResignationBean, 0)
+	for _, res := range resignations {
+		team, err := data.GetTeam(res.TeamId)
+		if err != nil {
+			util.Debug("Cannot get team by id", err)
+			continue
+		}
+		resignationBeans = append(resignationBeans, ResignationBean{
+			Resignation: res,
+			Team:        team,
+		})
+	}
+
+	type PageData struct {
+		SessUser         data.User
+		ResignationBeans []ResignationBean
+		IsEmpty          bool
+	}
+
+	pageData := PageData{
+		SessUser:         s_u,
+		ResignationBeans: resignationBeans,
+		IsEmpty:          len(resignationBeans) == 0,
+	}
+
+	// 渲染页面
+	generateHTML(w, &pageData, "layout", "navbar.private", "resignations.member")
 }
 
 // GET /v1/applications/member

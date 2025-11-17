@@ -12,9 +12,9 @@
       <li><a href="/v1/team/manage?uuid={{ .Team.Uuid }}">调整角色</a></li>
       <li><a href="/v1/team/edit?uuid={{ .Team.Uuid }}">修改资料</a></li>
       <li><a href="/v1/team/member_add?uuid={{ .Team.Uuid }}">邀请新人</a></li>
-      <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">看邀请函</a></li>
-      <li class="active"><a href="#">看申请书</a></li>
-      <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">离队成员</a></li>
+      <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">邀请函</a></li>
+      <li><a href="/v1/team/new_applications/check?uuid={{ .Team.Uuid }}">待处理申请</a></li>
+      <li class="active"><a href="#">全部申请</a></li>
       <li><a href="#">注销团队</a></li>
   </ol>
 </div>

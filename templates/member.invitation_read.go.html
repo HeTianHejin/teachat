@@ -51,11 +51,13 @@
                 <p>
                     {{ .Invitation.InviteWord }}
                 </p>
+                
+                <p>拟邀任茶团角色为: {{ .Invitation.Role }}</p>
+
                 <p class="text-right">邀请人：
 
                     <a href="/v1/user/biography?uuid={{ .Author.Uuid }}">{{ .Author.Name }}</a></p>
 
-                <p>拟邀任茶团角色为: {{ .Invitation.Role }}</p>
             </div>
 
         </div>

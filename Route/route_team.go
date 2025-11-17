@@ -371,6 +371,18 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 // GET /v1/team/detail?uuid=
 // 显示茶团详细信息
 func TeamDetail(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		//游客，需登录
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", err)
+		report(w, r, "你好，茶博士说久仰大名，请问大名是谁？")
+		return
+	}
 	//获取茶团资料
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
@@ -479,25 +491,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	tD.IsCoreMember = false
 	tD.IsMember = false
-	s, err := session(r)
-	if err != nil {
-		//游客
-		tD.SessUser = data.User{
-			Id:   data.UserId_None,
-			Name: "游客",
-			// 用户足迹
-			Footprint: r.URL.Path,
-			Query:     r.URL.RawQuery,
-		}
-		generateHTML(w, &tD, "layout", "navbar.public", "team.detail", "component_avatar_name_gender")
-		return
-	}
-	s_u, err := s.User()
-	if err != nil {
-		util.Debug(" Cannot get user from session", err)
-		report(w, r, "你好，茶博士说久仰大名，请问大名是谁？")
-		return
-	}
+
 	// 用户足迹
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
@@ -549,6 +543,19 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 		if count > 0 {
 			tD.HasApplication = true
+		}
+
+		//检查茶团是否有待处理的退出声明
+		resignations, err := data.GetResignationsByTeamId(tD.TeamBean.Team.Id)
+		if err != nil {
+			util.Debug("Cannot get resignations", err)
+		} else {
+			for _, r := range resignations {
+				if r.Status < data.ResignationStatusApproved {
+					tD.HasResignation = true
+					break
+				}
+			}
 		}
 	}
 
@@ -793,7 +800,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 	switch action {
 	case "appoint", "discharge":
 		member.Role = role
-		err := member.UpdateRoleClass()
+		err := member.UpdateRoleStatus()
 		if err != nil {
 			report(w, r, "你好，保存角色管理操作失败，请稍后再试。")
 			return
@@ -1060,6 +1067,54 @@ func TeamInvitations(w http.ResponseWriter, r *http.Request) {
 	}
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "team.invitations")
+
+}
+
+// GET /v1/team/members/left?uuid=
+// 查看已离开成员列表（所有人可见）
+func TeamMembersLeft(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		util.Debug(" Cannot get session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	vals := r.URL.Query()
+	team_uuid := vals.Get("uuid")
+	team, err := data.GetTeamByUUID(team_uuid)
+	if err != nil {
+		util.Debug(team_uuid, "Cannot get team by uuid", err)
+		report(w, r, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
+		return
+	}
+
+	// 查询已离开的成员（status=3）
+	leftMembers, err := data.GetResignedMembersByTeamId(team.Id)
+	if err != nil {
+		util.Debug(team.Id, "Cannot get resigned members", err)
+		report(w, r, "你好，茶博士正在努力的查找离开成员，请稍后再试。")
+		return
+	}
+
+	type PageData struct {
+		SessUser        data.User
+		Team            data.Team
+		LeftMemberSlice []data.TeamMember
+	}
+
+	pageData := PageData{
+		Team:            team,
+		LeftMemberSlice: leftMembers,
+	}
+
+	pageData.SessUser = s_u
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.members_left")
 
 }
 
