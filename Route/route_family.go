@@ -105,14 +105,14 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	// 2. get user's family
 	family_slice, err := data.GetAllFamilies(s_u.Id)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's family given id")
+		util.Debug(s_u.Id, "Cannot get user's family given id", err)
 		report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
 
 	f_b_slice, err := fetchFamilyBeanSlice(family_slice)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's family")
+		util.Debug(s_u.Id, "Cannot get user's family", err)
 		report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
@@ -131,7 +131,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 			if errors.Is(err, sql.ErrNoRows) {
 				l_default_family = data.FamilyUnknown
 			} else {
-				util.Debug(s_u.Id, "Cannot get user's default family")
+				util.Debug(s_u.Id, "Cannot get user's default family", err)
 				report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 				return
 			}
@@ -210,7 +210,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	// 3. check user is member of family
 	isMember, err = family.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot check user is_member of family")
+		util.Debug(s_u.Id, "Cannot check user is_member of family", err)
 		report(w, r, "你好，茶博士摸摸满头大汗，说因为外星人突然出现导致未能查看&家庭茶团详情。")
 		return
 	}
@@ -250,7 +250,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	//读取目标家庭的资料夹
 	family_bean, err := fetchFamilyBean(family)
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch bean given family")
+		util.Debug(family.Id, "Cannot fetch bean given family", err)
 		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
@@ -259,38 +259,38 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	f_p_members, err := f.ParentMembers()
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's parent members")
+		util.Debug(family.Id, "Cannot fetch family's parent members", err)
 		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	parent_member_bean_slice, err := fetchFamilyMemberBeanSlice(f_p_members)
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's parent members bean")
+		util.Debug(family.Id, "Cannot fetch family's parent members bean", err)
 		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 
 	c_members, err := f.ChildMembers()
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's child members")
+		util.Debug(family.Id, "Cannot fetch family's child members", err)
 		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	child_member_bean_slice, err := fetchFamilyMemberBeanSlice(c_members)
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's child members")
+		util.Debug(family.Id, "Cannot fetch family's child members", err)
 		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	other_members, err := f.OtherMembers()
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's other members")
+		util.Debug(family.Id, "Cannot fetch family's other members", err)
 		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	other_member_bean_slice, err := fetchFamilyMemberBeanSlice(other_members)
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's other members bean")
+		util.Debug(family.Id, "Cannot fetch family's other members bean", err)
 		report(w, r, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
@@ -333,10 +333,10 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 func HandleNewFamily(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		NewFamily(w, r)
+		NewFamilyGet(w, r)
 	case http.MethodPost:
 		// return family id
-		SaveFamily(w, r)
+		NewFamilyPost(w, r)
 	default:
 		// return error
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -345,8 +345,8 @@ func HandleNewFamily(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/family/new
-// create new family
-func SaveFamily(w http.ResponseWriter, r *http.Request) {
+// create a new family
+func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
@@ -410,9 +410,10 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	new_family.Name = s_u.Name + "&"
-
+	// 使用占位符*生成家庭名称，防止冒用他人姓名
+	new_family.Name = s_u.Name + "&*"
 	new_family.AuthorId = s_u.Id
+	new_family.PerspectiveUserId = s_u.Id // 视角所属用户，默认等于AuthorId
 	new_family.Introduction = introduction
 	//初始化家庭茶团默认参数
 	new_family.HusbandFromFamilyId = data.FamilyIdUnknown
@@ -421,7 +422,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 
 	//保存到数据库中,返回新家庭茶团的id
 	if err := new_family.Create(); err != nil {
-		util.Debug(s_u.Email, "Cannot create new family")
+		util.Debug(s_u.Email, "Cannot create new family", err)
 		report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
@@ -441,7 +442,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		author_member.Role = data.FamilyMemberRoleWife
 	}
 	if err := author_member.Create(); err != nil {
-		util.Debug(s_u.Email, "Cannot create author family member")
+		util.Debug(s_u.Email, "Cannot create author family member", err)
 		report(w, r, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
@@ -453,7 +454,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			df = data.FamilyUnknown
 		} else {
-			util.Debug(s_u.Id, "Cannot get user's default family")
+			util.Debug(s_u.Id, "Cannot get user's default family", err)
 			report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 			return
 		}
@@ -467,7 +468,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 		}
 		//把这个新家庭茶团设为默认
 		if err := udf.Create(); err != nil {
-			util.Debug(s_u.Email, "Cannot create user's default family")
+			util.Debug(s_u.Email, "Cannot create user's default family", err)
 			report(w, r, "你好，茶博士摸摸头，未能创建默认家庭茶团，请稍后再试。")
 			return
 		}
@@ -485,7 +486,7 @@ func SaveFamily(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/family/new
 // 返回一张空白的家庭填写表格（页面）
-func NewFamily(w http.ResponseWriter, r *http.Request) {
+func NewFamilyGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)

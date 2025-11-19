@@ -64,6 +64,11 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
+	//检查用户名称，不允许使用特殊字符，&,$,$,@...
+	if ok_name := isValidUserName(name); !ok_name {
+		report(w, r, "你好，请确认用户名是否只包含字母、数字、下划线或中文字符。")
+		return
+	}
 
 	// 根据用户提交的资料填写新用户表格
 	newU := data.User{

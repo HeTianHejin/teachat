@@ -198,68 +198,6 @@ func fetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 	return s_u, member_default_family, member_all_families, defaultTeam, survivalTeams, default_place, places, nil
 }
 
-// func fetchUserRelatedData(user data.User) (s_u data.User, family data.Family, families []data.Family, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
-// 	// 读取用户资料
-// 	s_u = user
-
-// 	member_default_family, err := GetLastDefaultFamilyByUserId(s_u.Id)
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	member_all_families, err := data.GetAllFamilies(s_u.Id)
-// 	if err != nil {
-// 		return
-// 	}
-// 	//remove member_default_family from member_all_families
-// 	for i, family := range member_all_families {
-// 		if family.Id == member_default_family.Id {
-// 			member_all_families = append(member_all_families[:i], member_all_families[i+1:]...)
-// 			break
-// 		}
-// 	}
-// 	// 把系统默认的“自由人”家庭资料加入families
-// 	member_all_families = append(member_all_families, data.UnknownFamily)
-// 	defaultTeam, err := s_u.GetLastDefaultTeam()
-// 	if err != nil {
-// 		return
-// 	}
-
-// 	survivalTeams, err := s_u.SurvivalTeams()
-// 	if err != nil {
-// 		return
-// 	}
-// 	for i, team := range survivalTeams {
-// 		if team.Id == defaultTeam.Id {
-// 			survivalTeams = append(survivalTeams[:i], survivalTeams[i+1:]...)
-// 			break
-// 		}
-// 	}
-// 	// 把系统默认团队资料加入teams
-// 	survivalTeams = append(survivalTeams, data.FreelancerTeam)
-
-// 	default_place, err := s_u.GetLastDefaultPlace()
-// 	if err != nil && errors.Is(err, sql.ErrNoRows) {
-// 		return
-// 	}
-
-// 	places, err = s_u.GetAllBindPlaces()
-// 	if err != nil {
-// 		return
-// 	}
-// 	if len(places) > 0 {
-// 		//移除默认地方
-// 		for i, place := range places {
-// 			if place.Id == default_place.Id {
-// 				places = append(places[:i], places[i+1:]...)
-// 				break
-// 			}
-// 		}
-// 	}
-
-// 	return s_u, member_default_family, member_all_families, defaultTeam, survivalTeams, default_place, places, nil
-// }
-
 // 准备用户相关数据
 func prepareUserPageData(sess *data.Session) (*data.UserPageData, error) {
 	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := fetchSessionUserRelatedData(*sess)

@@ -9,15 +9,16 @@ import (
 	"time"
 )
 
-// Family 家庭，原始的社会单位，社区生活构成的基础单元，
-// 一个狭义的家庭是由男主人（hero）、女主人公（heroine）、「或有」未成年儿子、女儿和宠物组成，
-// 已成年的儿子和女儿，成年后算为自动分家离开，计算为另一个（未来）家庭的成员，
-// 除了美猴王孙悟空是从石头里蹦出来的之外，其他人都是上有父母（上一代家庭），中间兄弟姐妹/配偶（可能结偶状态为false），下有子女（可能子女数为0）（下一代家庭），
-// 上中下亲缘家庭集合为大家族。
+// Family 家庭，生命传承功能完整的单位，社区构成的基础单元，
+// 这里一个家庭是指由1男主人（hero）、1女主人公（heroine）、「或有」未成年儿子、女儿和宠物等成员组成茶团，
+// 从构成数值来看，1女1男主和1女儿1男孩结构家庭，是一个标准家庭/理想中位数？
+// 已成年的儿子和女儿，成年后算为自动分家离开，计算为另一个（新）家庭的成员，
+// 除了美猴王孙悟空是从石头里蹦出来的之外，其他人都是上有父母（上一代家庭），中间兄弟姐妹，如果有子女（下一代家庭），必有配偶（可能结偶状态为false），
+// 上中下亲缘家庭集合为大家族，近亲是指连续性三代。
 type Family struct {
 	Id                  int
 	Uuid                string
-	AuthorId            int    // 创建者id
+	AuthorId            int    // 创建者茶友id，权限必须是男主人或者女主人角色
 	Name                string // 家庭名称，默认是“丈夫&妻子”联合名字组合，例如：比尔及梅琳达·盖茨（Bill & Melinda Gates)基金会（Foundation)【命名方法】
 	Introduction        string // 家庭简介
 	IsMarried           bool   // 是否已结婚？（法律上的领取结婚证）
@@ -27,8 +28,10 @@ type Family struct {
 	Status              int    // 状态指数，0、保密，1、单身，2、同居，3、已婚，4、分居，5、离婚，其他、未知
 	CreatedAt           time.Time
 	UpdatedAt           *time.Time
-	Logo                string // 家庭标志图片名
-	IsOpen              bool   // 是否公开，公开的家庭可以被搜索到，不公开的家庭不可以被搜索到
+	Logo                string     // 家庭标志图片名
+	IsOpen              bool       // 是否公开，公开的家庭可以被搜索到，不公开的家庭不可以被搜索到
+	DeletedAt           *time.Time // 软删除时间戳，NULL表示未删除
+	PerspectiveUserId   int        // 视角所属用户ID，表示这是谁眼中的家庭，等于AuthorId
 }
 
 // 未明确家庭资料的茶友，其家庭资料统一虚拟为"四海为家",id=0
@@ -147,7 +150,7 @@ type FamilyMemberSignIn struct {
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
 	IsAdopted    bool //是否领养
-	AuthorUserId int  //声明书作者茶友id
+	AuthorUserId int  //声明书作者茶友id，权限必须是男主人或者女主人角色
 }
 
 // 离开&家庭茶团成员声明
@@ -412,10 +415,10 @@ func (user *User) GetLastDefaultFamily() (Family, error) {
         SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, 
                f.is_married, f.has_child, f.husband_from_family_id, 
                f.wife_from_family_id, f.status, f.created_at, 
-               f.updated_at, f.logo, f.is_open 
+               f.updated_at, f.logo, f.is_open, f.deleted_at, f.perspective_user_id 
         FROM user_default_families udf 
         JOIN families f ON udf.family_id = f.id 
-        WHERE udf.user_id = $1 
+        WHERE udf.user_id = $1 AND f.deleted_at IS NULL 
         ORDER BY udf.created_at DESC 
         LIMIT 1`
 
@@ -425,7 +428,7 @@ func (user *User) GetLastDefaultFamily() (Family, error) {
 		&family.Introduction, &family.IsMarried, &family.HasChild,
 		&family.HusbandFromFamilyId, &family.WifeFromFamilyId,
 		&family.Status, &family.CreatedAt, &family.UpdatedAt,
-		&family.Logo, &family.IsOpen,
+		&family.Logo, &family.IsOpen, &family.DeletedAt, &family.PerspectiveUserId,
 	)
 
 	if err != nil {
@@ -465,9 +468,9 @@ func ResignMemberFamilies(user_id int) ([]Family, error) {
 	defer cancel()
 
 	query := `SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, 
-		f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open 
+		f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open, f.deleted_at, f.perspective_user_id 
 		FROM family_member_sign_outs fmso LEFT JOIN families f ON fmso.family_id = f.id 
-		WHERE fmso.user_id = $1 ORDER BY fmso.created_at DESC`
+		WHERE fmso.user_id = $1 AND f.deleted_at IS NULL ORDER BY fmso.created_at DESC`
 
 	rows, err := db.QueryContext(ctx, query, user_id)
 	if err != nil {
@@ -482,8 +485,8 @@ func GetAllAuthorFamilies(user_id int) ([]Family, error) {
 	defer cancel()
 
 	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
-		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open 
-		FROM families WHERE author_id = $1 ORDER BY created_at DESC`
+		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
+		FROM families WHERE author_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
 
 	rows, err := db.QueryContext(ctx, query, user_id)
 	if err != nil {
@@ -498,7 +501,7 @@ func CountAllAuthorFamilies(user_id int) (int, error) {
 	defer cancel()
 
 	var count int
-	err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM families WHERE author_id = $1", user_id).Scan(&count)
+	err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM families WHERE author_id = $1 AND deleted_at IS NULL", user_id).Scan(&count)
 	return count, wrapError("CountAllAuthorFamilies", err)
 }
 
@@ -518,9 +521,9 @@ func GetAllFamilies(user_id int) ([]Family, error) {
 	defer cancel()
 
 	query := `SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, 
-		f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open 
+		f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open, f.deleted_at, f.perspective_user_id 
 		FROM family_members fm LEFT JOIN families f ON fm.family_id = f.id 
-		WHERE fm.user_id = $1 ORDER BY f.created_at DESC`
+		WHERE fm.user_id = $1 AND f.deleted_at IS NULL ORDER BY f.created_at DESC`
 
 	rows, err := db.QueryContext(ctx, query, user_id)
 	if err != nil {
@@ -558,7 +561,7 @@ func (f *Family) CreatedAtDate() string {
 	return f.CreatedAt.Format("2006-01-02")
 }
 
-// Create 创建家庭
+// Create 创建单身1人家庭
 func (f *Family) Create() error {
 	if err := f.Validate(); err != nil {
 		return err
@@ -566,13 +569,18 @@ func (f *Family) Create() error {
 	ctx, cancel := getContext()
 	defer cancel()
 
+	// PerspectiveUserId默认等于AuthorId
+	if f.PerspectiveUserId == 0 {
+		f.PerspectiveUserId = f.AuthorId
+	}
+
 	query := `INSERT INTO families (uuid, author_id, name, introduction, is_married, has_child, 
-		husband_from_family_id, wife_from_family_id, status, created_at, logo, is_open) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid`
+		husband_from_family_id, wife_from_family_id, status, created_at, logo, is_open, perspective_user_id) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid`
 
 	err := db.QueryRowContext(ctx, query, Random_UUID(), f.AuthorId, f.Name, f.Introduction,
 		f.IsMarried, f.HasChild, f.HusbandFromFamilyId, f.WifeFromFamilyId, f.Status,
-		time.Now(), f.Logo, f.IsOpen).Scan(&f.Id, &f.Uuid)
+		time.Now(), f.Logo, f.IsOpen, f.PerspectiveUserId).Scan(&f.Id, &f.Uuid)
 
 	return wrapError("Family.Create", err)
 }
@@ -597,14 +605,14 @@ func (f *Family) Get() (err error) {
 	if f.Id == 0 {
 		return fmt.Errorf("family not found with id: %d", f.Id)
 	}
-	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open FROM families WHERE id=$1"
+	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id FROM families WHERE id=$1 AND deleted_at IS NULL"
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 
-	if err = stmt.QueryRow(f.Id).Scan(&f.Id, &f.Uuid, &f.AuthorId, &f.Name, &f.Introduction, &f.IsMarried, &f.HasChild, &f.HusbandFromFamilyId, &f.WifeFromFamilyId, &f.Status, &f.CreatedAt, &f.UpdatedAt, &f.Logo, &f.IsOpen); err != nil {
+	if err = stmt.QueryRow(f.Id).Scan(&f.Id, &f.Uuid, &f.AuthorId, &f.Name, &f.Introduction, &f.IsMarried, &f.HasChild, &f.HusbandFromFamilyId, &f.WifeFromFamilyId, &f.Status, &f.CreatedAt, &f.UpdatedAt, &f.Logo, &f.IsOpen, &f.DeletedAt, &f.PerspectiveUserId); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("family not found with id: %d", f.Id)
 		}
@@ -638,8 +646,8 @@ func GetFamiliesByAuthorId(authorId int) ([]Family, error) {
 	defer cancel()
 
 	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
-		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open 
-		FROM families WHERE author_id=$1`
+		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
+		FROM families WHERE author_id=$1 AND deleted_at IS NULL`
 
 	rows, err := db.QueryContext(ctx, query, authorId)
 	if err != nil {
@@ -654,13 +662,13 @@ func (f *Family) GetByUuid() (err error) {
 		*f = FamilyUnknown
 		return nil
 	}
-	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open FROM families WHERE uuid=$1"
+	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id FROM families WHERE uuid=$1 AND deleted_at IS NULL"
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(f.Uuid).Scan(&f.Id, &f.Uuid, &f.AuthorId, &f.Name, &f.Introduction, &f.IsMarried, &f.HasChild, &f.HusbandFromFamilyId, &f.WifeFromFamilyId, &f.Status, &f.CreatedAt, &f.UpdatedAt, &f.Logo, &f.IsOpen)
+	err = stmt.QueryRow(f.Uuid).Scan(&f.Id, &f.Uuid, &f.AuthorId, &f.Name, &f.Introduction, &f.IsMarried, &f.HasChild, &f.HusbandFromFamilyId, &f.WifeFromFamilyId, &f.Status, &f.CreatedAt, &f.UpdatedAt, &f.Logo, &f.IsOpen, &f.DeletedAt, &f.PerspectiveUserId)
 	if err != nil {
 		return
 	}
@@ -901,4 +909,101 @@ func (f *Family) IsOnlyOneMember() (isOnlyOne bool, err error) {
 		return
 	}
 	return count == 1, nil
+}
+
+// SoftDelete 软删除家庭
+func (f *Family) SoftDelete() error {
+	ctx, cancel := getContext()
+	defer cancel()
+
+	now := time.Now()
+	f.DeletedAt = &now
+
+	query := "UPDATE families SET deleted_at = $1, updated_at = $2 WHERE id = $3 AND deleted_at IS NULL"
+	result, err := db.ExecContext(ctx, query, now, now, f.Id)
+	if err != nil {
+		return wrapError("Family.SoftDelete", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return wrapError("Family.SoftDelete", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("family not found or already deleted: %d", f.Id)
+	}
+
+	return nil
+}
+
+// Restore 恢复软删除的家庭
+func (f *Family) Restore() error {
+	ctx, cancel := getContext()
+	defer cancel()
+
+	f.DeletedAt = nil
+	now := time.Now()
+	f.UpdatedAt = &now
+
+	query := "UPDATE families SET deleted_at = NULL, updated_at = $1 WHERE id = $2 AND deleted_at IS NOT NULL"
+	result, err := db.ExecContext(ctx, query, now, f.Id)
+	if err != nil {
+		return wrapError("Family.Restore", err)
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return wrapError("Family.Restore", err)
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("family not found or not deleted: %d", f.Id)
+	}
+
+	return nil
+}
+
+// IsDeleted 检查家庭是否已被软删除
+func (f *Family) IsDeleted() bool {
+	return f.DeletedAt != nil
+}
+
+// GetDeletedFamiliesByAuthorId 获取用户已删除的家庭列表
+func GetDeletedFamiliesByAuthorId(authorId int) ([]Family, error) {
+	ctx, cancel := getContext()
+	defer cancel()
+
+	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
+		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
+		FROM families WHERE author_id=$1 AND deleted_at IS NOT NULL ORDER BY deleted_at DESC`
+
+	rows, err := db.QueryContext(ctx, query, authorId)
+	if err != nil {
+		return nil, wrapError("GetDeletedFamiliesByAuthorId", err)
+	}
+	return scanFamilies(rows)
+}
+
+// GetFamilyIncludingDeleted 获取家庭（包括已删除的）
+func GetFamilyIncludingDeleted(family_id int) (family Family, err error) {
+	if family_id == 0 {
+		return FamilyUnknown, nil
+	}
+
+	ctx, cancel := getContext()
+	defer cancel()
+
+	query := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id FROM families WHERE id=$1"
+	err = db.QueryRowContext(ctx, query, family_id).Scan(
+		&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction,
+		&family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId,
+		&family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen, &family.DeletedAt, &family.PerspectiveUserId)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Family{}, fmt.Errorf("family not found with id: %d", family_id)
+		}
+		return Family{}, wrapError("GetFamilyIncludingDeleted", err)
+	}
+
+	return family, nil
 }

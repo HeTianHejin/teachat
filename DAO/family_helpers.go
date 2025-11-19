@@ -36,7 +36,7 @@ func scanFamilies(rows *sql.Rows) ([]Family, error) {
 		var f Family
 		if err := rows.Scan(&f.Id, &f.Uuid, &f.AuthorId, &f.Name, &f.Introduction,
 			&f.IsMarried, &f.HasChild, &f.HusbandFromFamilyId, &f.WifeFromFamilyId,
-			&f.Status, &f.CreatedAt, &f.UpdatedAt, &f.Logo, &f.IsOpen); err != nil {
+			&f.Status, &f.CreatedAt, &f.UpdatedAt, &f.Logo, &f.IsOpen, &f.DeletedAt, &f.PerspectiveUserId); err != nil {
 			return nil, err
 		}
 		families = append(families, f)
@@ -48,10 +48,10 @@ func scanFamilies(rows *sql.Rows) ([]Family, error) {
 func queryFamiliesByUserRole(ctx context.Context, userID int, roles []int) ([]Family, error) {
 	query := `SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, 
 		f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, 
-		f.created_at, f.updated_at, f.logo, f.is_open 
+		f.created_at, f.updated_at, f.logo, f.is_open, f.deleted_at, f.perspective_user_id 
 		FROM family_members fm 
 		LEFT JOIN families f ON fm.family_id = f.id 
-		WHERE fm.user_id = $1 AND fm.role = ANY($2)
+		WHERE fm.user_id = $1 AND fm.role = ANY($2) AND f.deleted_at IS NULL
 		ORDER BY fm.created_at DESC`
 	
 	rows, err := db.QueryContext(ctx, query, userID, pq.Array(roles))

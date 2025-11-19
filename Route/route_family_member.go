@@ -424,7 +424,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 			report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜失踪了，稍后再试。")
 			return
 		}
-		//如果role==1，2，表示家庭成员是家庭的父母角色，那么需要更新家庭的名称，
+		//如果role==1，2，表示家庭成员是家庭的父母角色，那么需要更新家庭的名称
 		if family_member.Role == 1 || family_member.Role == 2 {
 			family := data.Family{
 				Id: family_member.FamilyId,
@@ -434,18 +434,10 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 				report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
 				return
 			}
-			t_user, err := data.GetUser(family_member.UserId)
-			if err != nil {
-				util.Debug(t_user.Id, " Cannot get user given id")
-				report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜找不到，稍后再试。")
-				return
-			}
-			//更新家庭的名称：男主人名+女主人名
-			family.Name = family.Name + t_user.Name
-			if err = family.Update(); err != nil {
-				util.Debug(" Cannot update family", err)
-				report(w, r, "你好，茶博士正在忙碌，厚厚的眼镜不见了，稍后再试。")
-				return
+			//使用新方法自动更新家庭名称，将占位符*替换为实际配偶姓名
+			if err = family.UpdateFamilyNameWithSpouse(family_member.UserId); err != nil {
+				util.Debug(" Cannot update family name", err)
+				// 不阻断流程，只记录错误
 			}
 		}
 

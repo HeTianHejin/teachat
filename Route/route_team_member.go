@@ -326,7 +326,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	//读取目标茶团资料
 	t_team, err := data.GetTeam(team_id_int)
 	if err != nil {
-		util.Debug(team_id_str, "Cannot get team by id")
+		util.Debug(team_id_str, "Cannot get team by id", err)
 		report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
@@ -490,7 +490,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	//目标茶友
 	t_member, err := data.GetUserByEmail(m_email, r.Context())
 	if err != nil {
-		util.Debug(m_email, "Cannot get user by email")
+		util.Debug(m_email, "Cannot get user by email", err)
 		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}

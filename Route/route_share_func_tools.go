@@ -93,6 +93,13 @@ func isEmail(email string) bool {
 	return reg.MatchString(email)
 }
 
+// 验证用户名，只允许字母、数字、下划线或中文字符，正确返回true，错误返回false。
+func isValidUserName(name string) bool {
+	pattern := `^[a-zA-Z0-9_\p{Han}]+$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(name)
+}
+
 // 验证id_slice，必需是非零正整数而且不重复的逗号分隔的"2,19,87..."字符串格式，是否正确，正确返回true，错误返回false。
 // 预编译正则表达式提高性能（deepSeek.com）
 var idSliceRegex = regexp.MustCompile(`^[1-9][0-9]*(,[1-9][0-9]*)*$`)

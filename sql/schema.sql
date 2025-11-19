@@ -37,8 +37,47 @@ CREATE TABLE families (
     logo                  VARCHAR(255),
     is_open               BOOLEAN DEFAULT true,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP,
+    perspective_user_id   INTEGER
+);
+
+COMMENT ON COLUMN families.perspective_user_id IS '视角所属用户ID，表示这是谁眼中的家庭，默认等于author_id';
+
+-- 家庭消息偏好表
+CREATE TABLE family_message_preferences (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    user_id               INTEGER REFERENCES users(id),
+    family_id             INTEGER REFERENCES families(id),
+    receive_messages      BOOLEAN DEFAULT true,
+    notification_type     INTEGER DEFAULT 2,
+    muted_until           TIMESTAMP,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP
 );
+
+COMMENT ON TABLE family_message_preferences IS '家庭消息偏好设置，用户可以选择接收哪些家庭成员的消息';
+COMMENT ON COLUMN family_message_preferences.notification_type IS '0-关闭, 1-仅重要, 2-全部';
+
+-- 家庭关联表（用于利益回避机制）
+CREATE TABLE family_relations (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    family_id_1           INTEGER REFERENCES families(id),
+    family_id_2           INTEGER REFERENCES families(id),
+    relation_type         INTEGER NOT NULL,
+    confirmed_by          INTEGER REFERENCES users(id),
+    status                INTEGER DEFAULT 0,
+    note                  TEXT,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+COMMENT ON TABLE family_relations IS '家庭关联表，用于识别三代以内近亲关系实现利益回避';
+COMMENT ON COLUMN family_relations.relation_type IS '1-同一家庭不同视角, 2-前后家庭, 3-父母子女, 4-领养关系, 5-兄弟姐妹';
+COMMENT ON COLUMN family_relations.status IS '0-单方声明, 1-双方确认, 2-已拒绝';
 
 -- 团队表
 -- 层级关系通过groups和group_members表管理
@@ -1486,6 +1525,25 @@ CREATE INDEX idx_group_members_level ON group_members(level);
 
 -- 用户表索引
 CREATE INDEX idx_users_email ON users(email);
+
+-- 家庭表索引
+CREATE INDEX idx_families_deleted_at ON families(deleted_at);
+CREATE INDEX idx_families_author_id ON families(author_id);
+CREATE INDEX idx_families_author_deleted ON families(author_id, deleted_at);
+CREATE INDEX idx_families_perspective_user ON families(perspective_user_id);
+
+-- 家庭消息偏好索引
+CREATE INDEX idx_family_message_prefs_user ON family_message_preferences(user_id);
+CREATE INDEX idx_family_message_prefs_family ON family_message_preferences(family_id);
+CREATE INDEX idx_family_message_prefs_user_family ON family_message_preferences(user_id, family_id);
+
+-- 家庭关联表索引
+CREATE INDEX idx_family_relations_family1 ON family_relations(family_id_1);
+CREATE INDEX idx_family_relations_family2 ON family_relations(family_id_2);
+CREATE INDEX idx_family_relations_status ON family_relations(status);
+CREATE INDEX idx_family_relations_type ON family_relations(relation_type);
+CREATE INDEX idx_family_relations_deleted ON family_relations(deleted_at);
+CREATE INDEX idx_family_relations_families ON family_relations(family_id_1, family_id_2, status);
 
 -- 会话表索引
 CREATE INDEX idx_sessions_user_id ON sessions(user_id);

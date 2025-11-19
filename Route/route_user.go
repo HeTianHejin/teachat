@@ -79,10 +79,14 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 		name := r.PostFormValue("name")
 		len_biog := cnStrLen(name)
 		if len_biog < 2 || len_biog > 16 {
-			report(w, r, "茶博士彬彬有礼的说：过高人易妒，过洁世同嫌。名字也是噢。")
+			report(w, r, "茶博士彬彬有礼的说：名字太短不够帅，太长了墨水都不够用噢。")
 			return
 		}
-		s_u.Name = name
+		if isValidUserName(name) {
+			report(w, r, "你好，请勿使用特殊字符作为名称呢，将来登机称帝，都不知道如何高呼陛下万岁。")
+			return
+		}
+		newName := name
 
 		biog := r.PostFormValue("biography")
 		len_biog = cnStrLen(biog)
@@ -90,12 +94,12 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 			report(w, r, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
 			return
 		}
-		s_u.Biography = biog
+		newBiography := biog
 
-		err = data.UpdateUserNameAndBiography(s_u.Id, s_u.Name, s_u.Biography)
+		err = data.UpdateUserNameAndBiography(s_u.Id, newName, newBiography)
 		if err != nil {
 			util.Debug(" 更新用户信息错误！", err)
-			report(w, r, "茶博士失魂鱼，花名或者简介修改失败！")
+			report(w, r, "茶博士失魂鱼，请问你刚刚说的花名或者简介是什么来着？")
 			return
 		}
 

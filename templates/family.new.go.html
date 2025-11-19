@@ -2,10 +2,22 @@
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/group_of_relatives/office">家族事务</a></li>
+    <li><a href="/v1/home/office">家族办公室</a></li>
     <li class="active">登记一个新的家庭茶话团队</li>
 
 </ol>
+
+
+<div class="well">
+    <p><strong>登记说明：</strong></p>
+    <ul>
+        <li>必须是男或者女主人才能登记新家庭</li>
+        <li>登记人将自动成为第一个家庭主人（父母角色）成员</li>
+        <li><span class="text-info">这是您眼中的家庭，您可以按自己的认知登记</span></li>
+        <li>后续可以通过家庭关联功能建立与其他家庭的关系</li>
+    </ul>
+</div>
+
 
 <div class="panel panel-default">
 
@@ -58,14 +70,18 @@
                 </label>
             </div>
 
-            <label for="name">家庭茶团名称（4-18字）:</label>
+            <label for="name">家庭茶团名称：</label>
             <div class="form-group">
-                <input type="text" class="form-control" readonly id="name" minlength="2" maxlength="72" value="{{ .SessUser.Name }}&家庭茶团" />
-               
+                <input type="text" class="form-control" readonly id="name" value="{{ .SessUser.Name }}&*" />
+                <small class="form-text text-muted">
+                    <span class="text-info">★ 系统自动生成名称，"*"代表配偶占位符</span><br/>
+                    当配偶确认加入后，系统将自动更新为实际名称（例：张三&李四）<br/>
+                    这样可以防止冒用他人姓名
+                </small>
             </div>
 
             <div class="form-group" style="margin-top: 1rem;">
-                <label for="introduction">家庭茶团简介（17～456字）:</label>
+                <label for="introduction">家庭茶团简介（3～456字）:</label>
                 <textarea class="form-control" name="introduction" id="introduction" rows="3" minlength="4"
                     maxlength="567"  required>一个世界上最重要的地方，一个温暖的家。</textarea>
             </div>
