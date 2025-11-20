@@ -1,0 +1,50 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li>大堂</li>
+  <li><a href="/v1/family/home">家庭事项</a></li>
+  <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+  <li class="active">家族树</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <i class="bi-diagram-3" style="font-size: 1.5rem; color: brown;"></i>
+      {{ .Family.Name }} 家族树
+    </h3>
+  </div>
+  <div class="panel-body">
+    <div style="text-align: center; padding: 50px;">
+      <div style="border: 2px dashed #ccc; padding: 40px; border-radius: 10px;">
+        <i class="bi-diagram-3" style="font-size: 4rem; color: #999;"></i>
+        <h4 style="color: #666; margin-top: 20px;">家族树视图</h4>
+        <p style="color: #999;">
+          这里将展示 {{ .Family.Name }} 的家族关系树<br>
+          包括父母家庭、当前家庭、子女家庭的关系图谱
+        </p>
+        <div style="margin-top: 30px; text-align: left; max-width: 600px; margin-left: auto; margin-right: auto;">
+          <h5>家族信息：</h5>
+          <ul>
+            <li>家庭名称：{{ .Family.Name }}</li>
+            <li>家庭状态：{{ .Family.GetStatus }}</li>
+            <li>创建日期：{{ .Family.CreatedAtDate }}</li>
+            {{ if .Family.HusbandFromFamilyId }}
+            <li>丈夫来自家庭ID：{{ .Family.HusbandFromFamilyId }}</li>
+            {{ end }}
+            {{ if .Family.WifeFromFamilyId }}
+            <li>妻子来自家庭ID：{{ .Family.WifeFromFamilyId }}</li>
+            {{ end }}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <a href="/v1/family/detail?id={{ .Family.Uuid }}" class="btn btn-default">
+      <i class="glyphicon glyphicon-arrow-left"></i> 返回家庭详情
+    </a>
+  </div>
+</div>
+
+{{ end }}

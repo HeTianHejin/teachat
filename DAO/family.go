@@ -84,14 +84,15 @@ func (f *Family) GetStatus() string {
 type FamilyMember struct {
 	Id               int
 	Uuid             string
-	FamilyId         int    // 家庭id
-	UserId           int    // 茶友id
-	Role             int    // 家庭角色，0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物,
-	IsAdult          bool   // 是否成年?
-	NickName         string // 父母对孩童时期的昵称，例如：狗剩
-	IsAdopted        bool   // 是否被领养?例如：木偶人匹诺曹Pinocchio
-	Age              int    // 年龄,如果是0表示未知
-	OrderOfSeniority int    // 家中排行老几？孩子的年长先后顺序，1、2、3 ...,如果是0表示未知
+	FamilyId         int        // 家庭id
+	UserId           int        // 茶友id
+	Role             int        // 家庭角色，0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物,
+	IsAdult          bool       // 是否成年?
+	NickName         string     // 父母对孩童时期的昵称，例如：狗剩
+	IsAdopted        bool       // 是否被领养?例如：木偶人匹诺曹Pinocchio
+	Birthday         *time.Time // 生日，NULL表示未知
+	DeathDate        *time.Time // 忌日，NULL表示在世
+	OrderOfSeniority int        // 家中排行老几？孩子的年长先后顺序，1、2、3 ...,如果是0表示未知
 	CreatedAt        time.Time
 	UpdatedAt        *time.Time
 }
@@ -386,6 +387,7 @@ func (fms *FamilyMemberSignIn) GetStatus() string {
 }
 
 // UserDefaultFamily 用户的“默认家庭”设置记录
+// 将自动对外展示，所以选中的家庭必须是开放属性（family.IsOpen==true）
 type UserDefaultFamily struct {
 	Id        int
 	UserId    int
@@ -446,6 +448,20 @@ func ParentMemberFamilies(user_id int) ([]Family, error) {
 	ctx, cancel := getContext()
 	defer cancel()
 	return queryFamiliesByUserRole(ctx, user_id, []int{FamilyMemberRoleHusband, FamilyMemberRoleWife})
+}
+
+// ParentMemberOpenFamilies 用户担任父母角色的公开家庭
+func ParentMemberOpenFamilies(user_id int) ([]Family, error) {
+	ctx, cancel := getContext()
+	defer cancel()
+	return queryFamiliesByUserRoleAndOpen(ctx, user_id, []int{FamilyMemberRoleHusband, FamilyMemberRoleWife}, true)
+}
+
+// ParentMemberPrivateFamilies 用户担任父母角色的私密家庭
+func ParentMemberPrivateFamilies(user_id int) ([]Family, error) {
+	ctx, cancel := getContext()
+	defer cancel()
+	return queryFamiliesByUserRoleAndOpen(ctx, user_id, []int{FamilyMemberRoleHusband, FamilyMemberRoleWife}, false)
 }
 
 // ChildMemberFamilies 用户担任子女角色的全部家庭
@@ -515,6 +531,8 @@ func CountAllfamilies(user_id int) (int, error) {
 	return count, wrapError("CountAllfamilies", err)
 }
 
+// 获取用户视角
+
 // GetAllFamilies 获取用户所属的全部家庭
 func GetAllFamilies(user_id int) ([]Family, error) {
 	ctx, cancel := getContext()
@@ -540,12 +558,34 @@ func (fm *FamilyMember) GetIsAdult() string {
 	return "未成年"
 }
 
-// FamilyMember.GetAge() 获取年龄
-func (fm *FamilyMember) GetAge() string {
-	if fm.Age == 0 {
+// GetAge 计算年龄
+func (fm *FamilyMember) GetAge() int {
+	if fm.Birthday == nil {
+		return 0
+	}
+	endDate := time.Now()
+	if fm.DeathDate != nil {
+		endDate = *fm.DeathDate
+	}
+	age := endDate.Year() - fm.Birthday.Year()
+	if endDate.Month() < fm.Birthday.Month() || (endDate.Month() == fm.Birthday.Month() && endDate.Day() < fm.Birthday.Day()) {
+		age--
+	}
+	return age
+}
+
+// GetAgeString 获取年龄字符串
+func (fm *FamilyMember) GetAgeString() string {
+	age := fm.GetAge()
+	if age == 0 {
 		return "未知"
 	}
-	return strconv.Itoa(fm.Age)
+	return strconv.Itoa(age)
+}
+
+// IsAlive 是否在世
+func (fm *FamilyMember) IsAlive() bool {
+	return fm.DeathDate == nil
 }
 
 // FamilyMember.GetSeniority() 获取出生顺序号，排行老几
@@ -721,13 +761,13 @@ func (f *Family) IsParentMember(user_id int) (isMember bool, err error) {
 
 // Family.AllMembers() 获取家庭所有成员
 func (f *Family) AllMembers() (members []FamilyMember, err error) {
-	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1", f.Id)
+	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1", f.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		member := FamilyMember{}
-		err = rows.Scan(&member.Id, &member.Uuid, &member.FamilyId, &member.UserId, &member.Role, &member.IsAdult, &member.NickName, &member.IsAdopted, &member.Age, &member.OrderOfSeniority, &member.CreatedAt, &member.UpdatedAt)
+		err = rows.Scan(&member.Id, &member.Uuid, &member.FamilyId, &member.UserId, &member.Role, &member.IsAdult, &member.NickName, &member.IsAdopted, &member.Birthday, &member.DeathDate, &member.OrderOfSeniority, &member.CreatedAt, &member.UpdatedAt)
 		if err != nil {
 			return
 		}
@@ -767,24 +807,24 @@ func (fm *FamilyMember) Create() error {
 	defer cancel()
 
 	query := `INSERT INTO family_members (uuid, family_id, user_id, role, is_adult, nick_name, 
-		is_adopted, age, order_of_seniority, created_at) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid`
+		is_adopted, birthday, death_date, order_of_seniority, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid`
 
 	err := db.QueryRowContext(ctx, query, Random_UUID(), fm.FamilyId, fm.UserId, fm.Role,
-		fm.IsAdult, fm.NickName, fm.IsAdopted, fm.Age, fm.OrderOfSeniority, time.Now()).Scan(&fm.Id, &fm.Uuid)
+		fm.IsAdult, fm.NickName, fm.IsAdopted, fm.Birthday, fm.DeathDate, fm.OrderOfSeniority, time.Now()).Scan(&fm.Id, &fm.Uuid)
 
 	return wrapError("FamilyMember.Create", err)
 }
 
 // FamilyMember.Get() 根据id获取家庭成员
 func (fm *FamilyMember) Get() (err error) {
-	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE id=$1"
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE id=$1"
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(fm.Id).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Age, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
+	err = stmt.QueryRow(fm.Id).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Birthday, &fm.DeathDate, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
 	if err != nil {
 		return
 	}
@@ -793,13 +833,13 @@ func (fm *FamilyMember) Get() (err error) {
 
 // FamilyMember.GetByUserIdFamilyId() 根据user_id获取指定的家庭成员
 func (fm *FamilyMember) GetByUserIdFamilyId() (err error) {
-	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE user_id=$1 and family_id = $2"
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE user_id=$1 and family_id = $2"
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(fm.UserId, fm.FamilyId).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Age, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
+	err = stmt.QueryRow(fm.UserId, fm.FamilyId).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Birthday, &fm.DeathDate, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
 	if err != nil {
 		return
 	}
@@ -808,13 +848,13 @@ func (fm *FamilyMember) GetByUserIdFamilyId() (err error) {
 
 // FamilyMember.GetByRoleFamilyId() 根据role获取指定的家庭成员
 func (fm *FamilyMember) GetByRoleFamilyId() (err error) {
-	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE role=$1 and family_id = $2"
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE role=$1 and family_id = $2"
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(fm.Role, fm.FamilyId).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Age, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
+	err = stmt.QueryRow(fm.Role, fm.FamilyId).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Birthday, &fm.DeathDate, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
 	if err != nil {
 		return
 	}
@@ -823,13 +863,13 @@ func (fm *FamilyMember) GetByRoleFamilyId() (err error) {
 
 // FamilyMember.ParentMember() 获取家庭成员的父母成员,return parentMembers []FamilyMember,err error
 func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
-	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleHusband, FamilyMemberRoleWife)
+	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleHusband, FamilyMemberRoleWife)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		parentMember := FamilyMember{}
-		err = rows.Scan(&parentMember.Id, &parentMember.Uuid, &parentMember.FamilyId, &parentMember.UserId, &parentMember.Role, &parentMember.IsAdult, &parentMember.NickName, &parentMember.IsAdopted, &parentMember.Age, &parentMember.OrderOfSeniority, &parentMember.CreatedAt, &parentMember.UpdatedAt)
+		err = rows.Scan(&parentMember.Id, &parentMember.Uuid, &parentMember.FamilyId, &parentMember.UserId, &parentMember.Role, &parentMember.IsAdult, &parentMember.NickName, &parentMember.IsAdopted, &parentMember.Birthday, &parentMember.DeathDate, &parentMember.OrderOfSeniority, &parentMember.CreatedAt, &parentMember.UpdatedAt)
 		if err != nil {
 			return
 		}
@@ -841,13 +881,13 @@ func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
 
 // FamilyMember.ChildMembers() 获取家庭成员的子女成员列表
 func (f *Family) ChildMembers() (child_members []FamilyMember, err error) {
-	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleDaughter, FamilyMemberRoleSon)
+	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleDaughter, FamilyMemberRoleSon)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		childMember := FamilyMember{}
-		err = rows.Scan(&childMember.Id, &childMember.Uuid, &childMember.FamilyId, &childMember.UserId, &childMember.Role, &childMember.IsAdult, &childMember.NickName, &childMember.IsAdopted, &childMember.Age, &childMember.OrderOfSeniority, &childMember.CreatedAt, &childMember.UpdatedAt)
+		err = rows.Scan(&childMember.Id, &childMember.Uuid, &childMember.FamilyId, &childMember.UserId, &childMember.Role, &childMember.IsAdult, &childMember.NickName, &childMember.IsAdopted, &childMember.Birthday, &childMember.DeathDate, &childMember.OrderOfSeniority, &childMember.CreatedAt, &childMember.UpdatedAt)
 		if err != nil {
 			return
 		}
@@ -859,13 +899,13 @@ func (f *Family) ChildMembers() (child_members []FamilyMember, err error) {
 
 // FamilyMember.OtherMembers() 获取家庭成员的其他成员列表
 func (f *Family) OtherMembers() (other_members []FamilyMember, err error) {
-	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, age, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleUnknown, FamilyMemberRolePet)
+	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleUnknown, FamilyMemberRolePet)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		otherMember := FamilyMember{}
-		err = rows.Scan(&otherMember.Id, &otherMember.Uuid, &otherMember.FamilyId, &otherMember.UserId, &otherMember.Role, &otherMember.IsAdult, &otherMember.NickName, &otherMember.IsAdopted, &otherMember.Age, &otherMember.OrderOfSeniority, &otherMember.CreatedAt, &otherMember.UpdatedAt)
+		err = rows.Scan(&otherMember.Id, &otherMember.Uuid, &otherMember.FamilyId, &otherMember.UserId, &otherMember.Role, &otherMember.IsAdult, &otherMember.NickName, &otherMember.IsAdopted, &otherMember.Birthday, &otherMember.DeathDate, &otherMember.OrderOfSeniority, &otherMember.CreatedAt, &otherMember.UpdatedAt)
 		if err != nil {
 			return
 		}
@@ -878,6 +918,25 @@ func (f *Family) OtherMembers() (other_members []FamilyMember, err error) {
 // FamilyMember.CreatedAtDate() 登记日期
 func (fm *FamilyMember) CreatedAtDate() string {
 	return fm.CreatedAt.Format("2006-01-02")
+}
+
+// FamilyMember.GetByUuid() 根据uuid获取家庭成员
+func (fm *FamilyMember) GetByUuid() (err error) {
+	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE uuid=$1"
+	err = db.QueryRow(statement, fm.Uuid).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Birthday, &fm.DeathDate, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
+	return
+}
+
+// FamilyMember.UpdateMemberInfo() 更新家庭成员信息
+func (fm *FamilyMember) UpdateMemberInfo() (err error) {
+	statement := "UPDATE family_members SET nick_name=$1, birthday=$2, death_date=$3, order_of_seniority=$4, updated_at=$5 WHERE id=$6"
+	_, err = db.Exec(statement, fm.NickName, fm.Birthday, fm.DeathDate, fm.OrderOfSeniority, time.Now(), fm.Id)
+	return
+}
+
+// ParseDate 解析日期字符串
+func ParseDate(dateStr string) (time.Time, error) {
+	return time.Parse("2006-01-02", dateStr)
 }
 
 // CountFamilyMembers 统计家庭总成员数

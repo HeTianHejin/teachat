@@ -333,7 +333,7 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//更新声明书状态为已读
-	family_member_sign_in.Status = 1
+	family_member_sign_in.Status = data.SignInStatusRead
 	if err := family_member_sign_in.Update(); err != nil {
 		util.Debug(" Cannot update family_member_sign_in", err)
 		report(w, r, "更新声明书失误，请稍后再试一次。")
@@ -398,8 +398,9 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查声明书状态是否已读但未处理，status==1是已读未处理，其它值都是非法的值
-	if family_member_sign_in.Status != 1 {
+	if family_member_sign_in.Status != data.SignInStatusRead {
 		report(w, r, "你好，柳丝榆荚自芳菲，声明资料满天飞。请稍后再试。")
+		return
 	}
 
 	family_member_sign_in_reply := data.FamilyMemberSignInReply{
@@ -442,7 +443,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//更新声明书状态为"已确认“ 2
-		family_member_sign_in.Status = 2
+		family_member_sign_in.Status = data.SignInStatusConfirmed
 		if err = family_member_sign_in.Update(); err != nil {
 			util.Debug(" Cannot update family_member_sign_in", err)
 			report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
@@ -453,7 +454,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	} else {
 		//拒绝加入家庭
 		//在声明书状态中更新为“已否认”
-		family_member_sign_in.Status = 3
+		family_member_sign_in.Status = data.SignInStatusDenied
 		if err = family_member_sign_in.Update(); err != nil {
 			util.Debug(" Cannot update family_member_sign_in", err)
 			report(w, r, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
@@ -487,4 +488,193 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	t := fmt.Sprintf("你好，茶博士已经保存关于 %s 否认是成员答复。", family_member_sign_in.Title)
 	report(w, r, t)
 
+}
+
+// HandleFamilyMemberEdit 处理编辑家庭成员资料
+func HandleFamilyMemberEdit(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		FamilyMemberEditGet(w, r)
+	case http.MethodPost:
+		FamilyMemberEditPost(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/family_member/edit?id=xxx
+func FamilyMemberEditGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	member_uuid := r.URL.Query().Get("id")
+	fm := data.FamilyMember{Uuid: member_uuid}
+	if err = fm.GetByUuid(); err != nil {
+		report(w, r, "未找到成员资料")
+		return
+	}
+
+	family := data.Family{Id: fm.FamilyId}
+	if err = family.Get(); err != nil {
+		report(w, r, "未找到家庭资料")
+		return
+	}
+
+	isParent, _ := family.IsParentMember(s_u.Id)
+	if !isParent {
+		report(w, r, "只有父母角色可以编辑成员资料")
+		return
+	}
+
+	fmBean, err := fetchFamilyMemberBean(fm)
+	if err != nil {
+		report(w, r, "获取成员资料失败")
+		return
+	}
+
+	familyBean, err := fetchFamilyBean(family)
+	if err != nil {
+		report(w, r, "获取家庭资料失败")
+		return
+	}
+
+	type EditData struct {
+		SessUser         data.User
+		FamilyBean       data.FamilyBean
+		FamilyMemberBean data.FamilyMemberBean
+	}
+
+	generateHTML(w, &EditData{s_u, familyBean, fmBean}, "layout", "navbar.private", "family_member.edit")
+}
+
+// POST /v1/family_member/edit
+func FamilyMemberEditPost(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	if err = r.ParseForm(); err != nil {
+		report(w, r, "表单解析失败")
+		return
+	}
+
+	member_uuid := r.PostFormValue("member_id")
+	fm := data.FamilyMember{Uuid: member_uuid}
+	if err = fm.GetByUuid(); err != nil {
+		report(w, r, "未找到成员资料")
+		return
+	}
+
+	family := data.Family{Id: fm.FamilyId}
+	if err = family.Get(); err != nil {
+		report(w, r, "未找到家庭资料")
+		return
+	}
+
+	isParent, _ := family.IsParentMember(s_u.Id)
+	if !isParent {
+		report(w, r, "只有父母角色可以编辑成员资料")
+		return
+	}
+
+	fm.NickName = r.PostFormValue("nickname")
+
+	if birthday := r.PostFormValue("birthday"); birthday != "" {
+		if t, err := data.ParseDate(birthday); err == nil {
+			fm.Birthday = &t
+		}
+	}
+
+	if deathDate := r.PostFormValue("death_date"); deathDate != "" {
+		if t, err := data.ParseDate(deathDate); err == nil {
+			fm.DeathDate = &t
+		}
+	} else {
+		fm.DeathDate = nil
+	}
+
+	if order := r.PostFormValue("order"); order != "" {
+		if o, err := strconv.Atoi(order); err == nil {
+			fm.OrderOfSeniority = o
+		}
+	}
+
+	if err = fm.UpdateMemberInfo(); err != nil {
+		util.Debug("更新成员资料失败", err)
+		report(w, r, "保存失败，请稍后再试")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/family/detail?id="+family.Uuid, http.StatusFound)
+}
+
+// GET /v1/family_member/detail?id=xxx
+func FamilyMemberDetail(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	member_uuid := r.URL.Query().Get("id")
+	fm := data.FamilyMember{Uuid: member_uuid}
+	if err = fm.GetByUuid(); err != nil {
+		report(w, r, "未找到成员资料")
+		return
+	}
+
+	family := data.Family{Id: fm.FamilyId}
+	if err = family.Get(); err != nil {
+		report(w, r, "未找到家庭资料")
+		return
+	}
+
+	isMember, _ := family.IsMember(s_u.Id)
+	if !family.IsOpen && !isMember {
+		report(w, r, "无权查看此成员资料")
+		return
+	}
+
+	fmBean, err := fetchFamilyMemberBean(fm)
+	if err != nil {
+		report(w, r, "获取成员资料失败")
+		return
+	}
+
+	familyBean, err := fetchFamilyBean(family)
+	if err != nil {
+		report(w, r, "获取家庭资料失败")
+		return
+	}
+
+	isParent, _ := family.IsParentMember(s_u.Id)
+
+	type DetailData struct {
+		SessUser         data.User
+		FamilyBean       data.FamilyBean
+		FamilyMemberBean data.FamilyMemberBean
+		IsParent         bool
+	}
+
+	generateHTML(w, &DetailData{s_u, familyBean, fmBean, isParent}, "layout", "navbar.private", "family_member.detail", "component_avatar_name_gender")
 }

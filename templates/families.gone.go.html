@@ -1,0 +1,119 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li>大堂</li>
+  <li><a href="/v1/family/home">家庭事项</a></li>
+  <li class="active">随风飘逝</li>
+</ol>
+
+<div style="margin: 20px;">
+  <ul class="nav nav-tabs">
+    <li role="presentation"><a href="/v1/family/home">公开</a></li>
+    <li role="presentation"><a href="/v1/family/home/private">私密</a></li>
+  </ul>
+</div>
+
+<div style="margin: 20px;">
+  <ul class="nav nav-pills nav-justified">
+    <li role="presentation"><a href="/v1/family/home">家庭首页</a></li>
+    <li role="presentation"><a href="/v1/families/parent">本家家族</a></li>
+    <li role="presentation"><a href="/v1/families/in-laws">外家姻亲</a></li>
+    <li role="presentation" class="active"><a href="/v1/families/gone">随风飘逝</a></li>
+  </ul>
+</div>
+
+<div class="alert alert-info" style="margin: 20px;">
+  <i class="glyphicon glyphicon-info-sign"></i>
+  <strong>随风飘逝</strong> - 这里记录着已经离开或解散的家庭茶团，如同往事随风，留下回忆。
+</div>
+
+{{ if .IsEmpty }}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="lead">茶博士</span>
+  </div>
+  <div class="panel-body">
+    <p style="color: #999; font-style: italic;">
+      "满纸荒唐言，一把辛酸泪。都云作者痴，谁解其中味？"
+    </p>
+    <p>暂无随风飘逝的家庭茶团记录。</p>
+  </div>
+</div>
+{{ else }}
+
+{{ range .OtherFamilyBeanSlice }}
+<div class="media" style="opacity: 0.7;">
+  <div class="media-left">
+    <a href="/v1/family/detail?id={{ .Family.Uuid }}">
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-slash.svg" alt="已离开家庭" height="32" width="32" style="filter: grayscale(100%);">
+    </a>
+  </div>
+  <div class="media-body">
+    <div class="panel panel-default" style="border-color: #ddd;">
+      <div class="panel-heading" style="background-color: #f9f9f9;">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <a href="/v1/family/detail?id={{ .Family.Uuid }}" style="color: #999;">{{ .Family.Name }} 家庭茶团</a>
+            {{ if .Family.IsDeleted }}
+            <span class="label label-default" style="font-size: xx-small; background-color: #999;">已删除</span>
+            {{ else }}
+            <span class="label label-default" style="font-size: xx-small; background-color: #999;">已退出</span>
+            {{ end }}
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+              <span class="label label-default" style="background-color: #ccc;">{{ .Family.GetStatus }}</span>
+            </span>
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="pull-right" style="font-size: small; color: #999;">
+              <a href="/v1/user/biography?uuid={{ .Founder.Uuid }}" style="color: #999;">{{ .Founder.Name }}</a>
+              {{if .Founder.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: #ccc;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 1.4rem; color: #ccc;"></i>
+              {{ end }}
+              {{ .Family.CreatedAtDate }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body" style="color: #999;">
+        {{ .Family.Introduction }} ...
+      </div>
+      <div class="panel-footer" style="background-color: #fafafa;">
+        <span style="margin-inline-end: 20px; color: #999;">
+          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+          {{ .Family.Id }}
+        </span>
+        <span style="margin-inline-end: 20px; color: #999;">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+          {{ .PersonCount }}
+        </span>
+        <span style="float: right; font-style: italic; color: #bbb;">
+          <i class="glyphicon glyphicon-time"></i>
+          往事如烟
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin: 1rem;">
+  <a class="btn btn-default disabled" role="button" style="opacity: 0.5;">
+    <i class="bi-diagram-3" style="font-size: 1.5rem; color: #999;"></i>
+    家族树</a>
+  <span style="margin-inline-start: 2rem;">
+    <a class="btn btn-default" href="/v1/family/detail?id={{ .Family.Uuid }}" role="button">
+      <i class="bi-eye" style="font-size: 1.5rem; color: #999;"></i>
+      查看回忆</a>
+  </span>
+</div>
+
+<hr style="border-color: #eee;" />
+
+{{ end }}
+
+{{ end }}
+
+{{ end }}

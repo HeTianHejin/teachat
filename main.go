@@ -145,11 +145,19 @@ func main() {
 	mux.HandleFunc("/v1/family/detail", route.FamilyDetail)
 	mux.HandleFunc("/v1/family/default", route.SetDefaultFamily)
 
-	mux.HandleFunc("/v1/families/home", route.HomeFamilies)
+	mux.HandleFunc("/v1/family/home", route.HomeFamilies)
+	mux.HandleFunc("/v1/family/home/private", route.HomePrivateFamilies)
+	mux.HandleFunc("/v1/family/tree", route.FamilyTree)
+	mux.HandleFunc("/v1/families/parent", route.ParentFamilies)
+	mux.HandleFunc("/v1/families/child", route.ChildFamilies)
+	mux.HandleFunc("/v1/families/in-laws", route.InLawsFamilies)
+	mux.HandleFunc("/v1/families/gone", route.GoneFamilies)
 
 	//defined in route_family_member.go
 	mux.HandleFunc("/v1/family_member/sign_in_new", route.HandleFamilyMemberSignInNew)
 	mux.HandleFunc("/v1/family_member/sign_in", route.HandleFamilyMemberSignIn)
+	mux.HandleFunc("/v1/family_member/detail", route.FamilyMemberDetail)
+	mux.HandleFunc("/v1/family_member/edit", route.HandleFamilyMemberEdit)
 	//mux.HandleFunc("/v1/family_member/sign_out", route.HandleFamilyMemberSignOut)
 
 	//defined in route_talk_objective.go

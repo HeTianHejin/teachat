@@ -61,6 +61,23 @@ func queryFamiliesByUserRole(ctx context.Context, userID int, roles []int) ([]Fa
 	return scanFamilies(rows)
 }
 
+// queryFamiliesByUserRoleAndOpen 根据用户ID、角色和IsOpen查询家庭
+func queryFamiliesByUserRoleAndOpen(ctx context.Context, userID int, roles []int, isOpen bool) ([]Family, error) {
+	query := `SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, 
+		f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, 
+		f.created_at, f.updated_at, f.logo, f.is_open, f.deleted_at, f.perspective_user_id 
+		FROM family_members fm 
+		LEFT JOIN families f ON fm.family_id = f.id 
+		WHERE fm.user_id = $1 AND fm.role = ANY($2) AND f.is_open = $3 AND f.deleted_at IS NULL
+		ORDER BY fm.created_at DESC`
+	
+	rows, err := db.QueryContext(ctx, query, userID, pq.Array(roles), isOpen)
+	if err != nil {
+		return nil, wrapError("queryFamiliesByUserRoleAndOpen", err)
+	}
+	return scanFamilies(rows)
+}
+
 // validateFamily 验证 Family 数据
 func (f *Family) Validate() error {
 	if f.Name == "" {

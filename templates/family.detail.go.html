@@ -4,6 +4,7 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/family/home">家庭事项</a></li>
   <li><a>{{ .FamilyBean.Family.Name }}家庭茶团</a></li>
   <li class="=active">详情</li>
 </ol>
@@ -22,7 +23,7 @@
 
 {{ if .IsParent }}
 <div style="margin: 1rem;">
-  <a class="btn btn-default" href="/v1/families/home" role="button">家庭首页</a>
+  <a class="btn btn-default" href="/v1/family/home" role="button">家庭首页</a>
   {{/* 显示添加家庭成员的功能按钮  */}}
   <a class="btn btn-default" href="/v1/search" role="button" style="margin-inline-start: 2rem;">
     <i class="bi-pencil-square" style="font-size: 1.2rem; color: green;"></i>
@@ -113,10 +114,27 @@
     </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
-
+    {{ if .FamilyMember.Birthday }}
+    <p>年龄：{{ .FamilyMember.GetAgeString }}岁
+      {{ if not .FamilyMember.IsAlive }}
+      <span class="label label-default" style="background-color: #999;">已故</span>
+      {{ end }}
+    </p>
+    {{ end }}
     <p>登记时间：{{ .FamilyMember.CreatedAtDate }}</p>
 
     <span style="font-style: italic;">{{ .Member.Email }}</span>
+    
+    <div style="margin-top: 10px;">
+      <a href="/v1/family_member/detail?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
+        <i class="bi-eye"></i> 查看详情
+      </a>
+      {{ if $.IsParent }}
+      <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
+        <i class="bi-pencil"></i> 编辑资料
+      </a>
+      {{ end }}
+    </div>
 
   </div>
 </div>
@@ -138,10 +156,27 @@
     </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
-
+    {{ if .FamilyMember.Birthday }}
+    <p>年龄：{{ .FamilyMember.GetAgeString }}岁
+      {{ if not .FamilyMember.IsAlive }}
+      <span class="label label-default" style="background-color: #999;">已故</span>
+      {{ end }}
+    </p>
+    {{ end }}
     <p>登记时间：{{ .FamilyMember.CreatedAtDate }}</p>
 
     <span style="font-style: italic;">{{ .Member.Email }}</span>
+    
+    <div style="margin-top: 10px;">
+      <a href="/v1/family_member/detail?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
+        <i class="bi-eye"></i> 查看详情
+      </a>
+      {{ if $.IsParent }}
+      <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
+        <i class="bi-pencil"></i> 编辑资料
+      </a>
+      {{ end }}
+    </div>
 
   </div>
 </div>
@@ -163,10 +198,27 @@
     </span>
 
     <h5>家庭角色：{{ .FamilyMember.GetRole }}</h5>
-
+    {{ if .FamilyMember.Birthday }}
+    <p>年龄：{{ .FamilyMember.GetAgeString }}岁
+      {{ if not .FamilyMember.IsAlive }}
+      <span class="label label-default" style="background-color: #999;">已故</span>
+      {{ end }}
+    </p>
+    {{ end }}
     <p>登记时间：{{ .FamilyMember.CreatedAtDate }}</p>
 
     <span style="font-style: italic;">{{ .Member.Email }}</span>
+    
+    <div style="margin-top: 10px;">
+      <a href="/v1/family_member/detail?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
+        <i class="bi-eye"></i> 查看详情
+      </a>
+      {{ if $.IsParent }}
+      <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
+        <i class="bi-pencil"></i> 编辑资料
+      </a>
+      {{ end }}
+    </div>
 
   </div>
 </div>
