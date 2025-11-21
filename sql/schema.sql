@@ -60,7 +60,7 @@ CREATE TABLE family_message_preferences (
 COMMENT ON TABLE family_message_preferences IS '家庭消息偏好设置，用户可以选择接收哪些家庭成员的消息';
 COMMENT ON COLUMN family_message_preferences.notification_type IS '0-关闭, 1-仅重要, 2-全部';
 
--- 家庭关联表（用于利益回避机制）
+-- 家庭关联表（用于利益回避机制,风险控制等）
 CREATE TABLE family_relations (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -218,17 +218,23 @@ CREATE TABLE places (
 CREATE TABLE family_members (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(255) DEFAULT gen_random_uuid(),
-    family_id             INTEGER,
-    user_id               INTEGER,
+    family_id             INTEGER REFERENCES families(id),
+    user_id               INTEGER REFERENCES users(id),
     role                  INTEGER DEFAULT 0,
     is_adult              BOOLEAN DEFAULT true,
     nick_name             VARCHAR(255) DEFAULT ':P',
     is_adopted            BOOLEAN DEFAULT false,
-    age                   INTEGER DEFAULT 0,
+    birthday              TIMESTAMP,
+    death_date            TIMESTAMP,
     order_of_seniority    INTEGER DEFAULT 0,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP
 );
+
+COMMENT ON TABLE family_members IS '家庭成员表';
+COMMENT ON COLUMN family_members.role IS '0-秘密, 1-男主人, 2-女主人, 3-女儿, 4-儿子, 5-宠物';
+COMMENT ON COLUMN family_members.is_adopted IS '是否被领养';
+COMMENT ON COLUMN family_members.order_of_seniority IS '家中排行老几，孩子的年长先后顺序，1、2、3...，0表示未知';
 
 -- 团队成员表
 CREATE TABLE team_members (
