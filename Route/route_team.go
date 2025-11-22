@@ -204,6 +204,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	logo := "teamLogo"
+	isPrivate := r.PostFormValue("is_private") == "true"
 	new_team := data.Team{
 		Name:         new_name,
 		Abbreviation: abbr + "$",
@@ -212,6 +213,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		Class:        class,
 		FounderId:    s_u.Id,
 		Tags:         r.PostFormValue("tags"),
+		IsPrivate:    isPrivate,
 	}
 	// 使用事务创建团队并添加创建人为第一个成员
 	if err := createTeamWithFounderMember(&new_team, s_u.Id); err != nil {
@@ -270,19 +272,53 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var ts data.TeamSquare
+	ts.SessUser = s_u
+
+	// 获取过滤参数
+	filter := r.URL.Query().Get("filter")
+	if filter == "" {
+		filter = "public"
+	}
+
 	team_slice, err := s_u.HoldTeams()
 	if err != nil {
 		util.Debug(" Cannot get hold teams", err)
 		return
 	}
-	ts.TeamBeanSlice, err = fetchTeamBeanSlice(team_slice)
-	if err != nil {
-		util.Debug(" Cannot get team bean slice", err)
-		report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
-		return
+
+	// 根据过滤条件筛选团队
+	var filtered_teams []data.Team
+	for _, team := range team_slice {
+		if filter == "public" && !team.IsPrivate {
+			filtered_teams = append(filtered_teams, team)
+		} else if filter == "private" && team.IsPrivate {
+			filtered_teams = append(filtered_teams, team)
+		}
 	}
-	ts.SessUser = s_u
-	generateHTML(w, &ts, "layout", "navbar.private", "teams.hold", "component_teams_public", "component_team")
+
+	if len(filtered_teams) == 0 {
+		ts.IsEmpty = true
+	} else {
+		ts.IsEmpty = false
+		ts.TeamBeanSlice, err = fetchTeamBeanSlice(filtered_teams)
+		if err != nil {
+			util.Debug(" Cannot get team bean slice", err)
+			report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+			return
+		}
+	}
+
+	type PageData struct {
+		data.TeamSquare
+		PageType      string
+		CurrentFilter string
+	}
+	pageData := PageData{
+		TeamSquare:    ts,
+		PageType:      "hold",
+		CurrentFilter: filter,
+	}
+	generateHTML(w, &pageData, "layout", "navbar.private", "teams.hold", "component_teams_public", "component_team", "component_team_nav")
 }
 
 // GET /v1/teams/joined
@@ -301,8 +337,13 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var tS data.TeamSquare
-
 	tS.SessUser = s_u
+
+	// 获取过滤参数
+	filter := r.URL.Query().Get("filter")
+	if filter == "" {
+		filter = "public" // 默认显示公开团队
+	}
 
 	survival_team_slice, err := s_u.SurvivalTeams()
 	if err != nil {
@@ -310,11 +351,22 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
-	if len(survival_team_slice) == 0 {
+
+	// 根据过滤条件筛选团队
+	var filtered_teams []data.Team
+	for _, team := range survival_team_slice {
+		if filter == "public" && !team.IsPrivate {
+			filtered_teams = append(filtered_teams, team)
+		} else if filter == "private" && team.IsPrivate {
+			filtered_teams = append(filtered_teams, team)
+		}
+	}
+
+	if len(filtered_teams) == 0 {
 		tS.IsEmpty = true
 	} else {
 		tS.IsEmpty = false
-		teamBeanSlice, err := fetchTeamBeanSlice(survival_team_slice)
+		teamBeanSlice, err := fetchTeamBeanSlice(filtered_teams)
 		if err != nil {
 			util.Debug(" Cannot get team bean slice", err)
 			report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
@@ -338,7 +390,19 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		tS.TeamBeanSlice = teamBeanSlice
 	}
 
-	generateHTML(w, &tS, "layout", "navbar.private", "teams.joined", "component_teams_public", "component_team")
+	// 添加过滤标志到模板数据
+	type PageData struct {
+		data.TeamSquare
+		CurrentFilter string
+		PageType      string
+	}
+	pageData := PageData{
+		TeamSquare:    tS,
+		CurrentFilter: filter,
+		PageType:      "joined",
+	}
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "teams.joined", "component_teams_public", "component_team", "component_team_nav")
 }
 
 // GET /v1/teams/employed
@@ -353,19 +417,53 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 
 	var ts data.TeamSquare
 	ts.SessUser = u
+
+	// 获取过滤参数
+	filter := r.URL.Query().Get("filter")
+	if filter == "" {
+		filter = "public"
+	}
+
 	team_slice, err := u.CoreExecTeams()
 	if err != nil {
 		util.Debug(" Cannot get employed teams", err)
 		report(w, r, "你好，茶博士必须先找到自己的高度近视眼镜，再帮您查询资料。请稍后再试。")
 		return
 	}
-	ts.TeamBeanSlice, err = fetchTeamBeanSlice(team_slice)
-	if err != nil {
-		util.Debug(" Cannot get team bean slice", err)
-		report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
-		return
+
+	// 根据过滤条件筛选团队
+	var filtered_teams []data.Team
+	for _, team := range team_slice {
+		if filter == "public" && !team.IsPrivate {
+			filtered_teams = append(filtered_teams, team)
+		} else if filter == "private" && team.IsPrivate {
+			filtered_teams = append(filtered_teams, team)
+		}
 	}
-	generateHTML(w, &ts, "layout", "navbar.private", "teams.employed", "component_teams_public", "component_team")
+
+	if len(filtered_teams) == 0 {
+		ts.IsEmpty = true
+	} else {
+		ts.IsEmpty = false
+		ts.TeamBeanSlice, err = fetchTeamBeanSlice(filtered_teams)
+		if err != nil {
+			util.Debug(" Cannot get team bean slice", err)
+			report(w, r, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+			return
+		}
+	}
+
+	type PageData struct {
+		data.TeamSquare
+		PageType      string
+		CurrentFilter string
+	}
+	pageData := PageData{
+		TeamSquare:    ts,
+		PageType:      "employed",
+		CurrentFilter: filter,
+	}
+	generateHTML(w, &pageData, "layout", "navbar.private", "teams.employed", "component_teams_public", "component_team", "component_team_nav")
 }
 
 // GET /v1/team/detail?uuid=

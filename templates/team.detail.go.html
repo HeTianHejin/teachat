@@ -5,8 +5,9 @@
 {{ with .TeamBean }}{{/* 检测Teambean非空 --开始  */}}
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li>$事业茶团详情</li>
-  <li class="=active"><a href="#">{{ .Team.Name }}</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li>{{ .Team.Name }}</li>
+  <li class="=active">$事业茶团详情</li>
 </ol>
 
 {{ if $.IsCoreMember }}
@@ -141,15 +142,20 @@
     </div>
 
     <div class="my-4">
-      <!-- 使用margin-y: 4单位 -->
-      <ol class="nav nav-tabs nav-justified">
+      <!-- 团队功能导航 -->
+      <ul class="nav nav-tabs nav-justified">
         <li class="active"><a href="#">在座成员</a></li>
         <li><a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}">技能</a></li>
         <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">法力</a></li>
         <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
+        {{ if $.IsCoreMember }}
+        <li><a href="/v1/team/applications?uuid={{ .Team.Uuid }}">查看申请{{ if $.HasApplication }}<span class="badge">!</span>{{ end }}</a></li>
+        <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">查看邀请</a></li>
+        <li><a href="/v1/team/resignations?uuid={{ .Team.Uuid }}">查看退团{{ if $.HasResignation }}<span class="badge">!</span>{{ end }}</a></li>
+        {{ end }}
         <li><a href="/v1/team_member/role_changed?uuid={{ .Team.Uuid }}">角色变动</a></li>
         <li><a href="/v1/team/members/left?uuid={{ .Team.Uuid }}">离开成员</a></li>
-      </ol>
+      </ul>
     </div>
 
     {{ end }}{{/* 检测Teambean非空 --结束  */}}

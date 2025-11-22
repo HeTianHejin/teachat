@@ -95,6 +95,14 @@ CREATE TABLE teams (
     updated_at            TIMESTAMP,
     deleted_at            TIMESTAMP
 );
+-- 为teams表添加is_private字段
+-- 私密团队不公开显示，但可以接收消息和作业进度
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;
+COMMENT ON COLUMN teams.is_private IS '是否私密：true-私密团队（不公开但可接收消息），false-公开团队';
+-- 为is_private字段创建索引以优化查询
+CREATE INDEX IF NOT EXISTS idx_teams_is_private ON teams(is_private);
+-- 复合索引优化常见查询（class + is_private + deleted_at）
+CREATE INDEX IF NOT EXISTS idx_teams_class_private_deleted ON teams(class, is_private, deleted_at);
 
 -- 集团表
 -- 用于管理多个团队的集合，支持复杂的多团队协作场景

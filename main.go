@@ -143,15 +143,19 @@ func main() {
 	//家庭茶团杂项
 	mux.HandleFunc("/v1/family/new", route.HandleNewFamily)
 	mux.HandleFunc("/v1/family/detail", route.FamilyDetail)
+	mux.HandleFunc("/v1/family/edit", route.HandleEditFamily)
 	mux.HandleFunc("/v1/family/default", route.SetDefaultFamily)
 
 	mux.HandleFunc("/v1/family/home", route.HomeFamilies)
 	mux.HandleFunc("/v1/family/home/private", route.HomePrivateFamilies)
 	mux.HandleFunc("/v1/family/tree", route.FamilyTree)
 	mux.HandleFunc("/v1/families/parent", route.ParentFamilies)
+	mux.HandleFunc("/v1/families/parent/private", route.ParentPrivateFamilies)
 	mux.HandleFunc("/v1/families/child", route.ChildFamilies)
 	mux.HandleFunc("/v1/families/in-laws", route.InLawsFamilies)
+	mux.HandleFunc("/v1/families/in-laws/private", route.InLawsPrivateFamilies)
 	mux.HandleFunc("/v1/families/gone", route.GoneFamilies)
+	mux.HandleFunc("/v1/families/gone/private", route.GonePrivateFamilies)
 
 	//defined in route_family_member.go
 	mux.HandleFunc("/v1/family_member/sign_in_new", route.HandleFamilyMemberSignInNew)

@@ -1,22 +1,13 @@
 {{ define "content" }}
-{{/* 这是用户拥有的全部茶团页面 */}}
+{{/* 这是用户创建的茶团页面 */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/myoffice">我的@个人办公室</a></li>
-  <li class="active">@我的茶团关系</li>
+    <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li class="active">我创建的团队</li>
 </ol>
 
-<div style="margin: 20px;">
-  <ul class="nav nav-tabs nav-justified">
-    <li role="presentation" class="active"><a href="#">我建的团</a></li>
-    <li role="presentation"><a href="/v1/teams/joined">已经加入</a></li>
-    <li role="presentation"><a href="/v1/teams/employed">核心管理</a></li>
-    <li role="presentation"><a href="/v1/applications/member">查看申请</a></li>
-    <li role="presentation"><a href="/v1/invitations/member">查看邀请</a></li>
-    <li role="presentation"><a href="/v1/resignations/member">查看退团</a></li>
-  </ul>
-</div>
+{{ template "team_nav" . }}
 
 <div class="panel panel-info">
   <div class="panel-heading">
