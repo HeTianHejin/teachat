@@ -29,8 +29,31 @@ func getLastDefaultFamilyByUserId(userID int) (data.Family, error) {
 	}
 }
 
-// Fetch userbean given user 根据user参数，查询用户所得资料荚,包括默认团队，全部已经加入的状态正常团队,成为核心团队，
-func fetchUserBean(user data.User) (userbean data.UserBean, err error) {
+// fetchUserBeanForBiography 为名片页面获取用户资料（轻量级）
+func fetchUserBeanForBiography(user data.User) (userbean data.UserBean, err error) {
+	userbean.User = user
+
+	// 获取默认家庭
+	default_family, err := getLastDefaultFamilyByUserId(user.Id)
+	if err != nil {
+		return userbean, err
+	}
+
+	userbean.DefaultFamily = default_family
+
+	// 获取默认团队
+	default_team, err := user.GetLastDefaultTeam()
+	if err != nil {
+		return
+	}
+
+	userbean.DefaultTeam = default_team
+
+	return
+}
+
+// Fetch userbean given user 根据user参数，查询用户资料荚,包括默认的家庭，团队，地方，
+func fetchUserDefaultBean(user data.User) (userbean data.UserBean, err error) {
 
 	userbean.User = user
 
@@ -39,73 +62,14 @@ func fetchUserBean(user data.User) (userbean data.UserBean, err error) {
 		return userbean, err
 	}
 
-	familybean, err := fetchFamilyBean(default_family)
-	if err != nil {
-		return
-	}
-	userbean.DefaultFamilyBean = familybean
-
-	family_slice_parent, err := data.ParentMemberFamilies(user.Id)
-	if err != nil {
-		return
-	}
-	userbean.ParentMemberFamilyBeanSlice, err = fetchFamilyBeanSlice(family_slice_parent)
-	if err != nil {
-		return
-	}
-	family_slice_child, err := data.ChildMemberFamilies(user.Id)
-	if err != nil {
-		return
-	}
-	userbean.ChildMemberFamilyBeanSlice, err = fetchFamilyBeanSlice(family_slice_child)
-	if err != nil {
-		return
-	}
-	family_slice_other, err := data.OtherMemberFamilies(user.Id)
-	if err != nil {
-		return
-	}
-	userbean.OtherMemberFamilyBeanSlice, err = fetchFamilyBeanSlice(family_slice_other)
-	if err != nil {
-		return
-	}
-	family_slice_resign, err := data.ResignMemberFamilies(user.Id)
-	if err != nil {
-		return
-	}
-	userbean.ResignMemberFamilyBeanSlice, err = fetchFamilyBeanSlice(family_slice_resign)
-	if err != nil {
-		return
-	}
+	userbean.DefaultFamily = default_family
 
 	default_team, err := user.GetLastDefaultTeam()
 	if err != nil {
 		return
 	}
-	teambean, err := fetchTeamBean(default_team)
-	if err != nil {
-		return
-	}
-	userbean.DefaultTeamBean = teambean
 
-	team_slice_core, err := user.CoreExecTeams()
-	if err != nil {
-		return
-	}
-	userbean.ManageTeamBeanSlice, err = fetchTeamBeanSlice(team_slice_core)
-	if err != nil {
-		return
-	}
-
-	team_slice_normal, err := user.NormalExecTeams()
-	if err != nil {
-		return
-	}
-	userbean.JoinTeamBeanSlice, err = fetchTeamBeanSlice(team_slice_normal)
-	if err != nil {
-		return
-	}
-
+	userbean.DefaultTeam = default_team
 	default_place, err := user.GetLastDefaultPlace()
 	if err != nil && errors.Is(err, sql.ErrNoRows) {
 		return
@@ -118,7 +82,7 @@ func fetchUserBean(user data.User) (userbean data.UserBean, err error) {
 // fetch userbean_slice given []user
 func fetchUserBeanSlice(user_slice []data.User) (userbean_slice []data.UserBean, err error) {
 	for _, user := range user_slice {
-		userbean, err := fetchUserBean(user)
+		userbean, err := fetchUserDefaultBean(user)
 		if err != nil {
 			return nil, err
 		}

@@ -29,16 +29,17 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("uuid")
 	//没有id参数，报告uuid没有提及
 	if uuid == "" {
-		report(w, r, "你好，请提供需要查找茶友的识别码。")
+		report(w, r, "你好，请提供茶友的识别码。")
 		return
 	}
 	//有uuid参数，读取指定用户资料
 	user, err := data.GetUserByUUID(uuid)
 	if err != nil {
+		util.Debug("Cannot get user given uuid", uuid, err)
 		report(w, r, "报告，大王，未能找到茶友的资料！")
 		return
 	}
-	uB, err = fetchUserBean(user)
+	uB, err = fetchUserBeanForBiography(user)
 	if err != nil {
 		util.Debug("Cannot get user Bean given uuid", user.Uuid, err)
 		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
@@ -56,7 +57,6 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 		//不是简介主人,打开公开介绍页
-		uB.IsAuthor = false
 		generateHTML(w, &uB, "layout", "navbar.private", "biography.public")
 	}
 

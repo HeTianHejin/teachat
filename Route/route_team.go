@@ -46,6 +46,10 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士竟然说，陛下你不能将特殊茶团作为默认茶团，请确认。")
 		return
 	}
+	if t_team.IsPrivate {
+		report(w, r, "你好，茶博士竟然说，陛下你不能将私密茶团作为默认茶团，请确认。")
+		return
+	}
 
 	//检查是否重复设置默认事业茶团
 	lastDefaultTeam, err := s_u.GetLastDefaultTeam()
@@ -1551,7 +1555,7 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 
 		user, err := data.GetUser(userId)
 		if err == nil && user.Id > 0 {
-			userBean, err := fetchUserBean(user)
+			userBean, err := fetchUserPublicBean(user)
 			if err == nil {
 				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
 				pageData.IsEmpty = false
@@ -1567,7 +1571,7 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 
 		user, err := data.GetUserByEmail(keyword, r.Context())
 		if err == nil && user.Id > 0 {
-			userBean, err := fetchUserBean(user)
+			userBean, err := fetchUserPublicBean(user)
 			if err == nil {
 				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
 				pageData.IsEmpty = false

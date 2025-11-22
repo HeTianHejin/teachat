@@ -3,11 +3,10 @@
 <ol class="breadcrumb">
 
     <li>大堂</li>
+    <li>茶友名片</li>
     <li class="active">
-        {{ with .DefaultPlace }}
-        {{ .Name }}
+        {{ .User.Name }}
         <span style="font-style: italic;">@洞天福地</span>
-        {{ end }}
     </li>
 </ol>
 
@@ -35,44 +34,10 @@
 <div class="panel panel-default">
     <div class="panel-heading">默认&家庭茶团</div>
     <div class="panel-body">
-        {{ with .DefaultFamilyBean }}
-        <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
-        {{ end }}
-    </div>
-
-    <div class="panel-heading">主人角色&家庭茶团</div>
-    <div class="panel-body">
-        {{ range .ParentMemberFamilyBeanSlice }}
-        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
+        {{ with .DefaultFamily }}
+        <a href="/v1/family/detail?id={{ .Uuid }}">{{ .Name }}</a>
         {{ else }}
-        无&纪录
-        {{ end }}
-    </div>
-
-    <div class="panel-heading">孩子角色&家庭茶团</div>
-    <div class="panel-body">
-        {{ range .ChildMemberFamilyBeanSlice }}
-        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
-        {{ else }}
-        无&纪录
-        {{ end }}
-    </div>
-   
-    <div class="panel-heading">其他角色&家庭茶团</div>
-    <div class="panel-body">
-        {{ range .OtherMemberFamilyBeanSlice }}
-        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
-        {{ else }}
-        无&纪录
-        {{ end }}
-    </div>
-    
-    <div class="panel-heading">声明离开&家庭茶团</div>
-    <div class="panel-body">
-        {{ range .ResignMemberFamilyBeanSlice }}
-        @<a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a>
-        {{ else }}
-        无&纪录
+        无&家庭纪录
         {{ end }}
     </div>
 </div>
@@ -80,49 +45,20 @@
 <div class="panel panel-default">
     <div class="panel-heading">默认$事业茶团</div>
     <div class="panel-body">
-        {{ with .DefaultTeamBean }}
-        @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
+        {{ with .DefaultTeam }}
+        @<a href="/v1/team/detail?uuid={{ .Uuid }}">{{ .Abbreviation }}</a>
+        {{ if .Tags }}
+        <span class="text-muted" style="margin-left: 10px;">
+            <small><span class="glyphicon glyphicon-tag"></span> {{ .Tags }}</small>
+        </span>
+        {{ end }}
         {{ else }}
-        无$纪录
+        无$团队纪录
         {{ end }}
     </div>
 
-    <div class="panel-heading">管理$事业茶团</div>
-    <div class="panel-body">
-        {{ range .ManageTeamBeanSlice }}
-        @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
-        {{ else }}
-        无&纪录
-        {{ end }}
-    </div>
-
-    <div class="panel-heading">普通$事业茶团</div>
-    <div class="panel-body">
-        {{ range .JoinTeamBeanSlice }}
-        @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
-        {{ else }}
-        无$纪录
-        {{ end }}
-    </div>
-
-    <div class="panel-heading">离开$事业茶团</div>
-    <div class="panel-body">
-        {{ range .ResignTeamBeanSlice }}
-        @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
-        {{ else }}
-        无$纪录
-        {{ end }}
-    </div>
 </div>
 
-{{ with .DefaultPlace }}
-<div class="panel panel-default">
-    <div class="panel-heading">品茶老地方</div>
-    <div class="panel-body">
-        @<a href="/v1/place/detail?uuid={{ .Uuid }}">{{ .Name }}</a>
-    </div>
-</div>
-{{ end }}
 
 <ul class="nav nav-pills" style="margin-bottom: 20px;">
     <li role="presentation" class="active"><a href="#">关注</a></li>
