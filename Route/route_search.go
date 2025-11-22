@@ -84,7 +84,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			}
 			//如果user是非空
 			if user.Id > 0 {
-				user_bean, err := fetchUserBean(user)
+				user_bean, err := fetchUserDefaultBean(user)
 				if err != nil {
 					util.Debug("cannot get user-bean given user", err)
 					report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -138,7 +138,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 		//如果user是非空
 		if user.Id > 0 {
-			userbean, err := fetchUserBean(user)
+			userbean, err := fetchUserDefaultBean(user)
 			if err != nil {
 				util.Debug("cannot get user-bean given user", err)
 				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")

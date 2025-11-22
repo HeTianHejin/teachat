@@ -1555,7 +1555,7 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 
 		user, err := data.GetUser(userId)
 		if err == nil && user.Id > 0 {
-			userBean, err := fetchUserPublicBean(user)
+			userBean, err := fetchUserDefaultBean(user)
 			if err == nil {
 				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
 				pageData.IsEmpty = false
@@ -1571,7 +1571,7 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 
 		user, err := data.GetUserByEmail(keyword, r.Context())
 		if err == nil && user.Id > 0 {
-			userBean, err := fetchUserPublicBean(user)
+			userBean, err := fetchUserDefaultBean(user)
 			if err == nil {
 				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
 				pageData.IsEmpty = false

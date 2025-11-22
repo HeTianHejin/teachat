@@ -7,16 +7,16 @@ type UserBean struct {
 
 	User User // 目标茶友
 
-	DefaultFamilyBean           FamilyBean   //目标茶友默认的家庭茶团资料夹
-	ParentMemberFamilyBeanSlice []FamilyBean //目标茶友管理（作为家长成员）家庭茶团资料夹
-	ChildMemberFamilyBeanSlice  []FamilyBean //作为子女成员家庭茶团资料夹
-	OtherMemberFamilyBeanSlice  []FamilyBean //作为其他成员角色的家庭茶团资料夹
-	ResignMemberFamilyBeanSlice []FamilyBean //目标茶友声明离开的家庭茶团资料夹
+	DefaultFamily Family //目标茶友默认的家庭茶团
+	// ParentMemberFamilyBeanSlice []FamilyBean //目标茶友管理（作为家长成员）家庭茶团资料夹
+	// ChildMemberFamilyBeanSlice  []FamilyBean //作为子女成员家庭茶团资料夹
+	// OtherMemberFamilyBeanSlice  []FamilyBean //作为其他成员角色的家庭茶团资料夹
+	// ResignMemberFamilyBeanSlice []FamilyBean //目标茶友声明离开的家庭茶团资料夹
 
-	DefaultTeamBean     TeamBean   //目标茶友默认事业茶团资料夹
-	ManageTeamBeanSlice []TeamBean //目标茶友管理的事业茶团资料夹
-	JoinTeamBeanSlice   []TeamBean //目标茶友已加入的事业茶团资料夹
-	ResignTeamBeanSlice []TeamBean //目标茶友已离开的事业茶团资料夹
+	DefaultTeam Team //目标茶友默认事业茶团
+	// ManageTeamBeanSlice []TeamBean //目标茶友管理的事业茶团资料夹
+	// JoinTeamBeanSlice   []TeamBean //目标茶友已加入的事业茶团资料夹
+	// ResignTeamBeanSlice []TeamBean //目标茶友已离开的事业茶团资料夹
 
 	DefaultPlace Place //目标茶友首选品茶地点
 

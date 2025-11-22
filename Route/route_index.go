@@ -81,7 +81,6 @@ func About(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		//游客
-		uB.IsAuthor = false
 		uB.SessUser = data.User{
 			Id:   0,
 			Name: "游客",
