@@ -84,6 +84,9 @@
           </div>
 
           <div class="col-xs-4 text-center">
+            {{ if .Team.IsPrivate }}
+            <span class="label label-danger">私密</span>
+            {{ end }}
             {{ if .Team.IsOpen }}
             <i class="bi-people" style="font-size: 2rem;"></i>
 
