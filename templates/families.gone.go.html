@@ -8,23 +8,19 @@
 
 <div style="margin: 20px;">
   <ul class="nav nav-tabs">
-    <li role="presentation"><a href="/v1/family/home">公开</a></li>
+    <li role="presentation" class="active"><a href="/v1/family/home">公开</a></li>
     <li role="presentation"><a href="/v1/family/home/private">私密</a></li>
+    <li role="presentation" style="margin-left: auto;"><a href="/v1/family/new"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 新建</a></li>
   </ul>
 </div>
 
 <div style="margin: 20px;">
-  <ul class="nav nav-pills nav-justified">
+  <ul class="nav nav-pills">
     <li role="presentation"><a href="/v1/family/home">家庭首页</a></li>
     <li role="presentation"><a href="/v1/families/parent">本家家族</a></li>
     <li role="presentation"><a href="/v1/families/in-laws">外家姻亲</a></li>
     <li role="presentation" class="active"><a href="/v1/families/gone">随风飘逝</a></li>
   </ul>
-</div>
-
-<div class="alert alert-info" style="margin: 20px;">
-  <i class="glyphicon glyphicon-info-sign"></i>
-  <strong>随风飘逝</strong> - 这里记录着已经离开或解散的家庭茶团，如同往事随风，留下回忆。
 </div>
 
 {{ if .IsEmpty }}
@@ -33,10 +29,7 @@
     <span class="lead">茶博士</span>
   </div>
   <div class="panel-body">
-    <p style="color: #999; font-style: italic;">
-      "满纸荒唐言，一把辛酸泪。都云作者痴，谁解其中味？"
-    </p>
-    <p>暂无随风飘逝的家庭茶团记录。</p>
+    暂无随风飘逝的家庭茶团记录。
   </div>
 </div>
 {{ else }}

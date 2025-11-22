@@ -1,0 +1,108 @@
+{{ define "content"}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/family/home">家庭事项</a></li>
+  <li><a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}">{{ .FamilyBean.Family.Name }}</a></li>
+  <li class="active">编辑家庭</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4>编辑家庭资料</h4>
+  </div>
+  <div class="panel-body">
+    <form action="/v1/family/edit" method="post">
+      <input type="hidden" name="family_id" value="{{ .FamilyBean.Family.Uuid }}">
+      
+      <div class="form-group">
+        <label for="introduction">家庭简介 *</label>
+        <textarea class="form-control" id="introduction" name="introduction" rows="5" required>{{ .FamilyBean.Family.Introduction }}</textarea>
+        <p class="help-block">17-456字</p>
+      </div>
+
+      <div class="form-group">
+        <label for="status">家庭状态 *</label>
+        <select class="form-control" id="status" name="status" required>
+          <option value="0" {{ if eq .FamilyBean.Family.Status 0 }}selected{{ end }}>保密</option>
+          <option value="1" {{ if eq .FamilyBean.Family.Status 1 }}selected{{ end }}>单身</option>
+          <option value="2" {{ if eq .FamilyBean.Family.Status 2 }}selected{{ end }}>同居</option>
+          <option value="3" {{ if eq .FamilyBean.Family.Status 3 }}selected{{ end }}>已婚</option>
+          <option value="4" {{ if eq .FamilyBean.Family.Status 4 }}selected{{ end }}>分居</option>
+          <option value="5" {{ if eq .FamilyBean.Family.Status 5 }}selected{{ end }}>离婚</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>是否有子女 *</label>
+        <div class="radio">
+          <label>
+            <input type="radio" name="has_child" value="true" {{ if .FamilyBean.Family.HasChild }}checked{{ end }} required> 是
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="has_child" value="false" {{ if not .FamilyBean.Family.HasChild }}checked{{ end }}> 否
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>是否已婚 *</label>
+        <div class="radio">
+          <label>
+            <input type="radio" name="is_married" value="true" {{ if .FamilyBean.Family.IsMarried }}checked{{ end }} required> 是
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="is_married" value="false" {{ if not .FamilyBean.Family.IsMarried }}checked{{ end }}> 否
+          </label>
+        </div>
+      </div>
+
+      <hr>
+      <h5>原生家庭关系</h5>
+      <p class="help-block">设置夫妻双方各自来自的父母家庭，用于建立家族树</p>
+
+      <div class="form-group">
+        <label for="husband_family">丈夫来自家庭</label>
+        <select class="form-control" id="husband_family" name="husband_family_id">
+          <option value="0" {{ if eq .FamilyBean.Family.HusbandFromFamilyId 0 }}selected{{ end }}>未设置</option>
+          {{ range .ParentFamilies }}
+          <option value="{{ .Id }}" {{ if eq $.FamilyBean.Family.HusbandFromFamilyId .Id }}selected{{ end }}>{{ .Name }}</option>
+          {{ end }}
+        </select>
+        <p class="help-block">选择丈夫的父母家庭</p>
+      </div>
+
+      <div class="form-group">
+        <label for="wife_family">妻子来自家庭</label>
+        <select class="form-control" id="wife_family" name="wife_family_id">
+          <option value="0" {{ if eq .FamilyBean.Family.WifeFromFamilyId 0 }}selected{{ end }}>未设置</option>
+          {{ range .ParentFamilies }}
+          <option value="{{ .Id }}" {{ if eq $.FamilyBean.Family.WifeFromFamilyId .Id }}selected{{ end }}>{{ .Name }}</option>
+          {{ end }}
+        </select>
+        <p class="help-block">选择妻子的父母家庭</p>
+      </div>
+
+      <hr>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" name="is_open" {{ if .FamilyBean.Family.IsOpen }}checked{{ end }}> 公开家庭（可被搜索）
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">保存</button>
+        <a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ end }}

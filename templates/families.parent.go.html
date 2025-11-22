@@ -3,18 +3,19 @@
 <ol class="breadcrumb">
   <li>大堂</li>
   <li><a href="/v1/family/home">家庭事项</a></li>
-  <li class="active">本家家族（父代）</li>
+  <li class="active">本家家族</li>
 </ol>
 
 <div style="margin: 20px;">
   <ul class="nav nav-tabs">
-    <li role="presentation"><a href="/v1/family/home">公开</a></li>
+    <li role="presentation" class="active"><a href="/v1/family/home">公开</a></li>
     <li role="presentation"><a href="/v1/family/home/private">私密</a></li>
+    <li role="presentation" style="margin-left: auto;"><a href="/v1/family/new"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 新建</a></li>
   </ul>
 </div>
 
 <div style="margin: 20px;">
-  <ul class="nav nav-pills nav-justified">
+  <ul class="nav nav-pills">
     <li role="presentation"><a href="/v1/family/home">家庭首页</a></li>
     <li role="presentation" class="active"><a href="/v1/families/parent">本家家族</a></li>
     <li role="presentation"><a href="/v1/families/in-laws">外家姻亲</a></li>
@@ -28,7 +29,7 @@
     <span class="lead">茶博士</span>
   </div>
   <div class="panel-body">
-    尚未登记父代家庭茶团。
+    尚未登记本家家族茶团。
   </div>
 </div>
 {{ else }}
@@ -37,7 +38,11 @@
 <div class="media">
   <div class="media-left">
     <a href="/v1/family/detail?id={{ .Family.Uuid }}">
-      <img class="media-object" src="/v1/static/bootstrap-icons/house-heart.svg" alt="父代家庭" height="32" width="32">
+      {{ if .Family.Status }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door.svg" alt="已婚家庭" height="32" width="32">
+      {{ else }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door-fill.svg" alt="单身贵族" height="32" width="32">
+      {{ end }}
     </a>
   </div>
   <div class="media-body">
@@ -61,6 +66,7 @@
               {{ else }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
               {{ end }}
+              <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
               {{ .Family.CreatedAtDate }}
             </div>
           </div>
@@ -70,10 +76,15 @@
         {{ .Family.Introduction }} ...
       </div>
       <div class="panel-footer">
-        <span style="margin-inline-end: 20px;">
+        <span style="margin-inline-end: 20px;" title="家庭号">
           <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
           {{ .Family.Id }}
         </span>
+        {{ if .Family.HasChild }}
+        <span style="margin-inline-end: 20px;" title="有子女">
+          <i class="bi-check-circle" style="font-size: 1rem; color: #5cb85c;"></i>
+        </span>
+        {{ end }}
         <span style="margin-inline-end: 20px;">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
           {{ .PersonCount }}

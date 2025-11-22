@@ -79,6 +79,12 @@
           {{ .FamilyBean.Family.Id }}
         </span>
 
+        {{ if .FamilyBean.Family.HasChild }}
+        <span style="margin-inline-end: 20px;" title="有子女">
+          <i class="bi-check-circle" style="font-size: 1rem; color: #010101;"></i>
+        </span>
+        {{ end }}
+
         <span style="margin-inline-end: 20px;" title="成员数">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
           {{ .FamilyBean.PersonCount }}
@@ -131,7 +137,7 @@
       </a>
       {{ if $.IsParent }}
       <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
-        <i class="bi-pencil"></i> 编辑资料
+        <i class="bi-pencil"></i> 编辑
       </a>
       {{ end }}
     </div>
@@ -173,7 +179,7 @@
       </a>
       {{ if $.IsParent }}
       <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
-        <i class="bi-pencil"></i> 编辑资料
+        <i class="bi-pencil"></i> 编辑
       </a>
       {{ end }}
     </div>
@@ -215,7 +221,7 @@
       </a>
       {{ if $.IsParent }}
       <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
-        <i class="bi-pencil"></i> 编辑资料
+        <i class="bi-pencil"></i> 编辑
       </a>
       {{ end }}
     </div>

@@ -476,6 +476,182 @@ func HomePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &fSPD, "layout", "navbar.private", "families.home.private")
 }
 
+// GET /v1/families/parent/private
+// 查看私密父代家庭（用户作为子女的家庭）
+func ParentPrivateFamilies(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	family_slice, err := data.ChildMemberFamilies(s_u.Id)
+	if err != nil {
+		util.Debug(s_u.Id, "Cannot get user's parent families", err)
+		report(w, r, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有父代家庭茶团。", s_u.Email))
+		return
+	}
+
+	var private_families []data.Family
+	for _, fam := range family_slice {
+		if !fam.IsOpen {
+			private_families = append(private_families, fam)
+		}
+	}
+
+	f_b_slice, err := fetchFamilyBeanSlice(private_families)
+	if err != nil {
+		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		report(w, r, fmt.Sprintf("你好，茶博士摸摸头，未能查看这个用户%s父代家庭茶团列表。", s_u.Email))
+		return
+	}
+
+	var fSPD data.FamilySquare
+	fSPD.IsEmpty = len(f_b_slice) == 0
+	if !fSPD.IsEmpty {
+		for i := range f_b_slice {
+			f_b_slice[i].Family.Introduction = subStr(f_b_slice[i].Family.Introduction, 66)
+		}
+		fSPD.OtherFamilyBeanSlice = f_b_slice
+	}
+	fSPD.SessUser = s_u
+	generateHTML(w, &fSPD, "layout", "navbar.private", "families.parent.private")
+}
+
+// GET /v1/families/in-laws/private
+// 查看私密外家姻亲（配偶的父代和子代家庭）
+func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	my_families, err := data.ParentMemberFamilies(s_u.Id)
+	if err != nil {
+		util.Debug(s_u.Id, "Cannot get user's families", err)
+		report(w, r, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
+		return
+	}
+
+	var inlaw_families []data.Family
+	for _, my_fam := range my_families {
+		parents, _ := my_fam.ParentMembers()
+		for _, parent := range parents {
+			if parent.UserId != s_u.Id {
+				spouse_parent_fams, _ := data.ChildMemberFamilies(parent.UserId)
+				for _, spf := range spouse_parent_fams {
+					if !spf.IsOpen {
+						inlaw_families = append(inlaw_families, spf)
+					}
+				}
+				
+				spouse_child_fams, _ := data.ParentMemberFamilies(parent.UserId)
+				for _, scf := range spouse_child_fams {
+					if !scf.IsOpen {
+						children, _ := scf.ChildMembers()
+						for _, child := range children {
+							if child.IsAdult {
+								child_fams, _ := data.ParentMemberFamilies(child.UserId)
+								for _, cf := range child_fams {
+									if !cf.IsOpen {
+										inlaw_families = append(inlaw_families, cf)
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	f_b_slice, err := fetchFamilyBeanSlice(inlaw_families)
+	if err != nil {
+		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		report(w, r, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
+		return
+	}
+
+	var fSPD data.FamilySquare
+	fSPD.IsEmpty = len(f_b_slice) == 0
+	if !fSPD.IsEmpty {
+		for i := range f_b_slice {
+			f_b_slice[i].Family.Introduction = subStr(f_b_slice[i].Family.Introduction, 66)
+		}
+		fSPD.OtherFamilyBeanSlice = f_b_slice
+	}
+	fSPD.SessUser = s_u
+	generateHTML(w, &fSPD, "layout", "navbar.private", "families.in-laws.private")
+}
+
+// GET /v1/families/gone/private
+// 查看私密随风飘逝的家庭（已退出或已删除）
+func GonePrivateFamilies(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	resign_families, err := data.ResignMemberFamilies(s_u.Id)
+	if err != nil {
+		util.Debug(s_u.Id, "Cannot get user's resign families", err)
+		report(w, r, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
+		return
+	}
+
+	deleted_families, err := data.GetDeletedFamiliesByAuthorId(s_u.Id)
+	if err != nil {
+		util.Debug(s_u.Id, "Cannot get user's deleted families", err)
+		report(w, r, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
+		return
+	}
+
+	var private_gone_families []data.Family
+	for _, fam := range append(resign_families, deleted_families...) {
+		if !fam.IsOpen {
+			private_gone_families = append(private_gone_families, fam)
+		}
+	}
+
+	f_b_slice, err := fetchFamilyBeanSlice(private_gone_families)
+	if err != nil {
+		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		report(w, r, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
+		return
+	}
+
+	var fSPD data.FamilySquare
+	fSPD.IsEmpty = len(f_b_slice) == 0
+	if !fSPD.IsEmpty {
+		for i := range f_b_slice {
+			f_b_slice[i].Family.Introduction = subStr(f_b_slice[i].Family.Introduction, 66)
+		}
+		fSPD.OtherFamilyBeanSlice = f_b_slice
+	}
+	fSPD.SessUser = s_u
+	generateHTML(w, &fSPD, "layout", "navbar.private", "families.gone.private")
+}
+
 // GET /v1/family/detail?id=XXX
 // 查看&家庭茶团详情
 // 需要检查会话用户是否被这个家庭声明为新成员，这影响是否展示新成员声明
@@ -813,4 +989,141 @@ func NewFamilyGet(w http.ResponseWriter, r *http.Request) {
 	fSPD.SessUser = s_u
 
 	generateHTML(w, &fSPD, "layout", "navbar.private", "family.new")
+}
+
+// HandleEditFamily 处理编辑家庭
+func HandleEditFamily(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		EditFamilyGet(w, r)
+	case http.MethodPost:
+		EditFamilyPost(w, r)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/family/edit?id=xxx
+func EditFamilyGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	family_uuid := r.URL.Query().Get("id")
+	family := data.Family{Uuid: family_uuid}
+	if err = family.GetByUuid(); err != nil {
+		report(w, r, "未找到家庭资料")
+		return
+	}
+
+	isParent, _ := family.IsParentMember(s_u.Id)
+	if !isParent {
+		report(w, r, "只有父母角色可以编辑家庭资料")
+		return
+	}
+
+	familyBean, err := fetchFamilyBean(family)
+	if err != nil {
+		report(w, r, "获取家庭资料失败")
+		return
+	}
+
+	parentMembers, _ := family.ParentMembers()
+	var parentFamilies []data.Family
+	for _, pm := range parentMembers {
+		childFamilies, _ := data.ChildMemberFamilies(pm.UserId)
+		parentFamilies = append(parentFamilies, childFamilies...)
+	}
+
+	type EditData struct {
+		SessUser       data.User
+		FamilyBean     data.FamilyBean
+		ParentFamilies []data.Family
+	}
+
+	generateHTML(w, &EditData{s_u, familyBean, parentFamilies}, "layout", "navbar.private", "family.edit")
+}
+
+// POST /v1/family/edit
+func EditFamilyPost(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	if err = r.ParseForm(); err != nil {
+		report(w, r, "表单解析失败")
+		return
+	}
+
+	family_uuid := r.PostFormValue("family_id")
+	family := data.Family{Uuid: family_uuid}
+	if err = family.GetByUuid(); err != nil {
+		report(w, r, "未找到家庭资料")
+		return
+	}
+
+	isParent, _ := family.IsParentMember(s_u.Id)
+	if !isParent {
+		report(w, r, "只有父母角色可以编辑家庭资料")
+		return
+	}
+
+	introduction := r.PostFormValue("introduction")
+	lenI := cnStrLen(introduction)
+	if lenI < int(util.Config.ThreadMinWord) || lenI > int(util.Config.ThreadMaxWord) {
+		report(w, r, "家庭简介字数不符合要求")
+		return
+	}
+
+	status_str := r.PostFormValue("status")
+	status, err := strconv.Atoi(status_str)
+	if err != nil || status < 0 || status > 5 {
+		report(w, r, "家庭状态无效")
+		return
+	}
+
+	has_child := r.PostFormValue("has_child") == "true"
+	is_married := r.PostFormValue("is_married") == "true"
+
+	husband_family_id_str := r.PostFormValue("husband_family_id")
+	if husband_family_id_str != "" {
+		if hfid, err := strconv.Atoi(husband_family_id_str); err == nil {
+			family.HusbandFromFamilyId = hfid
+		}
+	}
+
+	wife_family_id_str := r.PostFormValue("wife_family_id")
+	if wife_family_id_str != "" {
+		if wfid, err := strconv.Atoi(wife_family_id_str); err == nil {
+			family.WifeFromFamilyId = wfid
+		}
+	}
+
+	family.Introduction = introduction
+	family.Status = status
+	family.HasChild = has_child
+	family.IsMarried = is_married
+	family.IsOpen = r.PostFormValue("is_open") == "on"
+
+	if err = family.Update(); err != nil {
+		util.Debug("更新家庭资料失败", err)
+		report(w, r, "保存失败，请稍后再试")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/family/detail?id="+family.Uuid, http.StatusFound)
 }
