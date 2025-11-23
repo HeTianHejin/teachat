@@ -477,7 +477,7 @@ func SearchTeamByAbbreviation(keyword string, limit int, ctx context.Context) ([
 	defer cancel()
 
 	teams := []Team{}
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, deleted_at, tags FROM teams WHERE abbreviation LIKE $1 AND deleted_at IS NULL LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := db.QueryContext(ctx, "SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, deleted_at, tags FROM teams WHERE abbreviation LIKE $1 AND deleted_at IS NULL AND is_private = false LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return teams, err
 	}
@@ -680,13 +680,13 @@ func (team *Team) CreatedAtDate() string {
 
 // Team.Create()创建$事业茶团
 func (team *Team) Create() (err error) {
-	statement := "INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid"
+	statement := "INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Abbreviation, team.Logo, team.IsPrivate).Scan(&team.Id, &team.Uuid)
+	err = stmt.QueryRow(Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Abbreviation, team.Logo, team.IsPrivate, team.Tags).Scan(&team.Id, &team.Uuid)
 	return
 }
 

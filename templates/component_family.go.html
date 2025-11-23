@@ -1,0 +1,28 @@
+{{ define "component_family" }}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>{{ .Family.Name }}</strong>
+    <span class="label label-{{ if .Family.IsMarried }}success{{ else }}default{{ end }}">
+      {{ .Family.GetStatus }}
+    </span>
+    <a href="/v1/family/detail?id={{ .Family.Uuid }}" class="btn btn-xs btn-info pull-right">
+      <span class="glyphicon glyphicon-eye-open"></span> 查看详情
+    </a>
+  </div>
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left">
+        {{ if .Family.Logo }}
+        <img class="media-object" src="/v1/static/avatar/{{ .Family.Logo }}" alt="family" width="64" height="64">
+        {{ else }}
+        <img class="media-object" src="/v1/static/bootstrap-icons/house-heart.svg" alt="family" width="64" height="64">
+        {{ end }}
+      </div>
+      <div class="media-body">
+        <p>{{ .Family.Introduction }}</p>
+        <p><small class="text-muted">成员数：{{ .MemberCount }} | 创建时间：{{ .Family.CreatedAtDate }}</small></p>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}

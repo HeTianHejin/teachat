@@ -376,7 +376,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 	tD.StatsSet.FamilyCount = len(familyMap)
 	tD.StatsSet.TeamCount = len(teamMap)
-	//tD.StatsSet.PersonCount = ?
+	//tD.StatsSet.MemberCount = ?
 
 	tD.PostBeanSlice, err = fetchPostBeanSlice(post_n_slice)
 	if err != nil {

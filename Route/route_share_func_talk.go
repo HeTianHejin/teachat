@@ -151,7 +151,7 @@ func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 		return
 	}
 
-	tB.StatsSet.PersonCount = 1 //默认为1(作者本人)
+	tB.StatsSet.MemberCount = 1 //默认为1(作者本人)
 	tB.StatsSet.FamilyCount = 0
 	tB.StatsSet.TeamCount = 0
 
@@ -161,11 +161,11 @@ func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 			util.Debug(fmt.Sprintf("Failed to count family members for family ID %d: %v", thread.FamilyId, err))
 			return tB, fmt.Errorf("failed to count family members: %w", err)
 		}
-		tB.StatsSet.PersonCount = p_f_count
+		tB.StatsSet.MemberCount = p_f_count
 		tB.StatsSet.FamilyCount = 1
 	} else {
 		teamMembersCount := tB.AuthorTeam.NumMembers()
-		tB.StatsSet.PersonCount = teamMembersCount
+		tB.StatsSet.MemberCount = teamMembersCount
 	}
 
 	if tB.AuthorTeam.Id > data.TeamIdFreelancer {

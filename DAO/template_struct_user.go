@@ -36,7 +36,7 @@ type UserPageData struct {
 
 // 涉及人事统计值集合
 type StatsSet struct {
-	PersonCount int // 人数
+	MemberCount int // 人数
 	FamilyCount int // 家庭数
 	TeamCount   int // 团队数
 }
@@ -71,7 +71,7 @@ type FamilyBean struct {
 	Founder     User
 	FounderTeam Team // 发起人默认所在的团队
 
-	PersonCount int //成员计数
+	MemberCount int //成员计数（包括宠物）
 }
 type FamilyMemberBean struct {
 	FamilyMember FamilyMember

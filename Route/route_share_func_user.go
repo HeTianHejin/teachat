@@ -270,7 +270,7 @@ func fetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error)
 		return FamilyBean, err
 	}
 
-	FamilyBean.PersonCount, err = data.CountFamilyMembers(family.Id)
+	FamilyBean.MemberCount, err = data.CountFamilyMembers(family.Id)
 	if err != nil {
 		util.Debug(family.AuthorId, " Cannot read family member count")
 		return FamilyBean, err
