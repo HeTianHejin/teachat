@@ -7,8 +7,9 @@ type SearchPageData struct {
 	IsEmpty bool //查询结果为空?
 	Count   int  //查询结果个数
 
-	UserBeanSlice      []UserBean //茶友（用户）资料夹队列
-	TeamBeanSlice      []TeamBean //茶团资料夹队列
+	UserBeanSlice      []UserBean   //茶友（用户）资料夹队列
+	FamilyBeanSlice    []FamilyBean //家庭资料夹队列
+	TeamBeanSlice      []TeamBean   //茶团资料夹队列
 	ThreadBeanSlice    []ThreadBean
 	ProjectBeanSlice   []ProjectBean
 	ObjectiveBeanSlice []ObjectiveBean

@@ -344,4 +344,5 @@ const (
 	SearchTypeUserId          = 10 // 按用户id查询
 	SearchTypeSkill           = 11 // 按技能名称查询
 	SearchTypeMagic           = 12 // 按法力名称查询
+	SearchTypeFamilyName      = 13 // 按家庭名称查询
 )

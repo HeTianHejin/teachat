@@ -1066,3 +1066,19 @@ func GetFamilyIncludingDeleted(family_id int) (family Family, err error) {
 
 	return family, nil
 }
+
+// SearchFamilyByName 根据家庭名称关键词搜索公开的家庭
+func SearchFamilyByName(keyword string, limit int, ctx context.Context) ([]Family, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
+		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
+		FROM families WHERE name LIKE $1 AND deleted_at IS NULL AND is_open = true LIMIT $2`
+
+	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	if err != nil {
+		return nil, wrapError("SearchFamilyByName", err)
+	}
+	return scanFamilies(rows)
+}

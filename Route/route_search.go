@@ -338,6 +338,26 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
+	case data.SearchTypeFamilyName:
+		//查询公开家庭
+		family_slice, err := data.SearchFamilyByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		if err != nil {
+			util.Debug(" failed to search family by keyword", err)
+		}
+		if len(family_slice) >= 1 {
+			family_bean_slice, err := fetchFamilyBeanSlice(family_slice)
+			if err != nil {
+				util.Debug(" Cannot fetch family bean slice", err)
+				report(w, r, "你好，茶博士摸摸头，搜索关键词无效，请确认后再试。")
+				return
+			}
+			fPD.Count = len(family_bean_slice)
+			fPD.FamilyBeanSlice = family_bean_slice
+			fPD.IsEmpty = false
+		}
+		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_family")
+		return
+
 	default:
 		report(w, r, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
 		return

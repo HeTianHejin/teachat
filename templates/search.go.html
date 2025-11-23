@@ -7,52 +7,115 @@
   茶博士：如果知道对应的编号数，查询速度会更快。可以用邮箱代替花名查找茶友。
 </div>
 
+<script>
+function switchCategory(category) {
+  var hint = document.getElementById('select-hint');
+  if (hint) hint.style.display = 'none';
+  
+  var groups = ['person', 'org', 'activity', 'resource'];
+  for (var i = 0; i < groups.length; i++) {
+    var groupDiv = document.getElementById('types-' + groups[i]);
+    if (groupDiv) {
+      if (groups[i] === category) {
+        groupDiv.style.display = 'block';
+        var inputs = groupDiv.getElementsByTagName('input');
+        if (inputs.length > 0) {
+          inputs[0].checked = true;
+          for (var j = 0; j < inputs.length; j++) {
+            inputs[j].required = true;
+          }
+        }
+      } else {
+        groupDiv.style.display = 'none';
+        var inputs = groupDiv.getElementsByTagName('input');
+        for (var j = 0; j < inputs.length; j++) {
+          inputs[j].checked = false;
+          inputs[j].required = false;
+        }
+      }
+    }
+  }
+}
+</script>
+
 <form role="form" action="/v1/search" method="post">
 
   <div class="panel-body form-group">
 
     <div>
-      <label for="radio">选择类别：</label>
-      <fieldset id="radio">
-        <input type="radio" name="class" id="user_id" style="width: fit-content;" value="10"required />
-        <label for="user_id">茶友茶号</label>
+      <label>选择大类：</label>
+      <fieldset id="category-level1" style="margin-bottom: 1rem;">
+        <input type="radio" name="category" id="cat-person" value="person" required style="width: fit-content;" onchange="switchCategory('person')" />
+        <label for="cat-person">👤 人员</label>
 
-        <input type="radio" name="class" id="user" style="width: fit-content;" value="0"  checked required />
-        <label for="user">茶友花名</label>
+        <input type="radio" name="category" id="cat-org" value="org" required style="width: fit-content;" onchange="switchCategory('org')" />
+        <label for="cat-org">🏠 组织</label>
 
-        <input type="radio" name="class" id="team" style="width: fit-content;" value="1" required />
-        <label for="team">茶团简称</label>
+        <input type="radio" name="category" id="cat-activity" value="activity" required style="width: fit-content;" onchange="switchCategory('activity')" />
+        <label for="cat-activity">🍵 活动</label>
 
-        <input type="radio" name="class" id="thread" style="width: fit-content;" value="2" required />
-        <label for="thread">茶议标题</label>
+        <input type="radio" name="category" id="cat-resource" value="resource" required style="width: fit-content;" onchange="switchCategory('resource')" />
+        <label for="cat-resource">📦 资源</label>
+      </fieldset>
+    </div>
 
-        <input type="radio" name="class" id="objective" style="width: fit-content;" value="3" required />
-        <label for="objective">茶会名称</label>
+    <div>
+      <label for="radio">选择具体类型：</label>
+      <div id="select-hint" style="color: #999; font-style: italic;">请先选择大类</div>
+      <fieldset id="category-level2">
+        <!-- 人员类 -->
+        <div id="types-person" class="type-group" style="display: none;">
+          <input type="radio" name="class" id="user" value="0" style="width: fit-content;" />
+          <label for="user">茶友花名</label>
 
-        <input type="radio" name="class" id="project" style="width: fit-content;" value="4" required  />
-        <label for="project">茶台名称</label>
+          <input type="radio" name="class" id="user_id" value="10" style="width: fit-content;" />
+          <label for="user_id">茶友茶号</label>
+        </div>
 
-        <input type="radio" name="class" id="place" style="width: fit-content;" value="5" required />
-        <label for="place">地点名称</label>
+        <!-- 组织类 -->
+        <div id="types-org" class="type-group" style="display: none;">
+          <input type="radio" name="class" id="family" value="13" style="width: fit-content;" />
+          <label for="family">家庭名称</label>
 
-        <input type="radio" name="class" id="environment" style="width: fit-content;" value="6" required />
-        <label for="environment">环境条件</label>
+          <input type="radio" name="class" id="team" value="1" style="width: fit-content;" />
+          <label for="team">团队简称</label>
+        </div>
 
-        <input type="radio" name="class" id="hazard" style="width: fit-content;" value="7" required />
-        <label for="hazard">安全隐患</label>
+        <!-- 活动类 -->
+        <div id="types-activity" class="type-group" style="display: none;">
+          <input type="radio" name="class" id="thread" value="2" style="width: fit-content;" />
+          <label for="thread">茶议标题</label>
 
-        <input type="radio" name="class" id="risk" style="width: fit-content;" value="8" required />
-        <label for="risk">作业风险</label>
+          <input type="radio" name="class" id="objective" value="3" style="width: fit-content;" />
+          <label for="objective">茶会名称</label>
 
-  <input type="radio" name="class" id="goods" style="width: fit-content;" value="9" required />
-  <label for="goods">物资</label>
+          <input type="radio" name="class" id="project" value="4" style="width: fit-content;" />
+          <label for="project">茶台名称</label>
 
-        <input type="radio" name="class" id="skill" style="width: fit-content;" value="11" required />
-        <label for="skill">技能</label>
+          <input type="radio" name="class" id="place" value="5" style="width: fit-content;" />
+          <label for="place">地点名称</label>
+        </div>
 
-        <input type="radio" name="class" id="magic" style="width: fit-content;" value="12" required />
-        <label for="magic">法力</label>
+        <!-- 资源类 -->
+        <div id="types-resource" class="type-group" style="display: none;">
+          <input type="radio" name="class" id="goods" value="9" style="width: fit-content;" />
+          <label for="goods">物资</label>
 
+          <input type="radio" name="class" id="skill" value="11" style="width: fit-content;" />
+          <label for="skill">技能</label>
+
+          <input type="radio" name="class" id="magic" value="12" style="width: fit-content;" />
+          <label for="magic">法力</label>
+
+          <input type="radio" name="class" id="environment" value="6" style="width: fit-content;" />
+          <label for="environment">环境条件</label>
+
+          <input type="radio" name="class" id="hazard" value="7" style="width: fit-content;" />
+          <label for="hazard">安全隐患</label>
+
+          <input type="radio" name="class" id="risk" value="8" style="width: fit-content;" />
+          <label for="risk">作业风险</label>
+        </div>
       </fieldset>
     </div>
 
@@ -85,13 +148,13 @@
 
 <div class="media">
   <div class="media-left">
-   {{ template "component_avatar_name_gender" .User }}
+    {{ template "component_avatar_name_gender" .User }}
   </div>
   <div class="media-body">
-      <span style="font-style: italic;">
-        （<a href="/v1/family/detail?id={{ .DefaultFamily.Uuid }}">{{ .DefaultFamily.Name }}</a>,
-        <a href="/v1/team/detail?uuid={{ .DefaultTeam.Uuid }}">{{ .DefaultTeam.Abbreviation }}</a>）
-      </span>
+    <span style="font-style: italic;">
+      （<a href="/v1/family/detail?id={{ .DefaultFamily.Uuid }}">{{ .DefaultFamily.Name }}</a>,
+      <a href="/v1/team/detail?uuid={{ .DefaultTeam.Uuid }}">{{ .DefaultTeam.Abbreviation }}</a>）
+    </span>
     </p>
     <p>茶友号：{{ .User.Id }}</p>
     <p>邮 箱：{{ .User.Email }}</p>
@@ -102,12 +165,16 @@
 <hr />
 {{ end }}{{/* 这是查找用户（茶友）结果队列迭代结束 */}}
 
+{{ range .FamilyBeanSlice }}{{/* 这是查找家庭结果展示 */}}
+{{ template "component_family" . }}
+<hr />
+{{ end }}{{/* 这是查找到的家庭结果队列迭代结束 */}}
+
 {{ range .TeamBeanSlice }}
 {{/* 这是查找茶团（事业团队）结果展示 */}}
 {{ template "component_team" . }}
 <hr />
 {{ end }}{{/* 这是查找到的茶团结果队列迭代结束 */}}
-
 
 {{/* 以下是查询结果，茶议的简要展示 */}}
 {{ range .ThreadBeanSlice }}
@@ -119,7 +186,7 @@
 {{ range .ProjectBeanSlice }}
 {{ template "component_project_bean" . }}
 <hr />
-{{ end }}{{/* 这是查找到的茶台结果队列迭代结束 */}} 
+{{ end }}{{/* 这是查找到的茶台结果队列迭代结束 */}}
 
 {{/* 以下是查询结果，茶会（茶围）的简要展示 */}}
 {{ range .ObjectiveBeanSlice }}
@@ -159,7 +226,8 @@
 <div class="panel panel-default">
   <div class="panel-heading">
     <strong>安全隐患 #{{ .Id }}</strong> - {{ .Name }}
-    <span class="label label-{{ if eq .Severity 5 }}danger{{ else if eq .Severity 4 }}warning{{ else if eq .Severity 3 }}info{{ else }}default{{ end }}">
+    <span
+      class="label label-{{ if eq .Severity 5 }}danger{{ else if eq .Severity 4 }}warning{{ else if eq .Severity 3 }}info{{ else }}default{{ end }}">
       {{ .SeverityName }}
     </span>
     <span class="label label-default">{{ .CategoryName }}</span>
@@ -169,8 +237,10 @@
   </div>
   <div class="panel-body">
     <p>{{ .Description }}</p>
-    {{ if .Keywords }}<p><strong>关键词：</strong>{{ .Keywords }}</p>{{ end }}
-    {{ if .Source }}<p><strong>来源：</strong>{{ .Source }}</p>{{ end }}
+    {{ if .Keywords }}
+    <p><strong>关键词：</strong>{{ .Keywords }}</p>{{ end }}
+    {{ if .Source }}
+    <p><strong>来源：</strong>{{ .Source }}</p>{{ end }}
     <small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
   </div>
 </div>
@@ -181,7 +251,8 @@
 <div class="panel panel-default">
   <div class="panel-heading">
     <strong>作业风险 #{{ .Id }}</strong> - {{ .Name }}
-    <span class="label label-{{ if eq .Severity 5 }}danger{{ else if eq .Severity 4 }}warning{{ else if eq .Severity 3 }}info{{ else }}default{{ end }}">
+    <span
+      class="label label-{{ if eq .Severity 5 }}danger{{ else if eq .Severity 4 }}warning{{ else if eq .Severity 3 }}info{{ else }}default{{ end }}">
       {{ RiskSeverityLevelString .Severity }}
     </span>
     {{ if .Source }}<span class="label label-default">{{ .Source }}</span>{{ end }}
@@ -191,8 +262,10 @@
   </div>
   <div class="panel-body">
     <p>{{ .Description }}</p>
-    {{ if .Keywords }}<p><strong>关键词：</strong>{{ .Keywords }}</p>{{ end }}
-    {{ if .Nickname }}<p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
+    {{ if .Keywords }}
+    <p><strong>关键词：</strong>{{ .Keywords }}</p>{{ end }}
+    {{ if .Nickname }}
+    <p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
     <small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
   </div>
 </div>
@@ -216,7 +289,8 @@
       <div class="media-body">
         <h4 class="media-heading">{{ .Name }} <small class="text-muted">{{ .Nickname }}</small></h4>
         <p>{{ .Applicability }}</p>
-        {{ if gt .Price 0.0 }}<p>价格：¥{{ .Price }}</p>{{ end }}
+        {{ if gt .Price 0.0 }}
+        <p>价格：¥{{ .Price }}</p>{{ end }}
         <p><small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small></p>
       </div>
     </div>
@@ -229,7 +303,8 @@
 <div class="panel panel-default">
   <div class="panel-heading">
     <strong>技能 #{{ .Id }}</strong> - {{ .Name }}
-    <span class="label label-{{ if eq .Category 2 }}primary{{ else if eq .Category 1 }}success{{ else }}default{{ end }}">
+    <span
+      class="label label-{{ if eq .Category 2 }}primary{{ else if eq .Category 1 }}success{{ else }}default{{ end }}">
       {{ .CategoryString }}
     </span>
     <a href="/v1/skill/detail?id={{ .Id }}" class="btn btn-xs btn-info pull-right">
@@ -238,7 +313,8 @@
   </div>
   <div class="panel-body">
     <p>{{ .Description }}</p>
-    {{ if .Nickname }}<p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
+    {{ if .Nickname }}
+    <p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
     <p><strong>体力等级：</strong>{{ .StrengthLevelString }}</p>
     <p><strong>难度等级：</strong>{{ .DifficultyLevelString }}</p>
     <small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
@@ -260,7 +336,8 @@
   </div>
   <div class="panel-body">
     <p>{{ .Description }}</p>
-    {{ if .Nickname }}<p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
+    {{ if .Nickname }}
+    <p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
     <p><strong>智力等级：</strong>{{ .IntelligenceLevelString }}</p>
     <p><strong>难度等级：</strong>{{ .DifficultyLevelString }}</p>
     <small class="text-muted">创建时间：{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small>
