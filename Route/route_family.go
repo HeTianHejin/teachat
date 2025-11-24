@@ -26,7 +26,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 2. get family id
-	family_uuid := r.URL.Query().Get("uuid")
+	family_uuid := r.URL.Query().Get("id")
 	//check family is valid
 	if family_uuid == data.FamilyUuidUnknown || family_uuid == "" {
 		report(w, r, "你好，茶博士摸摸头竟然说，陛下这个特殊家庭茶团不允许私用呢。")
@@ -62,19 +62,17 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	//检查这个新的默认家庭茶团是否已经设置，避免重复记录
 	//fetch user default family
 	lastDefaultFamily, err := s_u.GetLastDefaultFamily()
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug("Cannot get user's last default family", err)
 		report(w, r, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
 		return
-	}
-	//if last default family is not Unknown
-	if lastDefaultFamily.Id > data.FamilyIdUnknown {
-		//if last default family is  equal to the new default family
+	} else if errors.Is(err, sql.ErrNoRows) || lastDefaultFamily.Id > data.FamilyIdUnknown {
+		//if last default family is not Unknown or NoRows
 		if lastDefaultFamily.Id == t_family.Id {
+			//if last default family is  equal to the new default family
 			report(w, r, "你好，茶博士竟然说,请勿重复设置默认家庭茶团。")
 			return
 		}
-
 	}
 
 	// set default family
@@ -348,7 +346,7 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 				// 获取配偶作为子女的家庭（配偶父代）
 				spouse_parent_fams, _ := data.ChildMemberFamilies(parent.UserId)
 				inlaw_families = append(inlaw_families, spouse_parent_fams...)
-				
+
 				// 获取配偶子女的家庭（配偶子代）
 				spouse_child_fams, _ := data.ParentMemberFamilies(parent.UserId)
 				for _, scf := range spouse_child_fams {
@@ -557,7 +555,7 @@ func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 						inlaw_families = append(inlaw_families, spf)
 					}
 				}
-				
+
 				spouse_child_fams, _ := data.ParentMemberFamilies(parent.UserId)
 				for _, scf := range spouse_child_fams {
 					if !scf.IsOpen {
@@ -962,13 +960,16 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//报告用户登记家庭茶团成功
-	text := ""
-	if s_u.Gender == data.User_Gender_Female {
-		text = fmt.Sprintf("%s 女士，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有快乐品茶时光。", s_u.Name, new_family.Name)
-	} else {
-		text = fmt.Sprintf("%s 先生，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)
-	}
-	report(w, r, text)
+	// text := ""
+	// if s_u.Gender == data.User_Gender_Female {
+	// 	text = fmt.Sprintf("%s 女士，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有快乐品茶时光。", s_u.Name, new_family.Name)
+	// } else {
+	// 	text = fmt.Sprintf("%s 先生，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)
+	// }
+	// report(w, r, text)
+
+	//跳转新建的家庭详情页面
+	http.Redirect(w, r, "/v1/family/detail?id="+new_family.Uuid, http.StatusFound)
 }
 
 // GET /v1/family/new
@@ -1126,4 +1127,159 @@ func EditFamilyPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/v1/family/detail?id="+family.Uuid, http.StatusFound)
+}
+
+// GET /v1/family/member_add?uuid=
+// 显示家庭搜索用户页面
+func FamilyMemberAddGet(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, r, "你好，缺少家庭标识。")
+		return
+	}
+
+	family := data.Family{Uuid: uuid}
+	if err = family.GetByUuid(); err != nil {
+		util.Debug("Cannot get family by uuid", err)
+		report(w, r, "你好，未能找到该家庭。")
+		return
+	}
+
+	// 检查权限：必须是父母角色
+	isParent, _ := family.IsParentMember(sessUser.Id)
+	if !isParent {
+		report(w, r, "你好，只有父母角色才能添加家庭成员。")
+		return
+	}
+
+	var pageData struct {
+		SessUser data.User
+		Family   data.Family
+	}
+	pageData.SessUser = sessUser
+	pageData.Family = family
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "family.member_add")
+}
+
+// HandleFamilySearchUser POST /v1/family/search_user
+// 处理家庭搜索用户请求
+func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, r, "你好，茶博士失魂鱼，未能理解你的话语，请稍后再试。")
+		return
+	}
+
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	sessUser, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	familyUuid := r.PostFormValue("family_uuid")
+	searchType := r.PostFormValue("search_type")
+	keyword := r.PostFormValue("keyword")
+
+	// 验证关键词长度
+	if len(keyword) < 1 || len(keyword) > 32 {
+		report(w, r, "你好，茶博士摸摸头，说关键词太长了记不住呢，请确认后再试。")
+		return
+	}
+
+	// 获取家庭信息
+	family := data.Family{Uuid: familyUuid}
+	if err = family.GetByUuid(); err != nil {
+		util.Debug("Cannot get family by uuid", err)
+		report(w, r, "你好，未能找到该家庭。")
+		return
+	}
+
+	// 检查权限
+	isParent, _ := family.IsParentMember(sessUser.Id)
+	if !isParent {
+		report(w, r, "你好，只有父母角色才能添加家庭成员。")
+		return
+	}
+
+	var pageData struct {
+		SessUser      data.User
+		Family        data.Family
+		UserBeanSlice []data.UserBean
+		IsEmpty       bool
+	}
+	pageData.SessUser = sessUser
+	pageData.Family = family
+	pageData.IsEmpty = true
+
+	switch searchType {
+	case "user_id":
+		// 按茶友号查询
+		userId, err := strconv.Atoi(keyword)
+		if err != nil || userId <= 0 {
+			report(w, r, "茶友号必须是正整数")
+			return
+		}
+
+		user, err := data.GetUser(userId)
+		if err == nil && user.Id > 0 {
+			userBean, err := fetchUserDefaultBean(user)
+			if err == nil {
+				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
+				pageData.IsEmpty = false
+			}
+		}
+
+	case "user_email":
+		// 按邮箱查询
+		if !isEmail(keyword) {
+			report(w, r, "你好，请输入有效的电子邮箱地址。")
+			return
+		}
+
+		user, err := data.GetUserByEmail(keyword, r.Context())
+		if err == nil && user.Id > 0 {
+			userBean, err := fetchUserDefaultBean(user)
+			if err == nil {
+				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
+				pageData.IsEmpty = false
+			}
+		}
+
+	case "user_name":
+		// 按花名查询
+		userSlice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		if err == nil && len(userSlice) >= 1 {
+			userBeanSlice, err := fetchUserBeanSlice(userSlice)
+			if err == nil && len(userBeanSlice) >= 1 {
+				pageData.UserBeanSlice = userBeanSlice
+				pageData.IsEmpty = false
+			}
+		}
+
+	default:
+		report(w, r, "你好，请选择正确的查询方式。")
+		return
+	}
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "family.search_user_result", "component_avatar_name_gender")
 }

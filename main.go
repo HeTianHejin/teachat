@@ -164,6 +164,10 @@ func main() {
 	mux.HandleFunc("/v1/family_member/edit", route.HandleFamilyMemberEdit)
 	//mux.HandleFunc("/v1/family_member/sign_out", route.HandleFamilyMemberSignOut)
 
+	//defined in route_family.go - family member add
+	mux.HandleFunc("/v1/family/member_add", route.FamilyMemberAddGet)
+	mux.HandleFunc("/v1/family/search_user", route.HandleFamilySearchUser)
+
 	//defined in route_talk_objective.go
 	mux.HandleFunc("/v1/objective/new", route.HandleNewObjective)
 	mux.HandleFunc("/v1/objective/square", route.ObjectiveSquare)

@@ -1,0 +1,51 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+  <li><a href="/v1/family/member_add?uuid={{ .Family.Uuid }}">添加成员</a></li>
+  <li class="active">搜索结果</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>搜索结果</strong>
+  </div>
+
+  <div class="panel-body">
+    {{ if .IsEmpty }}
+    <p>未找到匹配的茶友。</p>
+    <a href="/v1/family/member_add?uuid={{ .Family.Uuid }}" class="btn btn-default">返回搜索</a>
+    {{ else }}
+    {{ range .UserBeanSlice }}
+    <div class="media">
+      <div class="media-left">
+        {{ template "component_avatar_name_gender" .User }}
+      </div>
+      <div class="media-body">
+        <p>
+          <span style="font-style: italic;">
+            （<a href="/v1/family/detail?id={{ .DefaultFamily.Uuid }}">{{ .DefaultFamily.Name }}</a>，
+            <a href="/v1/team/detail?uuid={{ .DefaultTeam.Uuid }}">{{ .DefaultTeam.Abbreviation }}</a>）
+          </span>
+        </p>
+        <p>茶友号：{{ .User.Id }}</p>
+        <p>邮箱：{{ .User.Email }}</p>
+        <div style="margin-top: 10px;">
+          <a href="/v1/family_member/sign_in_new?id={{ .User.Uuid }}&family_uuid={{ $.Family.Uuid }}" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span> 声明为家庭成员
+          </a>
+          <a href="/v1/user/biography?uuid={{ .User.Uuid }}" class="btn btn-default">
+            <span class="glyphicon glyphicon-user"></span> 查看资料
+          </a>
+        </div>
+      </div>
+    </div>
+    <hr />
+    {{ end }}
+    <a href="/v1/family/member_add?uuid={{ $.Family.Uuid }}" class="btn btn-default">继续搜索</a>
+    {{ end }}
+  </div>
+</div>
+
+{{ end }}
