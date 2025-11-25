@@ -1130,7 +1130,7 @@ func EditFamilyPost(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/family/member_add?uuid=
-// 显示家庭搜索用户页面
+// 显示家庭搜索用户页面，--Claude sonnet4.5按要求协助创建
 func FamilyMemberAddGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -1175,7 +1175,7 @@ func FamilyMemberAddGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // HandleFamilySearchUser POST /v1/family/search_user
-// 处理家庭搜索用户请求
+// 处理家庭搜索用户请求 -> 返回搜索结果 --Claude sonnet4.5按要求协助创建
 func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {

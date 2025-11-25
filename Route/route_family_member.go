@@ -1,6 +1,8 @@
 package route
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -31,6 +33,12 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", s.Email, err)
+		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		return
+	}
 	family_member_user_uuid := r.URL.Query().Get("id")
 	if family_member_user_uuid == "" {
 		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -43,29 +51,25 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-
-	//读取当前会话用户的相关资料
-	s_u, s_d_family, s_all_families, s_d_team, s_survival_teams, s_d_place, s_places, err := fetchSessionUserRelatedData(s)
-	if err != nil {
-		util.Debug("cannot fetch s_u s_teams given session", err)
+	//发声明家庭
+	family_uuid := r.URL.Query().Get("family_uuid")
+	if family_uuid == "" {
 		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
+	family := data.Family{Uuid: family_uuid}
+	if err = family.GetByUuid(); err != nil {
+		util.Debug("cannot get family by uuid:", family_uuid, err)
+		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		return
+	}
+
 	var fms data.FamilyMemberSignInNew
 	//将当前用户的资料填入表格
 	fms.SessUser = s_u
 	//将当前用户的默认茶团资料填入表格
-	fms.SessUserDefaultFamily = s_d_family
-	fms.SessUserAllFamilies = s_all_families
-	//将当前用户的默认茶团资料填入表格
-	fms.SessUserDefaultTeam = s_d_team
-	//将当前用户的所有茶团资料填入表格
-	fms.SessUserSurvivalTeams = s_survival_teams
-	fms.SessUserDefaultPlace = s_d_place
-	//将当前用户的所有地点资料填入表格
-	fms.SessUserBindPlaces = s_places
-
-	fms.FamilyMemberUser = family_member_user
+	fms.Family = family
+	fms.NewMemberUser = family_member_user
 
 	//渲染页面
 	generateHTML(w, &fms, "layout", "navbar.private", "family_member.sign_in")
@@ -97,6 +101,10 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m_email := r.PostFormValue("m_email")
+	if m_email == "" {
+		report(w, r, "你好，茶博士认为你没有填写茶友的电子邮箱，请确认后再试。")
+		return
+	}
 	// 检查提交的成员邮箱
 	if ok := isEmail(m_email); !ok {
 		report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再试一次。")
@@ -105,16 +113,15 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	//读取声明增加的成员资料
 	t_user, err := data.GetUserByEmail(m_email, r.Context())
 	if err != nil {
-		util.Debug(m_email, "Cannot get user by email")
+		util.Debug(m_email, "Cannot get user by email", err)
 		report(w, r, "你好，茶博士正在无事忙之中，稍后再试。")
 		return
 	}
 	// 读取提及的家庭资料
-	// 提及的家庭
 	family_uuid := r.PostFormValue("family_uuid")
 
 	// 如果family_uuid=“x“特殊值，这是虚值，报告错误
-	if family_uuid == data.FamilyUuidUnknown {
+	if family_uuid == data.FamilyUuidUnknown || family_uuid == "" {
 		report(w, r, "你好，茶博士认为你没有提及具体的家庭，或者提及的&家庭茶团还没有登记，请确认后再试。")
 		return
 	}
@@ -141,47 +148,17 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	isMember := false
-	// check if session user is member of family
-	if isMember, err = t_family.IsMember(s_u.Id); err != nil || !isMember {
-		util.Debug(s_u.Id, "Cannot check if user is member of family")
-		report(w, r, "你好，茶博士认为你不是这个家庭的成员，请确认后再试。")
-		return
-	}
-	// 检查提及的茶友是否已经是提及的家庭的成员
-	if isMember, err = t_family.IsMember(t_user.Id); isMember || err != nil {
-		util.Debug(t_user.Id, "Cannot check if user is member of family")
-		report(w, r, "你好，茶博士认为提及的茶友已经是家庭的成员，请确认后再试。")
-		return
-	}
-
-	// 检查当前用户是否这个家庭的父母角色
-	parent_members, err := t_family.ParentMembers()
-	if err != nil {
-		util.Debug(t_family.Id, "Cannot get parent members of family")
-		report(w, r, "你好，茶博士认为你不是这个家庭的主人成员，请确认后再试。")
-		return
-	}
-	for _, p := range parent_members {
-		if p.UserId == s_u.Id {
-			isMember = true
-			break
-		}
-	}
-	if !isMember {
+	// check if session user is parent member of family
+	if isPMember, err := t_family.IsParentMember(s_u.Id); err != nil || !isPMember {
+		util.Debug(s_u.Id, "Cannot check if user is member of family", err)
 		report(w, r, "你好，茶博士认为你无权声明这个家庭增加新成员，请确认后再试。")
 		return
 	}
-
-	//读取提及的place资料
-	place_uuid := r.PostFormValue("place_uuid")
-	t_place := data.Place{
-		Uuid: place_uuid,
-	}
-	// 检查提及的品茶地点是否存在
-	if err = t_place.GetByUuid(); err != nil {
-		//util.PanicTea(util.LogError(err), t_place.Uuid, "Cannot get place by uuid")
-		report(w, r, "你好，茶博士找不到提及的地点，请确认后再试。")
+	isMember := false
+	// 检查提及的茶友是否已经是提及的家庭的成员
+	if isMember, err = t_family.IsMember(t_user.Id); isMember || err != nil {
+		util.Debug(t_user.Id, "Cannot check if user is member of family", err)
+		report(w, r, "你好，茶博士认为提及的茶友已经是家庭的成员，请勿重复添加。")
 		return
 	}
 
@@ -197,7 +174,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士处理选择的角色出现了问题，请稍后再试。")
 		return
 	}
-	if role_int < 0 || role_int > 5 {
+	if role_int < data.FamilyMemberRoleUnknown || role_int > data.FamilyMemberRolePet {
 		report(w, r, "你好，茶博士认为你选择的角色不存在，请确认后再试。")
 		return
 	}
@@ -209,13 +186,19 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	//查看成员角色，分类处理：0、秘密，1、男主人，2、女主人，3、女儿， 4、儿子，5、宠物,
 	switch role_int {
-	case 0, 3, 4, 5:
+	case data.FamilyMemberRoleUnknown, data.FamilyMemberRoleDaughter, data.FamilyMemberRoleSon, data.FamilyMemberRolePet:
 		// ok，角色可以共用
 		break
-	case 1, 2:
-		//角色是唯一的的，检查是否被占用
+	case data.FamilyMemberRoleHusband, data.FamilyMemberRoleWife:
+		//角色是唯一的，检查是否被占用
 		if err = t_family_member.GetByRoleFamilyId(); err == nil {
 			report(w, r, "你好，茶博士认为你选择的角色已经被占用，请确认后再试。")
+			return
+		} else if errors.Is(err, sql.ErrNoRows) {
+			break
+		} else {
+			util.Debug(t_family_member.Id, "Cannot get family member by role and family id", err)
+			report(w, r, "你好，茶博士处理选择的角色出现了问题，请稍后再试。")
 			return
 		}
 	default:
@@ -253,7 +236,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		IsAdult:      is_adult,
 		Title:        title,
 		Content:      cont,
-		PlaceId:      t_place.Id,
+		PlaceId:      data.PlaceIdSpaceshipTeabar,
 		IsAdopted:    is_adopted,
 		AuthorUserId: s_u.Id,
 	}

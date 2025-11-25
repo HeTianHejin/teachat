@@ -89,15 +89,10 @@ type FamilyMemberBean struct {
 
 // 申报&家庭茶团新成员页面数据
 type FamilyMemberSignInNew struct {
-	SessUser              User
-	SessUserDefaultFamily Family
-	SessUserAllFamilies   []Family
-	SessUserDefaultTeam   Team
-	SessUserSurvivalTeams []Team
-	SessUserDefaultPlace  Place
-	SessUserBindPlaces    []Place
+	SessUser User
 
-	FamilyMemberUser User // 声明为家庭新成员目标茶友
+	Family        Family
+	NewMemberUser User // 声明为家庭新成员目标茶友
 }
 
 // FamilyMemberSignInBeanDetail &家庭茶团新成员声明书详情页面数据
