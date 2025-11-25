@@ -28,7 +28,7 @@ func HandleNewObjective(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /objective/create
-// 返回objective.new页面
+// 返回创建目标茶围页面
 func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	//尝试从http请求中读取用户会话信息
 	s, err := session(r)

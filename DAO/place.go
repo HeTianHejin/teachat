@@ -54,8 +54,8 @@ const (
 )
 
 const (
-	PlaceIdNone              = 0
-	PlaceIdSpaceshipTeabar   = 1
+	PlaceIdNone              = 0 // 未知地点 | Unknown Place
+	PlaceIdSpaceshipTeabar   = 1 //茶棚
 	PlaceUuidSpaceshipTeabar = "x"
 )
 

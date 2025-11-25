@@ -529,7 +529,7 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err 
 }
 
 // SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团,
-// team.class = 1 or 2, team_members.status = 1
+// team.class = 0、1 or 2, team_members.status = 1
 func (user *User) SurvivalTeams() ([]Team, error) {
 	count, err := user.SurvivalTeamsCount()
 	if err != nil {
@@ -543,13 +543,13 @@ func (user *User) SurvivalTeams() ([]Team, error) {
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags
         FROM teams
         JOIN team_members ON teams.id = team_members.team_id
-        WHERE teams.class IN ($1, $2) AND team_members.user_id = $3 AND team_members.status = $4 AND teams.deleted_at IS NULL`
+        WHERE teams.class IN ($1, $2, $3) AND team_members.user_id = $4 AND team_members.status = $5 AND teams.deleted_at IS NULL`
 
 	estimatedCapacity := util.Config.MaxSurvivalTeams //设定用户最大允许活跃$事业茶团数值
 	teams := make([]Team, 0, estimatedCapacity)
 
-	query += ` LIMIT $5` // 限制最大团队数
-	rows, err := db.Query(query, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive, estimatedCapacity)
+	query += ` LIMIT $6` // 限制最大团队数
+	rows, err := db.Query(query, TeamClassSpaceship, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive, estimatedCapacity)
 	if err != nil {
 		return nil, err
 	}
