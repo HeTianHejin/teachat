@@ -242,10 +242,10 @@ func main() {
 	mux.HandleFunc("/v1/office/polite", route.Polite)
 	mux.HandleFunc("/v1/office/draftThread", route.ActivateDraftThread)
 
-	//defined in route_message.go
-	mux.HandleFunc("/v1/message/accept", route.AcceptMessages)
-	mux.HandleFunc("/v1/message/invitation_team", route.InvitationsTeam)
-	mux.HandleFunc("/v1/message/invitation_group", route.InvitationGroup)
+	//defined in route_notification.go
+	mux.HandleFunc("/v1/notification/accept", route.AcceptNotifications)
+	mux.HandleFunc("/v1/notification/invitation_team", route.InvitationsTeam)
+	mux.HandleFunc("/v1/notification/invitation_group", route.InvitationGroup)
 
 	//defined in route_place.go
 	mux.HandleFunc("/v1/place/new", route.NewPlace)

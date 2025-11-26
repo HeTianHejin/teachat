@@ -255,10 +255,10 @@ type IndexPageData struct {
 	ThreadBeanSlice []ThreadBean // Threads和作者资料荚
 }
 
-// 接纳茶语消息页面数据
-type AcceptMessagePageData struct {
+// 接纳茶语通知页面数据
+type AcceptNotificationPageData struct {
 	SessUser                   User
-	AcceptMessageSlice         []AcceptMessage
+	AcceptNotificationSlice    []AcceptNotification
 	GroupInvitationUnreadCount int
 }
 

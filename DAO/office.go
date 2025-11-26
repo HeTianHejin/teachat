@@ -61,8 +61,8 @@ const (
 	AcceptObjectTypeGroup                //group（集团）
 )
 
-// 用户新消息统计
-type NewMessageCount struct {
+// 用户新通知统计
+type NewNotificationCount struct {
 	Id     int
 	UserId int
 	Count  int
@@ -207,9 +207,9 @@ func (ao *AcceptObject) GetObjectByACId() (object any, err error) {
 	}
 }
 
-// 创建一个消息计数
-func (m *NewMessageCount) Save() error {
-	statement := `INSERT INTO new_message_counts (user_id, count) VALUES ($1, $2)`
+// 创建一个通知计数
+func (m *NewNotificationCount) Save() error {
+	statement := `INSERT INTO new_notification_counts (user_id, count) VALUES ($1, $2)`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return err
@@ -222,9 +222,9 @@ func (m *NewMessageCount) Save() error {
 	return nil
 }
 
-// update(） 修改一个消息计数
-func (m *NewMessageCount) Update() error {
-	statement := `UPDATE new_message_counts SET count = $1 WHERE id = $2`
+// update(） 修改一个通知计数
+func (m *NewNotificationCount) Update() error {
+	statement := `UPDATE new_notification_counts SET count = $1 WHERE id = $2`
 	stmt, err := db.Prepare(statement)
 	if err != nil {
 		return err
@@ -237,38 +237,38 @@ func (m *NewMessageCount) Update() error {
 	return nil
 }
 
-// 根据.UserId获取用户新消息的消息计数
-func (m *NewMessageCount) GetByUserId() error {
-	err := db.QueryRow(`SELECT id, count FROM new_message_counts WHERE user_id = $1`, m.UserId).Scan(&m.Id, &m.Count)
+// 根据.UserId获取用户新通知的通知计数
+func (m *NewNotificationCount) GetByUserId() error {
+	err := db.QueryRow(`SELECT id, count FROM new_notification_counts WHERE user_id = $1`, m.UserId).Scan(&m.Id, &m.Count)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// 检查new_message_counts表里是否已经存在用户id，返回bool，true为存在
-func (m *NewMessageCount) Check() (valid bool, err error) {
-	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM new_message_counts WHERE user_id = $1)", m.UserId).Scan(&valid)
+// 检查new_notification_counts表里是否已经存在用户id，返回bool，true为存在
+func (m *NewNotificationCount) Check() (valid bool, err error) {
+	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM new_notification_counts WHERE user_id = $1)", m.UserId).Scan(&valid)
 	if err != nil {
 		return false, err
 	}
 	return valid, nil
 }
 
-// GetUserMessage() 获取用户消息数
-func (user *User) GetNewMessageCount() (count int, err error) {
-	err = db.QueryRow(`SELECT count FROM new_message_counts WHERE user_id = $1`, user.Id).Scan(&count)
+// GetUserNotification() 获取用户通知数
+func (user *User) GetNewNotificationCount() (count int, err error) {
+	err = db.QueryRow(`SELECT count FROM new_notification_counts WHERE user_id = $1`, user.Id).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
 	return count, err
 }
 
-// 根据count是否大于0来判断是否有未读消息
-func (user *User) HasUnreadMessage() (has bool) {
-	// 友邻蒙评未读消息数量
-	count1, _ := user.GetNewMessageCount()
-	// 邀请函未读消息数量
+// 根据count是否大于0来判断是否有未读通知
+func (user *User) HasUnreadNotification() (has bool) {
+	// 友邻蒙评未读通知数量
+	count1, _ := user.GetNewNotificationCount()
+	// 邀请函未读通知数量
 	count2 := user.InvitationUnviewedCount()
 
 	count := count1 + count2
@@ -276,37 +276,37 @@ func (user *User) HasUnreadMessage() (has bool) {
 	return count > 0
 }
 
-// AddNewUserMessages() 添加一条用户新信息数
-// 首先检查new_message_counts记录里是否已经存在用户id，
+// AddNewUserNotifications() 添加一条用户新通知数
+// 首先检查new_notification_counts记录里是否已经存在用户id，
 // 如果没有，执行save()，如果有，执行update()
-func AddUserMessageCount(user_id int) error {
-	messageCount := NewMessageCount{
+func AddUserNotificationCount(user_id int) error {
+	notificationCount := NewNotificationCount{
 		UserId: user_id,
 	}
 	// 这里检查是否存在此用户记录
-	exists, err := messageCount.Check()
+	exists, err := notificationCount.Check()
 	if err != nil {
 		return err
 	}
 
 	if exists {
 		// User record exists, update the count +1
-		if err := messageCount.GetByUserId(); err != nil {
+		if err := notificationCount.GetByUserId(); err != nil {
 			return err
 		}
-		messageCount.Count += 1
-		return messageCount.Update()
+		notificationCount.Count += 1
+		return notificationCount.Update()
 	} else {
 		// User record doesn't exist, create a new one
-		messageCount.Count = 1
-		return messageCount.Save()
+		notificationCount.Count = 1
+		return notificationCount.Save()
 	}
 
 }
 
-// SubtractUserMessageCount() 减去通知小黑板上用户1消息数
-func SubtractUserMessageCount(user_id int) error {
-	mesC := NewMessageCount{
+// SubtractUserNotificationCount() 减去通知小黑板上用户1通知数
+func SubtractUserNotificationCount(user_id int) error {
+	mesC := NewNotificationCount{
 		UserId: user_id,
 	}
 
@@ -314,13 +314,13 @@ func SubtractUserMessageCount(user_id int) error {
 		// 不存在，返回错误
 		return err
 	}
-	// 存在，-1消息记录，执行update()
+	// 存在，-1通知记录，执行update()
 	if err := mesC.GetByUserId(); err != nil {
 		return err
 	}
 
 	if mesC.Count <= 0 {
-		return errors.New("error in the number of messages, The number of messages must not be negative")
+		return errors.New("error in the number of notifications, The number of notifications must not be negative")
 	}
 
 	mesC.Count -= 1

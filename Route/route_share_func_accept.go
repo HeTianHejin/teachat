@@ -7,8 +7,8 @@ import (
 	util "teachat/Util"
 )
 
-// 创建AcceptObject并发送邻座蒙评消息
-func createAndSendAcceptMessage(objectId int, objectType int, excludeUserId int) error {
+// 创建AcceptObject并发送邻座蒙评通知
+func createAndSendAcceptNotification(objectId int, objectType int, excludeUserId int) error {
 	// 创建AcceptObject
 	aO := data.AcceptObject{
 		ObjectId:   objectId,
@@ -19,17 +19,17 @@ func createAndSendAcceptMessage(objectId int, objectType int, excludeUserId int)
 		return fmt.Errorf("创建AcceptObject失败: %w", err)
 	}
 
-	// 创建消息
-	mess := data.AcceptMessage{
+	// 创建通知
+	mess := data.AcceptNotification{
 		FromUserId:     data.UserId_Captain_Spaceship,
 		Title:          "新茶语邻座评审邀请",
 		Content:        "您被茶棚选中为新茶语评审官啦，请及时去审理。",
 		AcceptObjectId: aO.Id,
 	}
 
-	// 发送消息
-	if err := TwoAcceptMessagesSendExceptUserId(excludeUserId, mess); err != nil {
-		return fmt.Errorf("发送消息失败: %w", err)
+	// 发送通知
+	if err := TwoAcceptNotificationsSendExceptUserId(excludeUserId, mess); err != nil {
+		return fmt.Errorf("发送通知失败: %w", err)
 	}
 
 	// 返回提示信息

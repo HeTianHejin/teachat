@@ -356,12 +356,12 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	if util.Config.PoliteMode {
 		// 友邻蒙评模式
-		if err := createAndSendAcceptMessage(new_draft_post.Id, data.AcceptObjectTypePost, s_u.Id); err != nil {
+		if err := createAndSendAcceptNotification(new_draft_post.Id, data.AcceptObjectTypePost, s_u.Id); err != nil {
 			// 根据错误类型返回不同提示
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
-				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求通知。")
 			}
 			return
 		}

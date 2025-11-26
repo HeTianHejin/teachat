@@ -88,7 +88,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 权限检查。。。
-	ok, err := s_u.CheckHasReadAcceptMessage(ao_id_int)
+	ok, err := s_u.CheckHasReadAcceptNotification(ao_id_int)
 	if err != nil {
 		util.Debug("Cannot check acceptance", err)
 		report(w, r, "你好，(茶博士摸摸头想了又想), 茴香豆的茴字真的有四种写法吗？")
@@ -400,18 +400,18 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取友邻蒙评邀请函
-	var acceptMessage data.AcceptMessage
-	if err = acceptMessage.GetAccMesByUIdAndAOId(s_u.Id, ao.Id); err != nil {
-		util.Debug("Cannot get accept-message invitation", err)
+	var acceptNotification data.AcceptNotification
+	if err = acceptNotification.GetAccNotiByUIdAndAOId(s_u.Id, ao.Id); err != nil {
+		util.Debug("Cannot get accept-notification invitation", err)
 		report(w, r, "你好，茶博士莫名其妙，竟然说没有机票也登船有时候是合情合理的。")
 		return
 	}
 
 	// 检查用户是否受邀请的新茶评审官
 	ok := false
-	ok, err = s_u.CheckHasAcceptMessage(ao.Id)
+	ok, err = s_u.CheckHasAcceptNotification(ao.Id)
 	if err != nil {
-		util.Debug("CheckHasAcceptMessage failed given accept-object id", ao.Id)
+		util.Debug("CheckHasAcceptNotification failed given accept-object id", ao.Id)
 		report(w, r, "你好，茶博士莫名其妙，竟然说没有机票也可以登船有时候是合情合理的。")
 		return
 	}
@@ -432,8 +432,8 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		//aopd.Title = ob.Title
 		aopd.Body = ob.Title + "." + ob.Body
 		// 更新友邻蒙评邀请函class为已读
-		if err = acceptMessage.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update ob accept-message class", err)
+		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
+			util.Debug("Cannot update ob accept-notification class", err)
 		}
 	case data.AcceptObjectTypeProject:
 		pr := data.Project{
@@ -447,8 +447,8 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		//aopd.Title = pr.Title
 		aopd.Body = pr.Title + "." + pr.Body
 		// 更新友邻蒙评邀请函class为已读
-		if err = acceptMessage.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update pr accept-message class", err)
+		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
+			util.Debug("Cannot update pr accept-notification class", err)
 		}
 	case data.AcceptObjectTypeThread:
 		dThread := data.DraftThread{
@@ -461,11 +461,11 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		aopd.Body = dThread.Title + "." + dThread.Body
-		if err = acceptMessage.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update draft-thread accept-message class", err)
+		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
+			util.Debug("Cannot update draft-thread accept-notification class", err)
 		}
 		// 更新友邻蒙评邀请函class为已读
-		acceptMessage.Update(s_u.Id, dThread.Id)
+		acceptNotification.Update(s_u.Id, dThread.Id)
 
 	case data.AcceptObjectTypePost:
 		dPost := data.DraftPost{
@@ -478,8 +478,8 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 		aopd.Body = dPost.Body
 		// 更新友邻蒙评邀请函class为已读
-		if err = acceptMessage.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update po accept-message class", err)
+		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
+			util.Debug("Cannot update po accept-notification class", err)
 		}
 
 	case data.AcceptObjectTypeTeam:
@@ -492,8 +492,8 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		//aopd.Title = team.Name
 		aopd.Body = team.Name + " " + team.Mission
 		// 更新友邻蒙评邀请函class为已读
-		if err = acceptMessage.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update team accept-message class", err)
+		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
+			util.Debug("Cannot update team accept-notification class", err)
 			return
 		}
 
@@ -506,8 +506,8 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		}
 		aopd.Body = group.Name + " " + group.Mission
 		// 更新友邻蒙评邀请函class为已读
-		if err = acceptMessage.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update group accept-message class", err)
+		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
+			util.Debug("Cannot update group accept-notification class", err)
 			return
 		}
 
@@ -520,9 +520,9 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	aopd.SessUser = s_u
 	aopd.Id = ao.Id
 
-	// 减少1新消息小黑板用户消息记录
-	if err = data.SubtractUserMessageCount(s_u.Id); err != nil {
-		util.Debug("Cannot subtract 1 user message", err)
+	// 减少1新通知小黑板用户通知记录
+	if err = data.SubtractUserNotificationCount(s_u.Id); err != nil {
+		util.Debug("Cannot subtract 1 user notification", err)
 	}
 
 	generateHTML(w, &aopd, "layout", "navbar.private", "watch_your_language")

@@ -175,11 +175,11 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if util.Config.PoliteMode {
-		if err = createAndSendAcceptMessage(draft_thread.Id, data.AcceptObjectTypeThread, s_u.Id); err != nil {
+		if err = createAndSendAcceptNotification(draft_thread.Id, data.AcceptObjectTypeThread, s_u.Id); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
-				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求通知。")
 			}
 			return
 		}
@@ -189,7 +189,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		return
 
 	} else {
-		// 无需发送AcceptObject消息，直接创建新茶议
+		// 无需发送AcceptObject通知，直接创建新茶议
 		thread, err := acceptNewDraftThread(draft_thread.Id)
 		if err != nil {
 			switch {

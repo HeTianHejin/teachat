@@ -174,11 +174,11 @@ func GroupMemberInvitePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 向团队CEO发送消息通知
+	// 向团队CEO发送通知通知
 	team, _ := data.GetTeam(teamId)
 	if ceo, err := team.MemberCEO(); err == nil {
-		if err = data.AddUserMessageCount(ceo.UserId); err != nil {
-			util.Debug("Cannot add user message count", err)
+		if err = data.AddUserNotificationCount(ceo.UserId); err != nil {
+			util.Debug("Cannot add user notification count", err)
 		}
 	}
 
@@ -257,9 +257,9 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 		if err := invitation.UpdateStatus(); err != nil {
 			util.Debug("Cannot update invitation status", err)
 		}
-		// 减少消息计数
-		if err = data.SubtractUserMessageCount(sessUser.Id); err != nil {
-			util.Debug("Cannot subtract user message count", err)
+		// 减少通知计数
+		if err = data.SubtractUserNotificationCount(sessUser.Id); err != nil {
+			util.Debug("Cannot subtract user notification count", err)
 		}
 	}
 

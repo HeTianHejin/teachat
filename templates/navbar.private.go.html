@@ -23,7 +23,7 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                         aria-expanded="false">我的<span class="caret"></span></a>
                     <ul class="dropdown-menu">
-                        <li><a href="/v1/message/accept">信箱</a></li>
+                        <li><a href="/v1/notification/accept">信箱</a></li>
                         <li><a href="/v1/objectives/mine">茶围</a></li>
                         <li role="separator" class="divider"></li>
                         <li><a href="/v1/teams/joined">团队</a></li>
@@ -51,10 +51,10 @@
                         {{ end }}
                     </a>
                 </li>
-                {{ if  .HasUnreadMessage }}
-                <li role="presentation"><a href="/v1/message/accept">
+                {{ if  .HasUnreadNotification }}
+                <li role="presentation"><a href="/v1/notification/accept">
                         <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
-                        <span class="badge">{{ .GetNewMessageCount }}</span></a>
+                        <span class="badge">{{ .GetNewNotificationCount }}</span></a>
                 </li>
                 {{ else }}
                 {{ end }}       

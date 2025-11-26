@@ -207,11 +207,11 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if util.Config.PoliteMode {
-		if err = createAndSendAcceptMessage(new_ob.Id, data.AcceptObjectTypeObjective, s_u.Id); err != nil {
+		if err = createAndSendAcceptNotification(new_ob.Id, data.AcceptObjectTypeObjective, s_u.Id); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
-				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求消息。")
+				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求通知。")
 			}
 			return
 		}

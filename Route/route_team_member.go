@@ -1616,9 +1616,9 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 				report(w, r, "你好，茶博士未能创建邀请函，请稍后再试。")
 				return
 			}
-			// 向受邀请的茶友新消息小黑板上加1
-			if err = data.AddUserMessageCount(invite_user.Id); err != nil {
-				util.Debug(" Cannot add user new-message count", err)
+			// 向受邀请的茶友新通知小黑板上加1
+			if err = data.AddUserNotificationCount(invite_user.Id); err != nil {
+				util.Debug(" Cannot add user new-notification count", err)
 				return
 			}
 
@@ -1843,9 +1843,9 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 			report(w, r, "你好，茶博士正在努力的更新邀请函状态，请稍后再试。")
 			return
 		}
-		// 减去茶友1小黑板新消息数
-		if err = data.SubtractUserMessageCount(s_u.Id); err != nil {
-			util.Debug(" Cannot subtract user message count", err)
+		// 减去茶友1小黑板新通知数
+		if err = data.SubtractUserNotificationCount(s_u.Id); err != nil {
+			util.Debug(" Cannot subtract user notification count", err)
 			return
 		}
 

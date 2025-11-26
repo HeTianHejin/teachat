@@ -6,7 +6,7 @@ import (
 	util "teachat/Util"
 )
 
-// GET /v1/message/invitation_group
+// GET /v1/notification/invitation_group
 // 查看集团邀请函列表
 func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -77,11 +77,11 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	pageData.GroupInvitationRejectedCount = rejectedCount
 	pageData.GroupInvitationTotalCount = len(invitations)
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "message.group_invitation")
+	generateHTML(w, &pageData, "layout", "navbar.private", "notification.invitation_group")
 }
 
-// GET /v1/message/invitation_team
-// 用户关于团队邀请函的消息
+// GET /v1/notification/invitation_team
+// 用户关于团队邀请函的通知
 func InvitationsTeam(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := session(r)
@@ -117,12 +117,12 @@ func InvitationsTeam(w http.ResponseWriter, r *http.Request) {
 	lbPD.InvitationBeanSlice = i_b_slice
 
 	//向用户返回接收邀请函的表单页面
-	generateHTML(w, &lbPD, "layout", "navbar.private", "message.invitation_team")
+	generateHTML(w, &lbPD, "layout", "navbar.private", "notification.invitation_team")
 }
 
-// Get /v1/message/accetp
-// read AcceptMessages page
-func AcceptMessages(w http.ResponseWriter, r *http.Request) {
+// Get /v1/notification/accetp
+// read AcceptNotifications page
+func AcceptNotifications(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	sess, err := session(r)
 	if err != nil {
@@ -136,10 +136,10 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，满头大汗的茶博士在努力中，请稍后再试。")
 		return
 	}
-	var amPD data.AcceptMessagePageData
+	var amPD data.AcceptNotificationPageData
 	//填写页面资料
 	amPD.SessUser = s_u
-	amPD.AcceptMessageSlice, err = s_u.UnreadAcceptMessages()
+	amPD.AcceptNotificationSlice, err = s_u.UnreadAcceptNotifications()
 	if err != nil {
 		util.Debug(s_u.Email, " Cannot get invitations")
 		report(w, r, "你好，满头大汗的茶博士在加倍努力查找您的资料中，请稍后再试。")
@@ -150,6 +150,6 @@ func AcceptMessages(w http.ResponseWriter, r *http.Request) {
 	amPD.GroupInvitationUnreadCount, _ = data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 0)
 
 	//向用户返回表单页面
-	generateHTML(w, &amPD, "layout", "navbar.private", "message.accept")
+	generateHTML(w, &amPD, "layout", "navbar.private", "notification.accept")
 
 }

@@ -47,8 +47,8 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// 向2个非当前用户发送蒙评审核消息
-func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error {
+// 向2个非当前用户发送蒙评审核通知
+func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotification) error {
 	var user_ids []int
 	var err error
 	// if data.UserCount() < 50 {
@@ -86,32 +86,32 @@ func TwoAcceptMessagesSendExceptUserId(u_id int, mess data.AcceptMessage) error 
 		util.Debug(" Cannot get 2 random-user-ids", err)
 		return err
 	}
-	// 发送“是否接纳”消息
+	// 发送“是否接纳”通知
 	if err = mess.Send(user_ids); err != nil {
-		util.Debug(" Cannot send accept message", err)
+		util.Debug(" Cannot send accept notification", err)
 		return err
 	}
-	// 记录用户有1新消息
+	// 记录用户有1新通知
 	for _, u_id := range user_ids {
-		if err = data.AddUserMessageCount(u_id); err != nil {
-			util.Debug(" Cannot add random user new-message-count", err)
+		if err = data.AddUserNotificationCount(u_id); err != nil {
+			util.Debug(" Cannot add random user new-notification-count", err)
 			return err
 		}
 	}
 	return nil
 }
 
-// 向当前用户发送友邻蒙评结果通知消息
-func PilotAcceptMessageSend(u_id int, mess data.AcceptMessage) error {
+// 向当前用户发送友邻蒙评结果通知通知
+func PilotAcceptNotificationSend(u_id int, mess data.AcceptNotification) error {
 
-	// 发送友评邻蒙结果通知消息
+	// 发送友评邻蒙结果通知通知
 	if err := mess.Send([]int{u_id}); err != nil {
-		util.Debug(" Cannot send accept message", err)
+		util.Debug(" Cannot send accept notification", err)
 		return err
 	}
-	// 记录用户有1新消息
-	if err := data.AddUserMessageCount(u_id); err != nil {
-		util.Debug(" Cannot add user new-message-count", err)
+	// 记录用户有1新通知
+	if err := data.AddUserNotificationCount(u_id); err != nil {
+		util.Debug(" Cannot add user new-notification-count", err)
 		return err
 	}
 	return nil

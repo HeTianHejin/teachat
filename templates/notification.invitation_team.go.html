@@ -17,14 +17,14 @@
       <span class="badge">{{ .SessUser.InvitationUnviewedCount }}</span>
       {{ end }}
     </a></li>
-    <li><a href="/v1/message/invitation_group">集团邀请
+    <li><a href="/v1/notification/invitation_group">集团邀请
       {{ if .GroupInvitationUnreadCount }}
       <span class="badge">{{ .GroupInvitationUnreadCount }}</span>
       {{ end }}
     </a></li>
-    <li><a href="/v1/message/accept">新茶评审
-      {{ if .SessUser.HasNewAcceptMessage }}
-      <span class="badge">{{ .SessUser.UnreadAcceptMessagesCount }}</span>
+    <li><a href="/v1/notification/accept">新茶评审
+      {{ if .SessUser.HasNewAcceptNotification }}
+      <span class="badge">{{ .SessUser.UnreadAcceptNotificationsCount }}</span>
       {{ end }}
     </a></li>
     <li><a href="/v1/office/note">茶棚纸条</a></li>
@@ -43,7 +43,7 @@
     <div class="row">
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
     
-          <a href="/v1/user/biography?uuid={{ .AuthorCEO.Uuid }}">{{ .AuthorCEO.Name }}</a>
+          <a href="/v1/user/biography?uuid={{ .Author.Uuid }}">{{ .Author.Name }}</a>
        
       </div>
 
@@ -63,7 +63,7 @@
   </div>
 
   <div class="panel-body">
-    <a href="/v1/team_member/invitation/read?id={{ .Invitation.Uuid }}">
+    <a href="/v1/team_member/invitation/read?uuid={{ .Invitation.Uuid }}">
       
       <h3>茶团邀请函</h3>
     </a>
