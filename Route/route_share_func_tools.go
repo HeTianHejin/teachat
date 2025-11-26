@@ -218,9 +218,9 @@ func getWidthHeightForJpeg(imgBytes []byte) (int, int, error) {
 }
 
 // 1. 校验茶议已有内容是否不超限,false == 超限
-func submitAdditionalContent(w http.ResponseWriter, r *http.Request, body, additional string) bool {
+func submitAdditionalContent(w http.ResponseWriter, s_u data.User, body, additional string) bool {
 	if cnStrLen(body) >= int(util.Config.ThreadMaxWord) {
-		report(w, r, "已有内容已超过最大字数限制，无法补充。")
+		report(w, s_u, "已有内容已超过最大字数限制，无法补充。")
 		return false
 	}
 
@@ -234,7 +234,7 @@ func submitAdditionalContent(w http.ResponseWriter, r *http.Request, body, addit
 			"茶博士提示：补充内容需满足：%d ≤ 字数 ≤ %d（当前：%d）。",
 			min, max, current,
 		)
-		report(w, r, errMsg)
+		report(w, s_u, errMsg)
 		return false
 	}
 	// 3. 校验补充内容是否包含敏感词
@@ -291,24 +291,24 @@ func sanitizeRedirectPath(inputPath string) string {
 }
 
 // Helper function for validating string length
-func validateCnStrLen(value string, min int, max int, fieldName string, w http.ResponseWriter, r *http.Request) bool {
+func validateCnStrLen(value string, min int, max int, fieldName string, w http.ResponseWriter, s_u data.User) bool {
 	if cnStrLen(value) < min {
-		report(w, r, fmt.Sprintf("你好，茶博士竟然说该茶议%s为空或太短，请确认后再试一次。", fieldName))
+		report(w, s_u, fmt.Sprintf("你好，茶博士竟然说该茶议%s为空或太短，请确认后再试一次。", fieldName))
 		return false
 	}
 	if cnStrLen(value) > max {
-		report(w, r, fmt.Sprintf("你好，茶博士竟然说该茶议%s过长，请确认后再试一次。", fieldName))
+		report(w, s_u, fmt.Sprintf("你好，茶博士竟然说该茶议%s过长，请确认后再试一次。", fieldName))
 		return false
 	}
 	return true
 }
 
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
-func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) error {
+func processUploadAvatar(w http.ResponseWriter, r *http.Request, s_u data.User, uuid string) error {
 	// 从请求中解包出单个上传文件
 	file, fileHeader, err := r.FormFile("avatar")
 	if err != nil {
-		report(w, r, "获取头像文件失败，请稍后再试。")
+		report(w, s_u, "获取头像文件失败，请稍后再试。")
 		return err
 	}
 	// 确保文件在函数执行完毕后关闭
@@ -317,17 +317,17 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	// 获取文件大小，注意：客户端提供的文件大小可能不准确
 	size := fileHeader.Size
 	if size > 30*1024 {
-		report(w, r, "文件大小超过30kb,茶博士接不住。")
+		report(w, s_u, "文件大小超过30kb,茶博士接不住。")
 		return errors.New("the file size over 30kb")
 	}
 	// 实际读取文件大小进行校验，以防止客户端伪造
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		report(w, r, "读取头像文件失败，请稍后再试。")
+		report(w, s_u, "读取头像文件失败，请稍后再试。")
 		return err
 	}
 	if len(fileBytes) > 30*1024 {
-		report(w, r, "文件大小超过30kb,茶博士接不住。")
+		report(w, s_u, "文件大小超过30kb,茶博士接不住。")
 		return errors.New("the file size over 30kb")
 	}
 
@@ -335,25 +335,25 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	filename := fileHeader.Filename
 	ext := strings.ToLower(path.Ext(filename))
 	if ext != ".jpeg" && ext != ".jpg" {
-		report(w, r, "注意头像图片文件类型, 目前仅限jpeg格式图片上传。")
+		report(w, s_u, "注意头像图片文件类型, 目前仅限jpeg格式图片上传。")
 		return errors.New("the file type is not jpeg")
 	}
 
 	// 获取文件类型，注意：客户端提供的文件类型可能不准确
 	fileType := http.DetectContentType(fileBytes)
 	if fileType != "image/jpeg" {
-		report(w, r, "注意图片文件类型,目前仅限jpeg格式。")
+		report(w, s_u, "注意图片文件类型,目前仅限jpeg格式。")
 		return errors.New("the file type is not jpeg")
 	}
 
 	// 检测图片尺寸宽高和图像格式,判断是否合适
 	width, height, err := getWidthHeightForJpeg(fileBytes)
 	if err != nil {
-		report(w, r, "注意图片文件格式, 目前仅限jpeg格式。")
+		report(w, s_u, "注意图片文件格式, 目前仅限jpeg格式。")
 		return err
 	}
 	if width < 32 || width > 64 || height < 32 || height > 64 {
-		report(w, r, "注意图片尺寸, 宽高需要在32-64像素之间。")
+		report(w, s_u, "注意图片尺寸, 宽高需要在32-64像素之间。")
 		return errors.New("the image size is not between 32 and 64")
 	}
 
@@ -362,7 +362,7 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	newFile, err := os.Create(newFilePath)
 	if err != nil {
 		util.Debug("创建头像文件名失败", err)
-		report(w, r, "创建头像文件失败，请稍后再试。")
+		report(w, s_u, "创建头像文件失败，请稍后再试。")
 		return err
 	}
 	// 确保文件在函数执行完毕后关闭
@@ -372,12 +372,12 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	buff := bufio.NewWriter(newFile)
 	if _, err = buff.Write(fileBytes); err != nil {
 		util.Debug("fail to write avatar image", err)
-		report(w, r, "你好，茶博士居然说没有墨水了， 未能写完头像文件，请稍后再试。")
+		report(w, s_u, "你好，茶博士居然说没有墨水了， 未能写完头像文件，请稍后再试。")
 		return err
 	}
 	if err = buff.Flush(); err != nil {
 		util.Debug("fail to write avatar image", err)
-		report(w, r, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
+		report(w, s_u, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
 		return err
 	}
 
@@ -385,7 +385,7 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 }
 
 // 茶博士向茶客回话的方法，包括但不限于意外事件和通知、感谢等等提示。
-func report(w http.ResponseWriter, r *http.Request, msg ...any) {
+func report(w http.ResponseWriter, s_u data.User, msg ...any) {
 	type uM struct {
 		SessUser data.User
 		Message  string
@@ -400,22 +400,11 @@ func report(w http.ResponseWriter, r *http.Request, msg ...any) {
 	}
 	m.Message = b.String()
 
-	s, err := session(r)
-	if err != nil {
-		m.SessUser = data.User{
-			Id:   data.UserId_None,
-			Name: "游客",
-		}
-		generateHTML(w, &m, "layout", "navbar.public", "feedback")
-		return
+	if s_u.Id > 0 {
+		m.SessUser = s_u
+	} else {
+		m.SessUser = data.UserUnknown
 	}
-	s_u, err := s.User()
-	if err != nil {
-		util.Debug("Cannot get user from session", s.Email, err)
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	m.SessUser = s_u
 
 	generateHTML(w, &m, "layout", "navbar.private", "feedback")
 }
@@ -462,21 +451,21 @@ func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]dat
 
 // validateTeamAndFamilyParams 验证团队和家庭ID参数的合法性
 // 返回: (是否有效, 错误) ---deepseek协助优化
-func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, currentUserID int, w http.ResponseWriter, r *http.Request) (bool, error) {
+func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, s_u data.User, w http.ResponseWriter) (bool, error) {
 
 	// 基本参数检查（这些检查不涉及数据库操作）
 	//非法id组合
 	if family_id == data.FamilyIdUnknown && team_id == data.TeamIdNone {
-		report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return false, nil
 	}
 	if team_id == data.TeamIdNone || team_id == data.TeamIdSpaceshipCrew {
-		report(w, r, "指定的团队编号是保留编号，不能使用。")
+		report(w, s_u, "指定的团队编号是保留编号，不能使用。")
 		return false, nil
 	}
 
 	if team_id < 0 || family_id < 0 {
-		report(w, r, "团队ID不合法。")
+		report(w, s_u, "团队ID不合法。")
 		return false, nil
 	}
 
@@ -485,7 +474,7 @@ func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, cu
 	if is_private {
 		// 管理权属于家庭
 		if family_id == data.FamilyIdUnknown {
-			report(w, r, "你好，四海为家者今天不能发布新茶语，请明天再试。")
+			report(w, s_u, "你好，四海为家者今天不能发布新茶语，请明天再试。")
 			return false, fmt.Errorf("unknown family #%d cannot do this", family_id)
 		}
 		family := data.Family{Id: family_id}
@@ -495,33 +484,33 @@ func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, cu
 		isOnlyOne, err := family.IsOnlyOneMember()
 		if err != nil {
 			util.Debug("Cannot count family member given id", family.Id, err)
-			report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+			report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 			return false, err
 		}
 		if isOnlyOne {
-			report(w, r, "根据“慎独”约定，单独成员家庭目前暂时不能品茶噢，请向船长抗议。")
+			report(w, s_u, "根据“慎独”约定，单独成员家庭目前暂时不能品茶噢，请向船长抗议。")
 			return false, fmt.Errorf("onlyone member family #%d cannot do this", family_id)
 		}
 
-		is_member, err := family.IsMember(currentUserID)
+		is_member, err := family.IsMember(s_u.Id)
 		if err != nil {
 			return false, err // 数据库错误，返回error
 		}
 		if !is_member {
-			report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+			report(w, s_u, "你好，家庭成员资格检查失败，请确认后再试。")
 			return false, fmt.Errorf(" team %d id_member check failed", team_id)
 		}
 	} else {
 		// 管理权属于团队
 		if team_id == data.TeamIdNone || team_id == data.TeamIdSpaceshipCrew {
-			report(w, r, "你好，特殊团队今天还不能创建茶话会，请稍后再试。")
+			report(w, s_u, "你好，特殊团队今天还不能创建茶话会，请稍后再试。")
 			return false, fmt.Errorf("special team #%d cannot do this", team_id)
 		}
 		//声明是四海为家【与家庭背景（责任）无关】
 		if team_id == data.TeamIdFreelancer {
 			//既隐藏家庭背景，也不声明团队的“独狼”
 			// 违背了“慎独”原则
-			report(w, r, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜发表茶话。")
+			report(w, s_u, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜发表茶话。")
 			return false, nil
 		}
 
@@ -529,12 +518,12 @@ func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, cu
 		// if err := team.Get(); err != nil {
 		// 	return false, err // 数据库错误，返回error
 		// }
-		is_member, err := team.IsMember(currentUserID)
+		is_member, err := team.IsMember(s_u.Id)
 		if err != nil {
 			return false, err // 数据库错误，返回error
 		}
 		if !is_member {
-			report(w, r, "你好，眼前无路想回头，您是什么团成员？什么茶话会？请稍后再试。")
+			report(w, s_u, "你好，眼前无路想回头，您是什么团成员？什么茶话会？请稍后再试。")
 			return false, nil
 		}
 

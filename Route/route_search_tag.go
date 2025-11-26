@@ -13,7 +13,7 @@ func SearchByTag(w http.ResponseWriter, r *http.Request) {
 	searchType := r.URL.Query().Get("type")
 
 	if tag == "" {
-		report(w, r, "你好，请输入搜索标签。")
+		report(w, data.UserUnknown, "你好，请输入搜索标签。")
 		return
 	}
 

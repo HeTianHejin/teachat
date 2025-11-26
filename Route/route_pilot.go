@@ -16,13 +16,13 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//获取用户信息
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	//判断用户角色是否为飞行员或者船长，如果是，则显示飞行员列表
-	if user.Role == "pilot" || user.Role == "captain" {
+	if s_u.Role == "pilot" || s_u.Role == "captain" {
 
 		pilots, err := data.GetAdministrators()
 		if err != nil {
@@ -32,7 +32,7 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &pilots, "layout", "navbar.private", "pilot.office")
 	}
 	//如果不是，则显示错误信息
-	report(w, r, "你好，欢迎光临茶博士服务室！")
+	report(w, s_u, "你好，欢迎光临茶博士服务室！")
 }
 
 // GET /pilot/new

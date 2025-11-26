@@ -15,7 +15,7 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	sessUser, err := s.User()
+	s_u, err := s.User()
 	if err != nil {
 		util.Debug("Cannot get user", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -23,10 +23,10 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户所在的担任CEO的团队收到的所有集团邀请函
-	invitations, err := data.GetGroupInvitationsByUserId(sessUser.Id)
+	invitations, err := data.GetGroupInvitationsByUserId(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot get group invitations", err)
-		report(w, r, "你好，茶博士在努力查找您的邀请函中，请稍后再试。")
+		report(w, s_u, "你好，茶博士在努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 
@@ -55,10 +55,10 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 统计各状态数量
-	unreadCount, _ := data.CountGroupInvitationsByUserIdAndStatus(sessUser.Id, 0)
-	viewedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(sessUser.Id, 1)
-	acceptedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(sessUser.Id, 2)
-	rejectedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(sessUser.Id, 3)
+	unreadCount, _ := data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 0)
+	viewedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 1)
+	acceptedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 2)
+	rejectedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 3)
 
 	var pageData struct {
 		SessUser                     data.User
@@ -69,7 +69,7 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 		GroupInvitationRejectedCount int
 		GroupInvitationTotalCount    int
 	}
-	pageData.SessUser = sessUser
+	pageData.SessUser = s_u
 	pageData.GroupInvitationSlice = invitationItems
 	pageData.GroupInvitationUnreadCount = unreadCount
 	pageData.GroupInvitationViewedCount = viewedCount
@@ -102,13 +102,13 @@ func InvitationsTeam(w http.ResponseWriter, r *http.Request) {
 	i_slice, err := s_u.Invitations()
 	if err != nil {
 		util.Debug(s_u.Email, " Cannot get invitations")
-		report(w, r, "你好，满头大汗的茶博士在努力查找您的邀请函中，请稍后再试。")
+		report(w, s_u, "你好，满头大汗的茶博士在努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 	i_b_slice, err := fetchInvitationBeanSlice(i_slice)
 	if err != nil {
 		util.Debug(s_u.Email, " Cannot get invitations bean slice")
-		report(w, r, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
+		report(w, s_u, "你好，茶博士在加倍努力查找您的邀请函中，请稍后再试。")
 		return
 	}
 
@@ -133,7 +133,7 @@ func AcceptNotifications(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user", err)
-		report(w, r, "你好，满头大汗的茶博士在努力中，请稍后再试。")
+		report(w, s_u, "你好，满头大汗的茶博士在努力中，请稍后再试。")
 		return
 	}
 	var amPD data.AcceptNotificationPageData
@@ -142,7 +142,7 @@ func AcceptNotifications(w http.ResponseWriter, r *http.Request) {
 	amPD.AcceptNotificationSlice, err = s_u.UnreadAcceptNotifications()
 	if err != nil {
 		util.Debug(s_u.Email, " Cannot get invitations")
-		report(w, r, "你好，满头大汗的茶博士在加倍努力查找您的资料中，请稍后再试。")
+		report(w, s_u, "你好，满头大汗的茶博士在加倍努力查找您的资料中，请稍后再试。")
 		return
 	}
 

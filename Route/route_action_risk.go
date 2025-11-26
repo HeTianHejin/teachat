@@ -37,10 +37,10 @@ func RiskNewGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -48,7 +48,7 @@ func RiskNewGet(w http.ResponseWriter, r *http.Request) {
 		SessUser  data.User
 		ReturnURL string
 	}
-	riskData.SessUser = user
+	riskData.SessUser = s_u
 	riskData.ReturnURL = r.URL.Query().Get("return_url")
 
 	generateHTML(w, &riskData, "layout", "navbar.private", "risk.new")
@@ -61,10 +61,10 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -73,11 +73,11 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 	description := strings.TrimSpace(r.PostFormValue("description"))
 
 	if name == "" {
-		report(w, r, "风险名称不能为空。")
+		report(w, s_u, "风险名称不能为空。")
 		return
 	}
 	if description == "" {
-		report(w, r, "风险描述不能为空。")
+		report(w, s_u, "风险描述不能为空。")
 		return
 	}
 
@@ -88,7 +88,7 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	risk := data.Risk{
-		UserId:      user.Id,
+		UserId:      s_u.Id,
 		Name:        name,
 		Nickname:    strings.TrimSpace(r.PostFormValue("nickname")),
 		Keywords:    strings.TrimSpace(r.PostFormValue("keywords")),
@@ -99,7 +99,7 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := risk.Create(); err != nil {
 		util.Debug("Cannot create risk", err)
-		report(w, r, "创建风险记录失败，请重试。")
+		report(w, s_u, "创建风险记录失败，请重试。")
 		return
 	}
 
@@ -130,29 +130,29 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	risk := data.Risk{Id: id}
 	if err := risk.GetByIdOrUUID(); err != nil {
 		util.Debug("Cannot get risk by id", id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -169,7 +169,7 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 		Risk     data.Risk
 		Recorder data.User
 	}
-	riskData.SessUser = user
+	riskData.SessUser = s_u
 	riskData.Risk = risk
 	riskData.Recorder = recorder
 

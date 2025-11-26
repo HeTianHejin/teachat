@@ -27,12 +27,6 @@ func HandleSearch(w http.ResponseWriter, r *http.Request) {
 // POST /v1/search
 // 处理用户提交的查询（参数）方法
 func SearchPost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
-	if err != nil {
-		util.Debug(" Cannot parse form", err)
-		report(w, r, "你好，茶博士失魂鱼，未能理解你的话语，请稍后再试。")
-		return
-	}
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -44,6 +38,12 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug(" Cannot parse form", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能理解你的话语，请稍后再试。")
+		return
+	}
 
 	//读取查询参数
 	class_str := r.PostFormValue("class")
@@ -51,7 +51,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	class_int, err := strconv.Atoi(class_str)
 	if err != nil {
 		util.Debug("Cannot convert class_str to int", err)
-		report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
+		report(w, s_u, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 
@@ -59,7 +59,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	//检查keyword的文字长度是否>1 and <32
 	keyword_len := len(keyword)
 	if keyword_len < 1 || keyword_len > 32 {
-		report(w, r, "你好，茶博士摸摸头，说关键词太长了记不住呢，请确认后再试。")
+		report(w, s_u, "你好，茶博士摸摸头，说关键词太长了记不住呢，请确认后再试。")
 		return
 	}
 
@@ -79,7 +79,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			user, err := data.GetUserByEmail(keyword, r.Context())
 			if err != nil {
 				util.Debug(keyword, " Cannot search user by keyword", err)
-				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
 			//如果user是非空
@@ -87,7 +87,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				user_bean, err := fetchUserDefaultBean(user)
 				if err != nil {
 					util.Debug("cannot get user-bean given user", err)
-					report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+					report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 					return
 				} else {
 					fPD.UserDefaultDataBeanSlice = append(fPD.UserDefaultDataBeanSlice, user_bean)
@@ -98,7 +98,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			user_slice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 			if err != nil {
 				util.Debug(" Cannot search user by keyword", err)
-				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
 
@@ -106,7 +106,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				fPD.UserDefaultDataBeanSlice, err = fetchUserDefaultDataBeanSlice(user_slice)
 				if err != nil {
 					util.Debug(" Cannot fetch user bean slice given user_slice", err)
-					report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+					report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 					return
 				}
 				fPD.IsEmpty = false
@@ -120,7 +120,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		// 验证关键词是否为自然数
 		keyword_int, err := strconv.Atoi(keyword)
 		if err != nil || keyword_int <= 0 {
-			report(w, r, "茶友号必须是正整数")
+			report(w, s_u, "茶友号必须是正整数")
 			return
 		}
 		user, err := data.GetUser(keyword_int)
@@ -131,7 +131,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				return
 			} else {
 				util.Debug("failed to get user given user_id: ", keyword_int, err)
-				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
 		}
@@ -141,7 +141,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			userbean, err := fetchUserDefaultBean(user)
 			if err != nil {
 				util.Debug("cannot get user-bean given user", err)
-				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			} else {
 				fPD.UserDefaultDataBeanSlice = append(fPD.UserDefaultDataBeanSlice, userbean)
@@ -155,7 +155,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		team_slice, err := data.SearchTeamByAbbreviation(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search team by abbreviation", err)
-			report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 			return
 		}
 
@@ -163,7 +163,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			t_b_slice, err := fetchTeamBeanSlice(team_slice)
 			if err != nil {
 				util.Debug(" Cannot fetch team bean slice given team_slice", err)
-				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
 			if len(t_b_slice) >= 1 {
@@ -180,14 +180,14 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		thread_slice, err := data.SearchThreadByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search thread by title", err)
-			report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 			return
 		}
 		if len(thread_slice) >= 1 {
 			thread_bean_slice, err := fetchThreadBeanSlice(thread_slice, r)
 			if err != nil {
 				util.Debug(" Cannot fetch thread bean slice given thread_slice", err)
-				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
 			fPD.Count = len(thread_slice)
@@ -202,14 +202,14 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		objective_slice, err := data.SearchObjectiveByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search objective by title", err)
-			report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 			return
 		}
 		if len(objective_slice) >= 1 {
 			objective_bean_slice, err := FetchObjectiveBeanSlice(objective_slice)
 			if err != nil {
 				util.Debug(" Cannot fetch objective bean slice given objective_slice", err)
-				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
+				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
 			fPD.Count = len(objective_slice)
@@ -348,7 +348,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			family_bean_slice, err := fetchFamilyBeanSlice(family_slice)
 			if err != nil {
 				util.Debug(" Cannot fetch family bean slice", err)
-				report(w, r, "你好，茶博士摸摸头，搜索关键词无效，请确认后再试。")
+				report(w, s_u, "你好，茶博士摸摸头，搜索关键词无效，请确认后再试。")
 				return
 			}
 			fPD.Count = len(family_bean_slice)
@@ -359,7 +359,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		return
 
 	default:
-		report(w, r, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
+		report(w, s_u, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
 		return
 	}
 }

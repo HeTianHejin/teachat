@@ -36,14 +36,14 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	// 解析表单内容，获取当前用户提交的内容
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	// 提交的声明标题
@@ -51,7 +51,7 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	// 检查提交的声明标题字数是否>2 and <64
 	lenTit := cnStrLen(titl)
 	if lenTit < 2 || lenTit > 64 {
-		report(w, r, "你好，茶博士认为标题字数太长或者太短，请确认后再试。")
+		report(w, s_u, "你好，茶博士认为标题字数太长或者太短，请确认后再试。")
 		return
 	}
 
@@ -60,25 +60,25 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	// 检查提交的声明内容字数是否>3 and <int(util.Config.ThreadMaxWord)
 	lenCont := cnStrLen(cont)
 	if lenCont < 3 || lenCont > int(util.Config.ThreadMaxWord) {
-		report(w, r, "你好，茶博士认为内容字数太长或者太短，请确认后再试。")
+		report(w, s_u, "你好，茶博士认为内容字数太长或者太短，请确认后再试。")
 		return
 	}
 	// 检查提交的成员邮箱
 	m_email := r.PostFormValue("m_email")
 	if ok := isEmail(m_email); !ok {
-		report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
+		report(w, s_u, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
 		return
 	}
 	//读取声明退出的成员资料
 	t_user, err := data.GetUserByEmail(m_email, r.Context())
 	if err != nil {
 		util.Debug("Cannot get user by email", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//检查提交人是否和会话用户一致
 	if s_u.Id != t_user.Id {
-		report(w, r, "你好，目前不能代替他人提交退出茶团声明，请确认后再试。")
+		report(w, s_u, "你好，目前不能代替他人提交退出茶团声明，请确认后再试。")
 		return
 	}
 
@@ -87,25 +87,25 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	team_id, err := strconv.Atoi(team_id_str)
 	if err != nil {
 		util.Debug("Cannot convert team_id to int", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	// 读取目标茶团资料
 	t_team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Debug(team_id, "Cannot get team by id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	// 检查提交人是否为茶团成员
 	t_member, err := data.GetMemberByTeamIdUserId(t_team.Id, t_user.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "你好，你不是茶团成员，不接受退出声明噢。")
+			report(w, s_u, "你好，你不是茶团成员，不接受退出声明噢。")
 			return
 		} else {
 			util.Debug(t_team.Id, t_user.Id, "Cannot get team member by team id and user id", err)
-			report(w, r, "你好，未能获取拟退出的茶团资料，请稍后再试。")
+			report(w, s_u, "你好，未能获取拟退出的茶团资料，请稍后再试。")
 			return
 		}
 	}
@@ -115,13 +115,13 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	// case "taster":
 	// 	break
 	// case "CTO", RoleCFO, RoleCMO:
-	// 	report(w, r, "你好，请先联系CEO，将你目前角色核心成员调整为普通成员品茶师，然后再声明退出。")
+	// 	report(w, s_u, "你好，请先联系CEO，将你目前角色核心成员调整为普通成员品茶师，然后再声明退出。")
 	// 	return
 	// case RoleCEO:
-	// 	report(w, r, "你好，请先联系茶团创建人，将你目前角色调整为普通成员品茶师，然后再声明退出。")
+	// 	report(w, s_u, "你好，请先联系茶团创建人，将你目前角色调整为普通成员品茶师，然后再声明退出。")
 	// 	return
 	// default:
-	// 	report(w, r, "你好，满头大汗的茶博士表示找不到这个茶友角色，请确认后再试。")
+	// 	report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶友角色，请确认后再试。")
 	// 	return
 	// }
 
@@ -131,7 +131,7 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 		t_member.Role = "taster"
 		if err := t_member.UpdateRoleStatus(); err != nil {
 			util.Debug("Cannot update member role to taster", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 	}
@@ -152,15 +152,15 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	//尝试保存退出声明
 	if err := tmqD.Create(); err != nil {
 		util.Debug("Cannot create team member resignation", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	//返回成功保存声明的报告
 	if t_member.Role == "taster" && tmqD.MemberCurrentRole != "taster" {
-		report(w, r, "你好，作为核心成员，你的角色已自动调整为普通成员，退出声明已提交，请等待管理员审批。")
+		report(w, s_u, "你好，作为核心成员，你的角色已自动调整为普通成员，退出声明已提交，请等待管理员审批。")
 	} else {
-		report(w, r, "你好，茶博士已经保存了你的退出声明，请等待管理员答复。")
+		report(w, s_u, "你好，茶博士已经保存了你的退出声明，请等待管理员答复。")
 	}
 
 	//返回茶团主页
@@ -193,7 +193,7 @@ func MemberResignGet(w http.ResponseWriter, r *http.Request) {
 	t_team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(team_uuid, "Cannot get team by uuid", err)
-		report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
+		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
 
@@ -201,11 +201,11 @@ func MemberResignGet(w http.ResponseWriter, r *http.Request) {
 	_, err = data.GetMemberByTeamIdUserId(t_team.Id, s_u.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "你好，您不是本茶团的成员，稍后再试。")
+			report(w, s_u, "你好，您不是本茶团的成员，稍后再试。")
 			return
 		} else {
 			util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
-			report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
 	}
@@ -244,7 +244,7 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 	t_team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(team_uuid, "Cannot get team by uuid", err)
-		report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
+		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
 
@@ -252,13 +252,13 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 	role_notices, err := data.GetMemberRoleNoticesByTeamId(t_team.Id)
 	if err != nil {
 		util.Debug(t_team.Id, "Cannot get team member role change notice by team id", err)
-		report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
 	tmrnBeanSlice, err := fetchTeamMemberRoleNoticeBeanSlice(role_notices)
 	if err != nil {
 		util.Debug("Cannot fetch team member role notice bean slice", err)
-		report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
 
@@ -311,7 +311,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	team_id_int, err := strconv.Atoi(team_id_str)
 	if err != nil {
 		util.Debug(team_id_str, "Cannot convert team_id to int", err)
-		report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 		return
 	}
 
@@ -319,7 +319,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 
 	//检查提交的email参数格式是否正常
 	if ok := isEmail(member_email); !ok {
-		report(w, r, "你好，茶博士的眼镜被闪电破坏了，看不清提及的邮箱，请稍后再试。")
+		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，看不清提及的邮箱，请稍后再试。")
 		return
 	}
 
@@ -327,14 +327,14 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	t_team, err := data.GetTeam(team_id_int)
 	if err != nil {
 		util.Debug(team_id_str, "Cannot get team by id", err)
-		report(w, r, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
+		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
 	//读取拟调整角色目标茶友资料
 	t_member, err := data.GetUserByEmail(member_email, r.Context())
 	if err != nil {
 		util.Debug(member_email, "Cannot get user given email", err)
-		report(w, r, "你好，满头大汗的茶博士表示找不到这个茶友，稍后再试。")
+		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶友，稍后再试。")
 		return
 	}
 
@@ -342,11 +342,11 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	_, err = data.GetMemberByTeamIdUserId(t_team.Id, t_member.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "你好，满头大汗的茶博士表示这个不是茶团的成员，稍后再试。")
+			report(w, s_u, "你好，满头大汗的茶博士表示这个不是茶团的成员，稍后再试。")
 			return
 		} else {
 			util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
-			report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
 	}
@@ -356,14 +356,14 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	member_ceo, err := t_team.MemberCEO()
 	if err != nil {
 		util.Debug(t_team.Id, "Cannot get team ceo given team id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取目标茶团创建人的资料，Founder也可以调整成员角色！包括CEO！太疯狂了？（参考自观音菩萨可以决定西天取经团队的任何角色人选）
 	t_founder, err := t_team.Founder()
 	if err != nil {
 		util.Debug(t_team.Id, "Cannot get team founder given team id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 	}
 	// 准备资料
 	var tmrcnP data.TeamMemberRoleChangeNoticePage
@@ -383,7 +383,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !is_manager {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你不是这个茶团的管理者，无权调整角色噢。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你不是这个茶团的管理者，无权调整角色噢。")
 		return
 	}
 
@@ -391,14 +391,14 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	t_ceo, err := data.GetUser(member_ceo.UserId)
 	if err != nil {
 		util.Debug(member_ceo.UserId, "Cannot get user by id", err)
-		report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
 
 	m_c_role, err := data.GetTeamMemberRoleByTeamIdAndUserId(t_team.Id, t_member.Id)
 	if err != nil {
 		util.Debug(t_team.Id, "Cannot get team member role given team id", err)
-		report(w, r, "你好，茶博士正在忙碌中，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
 
@@ -441,7 +441,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	//提交的成员邮箱
 	m_email := r.PostFormValue("m_email")
 	if ok := isEmail(m_email); !ok {
-		report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
+		report(w, s_u, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
 		return
 	}
 	//提交的目标茶团
@@ -449,14 +449,14 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	team_id, err := strconv.Atoi(team_id_str)
 	if err != nil {
 		util.Debug(team_id_str, "Cannot convert team_id to int", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取目标茶团资料
 	t_team, err := data.GetTeam(team_id)
 	if err != nil {
 		util.Debug(team_id, "Cannot get team by id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//提交的成员新角色参数
@@ -474,16 +474,16 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 				break
 			} else {
 				util.Debug(t_team.Id, new_role, "Cannot get team member by role", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
 		} else {
-			report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的角色已经有人担任了，请确认后再提交。")
+			report(w, s_u, "你好，茶博士摸摸头嘀咕说，你提交的角色已经有人担任了，请确认后再提交。")
 			return
 		}
 
 	default:
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的角色不在茶团角色列表中，请确认后再提交。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你提交的角色不在茶团角色列表中，请确认后再提交。")
 		return
 	}
 
@@ -491,29 +491,29 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	t_member, err := data.GetUserByEmail(m_email, r.Context())
 	if err != nil {
 		util.Debug(m_email, "Cannot get user by email", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//检查目标茶友是否茶团成员
 	member, err := data.GetMemberByTeamIdUserId(t_team.Id, t_member.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "你好，茶博士摸摸头嘀咕说，这个茶友不是茶团成员，无法调整角色。")
+			report(w, s_u, "你好，茶博士摸摸头嘀咕说，这个茶友不是茶团成员，无法调整角色。")
 			return
 		} else {
 			util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
-			report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
 	}
 	//检查提交者是否在尝试调整自己的角色，不合规
 	if member.UserId == s_u.Id {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你不能调整自己的角色。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你不能调整自己的角色。")
 		return
 	}
 	//Role no change
 	if new_role == member.Role {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你没有调整角色，无需提交。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你没有调整角色，无需提交。")
 		return
 	}
 
@@ -521,14 +521,14 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	//检查提交的标题是否正常，中文字数>6,<24
 	if cnStrLen(title) < 6 || cnStrLen(title) > 24 {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的标题太长或太短，请确认后再提交。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你提交的标题太长或太短，请确认后再提交。")
 		return
 	}
 	//提交的角色调整内容
 	content := r.PostFormValue("content")
 	//检查提交的内容是否正常，中文字数>2,<int(util.Config.ThreadMaxWord),
 	if cnStrLen(content) < 2 || cnStrLen(content) > int(util.Config.ThreadMaxWord) {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你提交的内容太长或太短，请确认后再提交。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你提交的内容太长或太短，请确认后再提交。")
 		return
 	}
 
@@ -537,14 +537,14 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	m_ceo, err := t_team.MemberCEO()
 	if err != nil {
 		util.Debug(t_team.Id, "Cannot get team ceo given team id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取目标茶团创建人资料
 	t_founder, err := t_team.Founder()
 	if err != nil {
 		util.Debug(t_team.Id, "Cannot get team founder given team id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -563,14 +563,14 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = team_member_role_notice.Create(); err != nil {
 			util.Debug(team_member_role_notice, "Cannot create team_member_role_notice", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		//更新成员角色
 		member.Role = new_role
 		if err = member.UpdateRoleStatus(); err != nil {
 			util.Debug(member, "Cannot update member", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 
@@ -589,23 +589,23 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = team_member_role_notice.Create(); err != nil {
 			util.Debug(team_member_role_notice, "Cannot create team_member_role_notice", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		// 更新成员角色
 		member.Role = new_role
 		if err = member.UpdateRoleStatus(); err != nil {
 			util.Debug(member, "Cannot update member", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 	} else {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你不是这个茶团的管理者，无权调整角色噢。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你不是这个茶团的管理者，无权调整角色噢。")
 		return
 	}
 
 	//报告调整角色成功消息
-	report(w, r, "你好，茶博士摸摸头说，已经调整了 "+t_member.Name+" 的角色为 "+new_role+" 。")
+	report(w, s_u, "你好，茶博士摸摸头说，已经调整了 "+t_member.Name+" 的角色为 "+new_role+" 。")
 }
 
 // /v1/team_member/invite
@@ -685,32 +685,32 @@ func MemberApplicationDetail(w http.ResponseWriter, r *http.Request) {
 	application := data.MemberApplication{Uuid: application_uuid}
 	if err = application.GetByUuid(); err != nil {
 		util.Debug(application_uuid, "cannot get application given uuid", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	applicant, err := data.GetUser(application.UserId)
 	if err != nil {
 		util.Debug(application.UserId, "Cannot get user given id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	team, err := data.GetTeam(application.TeamId)
 	if err != nil {
 		util.Debug(application.TeamId, "Cannot get team given id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//权限检查，用户可以查看自己的申请书详情，或者是团队管理员可以
-	if applicant.Id != s_u.Id && !canManageTeam(&team, s_u.Id, w, r) {
+	if applicant.Id != s_u.Id && !canManageTeam(&team, s_u, w) {
 		return
 	}
 
 	applicant_default_team, err := applicant.GetLastDefaultTeam()
 	if err != nil {
 		util.Debug(applicant.Email, "Cannot get default team given user", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -733,18 +733,18 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//解析表单内容，获取茶友提交的内容
-	err = r.ParseForm()
-	if err != nil {
-		util.Debug(" Cannot parse form", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
-		return
-	}
 	// 根据会话信息读取茶友资料
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(s.Email, "Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	//解析表单内容，获取茶友提交的内容
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug(" Cannot parse form", err)
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -753,7 +753,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	application_id, err := strconv.Atoi(application_id_str)
 	if err != nil {
 		util.Debug(application_id_str, "Cannot convert application_id to int", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	application := data.MemberApplication{
@@ -762,47 +762,47 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	//读取加盟茶团申请书
 	if err = application.Get(); err != nil {
 		util.Debug(application_id, "Cannot get application given id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//检查申请书的状态是否正常，已查看
 	switch application.Status {
 	case data.MemberApplicationStatusPending:
 		//未查看
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	case data.MemberApplicationStatusViewed:
 		//已查看，但未处理
 		break
 	case data.MemberApplicationStatusApproved, data.MemberApplicationStatusRejected:
 		// 已经处理完成
-		report(w, r, "你好，这份申请书已经被处理，请确认后再试。")
+		report(w, s_u, "你好，这份申请书已经被处理，请确认后再试。")
 		return
 	case data.MemberApplicationStatusExpired:
 		//已经过期或者失效
-		report(w, r, "你好，这份申请书已经过期或者失效，请确认后再试。")
+		report(w, s_u, "你好，这份申请书已经过期或者失效，请确认后再试。")
 		return
 	default:
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 	}
 
 	//读取申请人申请加盟的茶团
 	team, err := data.GetTeam(application.TeamId)
 	if err != nil {
 		util.Debug(application.TeamId, "Cannot get team given id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	is_core_member, err := team.IsCoreMember(s_u.Id)
 	if err != nil {
 		util.Debug(team.Id, "Cannot get core members of team", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	// 如果不是茶团的核心成员，返回错误
 	if !is_core_member {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你不是茶团的核心成员，无权处理申请书噢。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你不是茶团的核心成员，无权处理申请书噢。")
 		return
 	}
 
@@ -810,7 +810,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	applicant, err := data.GetUser(application.UserId)
 	if err != nil {
 		util.Debug(application.UserId, "Cannot get user given id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//检查申请人是否已经是茶团成员=这个茶团是否已经存在该茶友
@@ -821,11 +821,11 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 			break
 		default:
 			util.Debug(applicant.Email, " when checking team_member", err)
-			report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
 	} else {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
 		return
 	}
 	//检查当前会话茶友是否和审查足迹资料中审查人一致
@@ -833,7 +833,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	//读取提交的回复内容
 	reply := r.PostFormValue("reply")
 	if reply == "" {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你没有填写回复内容或者内容太复杂了。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你没有填写回复内容或者内容太复杂了。")
 		return
 	}
 
@@ -842,7 +842,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	approval_int, err := strconv.Atoi(approval_str)
 	if err != nil {
 		util.Debug(approval_str, "Cannot convert approval to int", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -860,14 +860,14 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		//将新的茶团成员写入数据库
 		if err = team_member.Create(); err != nil {
 			util.Debug(team_member, "Cannot create team_member", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		//检查茶友加入茶团计数，如果是1，从默认的自由人，改设当前茶团为默认茶团
 		count, err := applicant.SurvivalTeamsCount()
 		if err != nil {
 			util.Debug(applicant.Email, " Cannot get survival teams count", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		if count == 0 {
@@ -877,7 +877,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 			}
 			if err = user_default_team.Create(); err != nil {
 				util.Debug(applicant.Email, " Cannot create user_default_team", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
 		}
@@ -886,7 +886,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		application.Status = data.MemberApplicationStatusApproved
 		if err = application.Update(); err != nil {
 			util.Debug(application, "Cannot update application", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		//创建批准加盟申请书答复
@@ -899,19 +899,19 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = application_reply.Create(); err != nil {
 			util.Debug(application_reply, "Cannot create application_reply", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 
 		//报告批准加盟成功消息
-		report(w, r, "你好，已经批准新成员 "+applicant.Name+" 加盟 "+team.Name+" 茶团。")
+		report(w, s_u, "你好，已经批准新成员 "+applicant.Name+" 加盟 "+team.Name+" 茶团。")
 		return
 	case 0:
 		//婉拒加盟
 		application.Status = data.MemberApplicationStatusRejected
 		if err = application.Update(); err != nil {
 			util.Debug(application, "Cannot update application", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		//创建婉拒加盟申请书答复
@@ -924,13 +924,13 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = application_reply.Create(); err != nil {
 			util.Debug(application_reply, "Cannot create application_reply", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
-		report(w, r, "你好，茶团成员 "+applicant.Email+" 已经婉拒加盟茶团 "+team.Name+"。")
+		report(w, s_u, "你好，茶团成员 "+applicant.Email+" 已经婉拒加盟茶团 "+team.Name+"。")
 		return
 	default:
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -962,7 +962,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	// 读取申请书
 	if err = application.GetByUuid(); err != nil {
 		util.Debug(application_uuid, "cannot get application given uuid", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	// 检查申请书状态，如果已经处理 status>1（MemberApplicationStatusViewed），跳转个人加盟团队申请书详情
@@ -975,14 +975,14 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	applicant, err := data.GetUser(application.UserId)
 	if err != nil {
 		util.Debug(application.UserId, "Cannot get user given id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取申请人申请加盟的茶团
 	team, err := data.GetTeam(application.TeamId)
 	if err != nil {
 		util.Debug(application.TeamId, "Cannot get team given id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	// 检查这个茶团是否已经存在该茶友
@@ -993,18 +993,18 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 			break
 		default:
 			util.Debug(applicant.Email, " when checking team_member", err)
-			report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
 	} else {
-		report(w, r, "你好，这个申请人已经在茶团中了噢？请确认后再试。")
+		report(w, s_u, "你好，这个申请人已经在茶团中了噢？请确认后再试。")
 		return
 	}
 	// 读取申请人默认所在的茶团
 	applicant_default_team, err := applicant.GetLastDefaultTeam()
 	if err != nil {
 		util.Debug(applicant.Email, "Cannot get default team given user", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -1012,7 +1012,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	core_members, err := team.CoreMembers()
 	if err != nil {
 		util.Debug(team.Id, "Cannot get core members of team", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//检查当前茶友是否是茶团的核心成员
@@ -1025,7 +1025,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	}
 	//如果不是茶团的核心成员，返回错误
 	if !is_core_member {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，你不是茶团的核心成员，无权审查申请书噢。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你不是茶团的核心成员，无权审查申请书噢。")
 		return
 	}
 
@@ -1080,26 +1080,26 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(team_uuid, "Cannot get team given uuid", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	user_uuid := r.FormValue("user_uuid")
 	app_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
 		util.Debug(user_uuid, "Cannot get user given uuid", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	content := r.FormValue("content")
 	//check content length
 	if len(content) > 666 || len(content) < 2 {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你的申请书内容太长了噢？墨水瓶也怕抄单词呀！")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，茶友你的申请书内容太长了噢？墨水瓶也怕抄单词呀！")
 		return
 	}
 
 	// s_u.Id != user.Id，检查是否茶友本人提交申请，不允许代他人申请
 	if s_u.Id != app_user.Id {
-		report(w, r, "你好，身前有余忘缩手，眼前无路想回头，目前仅接受本人申请加入茶团噢。")
+		report(w, s_u, "你好，身前有余忘缩手，眼前无路想回头，目前仅接受本人申请加入茶团噢。")
 		return
 	}
 
@@ -1111,11 +1111,11 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 			break
 		default:
 			util.Debug(app_user.Email, " when checking team_member", err)
-			report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
 	} else {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
 		return
 	}
 
@@ -1129,14 +1129,14 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	//保存申请书
 	if err = ma.Create(); err != nil {
 		util.Debug(team.Id, "Cannot create member-application", err)
-		report(w, r, "你好，茶博士正在飞速处理所有的技术问题，请耐心等待。")
+		report(w, s_u, "你好，茶博士正在飞速处理所有的技术问题，请耐心等待。")
 		return
 	}
 	//发送邮件通知茶团管理员（等待茶团管理员上班查看茶团详情即可见申请书，不另外通知）
 
 	//返回成功页面
 	t := fmt.Sprintf("你好，%s ，加盟 %s 申请书已经提交，请等待茶团管理员的回复。", s_u.Name, team.Abbreviation)
-	report(w, r, t)
+	report(w, s_u, t)
 
 }
 
@@ -1163,7 +1163,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug("Cannot get team given uuid", team_uuid, err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -1175,11 +1175,11 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 			break
 		default:
 			util.Debug(" when checking member_application", s_u.Email, err)
-			report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
 	} else {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你已经提交过申请书了噢？请确认后再试。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，茶友你已经提交过申请书了噢？请确认后再试。")
 		return
 	}
 
@@ -1187,12 +1187,12 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	ok, err := team.IsMember(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot check team member", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	if ok {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
 		return
 	}
 
@@ -1208,13 +1208,6 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 // 团队邀请对象，提交一份邀请函答复书
 // 根据答复选择，对应处理加入或者拒绝
 func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
-	//解析表单内容，获取茶友提交的内容
-	err := r.ParseForm()
-	if err != nil {
-		util.Debug(" Cannot parse form", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
-		return
-	}
 	// 根据会话信息读取茶友资料
 	s, err := session(r)
 	if err != nil {
@@ -1225,70 +1218,77 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，满地梨花一片天，请稍后再试一次")
+		report(w, s_u, "你好，满地梨花一片天，请稍后再试一次")
+		return
+	}
+	//解析表单内容，获取茶友提交的内容
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug(" Cannot parse form", err)
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取提交的参数
 	invitation_id, err := strconv.Atoi(r.PostFormValue("invitation_id"))
 	if err != nil {
 		util.Debug("failed to convert invitation_id to int", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	user_id, err := strconv.Atoi(r.PostFormValue("user_id"))
 	if err != nil {
 		util.Debug("Failed to convert user_id to int", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//检查是否存在该茶友注册资料
 	reply_user, err := data.GetUser(user_id)
 	if err != nil {
 		util.Debug("Cannot get user given id", err)
-		report(w, r, "你好，茶博士报告茶友资料查询繁忙，稍后再试。")
+		report(w, s_u, "你好，茶博士报告茶友资料查询繁忙，稍后再试。")
 		return
 	}
 
 	//检查一下提交的茶友和会话茶友Id是否一致
 	if reply_user.Id != s_u.Id {
 		util.Debug("Inconsistency between submitted user id and session id", err)
-		report(w, r, "你好，请勿冒充八戒骗孙悟空的芭蕉扇哦，稍后再试。")
+		report(w, s_u, "你好，请勿冒充八戒骗孙悟空的芭蕉扇哦，稍后再试。")
 		return
 	}
 	//根据茶友提交的invitation_id，检查是否存在该邀请函
 	invitation, err := data.GetInvitationById(invitation_id)
 	if err != nil {
 		util.Debug(" Cannot get invitation", err)
-		report(w, r, "你好，秋阴捧出何方雪？雨渍添来隔宿痕。稍后再试。")
+		report(w, s_u, "你好，秋阴捧出何方雪？雨渍添来隔宿痕。稍后再试。")
 		return
 	}
 	//检查一下邀请函是否已经被回复
 	if invitation.Status > data.InvitationStatusViewed {
-		report(w, r, "你好，这个邀请函已经答复或者已过期。")
+		report(w, s_u, "你好，这个邀请函已经答复或者已过期。")
 		return
 	}
 	invi_user, err := data.GetUserByEmail(invitation.InviteEmail, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get invited user given invitation's email", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	if invi_user.Id != s_u.Id {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，这个邀请函不是你的，你无权回答。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，这个邀请函不是你的，你无权回答。")
 		return
 	}
 
 	reply_class_int, err := strconv.Atoi(r.PostFormValue("reply"))
 	if err != nil {
 		util.Debug("Failed to convert class to int", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	reply_word := r.PostFormValue("invitation_reply")
 	//检查一下茶友提交的string，即reply_word是否不为空，中文长度小于int(util.Config.ThreadMaxWord)字符之间
 	if reply_word == "" || cnStrLen(reply_word) > int(util.Config.ThreadMaxWord) {
 		util.Debug(s_u.Email, " Cannot process invitation", err)
-		report(w, r, "你好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，答复的话太长了或者太短，只有外星人才接受呀，请确认再试。")
+		report(w, s_u, "你好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，答复的话太长了或者太短，只有外星人才接受呀，请确认再试。")
 		return
 	}
 
@@ -1296,7 +1296,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeam(invitation.TeamId)
 	if err != nil {
 		util.Debug(" Cannot get team by id", err)
-		report(w, r, "你好，丢了眼镜的茶博士忙到现在，还没有找到茶团登记本，请稍后再试。")
+		report(w, s_u, "你好，丢了眼镜的茶博士忙到现在，还没有找到茶团登记本，请稍后再试。")
 		return
 	}
 
@@ -1304,11 +1304,11 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	is_member, err := team.IsMember(invi_user.Id)
 	if err != nil {
 		util.Debug(" when checking team_member", err)
-		report(w, r, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 		return
 	}
 	if is_member {
-		report(w, r, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，茶友你已经在茶团中了噢？请确认后再试。")
 		return
 	}
 
@@ -1326,7 +1326,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			member, err := team.CheckTeamMemberByRole(invitation.Role)
 			if err != nil {
 				util.Debug(" Check team member given team_id and role failed", err)
-				report(w, r, "你好，茶博士报告说，天气太热茶壶开锅了，请稍后再试。")
+				report(w, s_u, "你好，茶博士报告说，天气太热茶壶开锅了，请稍后再试。")
 				return
 			}
 			if member == nil {
@@ -1334,7 +1334,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 				break
 			} else {
 				// 角色已被占用
-				report(w, r, "你好，该团队已经存在所选择的核心角色，请确认所选择的角色是否恰当。")
+				report(w, s_u, "你好，该团队已经存在所选择的核心角色，请确认所选择的角色是否恰当。")
 				return
 			}
 		case RoleCEO:
@@ -1343,7 +1343,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				//由于$事业茶团CEO角色不能空缺，所以空记录也是系统错误
 				util.Debug(" Get team-member CEO given team_id and role failed", err)
-				report(w, r, "你好，该团队构建资料缺失，请稍后再试。")
+				report(w, s_u, "你好，该团队构建资料缺失，请稍后再试。")
 				return
 			}
 			//是否团队发起人首次指定CEO？
@@ -1353,14 +1353,14 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			}
 			//不是发起人首次指定CEO，
 			//报告角色已被占用
-			report(w, r, "你好，该团队已经存在所选择的核心角色，请确认所选择的角色是否恰当。")
+			report(w, s_u, "你好，该团队已经存在所选择的核心角色，请确认所选择的角色是否恰当。")
 			return
 
 		case "taster":
 			// No additional validation needed for the "taster" role
 			break
 		default:
-			report(w, r, "你好，请选择正确的团队角色。")
+			report(w, s_u, "你好，请选择正确的团队角色。")
 			return
 		}
 
@@ -1368,7 +1368,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		invitation.Status = data.InvitationStatusAccepted
 		if err = invitation.UpdateStatus(); err != nil {
 			util.Debug(invitation.InviteEmail, " Cannot update invitation status", err)
-			report(w, r, "你好，茶博士报告开水太烫了，请稍后再试。")
+			report(w, s_u, "你好，茶博士报告开水太烫了，请稍后再试。")
 			return
 		}
 		repl := data.InvitationReply{
@@ -1378,7 +1378,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = repl.Create(); err != nil {
 			util.Debug(invitation.InviteEmail, " Cannot create invitation_reply", err)
-			report(w, r, "你好，茶博士报告开水太烫了，请稍后再试。")
+			report(w, s_u, "你好，茶博士报告开水太烫了，请稍后再试。")
 			return
 		}
 		// 准备将新成员添加进茶团所需的资料
@@ -1393,7 +1393,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		if team_member.Role == RoleCEO {
 			if err = team_member.UpdateFirstCEO(reply_user.Id); err != nil {
 				util.Debug(s_u.Email, " Cannot update team_member CEO", err)
-				report(w, r, "你好，幽情欲向嫦娥诉，无奈虚廊夜色昏。请稍后再试。")
+				report(w, s_u, "你好，幽情欲向嫦娥诉，无奈虚廊夜色昏。请稍后再试。")
 				return
 			}
 
@@ -1401,7 +1401,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			// 其它角色
 			if err = team_member.Create(); err != nil {
 				util.Debug(s_u.Email, " Cannot create team_member", err)
-				report(w, r, "你好，晕头晕脑的茶博士竟然忘记登记新成员了，请稍后再试。")
+				report(w, s_u, "你好，晕头晕脑的茶博士竟然忘记登记新成员了，请稍后再试。")
 				return
 			}
 		}
@@ -1410,7 +1410,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		count, err := reply_user.SurvivalTeamsCount()
 		if err != nil {
 			util.Debug(reply_user.Email, " Cannot get survival teams count", err)
-			report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		if count == 0 {
@@ -1420,7 +1420,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			}
 			if err = user_default_team.Create(); err != nil {
 				util.Debug(reply_user.Email, " Cannot create user_default_team", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
 		}
@@ -1434,7 +1434,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		invitation.Status = data.InvitationStatusRejected
 		if err = invitation.UpdateStatus(); err != nil {
 			util.Debug(s_u.Email, " Cannot update invitation status", err)
-			report(w, r, "你好，晕头晕脑的茶博士竟然把邀请答复处理搞混了，请稍后再试。")
+			report(w, s_u, "你好，晕头晕脑的茶博士竟然把邀请答复处理搞混了，请稍后再试。")
 			return
 		}
 		repl := data.InvitationReply{
@@ -1444,17 +1444,17 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		if err = repl.Create(); err != nil {
 			util.Debug(s_u.Email, " Cannot create invitation_reply", err)
-			report(w, r, "你好，晕头晕脑的茶博士竟然把邀请答复搞丢了，请稍后再试。")
+			report(w, s_u, "你好，晕头晕脑的茶博士竟然把邀请答复搞丢了，请稍后再试。")
 			return
 		}
 		//报告用户已经保存拒绝该邀请到答复记录
 		t := fmt.Sprintf("你好，茶博士已经保存关于 %s 婉拒加盟答复。", team.Abbreviation)
-		report(w, r, t)
+		report(w, s_u, t)
 		return
 
 	} else {
 		// 无效的reply 数值
-		report(w, r, "你好，何幸邀恩宠，宫车过往频。稍后再试。")
+		report(w, s_u, "你好，何幸邀恩宠，宫车过往频。稍后再试。")
 		return
 	}
 }
@@ -1484,7 +1484,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 	}
 	email := r.PostFormValue("email")
 	if ok := isEmail(email); !ok {
-		report(w, r, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
+		report(w, s_u, "你好，涨红了脸的茶博士，竟然强词夺理说，电子邮箱格式太复杂看不懂，请确认后再提交。")
 		return
 	}
 
@@ -1492,24 +1492,24 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 	//检查一下茶友提交的string，即i_word是否不为空，中文长度小于239字符之间
 	if 1 > cnStrLen(i_word) || cnStrLen(i_word) > 239 {
 		util.Debug(" Cannot process invitation", err)
-		report(w, r, "你好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，邀请的话太长了或者太短，只有外星人才接受呀，请确认再试。")
+		report(w, s_u, "你好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，邀请的话太长了或者太短，只有外星人才接受呀，请确认再试。")
 		return
 	}
 	role := r.PostFormValue("role")
 	team_uuid := r.PostFormValue("team_uuid")
 	if role == "" || team_uuid == "" {
-		report(w, r, "你好，请选择团队角色和团队资料信息。")
+		report(w, s_u, "你好，请选择团队角色和团队资料信息。")
 		return
 	}
 	author_uuid := r.PostFormValue("author_uuid")
 	if author_uuid != s_u.Uuid {
-		report(w, r, "你好，请勿冒充八戒骗孙悟空的芭蕉扇哦，稍后再试。")
+		report(w, s_u, "你好，请勿冒充八戒骗孙悟空的芭蕉扇哦，稍后再试。")
 		return
 	}
 	author, err := data.GetUserByUUID(author_uuid)
 	if err != nil {
 		util.Debug(" Cannot get author user by uuid", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//检查邀请的茶友是否存在
@@ -1517,21 +1517,21 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 	invite_user, err := data.GetUserByEmail(email, r.Context())
 	if err != nil {
 		util.Debug(" Cannot search user given email", err)
-		report(w, r, "你好，满头大汗的茶博士未能茶棚里找到这个茶友，请确认后再试。")
+		report(w, s_u, "你好，满头大汗的茶博士未能茶棚里找到这个茶友，请确认后再试。")
 		return
 	}
 
 	//检查茶友是否自己邀请自己？
 	//也许是可以的?例如观音菩萨也可以加入自己创建的西天取经茶团喝茶？？
 	// if s_u.Email == email {
-	// 	report(w, r, "你好，请不要邀请自己加入茶团哈。")
+	// 	report(w, s_u, "你好，请不要邀请自己加入茶团哈。")
 	// 	return
 	// }
 	//根据茶友提交的teamId，检查是否存在该team
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(" Cannot search team given team_uuid", err)
-		report(w, r, "你好，茶博士未能找到这个团队，请确认后再试。")
+		report(w, s_u, "你好，茶博士未能找到这个团队，请确认后再试。")
 		return
 	}
 	//检查当前茶友是否团队的Ceo或者founder，是否有权限邀请新成员
@@ -1539,26 +1539,26 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 	ceo_member, err := team.MemberCEO()
 	if err != nil {
 		util.Debug(" Cannot search team ceo", err)
-		report(w, r, "你好，未能找到茶团CEO，请确认后再试。")
+		report(w, s_u, "你好，未能找到茶团CEO，请确认后再试。")
 		return
 	}
 	ceo_user, err := ceo_member.User()
 	if err != nil {
 		util.Debug(" Cannot search ceo_user", err)
-		report(w, r, "你好，未能找到茶团CEO，请确认后再试。")
+		report(w, s_u, "你好，未能找到茶团CEO，请确认后再试。")
 		return
 	}
 
 	founder, err := team.Founder()
 	if err != nil {
 		util.Debug(" Cannot search team founder", err)
-		report(w, r, "你好，未能找到这个茶团的发起人，请确认后再试。")
+		report(w, s_u, "你好，未能找到这个茶团的发起人，请确认后再试。")
 		return
 	}
 	ok := founder.Id == s_u.Id ||
 		s_u.Id == ceo_user.Id
 	if !ok {
-		report(w, r, "你好，只有团队CEO或者创建人可以邀请请新成员加盟。")
+		report(w, s_u, "你好，只有团队CEO或者创建人可以邀请请新成员加盟。")
 		return
 	}
 
@@ -1568,11 +1568,11 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		//检查teamMember.Role中是否已经存在
 		_, err = team.GetTeamMemberByRole(role)
 		if err == nil {
-			report(w, r, "你好，该团队已经存在所选择的核心角色，请返回选择其他角色。")
+			report(w, s_u, "你好，该团队已经存在所选择的核心角色，请返回选择其他角色。")
 			return
 		} else if !errors.Is(err, sql.ErrNoRows) {
 			util.Debug(" Cannot search team member given team_id and role", err)
-			report(w, r, "你好，茶博士在这个团队角色事情迷糊了，请确认后再试。")
+			report(w, s_u, "你好，茶博士在这个团队角色事情迷糊了，请确认后再试。")
 			return
 		}
 
@@ -1582,7 +1582,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 			//例如,西天取经团队发起人观音菩萨（默认首个ceo），指定第一个成员唐僧取代自己为取经团队CEO
 			break
 		} else {
-			report(w, r, "你好，请先邀请茶友加盟为普通茶友，然后再调整角色，请确认后再试。")
+			report(w, s_u, "你好，请先邀请茶友加盟为普通茶友，然后再调整角色，请确认后再试。")
 			return
 		}
 
@@ -1591,7 +1591,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		break
 	default:
 		//其他非法角色，不允许
-		report(w, r, "你好，请选择正确的角色。")
+		report(w, s_u, "你好，请选择正确的角色。")
 		return
 	}
 
@@ -1613,7 +1613,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 			//存储邀请函
 			if err = invi.Create(); err != nil {
 				util.Debug(" Cannot create invitation", err)
-				report(w, r, "你好，茶博士未能创建邀请函，请稍后再试。")
+				report(w, s_u, "你好，茶博士未能创建邀请函，请稍后再试。")
 				return
 			}
 			// 向受邀请的茶友新通知小黑板上加1
@@ -1624,7 +1624,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 
 			// 报告发送者成功消息
 			mes := fmt.Sprintf("你好，成功以 %s 茶团名义，向茶友 %s 发送了加盟邀请函，请等待回复。", team.Abbreviation, invite_user.Name)
-			report(w, r, mes)
+			report(w, s_u, mes)
 			return
 		}
 		//其他类型的error，打印出来分析错误
@@ -1632,7 +1632,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//如果err为nil，说明茶友已经在茶团中，无需邀请
-	report(w, r, "你好，该茶友已经在茶团中，无需邀请。")
+	report(w, s_u, "你好，该茶友已经在茶团中，无需邀请。")
 
 }
 
@@ -1648,31 +1648,31 @@ func InviteMemberGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug("cannot fetch sess_user given session", err)
-		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	//根据茶友提交的Uuid，查询获取拟邀请加盟的茶友信息
 	vals := r.URL.Query()
 	user_uuid := vals.Get("uuid")
 	if user_uuid == "" {
-		report(w, r, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
+		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
 		return
 	}
 	invi_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
 		util.Debug(" Cannot get user given uuid", err)
-		report(w, r, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
+		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
 		return
 	}
 	team_uuid := vals.Get("team_uuid")
 	if team_uuid == "" {
-		report(w, r, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
+		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
 		return
 	}
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(" Cannot get team given uuid", err)
-		report(w, r, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
+		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
 		return
 	}
 
@@ -1690,7 +1690,7 @@ func InviteMemberGet(w http.ResponseWriter, r *http.Request) {
 		founder, err := team.Founder()
 		if err != nil {
 			util.Debug("cannot get team's founder given team", err)
-			report(w, r, "你好，桃李明年能再发，明年闺中知有谁？")
+			report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？")
 			return
 		}
 		iD.InvitationBean.Author = founder
@@ -1703,7 +1703,7 @@ func InviteMemberGet(w http.ResponseWriter, r *http.Request) {
 	m_ceo, err := team.MemberCEO()
 	if err != nil {
 		util.Debug("cannot get member ceo given team", err)
-		report(w, r, "你好，桃李明年能再发，明年闺中知有谁？")
+		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？")
 		return
 	}
 
@@ -1711,7 +1711,7 @@ func InviteMemberGet(w http.ResponseWriter, r *http.Request) {
 		ceo, err := data.GetUser(m_ceo.UserId)
 		if err != nil {
 			util.Debug("cannot get user given id", err)
-			report(w, r, "你好，桃李明年能再发，明年闺中知有谁？")
+			report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？")
 			return
 		}
 		iD.InvitationBean.Author = ceo
@@ -1721,7 +1721,7 @@ func InviteMemberGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//既不是某个茶团发起人，也不是CEO，无法代表茶团发出邀请函
-	report(w, r, "你好，慢条斯理的茶博士竟然说，茶团CEO或者创建人，才能发送该团邀请函呢。")
+	report(w, s_u, "你好，慢条斯理的茶博士竟然说，茶团CEO或者创建人，才能发送该团邀请函呢。")
 
 }
 
@@ -1745,7 +1745,7 @@ func MemberInvitationDetail(w http.ResponseWriter, r *http.Request) {
 	invi, err := data.GetInvitationByUuid(invi_uuid)
 	if err != nil {
 		util.Debug(invi_uuid, "Cannot get invitation given uuid", err)
-		report(w, r, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
 		return
 	}
 
@@ -1753,12 +1753,12 @@ func MemberInvitationDetail(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeam(invi.TeamId)
 	if err != nil {
 		util.Debug(invi.TeamId, "Cannot get team by id", err)
-		report(w, r, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
 
 	// 权限检查：团队管理员可以查看
-	if !canManageTeam(&team, s_u.Id, w, r) {
+	if !canManageTeam(&team, s_u, w) {
 		return
 	}
 
@@ -1766,14 +1766,14 @@ func MemberInvitationDetail(w http.ResponseWriter, r *http.Request) {
 	i_b, err := fetchInvitationBean(invi)
 	if err != nil {
 		util.Debug(invi.Id, "Cannot fetch invitationBean given invitation", err)
-		report(w, r, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
 	// 读取答复
 	reply, err := invi.Reply()
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug(invi.Id, "Cannot get invitation reply", err)
-		report(w, r, "你好，茶博士正在努力的查找邀请函答复资料，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找邀请函答复资料，请稍后再试。")
 		return
 	}
 
@@ -1809,7 +1809,7 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	invi, err := data.GetInvitationByUuid(invi_uuid)
 	if err != nil {
 		util.Debug(" Cannot get invitation given uuid", invi_uuid, err)
-		report(w, r, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
 		return
 	}
 
@@ -1817,20 +1817,20 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	// team, err := data.GetTeam(invi.TeamId)
 	// if err != nil {
 	// 	util.Debug(" Cannot get team by id", err)
-	// 	report(w, r, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
+	// 	report(w, s_u, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 	// 	return
 	// }
 
-	//if invi.InviteEmail != s_u.Email && !canManageTeam(&team, s_u.Id, w, r) {
+	//if invi.InviteEmail != s_u.Email && !canManageTeam(&team, s_u, w) {
 	if invi.InviteEmail != s_u.Email {
-		report(w, r, "你好，该邀请函不属于您，无法查看。")
+		report(w, s_u, "你好，该邀请函不属于您，无法查看。")
 		return
 	}
 
 	i_b, err := fetchInvitationBean(invi)
 	if err != nil {
 		util.Debug(invi.Id, " Cannot fetch invitationBean given invitation", err)
-		report(w, r, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
 
@@ -1840,7 +1840,7 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 		err = invi.UpdateStatus()
 		if err != nil {
 			util.Debug(s_u.Email, " Cannot update invitation", err)
-			report(w, r, "你好，茶博士正在努力的更新邀请函状态，请稍后再试。")
+			report(w, s_u, "你好，茶博士正在努力的更新邀请函状态，请稍后再试。")
 			return
 		}
 		// 减去茶友1小黑板新通知数
@@ -1877,12 +1877,12 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 	//获取参数
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, r, "你好，茶博士竟然说，陛下你没有给我茶团的uuid，请确认。")
+		report(w, s_u, "你好，茶博士竟然说，陛下你没有给我茶团的uuid，请确认。")
 		return
 	}
 
 	if uuid == data.TeamUUIDFreelancer {
-		report(w, r, "你好，茶博士竟然说，陛下你不能查看特殊茶团的加盟申请，请确认。")
+		report(w, s_u, "你好，茶博士竟然说，陛下你不能查看特殊茶团的加盟申请，请确认。")
 		return
 	}
 
@@ -1890,13 +1890,13 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 	t_team, err := data.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get team by given uuid", err)
-		report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	//检查用户是否茶团核心成员，非核心成员不能查看新的加盟申请书
 
-	if !canManageTeam(&t_team, s_u.Id, w, r) {
-		report(w, r, "你好，茶博士竟然说，不是这个茶团核心成员不能查看，请确认。")
+	if !canManageTeam(&t_team, s_u, w) {
+		report(w, s_u, "你好，茶博士竟然说，不是这个茶团核心成员不能查看，请确认。")
 		return
 	}
 
@@ -1904,13 +1904,13 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 	applies, err := data.GetMemberApplicationByTeamIdAndStatus(t_team.Id)
 	if err != nil {
 		util.Debug("Cannot get applys by team id", err)
-		report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	apply_bean_slice, err := fetchMemberApplicationBeanSlice(applies)
 	if err != nil {
 		util.Debug("Cannot get apply bean slice", err)
-		report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 
@@ -1933,7 +1933,7 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 // GET /v1/team_members/fired
 // 显示被开除的成员的表单页面
 func MemberFired(w http.ResponseWriter, r *http.Request) {
-	report(w, r, "您好，茶博士正在忙碌建设这个功能中。。。")
+	panic("implement me")
 }
 
 // GET /v1/team_member/resigned?uuid=
@@ -1956,11 +1956,11 @@ func TeamMemberResigned(w http.ResponseWriter, r *http.Request) {
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(team_uuid, "Cannot get team by uuid", err)
-		report(w, r, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
 		return
 	}
 
-	if !canManageTeam(&team, s_u.Id, w, r) {
+	if !canManageTeam(&team, s_u, w) {
 		return
 	}
 
@@ -1974,7 +1974,7 @@ func TeamMemberResigned(w http.ResponseWriter, r *http.Request) {
 	resignations, err := data.GetResignationsByTeamId(team.Id)
 	if err != nil {
 		util.Debug(team.Id, "Cannot get resignations by team id", err)
-		report(w, r, "你好，茶博士正在努力的查找退出声明，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找退出声明，请稍后再试。")
 		return
 	}
 
@@ -2052,25 +2052,25 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 	resignation := data.TeamMemberResignation{Uuid: resignation_uuid}
 	if err = resignation.GetByUuid(); err != nil {
 		util.Debug(resignation_uuid, "Cannot get resignation by uuid", err)
-		report(w, r, "你好，茶博士正在努力的查找退出声明，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找退出声明，请稍后再试。")
 		return
 	}
 
 	team, err := data.GetTeam(resignation.TeamId)
 	if err != nil {
 		util.Debug(resignation.TeamId, "Cannot get team by id", err)
-		report(w, r, "你好，茶博士正在努力的查找退出声明资料，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找退出声明资料，请稍后再试。")
 		return
 	}
 
-	if !canManageTeam(&team, s_u.Id, w, r) {
+	if !canManageTeam(&team, s_u, w) {
 		return
 	}
 
 	member, err := data.GetUser(resignation.MemberUserId)
 	if err != nil {
 		util.Debug(resignation.MemberUserId, "Cannot get user by id", err)
-		report(w, r, "你好，茶博士正在努力的查找退出声明资料，请稍后再试。")
+		report(w, s_u, "你好，茶博士正在努力的查找退出声明资料，请稍后再试。")
 		return
 	}
 
@@ -2081,7 +2081,7 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 	ceoMember, err := team.MemberCEO()
 	if err != nil {
 		util.Debug("Cannot get CEO", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -2089,7 +2089,7 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 	coreMembers, err := team.CoreMembers()
 	if err != nil {
 		util.Debug("Cannot get core members", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -2148,7 +2148,7 @@ func InvitationsReceived(w http.ResponseWriter, r *http.Request) {
 	invitations, err := s_u.Invitations()
 	if err != nil {
 		util.Debug("Cannot get invitations by user email", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -2197,7 +2197,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug("Cannot parse form", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -2205,14 +2205,14 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	resignation := data.TeamMemberResignation{Uuid: resignation_uuid}
 	if err = resignation.GetByUuid(); err != nil {
 		util.Debug(resignation_uuid, "Cannot get resignation by uuid", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	team, err := data.GetTeam(resignation.TeamId)
 	if err != nil {
 		util.Debug(resignation.TeamId, "Cannot get team by id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -2223,7 +2223,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	ceoMember, err := team.MemberCEO()
 	if err != nil {
 		util.Debug("Cannot get CEO", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -2231,7 +2231,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	coreMembers, err := team.CoreMembers()
 	if err != nil {
 		util.Debug("Cannot get core members", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -2246,7 +2246,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 		case "core_agree":
 			// 核心成员同意
 			if resignation.Status >= data.ResignationStatusCoreMemberAgree {
-				report(w, r, "你好，该声明已经处理过了。")
+				report(w, s_u, "你好，该声明已经处理过了。")
 				return
 			}
 			// 检查是否为核心成员（非CEO）
@@ -2258,77 +2258,77 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 			if !isCoreMember {
-				report(w, r, "你好，只有核心成员（非CEO）才能同意退出声明。")
+				report(w, s_u, "你好，只有核心成员（非CEO）才能同意退出声明。")
 				return
 			}
 			resignation.Status = data.ResignationStatusCoreMemberAgree
 			resignation.CoreMemberUserId = s_u.Id
 			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
 				util.Debug("Cannot update resignation status", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
-			report(w, r, "你好，已同意该成员退出，等待CEO批准。")
+			report(w, s_u, "你好，已同意该成员退出，等待CEO批准。")
 
 		case "ceo_approve":
 			// CEO批准
 			if ceoMember.UserId != s_u.Id {
-				report(w, r, "你好，只有CEO才能批准退出声明。")
+				report(w, s_u, "你好，只有CEO才能批准退出声明。")
 				return
 			}
 			if resignation.Status != data.ResignationStatusCoreMemberAgree {
-				report(w, r, "你好，需要核心成员先同意后，CEO才能批准。")
+				report(w, s_u, "你好，需要核心成员先同意后，CEO才能批准。")
 				return
 			}
 			resignation.Status = data.ResignationStatusApproved
 			resignation.CeoUserId = s_u.Id
 			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
 				util.Debug("Cannot update resignation status", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
 			// 更新成员状态为已退出
 			member, err := data.GetMemberByTeamIdUserId(team.Id, resignation.MemberUserId)
 			if err != nil {
 				util.Debug("Cannot get team member", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
 			member.Status = data.TeMemberStatusResigned
 			if err = member.UpdateRoleStatus(); err != nil {
 				util.Debug("Cannot update member status", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
-			report(w, r, "你好，CEO已批准该成员退出茶团。")
+			report(w, s_u, "你好，CEO已批准该成员退出茶团。")
 
 		case "retain":
 			// 挡留
-			if !canManageTeam(&team, s_u.Id, w, r) {
+			if !canManageTeam(&team, s_u, w) {
 				return
 			}
 			if resignation.Status >= data.ResignationStatusApproved {
-				report(w, r, "你好，该声明已经批准，无法挡留。")
+				report(w, s_u, "你好，该声明已经批准，无法挡留。")
 				return
 			}
 			resignation.Status = data.ResignationStatusPending
 			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
 				util.Debug("Cannot update resignation status", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
-			report(w, r, "你好，已标记为挡留中，请与成员沟通。")
+			report(w, s_u, "你好，已标记为挡留中，请与成员沟通。")
 
 		default:
-			report(w, r, "你好，无效的操作。")
+			report(w, s_u, "你好，无效的操作。")
 		}
 	} else {
 		// 不需要双重审批，管理员直接处理
-		if !canManageTeam(&team, s_u.Id, w, r) {
+		if !canManageTeam(&team, s_u, w) {
 			return
 		}
 		if resignation.Status >= data.ResignationStatusApproved {
-			report(w, r, "你好，该退出声明已经处理过了。")
+			report(w, s_u, "你好，该退出声明已经处理过了。")
 			return
 		}
 
@@ -2339,36 +2339,36 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 			resignation.CeoUserId = s_u.Id
 			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
 				util.Debug("Cannot update resignation status", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
 			// 更新成员状态为已退出
 			member, err := data.GetMemberByTeamIdUserId(team.Id, resignation.MemberUserId)
 			if err != nil {
 				util.Debug("Cannot get team member", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
 			member.Status = data.TeMemberStatusResigned
 			if err = member.UpdateRoleStatus(); err != nil {
 				util.Debug("Cannot update member status", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
-			report(w, r, "你好，已批准该成员退出茶团。")
+			report(w, s_u, "你好，已批准该成员退出茶团。")
 
 		case "retain":
 			// 挡留
 			resignation.Status = data.ResignationStatusPending
 			if err = resignation.UpdateCeoUserIdCoreMemberUserIdStatus(); err != nil {
 				util.Debug("Cannot update resignation status", err)
-				report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
-			report(w, r, "你好，已标记为挡留中，请与成员沟通。")
+			report(w, s_u, "你好，已标记为挡留中，请与成员沟通。")
 
 		default:
-			report(w, r, "你好，无效的操作。")
+			report(w, s_u, "你好，无效的操作。")
 		}
 	}
 }
@@ -2392,7 +2392,7 @@ func ResignationsReceived(w http.ResponseWriter, r *http.Request) {
 	resignations, err := data.GetResignationsByUserId(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot get resignations by user id", err)
-		report(w, r, "你好，茶博士正在忙碌中，稍后再试。")
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
@@ -2449,13 +2449,13 @@ func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 	applies, err := data.GetMemberApplies(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot get applys by user id", err)
-		report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	apply_bean_slice, err := fetchMemberApplicationBeanSlice(applies)
 	if err != nil {
 		util.Debug("Cannot get apply bean slice", err)
-		report(w, r, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	//截短MemberApplication.Content为66字，方便布局列表预览

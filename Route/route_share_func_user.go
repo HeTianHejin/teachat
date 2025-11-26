@@ -599,24 +599,24 @@ func fetchTeamMemberRoleNoticeBeanSlice(tmrn_slice []data.TeamMemberRoleNotice) 
 }
 
 // 检查并设置用户默认团队（非自由人占位团队）
-func setUserDefaultTeam(founder *data.User, newTeamID int, w http.ResponseWriter, r *http.Request) bool {
+func setUserDefaultTeam(s_u data.User, newTeamID int, w http.ResponseWriter) bool {
 	// 获取用户当前默认团队
-	oldDefaultTeam, err := founder.GetLastDefaultTeam()
+	oldDefaultTeam, err := s_u.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(founder.Email, "Cannot get last default team")
-		report(w, r, "你好，茶博士失魂鱼，手滑未能创建你的天命使团，请稍后再试。")
+		util.Debug(s_u.Email, "Cannot get last default team")
+		report(w, s_u, "你好，茶博士失魂鱼，手滑未能创建你的天命使团，请稍后再试。")
 		return false
 	}
 
 	// 检查是否为占位团队（自由人）
 	if oldDefaultTeam.Id == data.TeamIdFreelancer {
 		uDT := data.UserDefaultTeam{
-			UserId: founder.Id,
+			UserId: s_u.Id,
 			TeamId: newTeamID,
 		}
 		if err := uDT.Create(); err != nil {
-			util.Debug(founder.Email, newTeamID, "Cannot create default team")
-			report(w, r, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+			util.Debug(s_u.Email, newTeamID, "Cannot create default team")
+			report(w, s_u, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
 			return false
 		}
 	}

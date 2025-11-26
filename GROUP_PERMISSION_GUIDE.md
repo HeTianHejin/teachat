@@ -65,7 +65,7 @@ if teamId != "" {
             isCEO = true
         }
         if !isCEO {
-            report(w, r, "你好，只有团队创建人或CEO才能代表团队创建集团。")
+            report(w, s_u, "你好，只有团队创建人或CEO才能代表团队创建集团。")
             return
         }
     }
@@ -86,7 +86,7 @@ if sessUser.Id != team.FounderId {
         isCEO = true
     }
     if !isCEO {
-        report(w, r, "你好，只有团队创建人或CEO才能代表团队创建集团。")
+        report(w, s_u, "你好，只有团队创建人或CEO才能代表团队创建集团。")
         return
     }
 }

@@ -68,7 +68,7 @@ func EvidenceNewGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -91,18 +91,18 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	if !isVerifier(s_u.Id) {
-		report(w, r, "你没有权限创建证据记录")
+		report(w, s_u, "你没有权限创建证据记录")
 		return
 	}
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		util.Debug("Cannot parse multipart form", err)
-		report(w, r, "表单数据解析失败")
+		report(w, s_u, "表单数据解析失败")
 		return
 	}
 
@@ -113,7 +113,7 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 	visibilityStr := r.FormValue("visibility")
 
 	if description == "" {
-		report(w, r, "请填写可视凭据描述")
+		report(w, s_u, "请填写可视凭据描述")
 		return
 	}
 
@@ -138,7 +138,7 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 		filePath, fileSize, err := saveUploadedFile(file, header, s_u.Id)
 		if err != nil {
 			util.Debug("Cannot save uploaded file", err)
-			report(w, r, "文件上传失败")
+			report(w, s_u, "文件上传失败")
 			return
 		}
 
@@ -147,13 +147,13 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 		evidence.MimeType = header.Header.Get("Content-Type")
 		evidence.FileSize = fileSize
 	} else if originalURL == "" {
-		report(w, r, "请上传文件或填写原始URL")
+		report(w, s_u, "请上传文件或填写原始URL")
 		return
 	}
 
 	if err := evidence.Create(r.Context()); err != nil {
 		util.Debug("Cannot create evidence", err)
-		report(w, r, "创建证据记录失败")
+		report(w, s_u, "创建证据记录失败")
 		return
 	}
 
@@ -181,26 +181,26 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
-		report(w, r, "凭证ID缺失")
+		report(w, s_u, "凭证ID缺失")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		report(w, r, "无效的凭证ID")
+		report(w, s_u, "无效的凭证ID")
 		return
 	}
 
 	evidence := data.Evidence{Id: id}
 	if err := evidence.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("Cannot get evidence by id", id, err)
-		report(w, r, "凭证不存在")
+		report(w, s_u, "凭证不存在")
 		return
 	}
 
@@ -226,7 +226,7 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 						is_admin, _ := checkObjectiveAdminPermission(&objective, s_u.Id)
 						is_invited, _ := objective.IsInvitedMember(s_u.Id)
 						if !is_master && !is_admin && !is_invited {
-							report(w, r, "你好，身后有余忘缩手，眼前无路想回头。")
+							report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 							return
 						}
 					}

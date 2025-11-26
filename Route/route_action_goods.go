@@ -23,7 +23,7 @@ func HandleGoodsProjectNew(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !isVerifier(s_u.Id) {
-		report(w, r, "只有见证员才可以添加项目物资，请联系管理员。")
+		report(w, s_u, "只有见证员才可以添加项目物资，请联系管理员。")
 		return
 	}
 
@@ -33,7 +33,7 @@ func HandleGoodsProjectNew(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		GoodsProjectNewPost(w, r, s_u)
 	default:
-		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
+		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 		return
 	}
 }
@@ -43,13 +43,13 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 
 	project_id_str := r.URL.Query().Get("project_id")
 	if project_id_str == "" {
-		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
+		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
 	project_id, err := strconv.Atoi(project_id_str)
 	if err != nil {
 		util.Debug("cannot convert project_id to int", err)
-		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
+		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
 
@@ -57,14 +57,14 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 	project := data.Project{Id: project_id}
 	if err := project.Get(); err != nil {
 		util.Debug("cannot get project from database", err)
-		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
+		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
 	// 读取“约茶”资料以查询出茶叶方和收茶叶方
 	p_a, err := data.GetAppointmentByProjectId(project_id, r.Context())
 	if err != nil {
 		util.Debug("cannot get project appointment from database given pr_id", project_id, err)
-		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
+		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
 	f_id := 0
@@ -78,13 +78,13 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 		goods_slice_t, err := data.GetAvailabilityGoodsByTeamId(t_id, r.Context())
 		if err != nil {
 			util.Debug("cannot get goods from database given team_id", t_id, err)
-			report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
+			report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
 		goods_slice_f, err := data.GetAvailabilityGoodsByFamilyId(f_id, r.Context())
 		if err != nil {
 			util.Debug("cannot get goods from database given family_id", f_id, err)
-			report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
+			report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
 		goods_slice_payee = goods_slice_t
@@ -96,13 +96,13 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u data.User) {
 		goods_slice_t, err := data.GetAvailabilityGoodsByTeamId(t_id, r.Context())
 		if err != nil {
 			util.Debug("cannot get goods from database given team_id", project.TeamId, err)
-			report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
+			report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
 		goods_slice_t_s, err := data.GetAvailabilityGoodsByTeamId(t_s_id, r.Context())
 		if err != nil {
 			util.Debug("cannot get goods from database given team_id", project.TeamId, err)
-			report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
+			report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
 		goods_slice_payer = goods_slice_t
@@ -126,19 +126,19 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 	err := r.ParseForm()
 	if err != nil {
 		util.Debug("cannot parse form data", err)
-		report(w, r, "一脸蒙的茶博士，表示看不懂你提交的项目物资资料，请确认后再试一次。")
+		report(w, s_u, "一脸蒙的茶博士，表示看不懂你提交的项目物资资料，请确认后再试一次。")
 		return
 	}
 
 	// 获取项目ID
 	project_id_str := r.PostFormValue("project_id")
 	if project_id_str == "" {
-		report(w, r, "你好，茶博士表示无法理解项目，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示无法理解项目，请确认后再试。")
 		return
 	}
 	project_id, err := strconv.Atoi(project_id_str)
 	if err != nil {
-		report(w, r, "你好，茶博士表示无法理解项目，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示无法理解项目，请确认后再试。")
 		return
 	}
 
@@ -146,31 +146,31 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 	project := data.Project{Id: project_id}
 	if err := project.Get(); err != nil {
 		util.Debug("cannot get project from database", err)
-		report(w, r, "你好，茶博士表示无法理解项目，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示无法理解项目，请确认后再试。")
 		return
 	}
 
 	// 获取物资ID
 	goods_id_str := r.PostFormValue("goods_id")
 	if goods_id_str == "" {
-		report(w, r, "你好，茶博士表示无法理解物资，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示无法理解物资，请确认后再试。")
 		return
 	}
 	goods_id, err := strconv.Atoi(goods_id_str)
 	if err != nil {
-		report(w, r, "你好，茶博士表示无法理解物资，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示无法理解物资，请确认后再试。")
 		return
 	}
 
 	// 获取数量
 	quantity_str := r.PostFormValue("quantity")
 	if quantity_str == "" {
-		report(w, r, "你好，茶博士表示物资数量不能为空，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示物资数量不能为空，请确认后再试。")
 		return
 	}
 	quantity, err := strconv.Atoi(quantity_str)
 	if err != nil || quantity <= 0 {
-		report(w, r, "你好，茶博士表示物资数量格式错误，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示物资数量格式错误，请确认后再试。")
 		return
 	}
 
@@ -179,19 +179,19 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 	if cat := r.PostFormValue("category"); cat == "1" || cat == "2" {
 		category_int, _ = strconv.Atoi(cat)
 	} else {
-		report(w, r, "你好，茶博士表示无法理解物资的类别，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示无法理解物资的类别，请确认后再试。")
 		return
 	}
 
 	// 获取责任人ID（必填）
 	responsible_str := r.PostFormValue("responsible_user_id")
 	if responsible_str == "" {
-		report(w, r, "你好，茶博士表示责任人ID不能为空，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示责任人ID不能为空，请确认后再试。")
 		return
 	}
 	responsible_user_id, err := strconv.Atoi(responsible_str)
 	if err != nil || responsible_user_id <= 0 {
-		report(w, r, "你好，茶博士表示责任人ID格式错误，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示责任人ID格式错误，请确认后再试。")
 		return
 	}
 
@@ -199,19 +199,19 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 	expected_usage := r.PostFormValue("expected_usage")
 	le := len(expected_usage)
 	if le > int(util.Config.ThreadMaxWord) {
-		report(w, r, "你好，茶博士表示预期用途描述太长，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示预期用途描述太长，请确认后再试。")
 		return
 	}
 
 	// 获取提供方类型
 	provider_type_str := r.PostFormValue("provider_type")
 	if provider_type_str == "" {
-		report(w, r, "你好，茶博士表示提供方类型不能为空，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示提供方类型不能为空，请确认后再试。")
 		return
 	}
 	provider_type, err := strconv.Atoi(provider_type_str)
 	if err != nil || (provider_type != data.ProviderTypePayee && provider_type != data.ProviderTypePayer) {
-		report(w, r, "你好，茶博士表示提供方类型格式错误，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示提供方类型格式错误，请确认后再试。")
 		return
 	}
 
@@ -219,7 +219,7 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 	notes := r.PostFormValue("notes")
 	le = len(notes)
 	if le > int(util.Config.ThreadMaxWord) {
-		report(w, r, "你好，茶博士表示备注太长，请确认后再试。")
+		report(w, s_u, "你好，茶博士表示备注太长，请确认后再试。")
 		return
 	}
 
@@ -238,7 +238,7 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 
 	if err := goods_project.Create(r.Context()); err != nil {
 		util.Debug("cannot create project goods", err)
-		report(w, r, "一脸蒙的茶博士，表示无法创建项目物资，请确认后再试一次。")
+		report(w, s_u, "一脸蒙的茶博士，表示无法创建项目物资，请确认后再试一次。")
 		return
 	}
 
@@ -247,17 +247,6 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u data.User) 
 
 // HandleGoodsProjectDetail 处理项目物资详情页面
 func HandleGoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		GoodsProjectDetail(w, r)
-	default:
-		report(w, r, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
-		return
-	}
-}
-
-// GET /v1/goods/project_detail?uuid=xxx
-func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -266,22 +255,34 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
+	switch r.Method {
+	case http.MethodGet:
+		GoodsProjectDetail(w, r, s_u)
+	default:
+		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
+		return
+	}
+}
+
+// GET /v1/goods/project_detail?uuid=xxx
+func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u data.User) {
+	var err error
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
 		util.Debug("Project UUID is empty", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	// 获取项目信息
 	project := data.Project{Uuid: uuid}
-	if err := project.GetByUuid(); err != nil {
+	if err = project.GetByUuid(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -289,7 +290,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	ob, err := project.Objective()
 	if err != nil {
 		util.Debug("Cannot get objective", err)
-		report(w, r, "获取目标信息失败")
+		report(w, s_u, "获取目标信息失败")
 		return
 	}
 
@@ -297,7 +298,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	goodsProjectList, err := data.GetGoodsProjectByProjectId(project.Id, r.Context())
 	if err != nil {
 		util.Debug("Cannot get goods by project id", project.Id, err)
-		report(w, r, "获取项目物资列表失败")
+		report(w, s_u, "获取项目物资列表失败")
 		return
 	}
 
@@ -329,14 +330,14 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
 		util.Debug("Cannot fetch project bean", err)
-		report(w, r, "获取项目详情失败")
+		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(ob)
 	if err != nil {
 		util.Debug("Cannot fetch objective bean", err)
-		report(w, r, "获取目标详情失败")
+		report(w, s_u, "获取目标详情失败")
 		return
 	}
 
@@ -355,7 +356,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
 	if err != nil {
 		util.Debug("Admin permission check failed", "userId", s_u.Id, "objectiveId", ob.Id, "error", err)
-		report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		report(w, s_u, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	templateData.IsAdmin = is_admin
@@ -364,7 +365,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 		is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 		if err != nil {
 			util.Debug("Permission check failed", "user_id:", s_u.Id, "error:", err)
-			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
+			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 			return
 		}
 		templateData.IsMaster = is_master
@@ -381,10 +382,6 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 // POST /v1/goods/project_readiness
 // HandleGoodsProjectReadiness 处理物资准备状态操作
 func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		report(w, r, "一脸蒙的茶博士，表示看不懂你的操作。")
-		return
-	}
 
 	s, err := session(r)
 	if err != nil {
@@ -395,20 +392,20 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	if !isVerifier(s_u.Id) {
 		util.Debug("User is not a verifier:", err)
-		report(w, r, "只有见证员才可以设置物资准备状态。")
+		report(w, s_u, "只有见证员才可以设置物资准备状态。")
 		return
 	}
 
 	// 解析表单
 	if err := r.ParseForm(); err != nil {
 		util.Debug("Cannot parse form", err)
-		report(w, r, "表单数据解析失败")
+		report(w, s_u, "表单数据解析失败")
 		return
 	}
 
@@ -416,14 +413,14 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 	projectUuid := r.FormValue("project_uuid")
 	if projectUuid == "" {
 		util.Debug("Project UUID is empty", err)
-		report(w, r, "项目信息缺失")
+		report(w, s_u, "项目信息缺失")
 		return
 	}
 
 	project := data.Project{Uuid: projectUuid}
 	if err := project.GetByUuid(); err != nil {
 		util.Debug("Cannot get project by uuid", projectUuid, err)
-		report(w, r, "项目不存在")
+		report(w, s_u, "项目不存在")
 		return
 	}
 
@@ -434,7 +431,7 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 	// 验证必填字段
 	if isReadyStr == "" {
 		util.Debug("is_ready field is empty", err)
-		report(w, r, "请选择准备状态")
+		report(w, s_u, "请选择准备状态")
 		return
 	}
 
@@ -450,7 +447,7 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 
 	if err := readiness.CreateOrUpdate(r.Context()); err != nil {
 		util.Debug("Cannot create or update goods readiness", err)
-		report(w, r, "设置物资准备状态失败")
+		report(w, s_u, "设置物资准备状态失败")
 		return
 	}
 

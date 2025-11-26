@@ -37,10 +37,10 @@ func EnvironmentNewGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -48,7 +48,7 @@ func EnvironmentNewGet(w http.ResponseWriter, r *http.Request) {
 		SessUser  data.User
 		ReturnURL string
 	}
-	envData.SessUser = user
+	envData.SessUser = s_u
 	envData.ReturnURL = r.URL.Query().Get("return_url")
 
 	generateHTML(w, &envData, "layout", "navbar.private", "project.environment.new")
@@ -64,13 +64,13 @@ func EnvironmentNewPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	// 验证当前用户身份是否见证者茶团成员
 	if !(isVerifier(s_u.Id)) {
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -95,7 +95,7 @@ func EnvironmentNewPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := env.Create(); err != nil {
 		util.Debug("Cannot create environment", err)
-		report(w, r, "创建环境条件失败，请重试。")
+		report(w, s_u, "创建环境条件失败，请重试。")
 		return
 	}
 
@@ -126,29 +126,29 @@ func EnvironmentDetailGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	env := data.Environment{Id: id}
 	if err := env.GetByIdOrUUID(); err != nil {
 		util.Debug("Cannot get environment by id", id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -165,7 +165,7 @@ func EnvironmentDetailGet(w http.ResponseWriter, r *http.Request) {
 		Environment data.Environment
 		Recorder    data.User
 	}
-	envData.SessUser = user
+	envData.SessUser = s_u
 	envData.Environment = env
 	envData.Recorder = recorder
 

@@ -25,7 +25,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot fetch user related data", err)
-		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	//读取被邀请用户的相关资料
@@ -33,7 +33,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	invi_user, err := data.GetUserByUUID(user_uuid)
 	if err != nil {
 		util.Debug(" Cannot get user by uuid", err)
-		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	var iD data.InvitationDetail

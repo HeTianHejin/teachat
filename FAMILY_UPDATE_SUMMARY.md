@@ -22,7 +22,7 @@ PerspectiveUserId int // 视角所属用户ID，表示这是谁眼中的家庭
 // 检查家庭名称长度
 lenName := cnStrLen(familyName)
 if lenName < 2 || lenName > 72 {
-    report(w, r, "家庭名称长度不合适")
+    report(w, s_u, "家庭名称长度不合适")
     return
 }
 

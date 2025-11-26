@@ -32,7 +32,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -40,14 +40,14 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("uuid")
 	if uuid == "" {
 		util.Debug(" No uuid provided in query", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	t_proj := data.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -55,7 +55,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -63,12 +63,12 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	existingBrainFire, err := data.GetBrainFireByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" Cannot get existing brain-fire", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	if err == nil && existingBrainFire.Id > 0 {
 		if existingBrainFire.Status == data.BrainFireStatusExtinguished {
-			report(w, r, "该项目的脑火记录已完成，不能重复创建")
+			report(w, s_u, "该项目的脑火记录已完成，不能重复创建")
 			return
 		}
 
@@ -78,34 +78,34 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	proj_appointment, err := data.GetAppointmentByProjectId(t_proj.Id, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get project appointment", t_proj.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	proj_appointment_bean, err := fetchAppointmentBean(proj_appointment)
 	if err != nil {
 		util.Debug(" Cannot get project appointment bean", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	t_obje, err := t_proj.Objective()
 	if err != nil {
 		util.Debug(" Cannot get objective given proj_id", t_proj.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	projBean, err := fetchProjectBean(t_proj)
 	if err != nil {
 		util.Debug(" Cannot get projBean", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	objeBean, err := fetchObjectiveBean(t_obje)
 	if err != nil {
 		util.Debug(" Cannot get objeBean", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -113,7 +113,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	environments, err := data.GetDefaultEnvironments(r.Context())
 	if err != nil {
 		util.Debug(" Cannot get default environments", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -150,7 +150,7 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -158,40 +158,40 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	// 解析表单数据
 	if err := r.ParseForm(); err != nil {
 		util.Debug(" Cannot parse form", err)
-		report(w, r, "表单数据解析失败")
+		report(w, s_u, "表单数据解析失败")
 		return
 	}
 
 	// 获取项目信息
 	projectUuid := r.FormValue("project_uuid")
 	if projectUuid == "" {
-		report(w, r, "项目信息缺失")
+		report(w, s_u, "项目信息缺失")
 		return
 	}
 
 	t_proj := data.Project{Uuid: projectUuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", projectUuid, err)
-		report(w, r, "项目不存在")
+		report(w, s_u, "项目不存在")
 		return
 	}
 	// 检查是否已存在当前project_id的brain-fire记录
 	existingBrainFire, err := data.GetBrainFireByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" Cannot get existing brain-fire", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	if err == nil && existingBrainFire.Id > 0 {
 		if existingBrainFire.Status >= data.BrainFireStatusBurning {
-			report(w, r, "该项目的脑火记录已存在，不能重复创建")
+			report(w, s_u, "该项目的脑火记录已存在，不能重复创建")
 			return
 		}
 
@@ -210,7 +210,7 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// 验证必填字段
 	if title == "" || inference == "" || diagnose == "" || judgement == "" {
-		report(w, r, "请填写完整的脑火内容")
+		report(w, s_u, "请填写完整的脑火内容")
 		return
 	}
 
@@ -222,12 +222,12 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 	// 解析时间
 	startTime, err := time.Parse("2006-01-02T15:04", startTimeStr)
 	if err != nil {
-		report(w, r, "开始时间格式错误")
+		report(w, s_u, "开始时间格式错误")
 		return
 	}
 	endTime, err := time.Parse("2006-01-02T15:04", endTimeStr)
 	if err != nil {
-		report(w, r, "结束时间格式错误")
+		report(w, s_u, "结束时间格式错误")
 		return
 	}
 
@@ -265,7 +265,7 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := brainFire.Create(r.Context()); err != nil {
 		util.Debug(" Cannot create brain fire", err)
-		report(w, r, "创建脑火记录失败")
+		report(w, s_u, "创建脑火记录失败")
 		return
 	}
 
@@ -292,12 +292,12 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -309,22 +309,22 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 			project := data.Project{Uuid: uuid}
 			if err := project.GetByUuid(); err != nil {
 				util.Debug("Cannot get project by uuid", uuid, err)
-				report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
 			brainFire, err = data.GetBrainFireByProjectId(project.Id, r.Context())
 			if err != nil {
 				if err == sql.ErrNoRows {
-					report(w, r, "该项目还没有脑火记录")
+					report(w, s_u, "该项目还没有脑火记录")
 					return
 				}
 				util.Debug("Cannot get BrainFire by project_id", project.Id, err)
-				report(w, r, "该项目脑火记录似乎被茶水泡糊了")
+				report(w, s_u, "该项目脑火记录似乎被茶水泡糊了")
 				return
 			}
 		} else {
 			util.Debug("Cannot get BrainFire by uuid", uuid, err)
-			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
 	}
@@ -333,7 +333,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 	pr := data.Project{Id: brainFire.ProjectId}
 	if err := pr.Get(); err != nil {
 		util.Debug("Cannot get project", err)
-		report(w, r, "获取项目信息失败")
+		report(w, s_u, "获取项目信息失败")
 		return
 	}
 
@@ -341,7 +341,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 	ob, err := pr.Objective()
 	if err != nil {
 		util.Debug("Cannot get objective", err)
-		report(w, r, "获取目标信息失败")
+		report(w, s_u, "获取目标信息失败")
 		return
 	}
 
@@ -349,21 +349,21 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 	brainFireBean, err := fetchBrainFireBean(brainFire)
 	if err != nil {
 		util.Debug("Cannot fetch BrainFire bean", err)
-		report(w, r, "获取脑火记录详情失败")
+		report(w, s_u, "获取脑火记录详情失败")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(pr)
 	if err != nil {
 		util.Debug("Cannot fetch project bean", err)
-		report(w, r, "获取项目详情失败")
+		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(ob)
 	if err != nil {
 		util.Debug("Cannot fetch objective bean", err)
-		report(w, r, "获取目标详情失败")
+		report(w, s_u, "获取目标详情失败")
 		return
 	}
 
@@ -381,7 +381,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 			"objectiveId", ob.Id,
 			"error", err,
 		)
-		report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		report(w, s_u, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	templateData.IsAdmin = is_admin
@@ -389,7 +389,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 		is_master, err := checkProjectMasterPermission(&pr, s_u.Id)
 		if err != nil {
 			util.Debug("Permission check failed", "user_id:", s_u.Id, "error:", err)
-			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
+			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 			return
 		}
 		templateData.IsMaster = is_master
@@ -402,7 +402,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 		is_invited, err := ob.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug("Cannot check if user is invited to objective", err)
-			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
+			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 			return
 		}
 		templateData.IsInvited = is_invited
@@ -411,7 +411,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 	if brainFire.Id > 0 && brainFire.BrainFireType == data.BrainFireTypePrivate {
 		if !is_admin && !templateData.IsMaster && !templateData.IsVerifier && !templateData.IsInvited {
 			util.Debug("User has no access to this private brain-fire", "user_id:", s_u.Id, "brain_fire_id:", brainFire.Id)
-			report(w, r, "你没有权限查看此私密脑火记录")
+			report(w, s_u, "你没有权限查看此私密脑火记录")
 			return
 		}
 

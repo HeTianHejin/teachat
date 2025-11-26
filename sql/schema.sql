@@ -96,9 +96,9 @@ CREATE TABLE teams (
     deleted_at            TIMESTAMP
 );
 -- 为teams表添加is_private字段
--- 私密团队不公开显示，但可以接收消息和作业进度
+-- 私密团队不公开显示，但可以接收通知和作业进度
 ALTER TABLE teams ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;
-COMMENT ON COLUMN teams.is_private IS '是否私密：true-私密团队（不公开但可接收消息），false-公开团队';
+COMMENT ON COLUMN teams.is_private IS '是否私密：true-私密团队（不公开但可接收通知），false-公开团队';
 -- 为is_private字段创建索引以优化查询
 CREATE INDEX IF NOT EXISTS idx_teams_is_private ON teams(is_private);
 -- 复合索引优化常见查询（class + is_private + deleted_at）
@@ -522,7 +522,7 @@ CREATE TABLE thread_approved (
 );
 
 -- ============================================
--- 邀请与消息表
+-- 邀请与通知表
 -- ============================================
 
 -- 邀请表
@@ -555,8 +555,8 @@ CREATE TABLE accept_objects (
     object_id             INTEGER
 );
 
--- 接受消息表
-CREATE TABLE accept_messages (
+-- 接受通知表
+CREATE TABLE accept_notifications (
     id                    SERIAL PRIMARY KEY,
     from_user_id          INTEGER REFERENCES users(id),
     to_user_id            INTEGER REFERENCES users(id),
@@ -580,8 +580,8 @@ CREATE TABLE acceptances (
     y_accepted_at         TIMESTAMP
 );
 
--- 新消息计数表
-CREATE TABLE new_message_counts (
+-- 新通知计数表
+CREATE TABLE new_notification_counts (
     id                    SERIAL PRIMARY KEY,
     user_id               INTEGER,
     count                 INTEGER DEFAULT 0

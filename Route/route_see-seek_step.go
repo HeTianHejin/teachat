@@ -34,16 +34,16 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Cannot get s_u from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	// 检测当前会话茶友是否见证者
 	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
-		util.Debug(" Current user is not a verifier", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		util.Debug(" Current s_u is not a verifier", s_u.Id)
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -51,7 +51,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("uuid")
 
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	// 检查SeeSeek记录
@@ -59,50 +59,50 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			// 项目的“看看”第一步还没有做！提醒
-			report(w, r, "你好，项目的“看看”第一步还没有记录，请检查项目详情？")
+			report(w, s_u, "你好，项目的“看看”第一步还没有记录，请检查项目详情？")
 			return
 		}
 		//这是发生了数据库操作错误
 		util.Debug("Cannot get SeeSeek by uuid", err)
-		report(w, r, "处理“看看”记录时发生错误，请稍后再试")
+		report(w, s_u, "处理“看看”记录时发生错误，请稍后再试")
 		return
 	}
 
 	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
-		report(w, r, "无效的“看看”记录。")
+		report(w, s_u, "无效的“看看”记录。")
 		return
 	}
 	// 获取项目信息
 	project := data.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	// 获取目标信息
 	quoteObjective, err := project.Objective()
 	if err != nil {
 		util.Debug("Cannot get objective by project id", project.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	project_bean, err := fetchProjectBean(project)
 	if err != nil {
 		util.Debug("Cannot fetch project bean", err)
-		report(w, r, "获取项目详情失败，请稍后再试")
+		report(w, s_u, "获取项目详情失败，请稍后再试")
 		return
 	}
 	objective_bean, err := fetchObjectiveBean(quoteObjective)
 	if err != nil {
 		util.Debug("Cannot fetch objective bean", err)
-		report(w, r, "获取目标详情失败，请稍后再试")
+		report(w, s_u, "获取目标详情失败，请稍后再试")
 		return
 	}
 
 	see_seek_bean, err := fetchSeeSeekBean(see_seek)
 	if err != nil {
 		util.Debug("Cannot fetch SeeSeek bean", err)
-		report(w, r, "获取“看看”记录详情失败，请稍后再试")
+		report(w, s_u, "获取“看看”记录详情失败，请稍后再试")
 		return
 	}
 	completedSteps := see_seek.Step
@@ -120,7 +120,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
 	if err != nil {
 		util.Debug("Cannot get verifier team", err)
-		report(w, r, "获取验证者团队失败，请稍后再试")
+		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
 	// 准备页面数据
@@ -149,15 +149,15 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Cannot get s_u from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
-	if !isVerifier(user.Id) {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+	if !isVerifier(s_u.Id) {
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -166,7 +166,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 
 	step, _ := strconv.Atoi(stepStr)
 	if step != data.SeeSeekStepHazard {
-		report(w, r, "无效的步骤参数。")
+		report(w, s_u, "无效的步骤参数。")
 		return
 	}
 
@@ -174,14 +174,14 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	see_seek := data.SeeSeek{Uuid: seeSeekUuid}
 	if err := see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
-			report(w, r, "看看记录不存在。")
+			report(w, s_u, "看看记录不存在。")
 			return
 		}
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
-		report(w, r, "无效的看看记录。")
+		report(w, s_u, "无效的看看记录。")
 		return
 	}
 	// 允许从后续步骤返回修改，不检查重复提交
@@ -189,7 +189,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	// 获取项目信息
 	project := data.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
-		report(w, r, "项目不存在。")
+		report(w, s_u, "项目不存在。")
 		return
 	}
 
@@ -199,7 +199,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	if hazardIdsStr != "" {
 		hazardIds, err = parseIdSlice(hazardIdsStr)
 		if err != nil {
-			report(w, r, "隐患ID格式不正确")
+			report(w, s_u, "隐患ID格式不正确")
 			return
 		}
 	}
@@ -207,7 +207,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	existingHazards, err := see_seek.GetHazards()
 	if err != nil {
 		util.Debug("Cannot get existing hazards", err)
-		report(w, r, "获取已有隐患记录失败")
+		report(w, s_u, "获取已有隐患记录失败")
 		return
 	}
 
@@ -226,7 +226,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 		err = data.DeleteSeeSeekHazardsBySeeSeekId(see_seek.Id)
 		if err != nil {
 			util.Debug("Cannot delete existing SeeSeekHazards", err)
-			report(w, r, "更新隐患记录时发生错误，请稍后再试")
+			report(w, s_u, "更新隐患记录时发生错误，请稍后再试")
 			return
 		}
 
@@ -235,12 +235,12 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 			exist, err := data.IsHazardIdExists(hazardId)
 			if err != nil {
 				util.Debug("Cannot check hazard ID existence", err)
-				report(w, r, "验证隐患ID时发生错误，请稍后再试")
+				report(w, s_u, "验证隐患ID时发生错误，请稍后再试")
 				return
 			}
 			if !exist {
 				util.Debug("Invalid hazard ID", hazardId)
-				report(w, r, fmt.Sprintf("隐患ID %d 不存在，请检查后再试", hazardId))
+				report(w, s_u, fmt.Sprintf("隐患ID %d 不存在，请检查后再试", hazardId))
 				return
 			}
 
@@ -255,7 +255,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 				}
 				if err := see_seek_hazard.Create(); err != nil {
 					util.Debug("Cannot create SeeSeekHazard", err)
-					report(w, r, "保存隐患记录时发生错误，请稍后再试")
+					report(w, s_u, "保存隐患记录时发生错误，请稍后再试")
 					return
 				}
 			}
@@ -266,7 +266,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	see_seek.Step = data.SeeSeekStepHazard
 	if err := see_seek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", see_seek.Uuid, err)
-		report(w, r, "保存看看记录步骤时发生错误，请稍后再试")
+		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
 
@@ -299,15 +299,15 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Cannot get s_u from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
-		util.Debug(" Current user is not a verifier", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		util.Debug(" Current s_u is not a verifier", s_u.Id)
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -315,58 +315,58 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("uuid")
 
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	see_seek := data.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
-			report(w, r, "你好，项目的看看记录不存在，请检查项目详情？")
+			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
 			return
 		}
 		util.Debug("Cannot get SeeSeek by uuid", err)
-		report(w, r, "处理看看记录时发生错误，请稍后再试")
+		report(w, s_u, "处理看看记录时发生错误，请稍后再试")
 		return
 	}
 
 	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
-		report(w, r, "无效的看看记录。")
+		report(w, s_u, "无效的看看记录。")
 		return
 	}
 
 	project := data.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	quoteObjective, err := project.Objective()
 	if err != nil {
 		util.Debug("Cannot get objective by project id", project.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	project_bean, err := fetchProjectBean(project)
 	if err != nil {
 		util.Debug("Cannot fetch project bean", err)
-		report(w, r, "获取项目详情失败，请稍后再试")
+		report(w, s_u, "获取项目详情失败，请稍后再试")
 		return
 	}
 
 	objective_bean, err := fetchObjectiveBean(quoteObjective)
 	if err != nil {
 		util.Debug("Cannot fetch objective bean", err)
-		report(w, r, "获取目标详情失败，请稍后再试")
+		report(w, s_u, "获取目标详情失败，请稍后再试")
 		return
 	}
 
 	see_seek_bean, err := fetchSeeSeekBean(see_seek)
 	if err != nil {
 		util.Debug("Cannot fetch SeeSeek bean", err)
-		report(w, r, "获取看看记录详情失败，请稍后再试")
+		report(w, s_u, "获取看看记录详情失败，请稍后再试")
 		return
 	}
 
@@ -385,7 +385,7 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
 	if err != nil {
 		util.Debug("Cannot get verifier team", err)
-		report(w, r, "获取验证者团队失败，请稍后再试")
+		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
 
@@ -415,15 +415,15 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Cannot get s_u from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
-	if !isVerifier(user.Id) {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+	if !isVerifier(s_u.Id) {
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -432,17 +432,17 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 
 	step, _ := strconv.Atoi(stepStr)
 	if step != data.SeeSeekStepRisk {
-		report(w, r, "无效的步骤参数。")
+		report(w, s_u, "无效的步骤参数。")
 		return
 	}
 
 	seeSeek := data.SeeSeek{Uuid: seeSeekUuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
-			report(w, r, "看看记录不存在。")
+			report(w, s_u, "看看记录不存在。")
 			return
 		}
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -450,7 +450,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 
 	project := data.Project{Id: seeSeek.ProjectId}
 	if err := project.Get(); err != nil {
-		report(w, r, "项目不存在。")
+		report(w, s_u, "项目不存在。")
 		return
 	}
 
@@ -459,7 +459,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 	if riskIdsStr != "" {
 		riskIds, err = parseIdSlice(riskIdsStr)
 		if err != nil {
-			report(w, r, "风险ID格式不正确")
+			report(w, s_u, "风险ID格式不正确")
 			return
 		}
 	}
@@ -468,7 +468,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 	existingRisks, err := seeSeek.GetRisks()
 	if err != nil {
 		util.Debug("Cannot get existing risks", err)
-		report(w, r, "获取已有风险记录失败")
+		report(w, s_u, "获取已有风险记录失败")
 		return
 	}
 
@@ -487,7 +487,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 		err = data.DeleteSeeSeekRisksBySeeSeekId(seeSeek.Id)
 		if err != nil {
 			util.Debug("Cannot delete existing SeeSeekRisks", err)
-			report(w, r, "更新风险记录时发生错误，请稍后再试")
+			report(w, s_u, "更新风险记录时发生错误，请稍后再试")
 			return
 		}
 
@@ -499,7 +499,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 				}
 				if err := see_seek_risk.Create(); err != nil {
 					util.Debug("Cannot create SeeSeekRisk", err)
-					report(w, r, "保存风险记录时发生错误，请稍后再试")
+					report(w, s_u, "保存风险记录时发生错误，请稍后再试")
 					return
 				}
 			}
@@ -509,7 +509,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 	seeSeek.Step = data.SeeSeekStepRisk
 	if err := seeSeek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
-		report(w, r, "保存看看记录步骤时发生错误，请稍后再试")
+		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
 
@@ -540,15 +540,15 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Cannot get s_u from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
-		util.Debug(" Current user is not a verifier", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		util.Debug(" Current s_u is not a verifier", s_u.Id)
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -556,58 +556,58 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("uuid")
 
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	see_seek := data.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
-			report(w, r, "你好，项目的看看记录不存在，请检查项目详情？")
+			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
 			return
 		}
 		util.Debug("Cannot get SeeSeek by uuid", err)
-		report(w, r, "处理看看记录时发生错误，请稍后再试")
+		report(w, s_u, "处理看看记录时发生错误，请稍后再试")
 		return
 	}
 
 	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
-		report(w, r, "无效的看看记录。")
+		report(w, s_u, "无效的看看记录。")
 		return
 	}
 
 	project := data.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	quoteObjective, err := project.Objective()
 	if err != nil {
 		util.Debug("Cannot get objective by project id", project.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	project_bean, err := fetchProjectBean(project)
 	if err != nil {
 		util.Debug("Cannot fetch project bean", err)
-		report(w, r, "获取项目详情失败，请稍后再试")
+		report(w, s_u, "获取项目详情失败，请稍后再试")
 		return
 	}
 
 	objective_bean, err := fetchObjectiveBean(quoteObjective)
 	if err != nil {
 		util.Debug("Cannot fetch objective bean", err)
-		report(w, r, "获取目标详情失败，请稍后再试")
+		report(w, s_u, "获取目标详情失败，请稍后再试")
 		return
 	}
 
 	see_seek_bean, err := fetchSeeSeekBean(see_seek)
 	if err != nil {
 		util.Debug("Cannot fetch SeeSeek bean", err)
-		report(w, r, "获取看看记录详情失败，请稍后再试")
+		report(w, s_u, "获取看看记录详情失败，请稍后再试")
 		return
 	}
 
@@ -618,7 +618,7 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
 	if err != nil {
 		util.Debug("Cannot get verifier team", err)
-		report(w, r, "获取验证者团队失败，请稍后再试")
+		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
 
@@ -646,15 +646,15 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Cannot get s_u from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
-	if !isVerifier(user.Id) {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+	if !isVerifier(s_u.Id) {
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -663,17 +663,17 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 
 	step, _ := strconv.Atoi(stepStr)
 	if step != data.SeeSeekStepObservation {
-		report(w, r, "无效的步骤参数。")
+		report(w, s_u, "无效的步骤参数。")
 		return
 	}
 
 	seeSeek := data.SeeSeek{Uuid: seeSeekUuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
-			report(w, r, "看看记录不存在。")
+			report(w, s_u, "看看记录不存在。")
 			return
 		}
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -720,7 +720,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := seeSeekLook.Create(); err != nil {
 			util.Debug("Cannot create SeeSeekLook", err)
-			report(w, r, "保存视觉观察记录时发生错误，请稍后再试")
+			report(w, s_u, "保存视觉观察记录时发生错误，请稍后再试")
 			return
 		}
 	}
@@ -751,7 +751,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := seeSeekListen.Create(); err != nil {
 			util.Debug("Cannot create SeeSeekListen", err)
-			report(w, r, "保存听觉观察记录时发生错误，请稍后再试")
+			report(w, s_u, "保存听觉观察记录时发生错误，请稍后再试")
 			return
 		}
 	}
@@ -782,7 +782,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := seeSeekSmell.Create(); err != nil {
 			util.Debug("Cannot create SeeSeekSmell", err)
-			report(w, r, "保存嗅觉观察记录时发生错误，请稍后再试")
+			report(w, s_u, "保存嗅觉观察记录时发生错误，请稍后再试")
 			return
 		}
 	}
@@ -821,7 +821,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := seeSeekTouch.Create(); err != nil {
 			util.Debug("Cannot create SeeSeekTouch", err)
-			report(w, r, "保存触觉观察记录时发生错误，请稍后再试")
+			report(w, s_u, "保存触觉观察记录时发生错误，请稍后再试")
 			return
 		}
 	}
@@ -830,7 +830,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	seeSeek.Step = data.SeeSeekStepObservation
 	if err := seeSeek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
-		report(w, r, "保存看看记录步骤时发生错误，请稍后再试")
+		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
 
@@ -860,15 +860,15 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Cannot get s_u from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
-		util.Debug(" Current user is not a verifier", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		util.Debug(" Current s_u is not a verifier", s_u.Id)
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -876,58 +876,58 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("uuid")
 
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	see_seek := data.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err.Error() == "没有记录" {
-			report(w, r, "你好，项目的看看记录不存在，请检查项目详情？")
+			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
 			return
 		}
 		util.Debug("Cannot get SeeSeek by uuid", err)
-		report(w, r, "处理看看记录时发生错误，请稍后再试")
+		report(w, s_u, "处理看看记录时发生错误，请稍后再试")
 		return
 	}
 
 	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
-		report(w, r, "无效的看看记录。")
+		report(w, s_u, "无效的看看记录。")
 		return
 	}
 
 	project := data.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	quoteObjective, err := project.Objective()
 	if err != nil {
 		util.Debug("Cannot get objective by project id", project.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	project_bean, err := fetchProjectBean(project)
 	if err != nil {
 		util.Debug("Cannot fetch project bean", err)
-		report(w, r, "获取项目详情失败，请稍后再试")
+		report(w, s_u, "获取项目详情失败，请稍后再试")
 		return
 	}
 
 	objective_bean, err := fetchObjectiveBean(quoteObjective)
 	if err != nil {
 		util.Debug("Cannot fetch objective bean", err)
-		report(w, r, "获取目标详情失败，请稍后再试")
+		report(w, s_u, "获取目标详情失败，请稍后再试")
 		return
 	}
 
 	see_seek_bean, err := fetchSeeSeekBean(see_seek)
 	if err != nil {
 		util.Debug("Cannot fetch SeeSeek bean", err)
-		report(w, r, "获取看看记录详情失败，请稍后再试")
+		report(w, s_u, "获取看看记录详情失败，请稍后再试")
 		return
 	}
 
@@ -938,7 +938,7 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
 	if err != nil {
 		util.Debug("Cannot get verifier team", err)
-		report(w, r, "获取验证者团队失败，请稍后再试")
+		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
 
@@ -966,15 +966,15 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		util.Debug("Cannot get s_u from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
-	if !isVerifier(user.Id) {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+	if !isVerifier(s_u.Id) {
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -983,17 +983,17 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 
 	step, _ := strconv.Atoi(stepStr)
 	if step != data.SeeSeekStepReport {
-		report(w, r, "无效的步骤参数。")
+		report(w, s_u, "无效的步骤参数。")
 		return
 	}
 
 	seeSeek := data.SeeSeek{Uuid: seeSeekUuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
 		if err.Error() == "没有记录" {
-			report(w, r, "看看记录不存在。")
+			report(w, s_u, "看看记录不存在。")
 			return
 		}
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -1001,14 +1001,14 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 
 	project := data.Project{Id: seeSeek.ProjectId}
 	if err := project.Get(); err != nil {
-		report(w, r, "项目不存在。")
+		report(w, s_u, "项目不存在。")
 		return
 	}
 
 	// 获取完成时间
 	endTimeStr := r.PostFormValue("end_time")
 	if endTimeStr == "" {
-		report(w, r, "请选择完成时间")
+		report(w, s_u, "请选择完成时间")
 		return
 	}
 
@@ -1016,7 +1016,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	endTime, err := time.Parse("2006-01-02T15:04", endTimeStr)
 	if err != nil {
 		util.Debug(" Cannot parse end time", endTimeStr, err)
-		report(w, r, "完成时间格式不正确")
+		report(w, s_u, "完成时间格式不正确")
 		return
 	}
 
@@ -1054,12 +1054,12 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 			InstrumentGoodsID: instrumentGoodsId,
 			ReportTitle:       reportTitle,
 			ReportContent:     reportContent,
-			MasterUserId:      user.Id,
+			MasterUserId:      s_u.Id,
 			ReportDate:        time.Now(),
 		}
 		if err := examinationReport.Create(); err != nil {
 			util.Debug("Cannot create SeeSeekExaminationReport", err)
-			report(w, r, "保存检测报告时发生错误，请稍后再试")
+			report(w, s_u, "保存检测报告时发生错误，请稍后再试")
 			return
 		}
 
@@ -1108,7 +1108,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 
 			if err := examinationItem.Create(); err != nil {
 				util.Debug("Cannot create SeeSeekExaminationItem", err)
-				report(w, r, "保存检测项目时发生错误，请稍后再试")
+				report(w, s_u, "保存检测项目时发生错误，请稍后再试")
 				return
 			}
 		}
@@ -1120,7 +1120,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	seeSeek.EndTime = endTime
 	if err := seeSeek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
-		report(w, r, "保存看看记录步骤时发生错误，请稍后再试")
+		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
 

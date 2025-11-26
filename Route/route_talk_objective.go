@@ -41,7 +41,7 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s)
 	if err != nil {
 		util.Debug("cannot fetch s_u s_teams given session", err)
-		report(w, r, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
+		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 
@@ -69,15 +69,15 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	err = r.ParseForm()
-	if err != nil {
-		report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
-		return
-	}
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 	// 默认的茶话会封面图名
@@ -88,7 +88,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
 		util.Debug("Failed to convert class to int", err)
-		report(w, r, "茶话会类型参数格式错误")
+		report(w, s_u, "茶话会类型参数格式错误")
 		return
 	}
 
@@ -97,24 +97,24 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
 		util.Debug("Failed to convert family_id to int", err)
-		report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
 		util.Debug("Failed to convert class to int", err)
-		report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
 
-	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u.Id, w, r)
+	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u, w)
 	if !valid && err == nil {
 		return // 参数不合法，已经处理了错误
 	}
 	if err != nil {
 		// 处理数据库错误
 		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
-		report(w, r, "你好，成员资格检查失败，请确认后再试。")
+		report(w, s_u, "你好，成员资格检查失败，请确认后再试。")
 		return
 	}
 
@@ -125,11 +125,11 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	t_ob, err := obj.GetByTitle()
 	if err != nil {
 		util.Debug("查询茶话会失败", err)
-		report(w, r, "查询茶话会失败")
+		report(w, s_u, "查询茶话会失败")
 		return
 	}
 	if len(t_ob) > 0 {
-		report(w, r, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复哦，请确认后再试。")
+		report(w, s_u, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复哦，请确认后再试。")
 		return
 	}
 
@@ -137,23 +137,23 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	count_team, err := countObj.CountByTeamId()
 	if err != nil {
 		util.Debug(" cannot get count given objective team_id", err)
-		report(w, r, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
+		report(w, s_u, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
 		return
 	}
 	// 最大团队可以创建 茶话会 数量
 	if count_team > int(util.Config.MaxInviteTeams) {
-		report(w, r, "你好，编新不如述旧，一个茶团最多可以开的茶话会数量是有限的，请确认后再试。")
+		report(w, s_u, "你好，编新不如述旧，一个茶团最多可以开的茶话会数量是有限的，请确认后再试。")
 		return
 	}
 
 	// 检测一下name是否>2中文字，body是否在min_word-int(util.Config.ThreadMaxWord)中文字，
 	// 如果不是，返回错误信息
 	if cnStrLen(title) < 2 || cnStrLen(title) > 36 {
-		report(w, r, "你好，茶博士竟然说字太少浪费纸张，请确认后再试。")
+		report(w, s_u, "你好，茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
 	if cnStrLen(body) < int(util.Config.ThreadMinWord) || cnStrLen(body) > int(util.Config.ThreadMaxWord) {
-		report(w, r, "你好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
+		report(w, s_u, "你好，茶博士迷糊了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return
 	}
 
@@ -175,7 +175,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		if err = new_ob.Create(); err != nil {
 			// 记录错误，提示用户新开茶话会未成功
 			util.Debug(" Cannot create objective", err)
-			report(w, r, "你好，偷来梨蕊三分白，借得梅花一缕魂。")
+			report(w, s_u, "你好，偷来梨蕊三分白，借得梅花一缕魂。")
 			return
 		}
 
@@ -183,47 +183,47 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		//如果class=20封闭式茶话会(草围)，需要读取指定茶团号TeamIds列表
 		tIds_str := r.PostFormValue("invite_ids")
 		if tIds_str == "" {
-			report(w, r, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")
+			report(w, s_u, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")
 			return
 		}
 		t_id_slice, err := parseIdSlice(tIds_str)
 		if err != nil {
 			util.Debug(" Cannot parse team ids", err)
-			report(w, r, "你好，陛下填写的茶团号格式看不懂，必需是不重复的自然数用英文逗号分隔。")
+			report(w, s_u, "你好，陛下填写的茶团号格式看不懂，必需是不重复的自然数用英文逗号分隔。")
 			return
 		}
 
 		// 使用事务创建封闭式茶话会及其许可茶团
 		if err = data.CreateObjectiveWithTeams(&new_ob, t_id_slice); err != nil {
 			util.Debug("创建封闭式茶话会失败", err)
-			report(w, r, "你好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
+			report(w, s_u, "你好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
 			return
 		}
 	default:
 		// 非法的茶话会属性
 		util.Debug(" Unknown objective class", err)
-		report(w, r, "你好，身前有余勿伸手，眼前无路请回头，请稍后再试。")
+		report(w, s_u, "你好，身前有余勿伸手，眼前无路请回头，请稍后再试。")
 		return
 	}
 
 	if util.Config.PoliteMode {
 		if err = createAndSendAcceptNotification(new_ob.Id, data.AcceptObjectTypeObjective, s_u.Id); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
-				report(w, r, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
+				report(w, s_u, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
-				report(w, r, "你好，茶博士迷路了，未能发送蒙评请求通知。")
+				report(w, s_u, "你好，茶博士迷路了，未能发送蒙评请求通知。")
 			}
 			return
 		}
 
 		t := fmt.Sprintf("你好，新开茶话会 %s 已准备妥当，稍等有缘茶友评审通过之后，即可启用。", new_ob.Title)
 		// 提示用户草稿保存成功
-		report(w, r, t)
+		report(w, s_u, t)
 		return
 	} else {
 		objective, err := acceptNewObjective(new_ob.Id)
 		if err != nil {
-			report(w, r, err.Error())
+			report(w, s_u, err.Error())
 			return
 		}
 		//跳转到茶话会详情页
@@ -237,7 +237,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 // 根据用户是否登录显示不同导航条的茶话会广场页面
 func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	var oSpD data.ObjectiveSquare
-
+	s_u := data.UserUnknown
 	// 如何排序茶话会，是个问题！按照圆桌会议平等约定，应该是轮流出现在茶话会广场才合适，
 	// 而且，应该是按人头出现计数，而不是按热度或者建的茶话会数量。
 	// 每次展示2打=24个茶话会
@@ -247,19 +247,19 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	objective_slice, err := data.GetPublicObjectives(24)
 	if err != nil {
 		util.Debug(" Cannot get objectives", err)
-		report(w, r, "你好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
 		return
 	}
 	len := len(objective_slice)
 	if len == 0 {
-		report(w, r, "你好，山穷水尽疑无路，为何没有任何茶话会资料？请稍后再试。")
+		report(w, s_u, "你好，山穷水尽疑无路，为何没有任何茶话会资料？请稍后再试。")
 		return
 	}
 
 	oSpD.ObjectiveBeanSlice, err = FetchObjectiveBeanSlice(objective_slice)
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 
@@ -281,16 +281,16 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//已登录，读取用户信息
-	sUser, err := s.User()
+	s_u, err = s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
 		//跳转登录页面
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	oSpD.SessUser = sUser
+	oSpD.SessUser = s_u
 	for i := range oSpD.ObjectiveBeanSlice {
-		if oSpD.ObjectiveBeanSlice[i].Objective.UserId == sUser.Id {
+		if oSpD.ObjectiveBeanSlice[i].Objective.UserId == s_u.Id {
 			oSpD.ObjectiveBeanSlice[i].Objective.ActiveData.IsAuthor = true
 		} else {
 			oSpD.ObjectiveBeanSlice[i].Objective.ActiveData.IsAuthor = false
@@ -306,17 +306,18 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var oD data.ObjectiveDetail
+	s_u := data.UserUnknown
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
 	if uuid == "" {
-		report(w, r, "你好，茶博士看不懂陛下提交的UUID参数，请稍后再试。")
+		report(w, s_u, "你好，茶博士看不懂陛下提交的UUID参数，请稍后再试。")
 		return
 	}
 	// 根据uuid查询茶话会资料
 	ob := data.Objective{
 		Uuid: uuid}
 	if err = ob.GetByUuid(); err != nil {
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 
@@ -324,16 +325,16 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	case data.ObClassOpen, data.ObClassClose:
 		break
 	case data.ObClassOpenDraft, data.ObClassCloseDraft:
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	default:
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 	oD.ObjectiveBean, err = fetchObjectiveBean(ob)
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 
@@ -341,13 +342,13 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	project_slice, err := ob.GetPublicProjects()
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 	oD.ProjectBeanSlice, err = fetchProjectBeanSlice(project_slice)
 	if err != nil {
 		util.Debug(" Cannot read objective-bean slice", err)
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	}
 	//检查用户是否已经登录
@@ -368,7 +369,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//已经登录！
-	s_u, err := s.User()
+	s_u, err = s.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -388,7 +389,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		is_invited, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot read objective-bean slice", err)
-			report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌着。")
+			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌着。")
 			return
 		}
 		oD.IsInvited = is_invited
@@ -402,7 +403,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 			"objectiveId", ob.Id,
 			"error", err,
 		)
-		report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		report(w, s_u, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	oD.IsAdmin = is_admin
@@ -441,12 +442,12 @@ func objectiveSupplementGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", sess.Email, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, r, "茶博士失魂鱼，未能读取茶围目标编号，请确认后再试。")
+		report(w, s_u, "茶博士失魂鱼，未能读取茶围目标编号，请确认后再试。")
 		return
 	}
 
@@ -455,11 +456,11 @@ func objectiveSupplementGet(w http.ResponseWriter, r *http.Request) {
 	ob := data.Objective{Uuid: uuid}
 	if err = ob.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "你好，茶博士竟然说该茶围目标不存在，请确认后再试一次。")
+			report(w, s_u, "你好，茶博士竟然说该茶围目标不存在，请确认后再试一次。")
 			return
 		}
 		util.Debug(" Cannot read objective given uuid", uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -467,7 +468,7 @@ func objectiveSupplementGet(w http.ResponseWriter, r *http.Request) {
 	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
 	if err != nil {
 		util.Debug("objective Admin permission check failed:", "userId", s_u.Id, "objectiveId", ob.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	obSupp.IsAdmin = is_admin
@@ -477,7 +478,7 @@ func objectiveSupplementGet(w http.ResponseWriter, r *http.Request) {
 	obSupp.ObjectiveBean, err = fetchObjectiveBean(ob)
 	if err != nil {
 		util.Debug(" Cannot read objectiveBean", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -514,7 +515,7 @@ func objectiveSupplementPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", sess.Email, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -522,12 +523,12 @@ func objectiveSupplementPost(w http.ResponseWriter, r *http.Request) {
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	o_uuid := r.PostFormValue("uuid")
 	if o_uuid == "" {
-		report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说您补充的茶围目标编号不存在。")
+		report(w, s_u, "你好，茶博士扶起厚厚的眼镜，居然说您补充的茶围目标编号不存在。")
 		return
 	}
 	//读取提交的additional
@@ -537,11 +538,11 @@ func objectiveSupplementPost(w http.ResponseWriter, r *http.Request) {
 	ob := data.Objective{Uuid: o_uuid}
 	if err = ob.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			report(w, r, "你好，茶博士竟然说该茶围目标不存在，请确认后再试一次。")
+			report(w, s_u, "你好，茶博士竟然说该茶围目标不存在，请确认后再试一次。")
 			return
 		}
 		util.Debug(" Cannot read objective given uuid", o_uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
@@ -551,17 +552,17 @@ func objectiveSupplementPost(w http.ResponseWriter, r *http.Request) {
 			"objectiveId", ob.Id,
 			"error", err,
 		)
-		report(w, r, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
+		report(w, s_u, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
 	if !is_admin {
-		report(w, r, "茶博士惊讶，陛下你没有权限补充该茶围目标，请确认后再试。")
+		report(w, s_u, "茶博士惊讶，陛下你没有权限补充该茶围目标，请确认后再试。")
 		return
 	}
 
 	//读取提交内容要求>int(util.Config.ThreadMinWord)中文字符，加上已有内容是否<=int(util.Config.ThreadMaxWord)
-	if ok := submitAdditionalContent(w, r, ob.Body, additional); !ok {
-		report(w, r, "你好，茶博士扶起厚厚的眼镜，居然说陛下您补充的茶围目标内容太多了！请确认后再试。")
+	if ok := submitAdditionalContent(w, s_u, ob.Body, additional); !ok {
+		report(w, s_u, "你好，茶博士扶起厚厚的眼镜，居然说陛下您补充的茶围目标内容太多了！请确认后再试。")
 		return
 	}
 	//当前"[中文时间字符 + 补充]" + body
@@ -575,7 +576,7 @@ func objectiveSupplementPost(w http.ResponseWriter, r *http.Request) {
 	//更新茶围目标内容
 	if err = ob.Update(); err != nil {
 		util.Debug(" Cannot update objective", err)
-		report(w, r, "你好，茶博士失魂鱼，墨水中断未能补充茶围目标。")
+		report(w, s_u, "你好，茶博士失魂鱼，墨水中断未能补充茶围目标。")
 		return
 	}
 

@@ -63,47 +63,47 @@ func checkProjectMasterPermission(pr *data.Project, user_id int) (bool, error) {
 }
 
 // 检查茶台创建权限
-func checkCreateProjectPermission(objective data.Objective, userId int, w http.ResponseWriter, r *http.Request) bool {
+func checkCreateProjectPermission(objective data.Objective, s_u data.User, w http.ResponseWriter) bool {
 	switch objective.Class {
 	case data.ObClassOpen: // 开放式茶话会
 		return true
 	case data.ObClassClose: // 封闭式茶话会
-		isInvited, err := objective.IsInvitedMember(userId)
+		isInvited, err := objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug("检查邀请名单失败", "error", err)
-			report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
+			report(w, s_u, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
 			return false
 		}
 		if !isInvited {
-			report(w, r, "你好，茶博士无比惊讶说，陛下你的大名竟然不在邀请品茶名单上。")
+			report(w, s_u, "你好，茶博士无比惊讶说，陛下你的大名竟然不在邀请品茶名单上。")
 			return false
 		}
 		return true
 	default:
-		report(w, r, "你好，茶博士失魂鱼，竟然说受邀请品茶名单失踪了，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，竟然说受邀请品茶名单失踪了，请稍后再试。")
 		return false
 	}
 }
 
 // 检查茶议（thread）创建权限
-func checkCreateThreadPermission(project data.Project, userId int, w http.ResponseWriter, r *http.Request) bool {
+func checkCreateThreadPermission(project data.Project, s_u data.User, w http.ResponseWriter) bool {
 	switch project.Class {
 	case data.PrClassOpen: // 开放式茶台
 		return true
 	case data.PrClassClose: // 封闭式茶台
-		isInvited, err := project.IsInvitedMember(userId)
+		isInvited, err := project.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug("检查邀请名单失败", "error", err)
-			report(w, r, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
+			report(w, s_u, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
 			return false
 		}
 		if !isInvited {
-			report(w, r, "你好，茶博士无比惊讶说，陛下你的大名竟然不在邀请品茶名单上。")
+			report(w, s_u, "你好，茶博士无比惊讶说，陛下你的大名竟然不在邀请品茶名单上。")
 			return false
 		}
 		return true
 	default:
-		report(w, r, "你好，茶博士失魂鱼，竟然说受邀请品茶名单失踪了，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，竟然说受邀请品茶名单失踪了，请稍后再试。")
 		return false
 	}
 }

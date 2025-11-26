@@ -20,7 +20,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" 根据会话未能读取用户信息", err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
 	var uB data.UserDefaultDataBean
@@ -29,20 +29,20 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("uuid")
 	//没有id参数，报告uuid没有提及
 	if uuid == "" {
-		report(w, r, "你好，请提供茶友的识别码。")
+		report(w, s_u, "你好，请提供茶友的识别码。")
 		return
 	}
 	//有uuid参数，读取指定用户资料
 	user, err := data.GetUserByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get user given uuid", uuid, err)
-		report(w, r, "报告，大王，未能找到茶友的资料！")
+		report(w, s_u, "报告，大王，未能找到茶友的资料！")
 		return
 	}
 	uB, err = fetchUserDefaultDataBeanForBiography(user)
 	if err != nil {
 		util.Debug("Cannot get user Bean given uuid", user.Uuid, err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
 
@@ -79,11 +79,11 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 		name := r.PostFormValue("name")
 		len_biog := cnStrLen(name)
 		if len_biog < 2 || len_biog > 16 {
-			report(w, r, "茶博士彬彬有礼的说：名字太短不够帅，太长了墨水都不够用噢。")
+			report(w, s_u, "茶博士彬彬有礼的说：名字太短不够帅，太长了墨水都不够用噢。")
 			return
 		}
 		if isValidUserName(name) {
-			report(w, r, "你好，请勿使用特殊字符作为名称呢，将来登机称帝，都不知道如何高呼陛下万岁。")
+			report(w, s_u, "你好，请勿使用特殊字符作为名称呢，将来登机称帝，都不知道如何高呼陛下万岁。")
 			return
 		}
 		newName := name
@@ -91,7 +91,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 		biog := r.PostFormValue("biography")
 		len_biog = cnStrLen(biog)
 		if len_biog < 2 || len_biog > int(util.Config.ThreadMaxWord) {
-			report(w, r, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
+			report(w, s_u, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
 			return
 		}
 		newBiography := biog
@@ -99,7 +99,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 		err = data.UpdateUserNameAndBiography(s_u.Id, newName, newBiography)
 		if err != nil {
 			util.Debug(" 更新用户信息错误！", err)
-			report(w, r, "茶博士失魂鱼，请问你刚刚说的花名或者简介是什么来着？")
+			report(w, s_u, "茶博士失魂鱼，请问你刚刚说的花名或者简介是什么来着？")
 			return
 		}
 
@@ -131,14 +131,14 @@ func SaveAvatar(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" 获取用户信息错误！", err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息！")
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
 	// 处理上传到图片
-	if ok := processUploadAvatar(w, r, s_u.Uuid); ok == nil {
+	if ok := processUploadAvatar(w, r, s_u, s_u.Uuid); ok == nil {
 		s_u.Avatar = s_u.Uuid
 		s_u.UpdateAvatar()
-		report(w, r, "茶博士微笑说头像修改成功。")
+		report(w, s_u, "茶博士微笑说头像修改成功。")
 	}
 
 }
@@ -154,7 +154,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" 获取用户信息错误！", err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息！")
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
 	var lB data.LetterboxPageData
@@ -166,13 +166,13 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 // GET
 // update Password /Forgot Password?
 func Forgot(w http.ResponseWriter, r *http.Request) {
-	report(w, r, "尚未提供修改密码服务！")
+	report(w, data.UserUnknown, "尚未提供修改密码服务！")
 }
 
 // GET
 // Reset Password?
 func Reset(w http.ResponseWriter, r *http.Request) {
-	report(w, r, "尚未提供重置密码服务！")
+	panic("not implemented")
 }
 
 // GET /v1/users/connection_follow

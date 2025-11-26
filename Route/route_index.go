@@ -19,21 +19,21 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	thread_slice, err := data.HotThreads(num, r.Context())
 	if err != nil {
 		util.Debug(" Cannot read hot thread slice", err)
-		report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
+		report(w, data.UserUnknown, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
 	len := len(thread_slice)
 
 	if len == 0 {
 		util.Debug(" Cannot read hot thread slice", err)
-		report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
+		report(w, data.UserUnknown, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 
 	tb_slice, err = fetchThreadBeanSlice(thread_slice, r)
 	if err != nil {
 		util.Debug(" Cannot read thread and author slice", err)
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中。")
+		report(w, data.UserUnknown, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中。")
 		return
 	}
 
@@ -58,7 +58,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	sUser, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot read user info from session", err)
-		report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
+		report(w, data.UserUnknown, "你好，茶博士摸摸头，说有眼不识泰山。")
 		return
 	}
 	indexPD.SessUser = sUser

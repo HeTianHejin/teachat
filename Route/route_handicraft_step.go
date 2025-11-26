@@ -31,63 +31,63 @@ func HandicraftStep2Get(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	if !isVerifier(s_u.Id) {
-		report(w, r, "你没有权限执行此操作")
+		report(w, s_u, "你没有权限执行此操作")
 		return
 	}
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	handicraft := data.Handicraft{Uuid: uuid}
 	if err = handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
-			report(w, r, "手工艺记录不存在")
+			report(w, s_u, "手工艺记录不存在")
 			return
 		}
 		util.Debug("Cannot get handicraft by uuid", err)
-		report(w, r, "处理手工艺记录时发生错误")
+		report(w, s_u, "处理手工艺记录时发生错误")
 		return
 	}
 
 	project := data.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	objective, err := project.Objective()
 	if err != nil {
 		util.Debug("Cannot get objective", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
 		util.Debug("Cannot fetch project bean", err)
-		report(w, r, "获取项目详情失败")
+		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
 		util.Debug("Cannot fetch objective bean", err)
-		report(w, r, "获取目标详情失败")
+		report(w, s_u, "获取目标详情失败")
 		return
 	}
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check project master permission", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 	templateData := struct {
@@ -122,11 +122,11 @@ func HandicraftStep2Post(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 	if !isVerifier(s_u.Id) {
-		report(w, r, "你没有权限执行此操作")
+		report(w, s_u, "你没有权限执行此操作")
 		return
 	}
 
@@ -136,7 +136,7 @@ func HandicraftStep2Post(w http.ResponseWriter, r *http.Request) {
 
 	handicraft := data.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
-		report(w, r, "手工艺记录不存在")
+		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
@@ -155,7 +155,7 @@ func HandicraftStep2Post(w http.ResponseWriter, r *http.Request) {
 
 	if err := handicraft.Update(); err != nil {
 		util.Debug("Cannot update handicraft", err)
-		report(w, r, "保存难度信息失败")
+		report(w, s_u, "保存难度信息失败")
 		return
 	}
 
@@ -184,50 +184,50 @@ func HandicraftStep3Get(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	handicraft := data.Handicraft{Uuid: uuid}
 	if err = handicraft.GetByIdOrUUID(r.Context()); err != nil {
-		report(w, r, "手工艺记录不存在")
+		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
 	project := data.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
-		report(w, r, "项目不存在")
+		report(w, s_u, "项目不存在")
 		return
 	}
 
 	objective, err := project.Objective()
 	if err != nil {
-		report(w, r, "获取目标信息失败")
+		report(w, s_u, "获取目标信息失败")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
-		report(w, r, "获取项目详情失败")
+		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
-		report(w, r, "获取目标详情失败")
+		report(w, s_u, "获取目标详情失败")
 		return
 	}
 
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
 		util.Debug("Cannot check project master permission", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -262,7 +262,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -273,7 +273,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 
 	handicraft := data.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
-		report(w, r, "手工艺记录不存在")
+		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
@@ -289,7 +289,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := inauguration.Create(); err != nil {
 			util.Debug("Cannot create inauguration", err)
-			report(w, r, "保存开工仪式记录失败")
+			report(w, s_u, "保存开工仪式记录失败")
 			return
 		}
 	}
@@ -297,7 +297,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 	handicraft.Status = data.InProgress
 	if err := handicraft.Update(); err != nil {
 		util.Debug("Cannot update handicraft status", err)
-		report(w, r, "更新状态失败")
+		report(w, s_u, "更新状态失败")
 		return
 	}
 
@@ -325,50 +325,50 @@ func HandicraftStep4Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	handicraft := data.Handicraft{Uuid: uuid}
 	if err = handicraft.GetByIdOrUUID(r.Context()); err != nil {
-		report(w, r, "手工艺记录不存在")
+		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
 	project := data.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
-		report(w, r, "项目不存在")
+		report(w, s_u, "项目不存在")
 		return
 	}
 
 	objective, err := project.Objective()
 	if err != nil {
-		report(w, r, "获取目标信息失败")
+		report(w, s_u, "获取目标信息失败")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
-		report(w, r, "获取项目详情失败")
+		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
-		report(w, r, "获取目标详情失败")
+		report(w, s_u, "获取目标详情失败")
 		return
 	}
 
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
 		util.Debug("Cannot check project master permission", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -403,7 +403,7 @@ func HandicraftStep4Post(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -414,7 +414,7 @@ func HandicraftStep4Post(w http.ResponseWriter, r *http.Request) {
 
 	handicraft := data.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
-		report(w, r, "手工艺记录不存在")
+		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
@@ -430,7 +430,7 @@ func HandicraftStep4Post(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := processRecord.Create(); err != nil {
 			util.Debug("Cannot create process record", err)
-			report(w, r, "保存过程记录失败")
+			report(w, s_u, "保存过程记录失败")
 			return
 		}
 	}
@@ -459,50 +459,50 @@ func HandicraftStep5Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	handicraft := data.Handicraft{Uuid: uuid}
 	if err = handicraft.GetByIdOrUUID(r.Context()); err != nil {
-		report(w, r, "手工艺记录不存在")
+		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
 	project := data.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
-		report(w, r, "项目不存在")
+		report(w, s_u, "项目不存在")
 		return
 	}
 
 	objective, err := project.Objective()
 	if err != nil {
-		report(w, r, "获取目标信息失败")
+		report(w, s_u, "获取目标信息失败")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
-		report(w, r, "获取项目详情失败")
+		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
-		report(w, r, "获取目标详情失败")
+		report(w, s_u, "获取目标详情失败")
 		return
 	}
 
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
 		util.Debug("Cannot check project master permission", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -537,7 +537,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -549,7 +549,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 
 	handicraft := data.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
-		report(w, r, "手工艺记录不存在")
+		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
@@ -565,7 +565,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 		}
 		if err := ending.Create(); err != nil {
 			util.Debug("Cannot create ending", err)
-			report(w, r, "保存结束仪式记录失败")
+			report(w, s_u, "保存结束仪式记录失败")
 			return
 		}
 	}
@@ -578,7 +578,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 
 	if err := handicraft.Update(); err != nil {
 		util.Debug("Cannot update handicraft", err)
-		report(w, r, "更新手工艺状态失败")
+		report(w, s_u, "更新手工艺状态失败")
 		return
 	}
 
