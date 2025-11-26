@@ -17,7 +17,7 @@
     <p>未找到匹配的茶友。</p>
     <a href="/v1/team/member_add?uuid={{ .Team.Uuid }}" class="btn btn-default">返回搜索</a>
     {{ else }}
-    {{ range .UserBeanSlice }}
+    {{ range .UserDefaultDataBeanSlice }}
     <div class="media">
       <div class="media-left">
         <a href="/v1/user/biography?uuid={{ .User.Uuid }}">

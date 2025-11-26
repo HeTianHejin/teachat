@@ -77,7 +77,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 // GET
 // show About page 区别是导航条不同
 func About(w http.ResponseWriter, r *http.Request) {
-	var uB data.UserBean
+	var uB data.UserDefaultDataBean
 	sess, err := session(r)
 	if err != nil {
 		//游客

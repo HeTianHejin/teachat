@@ -23,7 +23,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
-	var uB data.UserBean
+	var uB data.UserDefaultDataBean
 
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
@@ -39,7 +39,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		report(w, r, "报告，大王，未能找到茶友的资料！")
 		return
 	}
-	uB, err = fetchUserBeanForBiography(user)
+	uB, err = fetchUserDefaultDataBeanForBiography(user)
 	if err != nil {
 		util.Debug("Cannot get user Bean given uuid", user.Uuid, err)
 		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")

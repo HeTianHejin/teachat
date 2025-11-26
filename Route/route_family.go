@@ -1222,10 +1222,10 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser      data.User
-		Family        data.Family
-		UserBeanSlice []data.UserBean
-		IsEmpty       bool
+		SessUser                 data.User
+		Family                   data.Family
+		UserDefaultDataBeanSlice []data.UserDefaultDataBean
+		IsEmpty                  bool
 	}
 	pageData.SessUser = sessUser
 	pageData.Family = family
@@ -1244,7 +1244,7 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 		if err == nil && user.Id > 0 {
 			userBean, err := fetchUserDefaultBean(user)
 			if err == nil {
-				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
+				pageData.UserDefaultDataBeanSlice = append(pageData.UserDefaultDataBeanSlice, userBean)
 				pageData.IsEmpty = false
 			}
 		}
@@ -1260,7 +1260,7 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 		if err == nil && user.Id > 0 {
 			userBean, err := fetchUserDefaultBean(user)
 			if err == nil {
-				pageData.UserBeanSlice = append(pageData.UserBeanSlice, userBean)
+				pageData.UserDefaultDataBeanSlice = append(pageData.UserDefaultDataBeanSlice, userBean)
 				pageData.IsEmpty = false
 			}
 		}
@@ -1269,9 +1269,9 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 		// 按花名查询
 		userSlice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err == nil && len(userSlice) >= 1 {
-			userBeanSlice, err := fetchUserBeanSlice(userSlice)
+			userBeanSlice, err := fetchUserDefaultDataBeanSlice(userSlice)
 			if err == nil && len(userBeanSlice) >= 1 {
-				pageData.UserBeanSlice = userBeanSlice
+				pageData.UserDefaultDataBeanSlice = userBeanSlice
 				pageData.IsEmpty = false
 			}
 		}

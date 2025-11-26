@@ -384,9 +384,13 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	return nil
 }
 
-// 茶博士向茶客报告信息的方法，包括但不限于意外事件和通知、感谢等等提示。
+// 茶博士向茶客回话的方法，包括但不限于意外事件和通知、感谢等等提示。
 func report(w http.ResponseWriter, r *http.Request, msg ...any) {
-	var userBPD data.UserBean
+	type uM struct {
+		SessUser data.User
+		Message  string
+	}
+	m := uM{}
 	var b strings.Builder
 	for i, arg := range msg {
 		if i > 0 {
@@ -394,15 +398,15 @@ func report(w http.ResponseWriter, r *http.Request, msg ...any) {
 		}
 		fmt.Fprint(&b, arg)
 	}
-	userBPD.Message = b.String()
+	m.Message = b.String()
 
 	s, err := session(r)
 	if err != nil {
-		userBPD.SessUser = data.User{
+		m.SessUser = data.User{
 			Id:   data.UserId_None,
 			Name: "游客",
 		}
-		generateHTML(w, &userBPD, "layout", "navbar.public", "feedback")
+		generateHTML(w, &m, "layout", "navbar.public", "feedback")
 		return
 	}
 	s_u, err := s.User()
@@ -411,9 +415,9 @@ func report(w http.ResponseWriter, r *http.Request, msg ...any) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	userBPD.SessUser = s_u
+	m.SessUser = s_u
 
-	generateHTML(w, &userBPD, "layout", "navbar.private", "feedback")
+	generateHTML(w, &m, "layout", "navbar.private", "feedback")
 }
 
 // Checks if the user is logged in and has a session, if not err is not nil

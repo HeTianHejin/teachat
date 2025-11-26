@@ -90,7 +90,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 					report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 					return
 				} else {
-					fPD.UserBeanSlice = append(fPD.UserBeanSlice, user_bean)
+					fPD.UserDefaultDataBeanSlice = append(fPD.UserDefaultDataBeanSlice, user_bean)
 					fPD.IsEmpty = false
 				}
 			}
@@ -103,7 +103,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if len(user_slice) >= 1 {
-				fPD.UserBeanSlice, err = fetchUserBeanSlice(user_slice)
+				fPD.UserDefaultDataBeanSlice, err = fetchUserDefaultDataBeanSlice(user_slice)
 				if err != nil {
 					util.Debug(" Cannot fetch user bean slice given user_slice", err)
 					report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -144,7 +144,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				report(w, r, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			} else {
-				fPD.UserBeanSlice = append(fPD.UserBeanSlice, userbean)
+				fPD.UserDefaultDataBeanSlice = append(fPD.UserDefaultDataBeanSlice, userbean)
 				fPD.IsEmpty = false
 			}
 		}

@@ -29,8 +29,8 @@ func getLastDefaultFamilyByUserId(userID int) (data.Family, error) {
 	}
 }
 
-// fetchUserBeanForBiography 为名片页面获取用户资料（轻量级）
-func fetchUserBeanForBiography(user data.User) (userbean data.UserBean, err error) {
+// fetchUserDefaultDataBeanForBiography 为名片页面获取用户资料（轻量级）
+func fetchUserDefaultDataBeanForBiography(user data.User) (userbean data.UserDefaultDataBean, err error) {
 	userbean.User = user
 
 	// 获取默认家庭
@@ -53,7 +53,7 @@ func fetchUserBeanForBiography(user data.User) (userbean data.UserBean, err erro
 }
 
 // Fetch userbean given user 根据user参数，查询用户资料荚,包括默认的家庭，团队，地方，
-func fetchUserDefaultBean(user data.User) (userbean data.UserBean, err error) {
+func fetchUserDefaultBean(user data.User) (userbean data.UserDefaultDataBean, err error) {
 
 	userbean.User = user
 
@@ -80,7 +80,7 @@ func fetchUserDefaultBean(user data.User) (userbean data.UserBean, err error) {
 }
 
 // fetch userbean_slice given []user
-func fetchUserBeanSlice(user_slice []data.User) (userbean_slice []data.UserBean, err error) {
+func fetchUserDefaultDataBeanSlice(user_slice []data.User) (userbean_slice []data.UserDefaultDataBean, err error) {
 	for _, user := range user_slice {
 		userbean, err := fetchUserDefaultBean(user)
 		if err != nil {
@@ -523,7 +523,7 @@ func fetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error)
 		return I_B, err
 	}
 
-	I_B.Author, err = i.AuthorCEO()
+	I_B.Author, err = i.Author()
 	if err != nil {
 		util.Debug(" Cannot fetch team CEO given invitation", err)
 		return I_B, err
