@@ -4,7 +4,7 @@ package data
 type GroupInvitationBean struct {
 	Invitation GroupInvitation
 	Group      Group //发出邀请函的集团
-	AuthorCEO  User  //集团首席执行官
+	Author     User  //集团首席执行官
 
 	InviteUser User   //受邀请的团队CEO
 	Team       Team   //手邀请团队

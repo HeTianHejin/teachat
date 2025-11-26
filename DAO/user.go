@@ -485,7 +485,7 @@ func (invitation *Invitation) TeamFounder() (user User, err error) {
 }
 
 // 获取撰写邀请函的茶团时任CEO（原撰写人），可能不是现任CEO
-func (invitation *Invitation) AuthorCEO() (user User, err error) {
+func (invitation *Invitation) Author() (user User, err error) {
 	user = User{}
 	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", invitation.AuthorUserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)

@@ -104,7 +104,7 @@ type Team struct {
 	Abbreviation string // 队名简称
 	Logo         string // $事业茶团标志
 	Tags         string // 分类标签，逗号分隔，如"诗词书法,文化艺术"
-	IsPrivate    bool   // 是否私密：true-私密团队（不公开但可接收消息），false-公开团队
+	IsPrivate    bool   // 是否私密：true-私密团队（不公开但可接收通知），false-公开团队
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
 	DeletedAt    *time.Time // 软删除时间戳，NULL表示未删除

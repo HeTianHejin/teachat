@@ -1,26 +1,17 @@
 package data
 
-// UserBeanPagedata 个人主页，渲染所需数据
-type UserBean struct {
+// UserDefaultDataBean Pagedata 个人主页，渲染所需数据
+type UserDefaultDataBean struct {
 	SessUser User //会话茶友
 	IsAuthor bool //是否本人
 
 	User User // 目标茶友
 
 	DefaultFamily Family //目标茶友默认的家庭茶团
-	// ParentMemberFamilyBeanSlice []FamilyBean //目标茶友管理（作为家长成员）家庭茶团资料夹
-	// ChildMemberFamilyBeanSlice  []FamilyBean //作为子女成员家庭茶团资料夹
-	// OtherMemberFamilyBeanSlice  []FamilyBean //作为其他成员角色的家庭茶团资料夹
-	// ResignMemberFamilyBeanSlice []FamilyBean //目标茶友声明离开的家庭茶团资料夹
-
-	DefaultTeam Team //目标茶友默认事业茶团
-	// ManageTeamBeanSlice []TeamBean //目标茶友管理的事业茶团资料夹
-	// JoinTeamBeanSlice   []TeamBean //目标茶友已加入的事业茶团资料夹
-	// ResignTeamBeanSlice []TeamBean //目标茶友已离开的事业茶团资料夹
+	DefaultTeam   Team   //目标茶友默认事业茶团
 
 	DefaultPlace Place //目标茶友首选品茶地点
 
-	Message string // 给目标茶友的通知消息
 }
 
 // 用户数据结构

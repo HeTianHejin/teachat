@@ -7,19 +7,19 @@ type SearchPageData struct {
 	IsEmpty bool //查询结果为空?
 	Count   int  //查询结果个数
 
-	UserBeanSlice      []UserBean   //茶友（用户）资料夹队列
-	FamilyBeanSlice    []FamilyBean //家庭资料夹队列
-	TeamBeanSlice      []TeamBean   //茶团资料夹队列
-	ThreadBeanSlice    []ThreadBean
-	ProjectBeanSlice   []ProjectBean
-	ObjectiveBeanSlice []ObjectiveBean
-	PlaceSlice         []Place       //品茶地点集合
-	EnvironmentSlice   []Environment //环境条件集合
-	HazardSlice        []Hazard      //隐患集合
-	RiskSlice          []Risk        //风险集合
-	GoodsSlice         []Goods       // 物资集合
-	SkillSlice         []Skill       // 技能集合
-	MagicSlice         []Magic       // 法力集合
+	UserDefaultDataBeanSlice []UserDefaultDataBean //茶友（用户）资料夹队列
+	FamilyBeanSlice          []FamilyBean          //家庭资料夹队列
+	TeamBeanSlice            []TeamBean            //茶团资料夹队列
+	ThreadBeanSlice          []ThreadBean
+	ProjectBeanSlice         []ProjectBean
+	ObjectiveBeanSlice       []ObjectiveBean
+	PlaceSlice               []Place       //品茶地点集合
+	EnvironmentSlice         []Environment //环境条件集合
+	HazardSlice              []Hazard      //隐患集合
+	RiskSlice                []Risk        //风险集合
+	GoodsSlice               []Goods       // 物资集合
+	SkillSlice               []Skill       // 技能集合
+	MagicSlice               []Magic       // 法力集合
 }
 
 // 我的地盘我做主
