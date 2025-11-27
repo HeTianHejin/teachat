@@ -1,6 +1,7 @@
 package route
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	data "teachat/DAO"
@@ -8,7 +9,7 @@ import (
 )
 
 // 创建AcceptObject并发送邻座蒙评通知
-func createAndSendAcceptNotification(objectId int, objectType int, excludeUserId int) error {
+func createAndSendAcceptNotification(objectId int, objectType int, excludeUserId int, ctx context.Context) error {
 	// 创建AcceptObject
 	aO := data.AcceptObject{
 		ObjectId:   objectId,
@@ -28,7 +29,7 @@ func createAndSendAcceptNotification(objectId int, objectType int, excludeUserId
 	}
 
 	// 发送通知
-	if err := TwoAcceptNotificationsSendExceptUserId(excludeUserId, mess); err != nil {
+	if err := TwoAcceptNotificationsSendExceptUserId(excludeUserId, mess, ctx); err != nil {
 		return fmt.Errorf("发送通知失败: %w", err)
 	}
 

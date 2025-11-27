@@ -88,7 +88,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 权限检查。。。
-	ok, err := s_u.CheckHasReadAcceptNotification(ao_id_int)
+	ok, err := s_u.CheckHasReadAcceptNotification(ao_id_int, r.Context())
 	if err != nil {
 		util.Debug("Cannot check acceptance", err)
 		report(w, s_u, "你好，(茶博士摸摸头想了又想), 茴香豆的茴字真的有四种写法吗？")

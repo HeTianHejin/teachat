@@ -175,7 +175,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if util.Config.PoliteMode {
-		if err = createAndSendAcceptNotification(draft_thread.Id, data.AcceptObjectTypeThread, s_u.Id); err != nil {
+		if err = createAndSendAcceptNotification(draft_thread.Id, data.AcceptObjectTypeThread, s_u.Id, r.Context()); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, s_u, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {

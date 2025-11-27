@@ -1,6 +1,7 @@
 package route
 
 import (
+	"context"
 	"net/http"
 	data "teachat/DAO"
 	util "teachat/Util"
@@ -48,7 +49,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 }
 
 // 向2个非当前用户发送蒙评审核通知
-func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotification) error {
+func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotification, ctx context.Context) error {
 	var user_ids []int
 	var err error
 	// if data.UserCount() < 50 {
@@ -87,7 +88,7 @@ func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotificati
 		return err
 	}
 	// 发送“是否接纳”通知
-	if err = mess.Send(user_ids); err != nil {
+	if err = mess.SendWithContext(user_ids, ctx); err != nil {
 		util.Debug(" Cannot send accept notification", err)
 		return err
 	}
@@ -102,10 +103,10 @@ func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotificati
 }
 
 // 向当前用户发送友邻蒙评结果通知通知
-func PilotAcceptNotificationSend(u_id int, mess data.AcceptNotification) error {
+func PilotAcceptNotificationSend(u_id int, mess data.AcceptNotification, ctx context.Context) error {
 
 	// 发送友评邻蒙结果通知通知
-	if err := mess.Send([]int{u_id}); err != nil {
+	if err := mess.SendWithContext([]int{u_id}, ctx); err != nil {
 		util.Debug(" Cannot send accept notification", err)
 		return err
 	}
