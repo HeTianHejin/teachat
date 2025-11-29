@@ -299,6 +299,13 @@ func main() {
 	mux.HandleFunc("/v1/risk/new", route.HandleNewRisk)
 	mux.HandleFunc("/v1/risk/detail", route.HandleRiskDetail)
 
+	//defined in route_message_box.go
+	mux.HandleFunc("/v1/message_box/detail", route.MessageBoxDetail)
+	mux.HandleFunc("/v1/message/read", route.MessageRead)
+	mux.HandleFunc("/v1/message/delete", route.MessageDelete)
+	mux.HandleFunc("/v1/message/send", route.MessageSend)
+	mux.HandleFunc("/v1/message/announcement/send", route.MessageAnnouncementSend)
+
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
 

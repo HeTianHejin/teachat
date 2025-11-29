@@ -1,6 +1,6 @@
 {{ define "content"}}
 
-{{/* 这是指定茶团详情展示页面-面包屑导航栏  */}}
+{{/* 这是指定团队详情展示页面-面包屑导航栏  */}}
 
 {{ with .TeamBean }}{{/* 检测Teambean非空 --开始  */}}
 <ol class="breadcrumb">
@@ -53,13 +53,19 @@
   {{ else }}{{/* 不是茶团成员  */}}
      <div class="text-right">
       <a href="/v1/team_member/application/new?uuid={{ .Team.Uuid }}">申请加盟</a>
+      {{ if .Team.IsOpen }}
+      <span style="margin: 0 10px;">|</span>
+      <a href="/v1/message/announcement/send?team_uuid={{ .Team.Uuid }}" style="color: #28a745;">
+        <i class="bi bi-megaphone"></i> 发送布告
+      </a>
+      {{ end }}
     </div>
   {{ end }}{{/* 检查是否团队成员结束  */}}
 
 {{ else }}{{/* 是封闭式茶团  */}}
 <p class="text-center">
   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
-  茶博士提示：封闭式茶团不接受加盟申请
+  茶博士提示：封闭式茶团不接受发送纸条消息
 </p>
 {{ end }}
 <hr />
@@ -139,7 +145,20 @@
           {{ .MembersCount }}
         </span>
 
-       
+        {{ if $.IsMember }}
+        <span style="margin-inline-end: 20px;" title="团队消息盒">
+          {{ if $.MessageBox }}
+          <a href="/v1/message_box/detail?uuid={{ $.MessageBox.Uuid }}" style="text-decoration: none; color: inherit;">
+            <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+            {{ if gt $.MessageCount 0 }}<span class="badge" style="background-color: #d9534f;">{{ $.MessageCount }}</span>{{ end }}
+          </a>
+          {{ else }}
+          <a href="/v1/message_box/detail?team_uuid={{ .Team.Uuid }}" style="text-decoration: none; color: inherit;">
+            <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+          </a>
+          {{ end }}
+        </span>
+        {{ end }}
 
       </div>
     </div>
@@ -151,6 +170,7 @@
         <li><a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}">技能</a></li>
         <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">法力</a></li>
         <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
+
         {{ if $.IsCoreMember }}
         <li><a href="/v1/team/applications?uuid={{ .Team.Uuid }}">查看申请{{ if $.HasApplication }}<span class="badge">!</span>{{ end }}</a></li>
         <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">查看邀请</a></li>
@@ -191,6 +211,14 @@
         
         <p>加盟时间：{{ .CreatedAtDate }}</p>
 
+        {{ if $.IsMember }}
+        <div class="btn-group" role="group" style="margin-top: 10px;">
+          <a href="/v1/message/send?team_uuid={{ $.TeamBean.Team.Uuid }}&receiver_id={{ .Member.Id }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-envelope"></i> 发送纸条
+          </a>
+        </div>
+        {{ end }}
+
       </div>
     </div>
 
@@ -223,6 +251,14 @@
         <p style="font-style: italic;">{{ .Member.Email }}</p>
         
         <p>加盟时间：{{ .CreatedAtDate }}</p>
+
+        {{ if $.IsMember }}
+        <div class="btn-group" role="group" style="margin-top: 10px;">
+          <a href="/v1/message/send?team_uuid={{ $.TeamBean.Team.Uuid }}&receiver_id={{ .Member.Id }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-envelope"></i> 发送纸条
+          </a>
+        </div>
+        {{ end }}
 
       </div>
     </div>

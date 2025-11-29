@@ -1084,7 +1084,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user_uuid := r.FormValue("user_uuid")
-	app_user, err := data.GetUserByUUID(user_uuid)
+	app_user, err := data.GetUserByID(user_uuid)
 	if err != nil {
 		util.Debug(user_uuid, "Cannot get user given uuid", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1506,7 +1506,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，请勿冒充八戒骗孙悟空的芭蕉扇哦，稍后再试。")
 		return
 	}
-	author, err := data.GetUserByUUID(author_uuid)
+	author, err := data.GetUserByID(author_uuid)
 	if err != nil {
 		util.Debug(" Cannot get author user by uuid", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1658,7 +1658,7 @@ func InviteMemberGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
 		return
 	}
-	invi_user, err := data.GetUserByUUID(user_uuid)
+	invi_user, err := data.GetUserByID(user_uuid)
 	if err != nil {
 		util.Debug(" Cannot get user given uuid", err)
 		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")

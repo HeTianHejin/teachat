@@ -1,0 +1,112 @@
+{{ define "content"}}
+
+{{/* 这是消息盒子详情页面-面包屑导航栏  */}}
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+  <li class="active">团队消息盒</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <i class="bi bi-envelope" style="font-size: 1.5rem;"></i>
+      {{ .Team.Name }} - 团队消息盒
+      {{ if gt .MessageCount 0 }}
+      <span class="label label-info">{{ .MessageCount }} 条消息</span>
+      {{ else }}
+      <span class="label label-default">暂无消息</span>
+      {{ end }}
+    </h3>
+  </div>
+  <div class="panel-body">
+    {{ if .Messages }}
+    <div class="list-group">
+      {{ range .Messages }}
+      <div class="list-group-item {{ if not .IsRead }}list-group-item-info{{ end }}">
+        <div class="row">
+          <div class="col-xs-2">
+            <small class="text-muted">{{ .CreatedAtDate }}</small>
+          </div>
+          <div class="col-xs-1">
+            <a href="/v1/user/biography?uuid={{ .SenderObjectId }}" title="查看用户详情">{{ .SenderObjectId }}</a>
+          </div>
+          <div class="col-xs-7">
+            {{ if eq .ReceiverType 0 }}
+            <span class="label label-success">布告</span>
+            {{ else }}
+            <span class="label label-primary">纸条</span>
+            {{ end }}
+            {{ if eq .ReceiverType 0 }}
+              {{ .Content }}
+            {{ else }}
+              {{ if eq .ReceiverId $.SessUser.Id }}
+                {{ .Content }}
+              {{ else }}
+                <span class="text-muted">这是发送给其他成员的纸条，您无权查看</span>
+              {{ end }}
+            {{ end }}
+          </div>
+          <div class="col-xs-2 text-right">
+            {{ if not .IsRead }}
+              {{ if eq .ReceiverType 0 }}
+                <!-- 布告消息，任何团队成员都可以标记已读 -->
+                <form method="POST" action="/v1/message/read?id={{ .Id }}" style="display: inline; margin-right: 5px;">
+                  <button type="submit" class="btn btn-xs btn-primary">标记已读</button>
+                </form>
+              {{ else }}
+                <!-- 纸条消息，只有接收者才能标记已读 -->
+                {{ if eq .ReceiverId $.SessUser.Id }}
+                <form method="POST" action="/v1/message/read?id={{ .Id }}" style="display: inline; margin-right: 5px;">
+                  <button type="submit" class="btn btn-xs btn-primary">标记已读</button>
+                </form>
+                {{ end }}
+              {{ end }}
+            {{ end }}
+            
+            <!-- 删除按钮 -->
+            {{ if eq .ReceiverType 0 }}
+              <!-- 布告消息，只有核心成员可以删除 -->
+              {{ if $.IsCoreMember }}
+              <form method="POST" action="/v1/message/delete?id={{ .Id }}" style="display: inline;" onsubmit="return confirm('确定要删除这条消息吗？');">
+                <button type="submit" class="btn btn-xs btn-danger">删除</button>
+              </form>
+              {{ end }}
+            {{ else }}
+              <!-- 纸条消息，只有接收者可以删除 -->
+              {{ if eq .ReceiverId $.SessUser.Id }}
+              <form method="POST" action="/v1/message/delete?id={{ .Id }}" style="display: inline;" onsubmit="return confirm('确定要删除这条消息吗？');">
+                <button type="submit" class="btn btn-xs btn-danger">删除</button>
+              </form>
+              {{ end }}
+            {{ end }}
+          </div>
+        </div>
+      </div>
+      {{ end }}
+    </div>
+    {{ else }}
+    <div class="text-center" style="padding: 2rem;">
+      <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+      <p class="text-muted">消息盒子为空</p>
+    </div>
+    {{ end }}
+  </div>
+  <div class="panel-footer">
+    <div class="row">
+      <div class="col-xs-6">
+        <small class="text-muted">
+          消息盒子编号: {{ .MessageBox.Uuid }}
+        </small>
+      </div>
+      <div class="col-xs-6 text-right">
+        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" class="btn btn-default">
+          返回团队详情
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{ end }}

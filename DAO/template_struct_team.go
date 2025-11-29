@@ -181,5 +181,8 @@ type TeamDetail struct {
 	HasApplication bool //是否有新的加盟申请书
 	HasResignation bool //是否有待处理的退出声明
 
+	MessageBox  *MessageBox //团队消息盒子
+	MessageCount int          //用户可见的消息总数
+
 	GroupBean *GroupBean //所属集团资料夹（如果有）
 }

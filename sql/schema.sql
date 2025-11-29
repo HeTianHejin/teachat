@@ -1285,6 +1285,53 @@ CREATE TABLE see_seek_look_evidences (
 );
 
 -- ============================================
+-- 消息系统表
+-- ============================================
+
+-- 消息盒子表
+CREATE TABLE message_boxes (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    type                  INTEGER NOT NULL, -- 1:家庭, 2:团队
+    object_id             INTEGER NOT NULL, -- 家庭id或团队id
+    is_empty              BOOLEAN DEFAULT true,
+    max_count             INTEGER DEFAULT 199,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 消息表
+CREATE TABLE messages (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    message_box_id        INTEGER NOT NULL REFERENCES message_boxes(id),
+    sender_type           INTEGER NOT NULL, -- 发送身份类型：1:家庭成员, 2:团队成员
+    sender_object_id      INTEGER NOT NULL, -- 发送者id
+    receiver_type         INTEGER NOT NULL DEFAULT 0, -- 0:全体, 1:成员
+    receiver_id           INTEGER DEFAULT 0, -- 接收者id
+    content               TEXT NOT NULL,
+    is_read               BOOLEAN DEFAULT false,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+-- 消息盒子相关索引
+CREATE INDEX idx_message_boxes_type_object ON message_boxes(type, object_id);
+CREATE INDEX idx_message_boxes_deleted_at ON message_boxes(deleted_at);
+CREATE INDEX idx_message_boxes_uuid ON message_boxes(uuid);
+
+-- 消息相关索引
+CREATE INDEX idx_messages_message_box_id ON messages(message_box_id);
+CREATE INDEX idx_messages_sender ON messages(sender_type, sender_object_id);
+CREATE INDEX idx_messages_receiver ON messages(receiver_type, receiver_id);
+CREATE INDEX idx_messages_is_read ON messages(is_read);
+CREATE INDEX idx_messages_created_at ON messages(created_at);
+CREATE INDEX idx_messages_deleted_at ON messages(deleted_at);
+CREATE INDEX idx_messages_uuid ON messages(uuid);
+
+-- ============================================
 -- 其他功能表
 -- ============================================
 
@@ -1503,6 +1550,17 @@ COMMENT ON TABLE safety_protections IS '安全防护表';
 COMMENT ON TABLE see_seeks IS '看看检查表';
 COMMENT ON TABLE brain_fires IS '脑火(头脑风暴)表';
 COMMENT ON TABLE suggestions IS '建议表';
+
+-- 消息系统表注释
+COMMENT ON TABLE message_boxes IS '消息盒子表';
+COMMENT ON TABLE messages IS '消息表';
+COMMENT ON COLUMN message_boxes.type IS '消息盒子类型：1-家庭，2-团队';
+COMMENT ON COLUMN message_boxes.object_id IS '绑定对象ID：家庭ID或团队ID';
+COMMENT ON COLUMN message_boxes.count IS '存量消息数量';
+COMMENT ON COLUMN message_boxes.max_count IS '存活最大消息数量，默认199';
+COMMENT ON COLUMN messages.sender_type IS '发送者类型：1-家庭，2-团队';
+COMMENT ON COLUMN messages.receiver_type IS '接收者类型：0-全体，1-成员';
+COMMENT ON COLUMN messages.receiver_id IS '接收者ID，全体时为0';
 
 -- 字段注释
 COMMENT ON COLUMN teams.tags IS '分类标签，逗号分隔，如"诗词书法,文化艺术"';

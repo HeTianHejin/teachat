@@ -31,7 +31,7 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	}
 	//读取被邀请用户的相关资料
 	user_uuid := r.FormValue("id")
-	invi_user, err := data.GetUserByUUID(user_uuid)
+	invi_user, err := data.GetUserByID(user_uuid)
 	if err != nil {
 		util.Debug(" Cannot get user by uuid", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")

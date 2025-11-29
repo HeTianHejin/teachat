@@ -1,0 +1,54 @@
+{{ define "content"}}
+
+{{/* 这是发送纸条页面-面包屑导航栏  */}}
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+  <li class="active">发送纸条</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <i class="bi bi-envelope-fill" style="font-size: 1.5rem;"></i>
+      发送纸条给 {{ .Receiver.Name }}
+    </h3>
+  </div>
+  <div class="panel-body">
+    <form method="POST" action="/v1/message/send">
+      <input type="hidden" name="team_uuid" value="{{ .Team.Uuid }}">
+      <input type="hidden" name="receiver_id" value="{{ .Receiver.Id }}">
+      
+      <div class="form-group">
+        <label for="content">纸条内容</label>
+        <textarea class="form-control" id="content" name="content" rows="5" placeholder="请输入要发送的纸条内容..." required></textarea>
+        <small class="form-text text-muted">纸条是私人消息，只有指定成员可以查看。</small>
+      </div>
+      
+      <div class="form-group">
+        <div class="row">
+          <div class="col-xs-6">
+            <p><strong>接收者：</strong>{{ .Receiver.Name }} ({{ .Receiver.Email }})</p>
+            <p><strong>团队：</strong>{{ .Team.Name }}</p>
+          </div>
+          <div class="col-xs-6">
+            <p><strong>发送者：</strong>{{ .SessUser.Name }} ({{ .SessUser.Email }})</p>
+            <p><strong>类型：</strong><span class="label label-primary">纸条</span></p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-send"></i> 发送纸条
+        </button>
+        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" class="btn btn-default">
+          <i class="bi bi-arrow-left"></i> 返回团队详情
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ end }}

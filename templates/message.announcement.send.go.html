@@ -1,0 +1,74 @@
+{{ define "content"}}
+
+{{/* 这是发送布告页面-面包屑导航栏  */}}
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+  <li class="active">发送布告</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <i class="bi bi-megaphone" style="font-size: 1.5rem;"></i>
+      发送布告给 {{ .Team.Name }}
+    </h3>
+  </div>
+  <div class="panel-body">
+    <form method="POST" action="/v1/message/announcement/send">
+      <input type="hidden" name="team_uuid" value="{{ .Team.Uuid }}">
+      
+      <div class="form-group">
+        <label for="content">布告内容</label>
+        <textarea class="form-control" id="content" name="content" rows="6" placeholder="请输入要发送的布告内容..." required></textarea>
+        <small class="form-text text-muted">布告是公开消息，团队全体成员都可以查看。</small>
+      </div>
+      
+      <div class="form-group">
+        <label for="sender_type">身份类型</label>
+        <div class="radio">
+          <label>
+            <input type="radio" name="sender_type" value="2" checked required>
+            团队成员
+          </label>
+        </div>
+        <div class="radio">
+          <label>
+            <input type="radio" name="sender_type" value="1">
+            家庭成员
+          </label>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <div class="row">
+          <div class="col-xs-6">
+            <p><strong>目标团队：</strong>{{ .Team.Name }}</p>
+            <p><strong>团队类型：</strong>{{ if .Team.IsPrivate }}<span class="label label-danger">私密</span>{{ else }}<span class="label label-success">{{ .Team.TeamProperty }}</span>{{ end }}</p>
+          </div>
+          <div class="col-xs-6">
+            <p><strong>发送者：</strong>{{ .SessUser.Name }} ({{ .SessUser.Email }})</p>
+            <p><strong>类型：</strong><span class="label label-success">布告</span></p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="alert alert-info" role="alert">
+        <i class="bi bi-info-circle"></i>
+        <strong>茶博士提示：</strong>布告消息将发送给团队全体成员，请确保内容得体、符合团队规范。
+      </div>
+      
+      <div class="form-group">
+        <button type="submit" class="btn btn-success">
+          <i class="bi bi-megaphone"></i> 发送布告
+        </button>
+        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" class="btn btn-default">
+          <i class="bi bi-arrow-left"></i> 返回团队详情
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ end }}

@@ -45,7 +45,7 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 欲声明为家庭成员的茶友资料
-	family_member_user, err := data.GetUserByUUID(family_member_user_uuid)
+	family_member_user, err := data.GetUserByID(family_member_user_uuid)
 	if err != nil {
 		util.Debug("cannot get family by uuid", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
