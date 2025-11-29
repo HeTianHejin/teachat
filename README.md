@@ -7,13 +7,13 @@
 1、家庭树链，每个人都有自我视角的&家庭及关联家族；  
 2、事业发展链，每个人都有所属的$事业团队茶团以及关联集团。  
 
-*使用 golang，postgresql，bootstrap 3，开源技术。  
+*使用 golang，postgresql，bootstrap 3。  
 *目录结构简要说明：
 util文件夹存放通用工具函数；public文件夹存放静态资源文件（css/js/image/help等）；  
 templates文件夹存放*.go.html模版文件。  
 DAO文件夹存放数据库连接属性；定义所需的原始数据结构type * struct，分类属性定义声明，相关的CURD方法；模版相关包装数据结构（TemplateData/bean）声明在template_struct_*；  
 Route文件夹存放路由处理函数，核心方法generateHTML方法，route_share_func_*存放共享的从数据库获取包装数据方法（fetch*Bean）/辅助函数；  
-sql文件夹存放创建数据库建表语句，预填充数据等*.sql文件。  
+sql文件夹存放创建数据库建表语句schema.sql，预填充数据等*.sql文件。  
 
 ### 是非特点
 
