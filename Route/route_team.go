@@ -510,6 +510,22 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，满头大汗的茶博士未能帮忙查看这个茶团资料，请稍后再试。")
 		return
 	}
+	// 检查团队是否公开可访问
+	if team.IsPrivate {
+		isMember, err := team.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot check if user is member of team", err)
+			report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")
+			return
+		}
+		if !isMember {
+			report(w, s_u, "你好，茶博士说这个茶团是私有的，你不能查看。")
+			return
+		}
+	} else {
+		report(w, s_u, "你好，茶博士说这个茶团是私有的，你不能查看。")
+		return
+	}
 
 	var tD data.TeamDetail
 
@@ -679,6 +695,18 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			groupBean.Founder = founder
 		}
 		tD.GroupBean = &groupBean
+	}
+
+	// 获取团队消息盒子
+	if tD.IsMember {
+		var messageBox data.MessageBox
+		err := messageBox.GetMessageBoxByTypeAndObjectId(data.MessageBoxTypeTeam, team.Id)
+		if err == nil {
+			// 获取用户可见的消息总数（未读+已读）
+			totalCount := messageBox.AllMessagesCountForUser(s_u.Id)
+			tD.MessageBox = &messageBox
+			tD.MessageCount = totalCount
+		}
 	}
 
 	generateHTML(w, &tD, "layout", "navbar.private", "team.detail", "component_avatar_name_gender")

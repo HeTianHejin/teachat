@@ -742,7 +742,6 @@ func (user *User) CountTeamsByFounderId() (count int, err error) {
 }
 
 // 根据用户提交的当前Uuid获取一个$事业茶团详情
-// AWS CodeWhisperer assist in writing
 func GetTeamByUUID(uuid string) (team Team, err error) {
 
 	team = Team{}
@@ -941,7 +940,6 @@ func (team *Team) CheckTeamMemberByRole(role string) (*TeamMember, error) {
 }
 
 // 根据team_member struct 生成Create()方法
-// AWS CodeWhisperer assist in writing
 func (tM *TeamMember) Create() (err error) {
 	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, status)
 	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id,uuid`
@@ -990,7 +988,6 @@ func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
 }
 
 // 根据teamMember.teamId获取Team()，返回成员所在team的信息
-// AWS CodeWhisperer assist in writing
 func (teamMember *TeamMember) Team() (team Team, err error) {
 	team = Team{}
 	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", teamMember.TeamId).
@@ -1021,26 +1018,6 @@ func (project *Project) InvitedTeams() (teams []Team, err error) {
 		teams = append(teams, team)
 	}
 	rows.Close()
-	return
-}
-
-// Deprecated: 使用Group结构管理团队层级关系
-// GetTeamsBySuperiorTeamId 已废弃，请使用 Group 和 GroupMember 管理团队层级
-func GetTeamsBySuperiorTeamId(superior_team_id int) (teams []Team, err error) {
-	return nil, errors.New("此方法已废弃，请使用 Group 结构管理团队层级关系")
-}
-
-// Deprecated: 使用Group结构管理团队层级关系
-// GetTeamByAbbreviationAndSuperiorTeamId 已废弃，请使用 Group 和 GroupMember 管理团队层级
-func GetTeamByAbbreviationAndSuperiorTeamId(abbreviation string, superior_team_id int) (team Team, err error) {
-	return Team{}, errors.New("此方法已废弃，请使用 Group 结构管理团队层级关系")
-}
-
-// GetTeamByAbbreviationAndFounderId()
-func GetTeamByAbbreviationAndFounderId(abbreviation string, founder_id int) (team Team, err error) {
-	team = Team{}
-	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE abbreviation = $1 AND founder_id = $2 AND deleted_at IS NULL", abbreviation, founder_id).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
 	return
 }
 
@@ -1090,7 +1067,6 @@ func ClosedTeamCount() (count int) {
 }
 
 // 获取$事业茶团的属性
-// AWS CodeWhisperer assist in writing
 func (team *Team) TeamProperty() string {
 	return TeamProperty[team.Class]
 }
