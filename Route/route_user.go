@@ -33,7 +33,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//有uuid参数，读取指定用户资料
-	user, err := data.GetUserByUUID(uuid)
+	user, err := data.GetUserByID(uuid)
 	if err != nil {
 		util.Debug("Cannot get user given uuid", uuid, err)
 		report(w, s_u, "报告，大王，未能找到茶友的资料！")

@@ -2,6 +2,7 @@ package data
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 )
@@ -238,11 +239,23 @@ func UserExistByEmail(email string) (exist bool, err error) {
 	return count > 0, nil
 }
 
-// Get a single user given the UUID
-func GetUserByUUID(uuid string) (user User, err error) {
+// Get a single user given the UUID or id
+func GetUserByID(uuid string) (user User, err error) {
+	if uuid == "" {
+		return user, fmt.Errorf("uuid is empty")
+	}
+	// 先以uuid查询，如果不存在，再以id查询
 	user = User{}
 	err = db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE uuid = $1", uuid).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", uuid).
+				Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+		} else {
+			return user, fmt.Errorf("查询用户失败:参数: %s, %v", uuid, err)
+		}
+	}
 	return
 }
 
