@@ -377,12 +377,12 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 
 // GET/POST /v1/message/send?team_uuid=xxx&receiver_id=xxx
 // 显示发送纸条页面或处理发送请求
-func MessageSend(w http.ResponseWriter, r *http.Request) {
+func HandleMessageTeamSend(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case "GET":
-		messageSendPage(w, r)
+		messageTeamSendPage(w, r)
 	case "POST":
-		messageSendPost(w, r)
+		messageTeamSendPost(w, r)
 	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -390,7 +390,7 @@ func MessageSend(w http.ResponseWriter, r *http.Request) {
 
 // GET /v1/message/send?team_uuid=xxx&receiver_id=xxx
 // 显示发送纸条页面
-func messageSendPage(w http.ResponseWriter, r *http.Request) {
+func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		//游客，需登录
@@ -419,6 +419,11 @@ func messageSendPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if receiver_id == s_u.Id {
+		report(w, s_u, "你好，请勿自己给自己传小纸条哦。")
+		return
+	}
+
 	// 获取团队信息
 	team, err := data.GetTeamByUUID(team_uuid)
 	if err != nil {
@@ -428,37 +433,11 @@ func messageSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否为团队成员
-	isMember := false
-	teamCoreMembers, err := team.CoreMembers()
+	isMember, err := team.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot get team core members", err)
+		util.Debug(" Cannot check team member", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 		return
-	}
-
-	teamNormalMembers, err := team.NormalMembers()
-	if err != nil {
-		util.Debug(" Cannot get team normal members", err)
-		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
-		return
-	}
-
-	// 检查核心成员
-	for _, member := range teamCoreMembers {
-		if member.UserId == s_u.Id {
-			isMember = true
-			break
-		}
-	}
-
-	// 检查普通成员
-	if !isMember {
-		for _, member := range teamNormalMembers {
-			if member.UserId == s_u.Id {
-				isMember = true
-				break
-			}
-		}
 	}
 
 	if !isMember {
@@ -475,21 +454,11 @@ func messageSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查接收者是否为团队成员
-	isReceiverMember := false
-	for _, member := range teamCoreMembers {
-		if member.UserId == receiver.Id {
-			isReceiverMember = true
-			break
-		}
-	}
-
-	if !isReceiverMember {
-		for _, member := range teamNormalMembers {
-			if member.UserId == receiver.Id {
-				isReceiverMember = true
-				break
-			}
-		}
+	isReceiverMember, err := team.IsMember(receiver_id)
+	if err != nil {
+		util.Debug(" Cannot check receiver member", err)
+		report(w, s_u, "你好，茶博士未能获取接收者信息，请稍后再试。")
+		return
 	}
 
 	if !isReceiverMember {
@@ -531,7 +500,7 @@ func messageSendPage(w http.ResponseWriter, r *http.Request) {
 
 // POST /v1/message/send
 // 处理发送纸条请求
-func messageSendPost(w http.ResponseWriter, r *http.Request) {
+func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		//游客，需登录
@@ -569,51 +538,32 @@ func messageSendPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查用户是否为团队成员
-	isMember := false
-	teamCoreMembers, err := team.CoreMembers()
-	if err == nil {
-		for _, member := range teamCoreMembers {
-			if member.UserId == s_u.Id {
-				isMember = true
-				break
-			}
-		}
+	// 检查发送和接收者是否为团队成员
+	isMemberS, err := team.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug(" Cannot check team member", err)
+		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
+		return
+	}
+	isMemberR, err := team.IsMember(receiver_id)
+	if err != nil {
+		util.Debug(" Cannot check receiver member", err)
+		report(w, s_u, "你好，茶博士未能获取接收者信息，请稍后再试。")
+		return
 	}
 
-	if !isMember {
-		teamNormalMembers, err := team.NormalMembers()
-		if err == nil {
-			for _, member := range teamNormalMembers {
-				if member.UserId == s_u.Id {
-					isMember = true
-					break
-				}
-			}
-		}
-	}
-
-	if !isMember {
+	if !isMemberS && !isMemberR {
 		report(w, s_u, "你好，只有团队成员才能发送纸条。")
 		return
 	}
 
 	// 获取或创建团队消息盒子
 	var messageBox data.MessageBox
-	err = messageBox.GetMessageBoxByTypeAndObjectId(data.MessageBoxTypeTeam, team.Id)
+	err = messageBox.GetOrCreateMessageBox(data.MessageBoxTypeTeam, team.Id)
 	if err != nil {
-		// 如果消息盒子不存在，创建一个新的
-		messageBox.Uuid = data.Random_UUID()
-		messageBox.Type = data.MessageBoxTypeTeam
-		messageBox.ObjectId = team.Id
-		messageBox.IsEmpty = true
-		messageBox.MaxCount = 199
-		err = messageBox.Create()
-		if err != nil {
-			util.Debug(" Cannot create message box", err)
-			report(w, s_u, "你好，茶博士未能创建消息盒子，请稍后再试。")
-			return
-		}
+		util.Debug(" Cannot get or create message box", err)
+		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
+		return
 	}
 
 	// 创建纸条消息
@@ -693,32 +643,16 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否为团队成员（团队成员不需要通过这个页面发送布告，他们有其他方式）
-	isMember := false
-	teamCoreMembers, err := team.CoreMembers()
-	if err == nil {
-		for _, member := range teamCoreMembers {
-			if member.UserId == s_u.Id {
-				isMember = true
-				break
-			}
-		}
-	}
-
-	if !isMember {
-		teamNormalMembers, err := team.NormalMembers()
-		if err == nil {
-			for _, member := range teamNormalMembers {
-				if member.UserId == s_u.Id {
-					isMember = true
-					break
-				}
-			}
-		}
+	isMember, err := team.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug(" Cannot check team member", err)
+		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
+		return
 	}
 
 	// 如果是团队成员，提示他们使用团队内部的消息功能
 	if isMember {
-		report(w, s_u, "你好，作为团队成员，请使用团队消息盒子发送消息。")
+		report(w, s_u, "你好，作为团队成员，请使用团队消息盒子发送布告消息。")
 		return
 	}
 
@@ -802,32 +736,16 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否为团队成员
-	isMember := false
-	teamCoreMembers, err := team.CoreMembers()
-	if err == nil {
-		for _, member := range teamCoreMembers {
-			if member.UserId == s_u.Id {
-				isMember = true
-				break
-			}
-		}
-	}
-
-	if !isMember {
-		teamNormalMembers, err := team.NormalMembers()
-		if err == nil {
-			for _, member := range teamNormalMembers {
-				if member.UserId == s_u.Id {
-					isMember = true
-					break
-				}
-			}
-		}
+	isMember, err := team.IsMember(s_u.Id)
+	if err != nil {
+		util.Debug(" Cannot check team member", err)
+		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
+		return
 	}
 
 	// 如果是团队成员，提示他们使用团队内部的消息功能
 	if isMember {
-		report(w, s_u, "你好，作为团队成员，请使用团队消息盒子发送消息。")
+		report(w, s_u, "你好，作为团队成员，请使用团队消息盒子发送纸条消息。")
 		return
 	}
 

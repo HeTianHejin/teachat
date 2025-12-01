@@ -199,7 +199,7 @@ func BatchGetMessagePreferences(userId int, familyIds []int) map[int]bool
 // 异步更新家族树缓存
 go UpdateFamilyTreeCache(userId)
 
-// 异步发送消息通知
+// 异步发送通知
 go SendNotificationAsync(userId, message)
 ```
 

@@ -522,9 +522,6 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士说这个茶团是私有的，你不能查看。")
 			return
 		}
-	} else {
-		report(w, s_u, "你好，茶博士说这个茶团是私有的，你不能查看。")
-		return
 	}
 
 	var tD data.TeamDetail
