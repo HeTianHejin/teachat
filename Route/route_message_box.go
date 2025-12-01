@@ -552,8 +552,8 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isMemberS && !isMemberR {
-		report(w, s_u, "你好，只有团队成员才能发送纸条。")
+	if !isMemberS || !isMemberR {
+		report(w, s_u, "你好，只有团队成员之间才能发送纸条。")
 		return
 	}
 
