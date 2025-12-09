@@ -700,7 +700,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		err := messageBox.GetMessageBoxByTypeAndObjectId(data.MessageBoxTypeTeam, team.Id)
 		if err == nil {
 			// 获取用户可见的消息总数（未读+已读）
-			totalCount := messageBox.AllMessagesCountForUser(s_u.Id)
+			totalCount := messageBox.AllMessagesCount()
 			tD.MessageBox = &messageBox
 			tD.MessageCount = totalCount
 		}
