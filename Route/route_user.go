@@ -2,7 +2,7 @@ package route
 
 import (
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -23,7 +23,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
-	var uB data.UserDefaultDataBean
+	var uB dao.UserDefaultDataBean
 
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
@@ -33,7 +33,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//有uuid参数，读取指定用户资料
-	user, err := data.GetUserByID(uuid)
+	user, err := dao.GetUserByID(uuid)
 	if err != nil {
 		util.Debug("Cannot get user given uuid", uuid, err)
 		report(w, s_u, "报告，大王，未能找到茶友的资料！")
@@ -96,7 +96,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 		}
 		newBiography := biog
 
-		err = data.UpdateUserNameAndBiography(s_u.Id, newName, newBiography)
+		err = dao.UpdateUserNameAndBiography(s_u.Id, newName, newBiography)
 		if err != nil {
 			util.Debug(" 更新用户信息错误！", err)
 			report(w, s_u, "茶博士失魂鱼，请问你刚刚说的花名或者简介是什么来着？")
@@ -157,7 +157,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
-	var lB data.LetterboxPageData
+	var lB dao.LetterboxPageData
 	lB.SessUser = s_u
 
 	generateHTML(w, &lB, "layout", "navbar.private", "avatar.upload")
@@ -166,7 +166,7 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 // GET
 // update Password /Forgot Password?
 func Forgot(w http.ResponseWriter, r *http.Request) {
-	report(w, data.UserUnknown, "尚未提供修改密码服务！")
+	report(w, dao.UserUnknown, "尚未提供修改密码服务！")
 }
 
 // GET

@@ -1,4 +1,4 @@
-package data
+package dao
 
 // 某个茶话页面渲染所需的动态数据
 type PublicPData struct {

@@ -1,4 +1,4 @@
-package data
+package dao
 
 // UserDefaultDataBean Pagedata 个人主页，渲染所需数据
 type UserDefaultDataBean struct {

@@ -3,7 +3,7 @@ package route
 import (
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -35,14 +35,14 @@ func PlaceCollect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查地方是否存在
-	t_place := data.Place{Id: t_place_id}
+	t_place := dao.Place{Id: t_place_id}
 	if err := t_place.Get(); err != nil {
 		util.Debug("Cannot get place by id", err)
 		report(w, s_u, "你好，茶博士表示无法收藏地方，请稍后再试。")
 		return
 	}
 	//检查用户是否已经收藏过该地方
-	exist, err := data.CheckUserPlace(s_u.Id, t_place_id)
+	exist, err := dao.CheckUserPlace(s_u.Id, t_place_id)
 	if err != nil {
 		util.Debug(s_u.Id, t_place_id, "Cannot check user place")
 		report(w, s_u, "你好，茶博士表示该地方有外星人出没，请稍后再试。")
@@ -53,7 +53,7 @@ func PlaceCollect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查用户收藏的地方数量是否超过99
-	count, err := data.CountUserPlace(s_u.Id)
+	count, err := dao.CountUserPlace(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot get user place count", err)
 		report(w, s_u, "你好，满头大汗的茶博士居然找不到提及的地方，请确定后再试。")
@@ -65,7 +65,7 @@ func PlaceCollect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//收藏该地方
-	user_place := data.UserPlace{UserId: s_u.Id, PlaceId: t_place_id}
+	user_place := dao.UserPlace{UserId: s_u.Id, PlaceId: t_place_id}
 	if err := user_place.Create(); err != nil {
 		util.Debug("Cannot collect place", err)
 		report(w, s_u, "你好，茶博士表示无法收藏地方，请稍后再试。")
@@ -83,7 +83,7 @@ func PlaceCollect(w http.ResponseWriter, r *http.Request) {
 	}
 	if old_default_place.Id == 0 {
 		//这是茶棚占位地点，还没有设置用户默认地点
-		udp := data.UserDefaultPlace{
+		udp := dao.UserDefaultPlace{
 			UserId:  s_u.Id,
 			PlaceId: user_place.Id,
 		}
@@ -114,7 +114,7 @@ func NewPlace(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var pL data.PlaceSlice
+	var pL dao.PlaceSlice
 	pL.SessUser = s_u
 	generateHTML(w, &pL, "layout", "navbar.private", "place.new")
 
@@ -135,7 +135,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//限制用户登记的地方最大数量为99,防止暴表
-	if count_place, err := data.CountPlaceByUserId(s_u.Id); err != nil || count_place >= 99 {
+	if count_place, err := dao.CountPlaceByUserId(s_u.Id); err != nil || count_place >= 99 {
 		util.Debug("Cannot get user place count", err)
 		report(w, s_u, "你好，茶博士表示您已经提交了多得数不过来，就要爆表的地方，请确定后再试。")
 		return
@@ -186,7 +186,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 	}
 	description := r.PostFormValue("description")
 	is_public := r.PostFormValue("is_public") == "0"
-	place := data.Place{
+	place := dao.Place{
 		Name:        name,
 		Nickname:    nickname,
 		UserId:      s_u.Id,
@@ -201,7 +201,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//把这个地方绑定到当前用户名下
-	up := data.UserPlace{
+	up := dao.UserPlace{
 		UserId:  s_u.Id,
 		PlaceId: place.Id,
 	}
@@ -213,7 +213,7 @@ func CreatePlace(w http.ResponseWriter, r *http.Request) {
 	// 统计用户绑定的地方数量，如果是 == 1，那么就把这个地方设置为该用户的默认地方
 	place_count := up.Count()
 	if place_count == 1 {
-		udp := data.UserDefaultPlace{
+		udp := dao.UserDefaultPlace{
 			UserId:  s_u.Id,
 			PlaceId: place.Id,
 		}
@@ -241,7 +241,7 @@ func MyPlace(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var pL data.PlaceSlice
+	var pL dao.PlaceSlice
 	places, err := s_u.GetAllBindPlaces()
 	if err != nil {
 		util.Debug("Cannot get places from user", err)
@@ -269,12 +269,12 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 	place_uuid := r.URL.Query().Get("uuid")
 
 	//如果uuid为茶棚系统值"x",这是一个占位值，跳转首页
-	if place_uuid == data.PlaceUuidSpaceshipTeabar || place_uuid == "" {
+	if place_uuid == dao.PlaceUuidSpaceshipTeabar || place_uuid == "" {
 		report(w, s_u, "你好，欢迎陛下大驾光临星际茶棚。")
 		return
 	}
 
-	t_place := data.Place{
+	t_place := dao.Place{
 		Uuid: place_uuid,
 	}
 
@@ -284,7 +284,7 @@ func PlaceDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var pD data.PlaceDetail
+	var pD dao.PlaceDetail
 	pD.Place = t_place
 	pD.SessUser = s_u
 	//是否地方登记者

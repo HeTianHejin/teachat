@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"crypto/rand"

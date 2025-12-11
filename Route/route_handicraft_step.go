@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -46,7 +46,7 @@ func HandicraftStep2Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handicraft := data.Handicraft{Uuid: uuid}
+	handicraft := dao.Handicraft{Uuid: uuid}
 	if err = handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			report(w, s_u, "手工艺记录不存在")
@@ -57,7 +57,7 @@ func HandicraftStep2Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project := data.Project{Id: handicraft.ProjectId}
+	project := dao.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -91,13 +91,13 @@ func HandicraftStep2Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	templateData := struct {
-		SessUser           data.User
+		SessUser           dao.User
 		IsMaster           bool
 		IsAdmin            bool
 		IsVerifier         bool
-		Handicraft         data.Handicraft
-		ProjectBean        data.ProjectBean
-		QuoteObjectiveBean data.ObjectiveBean
+		Handicraft         dao.Handicraft
+		ProjectBean        dao.ProjectBean
+		QuoteObjectiveBean dao.ObjectiveBean
 		CurrentStep        int
 	}{
 		SessUser:           s_u,
@@ -134,7 +134,7 @@ func HandicraftStep2Post(w http.ResponseWriter, r *http.Request) {
 	skillDifficultyStr := r.PostFormValue("skill_difficulty")
 	magicDifficultyStr := r.PostFormValue("magic_difficulty")
 
-	handicraft := data.Handicraft{Uuid: handicraftUuid}
+	handicraft := dao.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		report(w, s_u, "手工艺记录不存在")
 		return
@@ -194,13 +194,13 @@ func HandicraftStep3Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handicraft := data.Handicraft{Uuid: uuid}
+	handicraft := dao.Handicraft{Uuid: uuid}
 	if err = handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
-	project := data.Project{Id: handicraft.ProjectId}
+	project := dao.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
 		report(w, s_u, "项目不存在")
 		return
@@ -232,13 +232,13 @@ func HandicraftStep3Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := struct {
-		SessUser           data.User
+		SessUser           dao.User
 		IsMaster           bool
 		IsAdmin            bool
 		IsVerifier         bool
-		Handicraft         data.Handicraft
-		ProjectBean        data.ProjectBean
-		QuoteObjectiveBean data.ObjectiveBean
+		Handicraft         dao.Handicraft
+		ProjectBean        dao.ProjectBean
+		QuoteObjectiveBean dao.ObjectiveBean
 		CurrentStep        int
 	}{
 		SessUser:           s_u,
@@ -271,7 +271,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 	inaugurationDesc := strings.TrimSpace(r.PostFormValue("inauguration_desc"))
 	evidenceIdStr := r.PostFormValue("evidence_id")
 
-	handicraft := data.Handicraft{Uuid: handicraftUuid}
+	handicraft := dao.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		report(w, s_u, "手工艺记录不存在")
 		return
@@ -279,7 +279,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 
 	if inaugurationName != "" {
 		evidenceId, _ := strconv.Atoi(evidenceIdStr)
-		inauguration := data.Inauguration{
+		inauguration := dao.Inauguration{
 			HandicraftId:   handicraft.Id,
 			Name:           inaugurationName,
 			Description:    inaugurationDesc,
@@ -294,7 +294,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	handicraft.Status = data.InProgress
+	handicraft.Status = dao.InProgress
 	if err := handicraft.Update(); err != nil {
 		util.Debug("Cannot update handicraft status", err)
 		report(w, s_u, "更新状态失败")
@@ -335,13 +335,13 @@ func HandicraftStep4Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handicraft := data.Handicraft{Uuid: uuid}
+	handicraft := dao.Handicraft{Uuid: uuid}
 	if err = handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
-	project := data.Project{Id: handicraft.ProjectId}
+	project := dao.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
 		report(w, s_u, "项目不存在")
 		return
@@ -373,13 +373,13 @@ func HandicraftStep4Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := struct {
-		SessUser           data.User
+		SessUser           dao.User
 		IsMaster           bool
 		IsAdmin            bool
 		IsVerifier         bool
-		Handicraft         data.Handicraft
-		ProjectBean        data.ProjectBean
-		QuoteObjectiveBean data.ObjectiveBean
+		Handicraft         dao.Handicraft
+		ProjectBean        dao.ProjectBean
+		QuoteObjectiveBean dao.ObjectiveBean
 		CurrentStep        int
 	}{
 		SessUser:           s_u,
@@ -412,7 +412,7 @@ func HandicraftStep4Post(w http.ResponseWriter, r *http.Request) {
 	processDesc := strings.TrimSpace(r.PostFormValue("process_desc"))
 	evidenceIdStr := r.PostFormValue("evidence_id")
 
-	handicraft := data.Handicraft{Uuid: handicraftUuid}
+	handicraft := dao.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		report(w, s_u, "手工艺记录不存在")
 		return
@@ -420,7 +420,7 @@ func HandicraftStep4Post(w http.ResponseWriter, r *http.Request) {
 
 	if processName != "" {
 		evidenceId, _ := strconv.Atoi(evidenceIdStr)
-		processRecord := data.ProcessRecord{
+		processRecord := dao.ProcessRecord{
 			HandicraftId:   handicraft.Id,
 			Name:           processName,
 			Description:    processDesc,
@@ -469,13 +469,13 @@ func HandicraftStep5Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handicraft := data.Handicraft{Uuid: uuid}
+	handicraft := dao.Handicraft{Uuid: uuid}
 	if err = handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		report(w, s_u, "手工艺记录不存在")
 		return
 	}
 
-	project := data.Project{Id: handicraft.ProjectId}
+	project := dao.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
 		report(w, s_u, "项目不存在")
 		return
@@ -507,13 +507,13 @@ func HandicraftStep5Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := struct {
-		SessUser           data.User
+		SessUser           dao.User
 		IsMaster           bool
 		IsAdmin            bool
 		IsVerifier         bool
-		Handicraft         data.Handicraft
-		ProjectBean        data.ProjectBean
-		QuoteObjectiveBean data.ObjectiveBean
+		Handicraft         dao.Handicraft
+		ProjectBean        dao.ProjectBean
+		QuoteObjectiveBean dao.ObjectiveBean
 		CurrentStep        int
 	}{
 		SessUser:           s_u,
@@ -547,7 +547,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 	evidenceIdStr := r.PostFormValue("evidence_id")
 	statusStr := r.PostFormValue("status")
 
-	handicraft := data.Handicraft{Uuid: handicraftUuid}
+	handicraft := dao.Handicraft{Uuid: handicraftUuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		report(w, s_u, "手工艺记录不存在")
 		return
@@ -555,7 +555,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 
 	if endingName != "" {
 		evidenceId, _ := strconv.Atoi(evidenceIdStr)
-		ending := data.Ending{
+		ending := dao.Ending{
 			HandicraftId:   handicraft.Id,
 			Name:           endingName,
 			Description:    endingDesc,
@@ -572,9 +572,9 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 
 	status, _ := strconv.Atoi(statusStr)
 	if status < 0 || status > 4 {
-		status = int(data.Completed)
+		status = int(dao.Completed)
 	}
-	handicraft.Status = data.HandicraftStatus(status)
+	handicraft.Status = dao.HandicraftStatus(status)
 
 	if err := handicraft.Update(); err != nil {
 		util.Debug("Cannot update handicraft", err)
@@ -582,7 +582,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project := data.Project{Id: handicraft.ProjectId}
+	project := dao.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err == nil {
 		http.Redirect(w, r, "/v1/project/detail?uuid="+project.Uuid, http.StatusFound)
 	} else {

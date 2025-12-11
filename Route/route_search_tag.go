@@ -2,7 +2,7 @@ package route
 
 import (
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -13,16 +13,16 @@ func SearchByTag(w http.ResponseWriter, r *http.Request) {
 	searchType := r.URL.Query().Get("type")
 
 	if tag == "" {
-		report(w, data.UserUnknown, "你好，请输入搜索标签。")
+		report(w, dao.UserUnknown, "你好，请输入搜索标签。")
 		return
 	}
 
 	// 获取会话用户
-	var sessUser data.User
+	var sessUser dao.User
 	s, err := session(r)
 	if err != nil {
-		sessUser = data.User{
-			Id:   data.UserId_None,
+		sessUser = dao.User{
+			Id:   dao.UserId_None,
 			Name: "游客",
 		}
 	} else {
@@ -30,11 +30,11 @@ func SearchByTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser       data.User
+		SessUser       dao.User
 		Tag            string
 		SearchType     string
-		TeamBeanSlice  []data.TeamBean
-		GroupBeanSlice []data.GroupBean
+		TeamBeanSlice  []dao.TeamBean
+		GroupBeanSlice []dao.GroupBean
 	}
 	pageData.SessUser = sessUser
 	pageData.Tag = tag
@@ -43,25 +43,25 @@ func SearchByTag(w http.ResponseWriter, r *http.Request) {
 	// 根据类型搜索
 	if searchType == "group" {
 		// 搜索集团
-		groups, err := data.SearchGroupsByTag(tag)
+		groups, err := dao.SearchGroupsByTag(tag)
 		if err != nil {
 			util.Debug("Cannot search groups by tag", err)
 		}
 		// 转换为GroupBean
-		groupBeans := make([]data.GroupBean, 0, len(groups))
+		groupBeans := make([]dao.GroupBean, 0, len(groups))
 		for _, g := range groups {
-			founder, _ := data.GetUser(g.FounderId)
-			groupBeans = append(groupBeans, data.GroupBean{
+			founder, _ := dao.GetUser(g.FounderId)
+			groupBeans = append(groupBeans, dao.GroupBean{
 				Group:         g,
 				CreatedAtDate: g.CreatedAtDate(),
-				Open:          g.Class == data.GroupClassOpen,
+				Open:          g.Class == dao.GroupClassOpen,
 				Founder:       founder,
 			})
 		}
 		pageData.GroupBeanSlice = groupBeans
 	} else {
 		// 默认搜索团队
-		teams, err := data.SearchTeamsByTag(tag)
+		teams, err := dao.SearchTeamsByTag(tag)
 		if err != nil {
 			util.Debug("Cannot search teams by tag", err)
 		}
@@ -74,7 +74,7 @@ func SearchByTag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 渲染页面
-	if sessUser.Id == data.UserId_None {
+	if sessUser.Id == dao.UserId_None {
 		generateHTML(w, &pageData, "layout", "navbar.public", "search.tag_result")
 	} else {
 		generateHTML(w, &pageData, "layout", "navbar.private", "search.tag_result")
@@ -85,11 +85,11 @@ func SearchByTag(w http.ResponseWriter, r *http.Request) {
 // 显示热门标签页面
 func HotTags(w http.ResponseWriter, r *http.Request) {
 	// 获取会话用户
-	var sessUser data.User
+	var sessUser dao.User
 	s, err := session(r)
 	if err != nil {
-		sessUser = data.User{
-			Id:   data.UserId_None,
+		sessUser = dao.User{
+			Id:   dao.UserId_None,
 			Name: "游客",
 		}
 	} else {
@@ -104,14 +104,14 @@ func HotTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser data.User
+		SessUser dao.User
 		HotTags  []string
 	}
 	pageData.SessUser = sessUser
 	pageData.HotTags = hotTags
 
 	// 渲染页面
-	if sessUser.Id == data.UserId_None {
+	if sessUser.Id == dao.UserId_None {
 		generateHTML(w, &pageData, "layout", "navbar.public", "tags.hot")
 	} else {
 		generateHTML(w, &pageData, "layout", "navbar.private", "tags.hot")

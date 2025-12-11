@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -22,7 +22,7 @@ func LoginGet(w http.ResponseWriter, r *http.Request) {
 	// 读取用户提交的，点击‘登船’时所在页面资料，以便checkin成功时回到原页面，改善体验
 	footprint := r.FormValue("footprint")
 	query := r.FormValue("query")
-	var aopD data.AcceptObjectPageData
+	var aopD dao.AcceptObjectPageData
 	aopD.SessUser.Footprint = footprint
 	aopD.SessUser.Query = query
 
@@ -47,7 +47,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
 	}
-	s_u := data.UserUnknown
+	s_u := dao.UserUnknown
 	// 读取用户提交的资料
 	email := r.PostFormValue("email")
 	password := r.PostFormValue("password")
@@ -57,7 +57,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
-	if gender != data.User_Gender_Female && gender != data.User_Gender_Male {
+	if gender != dao.User_Gender_Female && gender != dao.User_Gender_Male {
 		report(w, s_u, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
@@ -69,10 +69,10 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 根据用户提交的资料填写新用户表格
-	newU := data.User{
+	newU := dao.User{
 		Name:      name,
 		Email:     email,
-		Password:  data.Encrypt(password),
+		Password:  dao.Encrypt(password),
 		Biography: biography,
 		Role:      "traveller",
 		Gender:    gender,
@@ -84,7 +84,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查提交的邮箱是否已经注册过了
-	exist_email, err := data.UserExistByEmail(newU.Email)
+	exist_email, err := dao.UserExistByEmail(newU.Email)
 	if err != nil {
 		util.Debug((fmt.Errorf("检查邮箱存在性时出错: %v, 邮箱: %s", err, newU.Email)), "数据库查询错误")
 		report(w, s_u, "你好，茶博士因找不到笔导致注册失败，请确认情况后重试。")
@@ -102,11 +102,11 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 将新成员添加进默认的自由人茶团
-	team_member := data.TeamMember{
-		TeamId: data.TeamIdFreelancer,
+	team_member := dao.TeamMember{
+		TeamId: dao.TeamIdFreelancer,
 		UserId: newU.Id,
 		Role:   "taster",
-		Status: data.TeMemberStatusActive,
+		Status: dao.TeMemberStatusActive,
 	}
 	if err = team_member.Create(); err != nil {
 		util.Debug(" Cannot create default_free team_member", err)
@@ -114,9 +114,9 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//设置茶棚预设的默认团队（自由人）
-	udt := data.UserDefaultTeam{
+	udt := dao.UserDefaultTeam{
 		UserId: newU.Id,
-		TeamId: data.TeamIdFreelancer,
+		TeamId: dao.TeamIdFreelancer,
 	}
 	if err = udt.Create(); err != nil {
 		util.Debug(" Cannot create default team", err)
@@ -127,7 +127,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	util.Debug(newU.Email, "注册新账号ok")
 
 	t := ""
-	if newU.Gender == data.User_Gender_Female {
+	if newU.Gender == dao.User_Gender_Female {
 		t = fmt.Sprintf("%s 女士，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
 	} else {
 		t = fmt.Sprintf("%s 先生，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
@@ -140,7 +140,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 // Authenticate the user given the email and password
 // 用户登录，并记录会话记录
 func Authenticate(w http.ResponseWriter, r *http.Request) {
-	s_u := data.UserUnknown
+	s_u := dao.UserUnknown
 	err := r.ParseForm()
 	if err != nil {
 		util.Debug(" Cannot parse form", err)
@@ -152,7 +152,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	pw := r.PostFormValue("password")
 	email := r.PostFormValue("email")
 
-	s_u = data.User{}
+	s_u = dao.User{}
 
 	// 口令检查，提示用户这是茶话会
 	wordValid := watchword == "闻香识茶" || watchword == "Recognizing Tea by Its Aroma"
@@ -160,13 +160,13 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	if wordValid {
 		// 口令正确，获取用户信息
 		if userID, convErr := strconv.Atoi(email); convErr == nil && userID > 0 {
-			s_u, err = data.GetUser(userID)
+			s_u, err = dao.GetUser(userID)
 			if err != nil {
 				report(w, s_u, "茶博士嘀咕说，请确认握笔姿势是否正确，身形健美。")
 				return
 			}
 		} else if isEmail(email) {
-			s_u, err = data.GetUserByEmail(email, r.Context())
+			s_u, err = dao.GetUserByEmail(email, r.Context())
 			if err != nil {
 				report(w, s_u, "(嘀咕说) 请确保输入账号正确，握笔姿态优雅。")
 				return
@@ -176,7 +176,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encryptedPw := data.Encrypt(pw)
+		encryptedPw := dao.Encrypt(pw)
 		if subtle.ConstantTimeCompare([]byte(s_u.Password), []byte(encryptedPw)) == 1 {
 			// 创建新的会话
 			session, err := s_u.CreateSession()
@@ -250,11 +250,11 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 2. 检查会话有效性
-	sess := data.Session{Uuid: cookie.Value}
+	sess := dao.Session{Uuid: cookie.Value}
 	valid, err := sess.Check()
 	if err != nil {
 		util.Debug(operation, "检查会话失败", "uuid", cookie.Value, "error", err)
-		report(w, data.UserUnknown, "你好，茶博士因找不到资料导致登出失败，请确认情况后重试。")
+		report(w, dao.UserUnknown, "你好，茶博士因找不到资料导致登出失败，请确认情况后重试。")
 		return
 	}
 
@@ -268,7 +268,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	// 3. 删除会话
 	if err := sess.Delete(); err != nil {
 		util.Debug(operation, "删除会话失败", "uuid", cookie.Value, "error", err)
-		report(w, data.UserUnknown, "你好，茶博士因找不到笔导致登出失败，请确认情况后重试。")
+		report(w, dao.UserUnknown, "你好，茶博士因找不到笔导致登出失败，请确认情况后重试。")
 		return
 	}
 

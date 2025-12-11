@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -258,7 +258,7 @@ func (ob *Objective) IsInvitedMember(user_id int) (ok bool, err error) {
 
 	if !ob.IsPrivate {
 		// 被邀请的对象是$事业团队 []Team.Id
-		// 迭代team_ids,用data.GetMemberUserIdsByTeamId()获取全部user_ids；
+		// 迭代team_ids,用dao.GetMemberUserIdsByTeamId()获取全部user_ids；
 		// 以UserId == u.Id？检查当前用户是否是茶话会邀请团队成员
 		for _, team_id := range team_ids {
 			user_ids, _ := GetAllMemberUserIdsByTeamId(team_id)

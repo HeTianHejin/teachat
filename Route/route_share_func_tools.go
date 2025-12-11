@@ -12,7 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"text/template"
 	"unicode/utf8"
@@ -27,7 +27,7 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 
 	// 创建模板并添加自定义函数
 	tmpl := template.New("layout").Funcs(template.FuncMap{
-		"GetEnvironmentLevelDescription": data.GetEnvironmentLevelDescription,
+		"GetEnvironmentLevelDescription": dao.GetEnvironmentLevelDescription,
 		"GetStarIcons": func(level int) string {
 			if level < 1 || level > 5 {
 				return ""
@@ -38,8 +38,8 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 			}
 			return stars
 		},
-		"RiskSeverityLevelString": data.RiskSeverityLevelString,
-		"AvailabilityString":      data.GoodsAvailabilityString,
+		"RiskSeverityLevelString": dao.RiskSeverityLevelString,
+		"AvailabilityString":      dao.GoodsAvailabilityString,
 		"mul": func(a, b int) int {
 			return a * b
 		},
@@ -218,7 +218,7 @@ func getWidthHeightForJpeg(imgBytes []byte) (int, int, error) {
 }
 
 // 1. 校验茶议已有内容是否不超限,false == 超限
-func submitAdditionalContent(w http.ResponseWriter, s_u data.User, body, additional string) bool {
+func submitAdditionalContent(w http.ResponseWriter, s_u dao.User, body, additional string) bool {
 	if cnStrLen(body) >= int(util.Config.ThreadMaxWord) {
 		report(w, s_u, "已有内容已超过最大字数限制，无法补充。")
 		return false
@@ -291,7 +291,7 @@ func sanitizeRedirectPath(inputPath string) string {
 }
 
 // Helper function for validating string length
-func validateCnStrLen(value string, min int, max int, fieldName string, w http.ResponseWriter, s_u data.User) bool {
+func validateCnStrLen(value string, min int, max int, fieldName string, w http.ResponseWriter, s_u dao.User) bool {
 	if cnStrLen(value) < min {
 		report(w, s_u, fmt.Sprintf("你好，茶博士竟然说该茶议%s为空或太短，请确认后再试一次。", fieldName))
 		return false
@@ -304,7 +304,7 @@ func validateCnStrLen(value string, min int, max int, fieldName string, w http.R
 }
 
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
-func processUploadAvatar(w http.ResponseWriter, r *http.Request, s_u data.User, uuid string) error {
+func processUploadAvatar(w http.ResponseWriter, r *http.Request, s_u dao.User, uuid string) error {
 	// 从请求中解包出单个上传文件
 	file, fileHeader, err := r.FormFile("avatar")
 	if err != nil {
@@ -385,9 +385,9 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, s_u data.User, 
 }
 
 // 茶博士向茶客回话的方法，包括但不限于意外事件和通知、感谢等等提示。
-func report(w http.ResponseWriter, s_u data.User, msg ...any) {
+func report(w http.ResponseWriter, s_u dao.User, msg ...any) {
 	type uM struct {
-		SessUser data.User
+		SessUser dao.User
 		Message  string
 	}
 	m := uM{}
@@ -403,34 +403,34 @@ func report(w http.ResponseWriter, s_u data.User, msg ...any) {
 	if s_u.Id > 0 {
 		m.SessUser = s_u
 	} else {
-		m.SessUser = data.UserUnknown
+		m.SessUser = dao.UserUnknown
 	}
 
 	generateHTML(w, &m, "layout", "navbar.private", "feedback")
 }
 
 // Checks if the user is logged in and has a session, if not err is not nil
-func session(r *http.Request) (data.Session, error) {
+func session(r *http.Request) (dao.Session, error) {
 	cookie, err := r.Cookie("_cookie")
 	if err != nil {
-		return data.Session{}, fmt.Errorf("cookie not found: %w", err)
+		return dao.Session{}, fmt.Errorf("cookie not found: %w", err)
 	}
 
-	sess := data.Session{Uuid: cookie.Value}
+	sess := dao.Session{Uuid: cookie.Value}
 	ok, checkErr := sess.Check()
 	if checkErr != nil {
-		return data.Session{}, fmt.Errorf("session check failed: %w", checkErr)
+		return dao.Session{}, fmt.Errorf("session check failed: %w", checkErr)
 	}
 	if !ok {
-		return data.Session{}, errors.New("invalid or expired session")
+		return dao.Session{}, errors.New("invalid or expired session")
 	}
 
 	return sess, nil
 }
 
-func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]data.TeamBean, error) {
-	newSlice := make([]data.TeamBean, 0, len(teamSlice))
-	var defaultTeam *data.TeamBean
+func moveDefaultTeamToFront(teamSlice []dao.TeamBean, defaultTeamID int) ([]dao.TeamBean, error) {
+	newSlice := make([]dao.TeamBean, 0, len(teamSlice))
+	var defaultTeam *dao.TeamBean
 
 	// 分离默认团队和其他团队
 	for _, tb := range teamSlice {
@@ -446,20 +446,20 @@ func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]dat
 	}
 
 	// 合并结果（默认团队在前）
-	return append([]data.TeamBean{*defaultTeam}, newSlice...), nil
+	return append([]dao.TeamBean{*defaultTeam}, newSlice...), nil
 }
 
 // validateTeamAndFamilyParams 验证团队和家庭ID参数的合法性
 // 返回: (是否有效, 错误) ---deepseek协助优化
-func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, s_u data.User, w http.ResponseWriter) (bool, error) {
+func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, s_u dao.User, w http.ResponseWriter) (bool, error) {
 
 	// 基本参数检查（这些检查不涉及数据库操作）
 	//非法id组合
-	if family_id == data.FamilyIdUnknown && team_id == data.TeamIdNone {
+	if family_id == dao.FamilyIdUnknown && team_id == dao.TeamIdNone {
 		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return false, nil
 	}
-	if team_id == data.TeamIdNone || team_id == data.TeamIdSpaceshipCrew {
+	if team_id == dao.TeamIdNone || team_id == dao.TeamIdSpaceshipCrew {
 		report(w, s_u, "指定的团队编号是保留编号，不能使用。")
 		return false, nil
 	}
@@ -473,11 +473,11 @@ func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, s_
 	//所以可以同时指定两者,符合任何人必然有某个家庭，但不一定有事业团队背景的实际情况
 	if is_private {
 		// 管理权属于家庭
-		if family_id == data.FamilyIdUnknown {
+		if family_id == dao.FamilyIdUnknown {
 			report(w, s_u, "你好，四海为家者今天不能发布新茶语，请明天再试。")
 			return false, fmt.Errorf("unknown family #%d cannot do this", family_id)
 		}
-		family := data.Family{Id: family_id}
+		family := dao.Family{Id: family_id}
 		// if err := family.Get(); err != nil {
 		// 	return false, err // 数据库错误，返回error
 		// }
@@ -502,19 +502,19 @@ func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, s_
 		}
 	} else {
 		// 管理权属于团队
-		if team_id == data.TeamIdNone || team_id == data.TeamIdSpaceshipCrew {
+		if team_id == dao.TeamIdNone || team_id == dao.TeamIdSpaceshipCrew {
 			report(w, s_u, "你好，特殊团队今天还不能创建茶话会，请稍后再试。")
 			return false, fmt.Errorf("special team #%d cannot do this", team_id)
 		}
 		//声明是四海为家【与家庭背景（责任）无关】
-		if team_id == data.TeamIdFreelancer {
+		if team_id == dao.TeamIdFreelancer {
 			//既隐藏家庭背景，也不声明团队的“独狼”
 			// 违背了“慎独”原则
 			report(w, s_u, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜发表茶话。")
 			return false, nil
 		}
 
-		team := data.Team{Id: team_id}
+		team := dao.Team{Id: team_id}
 		// if err := team.Get(); err != nil {
 		// 	return false, err // 数据库错误，返回error
 		// }

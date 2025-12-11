@@ -1,4 +1,4 @@
-package data
+package dao
 
 // 消息盒子详情页面数据
 type MessageBoxDetail struct {

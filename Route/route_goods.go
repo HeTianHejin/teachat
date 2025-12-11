@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -59,7 +59,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	team, err := data.GetTeam(team_id)
+	team, err := dao.GetTeam(team_id)
 	if err != nil {
 		util.Debug("cannot get team from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
@@ -75,13 +75,13 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
 		return
 	}
-	g_t := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
+	g_t := dao.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = g_t.GetByTeamIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get team goods from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
-	g := data.Goods{Id: g_id}
+	g := dao.Goods{Id: g_id}
 	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get goods from database", err)
 		report(w, s_u, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
@@ -290,23 +290,23 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 	operational_state_str := r.PostFormValue("operational_state")
 
 	// Convert to enum values
-	physical_state := data.PhysicalNew
+	physical_state := dao.PhysicalNew
 	if ps, err := strconv.Atoi(physical_state_str); err == nil && ps >= 0 && ps <= 3 {
-		physical_state = data.PhysicalState(ps)
+		physical_state = dao.PhysicalState(ps)
 	}
 
-	operational_state := data.OperationalNormal
+	operational_state := dao.OperationalNormal
 	if os, err := strconv.Atoi(operational_state_str); err == nil && os >= 0 && os <= 3 {
-		operational_state = data.OperationalState(os)
+		operational_state = dao.OperationalState(os)
 	}
 
 	availability_str := r.PostFormValue("availability")
-	availability := data.Available
+	availability := dao.Available
 	if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
-		availability = data.GoodsAvailability(av)
+		availability = dao.GoodsAvailability(av)
 	}
 
-	old_goods := data.Goods{
+	old_goods := dao.Goods{
 		Id:                    g.Id,
 		RecorderUserId:        s_u.Id,
 		Name:                  goods_name,
@@ -388,7 +388,7 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	team, err := data.GetTeam(team_id)
+	team, err := dao.GetTeam(team_id)
 	if err != nil {
 		util.Debug("cannot get team from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
@@ -404,20 +404,20 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
 		return
 	}
-	tg := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
+	tg := dao.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = tg.GetByTeamIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get team goods from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
-	g := data.Goods{Id: g_id}
+	g := dao.Goods{Id: g_id}
 	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get goods from database", err)
 		report(w, s_u, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
 	}
 
-	var gTD data.GoodsTeamDetail
+	var gTD dao.GoodsTeamDetail
 
 	gTD.SessUser = s_u
 	gTD.IsAdmin = true
@@ -465,7 +465,7 @@ func GoodsFamilyDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	family, err := data.GetFamily(family_id)
+	family, err := dao.GetFamily(family_id)
 	if err != nil {
 		util.Debug("cannot get family from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
@@ -481,13 +481,13 @@ func GoodsFamilyDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "茶博士耸耸肩说，非家庭成员无权查看物资的资料，请确认后再试一次。")
 		return
 	}
-	fg := data.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
+	fg := dao.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
 	if err = fg.GetByFamilyIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get family goods from database", s.Email, err)
 		report(w, s_u, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
-	g := data.Goods{Id: g_id}
+	g := dao.Goods{Id: g_id}
 	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			util.Debug("cannot get goods from database: no such goods", err)
@@ -499,7 +499,7 @@ func GoodsFamilyDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fGD data.GoodsFamilyDetail
+	var fGD dao.GoodsFamilyDetail
 	fGD.SessUser = s_u
 	fGD.IsAdmin = true
 	fGD.GoodsFamily = fg
@@ -549,7 +549,7 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	team, err := data.GetTeam(team_id)
+	team, err := dao.GetTeam(team_id)
 	if err != nil {
 		util.Debug("cannot get team from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
@@ -564,20 +564,20 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
-	g_t := data.GoodsTeam{GoodsId: g_id, TeamId: team_id}
+	g_t := dao.GoodsTeam{GoodsId: g_id, TeamId: team_id}
 	if err = g_t.GetByTeamIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get team goods from database", s.Email, err)
 		report(w, s_u, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
-	g := data.Goods{Id: g_id}
+	g := dao.Goods{Id: g_id}
 	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get goods from database", err)
 		report(w, s_u, "满头大汗的茶博士，表示找不到茶团物资，请稍后再试一次。")
 		return
 	}
 
-	var tGD data.GoodsTeamDetail
+	var tGD dao.GoodsTeamDetail
 
 	tGD.SessUser = s_u
 	tGD.IsAdmin = true
@@ -609,13 +609,13 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := data.GetTeamByUUID(team_uuid)
+	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug("cannot get team from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	if team.Id == data.TeamIdNone || team.Id == data.TeamIdFreelancer || team.Id == data.TeamIdSpaceshipCrew {
+	if team.Id == dao.TeamIdNone || team.Id == dao.TeamIdFreelancer || team.Id == dao.TeamIdSpaceshipCrew {
 		report(w, s_u, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
 	}
@@ -632,14 +632,14 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get []goods from database
-	t_goods_slice, availabilities, err := data.GetGoodsByTeamId(team.Id, r.Context())
+	t_goods_slice, availabilities, err := dao.GetGoodsByTeamId(team.Id, r.Context())
 	if err != nil {
 		util.Debug("cannot get goods from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 
-	var gTS data.GoodsTeamSlice
+	var gTS dao.GoodsTeamSlice
 
 	gTS.SessUser = s_u
 	gTS.IsAdmin = true
@@ -666,18 +666,18 @@ func GoodsFamily(w http.ResponseWriter, r *http.Request) {
 	}
 
 	family_uuid := r.URL.Query().Get("uuid")
-	if family_uuid == "" || family_uuid == data.FamilyUuidUnknown {
+	if family_uuid == "" || family_uuid == dao.FamilyUuidUnknown {
 		report(w, s_u, "你好，请确认提交的家庭识别码资料。")
 		return
 	}
 
-	family := data.Family{Uuid: family_uuid}
+	family := dao.Family{Uuid: family_uuid}
 	if err := family.GetByUuid(); err != nil {
 		util.Debug("Cannot get family from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认后再试一次。")
 		return
 	}
-	if family.Id == data.FamilyIdUnknown {
+	if family.Id == dao.FamilyIdUnknown {
 		report(w, s_u, "茶博士耸耸肩说，无法查看四海为家的物资，请确认后再试一次。")
 		return
 	}
@@ -694,14 +694,14 @@ func GoodsFamily(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get []goods from database for this family
-	f_goods_slice, availabilities, err := data.GetGoodsByFamilyId(family.Id, r.Context())
+	f_goods_slice, availabilities, err := dao.GetGoodsByFamilyId(family.Id, r.Context())
 	if err != nil {
 		util.Debug("cannot get goods from database: ", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
 
-	var gFS data.GoodsFamilySlice
+	var gFS dao.GoodsFamilySlice
 
 	gFS.SessUser = s_u
 	gFS.IsAdmin = true
@@ -762,7 +762,7 @@ func GoodsFamilyUpdatePost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	family, err := data.GetFamily(family_id)
+	family, err := dao.GetFamily(family_id)
 	if err != nil {
 		util.Debug("cannot get family from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
@@ -778,13 +778,13 @@ func GoodsFamilyUpdatePost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
 		return
 	}
-	g_f := data.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
+	g_f := dao.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
 	if err = g_f.GetByFamilyIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get family goods from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
-	g := data.Goods{Id: g_id}
+	g := dao.Goods{Id: g_id}
 	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get goods from database", err)
 		report(w, s_u, "满头大汗的茶博士，表示找不到家庭物资，请稍后再试一次。")
@@ -876,23 +876,23 @@ func GoodsFamilyUpdatePost(w http.ResponseWriter, r *http.Request) {
 	goods_purchase_url_str := r.PostFormValue("purchase_url")
 
 	// Parse state fields
-	physical_state := data.PhysicalNew
+	physical_state := dao.PhysicalNew
 	if ps, err := strconv.Atoi(r.PostFormValue("physical_state")); err == nil && ps >= 0 && ps <= 3 {
-		physical_state = data.PhysicalState(ps)
+		physical_state = dao.PhysicalState(ps)
 	}
 
-	operational_state := data.OperationalNormal
+	operational_state := dao.OperationalNormal
 	if os, err := strconv.Atoi(r.PostFormValue("operational_state")); err == nil && os >= 0 && os <= 3 {
-		operational_state = data.OperationalState(os)
+		operational_state = dao.OperationalState(os)
 	}
 
-	availability := data.Available
+	availability := dao.Available
 	if av, err := strconv.Atoi(r.PostFormValue("availability")); err == nil && av >= 0 && av <= 5 {
-		availability = data.GoodsAvailability(av)
+		availability = dao.GoodsAvailability(av)
 	}
 
 	// Update goods
-	old_goods := data.Goods{
+	old_goods := dao.Goods{
 		Id:                    g.Id,
 		RecorderUserId:        s_u.Id,
 		Name:                  goods_name,
@@ -974,7 +974,7 @@ func GoodsFamilyUpdate(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	family, err := data.GetFamily(family_id)
+	family, err := dao.GetFamily(family_id)
 	if err != nil {
 		util.Debug("cannot get family from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
@@ -990,20 +990,20 @@ func GoodsFamilyUpdate(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "茶博士耸耸肩说，非成员无权查看物资的资料，请确认后再试一次。")
 		return
 	}
-	fg := data.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
+	fg := dao.GoodsFamily{GoodsId: g_id, FamilyId: family_id}
 	if err = fg.GetByFamilyIdAndGoodsId(r.Context()); err != nil {
 		util.Debug("cannot get family goods from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示根据提供的参数无法查到物资资料，请确认后再试一次。")
 		return
 	}
-	g := data.Goods{Id: g_id}
+	g := dao.Goods{Id: g_id}
 	if err = g.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get goods from database", err)
 		report(w, s_u, "满头大汗的茶博士，表示找不到家庭物资，请稍后再试一次。")
 		return
 	}
 
-	var gFD data.GoodsFamilyDetail
+	var gFD dao.GoodsFamilyDetail
 
 	gFD.SessUser = s_u
 	gFD.IsAdmin = true
@@ -1074,12 +1074,12 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
 		return
 	}
-	if team_id == data.TeamIdFreelancer || team_id == data.TeamIdSpaceshipCrew {
+	if team_id == dao.TeamIdFreelancer || team_id == dao.TeamIdSpaceshipCrew {
 		report(w, s_u, "你好，茶博士表示特殊团队的物资今天无法处理，请确认后再试。")
 		return
 	}
 
-	team, err := data.GetTeam(team_id)
+	team, err := dao.GetTeam(team_id)
 	if err != nil {
 		util.Debug("cannot get team from database", err)
 		report(w, s_u, "你好，茶博士表示无法理解物资的团队，请确认后再试。")
@@ -1099,7 +1099,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// Max goods count check
-	gt := data.GoodsTeam{TeamId: team.Id}
+	gt := dao.GoodsTeam{TeamId: team.Id}
 	count_teams_goods, err := gt.CountByTeamId(r.Context())
 	if err != nil {
 		util.Debug("cannot count team goods from database", err)
@@ -1328,22 +1328,22 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	//availability_str := r.PostFormValue("availability")
 
 	// Convert to enum values
-	physical_state := data.PhysicalNew
+	physical_state := dao.PhysicalNew
 	if ps, err := strconv.Atoi(physical_state_str); err == nil && ps >= 0 && ps <= 3 {
-		physical_state = data.PhysicalState(ps)
+		physical_state = dao.PhysicalState(ps)
 	}
 
-	operational_state := data.OperationalNormal
+	operational_state := dao.OperationalNormal
 	if os, err := strconv.Atoi(operational_state_str); err == nil && os >= 0 && os <= 3 {
-		operational_state = data.OperationalState(os)
+		operational_state = dao.OperationalState(os)
 	}
 
-	// availability := data.Available
+	// availability := dao.Available
 	// if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
-	// 	availability = data.Availability(av)
+	// 	availability = dao.Availability(av)
 	// }
 
-	new_goods := data.Goods{
+	new_goods := dao.Goods{
 		RecorderUserId:        s_u.Id,
 		Name:                  goods_name,
 		Nickname:              goods_nickname,
@@ -1379,7 +1379,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create team goods
-	tg := data.GoodsTeam{
+	tg := dao.GoodsTeam{
 		TeamId:  team_id,
 		GoodsId: new_goods.Id,
 	}
@@ -1414,11 +1414,11 @@ func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if team_id == data.TeamIdFreelancer || team_id == data.TeamIdSpaceshipCrew {
+	if team_id == dao.TeamIdFreelancer || team_id == dao.TeamIdSpaceshipCrew {
 		report(w, s_u, "一脸蒙的茶博士，表示任何人都不能处理特殊团队的物资资料，请确认后再试一次。")
 		return
 	}
-	team, err := data.GetTeam(team_id)
+	team, err := dao.GetTeam(team_id)
 	if err != nil {
 		util.Debug("cannot get team from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
@@ -1437,7 +1437,7 @@ func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var gL data.GoodsTeamSlice
+	var gL dao.GoodsTeamSlice
 
 	gL.IsAdmin = true
 	gL.Team = team
@@ -1468,12 +1468,12 @@ func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if family_id == data.FamilyIdUnknown {
+	if family_id == dao.FamilyIdUnknown {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认后再试一次。")
 		return
 	}
 
-	family, err := data.GetFamily(family_id)
+	family, err := dao.GetFamily(family_id)
 	if err != nil {
 		util.Debug("cannot get family from database", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的家庭资料，请确认。")
@@ -1492,7 +1492,7 @@ func GoodsFamilyNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var gL data.GoodsFamilySlice
+	var gL dao.GoodsFamilySlice
 
 	gL.IsAdmin = true
 	gL.Family = family
@@ -1545,7 +1545,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士表示无法理解物资的家庭，请确认后再试。")
 		return
 	}
-	family, err := data.GetFamily(family_id)
+	family, err := dao.GetFamily(family_id)
 	// Check family
 	if err != nil {
 		util.Debug("cannot get family from database", s.Email, err)
@@ -1566,7 +1566,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fgCount := data.GoodsFamily{FamilyId: family.Id}
+	fgCount := dao.GoodsFamily{FamilyId: family.Id}
 	countFamilyGoods, err := fgCount.CountByFamilyId(r.Context())
 	if err != nil {
 		util.Debug("cannot get family goods count from database", err)
@@ -1794,22 +1794,22 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 	operational_state_str := r.PostFormValue("operational_state")
 
 	// Convert to enum values
-	physical_state := data.PhysicalNew
+	physical_state := dao.PhysicalNew
 	if ps, err := strconv.Atoi(physical_state_str); err == nil && ps >= 0 && ps <= 3 {
-		physical_state = data.PhysicalState(ps)
+		physical_state = dao.PhysicalState(ps)
 	}
 
-	operational_state := data.OperationalNormal
+	operational_state := dao.OperationalNormal
 	if os, err := strconv.Atoi(operational_state_str); err == nil && os >= 0 && os <= 3 {
-		operational_state = data.OperationalState(os)
+		operational_state = dao.OperationalState(os)
 	}
 
-	// availability := data.Available
+	// availability := dao.Available
 	// if av, err := strconv.Atoi(availability_str); err == nil && av >= 0 && av <= 5 {
-	// 	availability = data.Availability(av)
+	// 	availability = dao.Availability(av)
 	// }
 
-	new_goods := data.Goods{
+	new_goods := dao.Goods{
 		RecorderUserId:        s_u.Id,
 		Name:                  goods_name,
 		Nickname:              goods_nickname,
@@ -1843,7 +1843,7 @@ func GoodsFamilyNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fg := data.GoodsFamily{
+	fg := dao.GoodsFamily{
 		FamilyId: family.Id,
 		GoodsId:  new_goods.Id,
 	}
@@ -1873,7 +1873,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 
 	goods_uuid := r.URL.Query().Get("uuid")
 
-	t_goods := data.Goods{Uuid: goods_uuid}
+	t_goods := dao.Goods{Uuid: goods_uuid}
 
 	if err = t_goods.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get goods from database", err)
@@ -1882,7 +1882,7 @@ func GoodsCollect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查用户是否已经收藏过
-	t_goods_user := data.GoodsUser{
+	t_goods_user := dao.GoodsUser{
 		UserId:  s_u.Id,
 		GoodsId: t_goods.Id,
 	}
@@ -1935,7 +1935,7 @@ func GoodsUncollect(w http.ResponseWriter, r *http.Request) {
 
 	goods_uuid := r.URL.Query().Get("uuid")
 
-	t_goods := data.Goods{Uuid: goods_uuid}
+	t_goods := dao.Goods{Uuid: goods_uuid}
 
 	if err = t_goods.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get goods from database", err)
@@ -1944,7 +1944,7 @@ func GoodsUncollect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查用户是否已经收藏过
-	t_goods_user := data.GoodsUser{
+	t_goods_user := dao.GoodsUser{
 		UserId:  s_u.Id,
 		GoodsId: t_goods.Id,
 	}
@@ -1983,12 +1983,12 @@ func GoodsEyeOn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	g_u := data.GoodsUser{UserId: s_u.Id}
+	g_u := dao.GoodsUser{UserId: s_u.Id}
 	goods_slice, err := g_u.GetGoodsByUserId()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 无物资是正常情况
-			goods_slice = []data.Goods{} // 明确初始化空切片
+			goods_slice = []dao.Goods{} // 明确初始化空切片
 		} else {
 			// 处理真实错误
 			util.Debug("数据库错误", "error", err)
@@ -1996,7 +1996,7 @@ func GoodsEyeOn(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	gL := data.GoodsUserSlice{
+	gL := dao.GoodsUserSlice{
 		SessUser:   s_u,
 		GoodsSlice: goods_slice,
 	}
@@ -2023,7 +2023,7 @@ func GoodsDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资，请确认。")
 		return
 	}
-	t_goods := data.Goods{Uuid: goods_uuid}
+	t_goods := dao.Goods{Uuid: goods_uuid}
 	if err = t_goods.GetByIdOrUUID(r.Context()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			report(w, s_u, "一脸蒙的茶博士，表示找不到这个物资，请确认后再试。")
@@ -2034,7 +2034,7 @@ func GoodsDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	gL := data.GoodsDetail{
+	gL := dao.GoodsDetail{
 		SessUser: s_u,
 		Goods:    t_goods,
 	}

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -45,7 +45,7 @@ func HazardNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var hazardData struct {
-		SessUser  data.User
+		SessUser  dao.User
 		ReturnURL string
 	}
 	hazardData.SessUser = s_u
@@ -92,7 +92,7 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 		category = 6 // 默认其他
 	}
 
-	hazard := data.Hazard{
+	hazard := dao.Hazard{
 		UserId:      s_u.Id,
 		Name:        name,
 		Nickname:    strings.TrimSpace(r.PostFormValue("nickname")),
@@ -155,7 +155,7 @@ func HazardDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hazard := data.Hazard{Id: id}
+	hazard := dao.Hazard{Id: id}
 	if err := hazard.GetByIdOrUUID(); err != nil {
 		util.Debug("Cannot get hazard by id", id, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -163,17 +163,17 @@ func HazardDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取记录者信息
-	recorder, err := data.GetUser(hazard.UserId)
+	recorder, err := dao.GetUser(hazard.UserId)
 	if err != nil {
 		util.Debug("Cannot get recorder user", hazard.UserId, err)
 		// 如果获取记录者失败，使用默认值
-		recorder = data.User{Id: 0, Name: "未知用户"}
+		recorder = dao.User{Id: 0, Name: "未知用户"}
 	}
 
 	var hazardData struct {
-		SessUser data.User
-		Hazard   data.Hazard
-		Recorder data.User
+		SessUser dao.User
+		Hazard   dao.Hazard
+		Recorder dao.User
 	}
 	hazardData.SessUser = s_u
 	hazardData.Hazard = hazard

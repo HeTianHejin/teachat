@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
 )
@@ -57,7 +57,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t_proj := data.Project{Uuid: projectUuid}
+	t_proj := dao.Project{Uuid: projectUuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", projectUuid, err)
 		report(w, s_u, "项目不存在")
@@ -65,7 +65,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 尝试读取是否已经存在seeseek记录
-	existingSeeSeek, err := data.GetSeeSeekByProjectId(t_proj.Id, r.Context())
+	existingSeeSeek, err := dao.GetSeeSeekByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" failed to check existing see-seek by project_id", err)
 		report(w, s_u, "查询已有看看记录失败")
@@ -73,7 +73,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err == nil && existingSeeSeek.Id > 0 {
 		// 已存在看看记录
-		if existingSeeSeek.Status == data.SeeSeekStatusCompleted {
+		if existingSeeSeek.Status == dao.SeeSeekStatusCompleted {
 			report(w, s_u, "该项目的看看记录已完成，不能重复创建")
 			return
 		}
@@ -112,7 +112,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 尝试查找环境条件，测试是否存在该id的环境条件记录
-	env := data.Environment{Id: environmentId}
+	env := dao.Environment{Id: environmentId}
 	if err := env.GetByIdOrUUID(); err != nil {
 		util.Debug(" Cannot get environment by id", environmentId, err)
 		report(w, s_u, "环境条件不存在，请确认")
@@ -128,7 +128,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	payeeFamilyId, _ := strconv.Atoi(r.FormValue("payee_family_id"))
 
 	// 创建SeeSeek记录
-	seeSeek := data.SeeSeek{
+	seeSeek := dao.SeeSeek{
 		Name:             name,
 		Nickname:         nickname,
 		Description:      description,
@@ -141,11 +141,11 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 		PayeeTeamId:      payeeTeamId,
 		PayeeFamilyId:    payeeFamilyId,
 		VerifierUserId:   s_u.Id,
-		VerifierFamilyId: data.FamilyIdUnknown,
-		VerifierTeamId:   data.TeamIdVerifier,
+		VerifierFamilyId: dao.FamilyIdUnknown,
+		VerifierTeamId:   dao.TeamIdVerifier,
 		Category:         category,
-		Status:           data.SeeSeekStatusInProgress, // 进行中
-		Step:             data.SeeSeekStepEnvironment,  // 步骤1：环境条件
+		Status:           dao.SeeSeekStatusInProgress, // 进行中
+		Step:             dao.SeeSeekStepEnvironment,  // 步骤1：环境条件
 		StartTime:        startTime,
 	}
 
@@ -156,7 +156,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建环境关联记录
-	seeSeekEnv := data.SeeSeekEnvironment{
+	seeSeekEnv := dao.SeeSeekEnvironment{
 		SeeSeekId:     seeSeek.Id,
 		EnvironmentId: environmentId,
 	}
@@ -192,7 +192,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
-	t_proj := data.Project{Uuid: uuid}
+	t_proj := dao.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -207,7 +207,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取茶台的“约茶”资料
-	proj_appointment, err := data.GetAppointmentByProjectId(t_proj.Id, r.Context())
+	proj_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get project appointment", t_proj.Id, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -239,7 +239,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查是否已存在当前project_id的see-seek记录
-	existingSeeSeek, err := data.GetSeeSeekByProjectId(t_proj.Id, r.Context())
+	existingSeeSeek, err := dao.GetSeeSeekByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" Cannot get existing see-seek", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -253,7 +253,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取预设的4个通用场所环境,id为1,2,3,4
-	environments, err := data.GetDefaultEnvironments(r.Context())
+	environments, err := dao.GetDefaultEnvironments(r.Context())
 	if err != nil {
 		util.Debug(" Cannot get default environments", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -262,7 +262,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 
 	// 准备页面数据
 
-	var sSDpD data.SeeSeekDetailTemplateData
+	var sSDpD dao.SeeSeekDetailTemplateData
 	sSDpD.SessUser = s_u
 	sSDpD.IsVerifier = is_verifier
 
@@ -314,17 +314,17 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取SeeSeek记录
-	seeSeek := data.SeeSeek{Uuid: uuid}
+	seeSeek := dao.SeeSeek{Uuid: uuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			//尝试project的uuid
-			project := data.Project{Uuid: uuid}
+			project := dao.Project{Uuid: uuid}
 			if err := project.GetByUuid(); err != nil {
 				util.Debug("Cannot get project by uuid", uuid, err)
 				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
-			seeSeek, err = data.GetSeeSeekByProjectId(project.Id, r.Context())
+			seeSeek, err = dao.GetSeeSeekByProjectId(project.Id, r.Context())
 			if err != nil {
 				if err == sql.ErrNoRows {
 					report(w, s_u, "该项目还没有“看看”记录")
@@ -342,7 +342,7 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取项目信息
-	project := data.Project{Id: seeSeek.ProjectId}
+	project := dao.Project{Id: seeSeek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project", err)
 		report(w, s_u, "获取项目信息失败")
@@ -380,7 +380,7 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	templateData := data.SeeSeekDetailTemplateData{
+	templateData := dao.SeeSeekDetailTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         isVerifier(s_u.Id),
 		SeeSeekBean:        seeSeekBean,

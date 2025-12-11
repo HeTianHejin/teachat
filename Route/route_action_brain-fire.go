@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
 )
@@ -44,7 +44,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t_proj := data.Project{Uuid: uuid}
+	t_proj := dao.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -60,14 +60,14 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查是否已存在当前project_id的brain-fire记录
-	existingBrainFire, err := data.GetBrainFireByProjectId(t_proj.Id, r.Context())
+	existingBrainFire, err := dao.GetBrainFireByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" Cannot get existing brain-fire", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	if err == nil && existingBrainFire.Id > 0 {
-		if existingBrainFire.Status == data.BrainFireStatusExtinguished {
+		if existingBrainFire.Status == dao.BrainFireStatusExtinguished {
 			report(w, s_u, "该项目的脑火记录已完成，不能重复创建")
 			return
 		}
@@ -75,7 +75,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取茶台的"约茶"资料
-	proj_appointment, err := data.GetAppointmentByProjectId(t_proj.Id, r.Context())
+	proj_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get project appointment", t_proj.Id, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -110,7 +110,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取预设的环境条件
-	environments, err := data.GetDefaultEnvironments(r.Context())
+	environments, err := dao.GetDefaultEnvironments(r.Context())
 	if err != nil {
 		util.Debug(" Cannot get default environments", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -118,7 +118,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	var bfDtD data.BrainFireDetailTemplateData
+	var bfDtD dao.BrainFireDetailTemplateData
 	bfDtD.SessUser = s_u
 	bfDtD.IsVerifier = is_verifier
 
@@ -176,21 +176,21 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t_proj := data.Project{Uuid: projectUuid}
+	t_proj := dao.Project{Uuid: projectUuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", projectUuid, err)
 		report(w, s_u, "项目不存在")
 		return
 	}
 	// 检查是否已存在当前project_id的brain-fire记录
-	existingBrainFire, err := data.GetBrainFireByProjectId(t_proj.Id, r.Context())
+	existingBrainFire, err := dao.GetBrainFireByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" Cannot get existing brain-fire", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	if err == nil && existingBrainFire.Id > 0 {
-		if existingBrainFire.Status >= data.BrainFireStatusBurning {
+		if existingBrainFire.Status >= dao.BrainFireStatusBurning {
 			report(w, s_u, "该项目的脑火记录已存在，不能重复创建")
 			return
 		}
@@ -240,7 +240,7 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 	payeeFamilyId, _ := strconv.Atoi(r.FormValue("payee_family_id"))
 
 	// 创建BrainFire记录
-	brainFire := data.BrainFire{
+	brainFire := dao.BrainFire{
 		ProjectId:        t_proj.Id,
 		StartTime:        startTime,
 		EndTime:          endTime,
@@ -256,9 +256,9 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 		PayeeTeamId:      payeeTeamId,
 		PayeeFamilyId:    payeeFamilyId,
 		VerifierUserId:   s_u.Id,
-		VerifierFamilyId: data.FamilyIdUnknown,
-		VerifierTeamId:   data.TeamIdVerifier,
-		Status:           data.BrainFireStatusBurning, // 燃烧中
+		VerifierFamilyId: dao.FamilyIdUnknown,
+		VerifierTeamId:   dao.TeamIdVerifier,
+		Status:           dao.BrainFireStatusBurning, // 燃烧中
 		BrainFireClass:   brainFireClass,
 		BrainFireType:    brainFireType,
 	}
@@ -302,17 +302,17 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取BrainFire记录
-	brainFire := data.BrainFire{Uuid: uuid}
+	brainFire := dao.BrainFire{Uuid: uuid}
 	if err := brainFire.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			// 尝试project的uuid
-			project := data.Project{Uuid: uuid}
+			project := dao.Project{Uuid: uuid}
 			if err := project.GetByUuid(); err != nil {
 				util.Debug("Cannot get project by uuid", uuid, err)
 				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
-			brainFire, err = data.GetBrainFireByProjectId(project.Id, r.Context())
+			brainFire, err = dao.GetBrainFireByProjectId(project.Id, r.Context())
 			if err != nil {
 				if err == sql.ErrNoRows {
 					report(w, s_u, "该项目还没有脑火记录")
@@ -330,7 +330,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取项目信息
-	pr := data.Project{Id: brainFire.ProjectId}
+	pr := dao.Project{Id: brainFire.ProjectId}
 	if err := pr.Get(); err != nil {
 		util.Debug("Cannot get project", err)
 		report(w, s_u, "获取项目信息失败")
@@ -368,7 +368,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	templateData := data.BrainFireDetailTemplateData{
+	templateData := dao.BrainFireDetailTemplateData{
 		SessUser:           s_u,
 		BrainFireBean:      brainFireBean,
 		ProjectBean:        projectBean,
@@ -398,7 +398,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 		is_verifier := isVerifier(s_u.Id)
 		templateData.IsVerifier = is_verifier
 	}
-	if ob.Class == data.ObClassClose {
+	if ob.Class == dao.ObClassClose {
 		is_invited, err := ob.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug("Cannot check if user is invited to objective", err)
@@ -408,7 +408,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 		templateData.IsInvited = is_invited
 	}
 	// 检测私密脑火的访问权限
-	if brainFire.Id > 0 && brainFire.BrainFireType == data.BrainFireTypePrivate {
+	if brainFire.Id > 0 && brainFire.BrainFireType == dao.BrainFireTypePrivate {
 		if !is_admin && !templateData.IsMaster && !templateData.IsVerifier && !templateData.IsInvited {
 			util.Debug("User has no access to this private brain-fire", "user_id:", s_u.Id, "brain_fire_id:", brainFire.Id)
 			report(w, s_u, "你没有权限查看此私密脑火记录")

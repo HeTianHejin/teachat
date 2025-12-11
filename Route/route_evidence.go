@@ -9,7 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
 )
@@ -73,7 +73,7 @@ func EvidenceNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := struct {
-		SessUser data.User
+		SessUser dao.User
 	}{
 		SessUser: s_u,
 	}
@@ -120,11 +120,11 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 	category, _ := strconv.Atoi(categoryStr)
 	visibility, _ := strconv.Atoi(visibilityStr)
 
-	evidence := data.Evidence{
+	evidence := dao.Evidence{
 		Description:    description,
 		RecorderUserId: s_u.Id,
 		Note:           note,
-		Category:       data.EvidenceCategory(category),
+		Category:       dao.EvidenceCategory(category),
 		OriginalURL:    originalURL,
 		Visibility:     visibility,
 	}
@@ -197,7 +197,7 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	evidence := data.Evidence{Id: id}
+	evidence := dao.Evidence{Id: id}
 	if err := evidence.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("Cannot get evidence by id", id, err)
 		report(w, s_u, "凭证不存在")
@@ -205,20 +205,20 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查权限：如果是私密凭证，需要验证权限
-	if evidence.Visibility == data.VisibilityPrivate {
+	if evidence.Visibility == dao.VisibilityPrivate {
 		// 获取凭证关联的手工艺
-		var handicraft data.Handicraft
-		if inaugurations, err := data.GetInaugurationsByEvidenceId(evidence.Id); err == nil && len(inaugurations) > 0 {
+		var handicraft dao.Handicraft
+		if inaugurations, err := dao.GetInaugurationsByEvidenceId(evidence.Id); err == nil && len(inaugurations) > 0 {
 			handicraft.Id = inaugurations[0].HandicraftId
-		} else if processRecords, err := data.GetProcessRecordsByEvidenceId(evidence.Id); err == nil && len(processRecords) > 0 {
+		} else if processRecords, err := dao.GetProcessRecordsByEvidenceId(evidence.Id); err == nil && len(processRecords) > 0 {
 			handicraft.Id = processRecords[0].HandicraftId
-		} else if endings, err := data.GetEndingsByEvidenceId(evidence.Id); err == nil && len(endings) > 0 {
+		} else if endings, err := dao.GetEndingsByEvidenceId(evidence.Id); err == nil && len(endings) > 0 {
 			handicraft.Id = endings[0].HandicraftId
 		}
 
 		if handicraft.Id > 0 {
 			if err := handicraft.GetByIdOrUUID(r.Context()); err == nil {
-				project := data.Project{Id: handicraft.ProjectId}
+				project := dao.Project{Id: handicraft.ProjectId}
 				if err := project.Get(); err == nil {
 					objective, err := project.Objective()
 					if err == nil {
@@ -236,8 +236,8 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := struct {
-		SessUser   data.User
-		Evidence   data.Evidence
+		SessUser   dao.User
+		Evidence   dao.Evidence
 		IsVerifier bool
 	}{
 		SessUser:   s_u,

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -30,19 +30,19 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 	uuid := r.URL.Query().Get("uuid")
 
 	//检查是否将特殊茶团作为默认茶团
-	if uuid == data.TeamUUIDFreelancer || uuid == data.TeamUUIDSpaceshipCrew {
+	if uuid == dao.TeamUUIDFreelancer || uuid == dao.TeamUUIDSpaceshipCrew {
 		report(w, s_u, "你好，茶博士竟然说，陛下你不能将特殊茶团作为默认茶团，请确认。")
 		return
 	}
 	//查询目标茶团是否存在
-	t_team, err := data.GetTeamByUUID(uuid)
+	t_team, err := dao.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get team by given uuid", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
 		return
 	}
 
-	if t_team.Id == data.TeamIdFreelancer {
+	if t_team.Id == dao.TeamIdFreelancer {
 		report(w, s_u, "你好，茶博士竟然说，陛下你不能将特殊茶团作为默认茶团，请确认。")
 		return
 	}
@@ -58,7 +58,7 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
 		return
 	}
-	if lastDefaultTeam.Id > data.TeamIdFreelancer {
+	if lastDefaultTeam.Id > dao.TeamIdFreelancer {
 		if lastDefaultTeam.Id == t_team.Id {
 			report(w, s_u, "你好，茶博士竟然说，陛下你已经设置过这个默认$事业茶团了，请确认。")
 			return
@@ -78,7 +78,7 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//设置默认茶团
-	new_default_team := data.UserDefaultTeam{
+	new_default_team := dao.UserDefaultTeam{
 		UserId: s_u.Id,
 		TeamId: t_team.Id,
 	}
@@ -106,7 +106,7 @@ func NewTeamGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var tSPD data.TeamSquare
+	var tSPD dao.TeamSquare
 	tSPD.SessUser = s_u
 	generateHTML(w, &tSPD, "layout", "navbar.private", "team.new")
 }
@@ -175,14 +175,14 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 
 	//检测class是否合规
 	switch class {
-	case data.TeamClassOpenDraft, data.TeamClassCloseDraft:
+	case dao.TeamClassOpenDraft, dao.TeamClassCloseDraft:
 		break
 	default:
 		report(w, s_u, "你好，茶博士摸摸头，竟然说茶团类别太多或者太少，未能创建新茶团。")
 		return
 	}
 	//检测同名的team是否已经存在，团队不允许同名
-	old_team := data.Team{Name: new_name}
+	old_team := dao.Team{Name: new_name}
 
 	if err = old_team.GetByName(); err == nil {
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个茶团名称已经被占用，请换一个更响亮的团名，再试一次。")
@@ -209,7 +209,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 
 	logo := "teamLogo"
 	isPrivate := r.PostFormValue("is_private") == "true"
-	new_team := data.Team{
+	new_team := dao.Team{
 		Name:         new_name,
 		Abbreviation: abbr + "$",
 		Mission:      mission,
@@ -228,7 +228,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 
 	if util.Config.PoliteMode {
 		//启用了友邻蒙评
-		if err = createAndSendAcceptNotification(new_team.Id, data.AcceptObjectTypeTeam, s_u.Id, r.Context()); err != nil {
+		if err = createAndSendAcceptNotification(new_team.Id, dao.AcceptObjectTypeTeam, s_u.Id, r.Context()); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, s_u, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
@@ -238,7 +238,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		}
 		// 提示用户新茶团草稿保存成功
 		text := ""
-		if s_u.Gender == data.User_Gender_Female {
+		if s_u.Gender == dao.User_Gender_Female {
 			text = fmt.Sprintf("%s 女士，你好，登记 %s 草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
 		} else {
 			text = fmt.Sprintf("%s 先生，你好，登记 %s 草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
@@ -246,10 +246,10 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, text)
 	} else {
 		switch new_team.Class {
-		case data.TeamClassOpenDraft:
-			new_team.Class = data.TeamClassOpen
-		case data.TeamClassCloseDraft:
-			new_team.Class = data.TeamClassClose
+		case dao.TeamClassOpenDraft:
+			new_team.Class = dao.TeamClassOpen
+		case dao.TeamClassCloseDraft:
+			new_team.Class = dao.TeamClassClose
 		}
 		if err := new_team.Update(); err != nil {
 			util.Debug("Cannot update team", err)
@@ -275,7 +275,7 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var ts data.TeamSquare
+	var ts dao.TeamSquare
 	ts.SessUser = s_u
 
 	// 获取过滤参数
@@ -291,7 +291,7 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 根据过滤条件筛选团队
-	var filtered_teams []data.Team
+	var filtered_teams []dao.Team
 	for _, team := range team_slice {
 		if filter == "public" && !team.IsPrivate {
 			filtered_teams = append(filtered_teams, team)
@@ -313,7 +313,7 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type PageData struct {
-		data.TeamSquare
+		dao.TeamSquare
 		PageType      string
 		CurrentFilter string
 	}
@@ -340,7 +340,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tS data.TeamSquare
+	var tS dao.TeamSquare
 	tS.SessUser = s_u
 
 	// 获取过滤参数
@@ -357,7 +357,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 根据过滤条件筛选团队
-	var filtered_teams []data.Team
+	var filtered_teams []dao.Team
 	for _, team := range survival_team_slice {
 		if filter == "public" && !team.IsPrivate {
 			filtered_teams = append(filtered_teams, team)
@@ -396,7 +396,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 
 	// 添加过滤标志到模板数据
 	type PageData struct {
-		data.TeamSquare
+		dao.TeamSquare
 		CurrentFilter string
 		PageType      string
 	}
@@ -424,7 +424,7 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var ts data.TeamSquare
+	var ts dao.TeamSquare
 	ts.SessUser = s_u
 
 	// 获取过滤参数
@@ -441,7 +441,7 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 根据过滤条件筛选团队
-	var filtered_teams []data.Team
+	var filtered_teams []dao.Team
 	for _, team := range team_slice {
 		if filter == "public" && !team.IsPrivate {
 			filtered_teams = append(filtered_teams, team)
@@ -463,7 +463,7 @@ func EmployedTeams(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type PageData struct {
-		data.TeamSquare
+		dao.TeamSquare
 		PageType      string
 		CurrentFilter string
 	}
@@ -499,12 +499,12 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if uuid == data.TeamUUIDFreelancer {
+	if uuid == dao.TeamUUIDFreelancer {
 		report(w, s_u, "转会自由人，星际旅行特立独行的散客大集合，不属于任何$事业茶团。")
 		return
 	}
 
-	team, err := data.GetTeamByUUID(uuid)
+	team, err := dao.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Debug(uuid, " Cannot get team given uuid.")
 		report(w, s_u, "你好，满头大汗的茶博士未能帮忙查看这个茶团资料，请稍后再试。")
@@ -524,7 +524,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var tD data.TeamDetail
+	var tD dao.TeamDetail
 
 	teamBean, err := fetchTeamBean(team)
 	if err != nil {
@@ -535,10 +535,10 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	tD.TeamBean = teamBean
 
 	// 准备页面数据
-	var tc data.TeamMemberBean //核心成员资料荚
-	var tn data.TeamMemberBean //普通成员资料荚
-	var tcSlice []data.TeamMemberBean
-	var tnSlice []data.TeamMemberBean
+	var tc dao.TeamMemberBean //核心成员资料荚
+	var tn dao.TeamMemberBean //普通成员资料荚
+	var tcSlice []dao.TeamMemberBean
+	var tnSlice []dao.TeamMemberBean
 
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
@@ -555,7 +555,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	//据teamMembers中的UserId获取User
 	for _, member := range teamCoreMembers {
-		cm_user, err := data.GetUser(member.UserId)
+		cm_user, err := dao.GetUser(member.UserId)
 		if err != nil {
 			util.Debug(" Cannot get user", err)
 			report(w, s_u, "你好，茶博士为你效劳中，请稍后再试。")
@@ -583,7 +583,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		tcSlice = append(tcSlice, tc)
 	}
 	for _, member := range teamNormalMembers {
-		tn_user, err := data.GetUser(member.UserId)
+		tn_user, err := dao.GetUser(member.UserId)
 		if err != nil {
 			util.Debug(" Cannot get user", err)
 			report(w, s_u, "你好，茶博士为你疯狂效劳中，请稍后再试。")
@@ -655,7 +655,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 			tD.IsFounder = true
 		}
 		//检查茶团是否有待处理的加盟申请书
-		count, err := data.GetMemberApplicationByTeamIdAndStatusCount(tD.TeamBean.Team.Id)
+		count, err := dao.GetMemberApplicationByTeamIdAndStatusCount(tD.TeamBean.Team.Id)
 		if err != nil {
 			util.Debug("Cannot get member application count", err)
 			report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
@@ -666,12 +666,12 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//检查茶团是否有待处理的退出声明
-		resignations, err := data.GetResignationsByTeamId(tD.TeamBean.Team.Id)
+		resignations, err := dao.GetResignationsByTeamId(tD.TeamBean.Team.Id)
 		if err != nil {
 			util.Debug("Cannot get resignations", err)
 		} else {
 			for _, r := range resignations {
-				if r.Status < data.ResignationStatusApproved {
+				if r.Status < dao.ResignationStatusApproved {
 					tD.HasResignation = true
 					break
 				}
@@ -680,14 +680,14 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 查询团队所属集团
-	group, err := data.GetGroupByTeamId(team.Id)
+	group, err := dao.GetGroupByTeamId(team.Id)
 	if err == nil && group != nil {
-		groupBean := data.GroupBean{
+		groupBean := dao.GroupBean{
 			Group:         *group,
 			CreatedAtDate: group.CreatedAtDate(),
-			Open:          group.Class == data.GroupClassOpen,
+			Open:          group.Class == dao.GroupClassOpen,
 		}
-		founder, err := data.GetUser(group.FounderId)
+		founder, err := dao.GetUser(group.FounderId)
 		if err == nil {
 			groupBean.Founder = founder
 		}
@@ -696,8 +696,8 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 
 	// 获取团队消息盒子
 	if tD.IsMember {
-		var messageBox data.MessageBox
-		err := messageBox.GetMessageBoxByTypeAndObjectId(data.MessageBoxTypeTeam, team.Id)
+		var messageBox dao.MessageBox
+		err := messageBox.GetMessageBoxByTypeAndObjectId(dao.MessageBoxTypeTeam, team.Id)
 		if err == nil {
 			// 获取用户可见的消息总数（未读+已读）
 			totalCount := messageBox.AllMessagesCount()
@@ -747,14 +747,14 @@ func ManageTeamIndexGet(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	t_uuid := vals.Get("uuid")
 	//一次管理一个茶团，根据提交的team.Uuid来确定
-	team, err := data.GetTeamByUUID(t_uuid)
+	team, err := dao.GetTeamByUUID(t_uuid)
 	if err != nil {
 		util.Debug(" Cannot get this team", err)
 		report(w, s_u, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 		return
 	}
 
-	var tD data.TeamDetail
+	var tD dao.TeamDetail
 	//检查一下当前用户是否有权管理这个茶团？即teamMember中Role为"ceo".或者是茶团创建人
 	is_manager := false
 	//如果是创建人，那么就可以管理这个茶团
@@ -808,8 +808,8 @@ func ManageTeamIndexGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var tCMBSlice []data.TeamMemberBean
-	var tNMBSlice []data.TeamMemberBean
+	var tCMBSlice []dao.TeamMemberBean
+	var tNMBSlice []dao.TeamMemberBean
 
 	tCMBSlice, err = fetchTeamMemberBeanSlice(teamCoreMembers)
 	if err != nil {
@@ -835,16 +835,16 @@ func ManageTeamIndexGet(w http.ResponseWriter, r *http.Request) {
 	tD.SessUser = s_u
 
 	// 查询团队所属集团
-	group, err := data.GetGroupByTeamId(team.Id)
+	group, err := dao.GetGroupByTeamId(team.Id)
 	if err == nil && group != nil {
 		// 团队已加入集团
-		groupBean := data.GroupBean{
+		groupBean := dao.GroupBean{
 			Group:         *group,
 			CreatedAtDate: group.CreatedAtDate(),
-			Open:          group.Class == data.GroupClassOpen,
+			Open:          group.Class == dao.GroupClassOpen,
 		}
 		// 获取集团创建者
-		founder, err := data.GetUser(group.FounderId)
+		founder, err := dao.GetUser(group.FounderId)
 		if err == nil {
 			groupBean.Founder = founder
 		}
@@ -876,7 +876,7 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//这个茶团是否存在？
-	team, err := data.GetTeam(team_id)
+	team, err := dao.GetTeam(team_id)
 	if err != nil {
 		util.Debug(" Cannot get ceo of this team", err)
 		report(w, s_u, "你好，茶博士未能找到此茶团资料，请确认后再试。")
@@ -967,7 +967,7 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uuid := r.FormValue("team_uuid")
-	team, err := data.GetTeamByUUID(uuid)
+	team, err := dao.GetTeamByUUID(uuid)
 	if err != nil {
 		report(w, s_u, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
@@ -997,7 +997,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uuid := r.URL.Query().Get("uuid")
-	team, err := data.GetTeamByUUID(uuid)
+	team, err := dao.GetTeamByUUID(uuid)
 	if err != nil {
 		report(w, s_u, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
@@ -1030,7 +1030,7 @@ func TeamApplications(w http.ResponseWriter, r *http.Request) {
 
 	v := r.URL.Query()
 	tUid := v.Get("uuid")
-	team, err := data.GetTeamByUUID(tUid)
+	team, err := dao.GetTeamByUUID(tUid)
 	if err != nil {
 		util.Debug("Cannot get team", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
@@ -1051,7 +1051,7 @@ func TeamApplications(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 查询全部申请书
-	applications, err := data.GetMemberApplicationByTeamId(team.Id)
+	applications, err := dao.GetMemberApplicationByTeamId(team.Id)
 	if err != nil {
 		util.Debug("Cannot get applications", err)
 		report(w, s_u, "你好，茶博士正在努力的查找申请书，请稍后再试。")
@@ -1072,7 +1072,7 @@ func TeamApplications(w http.ResponseWriter, r *http.Request) {
 		end = totalCount
 	}
 
-	var pageApplications []data.MemberApplication
+	var pageApplications []dao.MemberApplication
 	if totalCount > 0 {
 		pageApplications = applications[start:end]
 	}
@@ -1085,14 +1085,14 @@ func TeamApplications(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var mAL data.MemberApplicationSlice
+	var mAL dao.MemberApplicationSlice
 	mAL.SessUser = s_u
 	mAL.Team = team
 	mAL.MemberApplicationBeanSlice = applicationBeans
 
 	// 分页信息
 	type PageData struct {
-		data.MemberApplicationSlice
+		dao.MemberApplicationSlice
 		CurrentPage int
 		TotalPages  int
 		HasPrev     bool
@@ -1129,7 +1129,7 @@ func TeamInvitations(w http.ResponseWriter, r *http.Request) {
 	//根据用户提交的Uuid，查询获取团队信息
 	v := r.URL.Query()
 	tUid := v.Get("uuid")
-	team, err := data.GetTeamByUUID(tUid)
+	team, err := dao.GetTeamByUUID(tUid)
 	if err != nil {
 		util.Debug(" Cannot get team", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
@@ -1171,14 +1171,14 @@ func TeamInvitations(w http.ResponseWriter, r *http.Request) {
 		end = totalCount
 	}
 
-	var pageInvitations []data.Invitation
+	var pageInvitations []dao.Invitation
 	if totalCount > 0 {
 		pageInvitations = t_invi_slice[start:end]
 	}
 
 	// 分页信息
 	type PageData struct {
-		data.InvitationsPageData
+		dao.InvitationsPageData
 		CurrentPage int
 		TotalPages  int
 		HasPrev     bool
@@ -1186,7 +1186,7 @@ func TeamInvitations(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageData := PageData{
-		InvitationsPageData: data.InvitationsPageData{
+		InvitationsPageData: dao.InvitationsPageData{
 			SessUser:        s_u,
 			Team:            team,
 			InvitationSlice: pageInvitations,
@@ -1218,7 +1218,7 @@ func TeamMembersLeft(w http.ResponseWriter, r *http.Request) {
 	}
 	vals := r.URL.Query()
 	team_uuid := vals.Get("uuid")
-	team, err := data.GetTeamByUUID(team_uuid)
+	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(team_uuid, "Cannot get team by uuid", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
@@ -1226,7 +1226,7 @@ func TeamMembersLeft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 查询已离开的成员（status=3）
-	leftMembers, err := data.GetResignedMembersByTeamId(team.Id)
+	leftMembers, err := dao.GetResignedMembersByTeamId(team.Id)
 	if err != nil {
 		util.Debug(team.Id, "Cannot get resigned members", err)
 		report(w, s_u, "你好，茶博士正在努力的查找离开成员，请稍后再试。")
@@ -1234,9 +1234,9 @@ func TeamMembersLeft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type PageData struct {
-		SessUser        data.User
-		Team            data.Team
-		LeftMemberSlice []data.TeamMember
+		SessUser        dao.User
+		Team            dao.Team
+		LeftMemberSlice []dao.TeamMember
 	}
 
 	pageData := PageData{
@@ -1250,7 +1250,7 @@ func TeamMembersLeft(w http.ResponseWriter, r *http.Request) {
 }
 
 // canManageTeam 检查用户是否有权限管理团队（核心成员或创建人）
-func canManageTeam(team *data.Team, s_u data.User, w http.ResponseWriter) bool {
+func canManageTeam(team *dao.Team, s_u dao.User, w http.ResponseWriter) bool {
 	isCoreMember, err := team.IsCoreMember(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot get core members", err)
@@ -1299,7 +1299,7 @@ func EditTeamGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := data.GetTeamByUUID(uuid)
+	team, err := dao.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get team by uuid", err)
 		report(w, s_u, "你好，未能找到该茶团。")
@@ -1323,8 +1323,8 @@ func EditTeamGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser data.User
-		Team     data.Team
+		SessUser dao.User
+		Team     dao.Team
 	}
 	pageData.SessUser = s_u
 	pageData.Team = team
@@ -1373,7 +1373,7 @@ func EditTeamPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取茶团并检查权限
-	team, err := data.GetTeam(teamId)
+	team, err := dao.GetTeam(teamId)
 	if err != nil {
 		util.Debug("Cannot get team", err)
 		report(w, s_u, "你好，未找到该茶团。")
@@ -1425,7 +1425,7 @@ func EditTeamPost(w http.ResponseWriter, r *http.Request) {
 
 	// 检查名称是否与其他茶团重复（排除自己）
 	if name != team.Name {
-		existingTeam := data.Team{Name: name}
+		existingTeam := dao.Team{Name: name}
 		if err := existingTeam.GetByName(); err == nil {
 			report(w, s_u, "你好，这个茶团名称已经被占用，请换一个更响亮的团名。")
 			return
@@ -1437,7 +1437,7 @@ func EditTeamPost(w http.ResponseWriter, r *http.Request) {
 		abbreviation = abbreviation + "$"
 	}
 	if abbreviation != team.Abbreviation {
-		existingTeam := data.Team{Abbreviation: abbreviation}
+		existingTeam := dao.Team{Abbreviation: abbreviation}
 		if err := existingTeam.GetByAbbreviation(); err == nil {
 			report(w, s_u, "你好，这个茶团简称已经被占用，请换一个更响亮的团名简称。")
 			return
@@ -1479,7 +1479,7 @@ func TeamMemberAddGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := data.GetTeamByUUID(uuid)
+	team, err := dao.GetTeamByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get team by uuid", err)
 		report(w, s_u, "你好，未能找到该茶团。")
@@ -1500,8 +1500,8 @@ func TeamMemberAddGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser data.User
-		Team     data.Team
+		SessUser dao.User
+		Team     dao.Team
 	}
 	pageData.SessUser = s_u
 	pageData.Team = team
@@ -1541,7 +1541,7 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeamByUUID(teamUuid)
+	team, err := dao.GetTeamByUUID(teamUuid)
 	if err != nil {
 		util.Debug("Cannot get team by uuid", err)
 		report(w, s_u, "你好，未能找到该茶团。")
@@ -1562,9 +1562,9 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser                 data.User
-		Team                     data.Team
-		UserDefaultDataBeanSlice []data.UserDefaultDataBean
+		SessUser                 dao.User
+		Team                     dao.Team
+		UserDefaultDataBeanSlice []dao.UserDefaultDataBean
 		IsEmpty                  bool
 	}
 	pageData.SessUser = s_u
@@ -1580,7 +1580,7 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, err := data.GetUser(userId)
+		user, err := dao.GetUser(userId)
 		if err == nil && user.Id > 0 {
 			userBean, err := fetchUserDefaultBean(user)
 			if err == nil {
@@ -1596,7 +1596,7 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, err := data.GetUserByEmail(keyword, r.Context())
+		user, err := dao.GetUserByEmail(keyword, r.Context())
 		if err == nil && user.Id > 0 {
 			userBean, err := fetchUserDefaultBean(user)
 			if err == nil {
@@ -1607,7 +1607,7 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 
 	case "user_name":
 		// 按花名查询
-		userSlice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		userSlice, err := dao.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err == nil && len(userSlice) >= 1 {
 			userBeanSlice, err := fetchUserDefaultDataBeanSlice(userSlice)
 			if err == nil && len(userBeanSlice) >= 1 {
@@ -1625,8 +1625,8 @@ func HandleTeamSearchUser(w http.ResponseWriter, r *http.Request) {
 }
 
 // createTeamWithFounderMember 使用事务创建团队并将创建人登记为第一个成员（CEO）
-func createTeamWithFounderMember(team *data.Team, founderUserId int) error {
-	tx, err := data.BeginTx()
+func createTeamWithFounderMember(team *dao.Team, founderUserId int) error {
+	tx, err := dao.BeginTx()
 	if err != nil {
 		return err
 	}
@@ -1636,11 +1636,11 @@ func createTeamWithFounderMember(team *data.Team, founderUserId int) error {
 		return err
 	}
 
-	member := data.TeamMember{
+	member := dao.TeamMember{
 		TeamId: team.Id,
 		UserId: founderUserId,
-		Role:   data.RoleCEO,
-		Status: data.TeMemberStatusActive,
+		Role:   dao.RoleCEO,
+		Status: dao.TeMemberStatusActive,
 	}
 	if err := member.CreateWithTx(tx); err != nil {
 		return err

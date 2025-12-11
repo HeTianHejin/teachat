@@ -2,7 +2,7 @@ package route
 
 import (
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -23,7 +23,7 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户所在的担任CEO的团队收到的所有集团邀请函
-	invitations, err := data.GetGroupInvitationsByUserId(s_u.Id)
+	invitations, err := dao.GetGroupInvitationsByUserId(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot get group invitations", err)
 		report(w, s_u, "你好，茶博士在努力查找您的邀请函中，请稍后再试。")
@@ -32,18 +32,18 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 
 	// 构建页面数据
 	type GroupInvitationItem struct {
-		Invitation data.GroupInvitation
-		Group      data.Group
-		Team       data.Team
+		Invitation dao.GroupInvitation
+		Group      dao.Group
+		Team       dao.Team
 	}
 
 	var invitationItems []GroupInvitationItem
 	for _, inv := range invitations {
-		group := data.Group{Id: inv.GroupId}
+		group := dao.Group{Id: inv.GroupId}
 		if err := group.Get(); err != nil {
 			continue
 		}
-		team, err := data.GetTeam(inv.TeamId)
+		team, err := dao.GetTeam(inv.TeamId)
 		if err != nil {
 			continue
 		}
@@ -55,13 +55,13 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 统计各状态数量
-	unreadCount, _ := data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 0)
-	viewedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 1)
-	acceptedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 2)
-	rejectedCount, _ := data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 3)
+	unreadCount, _ := dao.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 0)
+	viewedCount, _ := dao.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 1)
+	acceptedCount, _ := dao.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 2)
+	rejectedCount, _ := dao.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 3)
 
 	var pageData struct {
-		SessUser                     data.User
+		SessUser                     dao.User
 		GroupInvitationSlice         []GroupInvitationItem
 		GroupInvitationUnreadCount   int
 		GroupInvitationViewedCount   int
@@ -97,7 +97,7 @@ func InvitationsTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var lbPD data.LetterboxPageData
+	var lbPD dao.LetterboxPageData
 
 	i_slice, err := s_u.Invitations()
 	if err != nil {
@@ -136,7 +136,7 @@ func AcceptNotifications(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，满头大汗的茶博士在努力中，请稍后再试。")
 		return
 	}
-	var amPD data.AcceptNotificationPageData
+	var amPD dao.AcceptNotificationPageData
 	//填写页面资料
 	amPD.SessUser = s_u
 	amPD.AcceptNotificationSlice, err = s_u.UnreadAcceptNotifications()
@@ -147,7 +147,7 @@ func AcceptNotifications(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 查询集团邀请未读数量
-	amPD.GroupInvitationUnreadCount, _ = data.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 0)
+	amPD.GroupInvitationUnreadCount, _ = dao.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 0)
 
 	//向用户返回表单页面
 	generateHTML(w, &amPD, "layout", "navbar.private", "notification.accept")

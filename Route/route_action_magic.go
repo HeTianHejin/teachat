@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -57,12 +57,12 @@ func MagicNewGet(w http.ResponseWriter, r *http.Request) {
 	userTeams, err := s_u.SurvivalTeams()
 	if err != nil {
 		util.Debug("cannot get user teams", err)
-		userTeams = []data.Team{} // 如果获取失败，使用空列表
+		userTeams = []dao.Team{} // 如果获取失败，使用空列表
 	}
 
 	var magicData struct {
-		SessUser  data.User
-		UserTeams []data.Team
+		SessUser  dao.User
+		UserTeams []dao.Team
 		ReturnURL string
 	}
 	magicData.SessUser = s_u
@@ -120,14 +120,14 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 		level = 1 // 默认入门
 	}
 
-	magic := data.Magic{
+	magic := dao.Magic{
 		UserId:            s_u.Id,
 		Name:              name,
 		Nickname:          strings.TrimSpace(r.PostFormValue("nickname")),
 		Description:       description,
-		IntelligenceLevel: data.IntelligenceLevel(intelligenceLevel),
-		DifficultyLevel:   data.DifficultyLevel(difficultyLevel),
-		Category:          data.MagicCategory(category),
+		IntelligenceLevel: dao.IntelligenceLevel(intelligenceLevel),
+		DifficultyLevel:   dao.DifficultyLevel(difficultyLevel),
+		Category:          dao.MagicCategory(category),
 		Level:             level,
 	}
 
@@ -140,11 +140,11 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 	// 检查是否添加到个人法力列表
 	addToMyMagics := r.PostFormValue("add_to_my_magics") == "1"
 	if addToMyMagics {
-		magicUser := data.MagicUser{
+		magicUser := dao.MagicUser{
 			MagicId: magic.Id,
 			UserId:  s_u.Id,
 			Level:   1,          // 默认等级1
-			Status:  data.Clear, // 默认清醒状态
+			Status:  dao.Clear, // 默认清醒状态
 		}
 		if err := magicUser.Create(r.Context()); err != nil {
 			util.Debug("cannot create magic user record", err)
@@ -160,7 +160,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		// 验证用户是否为该团队成员
-		team, err := data.GetTeam(teamId)
+		team, err := dao.GetTeam(teamId)
 		if err != nil {
 			continue
 		}
@@ -169,11 +169,11 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		// 创建团队法力记录
-		magicTeam := data.MagicTeam{
+		magicTeam := dao.MagicTeam{
 			MagicId: magic.Id,
 			TeamId:  teamId,
 			Level:   1,                         // 默认等级1
-			Status:  data.ClearMagicTeamStatus, // 默认清晰状态
+			Status:  dao.ClearMagicTeamStatus, // 默认清晰状态
 		}
 		if err := magicTeam.Create(r.Context()); err != nil {
 			util.Debug("cannot create magic team record", err)
@@ -222,7 +222,7 @@ func MagicDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var magic data.Magic
+	var magic dao.Magic
 	if idStr != "" {
 		id, err := strconv.Atoi(idStr)
 		if err != nil || id <= 0 {
@@ -242,7 +242,7 @@ func MagicDetailGet(w http.ResponseWriter, r *http.Request) {
 
 	// 创建MagicBean结构
 	type MagicBean struct {
-		Magic data.Magic
+		Magic dao.Magic
 	}
 
 	magicBean := MagicBean{
@@ -250,7 +250,7 @@ func MagicDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var magicData struct {
-		SessUser   data.User
+		SessUser   dao.User
 		IsVerifier bool
 		IsAdmin    bool
 		IsMaster   bool
@@ -278,7 +278,7 @@ func MagicListGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取所有法力
-	magics, err := data.GetAllMagics(r.Context())
+	magics, err := dao.GetAllMagics(r.Context())
 	if err != nil {
 		util.Debug("Cannot get magics", err)
 		report(w, s_u, "获取法力列表失败，请重试。")
@@ -287,20 +287,20 @@ func MagicListGet(w http.ResponseWriter, r *http.Request) {
 
 	// 创建法力Bean列表
 	var magicBeans []struct {
-		Magic data.Magic
+		Magic dao.Magic
 	}
 	for _, magic := range magics {
 		magicBeans = append(magicBeans, struct {
-			Magic data.Magic
+			Magic dao.Magic
 		}{
 			Magic: magic,
 		})
 	}
 
 	var magicData struct {
-		SessUser data.User
+		SessUser dao.User
 		Magics   []struct {
-			Magic data.Magic
+			Magic dao.Magic
 		}
 	}
 	magicData.SessUser = s_u
@@ -353,9 +353,9 @@ func HandleMagicUserEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/magics/user_list
-func MagicsUserListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func MagicsUserListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 确保用户拥有默认法力
-	if err := data.EnsureDefaultMagics(s_u.Id, r.Context()); err != nil {
+	if err := dao.EnsureDefaultMagics(s_u.Id, r.Context()); err != nil {
 		util.Debug("cannot ensure default magics for user:", s_u.Id, err)
 	}
 
@@ -368,15 +368,15 @@ func MagicsUserListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建法力与用户法力的映射
-	magicUserMap := make(map[int]data.MagicUser)
+	magicUserMap := make(map[int]dao.MagicUser)
 	for _, magicUser := range magicUserBean.MagicUsers {
 		magicUserMap[magicUser.MagicId] = magicUser
 	}
 
 	// 创建包含法力和用户信息的结构
 	type MagicWithUserInfo struct {
-		Magic     data.Magic
-		MagicUser data.MagicUser
+		Magic     dao.Magic
+		MagicUser dao.MagicUser
 	}
 
 	// 按法力类型分组
@@ -388,17 +388,17 @@ func MagicsUserListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 				MagicUser: magicUser,
 			}
 			switch magic.Category {
-			case data.Rational:
+			case dao.Rational:
 				rationalMagics = append(rationalMagics, magicWithInfo)
-			case data.Sensual:
+			case dao.Sensual:
 				sensualMagics = append(sensualMagics, magicWithInfo)
 			}
 		}
 	}
 
 	var MagicDetailTemplateData struct {
-		SessUser           data.User
-		MagicUserBean      data.MagicUserBean
+		SessUser           dao.User
+		MagicUserBean      dao.MagicUserBean
 		RationalMagics     []MagicWithUserInfo
 		SensualMagics      []MagicWithUserInfo
 		RationalMagicCount int
@@ -416,7 +416,7 @@ func MagicsUserListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/magic_user/edit?id=123
-func MagicUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func MagicUserEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
 		report(w, s_u, "缺少法力记录ID参数。")
@@ -430,7 +430,7 @@ func MagicUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取法力用户记录
-	var magicUser data.MagicUser
+	var magicUser dao.MagicUser
 	if err := magicUser.GetById(id, r.Context()); err != nil {
 		util.Debug("cannot get magic user by id", id, err)
 		report(w, s_u, "法力记录不存在。")
@@ -440,7 +440,7 @@ func MagicUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	// 权限检查：只有同一家庭的parents成员可以编辑
 	if magicUser.UserId != s_u.Id {
 		// 获取目标用户的默认家庭
-		targetUser, err := data.GetUser(magicUser.UserId)
+		targetUser, err := dao.GetUser(magicUser.UserId)
 		if err != nil {
 			report(w, s_u, "权限验证失败。")
 			return
@@ -461,7 +461,7 @@ func MagicUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取法力信息
-	var magic data.Magic
+	var magic dao.Magic
 	magic.Id = magicUser.MagicId
 	if err := magic.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get magic by id", magicUser.MagicId, err)
@@ -470,9 +470,9 @@ func MagicUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var editData struct {
-		SessUser  data.User
-		MagicUser data.MagicUser
-		Magic     data.Magic
+		SessUser  dao.User
+		MagicUser dao.MagicUser
+		Magic     dao.Magic
 		ReturnURL string
 	}
 	editData.SessUser = s_u
@@ -484,7 +484,7 @@ func MagicUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/magic_user/edit
-func MagicUserEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func MagicUserEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PostFormValue("id")
 	if idStr == "" {
 		report(w, s_u, "缺少法力记录ID参数。")
@@ -498,7 +498,7 @@ func MagicUserEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取原始法力用户记录
-	var magicUser data.MagicUser
+	var magicUser dao.MagicUser
 	if err := magicUser.GetById(id, r.Context()); err != nil {
 		util.Debug("cannot get magic user by id", id, err)
 		report(w, s_u, "法力记录不存在。")
@@ -507,7 +507,7 @@ func MagicUserEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 
 	// 权限检查
 	if magicUser.UserId != s_u.Id {
-		targetUser, err := data.GetUser(magicUser.UserId)
+		targetUser, err := dao.GetUser(magicUser.UserId)
 		if err != nil {
 			report(w, s_u, "权限验证失败。")
 			return
@@ -541,7 +541,7 @@ func MagicUserEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 
 	// 更新法力用户记录
 	magicUser.Level = level
-	magicUser.Status = data.MagicUserStatus(status)
+	magicUser.Status = dao.MagicUserStatus(status)
 
 	if err := magicUser.Update(); err != nil {
 		util.Debug("cannot update magic user", err)
@@ -578,7 +578,7 @@ func HandleMagicsTeamList(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/magics/team_list?uuid=xxx
-func MagicsTeamListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func MagicsTeamListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	uuidStr := r.URL.Query().Get("uuid")
 	if uuidStr == "" {
 		report(w, s_u, "缺少团队UUID参数。")
@@ -586,7 +586,7 @@ func MagicsTeamListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeamByUUID(uuidStr)
+	team, err := dao.GetTeamByUUID(uuidStr)
 	if err != nil {
 		util.Debug("cannot get team by uuid", uuidStr, err)
 		report(w, s_u, "团队不存在。")
@@ -609,15 +609,15 @@ func MagicsTeamListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建法力与团队法力的映射
-	magicTeamMap := make(map[int]data.MagicTeam)
+	magicTeamMap := make(map[int]dao.MagicTeam)
 	for _, magicTeam := range magicTeamBean.MagicTeams {
 		magicTeamMap[magicTeam.MagicId] = magicTeam
 	}
 
 	// 创建包含法力和团队信息的结构
 	type MagicWithTeamInfo struct {
-		Magic     data.Magic
-		MagicTeam data.MagicTeam
+		Magic     dao.Magic
+		MagicTeam dao.MagicTeam
 	}
 
 	// 按法力类型分组
@@ -629,18 +629,18 @@ func MagicsTeamListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 				MagicTeam: magicTeam,
 			}
 			switch magic.Category {
-			case data.Rational:
+			case dao.Rational:
 				rationalMagics = append(rationalMagics, magicWithInfo)
-			case data.Sensual:
+			case dao.Sensual:
 				sensualMagics = append(sensualMagics, magicWithInfo)
 			}
 		}
 	}
 
 	var MagicDetailTemplateData struct {
-		SessUser           data.User
-		Team               data.Team
-		MagicTeamBean      data.MagicTeamBean
+		SessUser           dao.User
+		Team               dao.Team
+		MagicTeamBean      dao.MagicTeamBean
 		RationalMagics     []MagicWithTeamInfo
 		SensualMagics      []MagicWithTeamInfo
 		RationalMagicCount int
@@ -682,7 +682,7 @@ func HandleMagicTeamEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/magic_team/edit?id=123
-func MagicTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func MagicTeamEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
 		report(w, s_u, "缺少法力记录ID参数。")
@@ -696,7 +696,7 @@ func MagicTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队法力记录
-	var magicTeam data.MagicTeam
+	var magicTeam dao.MagicTeam
 	if err := magicTeam.GetById(id, r.Context()); err != nil {
 		util.Debug("cannot get magic team by id", id, err)
 		report(w, s_u, "法力记录不存在。")
@@ -704,7 +704,7 @@ func MagicTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeam(magicTeam.TeamId)
+	team, err := dao.GetTeam(magicTeam.TeamId)
 	if err != nil {
 		report(w, s_u, "团队信息获取失败。")
 		return
@@ -718,7 +718,7 @@ func MagicTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取法力信息
-	var magic data.Magic
+	var magic dao.Magic
 	magic.Id = magicTeam.MagicId
 	if err := magic.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get magic by id", magicTeam.MagicId, err)
@@ -727,10 +727,10 @@ func MagicTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var editData struct {
-		SessUser  data.User
-		Team      data.Team
-		MagicTeam data.MagicTeam
-		Magic     data.Magic
+		SessUser  dao.User
+		Team      dao.Team
+		MagicTeam dao.MagicTeam
+		Magic     dao.Magic
 		ReturnURL string
 	}
 	editData.SessUser = s_u
@@ -743,7 +743,7 @@ func MagicTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/magic_team/edit
-func MagicTeamEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func MagicTeamEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PostFormValue("id")
 	if idStr == "" {
 		report(w, s_u, "缺少法力记录ID参数。")
@@ -757,7 +757,7 @@ func MagicTeamEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取原始团队法力记录
-	var magicTeam data.MagicTeam
+	var magicTeam dao.MagicTeam
 	if err := magicTeam.GetById(id, r.Context()); err != nil {
 		util.Debug("cannot get magic team by id", id, err)
 		report(w, s_u, "法力记录不存在。")
@@ -765,7 +765,7 @@ func MagicTeamEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息并检查权限
-	team, err := data.GetTeam(magicTeam.TeamId)
+	team, err := dao.GetTeam(magicTeam.TeamId)
 	if err != nil {
 		report(w, s_u, "团队信息获取失败。")
 		return
@@ -792,7 +792,7 @@ func MagicTeamEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 
 	// 更新团队法力记录
 	magicTeam.Level = level
-	magicTeam.Status = data.MagicTeamStatus(status)
+	magicTeam.Status = dao.MagicTeamStatus(status)
 
 	if err := magicTeam.Update(); err != nil {
 		util.Debug("cannot update magic team", err)

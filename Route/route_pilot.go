@@ -2,7 +2,7 @@ package route
 
 import (
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -24,7 +24,7 @@ func OfficePilot(w http.ResponseWriter, r *http.Request) {
 	//判断用户角色是否为飞行员或者船长，如果是，则显示飞行员列表
 	if s_u.Role == "pilot" || s_u.Role == "captain" {
 
-		pilots, err := data.GetAdministrators()
+		pilots, err := dao.GetAdministrators()
 		if err != nil {
 			util.Debug(" Cannot get pilots", err)
 			http.Redirect(w, r, "/v1/", http.StatusFound)
@@ -67,14 +67,14 @@ func AddPilot(w http.ResponseWriter, r *http.Request) {
 		}
 		//获取新飞行员的用户信息，并添加到数据库中
 		email := r.PostFormValue("email")
-		newPilot, err := data.GetUserByEmail(email, r.Context())
+		newPilot, err := dao.GetUserByEmail(email, r.Context())
 		if err != nil {
 			util.Debug(" Cannot find user by email", err)
 			http.Redirect(w, r, "/v1/pilot/new", http.StatusFound)
 			return
 		}
 		passw := r.PostFormValue("password")
-		pilot := data.Administrator{
+		pilot := dao.Administrator{
 			UserId:   newPilot.Id,
 			Role:     "pilot",
 			Password: passw,

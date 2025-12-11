@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -53,7 +53,7 @@ func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//获取目标茶台
-	pr := data.Project{Uuid: uuid}
+	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project", uuid, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
@@ -90,7 +90,7 @@ func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//更新茶台地点
-	pp := data.ProjectPlace{
+	pp := dao.ProjectPlace{
 		ProjectId: pr.Id,
 		PlaceId:   place_id_int,
 		UserId:    s_u.Id,
@@ -137,14 +137,14 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//获取目标茶台
-	pr := data.Project{Uuid: uuid}
+	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project", uuid, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	//读取目标茶台地点
-	place := data.ProjectPlace{ProjectId: pr.Id}
+	place := dao.ProjectPlace{ProjectId: pr.Id}
 	if err = place.GetByProjectId(); err != nil {
 		util.Debug(" Cannot get project place", uuid, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
@@ -169,7 +169,7 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	var pD data.ProjectDetail
+	var pD dao.ProjectDetail
 	pD.SessUser = s_u
 	pD.IsVerifier = true
 	pD.ProjectBean = prBean
@@ -206,7 +206,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//获取目标茶台
-	pr := data.Project{Uuid: uuid}
+	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project", uuid, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
@@ -222,7 +222,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	//检查用户是否有权限处理这个请求
 	is_admin := false
 	if ob.IsPrivate {
-		admin_family, err := data.GetFamily(ob.FamilyId)
+		admin_family, err := dao.GetFamily(ob.FamilyId)
 		if err != nil {
 			util.Debug(" Cannot get family", ob.FamilyId, err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会举办方，请确认后再试。")
@@ -235,7 +235,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	} else {
-		admin_team, err := data.GetTeam(ob.TeamId)
+		admin_team, err := dao.GetTeam(ob.TeamId)
 		if err != nil {
 			util.Debug(" Cannot get team", ob.TeamId, err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
@@ -256,7 +256,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备记录入围的茶台
-	new_project_approved := data.ProjectApproved{
+	new_project_approved := dao.ProjectApproved{
 		ObjectiveId: ob.Id,
 		ProjectId:   pr.Id,
 		UserId:      s_u.Id,
@@ -273,7 +273,7 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 预填充约茶、看看、脑火、建议 4部曲
-	if err = data.CreateRequiredThreads(&ob, &pr, data.UserId_Verifier, data.Templates4step, r.Context()); err != nil {
+	if err = dao.CreateRequiredThreads(&ob, &pr, dao.UserId_Verifier, dao.Templates4step, r.Context()); err != nil {
 		util.Debug(" Cannot create required 4-threads", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 		return
@@ -352,7 +352,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//获取目标茶话会
-	t_ob := data.Objective{Uuid: ob_uuid}
+	t_ob := dao.Objective{Uuid: ob_uuid}
 	if err = t_ob.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			util.Debug("茶话会不存在", ob_uuid, err)
@@ -364,7 +364,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查在此茶围下是否已经存在相同名字的茶台
-	count_title, err := data.CountProjectByTitleObjectiveId(title, t_ob.Id)
+	count_title, err := dao.CountProjectByTitleObjectiveId(title, t_ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug(" Cannot get count of project by title and objective id", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
@@ -377,7 +377,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	place_uuid := r.PostFormValue("place_uuid")
-	place := data.Place{Uuid: place_uuid}
+	place := dao.Place{Uuid: place_uuid}
 	if err = place.GetByUuid(); err != nil {
 		util.Debug(" Cannot get place", err)
 		report(w, s_u, "你好，茶博士服务中，眼镜都模糊了，也未能找到你提交的喝茶地方资料，请确认后再试。")
@@ -397,7 +397,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	new_proj := data.Project{
+	new_proj := dao.Project{
 		UserId:      s_u.Id,
 		Title:       title,
 		Body:        body,
@@ -412,16 +412,16 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 根据茶话会属性判断
 	// 检查一下该茶话会是否草围（待蒙评审核状态）
 	switch t_ob.Class {
-	case data.ObClassOpenDraft, data.ObClassCloseDraft:
+	case dao.ObClassOpenDraft, dao.ObClassCloseDraft:
 		// 该茶话会是草围,尚未启用，不能新开茶台
 		report(w, s_u, "你好，这个茶话会尚未启用。")
 		return
 
-	case data.ObClassOpen:
+	case dao.ObClassOpen:
 		// 该茶话会是开放式茶话会，可以新开茶台
 		// 检查提交的class值是否有效，必须为10或者20
 		switch class {
-		case data.ObClassOpenDraft:
+		case dao.ObClassOpenDraft:
 			// 创建开放式草台
 			if err = new_proj.Create(); err != nil {
 				util.Debug(" Cannot create open project", err)
@@ -429,7 +429,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-		case data.ObClassCloseDraft:
+		case dao.ObClassCloseDraft:
 			tIds_str := r.PostFormValue("invite_ids")
 			if tIds_str == "" {
 				report(w, s_u, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")
@@ -449,7 +449,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 迭代team_id_slice，尝试保存新封闭式茶台邀请的茶团
 			for _, team_id := range team_id_slice {
-				poInviTeams := data.ProjectInvitedTeam{
+				poInviTeams := dao.ProjectInvitedTeam{
 					ProjectId: new_proj.Id,
 					TeamId:    team_id,
 				}
@@ -464,7 +464,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case data.ObClassClose:
+	case dao.ObClassClose:
 		// 封闭式茶话会
 		// 检查用户是否可以在此茶话会下新开茶台
 		ok, err := t_ob.IsInvitedMember(s_u.Id)
@@ -475,11 +475,11 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 当前用户是茶话会邀请团队成员，可以新开茶台
-		if class == data.ObClassOpenDraft {
+		if class == dao.ObClassOpenDraft {
 			report(w, s_u, "你好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
 			return
 		}
-		if class == data.ObClassCloseDraft {
+		if class == dao.ObClassCloseDraft {
 			tIds_str := r.PostFormValue("invite_ids")
 			if tIds_str == "" {
 				report(w, s_u, "你好，茶博士迷糊了，竟然说封闭式茶话会的茶团号不能省事不写，请确认后再试。")
@@ -499,7 +499,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 迭代team_id_slice，尝试保存新封闭式茶台邀请的茶团
 			for _, team_id := range team_id_slice {
-				poInviTeams := data.ProjectInvitedTeam{
+				poInviTeams := dao.ProjectInvitedTeam{
 					ProjectId: new_proj.Id,
 					TeamId:    team_id,
 				}
@@ -519,7 +519,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 保存草台喝茶地方
-	pp := data.ProjectPlace{
+	pp := dao.ProjectPlace{
 		ProjectId: new_proj.Id,
 		PlaceId:   place.Id,
 		UserId:    s_u.Id,
@@ -532,7 +532,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 	if util.Config.PoliteMode {
 
-		if err = createAndSendAcceptNotification(new_proj.Id, data.AcceptObjectTypeProject, s_u.Id, r.Context()); err != nil {
+		if err = createAndSendAcceptNotification(new_proj.Id, dao.AcceptObjectTypeProject, s_u.Id, r.Context()); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, s_u, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
@@ -564,7 +564,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	s_u := data.UserUnknown
+	s_u := dao.UserUnknown
 	// 2. 获取并验证茶话会UUID
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
@@ -573,7 +573,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. 获取茶话会详情
-	objective := data.Objective{Uuid: uuid}
+	objective := dao.Objective{Uuid: uuid}
 	if err := objective.GetByUuid(); err != nil {
 		util.Debug("获取茶话会失败", "uuid", uuid, "error", err)
 		if errors.Is(err, sql.ErrNoRows) {
@@ -612,13 +612,13 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 // 展示指定UUID茶台详情
 func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var pD data.ProjectDetail
-	s_u := data.UserUnknown
+	var pD dao.ProjectDetail
+	s_u := dao.UserUnknown
 	// 读取用户提交的查询参数
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
 
-	pr := data.Project{Uuid: uuid}
+	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			util.Debug("Project not found by uuid: ", uuid)
@@ -630,7 +630,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查project.Class=1 or 2,否则属于未经 友邻蒙评 通过的草稿，不允许查看
-	if pr.Class != data.PrClassOpen && pr.Class != data.PrClassClose {
+	if pr.Class != dao.PrClassOpen && pr.Class != dao.PrClassClose {
 		report(w, s_u, "你好，荡昏寐，饮之以茶。请稍后再试。")
 		return
 	}
@@ -657,7 +657,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 截短此引用的茶围内容以方便展示
 	pD.QuoteObjectiveBean.Objective.Body = subStr(pD.QuoteObjectiveBean.Objective.Body, 168)
 
-	var tb_normal_slice []data.ThreadBean
+	var tb_normal_slice []dao.ThreadBean
 	ctx := r.Context()
 	thread_normal_slice, err := pD.ProjectBean.Project.ThreadsNormal(ctx)
 	if err != nil {
@@ -672,7 +672,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	} else {
 		pD.IsOverTwelve = false
 	}
-	ta := data.ThreadApproved{
+	ta := dao.ThreadApproved{
 		ProjectId: pD.ProjectBean.Project.Id,
 	}
 	pD.ThreadIsApprovedCount = ta.CountByProjectId()
@@ -781,8 +781,8 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// 未登录，游客
 		pD.IsGuest = true
-		pD.SessUser = data.User{
-			Id:        data.UserId_None,
+		pD.SessUser = dao.User{
+			Id:        dao.UserId_None,
 			Name:      "游客",
 			Footprint: r.URL.Path,
 			Query:     r.URL.RawQuery,
@@ -811,7 +811,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pD.SessUserBindPlaces = s_places
 
 	//如果这是class=2封闭式茶台，需要检查当前浏览用户是否可以创建新茶议
-	if pD.ProjectBean.Project.Class == data.PrClassClose {
+	if pD.ProjectBean.Project.Class == dao.PrClassClose {
 		is_invited, err := pD.ProjectBean.Project.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot check invited member", err)
@@ -877,7 +877,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 检查Goods是否完成
 	pD.IsGoodsReadinessCompleted = pr.IsGoodsReadinessCompleted(r.Context())
 	// 检查Handicrafts是否完成
-	all_done, err := data.IsAllHandicraftsCompleted(pr.Id, r.Context())
+	all_done, err := dao.IsAllHandicraftsCompleted(pr.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug("Handicraft check failed", "error:", err)
 		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")

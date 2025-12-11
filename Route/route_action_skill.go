@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -73,17 +73,17 @@ func HandleSkillsUserList(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/skill/new
-func SkillNewGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillNewGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取用户所在的团队
 	userTeams, err := s_u.SurvivalTeams()
 	if err != nil {
 		util.Debug("cannot get s_u teams", err)
-		userTeams = []data.Team{} // 如果获取失败，使用空列表
+		userTeams = []dao.Team{} // 如果获取失败，使用空列表
 	}
 
 	var skillData struct {
-		SessUser  data.User
-		UserTeams []data.Team
+		SessUser  dao.User
+		UserTeams []dao.Team
 		ReturnURL string
 	}
 	skillData.SessUser = s_u
@@ -94,7 +94,7 @@ func SkillNewGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/skill/new
-func SkillNewPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 
 	// 验证必填字段
 	name := strings.TrimSpace(r.PostFormValue("name"))
@@ -130,14 +130,14 @@ func SkillNewPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 		level = 1 // 默认入门
 	}
 
-	skill := data.Skill{
+	skill := dao.Skill{
 		UserId:          s_u.Id,
 		Name:            name,
 		Nickname:        strings.TrimSpace(r.PostFormValue("nickname")),
 		Description:     description,
-		StrengthLevel:   data.StrengthLevel(strengthLevel),
-		DifficultyLevel: data.DifficultyLevel(difficultyLevel),
-		Category:        data.SkillCategory(category),
+		StrengthLevel:   dao.StrengthLevel(strengthLevel),
+		DifficultyLevel: dao.DifficultyLevel(difficultyLevel),
+		Category:        dao.SkillCategory(category),
 		Level:           level,
 	}
 
@@ -150,11 +150,11 @@ func SkillNewPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	// 检查是否添加到个人技能列表
 	addToMySkills := r.PostFormValue("add_to_my_skills") == "1"
 	if addToMySkills {
-		skillUser := data.SkillUser{
+		skillUser := dao.SkillUser{
 			SkillId: skill.Id,
 			UserId:  s_u.Id,
 			Level:   1,                          // 默认等级1
-			Status:  data.NormalSkillUserStatus, // 默认中能状态
+			Status:  dao.NormalSkillUserStatus, // 默认中能状态
 		}
 		if err := skillUser.Create(r.Context()); err != nil {
 			util.Debug("cannot create skill s_u record", err)
@@ -170,7 +170,7 @@ func SkillNewPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		// 验证用户是否为该团队成员
-		team, err := data.GetTeam(teamId)
+		team, err := dao.GetTeam(teamId)
 		if err != nil {
 			continue
 		}
@@ -179,11 +179,11 @@ func SkillNewPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		// 创建团队技能记录
-		skillTeam := data.SkillTeam{
+		skillTeam := dao.SkillTeam{
 			SkillId: skill.Id,
 			TeamId:  teamId,
 			Level:   1,                          // 默认等级1
-			Status:  data.NormalSkillTeamStatus, // 默认正常状态
+			Status:  dao.NormalSkillTeamStatus, // 默认正常状态
 		}
 		if err := skillTeam.Create(r.Context()); err != nil {
 			util.Debug("cannot create skill team record", err)
@@ -212,7 +212,7 @@ func SkillNewPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/skill/detail?id=123
-func SkillDetailGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillDetailGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 
 	idStr := r.URL.Query().Get("id")
 	uuidStr := r.URL.Query().Get("uuid")
@@ -221,7 +221,7 @@ func SkillDetailGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var skill data.Skill
+	var skill dao.Skill
 	if idStr != "" {
 		id, err := strconv.Atoi(idStr)
 		if err != nil || id <= 0 {
@@ -240,8 +240,8 @@ func SkillDetailGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var skillData struct {
-		SessUser data.User
-		Skill    data.Skill
+		SessUser dao.User
+		Skill    dao.Skill
 	}
 	skillData.SessUser = s_u
 	skillData.Skill = skill
@@ -250,10 +250,10 @@ func SkillDetailGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/skills/user_list
-func SkillsUserListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillsUserListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 
 	// 确保用户拥有默认技能
-	if err := data.EnsureDefaultSkills(s_u.Id, r.Context()); err != nil {
+	if err := dao.EnsureDefaultSkills(s_u.Id, r.Context()); err != nil {
 		util.Debug("cannot ensure default skills for s_u:", s_u.Id, err)
 	}
 
@@ -266,15 +266,15 @@ func SkillsUserListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建技能与用户技能的映射
-	skillUserMap := make(map[int]data.SkillUser)
+	skillUserMap := make(map[int]dao.SkillUser)
 	for _, skillUser := range skillUserBean.SkillUsers {
 		skillUserMap[skillUser.SkillId] = skillUser
 	}
 
 	// 创建包含技能和用户信息的结构
 	type SkillWithUserInfo struct {
-		Skill     data.Skill
-		SkillUser data.SkillUser
+		Skill     dao.Skill
+		SkillUser dao.SkillUser
 	}
 
 	// 按技能类型分组
@@ -286,17 +286,17 @@ func SkillsUserListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 				SkillUser: skillUser,
 			}
 			switch skill.Category {
-			case data.GeneralHardSkill:
+			case dao.GeneralHardSkill:
 				hardSkills = append(hardSkills, skillWithInfo)
-			case data.GeneralSoftSkill:
+			case dao.GeneralSoftSkill:
 				softSkills = append(softSkills, skillWithInfo)
 			}
 		}
 	}
 
 	var SkillDetailTemplateData struct {
-		SessUser       data.User
-		SkillUserBean  data.SkillUserBean
+		SessUser       dao.User
+		SkillUserBean  dao.SkillUserBean
 		HardSkills     []SkillWithUserInfo
 		SoftSkills     []SkillWithUserInfo
 		HardSkillCount int
@@ -337,7 +337,7 @@ func HandleSkillUserEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/skill_user/edit?id=123
-func SkillUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillUserEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
 		report(w, s_u, "缺少技能记录ID参数。")
@@ -351,7 +351,7 @@ func SkillUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取技能用户记录
-	var skillUser data.SkillUser
+	var skillUser dao.SkillUser
 	if err := skillUser.GetById(id, r.Context()); err != nil {
 		util.Debug("cannot get skill s_u by id", id, err)
 		report(w, s_u, "技能记录不存在。")
@@ -361,7 +361,7 @@ func SkillUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	// 权限检查：只有同一家庭的parents成员可以编辑
 	if skillUser.UserId != s_u.Id {
 		// 获取目标用户的默认家庭
-		targetUser, err := data.GetUser(skillUser.UserId)
+		targetUser, err := dao.GetUser(skillUser.UserId)
 		if err != nil {
 			report(w, s_u, "权限验证失败。")
 			return
@@ -382,7 +382,7 @@ func SkillUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取技能信息
-	var skill data.Skill
+	var skill dao.Skill
 	skill.Id = skillUser.SkillId
 	if err := skill.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get skill by id", skillUser.SkillId, err)
@@ -391,9 +391,9 @@ func SkillUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var editData struct {
-		SessUser  data.User
-		SkillUser data.SkillUser
-		Skill     data.Skill
+		SessUser  dao.User
+		SkillUser dao.SkillUser
+		Skill     dao.Skill
 		ReturnURL string
 	}
 	editData.SessUser = s_u
@@ -405,7 +405,7 @@ func SkillUserEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/skill_user/edit
-func SkillUserEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillUserEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PostFormValue("id")
 	if idStr == "" {
 		report(w, s_u, "缺少技能记录ID参数。")
@@ -419,7 +419,7 @@ func SkillUserEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取原始技能用户记录
-	var skillUser data.SkillUser
+	var skillUser dao.SkillUser
 	if err := skillUser.GetById(id, r.Context()); err != nil {
 		util.Debug("cannot get skill s_u by id", id, err)
 		report(w, s_u, "技能记录不存在。")
@@ -428,7 +428,7 @@ func SkillUserEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 
 	// 权限检查
 	if skillUser.UserId != s_u.Id {
-		targetUser, err := data.GetUser(skillUser.UserId)
+		targetUser, err := dao.GetUser(skillUser.UserId)
 		if err != nil {
 			report(w, s_u, "权限验证失败。")
 			return
@@ -462,7 +462,7 @@ func SkillUserEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 
 	// 更新技能用户记录
 	skillUser.Level = level
-	skillUser.Status = data.SkillUserStatus(status)
+	skillUser.Status = dao.SkillUserStatus(status)
 
 	if err := skillUser.Update(); err != nil {
 		util.Debug("cannot update skill s_u", err)
@@ -499,7 +499,7 @@ func HandleSkillsTeamList(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/skills/team_list?uuid=xxx
-func SkillsTeamListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillsTeamListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	uuidStr := r.URL.Query().Get("uuid")
 	if uuidStr == "" {
 		report(w, s_u, "缺少团队UUID参数。")
@@ -507,7 +507,7 @@ func SkillsTeamListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeamByUUID(uuidStr)
+	team, err := dao.GetTeamByUUID(uuidStr)
 	if err != nil {
 		util.Debug("cannot get team by uuid", uuidStr, err)
 		report(w, s_u, "团队不存在。")
@@ -530,15 +530,15 @@ func SkillsTeamListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建技能与团队技能的映射
-	skillTeamMap := make(map[int]data.SkillTeam)
+	skillTeamMap := make(map[int]dao.SkillTeam)
 	for _, skillTeam := range skillTeamBean.SkillTeams {
 		skillTeamMap[skillTeam.SkillId] = skillTeam
 	}
 
 	// 创建包含技能和团队信息的结构
 	type SkillWithTeamInfo struct {
-		Skill     data.Skill
-		SkillTeam data.SkillTeam
+		Skill     dao.Skill
+		SkillTeam dao.SkillTeam
 	}
 
 	// 按技能类型分组
@@ -550,18 +550,18 @@ func SkillsTeamListGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 				SkillTeam: skillTeam,
 			}
 			switch skill.Category {
-			case data.GeneralHardSkill:
+			case dao.GeneralHardSkill:
 				hardSkills = append(hardSkills, skillWithInfo)
-			case data.GeneralSoftSkill:
+			case dao.GeneralSoftSkill:
 				softSkills = append(softSkills, skillWithInfo)
 			}
 		}
 	}
 
 	var SkillDetailTemplateData struct {
-		SessUser       data.User
-		Team           data.Team
-		SkillTeamBean  data.SkillTeamBean
+		SessUser       dao.User
+		Team           dao.Team
+		SkillTeamBean  dao.SkillTeamBean
 		HardSkills     []SkillWithTeamInfo
 		SoftSkills     []SkillWithTeamInfo
 		HardSkillCount int
@@ -603,7 +603,7 @@ func HandleSkillTeamEdit(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/skill_team/edit?id=123
-func SkillTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillTeamEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
 		report(w, s_u, "缺少技能记录ID参数。")
@@ -617,7 +617,7 @@ func SkillTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队技能记录
-	var skillTeam data.SkillTeam
+	var skillTeam dao.SkillTeam
 	if err := skillTeam.GetById(id, r.Context()); err != nil {
 		util.Debug("cannot get skill team by id", id, err)
 		report(w, s_u, "技能记录不存在。")
@@ -625,7 +625,7 @@ func SkillTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeam(skillTeam.TeamId)
+	team, err := dao.GetTeam(skillTeam.TeamId)
 	if err != nil {
 		report(w, s_u, "团队信息获取失败。")
 		return
@@ -639,7 +639,7 @@ func SkillTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取技能信息
-	var skill data.Skill
+	var skill dao.Skill
 	skill.Id = skillTeam.SkillId
 	if err := skill.GetByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get skill by id", skillTeam.SkillId, err)
@@ -648,10 +648,10 @@ func SkillTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var editData struct {
-		SessUser  data.User
-		Team      data.Team
-		SkillTeam data.SkillTeam
-		Skill     data.Skill
+		SessUser  dao.User
+		Team      dao.Team
+		SkillTeam dao.SkillTeam
+		Skill     dao.Skill
 		ReturnURL string
 	}
 	editData.SessUser = s_u
@@ -664,7 +664,7 @@ func SkillTeamEditGet(s_u data.User, w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/skill_team/edit
-func SkillTeamEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
+func SkillTeamEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	idStr := r.PostFormValue("id")
 	if idStr == "" {
 		report(w, s_u, "缺少技能记录ID参数。")
@@ -678,7 +678,7 @@ func SkillTeamEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取原始团队技能记录
-	var skillTeam data.SkillTeam
+	var skillTeam dao.SkillTeam
 	if err := skillTeam.GetById(id, r.Context()); err != nil {
 		util.Debug("cannot get skill team by id", id, err)
 		report(w, s_u, "技能记录不存在。")
@@ -686,7 +686,7 @@ func SkillTeamEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息并检查权限
-	team, err := data.GetTeam(skillTeam.TeamId)
+	team, err := dao.GetTeam(skillTeam.TeamId)
 	if err != nil {
 		report(w, s_u, "团队信息获取失败。")
 		return
@@ -713,7 +713,7 @@ func SkillTeamEditPost(s_u data.User, w http.ResponseWriter, r *http.Request) {
 
 	// 更新团队技能记录
 	skillTeam.Level = level
-	skillTeam.Status = data.SkillTeamStatus(status)
+	skillTeam.Status = dao.SkillTeamStatus(status)
 
 	if err := skillTeam.Update(); err != nil {
 		util.Debug("cannot update skill team", err)

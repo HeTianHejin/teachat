@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -63,20 +63,20 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fPD data.SearchPageData
+	var fPD dao.SearchPageData
 	fPD.SessUser = s_u
 	//初始化获取结果为零记录
 	fPD.IsEmpty = true
 
 	//根据查询类型操作
 	switch class_int {
-	case data.SearchTypeUserNameOrEmail:
+	case dao.SearchTypeUserNameOrEmail:
 		//按花名或者邮箱查找茶友，user
 
 		//用户可能提交了一个电子邮箱地址，如果是，我们需要先通过电子邮箱地址查找用户
 		//检查keyword是否是电子邮箱地址
 		if ok := isEmail(keyword); ok {
-			user, err := data.GetUserByEmail(keyword, r.Context())
+			user, err := dao.GetUserByEmail(keyword, r.Context())
 			if err != nil {
 				util.Debug(keyword, " Cannot search user by keyword", err)
 				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -95,7 +95,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		} else {
-			user_slice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+			user_slice, err := dao.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 			if err != nil {
 				util.Debug(" Cannot search user by keyword", err)
 				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -115,7 +115,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
 		return
 
-	case data.SearchTypeUserId:
+	case dao.SearchTypeUserId:
 		//按user_id查询茶友
 		// 验证关键词是否为自然数
 		keyword_int, err := strconv.Atoi(keyword)
@@ -123,7 +123,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "茶友号必须是正整数")
 			return
 		}
-		user, err := data.GetUser(keyword_int)
+		user, err := dao.GetUser(keyword_int)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				fPD.IsEmpty = true
@@ -150,9 +150,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		}
 		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
 		return
-	case data.SearchTypeTeamAbbr:
+	case dao.SearchTypeTeamAbbr:
 		//查询，茶团简称，team.abbreviation
-		team_slice, err := data.SearchTeamByAbbreviation(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		team_slice, err := dao.SearchTeamByAbbreviation(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search team by abbreviation", err)
 			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -175,9 +175,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_team", "component_avatar_name_gender")
 		return
 
-	case data.SearchTypeThreadTitle:
+	case dao.SearchTypeThreadTitle:
 		//查询，茶议标题，thread.title
-		thread_slice, err := data.SearchThreadByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		thread_slice, err := dao.SearchThreadByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search thread by title", err)
 			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -197,9 +197,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_thread_bean", "component_avatar_name_gender")
 		return
 
-	case data.SearchTypeObjectiveTitle:
+	case dao.SearchTypeObjectiveTitle:
 		//查询，茶会标题，objective.title
-		objective_slice, err := data.SearchObjectiveByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		objective_slice, err := dao.SearchObjectiveByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" Cannot search objective by title", err)
 			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -219,9 +219,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_objective_bean", "component_avatar_name_gender")
 		return
 
-	case data.SearchTypeProjectTitle:
+	case dao.SearchTypeProjectTitle:
 		//按茶台标题查询
-		project_slice, err := data.SearchProjectByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		project_slice, err := dao.SearchProjectByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search project by title", err)
 			fPD.IsEmpty = true
@@ -240,9 +240,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
 			return
 		}
-	case data.SearchTypePlaceName:
+	case dao.SearchTypePlaceName:
 		//查询品茶地点 place
-		place_slice, err := data.FindPlaceByName(keyword)
+		place_slice, err := dao.FindPlaceByName(keyword)
 		if err != nil {
 			util.Debug(" failed to search place by keyword", err)
 		}
@@ -254,9 +254,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_place")
 		return
 
-	case data.SearchTypeEnvironment:
+	case dao.SearchTypeEnvironment:
 		//查询环境条件 environment
-		environment_slice, err := data.SearchEnvironmentByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		environment_slice, err := dao.SearchEnvironmentByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search environment by keyword", err)
 		}
@@ -268,9 +268,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
-	case data.SearchTypeHazard:
+	case dao.SearchTypeHazard:
 		//查询隐患 hazard
-		hazard_slice, err := data.SearchHazardByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		hazard_slice, err := dao.SearchHazardByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search hazard by keyword", err)
 		}
@@ -282,9 +282,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
-	case data.SearchTypeGoods:
+	case dao.SearchTypeGoods:
 		// 查询物资（goods）
-		goods_slice, err := data.SearchGoodsByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		goods_slice, err := dao.SearchGoodsByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search goods by keyword", err)
 		}
@@ -296,9 +296,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
-	case data.SearchTypeRisk: // SearchTypeRisk
+	case dao.SearchTypeRisk: // SearchTypeRisk
 		//查询风险 risk
-		risk_slice, err := data.SearchRiskByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		risk_slice, err := dao.SearchRiskByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search risk by keyword", err)
 		}
@@ -310,9 +310,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
-	case data.SearchTypeSkill:
+	case dao.SearchTypeSkill:
 		//查询技能 skill
-		skill_slice, err := data.SearchSkillByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		skill_slice, err := dao.SearchSkillByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search skill by keyword", err)
 		}
@@ -324,9 +324,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
-	case data.SearchTypeMagic:
+	case dao.SearchTypeMagic:
 		//查询法力 magic
-		magic_slice, err := data.SearchMagicByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		magic_slice, err := dao.SearchMagicByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search magic by keyword", err)
 		}
@@ -338,9 +338,9 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		generateHTML(w, &fPD, "layout", "navbar.private", "search")
 		return
 
-	case data.SearchTypeFamilyName:
+	case dao.SearchTypeFamilyName:
 		//查询公开家庭
-		family_slice, err := data.SearchFamilyByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		family_slice, err := dao.SearchFamilyByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search family by keyword", err)
 		}
@@ -378,7 +378,7 @@ func SearchGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var f data.SearchPageData
+	var f dao.SearchPageData
 	f.SessUser = s_u
 
 	// 打开查询页面

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -45,7 +45,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t_proj := data.Project{Uuid: uuid}
+	t_proj := dao.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -74,7 +74,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查是否已存在手工艺记录
-	existingHandicraft, err := data.GetHandicraftsByProjectId(t_proj.Id, r.Context())
+	existingHandicraft, err := dao.GetHandicraftsByProjectId(t_proj.Id, r.Context())
 	if err == nil && len(existingHandicraft) > 0 {
 		// 已存在记录，跳转到详情页
 		http.Redirect(w, r, "/v1/handicraft/detail?uuid="+existingHandicraft[0].Uuid, http.StatusFound)
@@ -83,7 +83,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 
 	// 获取收茶叶方登记的技能和法力
 	// 读取茶围的约茶记录，确定收茶叶方团队
-	project_appointment, err := data.GetAppointmentByProjectId(t_proj.Id, r.Context())
+	project_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
 	if err != nil {
 		util.Debug("Cannot get project appointment by project id", t_proj.Id, err)
 		report(w, s_u, "获取约茶记录失败")
@@ -92,7 +92,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	if project_appointment.PayeeTeamId > 0 {
 		teamId = project_appointment.PayeeTeamId
 	} else if project_appointment.PayeeFamilyId > 0 {
-		family, err := data.GetFamily(project_appointment.PayeeFamilyId)
+		family, err := dao.GetFamily(project_appointment.PayeeFamilyId)
 		if err != nil {
 			util.Debug("Cannot get family by id", project_appointment.PayeeFamilyId, err)
 			report(w, s_u, "获取家庭信息失败")
@@ -100,7 +100,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 		}
 		// 注意：Family结构体没有DefaultTeamId字段，需要通过其他方式获取
 		// 这里假设使用家庭创建者的默认团队
-		founder_family, err := data.GetUser(family.AuthorId)
+		founder_family, err := dao.GetUser(family.AuthorId)
 		if err != nil {
 			util.Debug("Cannot get family founder", family.AuthorId, err)
 			report(w, s_u, "获取家庭创建者信息失败")
@@ -120,7 +120,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队CEO作为默认策动人
-	team := data.Team{Id: teamId}
+	team := dao.Team{Id: teamId}
 	if err := team.Get(); err != nil {
 		util.Debug("Cannot get team", teamId, err)
 		report(w, s_u, "获取收茶叶方团队信息失败")
@@ -135,30 +135,30 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	defaultInitiatorId := teamCEO.UserId
 
 	// 获取团队技能
-	skillTeams, err := data.GetTeamSkills(teamId, r.Context())
+	skillTeams, err := dao.GetTeamSkills(teamId, r.Context())
 	if err != nil {
 		util.Debug("Cannot get team skills", teamId, err)
-		skillTeams = []data.SkillTeam{}
+		skillTeams = []dao.SkillTeam{}
 	}
 	// 获取公开的技能详情
-	var skills []data.Skill
+	var skills []dao.Skill
 	for _, st := range skillTeams {
-		var skill data.Skill
+		var skill dao.Skill
 		skill.Id = st.SkillId
 		if err := skill.GetByIdOrUUID(r.Context()); err == nil {
 			skills = append(skills, skill)
 		}
 	}
 	// 获取团队公开登记的法力列表
-	magicTeams, err := data.GetTeamMagics(teamId, r.Context())
+	magicTeams, err := dao.GetTeamMagics(teamId, r.Context())
 	if err != nil {
 		util.Debug("Cannot get team magics", teamId, err)
-		magicTeams = []data.MagicTeam{}
+		magicTeams = []dao.MagicTeam{}
 	}
 	// 获取公开的法力详情
-	var magics []data.Magic
+	var magics []dao.Magic
 	for _, mt := range magicTeams {
-		var magic data.Magic
+		var magic dao.Magic
 		magic.Id = mt.MagicId
 		if err := magic.GetByIdOrUUID(r.Context()); err == nil {
 			magics = append(magics, magic)
@@ -173,16 +173,16 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := struct {
-		SessUser               data.User
+		SessUser               dao.User
 		IsAdmin                bool
 		IsMaster               bool
 		IsVerifier             bool
-		ProjectBean            data.ProjectBean
-		QuoteObjectiveBean     data.ObjectiveBean
-		Skills                 []data.Skill
-		Magics                 []data.Magic
+		ProjectBean            dao.ProjectBean
+		QuoteObjectiveBean     dao.ObjectiveBean
+		Skills                 []dao.Skill
+		Magics                 []dao.Magic
 		DefaultInitiatorId     int
-		EvidenceHandicraftBean []data.EvidenceHandicraftBean
+		EvidenceHandicraftBean []dao.EvidenceHandicraftBean
 	}{
 		SessUser:               s_u,
 		IsMaster:               is_master,
@@ -192,7 +192,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 		Skills:                 skills,
 		Magics:                 magics,
 		DefaultInitiatorId:     defaultInitiatorId,
-		EvidenceHandicraftBean: []data.EvidenceHandicraftBean{},
+		EvidenceHandicraftBean: []dao.EvidenceHandicraftBean{},
 	}
 
 	generateHTML(w, &templateData, "layout", "navbar.private", "action.handicraft.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
@@ -229,7 +229,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t_proj := data.Project{Uuid: projectUuid}
+	t_proj := dao.Project{Uuid: projectUuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug("Cannot get project by uuid", projectUuid, err)
 		report(w, s_u, "项目不存在")
@@ -271,7 +271,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 		magicDifficulty = 3
 	}
 
-	handicraft := data.Handicraft{
+	handicraft := dao.Handicraft{
 		RecorderUserId:  s_u.Id,
 		Name:            name,
 		Nickname:        nickname,
@@ -279,9 +279,9 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 		ProjectId:       t_proj.Id,
 		InitiatorId:     initiatorId,
 		OwnerId:         ownerId,
-		Type:            data.HandicraftType(handicraftType),
+		Type:            dao.HandicraftType(handicraftType),
 		Category:        category,
-		Status:          data.NotStarted,
+		Status:          dao.NotStarted,
 		SkillDifficulty: skillDifficulty,
 		MagicDifficulty: magicDifficulty,
 	}
@@ -299,7 +299,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 		contribId, err1 := strconv.Atoi(contributorIds[i])
 		contribRate, err2 := strconv.Atoi(contributorRates[i])
 		if err1 == nil && err2 == nil && contribId > 0 && contribRate > 0 {
-			contributor := data.HandicraftContributor{
+			contributor := dao.HandicraftContributor{
 				HandicraftId:     handicraft.Id,
 				UserId:           contribId,
 				ContributionRate: contribRate,
@@ -317,7 +317,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 	for _, skillIdStr := range skillIds {
 		skillId, err := strconv.Atoi(skillIdStr)
 		if err == nil && skillId > 0 {
-			handicraftSkill := data.HandicraftSkill{
+			handicraftSkill := dao.HandicraftSkill{
 				SkillId:      skillId,
 				HandicraftId: handicraft.Id,
 			}
@@ -332,7 +332,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 	for _, magicIdStr := range magicIds {
 		magicId, err := strconv.Atoi(magicIdStr)
 		if err == nil && magicId > 0 {
-			handicraftMagic := data.HandicraftMagic{
+			handicraftMagic := dao.HandicraftMagic{
 				MagicId:      magicId,
 				HandicraftId: handicraft.Id,
 			}
@@ -375,11 +375,11 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 先尝试作为手工艺UUID查询
-	handicraft := data.Handicraft{Uuid: uuid}
+	handicraft := dao.Handicraft{Uuid: uuid}
 	if err := handicraft.GetByIdOrUUID(r.Context()); err != nil {
 		// 如果不是手工艺UUID，尝试作为项目UUID查询
 		if err == sql.ErrNoRows {
-			project := data.Project{Uuid: uuid}
+			project := dao.Project{Uuid: uuid}
 			if err := project.GetByUuid(); err == nil {
 				// 是项目UUID，重定向到项目的手工艺列表页面
 				http.Redirect(w, r, "/v1/handicraft/list?project_uuid="+uuid, http.StatusFound)
@@ -393,7 +393,7 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project := data.Project{Id: handicraft.ProjectId}
+	project := dao.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project", err)
 		report(w, s_u, "获取项目信息失败")
@@ -442,7 +442,7 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 	is_verifier := isVerifier(s_u.Id)
 	is_invited := false
-	if handicraft.Category == data.HandicraftCategorySecret {
+	if handicraft.Category == dao.HandicraftCategorySecret {
 		if !is_master && !is_admin && !is_invited {
 			is_invited, err = objective.IsInvitedMember(s_u.Id)
 			if err != nil {
@@ -458,10 +458,10 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取相关技能
-	var skills []data.Skill
-	if skillRelations, err := data.GetHandicraftSkills(handicraft.Id); err == nil {
+	var skills []dao.Skill
+	if skillRelations, err := dao.GetHandicraftSkills(handicraft.Id); err == nil {
 		for _, sr := range skillRelations {
-			skill := data.Skill{Id: sr.SkillId}
+			skill := dao.Skill{Id: sr.SkillId}
 			if err := skill.GetByIdOrUUID(r.Context()); err == nil {
 				skills = append(skills, skill)
 			}
@@ -469,10 +469,10 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取相关法力
-	var magics []data.Magic
-	if magicRelations, err := data.GetHandicraftMagics(handicraft.Id); err == nil {
+	var magics []dao.Magic
+	if magicRelations, err := dao.GetHandicraftMagics(handicraft.Id); err == nil {
 		for _, mr := range magicRelations {
-			magic := data.Magic{Id: mr.MagicId}
+			magic := dao.Magic{Id: mr.MagicId}
 			if err := magic.GetByIdOrUUID(r.Context()); err == nil {
 				magics = append(magics, magic)
 			}
@@ -480,15 +480,15 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取相关凭证
-	var evidenceHandicraftBean []data.EvidenceHandicraftBean
-	if evidences, err := data.GetEvidencesByHandicraftId(handicraft.Id); err == nil {
-		evidenceHandicraftBean = append(evidenceHandicraftBean, data.EvidenceHandicraftBean{
+	var evidenceHandicraftBean []dao.EvidenceHandicraftBean
+	if evidences, err := dao.GetEvidencesByHandicraftId(handicraft.Id); err == nil {
+		evidenceHandicraftBean = append(evidenceHandicraftBean, dao.EvidenceHandicraftBean{
 			Evidences:  evidences,
 			Handicraft: handicraft,
 		})
 	}
 
-	templateData := data.HandicraftDetailTemplateData{
+	templateData := dao.HandicraftDetailTemplateData{
 		SessUser:               s_u,
 		IsMaster:               is_master,
 		IsAdmin:                is_admin,
@@ -534,7 +534,7 @@ func HandicraftListGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	project := data.Project{Uuid: projectUuid}
+	project := dao.Project{Uuid: projectUuid}
 	if err := project.GetByUuid(); err != nil {
 		util.Debug("Cannot get project by uuid", projectUuid, err)
 		report(w, s_u, "项目不存在")
@@ -563,14 +563,14 @@ func HandicraftListGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取项目的所有手工艺记录
-	handicrafts, err := data.GetHandicraftsByProjectId(project.Id, r.Context())
+	handicrafts, err := dao.GetHandicraftsByProjectId(project.Id, r.Context())
 	if err != nil {
 		util.Debug("Cannot get handicrafts by project id", project.Id, err)
-		handicrafts = []data.Handicraft{}
+		handicrafts = []dao.Handicraft{}
 	}
 
 	// 将 Handicraft 转换为 HandicraftBean
-	var handicraftBeans []data.HandicraftBean
+	var handicraftBeans []dao.HandicraftBean
 	for _, h := range handicrafts {
 		bean, err := fetchHandicraftBean(h)
 		if err != nil {
@@ -581,10 +581,10 @@ func HandicraftListGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	templateData := struct {
-		SessUser           data.User
-		HandicraftBeans    []data.HandicraftBean
-		ProjectBean        data.ProjectBean
-		QuoteObjectiveBean data.ObjectiveBean
+		SessUser           dao.User
+		HandicraftBeans    []dao.HandicraftBean
+		ProjectBean        dao.ProjectBean
+		QuoteObjectiveBean dao.ObjectiveBean
 	}{
 		SessUser:           s_u,
 		HandicraftBeans:    handicraftBeans,

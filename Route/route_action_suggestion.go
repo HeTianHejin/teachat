@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -48,7 +48,7 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t_proj := data.Project{Uuid: uuid}
+	t_proj := dao.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -56,7 +56,7 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查是否已存在当前project_id的suggestion记录
-	existingSuggestion, err := data.GetSuggestionByProjectId(t_proj.Id, r.Context())
+	existingSuggestion, err := dao.GetSuggestionByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" Cannot get existing suggestion", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -90,7 +90,7 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	var suggestionData data.SuggestionDetailTemplateData
+	var suggestionData dao.SuggestionDetailTemplateData
 	suggestionData.SessUser = s_u
 	suggestionData.ProjectBean = projBean
 	suggestionData.QuoteObjectiveBean = objeBean
@@ -130,7 +130,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	t_proj := data.Project{Uuid: projectUuid}
+	t_proj := dao.Project{Uuid: projectUuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", projectUuid, err)
 		report(w, s_u, "项目不存在")
@@ -144,14 +144,14 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查是否已存在当前project_id的suggestion记录
-	existingSuggestion, err := data.GetSuggestionByProjectId(t_proj.Id, r.Context())
+	existingSuggestion, err := dao.GetSuggestionByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" Cannot get existing suggestion", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	if err == nil && existingSuggestion.Id > 0 {
-		if existingSuggestion.Status == int(data.SuggestionStatusSubmitted) {
+		if existingSuggestion.Status == int(dao.SuggestionStatusSubmitted) {
 			report(w, s_u, "该项目的建议记录已提交，不能重复创建")
 			return
 		}
@@ -173,13 +173,13 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 	category, _ := strconv.Atoi(categoryStr)
 
 	// 创建Suggestion记录
-	suggestion := data.Suggestion{
+	suggestion := dao.Suggestion{
 		UserId:     s_u.Id,
 		ProjectId:  t_proj.Id,
 		Resolution: resolution,
 		Body:       body,
 		Category:   category,
-		Status:     int(data.SuggestionStatusSubmitted), // 已提交
+		Status:     int(dao.SuggestionStatusSubmitted), // 已提交
 	}
 
 	if err := suggestion.Create(r.Context()); err != nil {
@@ -189,7 +189,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 反馈结果到茶台项目状态，如果Resolution的值为false，搁置，更新项目状态
 	if !resolution {
-		t_proj.Status = int(data.ProjectStatusTeaCold)
+		t_proj.Status = int(dao.ProjectStatusTeaCold)
 		if err := t_proj.Update(); err != nil {
 			util.Debug(" Cannot update project status to TeaCold", err)
 			report(w, s_u, "更新项目状态失败")
@@ -197,7 +197,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 预填充物资、手艺 2部曲
-		if err = data.CreateRequiredThreads(&ob, &t_proj, data.UserId_Verifier, data.Templates2step, r.Context()); err != nil {
+		if err = dao.CreateRequiredThreads(&ob, &t_proj, dao.UserId_Verifier, dao.Templates2step, r.Context()); err != nil {
 			util.Debug(" Cannot create required 2-threads", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 			return
@@ -229,17 +229,17 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取Suggestion记录
-	suggestion := data.Suggestion{Uuid: uuid}
+	suggestion := dao.Suggestion{Uuid: uuid}
 	if err := suggestion.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			// 尝试project的uuid
-			project := data.Project{Uuid: uuid}
+			project := dao.Project{Uuid: uuid}
 			if err := project.GetByUuid(); err != nil {
 				util.Debug("Cannot get project by uuid", uuid, err)
 				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
-			suggestion, err = data.GetSuggestionByProjectId(project.Id, r.Context())
+			suggestion, err = dao.GetSuggestionByProjectId(project.Id, r.Context())
 			if err != nil {
 				if err == sql.ErrNoRows {
 					report(w, s_u, "该项目还没有建议记录")
@@ -257,7 +257,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取项目信息
-	pr := data.Project{Id: suggestion.ProjectId}
+	pr := dao.Project{Id: suggestion.ProjectId}
 	if err := pr.Get(); err != nil {
 		util.Debug("Cannot get project", err)
 		report(w, s_u, "获取项目信息失败")
@@ -295,7 +295,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	templateData := data.SuggestionDetailTemplateData{
+	templateData := dao.SuggestionDetailTemplateData{
 		SessUser:           s_u,
 		SuggestionBean:     suggestionBean,
 		ProjectBean:        projectBean,
@@ -326,7 +326,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 		templateData.IsVerifier = is_verifier
 	}
 
-	if suggestion.Category == int(data.SuggestionCategoryPrivate) {
+	if suggestion.Category == int(dao.SuggestionCategoryPrivate) {
 
 		is_invited, err := ob.IsInvitedMember(s_u.Id)
 		if err != nil {
@@ -338,7 +338,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检测私密建议的访问权限
-	if suggestion.Id > 0 && suggestion.Category == int(data.SuggestionCategoryPrivate) {
+	if suggestion.Id > 0 && suggestion.Category == int(dao.SuggestionCategoryPrivate) {
 		if !is_admin && !templateData.IsMaster && !templateData.IsVerifier && !templateData.IsInvited {
 			util.Debug("User has no access to this private suggestion", "user_id:", s_u.Id, "suggestion_id:", suggestion.Id)
 			report(w, s_u, "你没有权限查看此私密建议记录")

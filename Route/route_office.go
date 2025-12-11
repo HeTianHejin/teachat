@@ -3,7 +3,7 @@ package route
 import (
 	"context"
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -31,13 +31,13 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 	}
 	//读取被邀请用户的相关资料
 	user_uuid := r.FormValue("id")
-	invi_user, err := data.GetUserByID(user_uuid)
+	invi_user, err := dao.GetUserByID(user_uuid)
 	if err != nil {
 		util.Debug(" Cannot get user by uuid", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	var iD data.InvitationDetail
+	var iD dao.InvitationDetail
 	// 填写页面资料
 	iD.SessUser = s_u
 
@@ -49,26 +49,26 @@ func Invite(w http.ResponseWriter, r *http.Request) {
 }
 
 // 向2个非当前用户发送蒙评审核通知
-func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotification, ctx context.Context) error {
+func TwoAcceptNotificationsSendExceptUserId(u_id int, mess dao.AcceptNotification, ctx context.Context) error {
 	var user_ids []int
 	var err error
-	// if data.UserCount() < 50 {
+	// if dao.UserCount() < 50 {
 
-	// 	if user_ids, err = data.Get2RandomUserId(); err != nil {
+	// 	if user_ids, err = dao.Get2RandomUserId(); err != nil {
 	// 		util.PanicTea(util.LogError(err), " Cannot get 2 random user id")
 	// 		return err
 	// 	}
 	// } else {
-	// 	if data.SessionCount() > 12 && data.SessionCount() < 250 {
+	// 	if dao.SessionCount() > 12 && dao.SessionCount() < 250 {
 	// 		// 在线不同性别随机
-	// 		user_ids, err = data.Get2GenderRandomSUserIdExceptId(u_id)
+	// 		user_ids, err = dao.Get2GenderRandomSUserIdExceptId(u_id)
 	// 		if err != nil {
 	// 			util.PanicTea(util.LogError(err), " Cannot get 2 gender random sess_user id")
-	// 			user_ids, err = data.Get2GenderRandomUserIdExceptId(u_id)
+	// 			user_ids, err = dao.Get2GenderRandomUserIdExceptId(u_id)
 	// 			if err != nil {
 	// 				util.PanicTea(util.LogError(err), " Cannot get 2 gender random user id")
 	// 				// 在线不分性别随机
-	// 				user_ids, err = data.Get2RandomSUserIdExceptId(u_id)
+	// 				user_ids, err = dao.Get2RandomSUserIdExceptId(u_id)
 	// 				if err != nil {
 	// 					util.PanicTea(util.LogError(err), " Cannot get 2 random sess_user id")
 	// 					return err
@@ -76,7 +76,7 @@ func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotificati
 	// 			}
 	// 		}
 	// 	} else {
-	if user_ids, err = data.Get2RandomUserId(); err != nil {
+	if user_ids, err = dao.Get2RandomUserId(); err != nil {
 		//test status
 		util.Debug(" Cannot get 2 random user id", err)
 		return err
@@ -94,7 +94,7 @@ func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotificati
 	}
 	// 记录用户有1新通知
 	for _, u_id := range user_ids {
-		if err = data.AddUserNotificationCount(u_id); err != nil {
+		if err = dao.AddUserNotificationCount(u_id); err != nil {
 			util.Debug(" Cannot add random user new-notification-count", err)
 			return err
 		}
@@ -103,7 +103,7 @@ func TwoAcceptNotificationsSendExceptUserId(u_id int, mess data.AcceptNotificati
 }
 
 // 向当前用户发送友邻蒙评结果通知通知
-func PilotAcceptNotificationSend(u_id int, mess data.AcceptNotification, ctx context.Context) error {
+func PilotAcceptNotificationSend(u_id int, mess dao.AcceptNotification, ctx context.Context) error {
 
 	// 发送友评邻蒙结果通知通知
 	if err := mess.SendWithContext([]int{u_id}, ctx); err != nil {
@@ -111,7 +111,7 @@ func PilotAcceptNotificationSend(u_id int, mess data.AcceptNotification, ctx con
 		return err
 	}
 	// 记录用户有1新通知
-	if err := data.AddUserNotificationCount(u_id); err != nil {
+	if err := dao.AddUserNotificationCount(u_id); err != nil {
 		util.Debug(" Cannot add user new-notification-count", err)
 		return err
 	}

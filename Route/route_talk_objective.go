@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
 )
@@ -36,7 +36,7 @@ func NewObjectiveGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var oD data.ObjectiveDetail
+	var oD dao.ObjectiveDetail
 	//根据会话读取当前用户的信息
 	s_u, s_d_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s)
 	if err != nil {
@@ -119,7 +119,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查是否已经存在相同名字的茶话会
-	obj := data.Objective{
+	obj := dao.Objective{
 		Title: title,
 	}
 	t_ob, err := obj.GetByTitle()
@@ -133,7 +133,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	countObj := data.Objective{TeamId: team_id}
+	countObj := dao.Objective{TeamId: team_id}
 	count_team, err := countObj.CountByTeamId()
 	if err != nil {
 		util.Debug(" cannot get count given objective team_id", err)
@@ -157,7 +157,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	new_ob := data.Objective{
+	new_ob := dao.Objective{
 		Title:     title,
 		UserId:    s_u.Id,
 		Body:      body,
@@ -169,7 +169,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch class {
-	case data.ObClassOpenDraft:
+	case dao.ObClassOpenDraft:
 		//如果class=10开放式茶话会草围
 		//尝试保存新茶话会
 		if err = new_ob.Create(); err != nil {
@@ -179,7 +179,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case data.ObClassCloseDraft:
+	case dao.ObClassCloseDraft:
 		//如果class=20封闭式茶话会(草围)，需要读取指定茶团号TeamIds列表
 		tIds_str := r.PostFormValue("invite_ids")
 		if tIds_str == "" {
@@ -194,7 +194,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 使用事务创建封闭式茶话会及其许可茶团
-		if err = data.CreateObjectiveWithTeams(&new_ob, t_id_slice); err != nil {
+		if err = dao.CreateObjectiveWithTeams(&new_ob, t_id_slice); err != nil {
 			util.Debug("创建封闭式茶话会失败", err)
 			report(w, s_u, "你好，茶博士迷糊了，未能创建茶话会，请稍后再试。")
 			return
@@ -207,7 +207,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if util.Config.PoliteMode {
-		if err = createAndSendAcceptNotification(new_ob.Id, data.AcceptObjectTypeObjective, s_u.Id, r.Context()); err != nil {
+		if err = createAndSendAcceptNotification(new_ob.Id, dao.AcceptObjectTypeObjective, s_u.Id, r.Context()); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, s_u, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
@@ -236,15 +236,15 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 // show the random objectives
 // 根据用户是否登录显示不同导航条的茶话会广场页面
 func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
-	var oSpD data.ObjectiveSquare
-	s_u := data.UserUnknown
+	var oSpD dao.ObjectiveSquare
+	s_u := dao.UserUnknown
 	// 如何排序茶话会，是个问题！按照圆桌会议平等约定，应该是轮流出现在茶话会广场才合适，
 	// 而且，应该是按人头出现计数，而不是按热度或者建的茶话会数量。
 	// 每次展示2打=24个茶话会
 	// 用（随机选中）选取24个用户的24茶话会的模式
 
 	// test获取所有茶话会
-	objective_slice, err := data.GetPublicObjectives(24)
+	objective_slice, err := dao.GetPublicObjectives(24)
 	if err != nil {
 		util.Debug(" Cannot get objectives", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取缘分茶话会资料，请稍后再试。")
@@ -267,8 +267,8 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		//未登录！游客
-		oSpD.SessUser = data.User{
-			Id:   data.UserId_None,
+		oSpD.SessUser = dao.User{
+			Id:   dao.UserId_None,
 			Name: "游客",
 		}
 		//迭代茶话会队列，把作者属性设置为false
@@ -305,8 +305,8 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 // 读取指定的uuid茶话会详情
 func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
-	var oD data.ObjectiveDetail
-	s_u := data.UserUnknown
+	var oD dao.ObjectiveDetail
+	s_u := dao.UserUnknown
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
 	if uuid == "" {
@@ -314,7 +314,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据uuid查询茶话会资料
-	ob := data.Objective{
+	ob := dao.Objective{
 		Uuid: uuid}
 	if err = ob.GetByUuid(); err != nil {
 		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
@@ -322,9 +322,9 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch ob.Class {
-	case data.ObClassOpen, data.ObClassClose:
+	case dao.ObClassOpen, dao.ObClassClose:
 		break
-	case data.ObClassOpenDraft, data.ObClassCloseDraft:
+	case dao.ObClassOpenDraft, dao.ObClassCloseDraft:
 		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
 		return
 	default:
@@ -356,8 +356,8 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		//未登录！
 		oD.IsGuest = true
-		oD.SessUser = data.User{
-			Id:   data.UserId_None,
+		oD.SessUser = dao.User{
+			Id:   dao.UserId_None,
 			Name: "游客",
 			// 用户足迹
 			Footprint: r.URL.Path,
@@ -385,7 +385,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 	oD.SessUser = s_u
 
 	// 如果这个茶话会是封闭式，检查当前用户是否属于受邀请团队成员
-	if ob.Class == data.ObClassClose {
+	if ob.Class == dao.ObClassClose {
 		is_invited, err := oD.ObjectiveBean.Objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot read objective-bean slice", err)
@@ -451,9 +451,9 @@ func objectiveSupplementGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var obSupp data.ObjectiveSupplement
+	var obSupp dao.ObjectiveSupplement
 	// 读取茶围目标内容
-	ob := data.Objective{Uuid: uuid}
+	ob := dao.Objective{Uuid: uuid}
 	if err = ob.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			report(w, s_u, "你好，茶博士竟然说该茶围目标不存在，请确认后再试一次。")
@@ -535,7 +535,7 @@ func objectiveSupplementPost(w http.ResponseWriter, r *http.Request) {
 	additional := r.PostFormValue("additional")
 
 	// 读取茶围目标内容
-	ob := data.Objective{Uuid: o_uuid}
+	ob := dao.Objective{Uuid: o_uuid}
 	if err = ob.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			report(w, s_u, "你好，茶博士竟然说该茶围目标不存在，请确认后再试一次。")

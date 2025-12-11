@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
 )
@@ -55,7 +55,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查SeeSeek记录
-	see_seek := data.SeeSeek{Uuid: uuid}
+	see_seek := dao.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			// 项目的“看看”第一步还没有做！提醒
@@ -68,12 +68,12 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
+	if see_seek.Id < 1 || see_seek.Status < dao.SeeSeekStatusInProgress {
 		report(w, s_u, "无效的“看看”记录。")
 		return
 	}
 	// 获取项目信息
-	project := data.Project{Id: see_seek.ProjectId}
+	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -106,29 +106,29 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	completedSteps := see_seek.Step
-	currentStep := data.SeeSeekStepHazard
-	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
+	currentStep := dao.SeeSeekStepHazard
+	seeSeekStepTitle := dao.GetSeeSeekStepTitle(currentStep)
 
 	// 获取默认隐患列表（仅在第2步时需要）
-	var defaultHazards []data.Hazard
+	var defaultHazards []dao.Hazard
 
-	if hazards, err := data.GetDefaultHazards(r.Context()); err == nil {
+	if hazards, err := dao.GetDefaultHazards(r.Context()); err == nil {
 		defaultHazards = hazards
 	}
 
 	// 获取验证者团队
-	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
 		util.Debug("Cannot get verifier team", err)
 		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
 	// 准备页面数据
-	sssTD := data.SeeSeekStepTemplateData{
+	sssTD := dao.SeeSeekStepTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         is_verifier,
 		Verifier:           s_u,
-		VerifierFamily:     data.FamilyUnknown,
+		VerifierFamily:     dao.FamilyUnknown,
 		VerifierTeam:       verifier_team,
 		ProjectBean:        project_bean,
 		QuoteObjectiveBean: objective_bean,
@@ -165,13 +165,13 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	stepStr := r.PostFormValue("step")
 
 	step, _ := strconv.Atoi(stepStr)
-	if step != data.SeeSeekStepHazard {
+	if step != dao.SeeSeekStepHazard {
 		report(w, s_u, "无效的步骤参数。")
 		return
 	}
 
 	// 获取SeeSeek记录
-	see_seek := data.SeeSeek{Uuid: seeSeekUuid}
+	see_seek := dao.SeeSeek{Uuid: seeSeekUuid}
 	if err := see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			report(w, s_u, "看看记录不存在。")
@@ -180,14 +180,14 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
-	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
+	if see_seek.Id < 1 || see_seek.Status < dao.SeeSeekStatusInProgress {
 		report(w, s_u, "无效的看看记录。")
 		return
 	}
 	// 允许从后续步骤返回修改，不检查重复提交
 
 	// 获取项目信息
-	project := data.Project{Id: see_seek.ProjectId}
+	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		report(w, s_u, "项目不存在。")
 		return
@@ -223,7 +223,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	// 只有数据变化时才更新数据库
 	if !dataSame {
 		// 删除已有的隐患关联记录
-		err = data.DeleteSeeSeekHazardsBySeeSeekId(see_seek.Id)
+		err = dao.DeleteSeeSeekHazardsBySeeSeekId(see_seek.Id)
 		if err != nil {
 			util.Debug("Cannot delete existing SeeSeekHazards", err)
 			report(w, s_u, "更新隐患记录时发生错误，请稍后再试")
@@ -232,7 +232,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 
 		// 验证隐患ID是否存在
 		for _, hazardId := range hazardIds {
-			exist, err := data.IsHazardIdExists(hazardId)
+			exist, err := dao.IsHazardIdExists(hazardId)
 			if err != nil {
 				util.Debug("Cannot check hazard ID existence", err)
 				report(w, s_u, "验证隐患ID时发生错误，请稍后再试")
@@ -249,7 +249,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 		// 保存新的隐患记录
 		if len(hazardIds) > 0 {
 			for _, hazardId := range hazardIds {
-				see_seek_hazard := data.SeeSeekHazard{
+				see_seek_hazard := dao.SeeSeekHazard{
 					SeeSeekId: see_seek.Id,
 					HazardId:  hazardId,
 				}
@@ -263,14 +263,14 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 保存步骤，即更新seeSeek
-	see_seek.Step = data.SeeSeekStepHazard
+	see_seek.Step = dao.SeeSeekStepHazard
 	if err := see_seek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", see_seek.Uuid, err)
 		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
 
-	nextStep := data.SeeSeekStepHazard + 1
+	nextStep := dao.SeeSeekStepHazard + 1
 
 	// 跳转到下一步
 	http.Redirect(w, r, "/v1/see-seek/step"+strconv.Itoa(nextStep)+"?uuid="+seeSeekUuid, http.StatusFound)
@@ -319,7 +319,7 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	see_seek := data.SeeSeek{Uuid: uuid}
+	see_seek := dao.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
@@ -330,12 +330,12 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
+	if see_seek.Id < 1 || see_seek.Status < dao.SeeSeekStatusInProgress {
 		report(w, s_u, "无效的看看记录。")
 		return
 	}
 
-	project := data.Project{Id: see_seek.ProjectId}
+	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -371,29 +371,29 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	completedSteps := see_seek.Step
-	currentStep := data.SeeSeekStepRisk
+	currentStep := dao.SeeSeekStepRisk
 	// 获取当前步骤标题
-	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
+	seeSeekStepTitle := dao.GetSeeSeekStepTitle(currentStep)
 
 	// 获取默认风险列表（仅在第3步时需要）
-	var defaultRisks []data.Risk
+	var defaultRisks []dao.Risk
 
-	if risks, err := data.GetDefaultRisks(r.Context()); err == nil {
+	if risks, err := dao.GetDefaultRisks(r.Context()); err == nil {
 		defaultRisks = risks
 	}
 
-	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
 		util.Debug("Cannot get verifier team", err)
 		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
 
-	sssTD := data.SeeSeekStepTemplateData{
+	sssTD := dao.SeeSeekStepTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         is_verifier,
 		Verifier:           s_u,
-		VerifierFamily:     data.FamilyUnknown,
+		VerifierFamily:     dao.FamilyUnknown,
 		VerifierTeam:       verifier_team,
 		ProjectBean:        project_bean,
 		QuoteObjectiveBean: objective_bean,
@@ -431,12 +431,12 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 	stepStr := r.PostFormValue("step")
 
 	step, _ := strconv.Atoi(stepStr)
-	if step != data.SeeSeekStepRisk {
+	if step != dao.SeeSeekStepRisk {
 		report(w, s_u, "无效的步骤参数。")
 		return
 	}
 
-	seeSeek := data.SeeSeek{Uuid: seeSeekUuid}
+	seeSeek := dao.SeeSeek{Uuid: seeSeekUuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			report(w, s_u, "看看记录不存在。")
@@ -448,7 +448,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 
 	// 允许从后续步骤返回修改
 
-	project := data.Project{Id: seeSeek.ProjectId}
+	project := dao.Project{Id: seeSeek.ProjectId}
 	if err := project.Get(); err != nil {
 		report(w, s_u, "项目不存在。")
 		return
@@ -484,7 +484,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 	// 只有数据变化时才更新数据库
 	if !dataSame {
 		// 删除已有的风险关联记录
-		err = data.DeleteSeeSeekRisksBySeeSeekId(seeSeek.Id)
+		err = dao.DeleteSeeSeekRisksBySeeSeekId(seeSeek.Id)
 		if err != nil {
 			util.Debug("Cannot delete existing SeeSeekRisks", err)
 			report(w, s_u, "更新风险记录时发生错误，请稍后再试")
@@ -493,7 +493,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 
 		if len(riskIds) > 0 {
 			for _, riskId := range riskIds {
-				see_seek_risk := data.SeeSeekRisk{
+				see_seek_risk := dao.SeeSeekRisk{
 					SeeSeekId: seeSeek.Id,
 					RiskId:    riskId,
 				}
@@ -506,14 +506,14 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	seeSeek.Step = data.SeeSeekStepRisk
+	seeSeek.Step = dao.SeeSeekStepRisk
 	if err := seeSeek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
 		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
 
-	nextStep := data.SeeSeekStepRisk + 1
+	nextStep := dao.SeeSeekStepRisk + 1
 
 	http.Redirect(w, r, "/v1/see-seek/step"+strconv.Itoa(nextStep)+"?uuid="+seeSeekUuid, http.StatusFound)
 }
@@ -560,7 +560,7 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	see_seek := data.SeeSeek{Uuid: uuid}
+	see_seek := dao.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
@@ -571,12 +571,12 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
+	if see_seek.Id < 1 || see_seek.Status < dao.SeeSeekStatusInProgress {
 		report(w, s_u, "无效的看看记录。")
 		return
 	}
 
-	project := data.Project{Id: see_seek.ProjectId}
+	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -612,21 +612,21 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	completedSteps := see_seek.Step
-	currentStep := data.SeeSeekStepObservation
-	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
+	currentStep := dao.SeeSeekStepObservation
+	seeSeekStepTitle := dao.GetSeeSeekStepTitle(currentStep)
 
-	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
 		util.Debug("Cannot get verifier team", err)
 		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
 
-	sssTD := data.SeeSeekStepTemplateData{
+	sssTD := dao.SeeSeekStepTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         is_verifier,
 		Verifier:           s_u,
-		VerifierFamily:     data.FamilyUnknown,
+		VerifierFamily:     dao.FamilyUnknown,
 		VerifierTeam:       verifier_team,
 		ProjectBean:        project_bean,
 		QuoteObjectiveBean: objective_bean,
@@ -662,12 +662,12 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	stepStr := r.PostFormValue("step")
 
 	step, _ := strconv.Atoi(stepStr)
-	if step != data.SeeSeekStepObservation {
+	if step != dao.SeeSeekStepObservation {
 		report(w, s_u, "无效的步骤参数。")
 		return
 	}
 
-	seeSeek := data.SeeSeek{Uuid: seeSeekUuid}
+	seeSeek := dao.SeeSeek{Uuid: seeSeekUuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			report(w, s_u, "看看记录不存在。")
@@ -703,11 +703,11 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if lookChanged && (lookOutline != "" || lookSkin != "" || lookColor != "" || lookIsDeform || lookIsGraze || lookIsChange) {
-		err = data.DeleteSeeSeekLooksBySeeSeekId(seeSeek.Id)
+		err = dao.DeleteSeeSeekLooksBySeeSeekId(seeSeek.Id)
 		if err != nil {
 			util.Debug("Cannot delete existing SeeSeekLooks", err)
 		}
-		seeSeekLook := data.SeeSeekLook{
+		seeSeekLook := dao.SeeSeekLook{
 			SeeSeekId: seeSeek.Id,
 			Classify:  0,
 			Status:    1,
@@ -738,11 +738,11 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if listenChanged && (listenSound != "" || listenIsAbnormal) {
-		err = data.DeleteSeeSeekListensBySeeSeekId(seeSeek.Id)
+		err = dao.DeleteSeeSeekListensBySeeSeekId(seeSeek.Id)
 		if err != nil {
 			util.Debug("Cannot delete existing SeeSeekListens", err)
 		}
-		seeSeekListen := data.SeeSeekListen{
+		seeSeekListen := dao.SeeSeekListen{
 			SeeSeekId:  seeSeek.Id,
 			Classify:   0,
 			Status:     1,
@@ -769,11 +769,11 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if smellChanged && (smellOdour != "" || smellIsFoulOdour) {
-		err = data.DeleteSeeSeekSmellsBySeeSeekId(seeSeek.Id)
+		err = dao.DeleteSeeSeekSmellsBySeeSeekId(seeSeek.Id)
 		if err != nil {
 			util.Debug("Cannot delete existing SeeSeekSmells", err)
 		}
-		seeSeekSmell := data.SeeSeekSmell{
+		seeSeekSmell := dao.SeeSeekSmell{
 			SeeSeekId:   seeSeek.Id,
 			Classify:    0,
 			Status:      1,
@@ -804,11 +804,11 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if touchChanged && (touchTemperature != "" || touchStretch != "" || touchShake != "" || touchIsFever || touchIsStiff || touchIsShake) {
-		err = data.DeleteSeeSeekTouchesBySeeSeekId(seeSeek.Id)
+		err = dao.DeleteSeeSeekTouchesBySeeSeekId(seeSeek.Id)
 		if err != nil {
 			util.Debug("Cannot delete existing SeeSeekTouches", err)
 		}
-		seeSeekTouch := data.SeeSeekTouch{
+		seeSeekTouch := dao.SeeSeekTouch{
 			SeeSeekId:   seeSeek.Id,
 			Classify:    0,
 			Status:      1,
@@ -827,14 +827,14 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 更新步骤
-	seeSeek.Step = data.SeeSeekStepObservation
+	seeSeek.Step = dao.SeeSeekStepObservation
 	if err := seeSeek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
 		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
 
-	nextStep := data.SeeSeekStepObservation + 1
+	nextStep := dao.SeeSeekStepObservation + 1
 
 	http.Redirect(w, r, "/v1/see-seek/step"+strconv.Itoa(nextStep)+"?uuid="+seeSeekUuid, http.StatusFound)
 }
@@ -880,7 +880,7 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	see_seek := data.SeeSeek{Uuid: uuid}
+	see_seek := dao.SeeSeek{Uuid: uuid}
 	if err = see_seek.GetByIdOrUUID(r.Context()); err != nil {
 		if err.Error() == "没有记录" {
 			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
@@ -891,12 +891,12 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if see_seek.Id < 1 || see_seek.Status < data.SeeSeekStatusInProgress {
+	if see_seek.Id < 1 || see_seek.Status < dao.SeeSeekStatusInProgress {
 		report(w, s_u, "无效的看看记录。")
 		return
 	}
 
-	project := data.Project{Id: see_seek.ProjectId}
+	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project by uuid", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -932,21 +932,21 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	completedSteps := see_seek.Step
-	currentStep := data.SeeSeekStepReport
-	seeSeekStepTitle := data.GetSeeSeekStepTitle(currentStep)
+	currentStep := dao.SeeSeekStepReport
+	seeSeekStepTitle := dao.GetSeeSeekStepTitle(currentStep)
 
-	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
 		util.Debug("Cannot get verifier team", err)
 		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
 
-	sssTD := data.SeeSeekStepTemplateData{
+	sssTD := dao.SeeSeekStepTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         is_verifier,
 		Verifier:           s_u,
-		VerifierFamily:     data.FamilyUnknown,
+		VerifierFamily:     dao.FamilyUnknown,
 		VerifierTeam:       verifier_team,
 		ProjectBean:        project_bean,
 		QuoteObjectiveBean: objective_bean,
@@ -982,12 +982,12 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	stepStr := r.PostFormValue("step")
 
 	step, _ := strconv.Atoi(stepStr)
-	if step != data.SeeSeekStepReport {
+	if step != dao.SeeSeekStepReport {
 		report(w, s_u, "无效的步骤参数。")
 		return
 	}
 
-	seeSeek := data.SeeSeek{Uuid: seeSeekUuid}
+	seeSeek := dao.SeeSeek{Uuid: seeSeekUuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
 		if err.Error() == "没有记录" {
 			report(w, s_u, "看看记录不存在。")
@@ -999,7 +999,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 
 	// 允许从后续步骤返回修改
 
-	project := data.Project{Id: seeSeek.ProjectId}
+	project := dao.Project{Id: seeSeek.ProjectId}
 	if err := project.Get(); err != nil {
 		report(w, s_u, "项目不存在。")
 		return
@@ -1044,7 +1044,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 
 	if hasReportData {
 		instrumentGoodsId, _ := strconv.Atoi(instrumentGoodsIdStr)
-		examinationReport := data.SeeSeekExaminationReport{
+		examinationReport := dao.SeeSeekExaminationReport{
 			SeeSeekID:         seeSeek.Id,
 			Classify:          classify,
 			Status:            1,
@@ -1094,7 +1094,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 
-			examinationItem := data.SeeSeekExaminationItem{
+			examinationItem := dao.SeeSeekExaminationItem{
 				Classify:                   classify,
 				SeeSeekExaminationReportID: examinationReport.ID,
 				ItemName:                   itemName,
@@ -1115,8 +1115,8 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 更新步骤和状态
-	seeSeek.Step = data.SeeSeekStepReport
-	seeSeek.Status = data.SeeSeekStatusCompleted
+	seeSeek.Step = dao.SeeSeekStepReport
+	seeSeek.Status = dao.SeeSeekStatusCompleted
 	seeSeek.EndTime = endTime
 	if err := seeSeek.Update(); err != nil {
 		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)

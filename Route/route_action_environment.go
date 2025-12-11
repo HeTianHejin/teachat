@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -45,7 +45,7 @@ func EnvironmentNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var envData struct {
-		SessUser  data.User
+		SessUser  dao.User
 		ReturnURL string
 	}
 	envData.SessUser = s_u
@@ -74,7 +74,7 @@ func EnvironmentNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	env := data.Environment{
+	env := dao.Environment{
 		Name:        r.PostFormValue("name"),
 		Summary:     r.PostFormValue("summary"),
 		UserId:      s_u.Id, // 记录见证者ID
@@ -145,7 +145,7 @@ func EnvironmentDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	env := data.Environment{Id: id}
+	env := dao.Environment{Id: id}
 	if err := env.GetByIdOrUUID(); err != nil {
 		util.Debug("Cannot get environment by id", id, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -153,17 +153,17 @@ func EnvironmentDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取记录者信息
-	recorder, err := data.GetUser(env.UserId)
+	recorder, err := dao.GetUser(env.UserId)
 	if err != nil {
 		util.Debug("Cannot get recorder user", env.UserId, err)
 		// 如果获取记录者失败，使用默认值
-		recorder = data.User{Id: 0, Name: "未知用户"}
+		recorder = dao.User{Id: 0, Name: "未知用户"}
 	}
 
 	var envData struct {
-		SessUser    data.User
-		Environment data.Environment
-		Recorder    data.User
+		SessUser    dao.User
+		Environment dao.Environment
+		Recorder    dao.User
 	}
 	envData.SessUser = s_u
 	envData.Environment = env

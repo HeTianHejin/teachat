@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -28,11 +28,11 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	// 2. get family id
 	family_uuid := r.URL.Query().Get("id")
 	//check family is valid
-	if family_uuid == data.FamilyUuidUnknown || family_uuid == "" {
+	if family_uuid == dao.FamilyUuidUnknown || family_uuid == "" {
 		report(w, s_u, "你好，茶博士摸摸头竟然说，陛下这个特殊家庭茶团不允许私用呢。")
 		return
 	}
-	t_family := data.Family{
+	t_family := dao.Family{
 		Uuid: family_uuid,
 	}
 	//fetch family
@@ -66,7 +66,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 		util.Debug("Cannot get user's last default family", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
 		return
-	} else if errors.Is(err, sql.ErrNoRows) || lastDefaultFamily.Id > data.FamilyIdUnknown {
+	} else if errors.Is(err, sql.ErrNoRows) || lastDefaultFamily.Id > dao.FamilyIdUnknown {
 		//if last default family is not Unknown or NoRows
 		if lastDefaultFamily.Id == t_family.Id {
 			//if last default family is  equal to the new default family
@@ -76,7 +76,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// set default family
-	new_user_default_family := data.UserDefaultFamily{
+	new_user_default_family := dao.UserDefaultFamily{
 		UserId:   s_u.Id,
 		FamilyId: t_family.Id,
 	}
@@ -106,7 +106,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 2. get user's family - 默认显示公开家庭
-	family_slice, err := data.ParentMemberOpenFamilies(s_u.Id)
+	family_slice, err := dao.ParentMemberOpenFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's family given id", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
@@ -120,7 +120,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 
 	f_b_l_len := len(f_b_slice)
 	if f_b_l_len != 0 {
@@ -132,7 +132,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		l_default_family, err := s_u.GetLastDefaultFamily()
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				l_default_family = data.FamilyUnknown
+				l_default_family = dao.FamilyUnknown
 			} else {
 				util.Debug(s_u.Id, "Cannot get user's default family", err)
 				report(w, s_u, "你好，乱花渐欲迷人眼，未能查看家庭茶团列表。")
@@ -184,12 +184,12 @@ func FamilyTree(w http.ResponseWriter, r *http.Request) {
 	}
 
 	family_uuid := r.URL.Query().Get("id")
-	if family_uuid == data.FamilyUuidUnknown {
+	if family_uuid == dao.FamilyUuidUnknown {
 		report(w, s_u, "盛世无饥馑，四海可为家。")
 		return
 	}
 
-	family := data.Family{Uuid: family_uuid}
+	family := dao.Family{Uuid: family_uuid}
 	if err = family.GetByUuid(); err != nil {
 		util.Debug("Cannot get family by uuid", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记。")
@@ -208,8 +208,8 @@ func FamilyTree(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type FamilyTreeData struct {
-		SessUser data.User
-		Family   data.Family
+		SessUser dao.User
+		Family   dao.Family
 	}
 
 	var ftd FamilyTreeData
@@ -234,7 +234,7 @@ func ParentFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	family_slice, err := data.ChildMemberFamilies(s_u.Id)
+	family_slice, err := dao.ChildMemberFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's parent families", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有父代家庭茶团。", s_u.Email))
@@ -248,7 +248,7 @@ func ParentFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.IsEmpty = len(f_b_slice) == 0
 	if !fSPD.IsEmpty {
 		for i := range f_b_slice {
@@ -276,19 +276,19 @@ func ChildFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 查找用户作为父母的家庭，然后查找这些家庭的子女成员，再查找子女的家庭
-	parent_families, err := data.ParentMemberFamilies(s_u.Id)
+	parent_families, err := dao.ParentMemberFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's families", err)
 		report(w, s_u, s_u, "你好，茶博士摸摸头，未能查看子代家庭茶团列表。")
 		return
 	}
 
-	var child_families []data.Family
+	var child_families []dao.Family
 	for _, pf := range parent_families {
 		children, _ := pf.ChildMembers()
 		for _, child := range children {
 			if child.IsAdult {
-				child_fams, _ := data.ParentMemberFamilies(child.UserId)
+				child_fams, _ := dao.ParentMemberFamilies(child.UserId)
 				child_families = append(child_families, child_fams...)
 			}
 		}
@@ -301,7 +301,7 @@ func ChildFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.IsEmpty = len(f_b_slice) == 0
 	if !fSPD.IsEmpty {
 		for i := range f_b_slice {
@@ -329,14 +329,14 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 查找用户作为父母的家庭
-	my_families, err := data.ParentMemberFamilies(s_u.Id)
+	my_families, err := dao.ParentMemberFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's families", err)
 		report(w, s_u, s_u, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
 		return
 	}
 
-	var inlaw_families []data.Family
+	var inlaw_families []dao.Family
 	// 遍历用户的家庭，找到配偶
 	for _, my_fam := range my_families {
 		parents, _ := my_fam.ParentMembers()
@@ -344,16 +344,16 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 			// 找到配偶（不是自己的父母成员）
 			if parent.UserId != s_u.Id {
 				// 获取配偶作为子女的家庭（配偶父代）
-				spouse_parent_fams, _ := data.ChildMemberFamilies(parent.UserId)
+				spouse_parent_fams, _ := dao.ChildMemberFamilies(parent.UserId)
 				inlaw_families = append(inlaw_families, spouse_parent_fams...)
 
 				// 获取配偶子女的家庭（配偶子代）
-				spouse_child_fams, _ := data.ParentMemberFamilies(parent.UserId)
+				spouse_child_fams, _ := dao.ParentMemberFamilies(parent.UserId)
 				for _, scf := range spouse_child_fams {
 					children, _ := scf.ChildMembers()
 					for _, child := range children {
 						if child.IsAdult {
-							child_fams, _ := data.ParentMemberFamilies(child.UserId)
+							child_fams, _ := dao.ParentMemberFamilies(child.UserId)
 							inlaw_families = append(inlaw_families, child_fams...)
 						}
 					}
@@ -369,7 +369,7 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.IsEmpty = len(f_b_slice) == 0
 	if !fSPD.IsEmpty {
 		for i := range f_b_slice {
@@ -397,7 +397,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户声明离开的家庭
-	resign_families, err := data.ResignMemberFamilies(s_u.Id)
+	resign_families, err := dao.ResignMemberFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's resign families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
@@ -405,7 +405,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户已删除的家庭
-	deleted_families, err := data.GetDeletedFamiliesByAuthorId(s_u.Id)
+	deleted_families, err := dao.GetDeletedFamiliesByAuthorId(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's deleted families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
@@ -422,7 +422,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.IsEmpty = len(f_b_slice) == 0
 	if !fSPD.IsEmpty {
 		for i := range f_b_slice {
@@ -448,7 +448,7 @@ func HomePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	family_slice, err := data.ParentMemberPrivateFamilies(s_u.Id)
+	family_slice, err := dao.ParentMemberPrivateFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's private family", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
@@ -462,7 +462,7 @@ func HomePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.IsEmpty = len(f_b_slice) == 0
 	if !fSPD.IsEmpty {
 		for i := range f_b_slice {
@@ -489,14 +489,14 @@ func ParentPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	family_slice, err := data.ChildMemberFamilies(s_u.Id)
+	family_slice, err := dao.ChildMemberFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's parent families", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有父代家庭茶团。", s_u.Email))
 		return
 	}
 
-	var private_families []data.Family
+	var private_families []dao.Family
 	for _, fam := range family_slice {
 		if !fam.IsOpen {
 			private_families = append(private_families, fam)
@@ -510,7 +510,7 @@ func ParentPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.IsEmpty = len(f_b_slice) == 0
 	if !fSPD.IsEmpty {
 		for i := range f_b_slice {
@@ -537,32 +537,32 @@ func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	my_families, err := data.ParentMemberFamilies(s_u.Id)
+	my_families, err := dao.ParentMemberFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
 		return
 	}
 
-	var inlaw_families []data.Family
+	var inlaw_families []dao.Family
 	for _, my_fam := range my_families {
 		parents, _ := my_fam.ParentMembers()
 		for _, parent := range parents {
 			if parent.UserId != s_u.Id {
-				spouse_parent_fams, _ := data.ChildMemberFamilies(parent.UserId)
+				spouse_parent_fams, _ := dao.ChildMemberFamilies(parent.UserId)
 				for _, spf := range spouse_parent_fams {
 					if !spf.IsOpen {
 						inlaw_families = append(inlaw_families, spf)
 					}
 				}
 
-				spouse_child_fams, _ := data.ParentMemberFamilies(parent.UserId)
+				spouse_child_fams, _ := dao.ParentMemberFamilies(parent.UserId)
 				for _, scf := range spouse_child_fams {
 					if !scf.IsOpen {
 						children, _ := scf.ChildMembers()
 						for _, child := range children {
 							if child.IsAdult {
-								child_fams, _ := data.ParentMemberFamilies(child.UserId)
+								child_fams, _ := dao.ParentMemberFamilies(child.UserId)
 								for _, cf := range child_fams {
 									if !cf.IsOpen {
 										inlaw_families = append(inlaw_families, cf)
@@ -583,7 +583,7 @@ func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.IsEmpty = len(f_b_slice) == 0
 	if !fSPD.IsEmpty {
 		for i := range f_b_slice {
@@ -610,21 +610,21 @@ func GonePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resign_families, err := data.ResignMemberFamilies(s_u.Id)
+	resign_families, err := dao.ResignMemberFamilies(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's resign families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
 
-	deleted_families, err := data.GetDeletedFamiliesByAuthorId(s_u.Id)
+	deleted_families, err := dao.GetDeletedFamiliesByAuthorId(s_u.Id)
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's deleted families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
 
-	var private_gone_families []data.Family
+	var private_gone_families []dao.Family
 	for _, fam := range append(resign_families, deleted_families...) {
 		if !fam.IsOpen {
 			private_gone_families = append(private_gone_families, fam)
@@ -638,7 +638,7 @@ func GonePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.IsEmpty = len(f_b_slice) == 0
 	if !fSPD.IsEmpty {
 		for i := range f_b_slice {
@@ -669,19 +669,19 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fD data.FamilyDetail
+	var fD dao.FamilyDetail
 
 	// 2. get family
 	family_uuid := r.URL.Query().Get("id")
 
 	//用户如果没有设置默认家庭，则其uuid为x.
 	//报告无信息可供查看。
-	if family_uuid == data.FamilyUuidUnknown {
+	if family_uuid == dao.FamilyUuidUnknown {
 		report(w, s_u, "盛世无饥馑，四海可为家。")
 		return
 	}
 
-	family := data.Family{
+	family := dao.Family{
 		Uuid: family_uuid,
 	}
 	if err = family.GetByUuid(); err != nil {
@@ -702,7 +702,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	if !isMember {
 		// 不是家庭成员，则尝试读取这个家庭的增加新成员声明，看当前用户是否是某个声明对象
 		// check user is new member of family
-		family_member_sign_in := data.FamilyMemberSignIn{
+		family_member_sign_in := dao.FamilyMemberSignIn{
 			FamilyId: family.Id,
 			UserId:   s_u.Id,
 		}
@@ -739,7 +739,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
-	f := data.Family{
+	f := dao.Family{
 		Id: family.Id,
 	}
 	f_p_members, err := f.ParentMembers()
@@ -872,7 +872,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//声明一个空白&家庭茶团
-	var new_family data.Family
+	var new_family dao.Family
 
 	new_family.Status = status_int
 
@@ -902,8 +902,8 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 	new_family.PerspectiveUserId = s_u.Id // 视角所属用户，默认等于AuthorId
 	new_family.Introduction = introduction
 	//初始化家庭茶团默认参数
-	new_family.HusbandFromFamilyId = data.FamilyIdUnknown
-	new_family.WifeFromFamilyId = data.FamilyIdUnknown
+	new_family.HusbandFromFamilyId = dao.FamilyIdUnknown
+	new_family.WifeFromFamilyId = dao.FamilyIdUnknown
 	new_family.Logo = "familyLogo"
 
 	//保存到数据库中,返回新家庭茶团的id
@@ -915,17 +915,17 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 
 	//把创建者登记为默认&家庭茶团成员之一
 	//声明一个家庭成员
-	author_member := data.FamilyMember{
+	author_member := dao.FamilyMember{
 		FamilyId: new_family.Id,
 		UserId:   s_u.Id,
 		IsAdult:  true,
 	}
 	//根据茶友性别，设置其相应的男主
-	if s_u.Gender == data.User_Gender_Male {
-		author_member.Role = data.FamilyMemberRoleHusband
+	if s_u.Gender == dao.User_Gender_Male {
+		author_member.Role = dao.FamilyMemberRoleHusband
 	} else {
 		//或者女主角色
-		author_member.Role = data.FamilyMemberRoleWife
+		author_member.Role = dao.FamilyMemberRoleWife
 	}
 	if err := author_member.Create(); err != nil {
 		util.Debug(s_u.Email, "Cannot create author family member", err)
@@ -938,7 +938,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 	df, err := s_u.GetLastDefaultFamily()
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			df = data.FamilyUnknown
+			df = dao.FamilyUnknown
 		} else {
 			util.Debug(s_u.Id, "Cannot get user's default family", err)
 			report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
@@ -946,9 +946,9 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	if df.Id == data.FamilyIdUnknown {
+	if df.Id == dao.FamilyIdUnknown {
 		//还没有设置默认家庭
-		udf := data.UserDefaultFamily{
+		udf := dao.UserDefaultFamily{
 			UserId:   s_u.Id,
 			FamilyId: new_family.Id,
 		}
@@ -962,7 +962,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 
 	//报告用户登记家庭茶团成功
 	// text := ""
-	// if s_u.Gender == data.User_Gender_Female {
+	// if s_u.Gender == dao.User_Gender_Female {
 	// 	text = fmt.Sprintf("%s 女士，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有快乐品茶时光。", s_u.Name, new_family.Name)
 	// } else {
 	// 	text = fmt.Sprintf("%s 先生，你好，登记 %s 家庭茶团成功，可以到我的家庭中查看详情，祝愿拥有美好品茶时光。", s_u.Name, new_family.Name)
@@ -987,7 +987,7 @@ func NewFamilyGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var fSPD data.FamilySquare
+	var fSPD dao.FamilySquare
 	fSPD.SessUser = s_u
 
 	generateHTML(w, &fSPD, "layout", "navbar.private", "family.new")
@@ -1019,7 +1019,7 @@ func EditFamilyGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	family_uuid := r.URL.Query().Get("id")
-	family := data.Family{Uuid: family_uuid}
+	family := dao.Family{Uuid: family_uuid}
 	if err = family.GetByUuid(); err != nil {
 		report(w, s_u, "未找到家庭资料")
 		return
@@ -1038,16 +1038,16 @@ func EditFamilyGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	parentMembers, _ := family.ParentMembers()
-	var parentFamilies []data.Family
+	var parentFamilies []dao.Family
 	for _, pm := range parentMembers {
-		childFamilies, _ := data.ChildMemberFamilies(pm.UserId)
+		childFamilies, _ := dao.ChildMemberFamilies(pm.UserId)
 		parentFamilies = append(parentFamilies, childFamilies...)
 	}
 
 	type EditData struct {
-		SessUser       data.User
-		FamilyBean     data.FamilyBean
-		ParentFamilies []data.Family
+		SessUser       dao.User
+		FamilyBean     dao.FamilyBean
+		ParentFamilies []dao.Family
 	}
 
 	generateHTML(w, &EditData{s_u, familyBean, parentFamilies}, "layout", "navbar.private", "family.edit")
@@ -1072,7 +1072,7 @@ func EditFamilyPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	family_uuid := r.PostFormValue("family_id")
-	family := data.Family{Uuid: family_uuid}
+	family := dao.Family{Uuid: family_uuid}
 	if err = family.GetByUuid(); err != nil {
 		report(w, s_u, "未找到家庭资料")
 		return
@@ -1151,7 +1151,7 @@ func FamilyMemberAddGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	family := data.Family{Uuid: uuid}
+	family := dao.Family{Uuid: uuid}
 	if err = family.GetByUuid(); err != nil {
 		util.Debug("Cannot get family by uuid", err)
 		report(w, s_u, "你好，未能找到该家庭。")
@@ -1166,8 +1166,8 @@ func FamilyMemberAddGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser data.User
-		Family   data.Family
+		SessUser dao.User
+		Family   dao.Family
 	}
 	pageData.SessUser = s_u
 	pageData.Family = family
@@ -1207,7 +1207,7 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取家庭信息
-	family := data.Family{Uuid: familyUuid}
+	family := dao.Family{Uuid: familyUuid}
 	if err = family.GetByUuid(); err != nil {
 		util.Debug("Cannot get family by uuid", err)
 		report(w, s_u, "你好，未能找到该家庭。")
@@ -1222,9 +1222,9 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser                 data.User
-		Family                   data.Family
-		UserDefaultDataBeanSlice []data.UserDefaultDataBean
+		SessUser                 dao.User
+		Family                   dao.Family
+		UserDefaultDataBeanSlice []dao.UserDefaultDataBean
 		IsEmpty                  bool
 	}
 	pageData.SessUser = s_u
@@ -1240,7 +1240,7 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, err := data.GetUser(userId)
+		user, err := dao.GetUser(userId)
 		if err == nil && user.Id > 0 {
 			userBean, err := fetchUserDefaultBean(user)
 			if err == nil {
@@ -1256,7 +1256,7 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		user, err := data.GetUserByEmail(keyword, r.Context())
+		user, err := dao.GetUserByEmail(keyword, r.Context())
 		if err == nil && user.Id > 0 {
 			userBean, err := fetchUserDefaultBean(user)
 			if err == nil {
@@ -1267,7 +1267,7 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 
 	case "user_name":
 		// 按花名查询
-		userSlice, err := data.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		userSlice, err := dao.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err == nil && len(userSlice) >= 1 {
 			userBeanSlice, err := fetchUserDefaultDataBeanSlice(userSlice)
 			if err == nil && len(userBeanSlice) >= 1 {

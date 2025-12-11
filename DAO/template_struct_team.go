@@ -1,4 +1,4 @@
-package data
+package dao
 
 // 集团邀请团队加盟邀请函
 type GroupInvitationBean struct {

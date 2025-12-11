@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -29,8 +29,8 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 	uuid := vals.Get("uuid")
 	team_uuid := vals.Get("team_uuid")
 
-	var messageBox data.MessageBox
-	var team data.Team
+	var messageBox dao.MessageBox
+	var team dao.Team
 
 	if uuid != "" {
 		// 通过消息盒子UUID获取
@@ -42,8 +42,8 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 获取关联的团队
-		if messageBox.Type == data.MessageBoxTypeTeam {
-			team, err = data.GetTeam(messageBox.ObjectId)
+		if messageBox.Type == dao.MessageBoxTypeTeam {
+			team, err = dao.GetTeam(messageBox.ObjectId)
 			if err != nil {
 				util.Debug(" Cannot get team by id", err)
 				report(w, s_u, "你好，茶博士未能找到关联的团队，请稍后再试。")
@@ -55,7 +55,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	} else if team_uuid != "" {
 		// 通过团队UUID获取
-		team, err = data.GetTeamByUUID(team_uuid)
+		team, err = dao.GetTeamByUUID(team_uuid)
 		if err != nil {
 			util.Debug(" Cannot get team by uuid", err)
 			report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
@@ -63,7 +63,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 获取或创建团队消息盒子（使用安全方法防止并发重复）
-		err = messageBox.GetOrCreateMessageBox(data.MessageBoxTypeTeam, team.Id)
+		err = messageBox.GetOrCreateMessageBox(dao.MessageBoxTypeTeam, team.Id)
 		if err != nil {
 			util.Debug(" Cannot get or create message box", err)
 			report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
@@ -127,7 +127,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 	messageCount := messageBox.AllMessagesCountForUser(s_u.Id)
 
 	// 准备页面数据
-	var mBD data.MessageBoxDetail
+	var mBD dao.MessageBoxDetail
 	mBD.SessUser = s_u
 	mBD.MessageBox = messageBox
 	mBD.Team = team
@@ -172,7 +172,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var message data.Message
+	var message dao.Message
 	err = message.GetMessageById(id)
 	if err != nil {
 		util.Debug(" Cannot get message by id", err)
@@ -181,7 +181,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取消息盒子并检查团队成员权限
-	var messageBox data.MessageBox
+	var messageBox dao.MessageBox
 	err = messageBox.GetMessageBoxById(message.MessageBoxId)
 	if err != nil {
 		util.Debug(" Cannot get message box", err)
@@ -189,9 +189,9 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var team data.Team
-	if messageBox.Type == data.MessageBoxTypeTeam {
-		team, err = data.GetTeam(messageBox.ObjectId)
+	var team dao.Team
+	if messageBox.Type == dao.MessageBoxTypeTeam {
+		team, err = dao.GetTeam(messageBox.ObjectId)
 		if err != nil {
 			util.Debug(" Cannot get team by id", err)
 			report(w, s_u, "你好，茶博士未能找到关联的团队，请稍后再试。")
@@ -245,9 +245,9 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 	// 1. 核心成员可以删除全体可见的消息
 	// 2. 消息接收者可以删除自己的消息
 	canDelete := false
-	if message.ReceiverType == data.MessageReceiverTypeAll && isCoreMember {
+	if message.ReceiverType == dao.MessageReceiverTypeAll && isCoreMember {
 		canDelete = true
-	} else if message.ReceiverType == data.MessageReceiverTypeMember && message.ReceiverId == s_u.Id {
+	} else if message.ReceiverType == dao.MessageReceiverTypeMember && message.ReceiverId == s_u.Id {
 		canDelete = true
 	}
 
@@ -297,7 +297,7 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var message data.Message
+	var message dao.Message
 	err = message.GetMessageById(id)
 	if err != nil {
 		util.Debug(" Cannot get message by id", err)
@@ -307,13 +307,13 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 
 	// 检查用户是否有权限查看和标记这条消息为已读
 	// 1. 首先检查消息权限：发送给"全体"的消息所有人可见，发送给"成员"的消息仅指定成员可见
-	if message.ReceiverType == data.MessageReceiverTypeMember && message.ReceiverId != s_u.Id {
+	if message.ReceiverType == dao.MessageReceiverTypeMember && message.ReceiverId != s_u.Id {
 		report(w, s_u, "你好，这条消息是发送给特定成员的，您无权查看。")
 		return
 	}
 
 	// 2. 获取消息盒子并检查团队成员权限
-	var messageBox data.MessageBox
+	var messageBox dao.MessageBox
 	err = messageBox.GetMessageBoxById(message.MessageBoxId)
 	if err != nil {
 		util.Debug(" Cannot get message box", err)
@@ -322,8 +322,8 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 如果是团队消息盒子，检查用户是否为团队成员
-	if messageBox.Type == data.MessageBoxTypeTeam {
-		team, err := data.GetTeam(messageBox.ObjectId)
+	if messageBox.Type == dao.MessageBoxTypeTeam {
+		team, err := dao.GetTeam(messageBox.ObjectId)
 		if err != nil {
 			util.Debug(" Cannot get team", err)
 			report(w, s_u, "你好，茶博士未能找到关联的团队，请稍后再试。")
@@ -368,7 +368,7 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 重定向回消息盒子详情页面
-	if messageBox.Type == data.MessageBoxTypeTeam {
+	if messageBox.Type == dao.MessageBoxTypeTeam {
 		http.Redirect(w, r, fmt.Sprintf("/v1/message_box/detail?uuid=%s", messageBox.Uuid), http.StatusFound)
 	} else {
 		http.Redirect(w, r, "/v1/", http.StatusFound)
@@ -425,7 +425,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeamByUUID(team_uuid)
+	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(" Cannot get team by uuid", err)
 		report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
@@ -446,7 +446,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取接收者用户信息
-	receiver, err := data.GetUser(receiver_id)
+	receiver, err := dao.GetUser(receiver_id)
 	if err != nil {
 		util.Debug(" Cannot get receiver by id", err)
 		report(w, s_u, "你好，茶博士未能找到接收者，请稍后再试。")
@@ -467,12 +467,12 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取或创建团队消息盒子
-	var messageBox data.MessageBox
-	err = messageBox.GetMessageBoxByTypeAndObjectId(data.MessageBoxTypeTeam, team.Id)
+	var messageBox dao.MessageBox
+	err = messageBox.GetMessageBoxByTypeAndObjectId(dao.MessageBoxTypeTeam, team.Id)
 	if err != nil {
 		// 如果消息盒子不存在，创建一个新的
-		messageBox.Uuid = data.Random_UUID()
-		messageBox.Type = data.MessageBoxTypeTeam
+		messageBox.Uuid = dao.Random_UUID()
+		messageBox.Type = dao.MessageBoxTypeTeam
 		messageBox.ObjectId = team.Id
 		messageBox.IsEmpty = true
 		messageBox.MaxCount = 199
@@ -485,7 +485,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	var mSPD data.MessageSendPageData
+	var mSPD dao.MessageSendPageData
 	mSPD.SessUser = s_u
 	mSPD.Team = team
 	mSPD.Receiver = receiver
@@ -531,7 +531,7 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeamByUUID(team_uuid)
+	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(" Cannot get team by uuid", err)
 		report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
@@ -558,8 +558,8 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取或创建团队消息盒子
-	var messageBox data.MessageBox
-	err = messageBox.GetOrCreateMessageBox(data.MessageBoxTypeTeam, team.Id)
+	var messageBox dao.MessageBox
+	err = messageBox.GetOrCreateMessageBox(dao.MessageBoxTypeTeam, team.Id)
 	if err != nil {
 		util.Debug(" Cannot get or create message box", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
@@ -567,12 +567,12 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建纸条消息
-	message := data.Message{
-		Uuid:           data.Random_UUID(),
+	message := dao.Message{
+		Uuid:           dao.Random_UUID(),
 		MessageBoxId:   messageBox.Id,
-		SenderType:     data.MessageBoxTypeTeam,
+		SenderType:     dao.MessageBoxTypeTeam,
 		SenderObjectId: team.Id,
-		ReceiverType:   data.MessageReceiverTypeMember,
+		ReceiverType:   dao.MessageReceiverTypeMember,
 		ReceiverId:     receiver_id,
 		Content:        content,
 		IsRead:         false,
@@ -629,7 +629,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeamByUUID(team_uuid)
+	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(" Cannot get team by uuid", err)
 		report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
@@ -657,8 +657,8 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取或创建团队消息盒子
-	var messageBox data.MessageBox
-	err = messageBox.GetOrCreateMessageBox(data.MessageBoxTypeTeam, team.Id)
+	var messageBox dao.MessageBox
+	err = messageBox.GetOrCreateMessageBox(dao.MessageBoxTypeTeam, team.Id)
 	if err != nil {
 		util.Debug(" Cannot get or create message box", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
@@ -673,7 +673,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 准备页面数据
-	var mASPD data.MessageAnnouncementSendPageData
+	var mASPD dao.MessageAnnouncementSendPageData
 	mASPD.SessUser = s_u
 	mASPD.Team = team
 
@@ -714,7 +714,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	switch sender_type_int {
-	case data.MessageSenderTypeTeam, data.MessageSenderTypeFamily:
+	case dao.MessageSenderTypeTeam, dao.MessageSenderTypeFamily:
 		break
 	default:
 		report(w, s_u, "你好，请填写完整的布告信息。")
@@ -722,7 +722,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeamByUUID(team_uuid)
+	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
 		util.Debug(" Cannot get team by uuid", err)
 		report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
@@ -750,8 +750,8 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取或创建团队消息盒子
-	var messageBox data.MessageBox
-	err = messageBox.GetOrCreateMessageBox(data.MessageBoxTypeTeam, team.Id)
+	var messageBox dao.MessageBox
+	err = messageBox.GetOrCreateMessageBox(dao.MessageBoxTypeTeam, team.Id)
 	if err != nil {
 		util.Debug(" Cannot get or create message box", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
@@ -766,13 +766,13 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建布告消息（发送给全体成员）
-	message := data.Message{
-		Uuid:           data.Random_UUID(),
+	message := dao.Message{
+		Uuid:           dao.Random_UUID(),
 		MessageBoxId:   messageBox.Id,
 		SenderType:     sender_type_int,
 		SenderObjectId: s_u.Id,
-		ReceiverType:   data.MessageReceiverTypeAll,
-		ReceiverId:     data.UserId_None, // 布告消息发送给全体
+		ReceiverType:   dao.MessageReceiverTypeAll,
+		ReceiverId:     dao.UserId_None, // 布告消息发送给全体
 		Content:        content,
 		IsRead:         false,
 	}

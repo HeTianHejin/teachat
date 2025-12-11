@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -44,7 +44,7 @@ func GroupMemberInviteGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := data.GetGroupByUUID(groupUuid)
+	group, err := dao.GetGroupByUUID(groupUuid)
 	if err != nil {
 		util.Debug("Cannot get group by uuid", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -59,10 +59,10 @@ func GroupMemberInviteGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 如果提供了team_uuid，获取团队信息
-	var inviteTeam *data.Team
+	var inviteTeam *dao.Team
 	teamUuid := r.URL.Query().Get("team_uuid")
 	if teamUuid != "" {
-		team, err := data.GetTeamByUUID(teamUuid)
+		team, err := dao.GetTeamByUUID(teamUuid)
 		if err != nil {
 			util.Debug("Cannot get team by uuid", err)
 		} else {
@@ -71,9 +71,9 @@ func GroupMemberInviteGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser   data.User
-		Group      data.Group
-		InviteTeam *data.Team
+		SessUser   dao.User
+		Group      dao.Group
+		InviteTeam *dao.Team
 	}
 	pageData.SessUser = s_u
 	pageData.Group = group
@@ -132,7 +132,7 @@ func GroupMemberInvitePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团并检查权限
-	group := data.Group{Id: groupId}
+	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
 		util.Debug("Cannot get group", err)
 		report(w, s_u, "你好，未找到该集团。")
@@ -146,7 +146,7 @@ func GroupMemberInvitePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查团队是否已经是集团成员
-	_, err = data.GetGroupMemberByGroupIdAndTeamId(groupId, teamId)
+	_, err = dao.GetGroupMemberByGroupIdAndTeamId(groupId, teamId)
 	if err == nil {
 		report(w, s_u, "你好，该团队已经是集团成员。")
 		return
@@ -157,7 +157,7 @@ func GroupMemberInvitePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建集团邀请函
-	invitation := data.GroupInvitation{
+	invitation := dao.GroupInvitation{
 		GroupId:      groupId,
 		TeamId:       teamId,
 		InviteWord:   inviteWord,
@@ -174,9 +174,9 @@ func GroupMemberInvitePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 向团队CEO发送通知通知
-	team, _ := data.GetTeam(teamId)
+	team, _ := dao.GetTeam(teamId)
 	if ceo, err := team.MemberCEO(); err == nil {
-		if err = data.AddUserNotificationCount(ceo.UserId); err != nil {
+		if err = dao.AddUserNotificationCount(ceo.UserId); err != nil {
 			util.Debug("Cannot add user notification count", err)
 		}
 	}
@@ -213,7 +213,7 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	invitationUuid := r.URL.Query().Get("id")
-	invitation, err := data.GetGroupInvitationByUuid(invitationUuid)
+	invitation, err := dao.GetGroupInvitationByUuid(invitationUuid)
 	if err != nil {
 		util.Debug("Cannot get group invitation", err)
 		report(w, s_u, "你好，未能找到该邀请函。")
@@ -221,7 +221,7 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeam(invitation.TeamId)
+	team, err := dao.GetTeam(invitation.TeamId)
 	if err != nil {
 		util.Debug("Cannot get team", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -242,13 +242,13 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团信息
-	group := data.Group{Id: invitation.GroupId}
+	group := dao.Group{Id: invitation.GroupId}
 	if err := group.Get(); err != nil {
 		util.Debug("Cannot get group", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
-	ceo, _ := data.GetUser(invitation.AuthorUserId)
+	ceo, _ := dao.GetUser(invitation.AuthorUserId)
 
 	// 如果是未读状态，更新为已读
 	if invitation.Status == 0 {
@@ -257,17 +257,17 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 			util.Debug("Cannot update invitation status", err)
 		}
 		// 减少通知计数
-		if err = data.SubtractUserNotificationCount(s_u.Id); err != nil {
+		if err = dao.SubtractUserNotificationCount(s_u.Id); err != nil {
 			util.Debug("Cannot subtract user notification count", err)
 		}
 	}
 
 	var pageData struct {
-		SessUser   data.User
-		Invitation data.GroupInvitation
-		Group      data.Group
-		CEO        data.User
-		Team       data.Team
+		SessUser   dao.User
+		Invitation dao.GroupInvitation
+		Group      dao.Group
+		CEO        dao.User
+		Team       dao.Team
 	}
 	pageData.SessUser = s_u
 	pageData.Invitation = invitation
@@ -321,7 +321,7 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取邀请函
-	invitation, err := data.GetGroupInvitationById(invitationId)
+	invitation, err := dao.GetGroupInvitationById(invitationId)
 	if err != nil {
 		util.Debug("Cannot get group invitation", err)
 		report(w, s_u, "你好，未能找到该邀请函。")
@@ -335,7 +335,7 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队信息
-	team, err := data.GetTeam(invitation.TeamId)
+	team, err := dao.GetTeam(invitation.TeamId)
 	if err != nil {
 		util.Debug("Cannot get team", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -356,7 +356,7 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团信息
-	group := data.Group{Id: invitation.GroupId}
+	group := dao.Group{Id: invitation.GroupId}
 	if err := group.Get(); err != nil {
 		util.Debug("Cannot get group", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -367,7 +367,7 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	case 1:
 		// 接受邀请
 		// 检查团队是否已经是集团成员
-		_, err = data.GetGroupMemberByGroupIdAndTeamId(group.Id, team.Id)
+		_, err = dao.GetGroupMemberByGroupIdAndTeamId(group.Id, team.Id)
 		if err == nil {
 			report(w, s_u, "你好，该团队已经是集团成员。")
 			return
@@ -378,12 +378,12 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 创建集团成员记录
-		member := data.GroupMember{
+		member := dao.GroupMember{
 			GroupId: group.Id,
 			TeamId:  team.Id,
 			Level:   invitation.Level,
 			Role:    invitation.Role,
-			Status:  data.GroupMemberStatusActive,
+			Status:  dao.GroupMemberStatusActive,
 			UserId:  s_u.Id,
 		}
 
@@ -400,7 +400,7 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 创建回复记录
-		reply := data.GroupInvitationReply{
+		reply := dao.GroupInvitationReply{
 			InvitationId: invitationId,
 			UserId:       s_u.Id,
 			ReplyWord:    replyWord,
@@ -419,7 +419,7 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 创建回复记录
-		reply := data.GroupInvitationReply{
+		reply := dao.GroupInvitationReply{
 			InvitationId: invitationId,
 			UserId:       s_u.Id,
 			ReplyWord:    replyWord,
@@ -467,7 +467,7 @@ func HandleGroupSearchTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团信息
-	group, err := data.GetGroupByUUID(groupUuid)
+	group, err := dao.GetGroupByUUID(groupUuid)
 	if err != nil {
 		util.Debug("Cannot get group by uuid", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -482,9 +482,9 @@ func HandleGroupSearchTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser      data.User
-		Group         data.Group
-		TeamBeanSlice []data.TeamBean
+		SessUser      dao.User
+		Group         dao.Group
+		TeamBeanSlice []dao.TeamBean
 		IsEmpty       bool
 	}
 	pageData.SessUser = s_u
@@ -500,7 +500,7 @@ func HandleGroupSearchTeam(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		team, err := data.GetTeam(teamId)
+		team, err := dao.GetTeam(teamId)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				pageData.IsEmpty = true
@@ -519,7 +519,7 @@ func HandleGroupSearchTeam(w http.ResponseWriter, r *http.Request) {
 
 	case "team_abbr":
 		// 按团队简称查询
-		teamSlice, err := data.SearchTeamByAbbreviation(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		teamSlice, err := dao.SearchTeamByAbbreviation(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug("Cannot search team by abbreviation", err)
 			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
@@ -563,7 +563,7 @@ func GroupMemberAddGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := data.GetGroupByUUID(groupUuid)
+	group, err := dao.GetGroupByUUID(groupUuid)
 	if err != nil {
 		util.Debug("Cannot get group by uuid", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -578,8 +578,8 @@ func GroupMemberAddGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser data.User
-		Group    data.Group
+		SessUser dao.User
+		Group    dao.Group
 	}
 	pageData.SessUser = s_u
 	pageData.Group = group
@@ -621,7 +621,7 @@ func GroupMemberRemoveGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := data.GetGroupByUUID(groupUuid)
+	group, err := dao.GetGroupByUUID(groupUuid)
 	if err != nil {
 		util.Debug("Cannot get group by uuid", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -636,7 +636,7 @@ func GroupMemberRemoveGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团的所有成员团队
-	members, err := data.GetMembersByGroupId(group.Id)
+	members, err := dao.GetMembersByGroupId(group.Id)
 	if err != nil {
 		util.Debug("Cannot get group members", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -644,10 +644,10 @@ func GroupMemberRemoveGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队详细信息
-	var teams []data.Team
+	var teams []dao.Team
 	for _, member := range members {
-		if member.Status == data.GroupMemberStatusActive {
-			team, err := data.GetTeam(member.TeamId)
+		if member.Status == dao.GroupMemberStatusActive {
+			team, err := dao.GetTeam(member.TeamId)
 			if err == nil {
 				teams = append(teams, team)
 			}
@@ -655,9 +655,9 @@ func GroupMemberRemoveGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser data.User
-		Group    data.Group
-		Teams    []data.Team
+		SessUser dao.User
+		Group    dao.Group
+		Teams    []dao.Team
 	}
 	pageData.SessUser = s_u
 	pageData.Group = group
@@ -702,7 +702,7 @@ func GroupMemberRemovePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团并检查权限
-	group := data.Group{Id: groupId}
+	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
 		util.Debug("Cannot get group", err)
 		report(w, s_u, "你好，未找到该集团。")
@@ -722,7 +722,7 @@ func GroupMemberRemovePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团成员记录
-	member, err := data.GetGroupMemberByGroupIdAndTeamId(groupId, teamId)
+	member, err := dao.GetGroupMemberByGroupIdAndTeamId(groupId, teamId)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			report(w, s_u, "你好，该团队不是集团成员。")
@@ -740,6 +740,6 @@ func GroupMemberRemovePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, _ := data.GetTeam(teamId)
+	team, _ := dao.GetTeam(teamId)
 	report(w, s_u, fmt.Sprintf("你好，已成功将团队 %s 移出集团。", team.Name))
 }

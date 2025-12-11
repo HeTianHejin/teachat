@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -45,7 +45,7 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 欲声明为家庭成员的茶友资料
-	family_member_user, err := data.GetUserByID(family_member_user_uuid)
+	family_member_user, err := dao.GetUserByID(family_member_user_uuid)
 	if err != nil {
 		util.Debug("cannot get family by uuid", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -57,14 +57,14 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	family := data.Family{Uuid: family_uuid}
+	family := dao.Family{Uuid: family_uuid}
 	if err = family.GetByUuid(); err != nil {
 		util.Debug("cannot get family by uuid:", family_uuid, err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 
-	var fms data.FamilyMemberSignInNew
+	var fms dao.FamilyMemberSignInNew
 	//将当前用户的资料填入表格
 	fms.SessUser = s_u
 	//将当前用户的默认茶团资料填入表格
@@ -111,7 +111,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//读取声明增加的成员资料
-	t_user, err := data.GetUserByEmail(m_email, r.Context())
+	t_user, err := dao.GetUserByEmail(m_email, r.Context())
 	if err != nil {
 		util.Debug(m_email, "Cannot get user by email", err)
 		report(w, s_u, "你好，茶博士正在无事忙之中，稍后再试。")
@@ -121,12 +121,12 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	family_uuid := r.PostFormValue("family_uuid")
 
 	// 如果family_uuid=“x“特殊值，这是虚值，报告错误
-	if family_uuid == data.FamilyUuidUnknown || family_uuid == "" {
+	if family_uuid == dao.FamilyUuidUnknown || family_uuid == "" {
 		report(w, s_u, "你好，茶博士认为你没有提及具体的家庭，或者提及的&家庭茶团还没有登记，请确认后再试。")
 		return
 	}
 
-	t_family := data.Family{
+	t_family := dao.Family{
 		Uuid: family_uuid,
 	}
 	// 检查提及的家庭是否存在
@@ -174,22 +174,22 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士处理选择的角色出现了问题，请稍后再试。")
 		return
 	}
-	if role_int < data.FamilyMemberRoleUnknown || role_int > data.FamilyMemberRolePet {
+	if role_int < dao.FamilyMemberRoleUnknown || role_int > dao.FamilyMemberRolePet {
 		report(w, s_u, "你好，茶博士认为你选择的角色不存在，请确认后再试。")
 		return
 	}
 
 	//检查这个角色是否被占用
-	t_family_member := data.FamilyMember{
+	t_family_member := dao.FamilyMember{
 		Role:     role_int,
 		FamilyId: t_family.Id,
 	}
 	//查看成员角色，分类处理：0、秘密，1、男主人，2、女主人，3、女儿， 4、儿子，5、宠物,
 	switch role_int {
-	case data.FamilyMemberRoleUnknown, data.FamilyMemberRoleDaughter, data.FamilyMemberRoleSon, data.FamilyMemberRolePet:
+	case dao.FamilyMemberRoleUnknown, dao.FamilyMemberRoleDaughter, dao.FamilyMemberRoleSon, dao.FamilyMemberRolePet:
 		// ok，角色可以共用
 		break
-	case data.FamilyMemberRoleHusband, data.FamilyMemberRoleWife:
+	case dao.FamilyMemberRoleHusband, dao.FamilyMemberRoleWife:
 		//角色是唯一的，检查是否被占用
 		if err = t_family_member.GetByRoleFamilyId(); err == nil {
 			report(w, s_u, "你好，茶博士认为你选择的角色已经被占用，请确认后再试。")
@@ -229,14 +229,14 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 新声明
-	new_family_member_sign_in := data.FamilyMemberSignIn{
+	new_family_member_sign_in := dao.FamilyMemberSignIn{
 		FamilyId:     t_family.Id,
 		UserId:       t_user.Id,
 		Role:         role_int,
 		IsAdult:      is_adult,
 		Title:        title,
 		Content:      cont,
-		PlaceId:      data.PlaceIdSpaceshipTeabar,
+		PlaceId:      dao.PlaceIdSpaceshipTeabar,
 		IsAdopted:    is_adopted,
 		AuthorUserId: s_u.Id,
 	}
@@ -292,7 +292,7 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 	// 获取请求参数
 	family_member_sign_in_uuid := r.URL.Query().Get("id")
 	// 读取增加家庭成员声明资料
-	family_member_sign_in := data.FamilyMemberSignIn{
+	family_member_sign_in := dao.FamilyMemberSignIn{
 		Uuid: family_member_sign_in_uuid,
 	}
 	if err := family_member_sign_in.GetByUuid(); err != nil {
@@ -307,7 +307,7 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var fMSID data.FamilyMemberSignInDetail
+	var fMSID dao.FamilyMemberSignInDetail
 	// 读取声明书详细资料
 	family_member_sign_in_bean, err := fetchFamilyMemberSignInBean(family_member_sign_in)
 	if err != nil {
@@ -316,7 +316,7 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//更新声明书状态为已读
-	family_member_sign_in.Status = data.SignInStatusRead
+	family_member_sign_in.Status = dao.SignInStatusRead
 	if err := family_member_sign_in.Update(); err != nil {
 		util.Debug(" Cannot update family_member_sign_in", err)
 		report(w, s_u, "更新声明书失误，请稍后再试一次。")
@@ -367,7 +367,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	//获取声明书id
 	family_member_sign_in_uuid := r.PostFormValue("id")
 	// 读取声明书资料
-	family_member_sign_in := data.FamilyMemberSignIn{
+	family_member_sign_in := dao.FamilyMemberSignIn{
 		Uuid: family_member_sign_in_uuid,
 	}
 	if err = family_member_sign_in.GetByUuid(); err != nil {
@@ -381,12 +381,12 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查声明书状态是否已读但未处理，status==1是已读未处理，其它值都是非法的值
-	if family_member_sign_in.Status != data.SignInStatusRead {
+	if family_member_sign_in.Status != dao.SignInStatusRead {
 		report(w, s_u, "你好，柳丝榆荚自芳菲，声明资料满天飞。请稍后再试。")
 		return
 	}
 
-	family_member_sign_in_reply := data.FamilyMemberSignInReply{
+	family_member_sign_in_reply := dao.FamilyMemberSignInReply{
 		SignInId: family_member_sign_in.Id,
 		UserId:   s_u.Id,
 	}
@@ -395,7 +395,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	if reply_bool {
 		//同意加入家庭
 		//读取声明书资料
-		family_member := data.FamilyMember{
+		family_member := dao.FamilyMember{
 			UserId:    family_member_sign_in.UserId,
 			FamilyId:  family_member_sign_in.FamilyId,
 			Role:      family_member_sign_in.Role,
@@ -410,7 +410,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		}
 		//如果role==1，2，表示家庭成员是家庭的父母角色，那么需要更新家庭的名称
 		if family_member.Role == 1 || family_member.Role == 2 {
-			family := data.Family{
+			family := dao.Family{
 				Id: family_member.FamilyId,
 			}
 			if err = family.Get(); err != nil {
@@ -426,7 +426,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//更新声明书状态为"已确认“ 2
-		family_member_sign_in.Status = data.SignInStatusConfirmed
+		family_member_sign_in.Status = dao.SignInStatusConfirmed
 		if err = family_member_sign_in.Update(); err != nil {
 			util.Debug(" Cannot update family_member_sign_in", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
@@ -437,7 +437,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	} else {
 		//拒绝加入家庭
 		//在声明书状态中更新为“已否认”
-		family_member_sign_in.Status = data.SignInStatusDenied
+		family_member_sign_in.Status = dao.SignInStatusDenied
 		if err = family_member_sign_in.Update(); err != nil {
 			util.Debug(" Cannot update family_member_sign_in", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
@@ -455,7 +455,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 
 	if reply_bool {
 		//跳转到家庭茶团页面,成员列表上有该茶友，表示已经加入成功
-		family := data.Family{
+		family := dao.Family{
 			Id: family_member_sign_in.FamilyId,
 		}
 		if err = family.Get(); err != nil {
@@ -499,13 +499,13 @@ func FamilyMemberEditGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	member_uuid := r.URL.Query().Get("id")
-	fm := data.FamilyMember{Uuid: member_uuid}
+	fm := dao.FamilyMember{Uuid: member_uuid}
 	if err = fm.GetByUuid(); err != nil {
 		report(w, s_u, "未找到成员资料")
 		return
 	}
 
-	family := data.Family{Id: fm.FamilyId}
+	family := dao.Family{Id: fm.FamilyId}
 	if err = family.Get(); err != nil {
 		report(w, s_u, "未找到家庭资料")
 		return
@@ -530,9 +530,9 @@ func FamilyMemberEditGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type EditData struct {
-		SessUser         data.User
-		FamilyBean       data.FamilyBean
-		FamilyMemberBean data.FamilyMemberBean
+		SessUser         dao.User
+		FamilyBean       dao.FamilyBean
+		FamilyMemberBean dao.FamilyMemberBean
 	}
 
 	generateHTML(w, &EditData{s_u, familyBean, fmBean}, "layout", "navbar.private", "family_member.edit")
@@ -557,13 +557,13 @@ func FamilyMemberEditPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	member_uuid := r.PostFormValue("member_id")
-	fm := data.FamilyMember{Uuid: member_uuid}
+	fm := dao.FamilyMember{Uuid: member_uuid}
 	if err = fm.GetByUuid(); err != nil {
 		report(w, s_u, "未找到成员资料")
 		return
 	}
 
-	family := data.Family{Id: fm.FamilyId}
+	family := dao.Family{Id: fm.FamilyId}
 	if err = family.Get(); err != nil {
 		report(w, s_u, "未找到家庭资料")
 		return
@@ -578,13 +578,13 @@ func FamilyMemberEditPost(w http.ResponseWriter, r *http.Request) {
 	fm.NickName = r.PostFormValue("nickname")
 
 	if birthday := r.PostFormValue("birthday"); birthday != "" {
-		if t, err := data.ParseDate(birthday); err == nil {
+		if t, err := dao.ParseDate(birthday); err == nil {
 			fm.Birthday = &t
 		}
 	}
 
 	if deathDate := r.PostFormValue("death_date"); deathDate != "" {
-		if t, err := data.ParseDate(deathDate); err == nil {
+		if t, err := dao.ParseDate(deathDate); err == nil {
 			fm.DeathDate = &t
 		}
 	} else {
@@ -620,13 +620,13 @@ func FamilyMemberDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	member_uuid := r.URL.Query().Get("id")
-	fm := data.FamilyMember{Uuid: member_uuid}
+	fm := dao.FamilyMember{Uuid: member_uuid}
 	if err = fm.GetByUuid(); err != nil {
 		report(w, s_u, "未找到成员资料")
 		return
 	}
 
-	family := data.Family{Id: fm.FamilyId}
+	family := dao.Family{Id: fm.FamilyId}
 	if err = family.Get(); err != nil {
 		report(w, s_u, "未找到家庭资料")
 		return
@@ -653,9 +653,9 @@ func FamilyMemberDetail(w http.ResponseWriter, r *http.Request) {
 	isParent, _ := family.IsParentMember(s_u.Id)
 
 	type DetailData struct {
-		SessUser         data.User
-		FamilyBean       data.FamilyBean
-		FamilyMemberBean data.FamilyMemberBean
+		SessUser         dao.User
+		FamilyBean       dao.FamilyBean
+		FamilyMemberBean dao.FamilyMemberBean
 		IsParent         bool
 	}
 

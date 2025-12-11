@@ -3,7 +3,7 @@ package route
 import (
 	"fmt"
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -20,54 +20,54 @@ const (
 )
 
 // 检查茶围目标管理权限，即用户是否属于茶围归属团队有效成员
-func checkObjectiveAdminPermission(ob *data.Objective, userID int) (bool, error) {
+func checkObjectiveAdminPermission(ob *dao.Objective, userID int) (bool, error) {
 
 	//家庭管理的
 	if ob.IsPrivate {
-		if ob.FamilyId == data.FamilyIdUnknown {
+		if ob.FamilyId == dao.FamilyIdUnknown {
 			return false, fmt.Errorf("checkObjectiveAdminPermission()-> invalid family id %d", ob.FamilyId)
 		}
 
-		family := data.Family{Id: ob.FamilyId}
+		family := dao.Family{Id: ob.FamilyId}
 		return family.IsParentMember(userID)
 	}
 
 	// 团队管理的茶围
-	if ob.TeamId == data.TeamIdNone || ob.TeamId == data.TeamIdFreelancer || ob.TeamId == data.TeamIdSpaceshipCrew {
+	if ob.TeamId == dao.TeamIdNone || ob.TeamId == dao.TeamIdFreelancer || ob.TeamId == dao.TeamIdSpaceshipCrew {
 		return false, fmt.Errorf("checkProjectMasterPermission()-> invalid team id %d", ob.TeamId)
 	}
 
-	team := data.Team{Id: ob.TeamId}
+	team := dao.Team{Id: ob.TeamId}
 	return team.IsMember(userID)
 }
 
 // 检查茶台项目管理权限，即用户是否茶台项目归属团队有权成员
-func checkProjectMasterPermission(pr *data.Project, user_id int) (bool, error) {
+func checkProjectMasterPermission(pr *dao.Project, user_id int) (bool, error) {
 
 	if pr.IsPrivate {
-		if pr.FamilyId == data.FamilyIdUnknown {
+		if pr.FamilyId == dao.FamilyIdUnknown {
 			return false, fmt.Errorf("checkProjectMasterPermission()-> invalid family id %d", pr.FamilyId)
 		}
 
-		pr_family := data.Family{Id: pr.FamilyId}
+		pr_family := dao.Family{Id: pr.FamilyId}
 		return pr_family.IsParentMember(user_id)
 	}
 
 	// 团队管理的
-	if pr.TeamId == data.TeamIdNone || pr.TeamId == data.TeamIdFreelancer || pr.TeamId == data.TeamIdSpaceshipCrew {
+	if pr.TeamId == dao.TeamIdNone || pr.TeamId == dao.TeamIdFreelancer || pr.TeamId == dao.TeamIdSpaceshipCrew {
 		return false, fmt.Errorf("checkProjectMasterPermission()-> invalid team id %d", pr.TeamId)
 	}
 
-	pr_team := data.Team{Id: pr.TeamId}
+	pr_team := dao.Team{Id: pr.TeamId}
 	return pr_team.IsMember(user_id)
 }
 
 // 检查茶台创建权限
-func checkCreateProjectPermission(objective data.Objective, s_u data.User, w http.ResponseWriter) bool {
+func checkCreateProjectPermission(objective dao.Objective, s_u dao.User, w http.ResponseWriter) bool {
 	switch objective.Class {
-	case data.ObClassOpen: // 开放式茶话会
+	case dao.ObClassOpen: // 开放式茶话会
 		return true
-	case data.ObClassClose: // 封闭式茶话会
+	case dao.ObClassClose: // 封闭式茶话会
 		isInvited, err := objective.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug("检查邀请名单失败", "error", err)
@@ -86,11 +86,11 @@ func checkCreateProjectPermission(objective data.Objective, s_u data.User, w htt
 }
 
 // 检查茶议（thread）创建权限
-func checkCreateThreadPermission(project data.Project, s_u data.User, w http.ResponseWriter) bool {
+func checkCreateThreadPermission(project dao.Project, s_u dao.User, w http.ResponseWriter) bool {
 	switch project.Class {
-	case data.PrClassOpen: // 开放式茶台
+	case dao.PrClassOpen: // 开放式茶台
 		return true
-	case data.PrClassClose: // 封闭式茶台
+	case dao.PrClassClose: // 封闭式茶台
 		isInvited, err := project.IsInvitedMember(s_u.Id)
 		if err != nil {
 			util.Debug("检查邀请名单失败", "error", err)
@@ -109,13 +109,13 @@ func checkCreateThreadPermission(project data.Project, s_u data.User, w http.Res
 }
 
 // 准备茶围页面数据
-func prepareObjectivePageData(objective data.Objective, userData *data.UserPageData) (*data.ObjectiveDetail, error) {
+func prepareObjectivePageData(objective dao.Objective, userData *dao.UserPageData) (*dao.ObjectiveDetail, error) {
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
 		return nil, err
 	}
 
-	return &data.ObjectiveDetail{
+	return &dao.ObjectiveDetail{
 		SessUser:                 userData.User,
 		SessUserDefaultFamily:    userData.DefaultFamily,
 		SessUserSurvivalFamilies: userData.SurvivalFamilies,
@@ -128,7 +128,7 @@ func prepareObjectivePageData(objective data.Objective, userData *data.UserPageD
 }
 
 // 根据给出的thread参数，去获取对应的茶议，附属品味计数，作者资料，作者发帖时候选择的茶团，费用和费时。
-func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, err error) {
+func fetchThreadBean(thread dao.Thread, r *http.Request) (tB dao.ThreadBean, err error) {
 	tB.Thread = thread
 
 	tB.PostCount = thread.NumReplies()
@@ -139,13 +139,13 @@ func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 		return tB, fmt.Errorf("failed to read thread author: %w", err)
 	}
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。
-	tB.AuthorFamily, err = data.GetFamily(thread.FamilyId)
+	tB.AuthorFamily, err = dao.GetFamily(thread.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read thread author family", err)
 		return
 	}
 
-	tB.AuthorTeam, err = data.GetTeam(thread.TeamId)
+	tB.AuthorTeam, err = dao.GetTeam(thread.TeamId)
 	if err != nil {
 		util.Debug(" Cannot read thread author team", err)
 		return
@@ -156,7 +156,7 @@ func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 	tB.StatsSet.TeamCount = 0
 
 	if thread.IsPrivate {
-		p_f_count, err := data.CountFamilyParentAndChildMembers(thread.FamilyId, r.Context())
+		p_f_count, err := dao.CountFamilyParentAndChildMembers(thread.FamilyId, r.Context())
 		if err != nil {
 			util.Debug(fmt.Sprintf("Failed to count family members for family ID %d: %v", thread.FamilyId, err))
 			return tB, fmt.Errorf("failed to count family members: %w", err)
@@ -168,7 +168,7 @@ func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 		tB.StatsSet.MemberCount = teamMembersCount
 	}
 
-	if tB.AuthorTeam.Id > data.TeamIdFreelancer {
+	if tB.AuthorTeam.Id > dao.TeamIdFreelancer {
 		tB.StatsSet.TeamCount = 1
 	}
 
@@ -179,8 +179,8 @@ func fetchThreadBean(thread data.Thread, r *http.Request) (tB data.ThreadBean, e
 }
 
 // 根据给出的thread_slice参数，去获取对应的茶议（截短正文保留前168字符），附属品味计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回
-func fetchThreadBeanSlice(thread_slice []data.Thread, r *http.Request) (ThreadBeanSlice []data.ThreadBean, err error) {
-	var beanSlice []data.ThreadBean
+func fetchThreadBeanSlice(thread_slice []dao.Thread, r *http.Request) (ThreadBeanSlice []dao.ThreadBean, err error) {
+	var beanSlice []dao.ThreadBean
 	// 截短ThreadSlice中thread.Body文字长度为168字符,
 	// 展示时长度接近，页面排列比较整齐，
 	for i := range thread_slice {
@@ -198,7 +198,7 @@ func fetchThreadBeanSlice(thread_slice []data.Thread, r *http.Request) (ThreadBe
 }
 
 // 根据给出的objectiv_slice参数，去获取对应的茶话会（objective），截短正文保留前168字符，附属茶台计数，发起人资料，发帖时候选择的茶团。然后按结构填写返回资料荚。
-func FetchObjectiveBeanSlice(objectiv_slice []data.Objective) (ObjectiveBeanSlice []data.ObjectiveBean, err error) {
+func FetchObjectiveBeanSlice(objectiv_slice []dao.Objective) (ObjectiveBeanSlice []dao.ObjectiveBean, err error) {
 	// 截短ObjectiveSlice中objective.Body文字长度为168字符,
 	for i := range objectiv_slice {
 		objectiv_slice[i].Body = subStr(objectiv_slice[i].Body, 168)
@@ -214,8 +214,8 @@ func FetchObjectiveBeanSlice(objectiv_slice []data.Objective) (ObjectiveBeanSlic
 }
 
 // 根据给出的objectiv参数，去获取对应的茶话会（objective），附属茶台计数，发起人资料，作者发贴时选择的茶团。然后按结构填写返回资料荚。
-func fetchObjectiveBean(ob data.Objective) (ObjectiveBean data.ObjectiveBean, err error) {
-	var oB data.ObjectiveBean
+func fetchObjectiveBean(ob dao.Objective) (ObjectiveBean dao.ObjectiveBean, err error) {
+	var oB dao.ObjectiveBean
 
 	oB.Objective = ob
 	if ob.Class == 1 {
@@ -235,13 +235,13 @@ func fetchObjectiveBean(ob data.Objective) (ObjectiveBean data.ObjectiveBean, er
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
 
-	oB.AuthorFamily, err = data.GetFamily(ob.FamilyId)
+	oB.AuthorFamily, err = dao.GetFamily(ob.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read objective author family", err)
 		return
 	}
 
-	oB.AuthorTeam, err = data.GetTeam(ob.TeamId)
+	oB.AuthorTeam, err = dao.GetTeam(ob.TeamId)
 	if err != nil {
 		util.Debug(" Cannot read objective author team", err)
 		return
@@ -251,7 +251,7 @@ func fetchObjectiveBean(ob data.Objective) (ObjectiveBean data.ObjectiveBean, er
 }
 
 // 据给出的project_slice参数，去获取对应的茶台（project），截短正文保留前168字符，附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
-func fetchProjectBeanSlice(project_slice []data.Project) (ProjectBeanSlice []data.ProjectBean, err error) {
+func fetchProjectBeanSlice(project_slice []dao.Project) (ProjectBeanSlice []dao.ProjectBean, err error) {
 	// 截短ObjectiveSlice中objective.Body文字长度为168字符,
 	for i := range project_slice {
 		project_slice[i].Body = subStr(project_slice[i].Body, 168)
@@ -267,8 +267,8 @@ func fetchProjectBeanSlice(project_slice []data.Project) (ProjectBeanSlice []dat
 }
 
 // 据给出的project参数，去获取对应的茶台（project），附属茶议计数，发起人资料，作者发帖时候选择的茶团。然后按结构填写返回资料。
-func fetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err error) {
-	var pb data.ProjectBean
+func fetchProjectBean(project dao.Project) (ProjectBean dao.ProjectBean, err error) {
+	var pb dao.ProjectBean
 	pb.Project = project
 	if project.Class == 1 {
 		pb.Open = true
@@ -287,13 +287,13 @@ func fetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
 
-	pb.AuthorFamily, err = data.GetFamily(project.FamilyId)
+	pb.AuthorFamily, err = dao.GetFamily(project.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read project author family", err)
 		return
 	}
 
-	pb.AuthorTeam, err = data.GetTeam(project.TeamId)
+	pb.AuthorTeam, err = dao.GetTeam(project.TeamId)
 	if err != nil {
 		util.Debug(" Cannot read project author team", err)
 		return
@@ -316,7 +316,7 @@ func fetchProjectBean(project data.Project) (ProjectBean data.ProjectBean, err e
 }
 
 // 据给出的post_slice参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回。
-func fetchPostBeanSlice(post_slice []data.Post) (PostBeanSlice []data.PostBean, err error) {
+func fetchPostBeanSlice(post_slice []dao.Post) (PostBeanSlice []dao.PostBean, err error) {
 	for _, pos := range post_slice {
 		postBean, err := fetchPostBean(pos)
 		if err != nil {
@@ -328,7 +328,7 @@ func fetchPostBeanSlice(post_slice []data.Post) (PostBeanSlice []data.PostBean, 
 }
 
 // 据给出的post参数，去获取对应的品味（Post），附属茶议计数，作者资料，作者发帖时候选择的茶团。然后按结构拼装返回。
-func fetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
+func fetchPostBean(post dao.Post) (PostBean dao.PostBean, err error) {
 	PostBean.Post = post
 	PostBean.Attitude = post.Atti()
 	PostBean.ThreadCount = post.NumReplies()
@@ -342,14 +342,14 @@ func fetchPostBean(post data.Post) (PostBean data.PostBean, err error) {
 
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。换句话说就是代表那个团队或者家庭说茶话？（注意个人身份发言是代表“自由人”茶团）
 
-	family, err := data.GetFamily(post.FamilyId)
+	family, err := dao.GetFamily(post.FamilyId)
 	if err != nil {
 		util.Debug(" Cannot read post author family", err)
 		return
 	}
 	PostBean.AuthorFamily = family
 
-	team, err := data.GetTeam(post.TeamId)
+	team, err := dao.GetTeam(post.TeamId)
 	if err != nil {
 		util.Debug(" Cannot read post author team", err)
 		return

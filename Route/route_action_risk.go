@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -45,7 +45,7 @@ func RiskNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var riskData struct {
-		SessUser  data.User
+		SessUser  dao.User
 		ReturnURL string
 	}
 	riskData.SessUser = s_u
@@ -87,7 +87,7 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 		severity = 3 // 默认中风险
 	}
 
-	risk := data.Risk{
+	risk := dao.Risk{
 		UserId:      s_u.Id,
 		Name:        name,
 		Nickname:    strings.TrimSpace(r.PostFormValue("nickname")),
@@ -149,7 +149,7 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	risk := data.Risk{Id: id}
+	risk := dao.Risk{Id: id}
 	if err := risk.GetByIdOrUUID(); err != nil {
 		util.Debug("Cannot get risk by id", id, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -157,17 +157,17 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取记录者信息
-	recorder, err := data.GetUser(risk.UserId)
+	recorder, err := dao.GetUser(risk.UserId)
 	if err != nil {
 		util.Debug("Cannot get recorder user", risk.UserId, err)
 		// 如果获取记录者失败，使用默认值
-		recorder = data.User{Id: 0, Name: "未知用户"}
+		recorder = dao.User{Id: 0, Name: "未知用户"}
 	}
 
 	var riskData struct {
-		SessUser data.User
-		Risk     data.Risk
-		Recorder data.User
+		SessUser dao.User
+		Risk     dao.Risk
+		Recorder dao.User
 	}
 	riskData.SessUser = s_u
 	riskData.Risk = risk

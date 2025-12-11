@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
 )
@@ -16,9 +16,9 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	var err error
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
-	var pD data.PostDetail
-	s_u := data.UserUnknown
-	t_post := data.Post{Uuid: uuid}
+	var pD dao.PostDetail
+	s_u := dao.UserUnknown
+	t_post := dao.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail", err)
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
@@ -103,8 +103,8 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		pD.IsGuest = true
 
 		// 填写页面数据
-		pD.SessUser = data.User{
-			Id:   data.UserId_None,
+		pD.SessUser = dao.User{
+			Id:   dao.UserId_None,
 			Name: "游客",
 			// 陛下足迹
 			Footprint: r.URL.Path,
@@ -151,7 +151,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !pD.IsAdmin && !pD.IsMaster {
-		veri_team := data.Team{Id: data.TeamIdVerifier}
+		veri_team := dao.Team{Id: dao.TeamIdVerifier}
 		is_member, err := veri_team.IsMember(s_u.Id)
 		if err != nil {
 			util.Debug("Cannot check verifier team member", err)
@@ -213,13 +213,13 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	//读取针对的目标茶议
 	thread_uuid := r.PostFormValue("uuid")
 	//检查uuid是否有效
-	t_thread, err := data.GetThreadByUUID(thread_uuid)
+	t_thread, err := dao.GetThreadByUUID(thread_uuid)
 	if err != nil {
 		report(w, s_u, "你好，根据陛下的指示，却未能读取目标茶议。")
 		return
 	}
 	ctx := r.Context()
-	posted := data.Post{UserId: s_u.Id, ThreadId: t_thread.Id}
+	posted := dao.Post{UserId: s_u.Id, ThreadId: t_thread.Id}
 	posted_exists, err := posted.HasUserPostedInThread(ctx)
 	if err != nil {
 		util.Debug("failed to check has-user-posted-thread", err)
@@ -277,11 +277,11 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	switch t_proj.Class {
-	case data.PrClassOpen:
+	case dao.PrClassOpen:
 		// 开放式茶台，任何人可以品茶
 		// 直接继续创建流程
 
-	case data.PrClassClose:
+	case dao.PrClassClose:
 		// 封闭式茶台，检查邀请状态
 		ok, err := t_proj.IsInvitedMember(s_u.Id)
 		if err != nil {
@@ -334,12 +334,12 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//确定是哪一种级别发布
-	dp_class := data.PostClassNormal
+	dp_class := dao.PostClassNormal
 	if is_admin || is_master {
-		dp_class = data.PostClassAdmin
+		dp_class = dao.PostClassAdmin
 	}
 
-	new_draft_post := data.DraftPost{
+	new_draft_post := dao.DraftPost{
 		UserId:    s_u.Id,
 		ThreadId:  t_thread.Id,
 		FamilyId:  family_id,
@@ -357,7 +357,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 
 	if util.Config.PoliteMode {
 		// 友邻蒙评模式
-		if err := createAndSendAcceptNotification(new_draft_post.Id, data.AcceptObjectTypePost, s_u.Id, r.Context()); err != nil {
+		if err := createAndSendAcceptNotification(new_draft_post.Id, dao.AcceptObjectTypePost, s_u.Id, r.Context()); err != nil {
 			// 根据错误类型返回不同提示
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, s_u, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
@@ -437,7 +437,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
-	t_post := data.Post{Uuid: uuid}
+	t_post := dao.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail given uuid", uuid)
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
@@ -465,7 +465,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 		//检查是否是品味发布者所在团队成员，或者家庭成员
 		if t_post.IsPrivate {
 			//检查是否是品味发布者所在家庭成员
-			family := data.Family{Id: t_post.FamilyId}
+			family := dao.Family{Id: t_post.FamilyId}
 			if is_member, err := family.IsMember(s_u.Id); err != nil || !is_member {
 				util.Debug(" Cannot check family member", err)
 				report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
@@ -476,7 +476,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			//检查是否是品味发布者所在团队成员
-			team := data.Team{Id: t_post.TeamId}
+			team := dao.Team{Id: t_post.TeamId}
 			if is_member, err := team.IsMember(s_u.Id); err != nil || !is_member {
 				util.Debug(" Cannot check team member", err)
 				report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
@@ -502,7 +502,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士失魂鱼，墨水中断未能补充品味。")
 			return
 		}
-		// thread, err := data.GetThreadById(t_post.ThreadId)
+		// thread, err := dao.GetThreadById(t_post.ThreadId)
 		// if err != nil {
 		// 	util.Debug(" Cannot read thread", err)
 		// 	Report(w, r, "身后有余忘缩手，眼前无路想回头，请稍后再试。")
@@ -535,7 +535,7 @@ func SupplementPostGet(w http.ResponseWriter, r *http.Request) {
 	}
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
-	t_post := data.Post{Uuid: uuid}
+	t_post := dao.Post{Uuid: uuid}
 	if err = t_post.GetByUuid(); err != nil {
 		util.Debug(" Cannot get post detail", err)
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
@@ -550,7 +550,7 @@ func SupplementPostGet(w http.ResponseWriter, r *http.Request) {
 		//检查是否是品味发布者所在团队成员，或者家庭成员
 		if t_post.IsPrivate {
 			//检查是否是品味发布者所在家庭成员
-			family := data.Family{Id: t_post.FamilyId}
+			family := dao.Family{Id: t_post.FamilyId}
 			if is_member, err := family.IsMember(s_u.Id); err != nil || !is_member {
 				util.Debug(" Cannot check family member", err)
 				report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
@@ -561,7 +561,7 @@ func SupplementPostGet(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			//检查是否是品味发布者所在团队成员
-			team := data.Team{Id: t_post.TeamId}
+			team := dao.Team{Id: t_post.TeamId}
 			if is_member, err := team.IsMember(s_u.Id); err != nil || !is_member {
 				util.Debug(" Cannot check team member", err)
 				report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
@@ -571,7 +571,7 @@ func SupplementPostGet(w http.ResponseWriter, r *http.Request) {
 			ok = true
 		}
 	}
-	var pD data.PostDetail
+	var pD dao.PostDetail
 	pD.SessUser = s_u
 	pD.IsInput = true
 	pD.PostBean, err = fetchPostBean(t_post)

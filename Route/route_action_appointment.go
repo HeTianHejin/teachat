@@ -5,7 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
 )
@@ -52,7 +52,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 根据uuid获取项目
-	pr := data.Project{Uuid: uuid}
+	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
 		// 如果项目获取失败，则记录错误并返回错误信息
 		util.Debug(" Cannot get project", uuid, err)
@@ -67,7 +67,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	master, err := data.GetUser(pr.UserId)
+	master, err := dao.GetUser(pr.UserId)
 	if err != nil {
 		// 如果用户获取失败，则记录错误并返回错误信息
 		util.Debug(" Cannot get user", err)
@@ -75,7 +75,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取项目所属的家族
-	master_family, err := data.GetFamily(pr.FamilyId)
+	master_family, err := dao.GetFamily(pr.FamilyId)
 	if err != nil {
 		// 如果家族获取失败，则记录错误并返回错误信息
 		util.Debug(" Cannot get family", err)
@@ -83,7 +83,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取项目所属的团队
-	master_team, err := data.GetTeam(pr.TeamId)
+	master_team, err := dao.GetTeam(pr.TeamId)
 	if err != nil {
 		// 如果团队获取失败，则记录错误并返回错误信息
 		util.Debug(" Cannot get team", err)
@@ -106,7 +106,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	admin, err := data.GetUser(ob.UserId)
+	admin, err := dao.GetUser(ob.UserId)
 	if err != nil {
 		// 如果用户获取失败，则记录错误并返回错误信息
 		util.Debug(" Cannot get user", err)
@@ -114,7 +114,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取目标所属的家族
-	admin_family, err := data.GetFamily(ob.FamilyId)
+	admin_family, err := dao.GetFamily(ob.FamilyId)
 	if err != nil {
 		// 如果家族获取失败，则记录错误并返回错误信息
 		util.Debug(" Cannot get family", err)
@@ -122,7 +122,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取目标所属的团队
-	admin_team, err := data.GetTeam(ob.TeamId)
+	admin_team, err := dao.GetTeam(ob.TeamId)
 	if err != nil {
 		// 如果团队获取失败，则记录错误并返回错误信息
 		util.Debug(" Cannot get team", err)
@@ -130,15 +130,15 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取验证者团队
-	verifier_team, err := data.GetTeam(data.TeamIdVerifier)
+	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
 		util.Debug(" Cannot get verifier team", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	// 创建项目预约的bean
-	p_a := data.ProjectAppointmentBean{
-		Appointment:    data.ProjectAppointment{},
+	p_a := dao.ProjectAppointmentBean{
+		Appointment:    dao.ProjectAppointment{},
 		Project:        pr,
 		Payer:          master,
 		PayerFamily:    master_family,
@@ -147,11 +147,11 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		PayeeFamily:    admin_family,
 		PayeeTeam:      admin_team,
 		Verifier:       s_u,
-		VerifierFamily: data.FamilyUnknown,
+		VerifierFamily: dao.FamilyUnknown,
 		VerifierTeam:   verifier_team,
 	}
 	// 创建预约页面数据
-	pAD := data.AppointmentTemplateData{
+	pAD := dao.AppointmentTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         true,
 		ProjectBean:        pr_bean,
@@ -265,7 +265,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// // 获取项目
-	// pr := data.Project{Id: project_id}
+	// pr := dao.Project{Id: project_id}
 	// if err = pr.Get(); err != nil {
 	// 	util.Debug(" Cannot get project", err)
 	// 	report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
@@ -276,12 +276,12 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 
-	verifier_family_id := data.FamilyIdUnknown
-	verifier_team_id := data.TeamIdVerifier
+	verifier_family_id := dao.FamilyIdUnknown
+	verifier_team_id := dao.TeamIdVerifier
 	now := time.Now()
 
 	// 创建新的预约记录
-	new_p_a := data.ProjectAppointment{
+	new_p_a := dao.ProjectAppointment{
 		PayerUserId:      payer_user_id,
 		PayerTeamId:      payer_team_id,
 		PayerFamilyId:    payer_family_id,
@@ -296,7 +296,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		StartTime:        start_time,
 		EndTime:          end_time,
 		PlaceId:          place_id,
-		Status:           data.AppointmentStatusSubmitted,
+		Status:           dao.AppointmentStatusSubmitted,
 		ConfirmedAt:      &now,
 		UpdatedAt:        now,
 	}
@@ -333,20 +333,20 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var pr data.Project
+	var pr dao.Project
 	// 尝试直接获取预约记录
-	pr_appointment := data.ProjectAppointment{Uuid: uuid}
+	pr_appointment := dao.ProjectAppointment{Uuid: uuid}
 	if err = pr_appointment.GetByIdOrUUID(r.Context()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 如果找不到预约记录，尝试用project uuid查找
-			pr = data.Project{Uuid: uuid}
+			pr = dao.Project{Uuid: uuid}
 			if err = pr.GetByUuid(); err != nil {
 				util.Debug(" Cannot get project by uuid", uuid, err)
 				report(w, s_u, "你好，茶博士找不到指定的茶台或预约记录。")
 				return
 			}
 			// 用project id查找预约记录
-			pr_appointment, err = data.GetAppointmentByProjectId(pr.Id, r.Context())
+			pr_appointment, err = dao.GetAppointmentByProjectId(pr.Id, r.Context())
 			if err != nil {
 				if errors.Is(err, sql.ErrNoRows) {
 					report(w, s_u, "这个茶台尚未约茶。")
@@ -365,7 +365,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 
 	if !(pr.Id > 1) {
 		// 获取项目信息
-		pr = data.Project{Id: pr_appointment.ProjectId}
+		pr = dao.Project{Id: pr_appointment.ProjectId}
 		if err = pr.Get(); err != nil {
 			util.Debug(" Cannot get project", pr_appointment.ProjectId, err)
 			report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
@@ -401,7 +401,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	aPD := data.AppointmentTemplateData{
+	aPD := dao.AppointmentTemplateData{
 		SessUser:           s_u,
 		IsVerifier:         isVerifier(s_u.Id),
 		AppointmentBean:    p_a_bean,
@@ -433,7 +433,7 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取预约记录
-	pr_appointment := data.ProjectAppointment{Uuid: uuid}
+	pr_appointment := dao.ProjectAppointment{Uuid: uuid}
 	if err = pr_appointment.GetByIdOrUUID(r.Context()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			report(w, s_u, "你好，茶博士找不到指定的预约记录。")
@@ -445,7 +445,7 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查预约状态
-	if pr_appointment.Status != data.AppointmentStatusSubmitted {
+	if pr_appointment.Status != dao.AppointmentStatusSubmitted {
 		report(w, s_u, "该预约已处理，无需重复操作。")
 		return
 	}
@@ -463,7 +463,7 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 
 	// 更新预约状态为已确认
 	now := time.Now()
-	pr_appointment.Status = data.AppointmentStatusConfirmed
+	pr_appointment.Status = dao.AppointmentStatusConfirmed
 	pr_appointment.ConfirmedAt = &now
 	pr_appointment.UpdatedAt = now
 
@@ -473,13 +473,13 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 更新项目状态为已约茶
-	pr := data.Project{Id: pr_appointment.ProjectId}
+	pr := dao.Project{Id: pr_appointment.ProjectId}
 	if err = pr.Get(); err != nil {
 		util.Debug(" Cannot get project", pr_appointment.ProjectId, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	} else {
-		pr.Status = data.ProjectStatusHotTea
+		pr.Status = dao.ProjectStatusHotTea
 
 		if err = pr.Update(); err != nil {
 			util.Debug(" Cannot update project status", err)
@@ -514,7 +514,7 @@ func AppointmentReject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取预约记录
-	pr_appointment := data.ProjectAppointment{Uuid: uuid}
+	pr_appointment := dao.ProjectAppointment{Uuid: uuid}
 	if err = pr_appointment.GetByIdOrUUID(r.Context()); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			report(w, s_u, "你好，茶博士找不到指定的预约记录。")
@@ -526,7 +526,7 @@ func AppointmentReject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查预约状态
-	if pr_appointment.Status != data.AppointmentStatusPending {
+	if pr_appointment.Status != dao.AppointmentStatusPending {
 		report(w, s_u, "该预约已处理，无需重复操作。")
 		return
 	}
@@ -539,7 +539,7 @@ func AppointmentReject(w http.ResponseWriter, r *http.Request) {
 
 	// 更新预约状态为已拒绝
 	now := time.Now()
-	pr_appointment.Status = data.AppointmentStatusRejected
+	pr_appointment.Status = dao.AppointmentStatusRejected
 	pr_appointment.UpdatedAt = now
 
 	if err = pr_appointment.Update(r.Context()); err != nil {

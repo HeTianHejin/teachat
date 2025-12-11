@@ -1,4 +1,4 @@
-package data
+package dao
 
 // 查询功能，根据关键词查找数据库记录，所得到的数据集合，页面数据
 type SearchPageData struct {

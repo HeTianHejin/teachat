@@ -5,17 +5,17 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
 // 获取用户最后一次设定的“默认家庭”
 // 如果用户没有设定默认家庭，则返回名称为“四海为家”(未知)家庭
 // route/family.go
-func getLastDefaultFamilyByUserId(userID int) (data.Family, error) {
-	user, err := data.GetUser(userID)
+func getLastDefaultFamilyByUserId(userID int) (dao.Family, error) {
+	user, err := dao.GetUser(userID)
 	if err != nil {
-		return data.Family{}, fmt.Errorf("failed to get user: %w", err)
+		return dao.Family{}, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	family, err := user.GetLastDefaultFamily()
@@ -23,14 +23,14 @@ func getLastDefaultFamilyByUserId(userID int) (data.Family, error) {
 	case err == nil:
 		return family, nil
 	case errors.Is(err, sql.ErrNoRows):
-		return data.FamilyUnknown, nil
+		return dao.FamilyUnknown, nil
 	default:
-		return data.Family{}, fmt.Errorf("failed to get default family: %w", err)
+		return dao.Family{}, fmt.Errorf("failed to get default family: %w", err)
 	}
 }
 
 // fetchUserDefaultDataBeanForBiography 为名片页面获取用户资料（轻量级）
-func fetchUserDefaultDataBeanForBiography(user data.User) (userbean data.UserDefaultDataBean, err error) {
+func fetchUserDefaultDataBeanForBiography(user dao.User) (userbean dao.UserDefaultDataBean, err error) {
 	userbean.User = user
 
 	// 获取默认家庭
@@ -53,7 +53,7 @@ func fetchUserDefaultDataBeanForBiography(user data.User) (userbean data.UserDef
 }
 
 // Fetch userbean given user 根据user参数，查询用户资料荚,包括默认的家庭，团队，地方，
-func fetchUserDefaultBean(user data.User) (userbean data.UserDefaultDataBean, err error) {
+func fetchUserDefaultBean(user dao.User) (userbean dao.UserDefaultDataBean, err error) {
 
 	userbean.User = user
 
@@ -80,7 +80,7 @@ func fetchUserDefaultBean(user data.User) (userbean data.UserDefaultDataBean, er
 }
 
 // fetch userbean_slice given []user
-func fetchUserDefaultDataBeanSlice(user_slice []data.User) (userbean_slice []data.UserDefaultDataBean, err error) {
+func fetchUserDefaultDataBeanSlice(user_slice []dao.User) (userbean_slice []dao.UserDefaultDataBean, err error) {
 	for _, user := range user_slice {
 		userbean, err := fetchUserDefaultBean(user)
 		if err != nil {
@@ -92,7 +92,7 @@ func fetchUserDefaultDataBeanSlice(user_slice []data.User) (userbean_slice []dat
 }
 
 // Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队
-func fetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.Family, families []data.Family, team data.Team, teams []data.Team, place data.Place, places []data.Place, err error) {
+func fetchSessionUserRelatedData(sess dao.Session) (s_u dao.User, family dao.Family, families []dao.Family, team dao.Team, teams []dao.Team, place dao.Place, places []dao.Place, err error) {
 	// 读取已登陆用户资料
 	s_u, err = sess.User()
 	if err != nil {
@@ -104,7 +104,7 @@ func fetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 		return
 	}
 
-	member_all_families, err := data.GetAllFamilies(s_u.Id)
+	member_all_families, err := dao.GetAllFamilies(s_u.Id)
 	if err != nil {
 		return
 	}
@@ -116,7 +116,7 @@ func fetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 		}
 	}
 	// 把系统默认的“自由人”家庭资料加入families
-	member_all_families = append(member_all_families, data.FamilyUnknown)
+	member_all_families = append(member_all_families, dao.FamilyUnknown)
 	defaultTeam, err := s_u.GetLastDefaultTeam()
 	if err != nil {
 		return
@@ -133,9 +133,9 @@ func fetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 		}
 	}
 	// 把系统默认团队资料加入teams
-	teamFreelancer, err := data.GetTeam(data.TeamIdFreelancer)
+	teamFreelancer, err := dao.GetTeam(dao.TeamIdFreelancer)
 	if err != nil {
-		util.Debug("cannot fetch team by id", data.TeamIdFreelancer, err)
+		util.Debug("cannot fetch team by id", dao.TeamIdFreelancer, err)
 		return
 	}
 	survivalTeams = append(survivalTeams, teamFreelancer)
@@ -163,13 +163,13 @@ func fetchSessionUserRelatedData(sess data.Session) (s_u data.User, family data.
 }
 
 // 准备用户相关数据
-func prepareUserPageData(sess *data.Session) (*data.UserPageData, error) {
+func prepareUserPageData(sess *dao.Session) (*dao.UserPageData, error) {
 	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := fetchSessionUserRelatedData(*sess)
 	if err != nil {
 		return nil, err
 	}
 
-	return &data.UserPageData{
+	return &dao.UserPageData{
 		User:             user,
 		DefaultFamily:    defaultFamily,
 		SurvivalFamilies: survivalFamilies,
@@ -181,8 +181,8 @@ func prepareUserPageData(sess *data.Session) (*data.UserPageData, error) {
 }
 
 // 据给出的team参数，去获取对应的茶团资料，是否开放，成员计数，发起日期，发起人（Founder）及其默认团队，然后按结构拼装返回。
-func fetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
-	if team.Id == data.TeamIdNone {
+func fetchTeamBean(team dao.Team) (TeamBean dao.TeamBean, err error) {
+	if team.Id == dao.TeamIdNone {
 		return TeamBean, fmt.Errorf("team id is none")
 	}
 
@@ -210,7 +210,7 @@ func fetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 
 	TeamBean.MembersCount = team.NumMembers()
 
-	if team.Id == data.TeamIdFreelancer {
+	if team.Id == dao.TeamIdFreelancer {
 		//茶友的默认团队还是“自由人”的情况
 		TeamBean.CEO = founder
 		TeamBean.CEOTeam = TeamBean.FounderTeam
@@ -223,7 +223,7 @@ func fetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 		util.Debug(" Cannot read team member ceo given team_id: ", team.Id, err)
 		return
 	}
-	ceo, err := data.GetUser(member_ceo.UserId)
+	ceo, err := dao.GetUser(member_ceo.UserId)
 	if err != nil {
 		util.Debug(" Cannot read team ceo given team_id: ", team.Id, err)
 		return
@@ -244,7 +244,7 @@ func fetchTeamBean(team data.Team) (TeamBean data.TeamBean, err error) {
 }
 
 // 根据给出的茶团队列，查询，获取对应的茶团资料夹
-func fetchTeamBeanSlice(team_slice []data.Team) (TeamBeanSlice []data.TeamBean, err error) {
+func fetchTeamBeanSlice(team_slice []dao.Team) (TeamBeanSlice []dao.TeamBean, err error) {
 	for _, tea := range team_slice {
 		teamBean, err := fetchTeamBean(tea)
 		if err != nil {
@@ -256,10 +256,10 @@ func fetchTeamBeanSlice(team_slice []data.Team) (TeamBeanSlice []data.TeamBean, 
 }
 
 // 根据给出的family参数，从数据库获取对应的家庭资料
-func fetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error) {
+func fetchFamilyBean(family dao.Family) (FamilyBean dao.FamilyBean, err error) {
 	FamilyBean.Family = family
 	//登记人资料
-	FamilyBean.Founder, err = data.GetUser(family.AuthorId)
+	FamilyBean.Founder, err = dao.GetUser(family.AuthorId)
 	if err != nil {
 		util.Debug(family.AuthorId, " Cannot read family founder")
 		return FamilyBean, err
@@ -270,7 +270,7 @@ func fetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error)
 		return FamilyBean, err
 	}
 
-	FamilyBean.MemberCount, err = data.CountFamilyMembers(family.Id)
+	FamilyBean.MemberCount, err = dao.CountFamilyMembers(family.Id)
 	if err != nil {
 		util.Debug(family.AuthorId, " Cannot read family member count")
 		return FamilyBean, err
@@ -279,7 +279,7 @@ func fetchFamilyBean(family data.Family) (FamilyBean data.FamilyBean, err error)
 }
 
 // 根据给出的家庭队列，查询，获取对应的家庭茶团资料集合
-func fetchFamilyBeanSlice(family_slice []data.Family) (FamilyBeanSlice []data.FamilyBean, err error) {
+func fetchFamilyBeanSlice(family_slice []dao.Family) (FamilyBeanSlice []dao.FamilyBean, err error) {
 	for _, fam := range family_slice {
 		familyBean, err := fetchFamilyBean(fam)
 		if err != nil {
@@ -291,10 +291,10 @@ func fetchFamilyBeanSlice(family_slice []data.Family) (FamilyBeanSlice []data.Fa
 }
 
 // fetchFamilyMemberBean() 根据给出的FamilyMember参数，去获取对应的家庭成员资料夹
-func fetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err error) {
+func fetchFamilyMemberBean(fm dao.FamilyMember) (FMB dao.FamilyMemberBean, err error) {
 	FMB.FamilyMember = fm
 
-	u, err := data.GetUser(fm.UserId)
+	u, err := dao.GetUser(fm.UserId)
 	if err != nil {
 		util.Debug(" Cannot read user given FamilyMember", err)
 		return FMB, err
@@ -307,7 +307,7 @@ func fetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 	}
 	FMB.MemberDefaultTeam = default_team
 
-	f := data.Family{Id: fm.FamilyId}
+	f := dao.Family{Id: fm.FamilyId}
 
 	//读取茶团的parent_members
 	family_parent_members, err := f.ParentMembers()
@@ -347,7 +347,7 @@ func fetchFamilyMemberBean(fm data.FamilyMember) (FMB data.FamilyMemberBean, err
 }
 
 // fetchFamilyMemberBeanSlice() 根据给出的FamilyMember列表参数，去获取对应的家庭成员资料夹列表
-func fetchFamilyMemberBeanSlice(fm_slice []data.FamilyMember) (FMB_slice []data.FamilyMemberBean, err error) {
+func fetchFamilyMemberBeanSlice(fm_slice []dao.FamilyMember) (FMB_slice []dao.FamilyMemberBean, err error) {
 	for _, fm := range fm_slice {
 		fmBean, err := fetchFamilyMemberBean(fm)
 		if err != nil {
@@ -359,29 +359,29 @@ func fetchFamilyMemberBeanSlice(fm_slice []data.FamilyMember) (FMB_slice []data.
 }
 
 // 根据给出的某个&家庭茶团增加成员声明书，获取&家庭茶团增加成员声明书资料夹
-func fetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.FamilyMemberSignInBean, err error) {
+func fetchFamilyMemberSignInBean(fmsi dao.FamilyMemberSignIn) (FMSIB dao.FamilyMemberSignInBean, err error) {
 	FMSIB.FamilyMemberSignIn = fmsi
 
-	family := data.Family{Id: fmsi.FamilyId}
+	family := dao.Family{Id: fmsi.FamilyId}
 	if err = family.Get(); err != nil {
 		util.Debug(" Cannot read family given FamilyMemberSignIn", err)
 		return FMSIB, err
 	}
 	FMSIB.Family = family
 
-	FMSIB.NewMember, err = data.GetUser(fmsi.UserId)
+	FMSIB.NewMember, err = dao.GetUser(fmsi.UserId)
 	if err != nil {
 		util.Debug(" Cannot read new member given FamilyMemberSignIn", err)
 		return FMSIB, err
 	}
 
-	FMSIB.Author, err = data.GetUser(fmsi.AuthorUserId)
+	FMSIB.Author, err = dao.GetUser(fmsi.AuthorUserId)
 	if err != nil {
 		util.Debug(" Cannot read author given FamilyMemberSignIn", err)
 		return FMSIB, err
 	}
 
-	place := data.Place{Id: fmsi.PlaceId}
+	place := dao.Place{Id: fmsi.PlaceId}
 	if err = place.Get(); err != nil {
 		util.Debug(" Cannot read place given FamilyMemberSignIn", err)
 		return FMSIB, err
@@ -392,7 +392,7 @@ func fetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.Famil
 }
 
 // 根据给出的多个&家庭茶团增加成员声明书队列，获取资料夹队列
-// func fetchFamilyMemberSignInBeanSlice(fmsi_slice []data.FamilyMemberSignIn) (FMSIB_slice []data.FamilyMemberSignInBean, err error) {
+// func fetchFamilyMemberSignInBeanSlice(fmsi_slice []dao.FamilyMemberSignIn) (FMSIB_slice []dao.FamilyMemberSignInBean, err error) {
 // 	for _, fmsi := range fmsi_slice {
 // 		fmsiBean, err := fetchFamilyMemberSignInBean(fmsi)
 // 		if err != nil {
@@ -404,15 +404,15 @@ func fetchFamilyMemberSignInBean(fmsi data.FamilyMemberSignIn) (FMSIB data.Famil
 // }
 
 // fetchTeamMemberBean() 根据给出的TeamMember参数，去获取对应的团队成员资料夹
-func fetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error) {
-	u, err := data.GetUser(tm.UserId)
+func fetchTeamMemberBean(tm dao.TeamMember) (TMB dao.TeamMemberBean, err error) {
+	u, err := dao.GetUser(tm.UserId)
 	if err != nil {
 		util.Debug(" Cannot read user given TeamMember", err)
 		return TMB, err
 	}
 	TMB.Member = u
 
-	team, err := data.GetTeam(tm.TeamId)
+	team, err := dao.GetTeam(tm.TeamId)
 	if err != nil {
 		util.Debug(" Cannot read team given team member", err)
 		return TMB, err
@@ -464,7 +464,7 @@ func fetchTeamMemberBean(tm data.TeamMember) (TMB data.TeamMemberBean, err error
 }
 
 // FtchTeamMemberBeanSlice() 根据给出的TeamMember列表参数，去获取对应的团队成员资料夹列表
-func fetchTeamMemberBeanSlice(tm_slice []data.TeamMember) (TMB_slice []data.TeamMemberBean, err error) {
+func fetchTeamMemberBeanSlice(tm_slice []dao.TeamMember) (TMB_slice []dao.TeamMemberBean, err error) {
 	for _, tm := range tm_slice {
 		tmBean, err := fetchTeamMemberBean(tm)
 		if err != nil {
@@ -476,11 +476,11 @@ func fetchTeamMemberBeanSlice(tm_slice []data.TeamMember) (TMB_slice []data.Team
 }
 
 // 根据给出的MemberApplication参数，去获取对应的加盟申请书资料夹
-func fetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBean data.MemberApplicationBean, err error) {
+func fetchMemberApplicationBean(ma dao.MemberApplication) (MemberApplicationBean dao.MemberApplicationBean, err error) {
 	MemberApplicationBean.MemberApplication = ma
 	MemberApplicationBean.Status = ma.GetStatus()
 
-	team, err := data.GetTeam(ma.TeamId)
+	team, err := dao.GetTeam(ma.TeamId)
 	if err != nil {
 		util.Debug(" Cannot read team given author", err)
 		return MemberApplicationBean, err
@@ -488,7 +488,7 @@ func fetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBea
 
 	MemberApplicationBean.Team = team
 
-	MemberApplicationBean.Author, err = data.GetUser(ma.UserId)
+	MemberApplicationBean.Author, err = dao.GetUser(ma.UserId)
 	if err != nil {
 		util.Debug(" Cannot read member application author", err)
 		return MemberApplicationBean, err
@@ -502,7 +502,7 @@ func fetchMemberApplicationBean(ma data.MemberApplication) (MemberApplicationBea
 	MemberApplicationBean.CreatedAtDate = ma.CreatedAtDate()
 	return MemberApplicationBean, nil
 }
-func fetchMemberApplicationBeanSlice(ma_slice []data.MemberApplication) (MemberApplicationBeanSlice []data.MemberApplicationBean, err error) {
+func fetchMemberApplicationBeanSlice(ma_slice []dao.MemberApplication) (MemberApplicationBeanSlice []dao.MemberApplicationBean, err error) {
 	for _, ma := range ma_slice {
 		maBean, err := fetchMemberApplicationBean(ma)
 		if err != nil {
@@ -514,7 +514,7 @@ func fetchMemberApplicationBeanSlice(ma_slice []data.MemberApplication) (MemberA
 }
 
 // fetchInvitationBean() 根据给出的Invitation参数，去获取对应的邀请书资料夹
-func fetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error) {
+func fetchInvitationBean(i dao.Invitation) (I_B dao.InvitationBean, err error) {
 	I_B.Invitation = i
 
 	I_B.Team, err = i.Team()
@@ -540,7 +540,7 @@ func fetchInvitationBean(i data.Invitation) (I_B data.InvitationBean, err error)
 }
 
 // fetchInvitationBeanSlice() 根据给出的Invitation列表参数，去获取对应的邀请书资料夹列表
-func fetchInvitationBeanSlice(i_slice []data.Invitation) (I_B_slice []data.InvitationBean, err error) {
+func fetchInvitationBeanSlice(i_slice []dao.Invitation) (I_B_slice []dao.InvitationBean, err error) {
 	for _, i := range i_slice {
 		iBean, err := fetchInvitationBean(i)
 		if err != nil {
@@ -552,27 +552,27 @@ func fetchInvitationBeanSlice(i_slice []data.Invitation) (I_B_slice []data.Invit
 }
 
 // fetchTeamMemberRoleNoticeBean() 根据给出的TeamMemberRoleNotice参数，去获取对应的团队成员角色通知资料夹
-func fetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean data.TeamMemberRoleNoticeBean, err error) {
+func fetchTeamMemberRoleNoticeBean(tmrn dao.TeamMemberRoleNotice) (tmrnBean dao.TeamMemberRoleNoticeBean, err error) {
 	tmrnBean.TeamMemberRoleNotice = tmrn
 
-	tmrnBean.Team, err = data.GetTeam(tmrn.TeamId)
+	tmrnBean.Team, err = dao.GetTeam(tmrn.TeamId)
 	if err != nil {
 		util.Debug(" Cannot read team given team member role notice", err)
 		return tmrnBean, err
 	}
 
-	tmrnBean.CEO, err = data.GetUser(tmrn.CeoId)
+	tmrnBean.CEO, err = dao.GetUser(tmrn.CeoId)
 	if err != nil {
 		util.Debug(" Cannot read ceo given team member role notice", err)
 		return tmrnBean, err
 	}
 
-	tm := data.TeamMember{Id: tmrn.MemberId}
+	tm := dao.TeamMember{Id: tmrn.MemberId}
 	if err = tm.Get(); err != nil {
 		util.Debug(" Cannot read team member given team member role notice", err)
 		return tmrnBean, err
 	}
-	tmrnBean.Member, err = data.GetUser(tm.UserId)
+	tmrnBean.Member, err = dao.GetUser(tm.UserId)
 	if err != nil {
 		util.Debug(" Cannot read member given team member role notice", err)
 		return tmrnBean, err
@@ -587,7 +587,7 @@ func fetchTeamMemberRoleNoticeBean(tmrn data.TeamMemberRoleNotice) (tmrnBean dat
 }
 
 // fetchTeamMemberRoleNoticeBeanSlice() 根据给出的TeamMemberRoleNotice列表参数，去获取对应的团队成员角色通知资料夹列表
-func fetchTeamMemberRoleNoticeBeanSlice(tmrn_slice []data.TeamMemberRoleNotice) (tmrnBeanSlice []data.TeamMemberRoleNoticeBean, err error) {
+func fetchTeamMemberRoleNoticeBeanSlice(tmrn_slice []dao.TeamMemberRoleNotice) (tmrnBeanSlice []dao.TeamMemberRoleNoticeBean, err error) {
 	for _, tmrn := range tmrn_slice {
 		tmrnBean, err := fetchTeamMemberRoleNoticeBean(tmrn)
 		if err != nil {
@@ -599,7 +599,7 @@ func fetchTeamMemberRoleNoticeBeanSlice(tmrn_slice []data.TeamMemberRoleNotice) 
 }
 
 // 检查并设置用户默认团队（非自由人占位团队）
-func setUserDefaultTeam(s_u data.User, newTeamID int, w http.ResponseWriter) bool {
+func setUserDefaultTeam(s_u dao.User, newTeamID int, w http.ResponseWriter) bool {
 	// 获取用户当前默认团队
 	oldDefaultTeam, err := s_u.GetLastDefaultTeam()
 	if err != nil {
@@ -609,8 +609,8 @@ func setUserDefaultTeam(s_u data.User, newTeamID int, w http.ResponseWriter) boo
 	}
 
 	// 检查是否为占位团队（自由人）
-	if oldDefaultTeam.Id == data.TeamIdFreelancer {
-		uDT := data.UserDefaultTeam{
+	if oldDefaultTeam.Id == dao.TeamIdFreelancer {
+		uDT := dao.UserDefaultTeam{
 			UserId: s_u.Id,
 			TeamId: newTeamID,
 		}
@@ -625,7 +625,7 @@ func setUserDefaultTeam(s_u data.User, newTeamID int, w http.ResponseWriter) boo
 
 // isVerifier 检查用户是否为见证者
 func isVerifier(userId int) bool {
-	verifier_team := data.Team{Id: data.TeamIdVerifier}
+	verifier_team := dao.Team{Id: dao.TeamIdVerifier}
 	is_member, err := verifier_team.IsMember(userId)
 	if err != nil {
 		util.Debug(" Cannot check team member", err)

@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -28,7 +28,7 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 	// 如果有team_id参数，检查用户是否为该团队的CEO或创建人
 	teamId := r.URL.Query().Get("team_id")
 	if teamId != "" {
-		team, err := data.GetTeamByUUID(teamId)
+		team, err := dao.GetTeamByUUID(teamId)
 		if err != nil {
 			util.Debug("Cannot get team by uuid", err)
 			report(w, s_u, "你好，未能找到指定的团队。")
@@ -56,8 +56,8 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser        data.User
-		Teams           []data.Team
+		SessUser        dao.User
+		Teams           []dao.Team
 		PreSelectedTeam string // 预选的团队UUID
 	}
 	pageData.SessUser = s_u
@@ -102,7 +102,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查权限：用户必须是该团队的创建人或CEO
-	team, err := data.GetTeam(firstTeamId)
+	team, err := dao.GetTeam(firstTeamId)
 	if err != nil {
 		util.Debug("Cannot get team", err)
 		report(w, s_u, "你好，未能找到指定的团队。")
@@ -152,7 +152,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 
 	// 检测class是否合规（草稿状态）
 	switch class {
-	case data.GroupClassOpenDraft, data.GroupClassCloseDraft:
+	case dao.GroupClassOpenDraft, dao.GroupClassCloseDraft:
 		break
 	default:
 		report(w, s_u, "你好，茶博士摸摸头，竟然说集团类别不合适，未能创建新集团。")
@@ -160,7 +160,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 使用事务创建集团并添加第一团队为成员
-	group := data.Group{
+	group := dao.Group{
 		Name:         name,
 		Abbreviation: abbreviation,
 		Mission:      mission,
@@ -179,7 +179,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 
 	if util.Config.PoliteMode {
 		//启用了友邻蒙评
-		if err = createAndSendAcceptNotification(group.Id, data.AcceptObjectTypeGroup, s_u.Id, r.Context()); err != nil {
+		if err = createAndSendAcceptNotification(group.Id, dao.AcceptObjectTypeGroup, s_u.Id, r.Context()); err != nil {
 			if strings.Contains(err.Error(), "创建AcceptObject失败") {
 				report(w, s_u, "你好，胭脂洗出秋阶影，冰雪招来露砌魂。")
 			} else {
@@ -190,7 +190,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 
 		// 提示用户新集团草稿保存成功
 		text := ""
-		if s_u.Gender == data.User_Gender_Female {
+		if s_u.Gender == dao.User_Gender_Female {
 			text = fmt.Sprintf("%s 女士，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, group.Name)
 		} else {
 			text = fmt.Sprintf("%s 先生，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, group.Name)
@@ -198,10 +198,10 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, text)
 	} else {
 		switch group.Class {
-		case data.GroupClassOpenDraft:
-			group.Class = data.GroupClassOpen
-		case data.GroupClassCloseDraft:
-			group.Class = data.GroupClassClose
+		case dao.GroupClassOpenDraft:
+			group.Class = dao.GroupClassOpen
+		case dao.GroupClassCloseDraft:
+			group.Class = dao.GroupClassClose
 		}
 		if err := group.Update(); err != nil {
 			util.Debug("Cannot update group class", err)
@@ -230,13 +230,13 @@ func GroupsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser data.User
-		Groups   []data.Group
+		SessUser dao.User
+		Groups   []dao.Group
 	}
 	pageData.SessUser = s_u
 
 	// TODO: 实现获取所有活跃集团的方法
-	// pageData.Groups, err = data.GetActiveGroups()
+	// pageData.Groups, err = dao.GetActiveGroups()
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "groups.list")
 }
@@ -268,7 +268,7 @@ func GroupReadGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := data.GetGroupByUUID(uuid)
+	group, err := dao.GetGroupByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get group by uuid", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -276,7 +276,7 @@ func GroupReadGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团的所有团队
-	teams, err := data.GetTeamsByGroupId(group.Id)
+	teams, err := dao.GetTeamsByGroupId(group.Id)
 	if err != nil {
 		util.Debug("Cannot get teams by group id", err)
 	}
@@ -289,9 +289,9 @@ func GroupReadGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser  data.User
-		Group     data.Group
-		Teams     []data.Team
+		SessUser  dao.User
+		Group     dao.Group
+		Teams     []dao.Team
 		CanManage bool
 		IsFounder bool
 	}
@@ -305,7 +305,7 @@ func GroupReadGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // checkGroupPermission 检查集团权限的辅助函数
-func checkGroupPermission(group *data.Group, userId int, permissionType string) (bool, error) {
+func checkGroupPermission(group *dao.Group, userId int, permissionType string) (bool, error) {
 	switch permissionType {
 	case "manage":
 		return group.CanManage(userId)
@@ -354,7 +354,7 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查权限
-	group := data.Group{Id: groupId}
+	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
 		util.Debug("Cannot get group", err)
 		report(w, s_u, "你好，未找到该集团。")
@@ -387,12 +387,12 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 		role = "成员团队"
 	}
 
-	member := data.GroupMember{
+	member := dao.GroupMember{
 		GroupId: groupId,
 		TeamId:  teamId,
 		Level:   level,
 		Role:    role,
-		Status:  data.GroupMemberStatusActive,
+		Status:  dao.GroupMemberStatusActive,
 		UserId:  s_u.Id,
 	}
 
@@ -426,7 +426,7 @@ func EditGroupGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := data.GetGroupByUUID(id)
+	group, err := dao.GetGroupByUUID(id)
 	if err != nil {
 		util.Debug("Cannot get group by uuid", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -441,8 +441,8 @@ func EditGroupGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser data.User
-		Group    data.Group
+		SessUser dao.User
+		Group    dao.Group
 	}
 	pageData.SessUser = s_u
 	pageData.Group = group
@@ -491,7 +491,7 @@ func EditGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团并检查权限
-	group := data.Group{Id: groupId}
+	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
 		util.Debug("Cannot get group", err)
 		report(w, s_u, "你好，未找到该集团。")
@@ -545,12 +545,12 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 先尝试作为团队UUID查询
-	team, err := data.GetTeamByUUID(id)
-	var group *data.Group
+	team, err := dao.GetTeamByUUID(id)
+	var group *dao.Group
 
 	if err == nil {
 		// 是团队UUID，查询该团队所属的集团
-		group, err = data.GetGroupByTeamId(team.Id)
+		group, err = dao.GetGroupByTeamId(team.Id)
 		if err != nil {
 			// 团队未加入任何集团，跳转到创建集团页面
 			http.Redirect(w, r, "/v1/group/new?team_id="+id, http.StatusFound)
@@ -558,7 +558,7 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 尝试作为集团UUID查询
-		groupData, err := data.GetGroupByUUID(id)
+		groupData, err := dao.GetGroupByUUID(id)
 		if err != nil {
 			util.Debug("Cannot get group by uuid", err)
 			report(w, s_u, "你好，未能找到该集团或团队。")
@@ -568,13 +568,13 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团的所有团队
-	teams, err := data.GetTeamsByGroupId(group.Id)
+	teams, err := dao.GetTeamsByGroupId(group.Id)
 	if err != nil {
 		util.Debug("Cannot get teams by group id", err)
 	}
 
 	// 获取集团创建者
-	founder, err := data.GetUser(group.FounderId)
+	founder, err := dao.GetUser(group.FounderId)
 	if err != nil {
 		util.Debug("Cannot get group founder", err)
 	}
@@ -590,18 +590,18 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	founderTeam, err := founder.GetLastDefaultTeam()
 	if err != nil {
 		util.Debug("Cannot get founder default team", err)
-		founderTeam = data.Team{Id: data.TeamIdNone}
+		founderTeam = dao.Team{Id: dao.TeamIdNone}
 	}
 
 	// 准备页面数据
-	var pageData data.GroupDetail
+	var pageData dao.GroupDetail
 	pageData.SessUser = s_u
 	pageData.CanManage = canManage
 
-	pageData.GroupBean = data.GroupBean{
+	pageData.GroupBean = dao.GroupBean{
 		Group:         *group,
 		CreatedAtDate: group.CreatedAtDate(),
-		Open:          group.Class == data.GroupClassOpen,
+		Open:          group.Class == dao.GroupClassOpen,
 		Founder:       founder,
 		FounderTeam:   founderTeam,
 		TeamsCount:    len(teams),
@@ -609,7 +609,7 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 
 	// 获取第一团队（最高管理团队）
 	// if group.FirstTeamId > 0 {
-	// 	firstTeam, err := data.GetTeam(group.FirstTeamId)
+	// 	firstTeam, err := dao.GetTeam(group.FirstTeamId)
 	// 	if err == nil {
 	// 		pageData.FirstTeamBean, err = fetchTeamBean(firstTeam)
 	// 		if err != nil {
@@ -619,7 +619,7 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// 获取团队Bean列表（排除第一团队）
-	teamBeans := make([]data.TeamBean, 0, len(teams))
+	teamBeans := make([]dao.TeamBean, 0, len(teams))
 	for _, t := range teams {
 		// if t.Id == group.FirstTeamId {
 		// 	continue // 跳过第一团队，因为已经单独显示
@@ -656,7 +656,7 @@ func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := data.GetGroupByUUID(id)
+	group, err := dao.GetGroupByUUID(id)
 	if err != nil {
 		util.Debug("Cannot get group by uuid", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -675,27 +675,27 @@ func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团的所有团队
-	teams, err := data.GetTeamsByGroupId(group.Id)
+	teams, err := dao.GetTeamsByGroupId(group.Id)
 	if err != nil {
 		util.Debug("Cannot get teams by group id", err)
 	}
 
 	// 准备页面数据
 	var pageData struct {
-		SessUser      data.User
-		GroupBean     data.GroupBean
-		TeamBeanSlice []data.TeamBean
+		SessUser      dao.User
+		GroupBean     dao.GroupBean
+		TeamBeanSlice []dao.TeamBean
 	}
 	pageData.SessUser = s_u
-	pageData.GroupBean = data.GroupBean{
+	pageData.GroupBean = dao.GroupBean{
 		Group:         group,
 		CreatedAtDate: group.CreatedAtDate(),
-		Open:          group.Class == data.GroupClassOpen,
+		Open:          group.Class == dao.GroupClassOpen,
 		TeamsCount:    len(teams),
 	}
 
 	// 获取团队Bean列表
-	teamBeans := make([]data.TeamBean, 0, len(teams))
+	teamBeans := make([]dao.TeamBean, 0, len(teams))
 	for _, t := range teams {
 		tb, err := fetchTeamBean(t)
 		if err == nil {
@@ -728,7 +728,7 @@ func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	group, err := data.GetGroupByUUID(id)
+	group, err := dao.GetGroupByUUID(id)
 	if err != nil {
 		util.Debug("Cannot get group by uuid", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -743,41 +743,41 @@ func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团发出的所有邀请函
-	invitations, err := data.GetInvitationsByGroupId(group.Id)
+	invitations, err := dao.GetInvitationsByGroupId(group.Id)
 	if err != nil {
 		util.Debug("Cannot get group invitations", err)
 	}
 
 	// 构建邀请函Bean列表
-	invitationBeans := make([]data.GroupInvitationBean, 0)
+	invitationBeans := make([]dao.GroupInvitationBean, 0)
 	for _, inv := range invitations {
-		team, err := data.GetTeam(inv.TeamId)
+		team, err := dao.GetTeam(inv.TeamId)
 		if err != nil {
 			continue
 		}
 
-		author, err := data.GetUser(inv.AuthorUserId)
+		author, err := dao.GetUser(inv.AuthorUserId)
 		if err != nil {
 			continue
 		}
 
-		bean := data.GroupInvitationBean{
+		bean := dao.GroupInvitationBean{
 			Invitation: inv,
 			Group:      group,
 			Author:     author,
-			InviteUser: data.User{}, // 受邀请团队CEO，
+			InviteUser: dao.User{}, // 受邀请团队CEO，
 			Team:       team,
 			Status:     inv.GetStatus(),
 		}
 
 		// 获取团队CEO信息
 		if ceo, err := team.MemberCEO(); err == nil {
-			if ceoUser, err := data.GetUser(ceo.UserId); err == nil {
+			if ceoUser, err := dao.GetUser(ceo.UserId); err == nil {
 				bean.InviteUser = ceoUser
 			}
 		}
 		// 获取团队信息
-		if team, err := data.GetTeam(inv.TeamId); err == nil {
+		if team, err := dao.GetTeam(inv.TeamId); err == nil {
 			bean.Team = team
 		}
 
@@ -785,9 +785,9 @@ func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var pageData struct {
-		SessUser        data.User
-		Group           data.Group
-		InvitationBeans []data.GroupInvitationBean
+		SessUser        dao.User
+		Group           dao.Group
+		InvitationBeans []dao.GroupInvitationBean
 	}
 	pageData.SessUser = s_u
 	pageData.Group = group
@@ -824,7 +824,7 @@ func DeleteGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取集团并检查权限
-	group := data.Group{Id: groupId}
+	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
 		util.Debug("Cannot get group", err)
 		report(w, s_u, "你好，未找到该集团。")
@@ -852,8 +852,8 @@ func DeleteGroupPost(w http.ResponseWriter, r *http.Request) {
 }
 
 // createGroupWithFirstMember 使用事务创建集团并将第一团队登记为成员
-func createGroupWithFirstMember(group *data.Group, firstTeamId int, userId int) error {
-	tx, err := data.BeginTx()
+func createGroupWithFirstMember(group *dao.Group, firstTeamId int, userId int) error {
+	tx, err := dao.BeginTx()
 	if err != nil {
 		return err
 	}
@@ -863,12 +863,12 @@ func createGroupWithFirstMember(group *data.Group, firstTeamId int, userId int) 
 		return err
 	}
 
-	firstMember := data.GroupMember{
+	firstMember := dao.GroupMember{
 		GroupId: group.Id,
 		TeamId:  firstTeamId,
 		Level:   1,
 		Role:    "最高管理团队",
-		Status:  data.GroupMemberStatusActive,
+		Status:  dao.GroupMemberStatusActive,
 		UserId:  userId,
 	}
 	if err := firstMember.CreateWithTx(tx); err != nil {
