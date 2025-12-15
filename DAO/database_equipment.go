@@ -21,7 +21,10 @@ import (
    涉及数据库存取操作的定义和一些方法
 */
 
-var db *sql.DB //数据库实例
+//var db *sql.DB //数据库实例
+
+// DB 数据库实例，请局变量
+var DB *sql.DB
 
 func init() {
 	var err error
@@ -47,13 +50,18 @@ func init() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=%s TimeZone=%s",
 		dbhost, dbport, dbuser, dbpassword, dbname, dbsslmode, dbTimeZone)
-	db, err = sql.Open(dbdriver, psqlInfo)
+	DB, err = sql.Open(dbdriver, psqlInfo)
 	if err != nil {
-		util.Fatal("星际迷失->茶棚数据库打开时：", err)
+		util.Panic("星际迷失->茶棚数据库打开时：", err)
 	}
+	// 配置连接池
+	//DB.SetMaxOpenConns(25)
+	//DB.SetMaxIdleConns(25)
+	DB.SetConnMaxLifetime(5 * time.Minute)
+
 	//测试数据库连接是否成功
-	if err = db.Ping(); err != nil {
-		util.Fatal("ping teachat database failure - 测试链接茶话会数据库失败", err)
+	if err = DB.Ping(); err != nil {
+		util.Panic("ping teachat database failure - 测试链接茶话会数据库失败", err)
 	}
 
 	//ok
@@ -110,7 +118,7 @@ func GetDay(time time.Time) int {
 // create a new read
 func SaveReadedUserId(thread_id int, user_id int) (read Read, err error) {
 	statement := "INSERT INTO reads (thread_id, user_id, read_at) VALUES ($1, $2, $3) RETURNING id, thread_id, user_id, read_at"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -131,5 +139,5 @@ func contains(slice []int, item int) bool {
 
 // BeginTx 开始一个数据库事务
 func BeginTx() (*sql.Tx, error) {
-	return db.Begin()
+	return DB.Begin()
 }

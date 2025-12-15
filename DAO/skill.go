@@ -120,7 +120,7 @@ func (s *Skill) Create(ctx context.Context) (err error) {
 		(uuid, user_id, name, nickname, description, strength_level, difficulty_level, category, level) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -140,7 +140,7 @@ func (s *Skill) GetByIdOrUUID(ctx context.Context) (err error) {
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM skills WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -155,7 +155,7 @@ func (s *Skill) Update() error {
 	statement := `UPDATE skills SET name = $2, nickname = $3, description = $4, 
 		strength_level = $5, difficulty_level = $6, category = $7, level = $8, updated_at = $9  
 		WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -167,7 +167,7 @@ func (s *Skill) Update() error {
 // Skill.Delete 软删除技能
 func (s *Skill) Delete() error {
 	statement := `UPDATE skills SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func GetSkillsByCategory(category SkillCategory, ctx context.Context) ([]Skill, 
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM skills WHERE category = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, category)
+	rows, err := DB.QueryContext(ctx, statement, category)
 	if err != nil {
 		return nil, err
 	}
@@ -281,7 +281,7 @@ func GetSkillsByStrengthLevel(strengthLevel StrengthLevel, ctx context.Context) 
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM skills WHERE strength_level = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, strengthLevel)
+	rows, err := DB.QueryContext(ctx, statement, strengthLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +307,7 @@ func GetSkillsByDifficultyLevel(difficultyLevel DifficultyLevel, ctx context.Con
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM skills WHERE difficulty_level = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, difficultyLevel)
+	rows, err := DB.QueryContext(ctx, statement, difficultyLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func GetSkillsByRecordUserId(userId int, ctx context.Context) ([]Skill, error) {
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level,
 		category, level, created_at, updated_at, deleted_at
 		FROM skills WHERE user_id = $1 AND deleted_at IS NULL ORDER BY category, level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, userId)
+	rows, err := DB.QueryContext(ctx, statement, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -358,7 +358,7 @@ func CountSkillsByRecordUserId(userId int, ctx context.Context) (int, error) {
 	defer cancel()
 	statement := `SELECT COUNT(*) FROM skills WHERE user_id = $1 AND deleted_at IS NULL`
 	var count int
-	err := db.QueryRowContext(ctx, statement, userId).Scan(&count)
+	err := DB.QueryRowContext(ctx, statement, userId).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -372,7 +372,7 @@ func (su *SkillUser) Create(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `INSERT INTO skill_users (skill_id, user_id, level, status) VALUES ($1, $2, $3, $4) RETURNING id`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -386,7 +386,7 @@ func (su *SkillUser) GetByUserAndSkill(ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, skill_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_users WHERE user_id = $1 AND skill_id = $2 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -397,7 +397,7 @@ func (su *SkillUser) GetByUserAndSkill(ctx context.Context) error {
 // SkillUser.Update 更新用户【技能记录】
 func (su *SkillUser) Update() error {
 	statement := `UPDATE skill_users SET level = $2, status = $3, updated_at = $4 WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -409,7 +409,7 @@ func (su *SkillUser) Update() error {
 // SkillUser.Delete 软删除用户【技能记录】
 func (su *SkillUser) Delete() error {
 	statement := `UPDATE skill_users SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -444,7 +444,7 @@ func GetUserSkills(userId int, ctx context.Context) ([]SkillUser, error) {
 	defer cancel()
 	statement := `SELECT id, skill_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_users WHERE user_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, userId)
+	rows, err := DB.QueryContext(ctx, statement, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -468,7 +468,7 @@ func CountUserSkills(userId int, ctx context.Context) (int, error) {
 	defer cancel()
 	statement := `SELECT COUNT(*) FROM skill_users WHERE user_id = $1 AND deleted_at IS NULL`
 	var count int
-	err := db.QueryRowContext(ctx, statement, userId).Scan(&count)
+	err := DB.QueryRowContext(ctx, statement, userId).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -501,7 +501,7 @@ func (s *Skill) GetById(id int, ctx context.Context) error {
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM skills WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -535,7 +535,7 @@ func GetSkillsBySkillUsers(skillUsers []SkillUser, ctx context.Context) ([]Skill
 		FROM skills WHERE id IN (%s) AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`,
 		strings.Join(placeholders, ","))
 
-	rows, err := db.QueryContext(ctx, statement, args...)
+	rows, err := DB.QueryContext(ctx, statement, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -563,7 +563,7 @@ func (u *User) LoadAllSkills(ctx context.Context) ([]Skill, error) {
 		FROM skills s INNER JOIN skill_users su ON s.id = su.skill_id 
 		WHERE su.user_id = $1 AND s.deleted_at IS NULL AND su.deleted_at IS NULL 
 		ORDER BY su.level DESC, su.created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, u.Id)
+	rows, err := DB.QueryContext(ctx, statement, u.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -619,7 +619,7 @@ func (su *SkillUser) GetById(id int, ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, skill_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_users WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -634,7 +634,7 @@ func (st *SkillTeam) Create(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `INSERT INTO skill_teams (skill_id, team_id, level, status) VALUES ($1, $2, $3, $4) RETURNING id`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -648,7 +648,7 @@ func (st *SkillTeam) GetByTeamAndSkill(ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_teams WHERE team_id = $1 AND skill_id = $2 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -659,7 +659,7 @@ func (st *SkillTeam) GetByTeamAndSkill(ctx context.Context) error {
 // SkillTeam.Update 更新团队【团队技能记录】
 func (st *SkillTeam) Update() error {
 	statement := `UPDATE skill_teams SET level = $2, status = $3, updated_at = $4 WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -671,7 +671,7 @@ func (st *SkillTeam) Update() error {
 // SkillTeam.Delete 软删除【团队技能记录】
 func (st *SkillTeam) Delete() error {
 	statement := `UPDATE skill_teams SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -706,7 +706,7 @@ func GetTeamSkills(teamId int, ctx context.Context) ([]SkillTeam, error) {
 	defer cancel()
 	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_teams WHERE team_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, teamId)
+	rows, err := DB.QueryContext(ctx, statement, teamId)
 	if err != nil {
 		return nil, err
 	}
@@ -730,7 +730,7 @@ func CountTeamSkills(teamId int, ctx context.Context) (int, error) {
 	defer cancel()
 	statement := `SELECT COUNT(*) FROM skill_teams WHERE team_id = $1 AND deleted_at IS NULL`
 	var count int
-	err := db.QueryRowContext(ctx, statement, teamId).Scan(&count)
+	err := DB.QueryRowContext(ctx, statement, teamId).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -743,7 +743,7 @@ func (st *SkillTeam) GetById(id int, ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_teams WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -761,7 +761,7 @@ func SearchSkillByName(keyword string, limit int, ctx context.Context) ([]Skill,
               ORDER BY name 
               LIMIT $2`
 
-	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, query, "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -790,7 +790,7 @@ func GetAllSkills(ctx context.Context) ([]Skill, error) {
               WHERE deleted_at IS NULL
               ORDER BY category, name`
 
-	rows, err := db.QueryContext(ctx, query)
+	rows, err := DB.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}

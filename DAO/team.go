@@ -40,7 +40,7 @@ func GetTeam(teamID int) (Team, error) {
                   FROM teams WHERE id = $1`
 
 	var team Team
-	err := db.QueryRow(query, teamID).Scan(
+	err := DB.QueryRow(query, teamID).Scan(
 		&team.Id, &team.Uuid, &team.Name, &team.Mission,
 		&team.FounderId, &team.CreatedAt, &team.Class,
 		&team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags,
@@ -66,7 +66,7 @@ func GetTeamsByIds(teamIDs []int) ([]Team, error) {
 	          abbreviation, logo, is_private, updated_at, deleted_at, tags 
 	          FROM teams WHERE id = ANY($1) AND deleted_at IS NULL`
 
-	rows, err := db.Query(query, teamIDs)
+	rows, err := DB.Query(query, teamIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (team *Team) SoftDelete() error {
 	now := time.Now()
 	team.DeletedAt = &now
 	statement := "UPDATE teams SET deleted_at = $1, updated_at = $2 WHERE id = $3"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -190,7 +190,7 @@ func (team *Team) Restore() error {
 	team.DeletedAt = nil
 	now := time.Now()
 	statement := "UPDATE teams SET deleted_at = NULL, updated_at = $1 WHERE id = $2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func (resignation *TeamMemberResignation) GetStatus() string {
 // TeamMemberResignation.Create()
 func (resignation *TeamMemberResignation) Create() (err error) {
 	statement := "INSERT INTO team_member_resignations (uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -271,7 +271,7 @@ func (resignation *TeamMemberResignation) CreatedAtDate() string {
 // TeamMemberResignation.Get()
 func (resignation *TeamMemberResignation) Get() (err error) {
 	statement := "SELECT * FROM team_member_resignations WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -283,7 +283,7 @@ func (resignation *TeamMemberResignation) Get() (err error) {
 // TeamMemberResignation.GetByUuid()
 func (resignation *TeamMemberResignation) GetByUuid() (err error) {
 	statement := "SELECT * FROM team_member_resignations WHERE uuid = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -295,7 +295,7 @@ func (resignation *TeamMemberResignation) GetByUuid() (err error) {
 // TeamMemberResignation.UpdateCeoUserIdCoreMemberUserIdStatus()
 func (resignation *TeamMemberResignation) UpdateCeoUserIdCoreMemberUserIdStatus() (err error) {
 	statement := "UPDATE team_member_resignations SET ceo_user_id = $1, core_member_user_id = $2, status = $3, updated_at = $4 WHERE id = $5"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -306,7 +306,7 @@ func (resignation *TeamMemberResignation) UpdateCeoUserIdCoreMemberUserIdStatus(
 
 // TeamMemberResignations.GetByUserIdAndTeamId()  获取某个用户在某个$事业茶团的全部“退出$事业茶团声明书”
 func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []TeamMemberResignation, err error) {
-	rows, err := db.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 AND team_id = $2", user_id, team_id)
+	rows, err := DB.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 AND team_id = $2", user_id, team_id)
 	if err != nil {
 		return
 	}
@@ -323,7 +323,7 @@ func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []Team
 
 // TeamMemberResignations.GetByTeamId() 获取某个$事业茶团的全部“退出$事业茶团声明书”
 func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation, err error) {
-	rows, err := db.Query("SELECT * FROM team_member_resignations WHERE team_id = $1 ORDER BY created_at DESC", team_id)
+	rows, err := DB.Query("SELECT * FROM team_member_resignations WHERE team_id = $1 ORDER BY created_at DESC", team_id)
 	if err != nil {
 		return
 	}
@@ -340,7 +340,7 @@ func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation,
 
 // GetResignationsByUserId() 获取某个用户的全部"退出$事业茶团声明书"
 func GetResignationsByUserId(user_id int) (resignations []TeamMemberResignation, err error) {
-	rows, err := db.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 ORDER BY created_at DESC", user_id)
+	rows, err := DB.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 ORDER BY created_at DESC", user_id)
 	if err != nil {
 		return
 	}
@@ -387,7 +387,7 @@ func (notice *TeamMemberRoleNotice) CreatedAtDate() string {
 // TeamMemberRoleNotice.Create()
 func (notice *TeamMemberRoleNotice) Create() (err error) {
 	statement := "INSERT INTO team_member_role_notices (uuid, team_id, ceo_id, member_id, member_current_role, new_role, title, content, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -399,7 +399,7 @@ func (notice *TeamMemberRoleNotice) Create() (err error) {
 // TeamMemberRoleNotice.Get()
 func (notice *TeamMemberRoleNotice) Get() (err error) {
 	statement := "SELECT * FROM team_member_role_notices WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -410,7 +410,7 @@ func (notice *TeamMemberRoleNotice) Get() (err error) {
 
 // TeamMemberRoleNotice.GetByTeamId()
 func GetMemberRoleNoticesByTeamId(team_id int) (notices []TeamMemberRoleNotice, err error) {
-	rows, err := db.Query("SELECT * FROM team_member_role_notices WHERE team_id = $1", team_id)
+	rows, err := DB.Query("SELECT * FROM team_member_role_notices WHERE team_id = $1", team_id)
 	if err != nil {
 		return
 	}
@@ -428,7 +428,7 @@ func GetMemberRoleNoticesByTeamId(team_id int) (notices []TeamMemberRoleNotice, 
 // Team.CountTeamMemberRoleNotices() 统计某个$事业茶团的角色调整声明数量
 func (team *Team) CountTeamMemberRoleNotices() (count int, err error) {
 	statement := "SELECT COUNT(*) FROM team_member_role_notices WHERE team_id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -440,7 +440,7 @@ func (team *Team) CountTeamMemberRoleNotices() (count int, err error) {
 // TeamMemberRoleNotice.UpdateStatus()
 func (notice *TeamMemberRoleNotice) UpdateStatus() (err error) {
 	statement := "UPDATE team_member_role_notices SET status = $1 WHERE id = $2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -452,7 +452,7 @@ func (notice *TeamMemberRoleNotice) UpdateStatus() (err error) {
 // TeamMemberRoleNotice.Update()
 func (notice *TeamMemberRoleNotice) Update() (err error) {
 	statement := "UPDATE team_member_role_notices SET team_id = $1, ceo_id = $2, member_id = $3, member_current_role = $4, new_role = $5, title = $6, content = $7, status = $8, updated_at = $9 WHERE id = $10"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -477,7 +477,7 @@ func SearchTeamByAbbreviation(keyword string, limit int, ctx context.Context) ([
 	defer cancel()
 
 	teams := []Team{}
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, deleted_at, tags FROM teams WHERE abbreviation LIKE $1 AND deleted_at IS NULL AND is_private = false LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, deleted_at, tags FROM teams WHERE abbreviation LIKE $1 AND deleted_at IS NULL AND is_private = false LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return teams, err
 	}
@@ -495,7 +495,7 @@ func SearchTeamByAbbreviation(keyword string, limit int, ctx context.Context) ([
 // Create() UserDefaultTeam{}创建用户设置默认$事业茶团的记录
 func (udteam *UserDefaultTeam) Create() (err error) {
 	statement := "INSERT INTO user_default_teams (user_id, team_id, created_at) VALUES ($1, $2, $3) RETURNING id"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -515,7 +515,7 @@ func (user *User) GetLastDefaultTeam() (team Team, err error) {
 		return GetTeam(TeamIdFreelancer)
 	}
 	team = Team{}
-	err = db.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 AND teams.deleted_at IS NULL ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 AND teams.deleted_at IS NULL ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
 	if errors.Is(err, sql.ErrNoRows) {
 		return GetTeam(TeamIdFreelancer)
 	}
@@ -524,7 +524,7 @@ func (user *User) GetLastDefaultTeam() (team Team, err error) {
 
 // GetTeamMemberRoleByTeamId() 获取用户在给定$事业茶团中担任的角色
 func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err error) {
-	err = db.QueryRow("SELECT role FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).Scan(&role)
+	err = DB.QueryRow("SELECT role FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).Scan(&role)
 	return
 }
 
@@ -549,7 +549,7 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 	teams := make([]Team, 0, estimatedCapacity)
 
 	query += ` LIMIT $6` // 限制最大团队数
-	rows, err := db.Query(query, TeamClassSpaceship, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive, estimatedCapacity)
+	rows, err := DB.Query(query, TeamClassSpaceship, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive, estimatedCapacity)
 	if err != nil {
 		return nil, err
 	}
@@ -578,7 +578,7 @@ func (user *User) SurvivalTeamsCount() (count int, err error) {
         JOIN team_members ON teams.id = team_members.team_id
         WHERE teams.class IN ($1, $2) AND team_members.user_id = $3 AND team_members.status = $4 AND teams.deleted_at IS NULL`
 
-	err = db.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive).Scan(&count)
+	err = DB.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive).Scan(&count)
 
 	return
 }
@@ -586,7 +586,7 @@ func (user *User) SurvivalTeamsCount() (count int, err error) {
 // 获取用户创建的全部$事业茶团，FounderId = UserId
 // AWS CodeWhisperer assist in writing
 func (user *User) HoldTeams() (teams []Team, err error) {
-	rows, err := db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE founder_id = $1 AND deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE founder_id = $1 AND deleted_at IS NULL", user.Id)
 	if err != nil {
 		return
 	}
@@ -604,7 +604,7 @@ func (user *User) HoldTeams() (teams []Team, err error) {
 // 用户担任CEO的$事业茶团，team_member.role = "CEO"
 // AWS CodeWhisperer assist in writing
 func (user *User) CeoTeams() (teams []Team, err error) {
-	rows, err := db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'CEO' AND teams.deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'CEO' AND teams.deleted_at IS NULL", user.Id)
 	if err != nil {
 		return
 	}
@@ -621,7 +621,7 @@ func (user *User) CeoTeams() (teams []Team, err error) {
 
 // user.FounderTeams() 用户创建的全部$事业茶团，team.FounderId = user.Id, return teams []team
 func (usre *User) FounderTeams() (teams []Team, err error) {
-	rows, err := db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams WHERE teams.founder_id = $1 AND teams.deleted_at IS NULL", usre.Id)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams WHERE teams.founder_id = $1 AND teams.deleted_at IS NULL", usre.Id)
 	if err != nil {
 		return
 	}
@@ -640,7 +640,7 @@ func (usre *User) FounderTeams() (teams []Team, err error) {
 // 用户担任核心高管成员的全部$事业茶团，team_member.role = "CEO", "CTO", "CMO", "CFO"
 // AWS CodeWhisperer assist in writing
 func (user *User) CoreExecTeams() (teams []Team, err error) {
-	rows, err := db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND (team_members.role = 'CEO' or team_members.role = 'CTO' or team_members.role = 'CMO' or team_members.role = 'CFO') AND teams.deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND (team_members.role = 'CEO' or team_members.role = 'CTO' or team_members.role = 'CMO' or team_members.role = 'CFO') AND teams.deleted_at IS NULL", user.Id)
 	if err != nil {
 		return
 	}
@@ -658,7 +658,7 @@ func (user *User) CoreExecTeams() (teams []Team, err error) {
 // 用户作为普通成员的全部$事业茶团，team_member.role = "taster"
 // AWS CodeWhisperer assist in writing
 func (user *User) NormalExecTeams() (teams []Team, err error) {
-	rows, err := db.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'taster' AND teams.deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'taster' AND teams.deleted_at IS NULL", user.Id)
 	if err != nil {
 		return
 	}
@@ -681,7 +681,7 @@ func (team *Team) CreatedAtDate() string {
 // Team.Create()创建$事业茶团
 func (team *Team) Create() (err error) {
 	statement := "INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -694,7 +694,7 @@ func (team *Team) Create() (err error) {
 // AWS CodeWhisperer assist in writing
 func (invitation *Invitation) Team() (team Team, err error) {
 	team = Team{}
-	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", invitation.TeamId).
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", invitation.TeamId).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
 	return
 }
@@ -703,7 +703,7 @@ func (invitation *Invitation) Team() (team Team, err error) {
 // AWS CodeWhisperer assist in writing
 // 统计全部注册$事业茶团数量
 func GetNumAllTeams() (count int) {
-	rows, _ := db.Query("SELECT COUNT(*) FROM teams WHERE deleted_at IS NULL")
+	rows, _ := DB.Query("SELECT COUNT(*) FROM teams WHERE deleted_at IS NULL")
 	for rows.Next() {
 		if err := rows.Scan(&count); err != nil {
 			return
@@ -716,7 +716,7 @@ func GetNumAllTeams() (count int) {
 // 统计某个$事业茶团的成员数
 // AWS CodeWhisperer assist in writing
 func (team *Team) NumMembers() (count int) {
-	rows, _ := db.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND status < $2", team.Id, TeMemberStatusResigned)
+	rows, _ := DB.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND status < $2", team.Id, TeMemberStatusResigned)
 	for rows.Next() {
 		if err := rows.Scan(&count); err != nil {
 			return
@@ -728,7 +728,7 @@ func (team *Team) NumMembers() (count int) {
 
 // user.CountTeamsByFounderId() 获取用户创建的$事业茶团数量值
 func (user *User) CountTeamsByFounderId() (count int, err error) {
-	rows, err := db.Query("SELECT COUNT(*) FROM teams WHERE founder_id = $1 AND deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT COUNT(*) FROM teams WHERE founder_id = $1 AND deleted_at IS NULL", user.Id)
 	if err != nil {
 		return 0, err
 	}
@@ -745,7 +745,7 @@ func (user *User) CountTeamsByFounderId() (count int, err error) {
 func GetTeamByUUID(uuid string) (team Team, err error) {
 
 	team = Team{}
-	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE uuid = $1 AND deleted_at IS NULL", uuid).
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE uuid = $1 AND deleted_at IS NULL", uuid).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
 	return
 }
@@ -755,7 +755,7 @@ func (team *Team) Get() (err error) {
 	if team.Id == TeamIdNone {
 		return fmt.Errorf("team not found with id: %d", team.Id)
 	}
-	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", team.Id).
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", team.Id).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
 	return
 }
@@ -769,7 +769,7 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
-	rows, err := db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2 AND status = $3", team.Id, "taster", TeMemberStatusActive)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2 AND status = $3", team.Id, "taster", TeMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -792,7 +792,7 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
-	rows, err := db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5) AND status = $6", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO, TeMemberStatusActive)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5) AND status = $6", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO, TeMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -815,7 +815,7 @@ func GetAllMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
 	if team_id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team_id)
 	}
-	rows, err := db.Query("SELECT user_id FROM team_members WHERE team_id = $1 AND status = 1", team_id)
+	rows, err := DB.Query("SELECT user_id FROM team_members WHERE team_id = $1 AND status = 1", team_id)
 	if err != nil {
 		return
 	}
@@ -839,7 +839,7 @@ func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err 
 	if team_id == TeamIdFreelancer {
 		return team_member, fmt.Errorf("team member cannot find with id: %d", team_id)
 	}
-	err = db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).
+	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
 	return
 }
@@ -888,7 +888,7 @@ func (team *Team) IsCoreMember(user_id int) (bool, error) {
 // AWS CodeWhisperer assist in writing
 func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 	team_member = TeamMember{}
-	err = db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, RoleCEO).
+	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, RoleCEO).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
 	return
 }
@@ -896,7 +896,7 @@ func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 // GetTeamMemberByRole() 根据角色查找$事业茶团成员资料。用于检查$事业茶团拟邀请的新成员角色是否已经被占用
 func (team *Team) GetTeamMemberByRole(role string) (team_member TeamMember, err error) {
 	team_member = TeamMember{}
-	err = db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
+	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
 	return
 }
@@ -918,7 +918,7 @@ func (team *Team) CheckTeamMemberByRole(role string) (*TeamMember, error) {
 	}
 
 	teamMember := &TeamMember{}
-	err := db.QueryRow(
+	err := DB.QueryRow(
 		"SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at "+
 			"FROM team_members WHERE team_id = $1 AND role = $2",
 		team.Id, role,
@@ -943,7 +943,7 @@ func (team *Team) CheckTeamMemberByRole(role string) (*TeamMember, error) {
 func (tM *TeamMember) Create() (err error) {
 	statement := `INSERT INTO team_members (uuid, team_id, user_id, role, created_at, status)
 	VALUES ($1, $2, $3, $4, $5, $6) RETURNING id,uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -958,7 +958,7 @@ func (teamMember *TeamMember) CreatedAtDate() string {
 
 // TeamMember.Get()
 func (teamMember *TeamMember) Get() (err error) {
-	err = db.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE id = $1", teamMember.Id).
+	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE id = $1", teamMember.Id).
 		Scan(&teamMember.Id, &teamMember.Uuid, &teamMember.TeamId, &teamMember.UserId, &teamMember.Role, &teamMember.CreatedAt, &teamMember.Status, &teamMember.UpdatedAt)
 	return
 }
@@ -966,7 +966,7 @@ func (teamMember *TeamMember) Get() (err error) {
 // teamMemberUpdate() 更新$事业茶团成员的角色和状态
 func (teamMember *TeamMember) UpdateRoleStatus() (err error) {
 	statement := `UPDATE team_members SET role = $2, updated_at = $3, status = $4 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -978,7 +978,7 @@ func (teamMember *TeamMember) UpdateRoleStatus() (err error) {
 // 更换$事业茶团默认CEO的方法，Update team_members记录中role=CEO的行 user_id 为当前user_id
 func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
 	statement := `UPDATE team_members SET user_id = $1, updated_at = $2 WHERE team_id = $3 AND role = $4`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -990,14 +990,14 @@ func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
 // 根据teamMember.teamId获取Team()，返回成员所在team的信息
 func (teamMember *TeamMember) Team() (team Team, err error) {
 	team = Team{}
-	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", teamMember.TeamId).
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", teamMember.TeamId).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
 	return
 }
 
 // GetTeamByName()
 func (team *Team) GetByName() (err error) {
-	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE name = $1 AND deleted_at IS NULL", team.Name).
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE name = $1 AND deleted_at IS NULL", team.Name).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
 	return
 }
@@ -1006,7 +1006,7 @@ func (team *Team) GetByName() (err error) {
 // 根据ProjectId从LicenceTeam获取[]TeamId,然后用teamId，获取对应的Team，最后返回[]team
 // 获取一个封闭式茶台的全部受邀请$事业茶团
 func (project *Project) InvitedTeams() (teams []Team, err error) {
-	rows, err := db.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id IN (SELECT team_id FROM project_invited_teams WHERE project_id = $1) AND deleted_at IS NULL", project.Id)
+	rows, err := DB.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id IN (SELECT team_id FROM project_invited_teams WHERE project_id = $1) AND deleted_at IS NULL", project.Id)
 	if err != nil {
 		return
 	}
@@ -1023,7 +1023,7 @@ func (project *Project) InvitedTeams() (teams []Team, err error) {
 
 // GetTeamByAbbreviation()
 func (team *Team) GetByAbbreviation() (err error) {
-	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE abbreviation = $1 AND deleted_at IS NULL", team.Abbreviation).
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE abbreviation = $1 AND deleted_at IS NULL", team.Abbreviation).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
 	return
 }
@@ -1031,14 +1031,14 @@ func (team *Team) GetByAbbreviation() (err error) {
 // GetGroupFirstTeam 根据group.first_team_id获取team
 func GetGroupFirstTeam(groupID int) (team Team, err error) {
 	team = Team{}
-	err = db.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, deleted_at, tags FROM teams WHERE id = (SELECT first_team_id FROM groups WHERE id = $1)", groupID).
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, deleted_at, tags FROM teams WHERE id = (SELECT first_team_id FROM groups WHERE id = $1)", groupID).
 		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags)
 	return
 }
 
 // 获取开放式$事业茶团的数量
 func OpenTeamCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM teams WHERE class = 1 AND deleted_at IS NULL")
+	rows, err := DB.Query("SELECT count(*) FROM teams WHERE class = 1 AND deleted_at IS NULL")
 	if err != nil {
 		return
 	}
@@ -1053,7 +1053,7 @@ func OpenTeamCount() (count int) {
 
 // 获取封闭式$事业茶团数量
 func ClosedTeamCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM teams WHERE class = 2 AND deleted_at IS NULL")
+	rows, err := DB.Query("SELECT count(*) FROM teams WHERE class = 2 AND deleted_at IS NULL")
 	if err != nil {
 		return
 	}
@@ -1078,7 +1078,7 @@ func (team *Team) Update() error {
 	statement := `UPDATE teams SET name = $1, mission = $2, class = $3, 
 	              abbreviation = $4, logo = $5, tags = $6, is_private = $7, updated_at = $8 
 	              WHERE id = $9`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -1091,7 +1091,7 @@ func (team *Team) Update() error {
 // UpdateClass 更新团队类型
 func (team *Team) UpdateClass() (err error) {
 	statement := `UPDATE teams SET class = $1, updated_at = $2 WHERE id = $3`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -1103,7 +1103,7 @@ func (team *Team) UpdateClass() (err error) {
 // UpdateLogo 更新团队标志
 func (team *Team) UpdateLogo() (err error) {
 	statement := `UPDATE teams SET logo = $1, updated_at = $2 WHERE id = $3`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -1115,7 +1115,7 @@ func (team *Team) UpdateLogo() (err error) {
 // UpdateAbbreviation 更新团队简称
 func (team *Team) UpdateAbbreviation() (err error) {
 	statement := `UPDATE teams SET abbreviation = $1, updated_at = $2 WHERE id = $3`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -1127,7 +1127,7 @@ func (team *Team) UpdateAbbreviation() (err error) {
 // UpdateName 更新团队名称
 func (team *Team) UpdateName() (err error) {
 	statement := `UPDATE teams SET name = $1, updated_at = $2 WHERE id = $3`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -1139,7 +1139,7 @@ func (team *Team) UpdateName() (err error) {
 // UpdateMission 更新团队使命
 func (team *Team) UpdateMission() (err error) {
 	statement := `UPDATE teams SET mission = $1, updated_at = $2 WHERE id = $3`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -1151,7 +1151,7 @@ func (team *Team) UpdateMission() (err error) {
 // UpdateIsPrivate 更新团队私密属性
 func (team *Team) UpdateIsPrivate() (err error) {
 	statement := `UPDATE teams SET is_private = $1, updated_at = $2 WHERE id = $3`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -1174,7 +1174,7 @@ func (tM *TeamMember) CreateWithTx(tx *sql.Tx) (err error) {
 
 // GetResignedMembersByTeamId 获取已离开的成员列表
 func GetResignedMembersByTeamId(teamId int) ([]TeamMember, error) {
-	rows, err := db.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND status = $2 ORDER BY updated_at DESC", teamId, TeMemberStatusResigned)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND status = $2 ORDER BY updated_at DESC", teamId, TeMemberStatusResigned)
 	if err != nil {
 		return nil, err
 	}

@@ -126,7 +126,7 @@ func (dT *DraftThread) StatusString() string {
 
 // 获取针对此post的全部threads。
 func (post *Post) Threads() (threads []Thread, err error) {
-	rows, err := db.Query("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 ORDER BY created_at DESC", post.Id)
+	rows, err := DB.Query("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 ORDER BY created_at DESC", post.Id)
 	if err != nil {
 		return
 	}
@@ -144,7 +144,7 @@ func (post *Post) Threads() (threads []Thread, err error) {
 // 根据DraftThread struct生成保存新茶议草稿
 func (d *DraftThread) Create() (err error) {
 	statement := "INSERT INTO draft_threads (user_id, project_id, title, body, class, created_at, type, post_id, team_id, is_private, family_id, category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -155,14 +155,14 @@ func (d *DraftThread) Create() (err error) {
 
 // 读取茶议草稿
 func (d *DraftThread) Get() (err error) {
-	err = db.QueryRow("SELECT id, user_id, project_id, title, body, class, created_at, type, post_id, team_id, is_private, family_id, category FROM draft_threads WHERE id = $1", d.Id).
+	err = DB.QueryRow("SELECT id, user_id, project_id, title, body, class, created_at, type, post_id, team_id, is_private, family_id, category FROM draft_threads WHERE id = $1", d.Id).
 		Scan(&d.Id, &d.UserId, &d.ProjectId, &d.Title, &d.Body, &d.Class, &d.CreatedAt, &d.Type, &d.PostId, &d.TeamId, &d.IsPrivate, &d.FamilyId, &d.Category)
 	return
 }
 
 // UpdateClass() 更新茶议草稿级
 func (d *DraftThread) UpdateStatus(status int) (err error) {
-	_, err = db.Exec("UPDATE draft_threads SET status=$1 WHERE id = $2", status, d.Id)
+	_, err = DB.Exec("UPDATE draft_threads SET status=$1 WHERE id = $2", status, d.Id)
 	return
 }
 
@@ -178,7 +178,7 @@ func (t *Thread) EditAtDate() string {
 
 // get the number of posts in a thread
 func (t *Thread) NumReplies() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM posts where thread_id = $1", t.Id)
+	rows, err := DB.Query("SELECT count(*) FROM posts where thread_id = $1", t.Id)
 	if err != nil {
 		return
 	}
@@ -193,7 +193,7 @@ func (t *Thread) NumReplies() (count int) {
 
 // 统计某个thread的全部posts属性Attitude=true的数量
 func (t *Thread) NumSupport() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM posts where thread_id = $1 and attitude = $2", t.Id, true)
+	rows, err := DB.Query("SELECT count(*) FROM posts where thread_id = $1 and attitude = $2", t.Id, true)
 	if err != nil {
 		return
 	}
@@ -208,7 +208,7 @@ func (t *Thread) NumSupport() (count int) {
 
 // 统计某个thread的全部posts属性Attitude=false的数量
 func (t *Thread) NumOppose() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM posts where thread_id = $1 and attitude = $2", t.Id, false)
+	rows, err := DB.Query("SELECT count(*) FROM posts where thread_id = $1 and attitude = $2", t.Id, false)
 	if err != nil {
 		return
 	}
@@ -223,7 +223,7 @@ func (t *Thread) NumOppose() (count int) {
 
 // get the number of reads in a thread
 func (thread *Thread) NumReads() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM reads where thread_id = $1", thread.Id)
+	rows, err := DB.Query("SELECT count(*) FROM reads where thread_id = $1", thread.Id)
 	if err != nil {
 		return
 	}
@@ -253,7 +253,7 @@ func (t *Thread) UpdateBodyAndClass(body string, class int, ctx context.Context)
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	_, err := db.ExecContext(ctx, query,
+	_, err := DB.ExecContext(ctx, query,
 		t.Id,
 		body,
 		class,
@@ -265,7 +265,7 @@ func (t *Thread) UpdateBodyAndClass(body string, class int, ctx context.Context)
 // UpdateClass() 根据Thread.Id更新class
 func (t *Thread) UpdateClass() (err error) {
 	statement := "UPDATE threads SET class = $1, edit_at = $2 WHERE id = $2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -280,7 +280,7 @@ func (t *Thread) UpdateClass() (err error) {
 // 保存新的茶议
 func (t *Thread) Create() (err error) {
 	statement := "INSERT INTO threads (uuid, body, user_id, created_at, class, title, project_id, family_id, type, post_id, team_id, is_private, category) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid, created_at"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -304,7 +304,7 @@ type ThreadApproved struct {
 // thread_approved.Create()
 func (threadApproved *ThreadApproved) Create() (err error) {
 	statement := "INSERT INTO thread_approved (project_id, thread_id, user_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -315,14 +315,14 @@ func (threadApproved *ThreadApproved) Create() (err error) {
 
 // thread_approved.GetByThreadId()
 func (threadApproved *ThreadApproved) GetByThreadId() (err error) {
-	err = db.QueryRow("SELECT id, project_id, thread_id, user_id, created_at FROM thread_approved WHERE thread_id = $1", threadApproved.ThreadId).Scan(&threadApproved.Id, &threadApproved.ProjectId, &threadApproved.ThreadId, &threadApproved.UserId, &threadApproved.CreatedAt)
+	err = DB.QueryRow("SELECT id, project_id, thread_id, user_id, created_at FROM thread_approved WHERE thread_id = $1", threadApproved.ThreadId).Scan(&threadApproved.Id, &threadApproved.ProjectId, &threadApproved.ThreadId, &threadApproved.UserId, &threadApproved.CreatedAt)
 	return
 }
 
 // thread_approved.Delete()
 func (threadApproved *ThreadApproved) Delete() (err error) {
 	statement := "DELETE FROM thread_approved WHERE project_id = $1 AND thread_id = $2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -333,7 +333,7 @@ func (threadApproved *ThreadApproved) Delete() (err error) {
 
 // threadApproved.CountByProjectId() 统计茶台采纳的茶议（方案）数量
 func (threadApproved *ThreadApproved) CountByProjectId() (count int) {
-	err := db.QueryRow("SELECT COUNT(*) FROM thread_approved WHERE project_id = $1", threadApproved.ProjectId).Scan(&count)
+	err := DB.QueryRow("SELECT COUNT(*) FROM thread_approved WHERE project_id = $1", threadApproved.ProjectId).Scan(&count)
 	if err != nil {
 		return
 	}
@@ -357,7 +357,7 @@ func HotThreads(limit int, ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE class IN (1,2) ORDER BY created_at DESC LIMIT $1", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE class IN (1,2) ORDER BY created_at DESC LIMIT $1", limit)
 	if err != nil {
 		return
 	}
@@ -379,7 +379,7 @@ func GetThreadByUUID(uuid string) (thread Thread, err error) {
 		return
 	}
 	thread = Thread{}
-	err = db.QueryRow("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE uuid = $1", uuid).
+	err = DB.QueryRow("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE uuid = $1", uuid).
 		Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
 	return
 }
@@ -389,7 +389,7 @@ func GetThreadByUUID(uuid string) (thread Thread, err error) {
 // Get a thread by the id
 func GetThreadById(id int) (thread Thread, err error) {
 	thread = Thread{}
-	err = db.QueryRow("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE id = $1", id).
+	err = DB.QueryRow("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE id = $1", id).
 		Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
 	return
 }
@@ -397,7 +397,7 @@ func GetThreadById(id int) (thread Thread, err error) {
 // 根据Post.ThreadId获取此品味属于哪一个thread
 func (post *Post) Thread() (thread Thread, err error) {
 	thread = Thread{}
-	err = db.QueryRow("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE id = $1", post.ThreadId).
+	err = DB.QueryRow("SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE id = $1", post.ThreadId).
 		Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
 	return
 }
@@ -419,7 +419,7 @@ func (project *Project) ThreadsNormal(ctx context.Context) ([]Thread, error) {
         ORDER BY created_at DESC`
 
 	// 使用预编译语句提高性能
-	stmt, err := db.Prepare(query)
+	stmt, err := DB.Prepare(query)
 	if err != nil {
 		return nil, fmt.Errorf("准备查询语句失败: %w", err)
 	}
@@ -459,7 +459,7 @@ func (project *Project) ThreadsNormal(ctx context.Context) ([]Thread, error) {
 func (project *Project) ThreadAppointment(ctx context.Context) (thread Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	err = db.QueryRowContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryAppointment, project.Id).
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryAppointment, project.Id).
 		Scan(&thread.Id, &thread.Uuid, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Class, &thread.Title, &thread.EditAt, &thread.ProjectId, &thread.FamilyId, &thread.Type, &thread.PostId, &thread.TeamId, &thread.IsPrivate, &thread.Category)
 
 	return
@@ -469,7 +469,7 @@ func (project *Project) ThreadAppointment(ctx context.Context) (thread Thread, e
 func (project *Project) ThreadsSeeSeek(ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategorySeeSeek, project.Id)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategorySeeSeek, project.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -495,7 +495,7 @@ func (project *Project) ThreadsSeeSeek(ctx context.Context) (threads []Thread, e
 func (project *Project) ThreadsBrainFire(ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryBrainFire, project.Id)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryBrainFire, project.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -521,7 +521,7 @@ func (project *Project) ThreadsBrainFire(ctx context.Context) (threads []Thread,
 func (project *Project) ThreadsSuggestion(ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategorySuggestion, project.Id)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategorySuggestion, project.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -547,7 +547,7 @@ func (project *Project) ThreadsSuggestion(ctx context.Context) (threads []Thread
 func (project *Project) ThreadsGoods(ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryGoods, project.Id)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryGoods, project.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -573,7 +573,7 @@ func (project *Project) ThreadsGoods(ctx context.Context) (threads []Thread, err
 func (project *Project) ThreadsHandicraft(ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryHandcraft, project.Id)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE post_id = $1 AND category = $2 AND project_id = $3", PostIdForThread, ThreadCategoryHandcraft, project.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -625,7 +625,7 @@ func CreateRequiredThreads(objective *Objective, project *Project, user_id int, 
 	defer cancel()
 
 	// 开始事务（使用传入的上下文）
-	tx, err := db.BeginTx(ctx, nil)
+	tx, err := DB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("事务启动失败: %w", err)
 	}
@@ -681,7 +681,7 @@ func (t *Thread) CreateInTx(tx *sql.Tx) error {
 func SearchThreadByTitle(keyword string, limit int, ctx context.Context) (threads []Thread, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE title LIKE $1 ORDER BY created_at DESC LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, body, user_id, created_at, class, title, edit_at, project_id, family_id, type, post_id, team_id, is_private, category FROM threads WHERE title LIKE $1 ORDER BY created_at DESC LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return
 	}

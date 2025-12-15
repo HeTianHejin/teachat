@@ -27,7 +27,7 @@ func GetUserPerspectiveFamilyTree(userId int) (*FamilyTreeNode, error) {
 
 	// 使用用户的主要家庭（最新的）作为根节点
 	rootFamily := userFamilies[0]
-	
+
 	root := &FamilyTreeNode{
 		Family:       rootFamily,
 		Generation:   0,
@@ -41,7 +41,7 @@ func GetUserPerspectiveFamilyTree(userId int) (*FamilyTreeNode, error) {
 		if err := parentFamily.Get(); err == nil {
 			// 递归获取祖父母辈（-2代）
 			grandparents := buildParentGeneration(&parentFamily, -2)
-			
+
 			parentNode := FamilyTreeNode{
 				Family:       parentFamily,
 				Generation:   -1,
@@ -56,7 +56,7 @@ func GetUserPerspectiveFamilyTree(userId int) (*FamilyTreeNode, error) {
 		parentFamily := Family{Id: rootFamily.WifeFromFamilyId}
 		if err := parentFamily.Get(); err == nil {
 			grandparents := buildParentGeneration(&parentFamily, -2)
-			
+
 			parentNode := FamilyTreeNode{
 				Family:       parentFamily,
 				Generation:   -1,
@@ -129,7 +129,7 @@ func getChildFamilies(parentFamilyId int) ([]Family, error) {
 		WHERE (f.husband_from_family_id = $1 OR f.wife_from_family_id = $1)
 		AND f.deleted_at IS NULL`
 
-	rows, err := db.QueryContext(ctx, query, parentFamilyId)
+	rows, err := DB.QueryContext(ctx, query, parentFamilyId)
 	if err != nil {
 		return nil, wrapError("getChildFamilies", err)
 	}
@@ -138,15 +138,15 @@ func getChildFamilies(parentFamilyId int) ([]Family, error) {
 
 // FamilyMessagePreference 家庭消息偏好设置
 type FamilyMessagePreference struct {
-	Id                int
-	Uuid              string
-	UserId            int       // 用户ID
-	FamilyId          int       // 家庭ID
-	ReceiveMessages   bool      // 是否接收该家庭成员的消息
-	NotificationType  int       // 通知类型：0-关闭，1-仅重要，2-全部
-	MutedUntil        *time.Time // 静音到期时间
-	CreatedAt         time.Time
-	UpdatedAt         *time.Time
+	Id               int
+	Uuid             string
+	UserId           int        // 用户ID
+	FamilyId         int        // 家庭ID
+	ReceiveMessages  bool       // 是否接收该家庭成员的消息
+	NotificationType int        // 通知类型：0-关闭，1-仅重要，2-全部
+	MutedUntil       *time.Time // 静音到期时间
+	CreatedAt        time.Time
+	UpdatedAt        *time.Time
 }
 
 // 通知类型常量
@@ -165,7 +165,7 @@ func (fmp *FamilyMessagePreference) Create() error {
 		(uuid, user_id, family_id, receive_messages, notification_type, muted_until, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, uuid`
 
-	err := db.QueryRowContext(ctx, query, Random_UUID(), fmp.UserId, fmp.FamilyId,
+	err := DB.QueryRowContext(ctx, query, Random_UUID(), fmp.UserId, fmp.FamilyId,
 		fmp.ReceiveMessages, fmp.NotificationType, fmp.MutedUntil, time.Now()).
 		Scan(&fmp.Id, &fmp.Uuid)
 
@@ -184,7 +184,7 @@ func (fmp *FamilyMessagePreference) Update() error {
 		SET receive_messages = $1, notification_type = $2, muted_until = $3, updated_at = $4 
 		WHERE id = $5`
 
-	_, err := db.ExecContext(ctx, query, fmp.ReceiveMessages, fmp.NotificationType,
+	_, err := DB.ExecContext(ctx, query, fmp.ReceiveMessages, fmp.NotificationType,
 		fmp.MutedUntil, now, fmp.Id)
 
 	return wrapError("FamilyMessagePreference.Update", err)
@@ -199,7 +199,7 @@ func GetUserFamilyMessagePreferences(userId int) ([]FamilyMessagePreference, err
 		muted_until, created_at, updated_at 
 		FROM family_message_preferences WHERE user_id = $1`
 
-	rows, err := db.QueryContext(ctx, query, userId)
+	rows, err := DB.QueryContext(ctx, query, userId)
 	if err != nil {
 		return nil, wrapError("GetUserFamilyMessagePreferences", err)
 	}

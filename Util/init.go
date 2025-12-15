@@ -126,3 +126,9 @@ func FileExist(path string) bool {
 	_, err := os.Lstat(path)
 	return !os.IsNotExist(err)
 }
+
+// FormatFloat 格式化浮点数，保留指定位数小数
+func FormatFloat(num float64, precision int) string {
+	format := fmt.Sprintf("%%.%df", precision)
+	return fmt.Sprintf(format, num)
+}

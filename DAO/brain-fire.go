@@ -80,7 +80,7 @@ func (bf *BrainFire) Create(ctx context.Context) (err error) {
 		 verifier_user_id, verifier_family_id, verifier_team_id, status, brain_fire_class, brain_fire_type) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -99,7 +99,7 @@ func (bf *BrainFire) Update(ctx context.Context) error {
 
 	statement := `UPDATE brain_fires SET title = $2, inference = $3, diagnose = $4, judgement = $5, 
 		status = $6, start_time = $7, end_time = $8, updated_at = $9 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -119,7 +119,7 @@ func (bf *BrainFire) GetByIdOrUUID(ctx context.Context) (err error) {
 		verifier_user_id, verifier_family_id, verifier_team_id, status, brain_fire_class, brain_fire_type,
 		created_at, updated_at
 		FROM brain_fires WHERE id=$1 OR uuid=$2`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -143,7 +143,7 @@ func GetBrainFireByProjectId(projectId int, ctx context.Context) (BrainFire, err
 		verifier_user_id, verifier_family_id, verifier_team_id, status, brain_fire_class, brain_fire_type,
 		created_at, updated_at
 		FROM brain_fires WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return bf, err
 	}

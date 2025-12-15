@@ -81,10 +81,10 @@ type MagicTeam struct {
 type MagicTeamStatus int
 
 const (
-	ChaoticMagicTeamStatus      MagicTeamStatus = iota // 0、混乱
-	ClearMagicTeamStatus                               // 1、清晰
-	CollaborativeMagicTeamStatus                       // 2、协同
-	InnovativeMagicTeamStatus                          // 3、创新
+	ChaoticMagicTeamStatus       MagicTeamStatus = iota // 0、混乱
+	ClearMagicTeamStatus                                // 1、清晰
+	CollaborativeMagicTeamStatus                        // 2、协同
+	InnovativeMagicTeamStatus                           // 3、创新
 )
 
 // IntelligenceLevel 智力耗费等级
@@ -150,7 +150,7 @@ func (m *Magic) Create(ctx context.Context) (err error) {
 		(uuid, user_id, name, nickname, description, intelligence_level, difficulty_level, category, level) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -170,7 +170,7 @@ func (m *Magic) GetByIdOrUUID(ctx context.Context) (err error) {
 	statement := `SELECT id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM magics WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -185,7 +185,7 @@ func (m *Magic) Update() error {
 	statement := `UPDATE magics SET name = $2, nickname = $3, description = $4, 
 		intelligence_level = $5, difficulty_level = $6, category = $7, level = $8, updated_at = $9  
 		WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (m *Magic) Update() error {
 // Delete 软删除法力记录
 func (m *Magic) Delete() error {
 	statement := `UPDATE magics SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -312,7 +312,7 @@ func GetMagicsByCategory(category MagicCategory, ctx context.Context) ([]Magic, 
 	statement := `SELECT id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM magics WHERE category = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, category)
+	rows, err := DB.QueryContext(ctx, statement, category)
 	if err != nil {
 		return nil, err
 	}
@@ -338,7 +338,7 @@ func GetMagicsByDifficultyLevel(difficultyLevel DifficultyLevel, ctx context.Con
 	statement := `SELECT id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM magics WHERE difficulty_level = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, difficultyLevel)
+	rows, err := DB.QueryContext(ctx, statement, difficultyLevel)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func GetAllMagics(ctx context.Context) ([]Magic, error) {
 	statement := `SELECT id, uuid, user_id, name, nickname, description, intelligence_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
 		FROM magics WHERE deleted_at IS NULL ORDER BY category, level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement)
+	rows, err := DB.QueryContext(ctx, statement)
 	if err != nil {
 		return nil, err
 	}
@@ -390,7 +390,7 @@ func (mu *MagicUser) Create(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `INSERT INTO magic_users (magic_id, user_id, level, status) VALUES ($1, $2, $3, $4) RETURNING id`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -404,7 +404,7 @@ func (mu *MagicUser) GetByUserAndMagic(ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, magic_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_users WHERE user_id = $1 AND magic_id = $2 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -415,7 +415,7 @@ func (mu *MagicUser) GetByUserAndMagic(ctx context.Context) error {
 // MagicUser.Update 更新用户法力记录
 func (mu *MagicUser) Update() error {
 	statement := `UPDATE magic_users SET level = $2, status = $3, updated_at = $4 WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -427,7 +427,7 @@ func (mu *MagicUser) Update() error {
 // MagicUser.Delete 软删除用户法力记录
 func (mu *MagicUser) Delete() error {
 	statement := `UPDATE magic_users SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -462,7 +462,7 @@ func GetUserMagics(userId int, ctx context.Context) ([]MagicUser, error) {
 	defer cancel()
 	statement := `SELECT id, magic_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_users WHERE user_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, userId)
+	rows, err := DB.QueryContext(ctx, statement, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -486,7 +486,7 @@ func (mu *MagicUser) GetById(id int, ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, magic_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_users WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -501,7 +501,7 @@ func (mt *MagicTeam) Create(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `INSERT INTO magic_teams (magic_id, team_id, level, status) VALUES ($1, $2, $3, $4) RETURNING id`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -515,7 +515,7 @@ func (mt *MagicTeam) GetByTeamAndMagic(ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_teams WHERE team_id = $1 AND magic_id = $2 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -526,7 +526,7 @@ func (mt *MagicTeam) GetByTeamAndMagic(ctx context.Context) error {
 // MagicTeam.Update 更新团队【法力记录】
 func (mt *MagicTeam) Update() error {
 	statement := `UPDATE magic_teams SET level = $2, status = $3, updated_at = $4 WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -538,7 +538,7 @@ func (mt *MagicTeam) Update() error {
 // MagicTeam.Delete 软删除团队【法力记录】
 func (mt *MagicTeam) Delete() error {
 	statement := `UPDATE magic_teams SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -573,7 +573,7 @@ func GetTeamMagics(teamId int, ctx context.Context) ([]MagicTeam, error) {
 	defer cancel()
 	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_teams WHERE team_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, teamId)
+	rows, err := DB.QueryContext(ctx, statement, teamId)
 	if err != nil {
 		return nil, err
 	}
@@ -597,7 +597,7 @@ func CountTeamMagics(teamId int, ctx context.Context) (int, error) {
 	defer cancel()
 	statement := `SELECT COUNT(*) FROM magic_teams WHERE team_id = $1 AND deleted_at IS NULL`
 	var count int
-	err := db.QueryRowContext(ctx, statement, teamId).Scan(&count)
+	err := DB.QueryRowContext(ctx, statement, teamId).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -610,7 +610,7 @@ func (mt *MagicTeam) GetById(id int, ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_teams WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -628,7 +628,7 @@ func SearchMagicByName(keyword string, limit int, ctx context.Context) ([]Magic,
               ORDER BY name 
               LIMIT $2`
 
-	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, query, "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -685,7 +685,7 @@ func CountUserMagics(userId int, ctx context.Context) (int, error) {
 	defer cancel()
 	statement := `SELECT COUNT(*) FROM magic_users WHERE user_id = $1 AND deleted_at IS NULL`
 	var count int
-	err := db.QueryRowContext(ctx, statement, userId).Scan(&count)
+	err := DB.QueryRowContext(ctx, statement, userId).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -717,7 +717,7 @@ func GetMagicsByMagicUsers(magicUsers []MagicUser, ctx context.Context) ([]Magic
 		FROM magics WHERE id IN (%s) AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`,
 		strings.Join(placeholders, ","))
 
-	rows, err := db.QueryContext(ctx, statement, args...)
+	rows, err := DB.QueryContext(ctx, statement, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -761,7 +761,7 @@ func GetMagicsByMagicTeams(magicTeams []MagicTeam, ctx context.Context) ([]Magic
 		FROM magics WHERE id IN (%s) AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`,
 		strings.Join(placeholders, ","))
 
-	rows, err := db.QueryContext(ctx, statement, args...)
+	rows, err := DB.QueryContext(ctx, statement, args...)
 	if err != nil {
 		return nil, err
 	}

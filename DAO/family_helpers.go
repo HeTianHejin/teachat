@@ -53,8 +53,8 @@ func queryFamiliesByUserRole(ctx context.Context, userID int, roles []int) ([]Fa
 		LEFT JOIN families f ON fm.family_id = f.id 
 		WHERE fm.user_id = $1 AND fm.role = ANY($2) AND f.deleted_at IS NULL
 		ORDER BY fm.created_at DESC`
-	
-	rows, err := db.QueryContext(ctx, query, userID, pq.Array(roles))
+
+	rows, err := DB.QueryContext(ctx, query, userID, pq.Array(roles))
 	if err != nil {
 		return nil, wrapError("queryFamiliesByUserRole", err)
 	}
@@ -70,8 +70,8 @@ func queryFamiliesByUserRoleAndOpen(ctx context.Context, userID int, roles []int
 		LEFT JOIN families f ON fm.family_id = f.id 
 		WHERE fm.user_id = $1 AND fm.role = ANY($2) AND f.is_open = $3 AND f.deleted_at IS NULL
 		ORDER BY fm.created_at DESC`
-	
-	rows, err := db.QueryContext(ctx, query, userID, pq.Array(roles), isOpen)
+
+	rows, err := DB.QueryContext(ctx, query, userID, pq.Array(roles), isOpen)
 	if err != nil {
 		return nil, wrapError("queryFamiliesByUserRoleAndOpen", err)
 	}

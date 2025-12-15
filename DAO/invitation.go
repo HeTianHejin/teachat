@@ -51,7 +51,7 @@ func (invitation *Invitation) GetStatus() string {
 func (invitation *Invitation) Create() (err error) {
 	statement := `INSERT INTO invitations (uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id)
 	VALUES ($1, $2, $3, $4, $5 ,$6 ,$7, $8)`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -72,7 +72,7 @@ func (invitation *Invitation) Create() (err error) {
 // AWS CodeWhisperer assist in writing
 func (invitation *Invitation) UpdateStatus() (err error) {
 	statement := `UPDATE invitations SET status = $1 WHERE id = $2`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -85,7 +85,7 @@ func (invitation *Invitation) UpdateStatus() (err error) {
 
 // 茶团team发送的全部邀请函-资料
 func (team *Team) Invitations() (invitations []Invitation, err error) {
-	rows, err := db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE team_id = $1 ORDER BY created_at DESC", team.Id)
+	rows, err := DB.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE team_id = $1 ORDER BY created_at DESC", team.Id)
 	if err != nil {
 		return
 	}
@@ -103,7 +103,7 @@ func (team *Team) Invitations() (invitations []Invitation, err error) {
 // 根据invite_email查询一个User收到的全部邀请函
 // AWS CodeWhisperer assist in writing
 func (user *User) Invitations() (invitations []Invitation, err error) {
-	rows, err := db.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE invite_email = $1 ORDER BY created_at DESC", user.Email)
+	rows, err := DB.Query("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE invite_email = $1 ORDER BY created_at DESC", user.Email)
 	if err != nil {
 		return
 	}
@@ -120,7 +120,7 @@ func (user *User) Invitations() (invitations []Invitation, err error) {
 
 // NumInvitations() 茶团发出的全部邀请函-数量
 func (team *Team) NumInvitations() (count int) {
-	rows, _ := db.Query("SELECT COUNT(*) FROM invitations WHERE team_id = $1", team.Id)
+	rows, _ := DB.Query("SELECT COUNT(*) FROM invitations WHERE team_id = $1", team.Id)
 	for rows.Next() {
 		if err := rows.Scan(&count); err != nil {
 			return
@@ -138,7 +138,7 @@ func (invitation *Invitation) CreatedAtDate() string {
 // GetInvitationByUuid
 func GetInvitationByUuid(uuid string) (invitation Invitation, err error) {
 	invitation = Invitation{}
-	err = db.QueryRow("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE uuid = $1", uuid).
+	err = DB.QueryRow("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE uuid = $1", uuid).
 		Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status, &invitation.AuthorUserId)
 	return
 }
@@ -146,7 +146,7 @@ func GetInvitationByUuid(uuid string) (invitation Invitation, err error) {
 // GetInvitationById(invitation_id)
 func GetInvitationById(id int) (invitation Invitation, err error) {
 	invitation = Invitation{}
-	err = db.QueryRow("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE id = $1", id).
+	err = DB.QueryRow("SELECT id, uuid, team_id, invite_email, role, invite_word, created_at, status, author_user_id FROM invitations WHERE id = $1", id).
 		Scan(&invitation.Id, &invitation.Uuid, &invitation.TeamId, &invitation.InviteEmail, &invitation.Role, &invitation.InviteWord, &invitation.CreatedAt, &invitation.Status, &invitation.AuthorUserId)
 	return
 }
@@ -156,7 +156,7 @@ func GetInvitationById(id int) (invitation Invitation, err error) {
 func (invitationReply *InvitationReply) Create() (err error) {
 	statement := `INSERT INTO invitation_replies (uuid, invitation_id, user_id, reply_word, created_at)
 	VALUES ($1, $2, $3, $4, $5)`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -179,7 +179,7 @@ func (invitation *Invitation) Check() bool {
 // AWS CodeWhisperer assist in writing
 func (invitation *Invitation) Reply() (invitationReply InvitationReply, err error) {
 	invitationReply = InvitationReply{}
-	err = db.QueryRow("SELECT id, uuid, invitation_id, user_id, reply_word, created_at FROM invitation_replies WHERE invitation_id = $1", invitation.Id).
+	err = DB.QueryRow("SELECT id, uuid, invitation_id, user_id, reply_word, created_at FROM invitation_replies WHERE invitation_id = $1", invitation.Id).
 		Scan(&invitationReply.Id, &invitationReply.Uuid, &invitationReply.InvitationId, &invitationReply.UserId, &invitationReply.ReplyWord, &invitationReply.CreatedAt)
 	return
 }
@@ -198,7 +198,7 @@ func (invitationReply *InvitationReply) CreatedAtDate() string {
 // teamMember.UserId.InvitationReply() 根据茶团成员的用户id查询其邀请函回复时间
 func (teamMember *TeamMember) InvitationReply() (invitationReply InvitationReply, err error) {
 	invitationReply = InvitationReply{}
-	err = db.QueryRow("SELECT id, uuid, invitation_id, user_id, reply_word, created_at FROM invitation_replies WHERE user_id = $1", teamMember.UserId).
+	err = DB.QueryRow("SELECT id, uuid, invitation_id, user_id, reply_word, created_at FROM invitation_replies WHERE user_id = $1", teamMember.UserId).
 		Scan(&invitationReply.Id, &invitationReply.Uuid, &invitationReply.InvitationId, &invitationReply.UserId, &invitationReply.ReplyWord, &invitationReply.CreatedAt)
 	return
 }

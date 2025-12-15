@@ -123,7 +123,7 @@ func (group *Group) SoftDelete() error {
 	now := time.Now()
 	group.DeletedAt = &now
 	statement := "UPDATE groups SET deleted_at = $1, updated_at = $2 WHERE id = $3"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (group *Group) Restore() error {
 	group.DeletedAt = nil
 	now := time.Now()
 	statement := "UPDATE groups SET deleted_at = NULL, updated_at = $1 WHERE id = $2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -152,7 +152,7 @@ func (group *Group) Create() error {
 	              first_team_id, class, logo, tags, created_at) 
 	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
 	              RETURNING id, uuid, created_at`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -168,7 +168,7 @@ func (group *Group) Get() error {
 	statement := `SELECT id, uuid, name, abbreviation, mission, founder_id, 
 	              first_team_id, class, logo, tags, created_at, updated_at, deleted_at 
 	              FROM groups WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -185,7 +185,7 @@ func GetGroupByUUID(uuid string) (Group, error) {
 	statement := `SELECT id, uuid, name, abbreviation, mission, founder_id, 
 	              first_team_id, class, logo, tags, created_at, updated_at, deleted_at 
 	              FROM groups WHERE uuid = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return group, err
 	}
@@ -203,7 +203,7 @@ func (group *Group) Update() error {
 	statement := `UPDATE groups SET name = $1, abbreviation = $2, mission = $3, 
 	              first_team_id = $4, class = $5, logo = $6, updated_at = $7 
 	              WHERE id = $8`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (gm *GroupMember) Create() error {
 	              status, user_id, created_at) 
 	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
 	              RETURNING id, uuid, created_at`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (gm *GroupMember) Get() error {
 	statement := `SELECT id, uuid, group_id, team_id, level, role, status, 
 	              user_id, created_at, updated_at, deleted_at 
 	              FROM group_members WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -251,7 +251,7 @@ func GetMembersByGroupId(groupId int) ([]GroupMember, error) {
 	          user_id, created_at, updated_at, deleted_at 
 	          FROM group_members WHERE group_id = $1 AND deleted_at IS NULL 
 	          ORDER BY level ASC, created_at ASC`
-	rows, err := db.Query(query, groupId)
+	rows, err := DB.Query(query, groupId)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func GetTeamsByGroupId(groupId int) ([]Team, error) {
 	          INNER JOIN group_members gm ON t.id = gm.team_id 
 	          WHERE gm.group_id = $1 AND gm.deleted_at IS NULL AND t.deleted_at IS NULL 
 	          ORDER BY gm.level ASC, gm.created_at ASC`
-	rows, err := db.Query(query, groupId)
+	rows, err := DB.Query(query, groupId)
 	if err != nil {
 		return nil, err
 	}
@@ -305,7 +305,7 @@ func GetGroupsByTeamId(teamId int) ([]Group, error) {
 	          INNER JOIN group_members gm ON g.id = gm.group_id 
 	          WHERE gm.team_id = $1 AND gm.deleted_at IS NULL AND g.deleted_at IS NULL 
 	          ORDER BY gm.created_at DESC`
-	rows, err := db.Query(query, teamId)
+	rows, err := DB.Query(query, teamId)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +329,7 @@ func (group *Group) CountGroupMembers() (int, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM group_members 
 	          WHERE group_id = $1 AND deleted_at IS NULL AND status = $2`
-	err := db.QueryRow(query, group.Id, GroupMemberStatusActive).Scan(&count)
+	err := DB.QueryRow(query, group.Id, GroupMemberStatusActive).Scan(&count)
 	return count, err
 }
 
@@ -347,7 +347,7 @@ func (group *Group) IsFirstTeamMember(userId int) (bool, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM team_members 
 	          WHERE team_id = $1 AND user_id = $2 AND status = $3`
-	err := db.QueryRow(query, group.FirstTeamId, userId, TeMemberStatusActive).Scan(&count)
+	err := DB.QueryRow(query, group.FirstTeamId, userId, TeMemberStatusActive).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -364,7 +364,7 @@ func (group *Group) IsFirstTeamCoreMember(userId int) (bool, error) {
 	query := `SELECT COUNT(*) FROM team_members
 	          WHERE team_id = $1 AND user_id = $2 AND status = $3 
 	          AND role IN ($4, $5, $6, $7)`
-	err := db.QueryRow(query, group.FirstTeamId, userId, TeMemberStatusActive, 
+	err := DB.QueryRow(query, group.FirstTeamId, userId, TeMemberStatusActive,
 		RoleCEO, RoleCTO, RoleCMO, RoleCFO).Scan(&count)
 	if err != nil {
 		return false, err
@@ -413,7 +413,7 @@ func GetGroupByTeamId(teamId int) (*Group, error) {
 	          ORDER BY gm.created_at ASC LIMIT 1`
 
 	var group Group
-	err := db.QueryRow(query, teamId).Scan(
+	err := DB.QueryRow(query, teamId).Scan(
 		&group.Id, &group.Uuid, &group.Name, &group.Abbreviation,
 		&group.Mission, &group.FounderId, &group.FirstTeamId, &group.Class,
 		&group.Logo, &group.CreatedAt, &group.UpdatedAt, &group.DeletedAt)
@@ -430,7 +430,7 @@ func GetGroupMemberByGroupIdAndTeamId(groupId, teamId int) (GroupMember, error) 
 	query := `SELECT id, uuid, group_id, team_id, level, role, status, 
 	          user_id, created_at, updated_at, deleted_at 
 	          FROM group_members WHERE group_id = $1 AND team_id = $2 AND deleted_at IS NULL`
-	err := db.QueryRow(query, groupId, teamId).Scan(
+	err := DB.QueryRow(query, groupId, teamId).Scan(
 		&member.Id, &member.Uuid, &member.GroupId, &member.TeamId,
 		&member.Level, &member.Role, &member.Status, &member.UserId,
 		&member.CreatedAt, &member.UpdatedAt, &member.DeletedAt)
@@ -442,7 +442,7 @@ func (gm *GroupMember) SoftDelete() error {
 	now := time.Now()
 	gm.DeletedAt = &now
 	statement := "UPDATE group_members SET deleted_at = $1, updated_at = $2 WHERE id = $3"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -499,7 +499,7 @@ func (gi *GroupInvitation) Create() error {
 	              role, level, status, author_user_id, created_at) 
 	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
 	              RETURNING id, uuid, created_at`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -513,7 +513,7 @@ func (gi *GroupInvitation) Create() error {
 // UpdateStatus 更新邀请函状态
 func (gi *GroupInvitation) UpdateStatus() error {
 	statement := `UPDATE group_invitations SET status = $1 WHERE id = $2`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -528,7 +528,7 @@ func GetGroupInvitationByUuid(uuid string) (GroupInvitation, error) {
 	statement := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
 	              status, author_user_id, created_at 
 	              FROM group_invitations WHERE uuid = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return gi, err
 	}
@@ -544,7 +544,7 @@ func GetGroupInvitationById(id int) (GroupInvitation, error) {
 	statement := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
 	              status, author_user_id, created_at 
 	              FROM group_invitations WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return gi, err
 	}
@@ -560,7 +560,7 @@ func (gir *GroupInvitationReply) Create() error {
 	              reply_word, created_at) 
 	              VALUES ($1, $2, $3, $4, $5) 
 	              RETURNING id, uuid, created_at`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -575,7 +575,7 @@ func GetInvitationsByGroupId(groupId int) ([]GroupInvitation, error) {
 	query := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
 	          status, author_user_id, created_at 
 	          FROM group_invitations WHERE group_id = $1 ORDER BY created_at DESC`
-	rows, err := db.Query(query, groupId)
+	rows, err := DB.Query(query, groupId)
 	if err != nil {
 		return nil, err
 	}
@@ -599,7 +599,7 @@ func GetInvitationsByTeamId(teamId int) ([]GroupInvitation, error) {
 	query := `SELECT id, uuid, group_id, team_id, invite_word, role, level, 
 	          status, author_user_id, created_at 
 	          FROM group_invitations WHERE team_id = $1 ORDER BY created_at DESC`
-	rows, err := db.Query(query, teamId)
+	rows, err := DB.Query(query, teamId)
 	if err != nil {
 		return nil, err
 	}
@@ -626,7 +626,7 @@ func GetGroupInvitationsByUserId(userId int) ([]GroupInvitation, error) {
 	          INNER JOIN team_members tm ON gi.team_id = tm.team_id 
 	          WHERE tm.user_id = $1 AND tm.role = 'CEO' 
 	          ORDER BY gi.created_at DESC`
-	rows, err := db.Query(query, userId)
+	rows, err := DB.Query(query, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -652,7 +652,7 @@ func CountGroupInvitationsByUserIdAndStatus(userId int, status int) (int, error)
 	          FROM group_invitations gi 
 	          INNER JOIN team_members tm ON gi.team_id = tm.team_id 
 	          WHERE tm.user_id = $1 AND gi.status = $2`
-	err := db.QueryRow(query, userId, status).Scan(&count)
+	err := DB.QueryRow(query, userId, status).Scan(&count)
 	return count, err
 }
 

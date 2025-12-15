@@ -80,8 +80,8 @@ func Error(v ...any) {
 	}
 }
 
-// Fatal 致命错误并退出
-func Fatal(v ...any) {
-	logWithCaller(1, "FATAL", v...)
+// Panic 严重错误并退出
+func Panic(v ...any) {
+	logWithCaller(1, "PANIC", v...)
 	os.Exit(1)
 }

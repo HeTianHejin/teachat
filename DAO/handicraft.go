@@ -119,7 +119,7 @@ func (i *Inauguration) Create() (err error) {
 		(uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -150,7 +150,7 @@ func (p *ProcessRecord) Create() (err error) {
 		(uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -180,7 +180,7 @@ func (e *Ending) Create() (err error) {
 		(uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -244,7 +244,7 @@ func (h *Handicraft) Create(ctx context.Context) (err error) {
 		 type, category, status, skill_difficulty, magic_difficulty, contributor_count) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -265,7 +265,7 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
 		contributor_count, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -281,7 +281,7 @@ func (h *Handicraft) Update() error {
 	statement := `UPDATE handicrafts SET name = $2, nickname = $3, description = $4, 
 		status = $5, skill_difficulty = $6, magic_difficulty = $7, contributor_count = $8, updated_at = $9  
 		WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -293,7 +293,7 @@ func (h *Handicraft) Update() error {
 // Delete 软删除手工艺记录
 func (h *Handicraft) Delete() error {
 	statement := `UPDATE handicrafts SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -381,7 +381,7 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
 		contributor_count, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, projectId)
+	rows, err := DB.QueryContext(ctx, statement, projectId)
 	if err != nil {
 		return nil, err
 	}
@@ -408,7 +408,7 @@ func IsAllHandicraftsCompleted(projectId int, ctx context.Context) (bool, error)
 	statement := `SELECT COUNT(*) as total, 
 		COUNT(CASE WHEN status = $2 THEN 1 END) as completed
 		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return false, err
 	}
@@ -437,7 +437,7 @@ func (hc *HandicraftContributor) Create() (err error) {
 		(handicraft_id, user_id, contribution_rate, created_at) 
 		VALUES ($1, $2, $3, $4) 
 		RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -452,14 +452,14 @@ func (hc *HandicraftContributor) Create() (err error) {
 		SELECT COUNT(*) FROM handicraft_contributors 
 		WHERE handicraft_id = $1 AND deleted_at IS NULL
 	) WHERE id = $1`
-	_, err = db.Exec(updateStmt, hc.HandicraftId)
+	_, err = DB.Exec(updateStmt, hc.HandicraftId)
 	return err
 }
 
 // Delete 删除协助者记录
 func (hc *HandicraftContributor) Delete() error {
 	statement := `UPDATE handicraft_contributors SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -474,7 +474,7 @@ func (hc *HandicraftContributor) Delete() error {
 
 // 获取手工艺的协助者列表，按贡献值降序排列
 func (h *Handicraft) GetContributors() ([]HandicraftContributor, error) {
-	rows, err := db.Query("SELECT id, handicraft_id, user_id, contribution_rate, created_at, deleted_at FROM handicraft_contributors WHERE handicraft_id = $1 AND deleted_at IS NULL ORDER BY contribution_rate DESC", h.Id)
+	rows, err := DB.Query("SELECT id, handicraft_id, user_id, contribution_rate, created_at, deleted_at FROM handicraft_contributors WHERE handicraft_id = $1 AND deleted_at IS NULL ORDER BY contribution_rate DESC", h.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -500,7 +500,7 @@ func (hm *HandicraftMagic) Create() (err error) {
 		(uuid, handicraft_id, magic_id, created_at) 
 		VALUES ($1, $2, $3, $4) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -512,7 +512,7 @@ func (hm *HandicraftMagic) Create() (err error) {
 // Delete 删除手工艺法力关联
 func (hm *HandicraftMagic) Delete() error {
 	statement := `UPDATE handicraft_magics SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -533,7 +533,7 @@ func (hs *HandicraftSkill) Create() (err error) {
 		(uuid, handicraft_id, skill_id, created_at) 
 		VALUES ($1, $2, $3, $4) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -545,7 +545,7 @@ func (hs *HandicraftSkill) Create() (err error) {
 // Delete 删除手工艺技能关联
 func (hs *HandicraftSkill) Delete() error {
 	statement := `UPDATE handicraft_skills SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -568,7 +568,7 @@ func GetHandicraftCompletionStatus(projectId int, ctx context.Context) (total, c
 		COUNT(CASE WHEN status = $3 THEN 1 END) as in_progress,
 		COUNT(CASE WHEN status = $4 THEN 1 END) as not_started
 		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -579,7 +579,7 @@ func GetHandicraftCompletionStatus(projectId int, ctx context.Context) (total, c
 
 // GetInaugurationsByHandicraftId 根据手工艺ID获取开工仪式记录
 func GetInaugurationsByHandicraftId(handicraftId int) ([]Inauguration, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM inaugurations WHERE handicraft_id = $1 ORDER BY created_at DESC", handicraftId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM inaugurations WHERE handicraft_id = $1 ORDER BY created_at DESC", handicraftId)
 	if err != nil {
 		return nil, err
 	}
@@ -599,7 +599,7 @@ func GetInaugurationsByHandicraftId(handicraftId int) ([]Inauguration, error) {
 
 // GetProcessRecordsByHandicraftId 根据手工艺ID获取过程记录
 func GetProcessRecordsByHandicraftId(handicraftId int) ([]ProcessRecord, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at, deleted_at FROM process_records WHERE handicraft_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC", handicraftId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at, deleted_at FROM process_records WHERE handicraft_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC", handicraftId)
 	if err != nil {
 		return nil, err
 	}
@@ -619,7 +619,7 @@ func GetProcessRecordsByHandicraftId(handicraftId int) ([]ProcessRecord, error) 
 
 // GetEndingsByHandicraftId 根据手工艺ID获取结束仪式记录
 func GetEndingsByHandicraftId(handicraftId int) ([]Ending, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM endings WHERE handicraft_id = $1 ORDER BY created_at DESC", handicraftId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM endings WHERE handicraft_id = $1 ORDER BY created_at DESC", handicraftId)
 	if err != nil {
 		return nil, err
 	}
@@ -639,7 +639,7 @@ func GetEndingsByHandicraftId(handicraftId int) ([]Ending, error) {
 
 // GetHandicraftSkills 根据手工艺ID获取技能关联
 func GetHandicraftSkills(handicraftId int) ([]HandicraftSkill, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, skill_id, created_at, updated_at, deleted_at FROM handicraft_skills WHERE handicraft_id = $1 AND deleted_at IS NULL", handicraftId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, skill_id, created_at, updated_at, deleted_at FROM handicraft_skills WHERE handicraft_id = $1 AND deleted_at IS NULL", handicraftId)
 	if err != nil {
 		return nil, err
 	}
@@ -659,7 +659,7 @@ func GetHandicraftSkills(handicraftId int) ([]HandicraftSkill, error) {
 
 // GetHandicraftMagics 根据手工艺ID获取法力关联
 func GetHandicraftMagics(handicraftId int) ([]HandicraftMagic, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, magic_id, created_at, updated_at, deleted_at FROM handicraft_magics WHERE handicraft_id = $1 AND deleted_at IS NULL", handicraftId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, magic_id, created_at, updated_at, deleted_at FROM handicraft_magics WHERE handicraft_id = $1 AND deleted_at IS NULL", handicraftId)
 	if err != nil {
 		return nil, err
 	}
@@ -679,7 +679,7 @@ func GetHandicraftMagics(handicraftId int) ([]HandicraftMagic, error) {
 
 // GetInaugurationsByEvidenceId 根据凭证ID获取开工仪式
 func GetInaugurationsByEvidenceId(evidenceId int) ([]Inauguration, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM inaugurations WHERE evidence_id = $1", evidenceId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM inaugurations WHERE evidence_id = $1", evidenceId)
 	if err != nil {
 		return nil, err
 	}
@@ -699,7 +699,7 @@ func GetInaugurationsByEvidenceId(evidenceId int) ([]Inauguration, error) {
 
 // GetProcessRecordsByEvidenceId 根据凭证ID获取过程记录
 func GetProcessRecordsByEvidenceId(evidenceId int) ([]ProcessRecord, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at, deleted_at FROM process_records WHERE evidence_id = $1 AND deleted_at IS NULL", evidenceId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at, deleted_at FROM process_records WHERE evidence_id = $1 AND deleted_at IS NULL", evidenceId)
 	if err != nil {
 		return nil, err
 	}
@@ -719,7 +719,7 @@ func GetProcessRecordsByEvidenceId(evidenceId int) ([]ProcessRecord, error) {
 
 // GetEndingsByEvidenceId 根据凭证ID获取结束仪式
 func GetEndingsByEvidenceId(evidenceId int) ([]Ending, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM endings WHERE evidence_id = $1", evidenceId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, name, description, recorder_user_id, evidence_id, status, created_at, updated_at FROM endings WHERE evidence_id = $1", evidenceId)
 	if err != nil {
 		return nil, err
 	}
@@ -739,7 +739,7 @@ func GetEndingsByEvidenceId(evidenceId int) ([]Ending, error) {
 
 // GetEvidencesByHandicraftId 根据手工艺ID获取凭证列表
 func GetEvidencesByHandicraftId(handicraftId int) ([]Evidence, error) {
-	rows, err := db.Query(`SELECT DISTINCT e.id, e.uuid, e.file_name, e.file_path, e.file_size, e.mime_type, 
+	rows, err := DB.Query(`SELECT DISTINCT e.id, e.uuid, e.file_name, e.file_path, e.file_size, e.mime_type, 
 		e.description, e.category, e.uploader_user_id, e.created_at, e.updated_at, e.deleted_at 
 		FROM evidences e 
 		LEFT JOIN inaugurations i ON e.id = i.evidence_id 

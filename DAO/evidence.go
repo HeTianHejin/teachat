@@ -90,7 +90,7 @@ func (he *HandicraftEvidence) Create() (err error) {
 		(uuid, handicraft_id, evidence_id, created_at, note) 
 		VALUES ($1, $2, $3, $4, $5) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -101,7 +101,7 @@ func (he *HandicraftEvidence) Create() (err error) {
 
 // GetByHandicraftId 根据手工艺ID获取凭据列表
 func GetHandicraftEvidencesByHandicraftId(handicraftId int) ([]HandicraftEvidence, error) {
-	rows, err := db.Query("SELECT id, uuid, handicraft_id, evidence_id, created_at, updated_at, deleted_at, note FROM handicraft_evidences WHERE handicraft_id = $1 AND deleted_at IS NULL", handicraftId)
+	rows, err := DB.Query("SELECT id, uuid, handicraft_id, evidence_id, created_at, updated_at, deleted_at, note FROM handicraft_evidences WHERE handicraft_id = $1 AND deleted_at IS NULL", handicraftId)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +122,7 @@ func GetHandicraftEvidencesByHandicraftId(handicraftId int) ([]HandicraftEvidenc
 // Delete 软删除手工艺凭据关联
 func (he *HandicraftEvidence) Delete() error {
 	statement := `UPDATE handicraft_evidences SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ func (e *Evidence) Create(ctx context.Context) (err error) {
 		 mime_type, file_size, file_hash, width, height, duration, created_at, visibility) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -188,7 +188,7 @@ func (e *Evidence) GetByIdOrUUID(ctx context.Context) (err error) {
 		original_url, filename, mime_type, file_size, file_hash, width, height, duration, 
 		created_at, updated_at, deleted_at, visibility
 		FROM evidences WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -207,7 +207,7 @@ func (e *Evidence) Update() error {
 	}
 	statement := `UPDATE evidences SET description = $2, note = $3, visibility = $4, updated_at = $5  
 		WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (e *Evidence) Update() error {
 // SoftDelete 软删除凭据
 func (e *Evidence) SoftDelete() error {
 	statement := `UPDATE evidences SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func GetEvidencesByUser(userId int, limit int, ctx context.Context) ([]Evidence,
 	statement := `SELECT id, uuid, description, category, filename, file_size, created_at, visibility
 		FROM evidences WHERE recorder_user_id = $1 AND deleted_at IS NULL 
 		ORDER BY created_at DESC LIMIT $2`
-	rows, err := db.QueryContext(ctx, statement, userId, limit)
+	rows, err := DB.QueryContext(ctx, statement, userId, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +296,7 @@ func GetEvidencesByCategory(category EvidenceCategory, limit int, ctx context.Co
 	statement := `SELECT id, uuid, description, recorder_user_id, filename, file_size, created_at, visibility
 		FROM evidences WHERE category = $1 AND deleted_at IS NULL AND visibility = $2
 		ORDER BY created_at DESC LIMIT $3`
-	rows, err := db.QueryContext(ctx, statement, category, VisibilityPublic, limit)
+	rows, err := DB.QueryContext(ctx, statement, category, VisibilityPublic, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +333,7 @@ func (ssle *SeeSeekLookEvidence) Create() (err error) {
 		(uuid, see_seek_id, evidence_id, created_at, note) 
 		VALUES ($1, $2, $3, $4, $5) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -344,7 +344,7 @@ func (ssle *SeeSeekLookEvidence) Create() (err error) {
 
 // GetBySeeSeekId 根据“看看”ID获取凭据列表
 func GetSeeSeekEvidencesBySeeSeekId(seeSeekId int) ([]SeeSeekLookEvidence, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, evidence_id, created_at, updated_at, deleted_at, note FROM see_seek_look_evidences WHERE see_seek_id = $1 AND deleted_at IS NULL", seeSeekId)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, evidence_id, created_at, updated_at, deleted_at, note FROM see_seek_look_evidences WHERE see_seek_id = $1 AND deleted_at IS NULL", seeSeekId)
 	if err != nil {
 		return nil, err
 	}
@@ -365,7 +365,7 @@ func GetSeeSeekEvidencesBySeeSeekId(seeSeekId int) ([]SeeSeekLookEvidence, error
 // Delete 软删除“看看”凭据关联
 func (ssle *SeeSeekLookEvidence) Delete() error {
 	statement := `UPDATE see_seek_look_evidences SET deleted_at = $2 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}

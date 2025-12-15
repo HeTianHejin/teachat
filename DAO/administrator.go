@@ -49,7 +49,7 @@ func GetAdministrators() (administrators []Administrator, err error) {
 // 添加一个普通管理员（Pilot）
 func (administrator *Administrator) Create() (err error) {
 	statement := "INSERT INTO administrators (uuid, user_id, role, password, created_at, valid) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}

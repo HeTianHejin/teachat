@@ -7,17 +7,17 @@ import (
 // FamilyRelation 家庭关联关系，用于标识不同Family记录之间的关系
 // 主要用途：利益回避机制，识别三代以内近亲关系
 type FamilyRelation struct {
-	Id            int
-	Uuid          string
-	FamilyId1     int    // 第一个家庭ID
-	FamilyId2     int    // 第二个家庭ID
-	RelationType  int    // 关系类型
-	ConfirmedBy   int    // 确认者用户ID
-	Status        int    // 状态：0-单方声明，1-双方确认，2-已拒绝
-	Note          string // 关系说明
-	CreatedAt     time.Time
-	UpdatedAt     *time.Time
-	DeletedAt     *time.Time
+	Id           int
+	Uuid         string
+	FamilyId1    int    // 第一个家庭ID
+	FamilyId2    int    // 第二个家庭ID
+	RelationType int    // 关系类型
+	ConfirmedBy  int    // 确认者用户ID
+	Status       int    // 状态：0-单方声明，1-双方确认，2-已拒绝
+	Note         string // 关系说明
+	CreatedAt    time.Time
+	UpdatedAt    *time.Time
+	DeletedAt    *time.Time
 }
 
 // 家庭关系类型常量
@@ -77,7 +77,7 @@ func (fr *FamilyRelation) Create() error {
 		confirmed_by, status, note, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id, uuid`
 
-	err := db.QueryRowContext(ctx, query, Random_UUID(), fr.FamilyId1, fr.FamilyId2,
+	err := DB.QueryRowContext(ctx, query, Random_UUID(), fr.FamilyId1, fr.FamilyId2,
 		fr.RelationType, fr.ConfirmedBy, fr.Status, fr.Note, time.Now()).
 		Scan(&fr.Id, &fr.Uuid)
 
@@ -93,7 +93,7 @@ func (fr *FamilyRelation) Get() error {
 		status, note, created_at, updated_at, deleted_at 
 		FROM family_relations WHERE id = $1 AND deleted_at IS NULL`
 
-	err := db.QueryRowContext(ctx, query, fr.Id).Scan(
+	err := DB.QueryRowContext(ctx, query, fr.Id).Scan(
 		&fr.Id, &fr.Uuid, &fr.FamilyId1, &fr.FamilyId2, &fr.RelationType,
 		&fr.ConfirmedBy, &fr.Status, &fr.Note, &fr.CreatedAt, &fr.UpdatedAt, &fr.DeletedAt)
 
@@ -112,7 +112,7 @@ func (fr *FamilyRelation) Confirm(userId int) error {
 	query := `UPDATE family_relations SET status = $1, updated_at = $2 
 		WHERE id = $3 AND deleted_at IS NULL`
 
-	_, err := db.ExecContext(ctx, query, fr.Status, now, fr.Id)
+	_, err := DB.ExecContext(ctx, query, fr.Status, now, fr.Id)
 	return wrapError("FamilyRelation.Confirm", err)
 }
 
@@ -128,7 +128,7 @@ func (fr *FamilyRelation) Reject(userId int) error {
 	query := `UPDATE family_relations SET status = $1, updated_at = $2 
 		WHERE id = $3 AND deleted_at IS NULL`
 
-	_, err := db.ExecContext(ctx, query, fr.Status, now, fr.Id)
+	_, err := DB.ExecContext(ctx, query, fr.Status, now, fr.Id)
 	return wrapError("FamilyRelation.Reject", err)
 }
 
@@ -148,7 +148,7 @@ func GetRelatedFamilies(familyId int) ([]Family, error) {
 		AND f.deleted_at IS NULL 
 		AND f.id != $1`
 
-	rows, err := db.QueryContext(ctx, query, familyId, FamilyRelationStatusConfirmed)
+	rows, err := DB.QueryContext(ctx, query, familyId, FamilyRelationStatusConfirmed)
 	if err != nil {
 		return nil, wrapError("GetRelatedFamilies", err)
 	}
@@ -211,7 +211,7 @@ func GetThreeGenerationUsers(userId int) ([]int, error) {
 			AND fr.deleted_at IS NULL
 			AND f.deleted_at IS NULL`
 
-		rows, err := db.QueryContext(ctx, query, family.Id,
+		rows, err := DB.QueryContext(ctx, query, family.Id,
 			FamilyRelationParentChild, FamilyRelationStatusConfirmed)
 		if err == nil {
 			for rows.Next() {

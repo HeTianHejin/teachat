@@ -23,7 +23,7 @@ type Session struct {
 // Create a new session for an existing user
 func (user *User) CreateSession() (session Session, err error) {
 	statement := "INSERT INTO sessions (uuid, email, user_id, created_at, gender) VALUES ($1, $2, $3, $4 ,$5) RETURNING id, uuid, email, user_id, created_at, gender"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -37,7 +37,7 @@ func (user *User) CreateSession() (session Session, err error) {
 // Get the session for an existing user
 func (user *User) Session() (session Session, err error) {
 	session = Session{}
-	err = db.QueryRow("SELECT id, uuid, email, user_id, created_at, gender FROM sessions WHERE user_id = $1", user.Id).
+	err = DB.QueryRow("SELECT id, uuid, email, user_id, created_at, gender FROM sessions WHERE user_id = $1", user.Id).
 		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
 	return
 }
@@ -45,7 +45,7 @@ func (user *User) Session() (session Session, err error) {
 // 删除用户的session
 func (user *User) DeleteSession() (err error) {
 	statement := /* sql */ "DELETE FROM sessions WHERE user_id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -57,7 +57,7 @@ func (user *User) DeleteSession() (err error) {
 
 // Check if session is valid in the database
 func (session *Session) Check() (bool, error) {
-	err := db.QueryRow(
+	err := DB.QueryRow(
 		"SELECT id, uuid, email, user_id, created_at, gender FROM sessions WHERE uuid = $1",
 		session.Uuid,
 	).Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
@@ -88,7 +88,7 @@ func (session *Session) Check() (bool, error) {
 // 检查登录口令是否正确
 func CheckWatchword(watchword string) (valid bool, err error) {
 	watchword_db := Watchword{}
-	err = db.QueryRow("SELECT id, word FROM watchwords WHERE word = $1 ", watchword).Scan(&watchword_db.Id, &watchword_db.Word)
+	err = DB.QueryRow("SELECT id, word FROM watchwords WHERE word = $1 ", watchword).Scan(&watchword_db.Id, &watchword_db.Word)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			valid = false
@@ -112,7 +112,7 @@ func CheckWatchword(watchword string) (valid bool, err error) {
 // Delete session from database
 func (session *Session) Delete() (err error) {
 	statement := "delete from sessions where uuid = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -125,7 +125,7 @@ func (session *Session) Delete() (err error) {
 // Get the user from the session
 func (session *Session) User() (user User, err error) {
 	//user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", session.UserId).
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", session.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }

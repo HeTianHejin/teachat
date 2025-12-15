@@ -81,12 +81,12 @@ func (m *Message) CreateWithContext(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
 	statement := "INSERT INTO messages (uuid, message_box_id, sender_type, sender_object_id, receiver_type, receiver_id, content, is_read, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id"
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -108,11 +108,11 @@ func (m *Message) GetMessageByIdWithContext(id int, ctx context.Context) (err er
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
-	err = db.QueryRowContext(ctx, "SELECT * FROM messages WHERE id = $1 AND deleted_at IS NULL", id).Scan(&m.Id, &m.Uuid, &m.MessageBoxId, &m.SenderType, &m.SenderObjectId, &m.ReceiverType, &m.ReceiverId, &m.Content, &m.IsRead, &m.CreatedAt, &m.UpdatedAt, &m.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT * FROM messages WHERE id = $1 AND deleted_at IS NULL", id).Scan(&m.Id, &m.Uuid, &m.MessageBoxId, &m.SenderType, &m.SenderObjectId, &m.ReceiverType, &m.ReceiverId, &m.Content, &m.IsRead, &m.CreatedAt, &m.UpdatedAt, &m.DeletedAt)
 	return
 }
 
@@ -129,12 +129,12 @@ func (m *Message) UpdateReadWithContext(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
 	statement := "UPDATE messages SET is_read = $2, updated_at = $3 WHERE id = $1"
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -156,12 +156,12 @@ func (m *Message) SoftDeleteWithContext(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
 	statement := "UPDATE messages SET deleted_at = $2 WHERE id = $1"
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -188,12 +188,12 @@ func (mb *MessageBox) CreateWithContext(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
 	statement := "INSERT INTO message_boxes (uuid, type, object_id, is_empty, max_count, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -215,7 +215,7 @@ func (mb *MessageBox) GetOrCreateMessageBoxWithContext(msg_type, object_id int, 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
@@ -270,11 +270,11 @@ func (mb *MessageBox) GetMessageBoxByIdWithContext(id int, ctx context.Context) 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
-	err = db.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, is_empty, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE id = $1 AND deleted_at IS NULL", id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, is_empty, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE id = $1 AND deleted_at IS NULL", id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
 	return
 }
 
@@ -291,11 +291,11 @@ func (mb *MessageBox) GetMessageBoxByTypeAndObjectIdWithContext(msg_type, object
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
-	err = db.QueryRowContext(ctx, "SELECT * FROM message_boxes WHERE type = $1 AND object_id = $2 AND deleted_at IS NULL", msg_type, object_id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT * FROM message_boxes WHERE type = $1 AND object_id = $2 AND deleted_at IS NULL", msg_type, object_id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 记录不存在时返回特定的错误，让调用者能够区分
@@ -319,12 +319,12 @@ func (mb *MessageBox) SoftDeleteWithContext(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
 	statement := "UPDATE message_boxes SET deleted_at = $2 WHERE id = $1"
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -346,11 +346,11 @@ func (mb *MessageBox) MessagesWithContext(ctx context.Context) (messages []Messa
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return nil, errors.New("database connection is nil")
 	}
 
-	rows, err := db.QueryContext(ctx, "SELECT * FROM messages WHERE message_box_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC", mb.Id)
+	rows, err := DB.QueryContext(ctx, "SELECT * FROM messages WHERE message_box_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC", mb.Id)
 	if err != nil {
 		return
 	}
@@ -379,11 +379,11 @@ func (mb *MessageBox) UnreadMessagesWithContext(ctx context.Context) (messages [
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return nil, errors.New("database connection is nil")
 	}
 
-	rows, err := db.QueryContext(ctx, "SELECT * FROM messages WHERE message_box_id = $1 AND is_read = $2 AND deleted_at IS NULL ORDER BY created_at DESC", mb.Id, false)
+	rows, err := DB.QueryContext(ctx, "SELECT * FROM messages WHERE message_box_id = $1 AND is_read = $2 AND deleted_at IS NULL ORDER BY created_at DESC", mb.Id, false)
 	if err != nil {
 		return
 	}
@@ -417,7 +417,7 @@ func (mb *MessageBox) getMessageCountForUserWithContext(whereClause string, user
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return 0
 	}
 
@@ -430,7 +430,7 @@ func (mb *MessageBox) getMessageCountForUserWithContext(whereClause string, user
 		query += " AND " + whereClause
 	}
 
-	err := db.QueryRowContext(ctx, query, mb.Id, MessageReceiverTypeAll, MessageReceiverTypeMember, userId).Scan(&count)
+	err := DB.QueryRowContext(ctx, query, mb.Id, MessageReceiverTypeAll, MessageReceiverTypeMember, userId).Scan(&count)
 	if err != nil {
 		return 0
 	}
@@ -455,7 +455,7 @@ func (mb *MessageBox) getMessageCountWithContext(whereClause string, ctx context
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return 0
 	}
 
@@ -464,7 +464,7 @@ func (mb *MessageBox) getMessageCountWithContext(whereClause string, ctx context
 		query += " AND " + whereClause
 	}
 
-	err := db.QueryRowContext(ctx, query, mb.Id).Scan(&count)
+	err := DB.QueryRowContext(ctx, query, mb.Id).Scan(&count)
 	if err != nil {
 		return 0
 	}
@@ -484,7 +484,7 @@ func (u *User) MessageBoxesWithContext(ctx context.Context) (messageBoxes []Mess
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return nil, errors.New("database connection is nil")
 	}
 
@@ -495,7 +495,7 @@ func (u *User) MessageBoxesWithContext(ctx context.Context) (messageBoxes []Mess
 		LEFT JOIN team_members tm ON (mb.type = $3 AND mb.object_id = tm.team_id AND tm.user_id = $2)
 		WHERE mb.deleted_at IS NULL AND (fm.user_id = $2 OR tm.user_id = $2)
 	`
-	rows, err := db.QueryContext(ctx, query, MessageBoxTypeFamily, u.Id, MessageBoxTypeTeam, u.Id)
+	rows, err := DB.QueryContext(ctx, query, MessageBoxTypeFamily, u.Id, MessageBoxTypeTeam, u.Id)
 	if err != nil {
 		return
 	}
@@ -524,7 +524,7 @@ func (u *User) MessagesByMessageBoxWithContext(messageBoxId int, ctx context.Con
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return nil, errors.New("database connection is nil")
 	}
 
@@ -534,7 +534,7 @@ func (u *User) MessagesByMessageBoxWithContext(messageBoxId int, ctx context.Con
 		AND (m.receiver_type = $2 OR (m.receiver_type = $3 AND m.receiver_id = $4))
 		ORDER BY m.created_at DESC
 	`
-	rows, err := db.QueryContext(ctx, query, messageBoxId, MessageReceiverTypeAll, MessageReceiverTypeMember, u.Id)
+	rows, err := DB.QueryContext(ctx, query, messageBoxId, MessageReceiverTypeAll, MessageReceiverTypeMember, u.Id)
 	if err != nil {
 		return
 	}
@@ -568,7 +568,7 @@ func (u *User) getMessagesCountWithContext(whereClause string, ctx context.Conte
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return 0
 	}
 
@@ -585,7 +585,7 @@ func (u *User) getMessagesCountWithContext(whereClause string, ctx context.Conte
 		query += " AND " + whereClause
 	}
 
-	err := db.QueryRowContext(ctx, query, MessageBoxTypeFamily, u.Id, MessageBoxTypeTeam, u.Id, MessageReceiverTypeAll, MessageReceiverTypeMember, u.Id).Scan(&count)
+	err := DB.QueryRowContext(ctx, query, MessageBoxTypeFamily, u.Id, MessageBoxTypeTeam, u.Id, MessageReceiverTypeAll, MessageReceiverTypeMember, u.Id).Scan(&count)
 	if err != nil {
 		return 0
 	}
@@ -605,12 +605,12 @@ func (mb *MessageBox) UpdateWithContext(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
 	statement := "UPDATE message_boxes SET is_empty = $2, updated_at = $3 WHERE id = $1"
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -632,11 +632,11 @@ func (mb *MessageBox) GetMessageBoxByUUIDWithContext(uuid string, ctx context.Co
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return errors.New("database connection is nil")
 	}
 
-	err = db.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, is_empty, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE uuid = $1 AND deleted_at IS NULL", uuid).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, is_empty, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE uuid = $1 AND deleted_at IS NULL", uuid).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
 	return
 }
 
@@ -653,12 +653,12 @@ func (mb *MessageBox) GetMessagesWithContext(ctx context.Context) (messages []Me
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return nil, errors.New("database connection is nil")
 	}
 
 	query := "SELECT * FROM messages WHERE message_box_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC"
-	rows, err := db.QueryContext(ctx, query, mb.Id)
+	rows, err := DB.QueryContext(ctx, query, mb.Id)
 	if err != nil {
 		return
 	}
@@ -689,7 +689,7 @@ func (mb *MessageBox) GetMessagesForUserWithContext(userId int, ctx context.Cont
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	if db == nil {
+	if DB == nil {
 		return nil, errors.New("database connection is nil")
 	}
 
@@ -700,7 +700,7 @@ func (mb *MessageBox) GetMessagesForUserWithContext(userId int, ctx context.Cont
 		AND (receiver_type = $2 OR (receiver_type = $3 AND receiver_id = $4))
 		ORDER BY created_at DESC
 	`
-	rows, err := db.QueryContext(ctx, query, mb.Id, MessageReceiverTypeAll, MessageReceiverTypeMember, userId)
+	rows, err := DB.QueryContext(ctx, query, mb.Id, MessageReceiverTypeAll, MessageReceiverTypeMember, userId)
 	if err != nil {
 		return
 	}

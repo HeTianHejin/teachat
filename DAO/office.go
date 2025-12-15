@@ -18,7 +18,7 @@ type LastQuery struct {
 // Create() 新建一条 LastQuery记录
 func (lq *LastQuery) Create() (err error) {
 	statement := `INSERT INTO last_queries (user_id, path, query, query_at) VALUES ($1, $2, $3, $4) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (lq *LastQuery) Create() (err error) {
 // Get() 读取一条 LastQuery记录
 func (lq *LastQuery) Get() (err error) {
 	statement := `SELECT id, user_id, path, query, query_at FROM last_queries WHERE user_id = $1 ORDER BY query_at DESC LIMIT 1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -84,7 +84,7 @@ type Acceptance struct {
 // Create() Acceptance新建一条 友邻蒙评 记录
 func (a *Acceptance) Create() (err error) {
 	statement := `INSERT INTO acceptances (accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (a *Acceptance) Create() (err error) {
 // Update() 根据id更新一条友邻蒙评 Y记录
 func (a *Acceptance) Update() (err error) {
 	statement := `UPDATE acceptances SET y_accept = $1, y_user_id = $2, y_accepted_at = $3 WHERE id = $4`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (a *Acceptance) Update() (err error) {
 
 // Get() 获取一条友友邻蒙评记录
 func (a *Acceptance) Get() (err error) {
-	err = db.QueryRow(`SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at FROM acceptances WHERE id = $1`, a.Id).Scan(&a.Id, &a.AcceptObjectId, &a.XAccept, &a.XUserId, &a.XAcceptedAt, &a.YAccept, &a.YUserId, &a.YAcceptedAt)
+	err = DB.QueryRow(`SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at FROM acceptances WHERE id = $1`, a.Id).Scan(&a.Id, &a.AcceptObjectId, &a.XAccept, &a.XUserId, &a.XAcceptedAt, &a.YAccept, &a.YUserId, &a.YAcceptedAt)
 	if err != nil {
 		return err
 	}
@@ -128,7 +128,7 @@ func (a *Acceptance) GetByAcceptObjectId() (Acceptance, error) {
               FROM acceptances 
               WHERE accept_object_id = $1`
 
-	row := db.QueryRowContext(ctx, query, a.AcceptObjectId)
+	row := DB.QueryRowContext(ctx, query, a.AcceptObjectId)
 	var acceptance Acceptance
 	err := row.Scan(&acceptance.Id, &acceptance.AcceptObjectId, &acceptance.XAccept, &acceptance.XUserId, &acceptance.XAcceptedAt, &acceptance.YAccept, &acceptance.YUserId, &acceptance.YAcceptedAt)
 	if err != nil {
@@ -140,7 +140,7 @@ func (a *Acceptance) GetByAcceptObjectId() (Acceptance, error) {
 // Create（） AcceptObject新建一条蒙评接纳对象的记录
 func (a *AcceptObject) Create() (err error) {
 	statement := `INSERT INTO accept_objects (object_type, object_id) VALUES ($1, $2) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func (a *AcceptObject) Create() (err error) {
 
 // Get() 据id获取友邻蒙评对象
 func (a *AcceptObject) Get() (err error) {
-	err = db.QueryRow(`SELECT id, object_type, object_id FROM accept_objects WHERE id = $1`, a.Id).Scan(&a.Id, &a.ObjectType, &a.ObjectId)
+	err = DB.QueryRow(`SELECT id, object_type, object_id FROM accept_objects WHERE id = $1`, a.Id).Scan(&a.Id, &a.ObjectType, &a.ObjectId)
 	if err != nil {
 		return err
 	}
@@ -210,7 +210,7 @@ func (ao *AcceptObject) GetObjectByACId() (object any, err error) {
 // 创建一个通知计数
 func (m *NewNotificationCount) Save() error {
 	statement := `INSERT INTO new_notification_counts (user_id, count) VALUES ($1, $2)`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -225,7 +225,7 @@ func (m *NewNotificationCount) Save() error {
 // update(） 修改一个通知计数
 func (m *NewNotificationCount) Update() error {
 	statement := `UPDATE new_notification_counts SET count = $1 WHERE id = $2`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -239,7 +239,7 @@ func (m *NewNotificationCount) Update() error {
 
 // 根据.UserId获取用户新通知的通知计数
 func (m *NewNotificationCount) GetByUserId() error {
-	err := db.QueryRow(`SELECT id, count FROM new_notification_counts WHERE user_id = $1`, m.UserId).Scan(&m.Id, &m.Count)
+	err := DB.QueryRow(`SELECT id, count FROM new_notification_counts WHERE user_id = $1`, m.UserId).Scan(&m.Id, &m.Count)
 	if err != nil {
 		return err
 	}
@@ -248,7 +248,7 @@ func (m *NewNotificationCount) GetByUserId() error {
 
 // 检查new_notification_counts表里是否已经存在用户id，返回bool，true为存在
 func (m *NewNotificationCount) Check() (valid bool, err error) {
-	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM new_notification_counts WHERE user_id = $1)", m.UserId).Scan(&valid)
+	err = DB.QueryRow("SELECT EXISTS(SELECT 1 FROM new_notification_counts WHERE user_id = $1)", m.UserId).Scan(&valid)
 	if err != nil {
 		return false, err
 	}
@@ -257,7 +257,7 @@ func (m *NewNotificationCount) Check() (valid bool, err error) {
 
 // GetUserNotification() 获取用户通知数
 func (user *User) GetNewNotificationCount() (count int, err error) {
-	err = db.QueryRow(`SELECT count FROM new_notification_counts WHERE user_id = $1`, user.Id).Scan(&count)
+	err = DB.QueryRow(`SELECT count FROM new_notification_counts WHERE user_id = $1`, user.Id).Scan(&count)
 	if err != nil {
 		return 0, err
 	}

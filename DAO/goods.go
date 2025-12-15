@@ -116,7 +116,7 @@ func (g *Goods) Create(ctx context.Context) (err error) {
 		 origin, manufacturer, manufacturer_url, engine_type, purchase_url) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -141,7 +141,7 @@ func (g *Goods) Update(ctx context.Context) error {
 		physical_state = $21, operational_state = $22, origin = $23, 
 		manufacturer = $24, manufacturer_url = $25, engine_type = $26, purchase_url = $27, 
 		updated_at = $28 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -165,7 +165,7 @@ func (g *Goods) GetByIdOrUUID(ctx context.Context) (err error) {
 		operational_state, origin, manufacturer, manufacturer_url, engine_type, 
 		purchase_url, created_at, updated_at
 		FROM goods WHERE id=$1 OR uuid=$2`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -190,7 +190,7 @@ func GetGoodsByRecorderUserId(recorderUserId int, ctx context.Context) ([]Goods,
 		operational_state, origin, manufacturer, manufacturer_url, engine_type, 
 		purchase_url, created_at, updated_at
 		FROM goods WHERE recorder_user_id = $1 ORDER BY created_at DESC`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return nil, err
 	}
@@ -285,7 +285,7 @@ func (gf *GoodsFamily) Create(ctx context.Context) error {
 
 	statement := `INSERT INTO goods_families (family_id, goods_id, availability, created_at) 
 		VALUES ($1, $2, $3, $4) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -301,7 +301,7 @@ func (gf *GoodsFamily) UpdateAvailability(ctx context.Context) error {
 	defer cancel()
 
 	statement := `UPDATE goods_families SET availability = $1, updated_at = $2 WHERE id = $3`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -318,7 +318,7 @@ func (gf *GoodsFamily) CountByFamilyId(ctx context.Context) (int, error) {
 
 	statement := `SELECT COUNT(*) FROM goods_families WHERE family_id = $1`
 	var count int
-	err := db.QueryRowContext(ctx, statement, gf.FamilyId).Scan(&count)
+	err := DB.QueryRowContext(ctx, statement, gf.FamilyId).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -334,7 +334,7 @@ func (gt *GoodsTeam) Create(ctx context.Context) error {
 
 	statement := `INSERT INTO goods_teams (team_id, goods_id, availability, created_at) 
 		VALUES ($1, $2, $3, $4) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -350,7 +350,7 @@ func (gt *GoodsTeam) UpdateAvailability(ctx context.Context) error {
 	defer cancel()
 
 	statement := `UPDATE goods_teams SET availability = $1, updated_at = $2 WHERE id = $3`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -370,7 +370,7 @@ func GetGoodsFamilyByIds(familyId, goodsId int, ctx context.Context) (*GoodsFami
 	gf := &GoodsFamily{}
 	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
 		FROM goods_families WHERE family_id = $1 AND goods_id = $2`
-	err := db.QueryRowContext(ctx, statement, familyId, goodsId).Scan(
+	err := DB.QueryRowContext(ctx, statement, familyId, goodsId).Scan(
 		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -389,7 +389,7 @@ func GetGoodsTeamByIds(teamId, goodsId int, ctx context.Context) (*GoodsTeam, er
 	gt := &GoodsTeam{}
 	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
 		FROM goods_teams WHERE team_id = $1 AND goods_id = $2`
-	err := db.QueryRowContext(ctx, statement, teamId, goodsId).Scan(
+	err := DB.QueryRowContext(ctx, statement, teamId, goodsId).Scan(
 		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -414,7 +414,7 @@ func GetGoodsByFamilyId(familyId int, ctx context.Context) ([]Goods, []GoodsAvai
 		FROM goods g JOIN goods_families gf ON g.id = gf.goods_id 
 		WHERE gf.family_id = $1 ORDER BY g.created_at DESC`
 
-	rows, err := db.QueryContext(ctx, statement, familyId)
+	rows, err := DB.QueryContext(ctx, statement, familyId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -459,7 +459,7 @@ func GetAvailabilityGoodsByFamilyId(familyId int, ctx context.Context) ([]Goods,
 		FROM goods g JOIN goods_families gf ON g.id = gf.goods_id
 		WHERE gf.family_id = $1 AND gf.availability = $2 ORDER BY g.created_at DESC`
 
-	rows, err := db.QueryContext(ctx, statement, familyId, Available)
+	rows, err := DB.QueryContext(ctx, statement, familyId, Available)
 	if err != nil {
 		return nil, err
 	}
@@ -494,7 +494,7 @@ func (gt *GoodsTeam) CountByTeamId(ctx context.Context) (int, error) {
 
 	statement := `SELECT COUNT(*) FROM goods_teams WHERE team_id = $1`
 	var count int
-	err := db.QueryRowContext(ctx, statement, gt.TeamId).Scan(&count)
+	err := DB.QueryRowContext(ctx, statement, gt.TeamId).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -515,7 +515,7 @@ func GetGoodsByTeamId(teamId int, ctx context.Context) ([]Goods, []GoodsAvailabi
 		FROM goods g JOIN goods_teams gt ON g.id = gt.goods_id 
 		WHERE gt.team_id = $1 ORDER BY g.created_at DESC`
 
-	rows, err := db.QueryContext(ctx, statement, teamId)
+	rows, err := DB.QueryContext(ctx, statement, teamId)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -558,7 +558,7 @@ func GetAvailabilityGoodsByTeamId(team_id int, ctx context.Context) ([]Goods, er
 		g.purchase_url, g.created_at, g.updated_at
 		FROM goods g JOIN goods_teams gt ON g.id = gt.goods_id
 		WHERE gt.team_id = $1 AND gt.availability = $2 ORDER BY g.created_at DESC`
-	rows, err := db.QueryContext(ctx, statement, team_id, Available)
+	rows, err := DB.QueryContext(ctx, statement, team_id, Available)
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +598,7 @@ func (gf *GoodsFamily) Get(ctx context.Context) error {
 
 	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
 		FROM goods_families WHERE id = $1`
-	err := db.QueryRowContext(ctx, statement, gf.Id).Scan(
+	err := DB.QueryRowContext(ctx, statement, gf.Id).Scan(
 		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
 	return err
 }
@@ -610,7 +610,7 @@ func (gf *GoodsFamily) GetByFamilyIdAndGoodsId(ctx context.Context) error {
 
 	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
 		FROM goods_families WHERE family_id = $1 AND goods_id = $2`
-	err := db.QueryRowContext(ctx, statement, gf.FamilyId, gf.GoodsId).Scan(
+	err := DB.QueryRowContext(ctx, statement, gf.FamilyId, gf.GoodsId).Scan(
 		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
 	return err
 }
@@ -621,7 +621,7 @@ func (gf *GoodsFamily) Update(ctx context.Context) error {
 	defer cancel()
 
 	statement := `UPDATE goods_families SET family_id = $2, goods_id = $3, availability = $4, updated_at = $5 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -637,7 +637,7 @@ func (gf *GoodsFamily) Delete(ctx context.Context) error {
 	defer cancel()
 
 	statement := `DELETE FROM goods_families WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -654,7 +654,7 @@ func (gt *GoodsTeam) Get(ctx context.Context) error {
 
 	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
 		FROM goods_teams WHERE id = $1`
-	err := db.QueryRowContext(ctx, statement, gt.Id).Scan(
+	err := DB.QueryRowContext(ctx, statement, gt.Id).Scan(
 		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
 	return err
 }
@@ -666,7 +666,7 @@ func (gt *GoodsTeam) GetByTeamIdAndGoodsId(ctx context.Context) error {
 
 	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
 		FROM goods_teams WHERE team_id = $1 AND goods_id = $2`
-	err := db.QueryRowContext(ctx, statement, gt.TeamId, gt.GoodsId).Scan(
+	err := DB.QueryRowContext(ctx, statement, gt.TeamId, gt.GoodsId).Scan(
 		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
 	return err
 }
@@ -677,7 +677,7 @@ func (gt *GoodsTeam) Update(ctx context.Context) error {
 	defer cancel()
 
 	statement := `UPDATE goods_teams SET team_id = $2, goods_id = $3, availability = $4, updated_at = $5 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -693,7 +693,7 @@ func (gt *GoodsTeam) Delete(ctx context.Context) error {
 	defer cancel()
 
 	statement := `DELETE FROM goods_teams WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -714,7 +714,7 @@ type GoodsUser struct {
 // GoodsUser.Create() 保存1用户收集的物资记录
 func (ug *GoodsUser) Create() (err error) {
 	statement := "INSERT INTO goods_users (user_id, goods_id, created_at) VALUES ($1, $2, $3) RETURNING id"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -725,14 +725,14 @@ func (ug *GoodsUser) Create() (err error) {
 
 // GoodsUser.Get() 获取1用户收集的物资记录
 func (ug *GoodsUser) Get() (err error) {
-	err = db.QueryRow("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE id = $1", ug.Id).
+	err = DB.QueryRow("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE id = $1", ug.Id).
 		Scan(&ug.Id, &ug.UserId, &ug.GoodsId, &ug.CreatedAt)
 	return
 }
 
 // GoodsUser.GetByUserIdAndGoodsId() 获取1用户收集的物资记录
 func (ug *GoodsUser) GetByUserIdAndGoodsId() (err error) {
-	err = db.QueryRow("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1 AND goods_id = $2", ug.UserId, ug.GoodsId).
+	err = DB.QueryRow("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1 AND goods_id = $2", ug.UserId, ug.GoodsId).
 		Scan(&ug.Id, &ug.UserId, &ug.GoodsId, &ug.CreatedAt)
 	return
 }
@@ -740,7 +740,7 @@ func (ug *GoodsUser) GetByUserIdAndGoodsId() (err error) {
 // GoodsUser.Delete() 删除1用户收集的物资记录
 func (ug *GoodsUser) Delete() (err error) {
 	statement := "DELETE FROM goods_users WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -751,7 +751,7 @@ func (ug *GoodsUser) Delete() (err error) {
 
 // GoodsUser.GetAllByUserId()  获取用户收集的所有物资记录
 func (ug *GoodsUser) GetAllByUserId() (goodsUserSlice []GoodsUser, err error) {
-	rows, err := db.Query("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1", ug.UserId)
+	rows, err := DB.Query("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1", ug.UserId)
 	if err != nil {
 		return
 	}
@@ -769,7 +769,7 @@ func (ug *GoodsUser) GetAllByUserId() (goodsUserSlice []GoodsUser, err error) {
 
 // GoodsUser.CountByUserId()  获取用户收集的物资记录数量
 func (gu *GoodsUser) CountByUserId() (count int, err error) {
-	err = db.QueryRow("SELECT COUNT(*) FROM goods_users WHERE user_id = $1", gu.UserId).Scan(&count)
+	err = DB.QueryRow("SELECT COUNT(*) FROM goods_users WHERE user_id = $1", gu.UserId).Scan(&count)
 	return
 }
 
@@ -786,7 +786,7 @@ func (gu *GoodsUser) GetGoodsByUserId() ([]Goods, error) {
         WHERE gu.user_id = $1
     `
 
-	rows, err := db.Query(query, gu.UserId)
+	rows, err := DB.Query(query, gu.UserId)
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %w", err)
 	}
@@ -815,7 +815,7 @@ func (gu *GoodsUser) GetGoodsByUserId() ([]Goods, error) {
 
 // CheckUserGoodsExist() 检查用户是否收藏了该物资
 func (ug *GoodsUser) CheckUserGoodsExist() (exist bool, err error) {
-	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM goods_users WHERE user_id = $1 AND goods_id = $2)", ug.UserId, ug.GoodsId).Scan(&exist)
+	err = DB.QueryRow("SELECT EXISTS(SELECT 1 FROM goods_users WHERE user_id = $1 AND goods_id = $2)", ug.UserId, ug.GoodsId).Scan(&exist)
 	return
 }
 
@@ -831,7 +831,7 @@ func SearchGoodsByName(keyword string, limit int, ctx context.Context) ([]Goods,
 		ORDER BY created_at DESC
 		LIMIT $2`
 
-	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, query, "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -931,7 +931,7 @@ func (gp *GoodsProject) Create(ctx context.Context) error {
 	statement := `INSERT INTO goods_projects 
 		(project_id, responsible_user_id, goods_id, provider_type, expected_usage, quantity, category, status, notes, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -954,7 +954,7 @@ func (gp *GoodsProject) Update(ctx context.Context) error {
 	statement := `UPDATE goods_projects SET responsible_user_id = $2, goods_id = $3, provider_type = $4,
 		expected_usage = $5, quantity = $6, category = $7, status = $8, notes = $9, updated_at = $10 
 		WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -973,7 +973,7 @@ func (gp *GoodsProject) SoftDelete(ctx context.Context) error {
 	defer cancel()
 
 	statement := `UPDATE goods_projects SET deleted_at = $2 WHERE id = $1 AND deleted_at IS NULL`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -995,7 +995,7 @@ func GetGoodsProjectByProjectId(projectId int, ctx context.Context) ([]GoodsProj
 		FROM goods_projects WHERE project_id = $1 AND deleted_at IS NULL 
 		ORDER BY created_at DESC`
 
-	rows, err := db.QueryContext(ctx, statement, projectId)
+	rows, err := DB.QueryContext(ctx, statement, projectId)
 	if err != nil {
 		return nil, err
 	}
@@ -1028,7 +1028,7 @@ func (gp *GoodsProject) GetByProjectIdAndGoodsId(ctx context.Context) error {
 	statement := `SELECT id, project_id, responsible_user_id, goods_id, provider_type, expected_usage, 
 		quantity, category, status, notes, created_at, updated_at, deleted_at 
 		FROM goods_projects WHERE project_id = $1 AND goods_id = $2 AND deleted_at IS NULL`
-	err := db.QueryRowContext(ctx, statement, gp.ProjectId, gp.GoodsId).Scan(
+	err := DB.QueryRowContext(ctx, statement, gp.ProjectId, gp.GoodsId).Scan(
 		&gp.Id, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ProviderType, &gp.ExpectedUsage,
 		&gp.Quantity, &gp.Category, &gp.Status, &gp.Notes, &gp.CreatedAt, &gp.UpdatedAt, &gp.DeletedAt)
 	return err
@@ -1059,7 +1059,7 @@ func (gpr *GoodsProjectReadiness) Create(ctx context.Context) error {
 	statement := `INSERT INTO goods_project_readiness 
 		(project_id, is_ready, user_id, notes, created_at) 
 		VALUES ($1, $2, $3, $4, $5) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -1076,7 +1076,7 @@ func (gpr *GoodsProjectReadiness) Update(ctx context.Context) error {
 
 	statement := `UPDATE goods_project_readiness SET is_ready = $1, user_id = $2, notes = $3, updated_at = $4 
 		WHERE project_id = $5`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -1096,7 +1096,7 @@ func GetGoodsProjectReadinessByProjectId(projectId int, ctx context.Context) (Go
 	gpr := GoodsProjectReadiness{}
 	statement := `SELECT id, project_id, is_ready, user_id, notes, created_at, updated_at 
 		FROM goods_project_readiness WHERE project_id = $1`
-	err := db.QueryRowContext(ctx, statement, projectId).Scan(
+	err := DB.QueryRowContext(ctx, statement, projectId).Scan(
 		&gpr.Id, &gpr.ProjectId, &gpr.IsReady, &gpr.UserId, &gpr.Notes, &gpr.CreatedAt, &gpr.UpdatedAt)
 	if err != nil {
 		return gpr, err

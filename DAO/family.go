@@ -175,7 +175,7 @@ type FamilyMemberSignOut struct {
 // FamilyMemberSignOut.Create() 创建“离开&家庭茶团成员声明”
 func (fms *FamilyMemberSignOut) Create() (err error) {
 	statement := "INSERT INTO family_member_sign_outs (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, is_adopted, author_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -190,7 +190,7 @@ func (fms *FamilyMemberSignOut) Create() (err error) {
 // FamilyMemberSignOut.Get()根据“id”获取“离开&家庭茶团成员声明”
 func (fms *FamilyMemberSignOut) Get() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_outs WHERE id = $1"
-	err = db.QueryRow(statement, fms.Id).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	err = DB.QueryRow(statement, fms.Id).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -200,7 +200,7 @@ func (fms *FamilyMemberSignOut) Get() (err error) {
 // FamilyMemberSignOut.GetByFamilyIdUserId() 根据“家庭茶团id”和“茶友id”获取“离开&家庭茶团成员声明”
 func (fms *FamilyMemberSignOut) GetByFamilyIdUserId() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_outs WHERE family_id = $1 AND user_id = $2"
-	err = db.QueryRow(statement, fms.FamilyId, fms.UserId).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	err = DB.QueryRow(statement, fms.FamilyId, fms.UserId).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -210,7 +210,7 @@ func (fms *FamilyMemberSignOut) GetByFamilyIdUserId() (err error) {
 // FamilyMemberSignOut.GetByUuid() 根据“uuid”获取“离开&家庭茶团成员声明”
 func (fms *FamilyMemberSignOut) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_outs WHERE uuid = $1"
-	err = db.QueryRow(statement, fms.Uuid).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	err = DB.QueryRow(statement, fms.Uuid).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -220,7 +220,7 @@ func (fms *FamilyMemberSignOut) GetByUuid() (err error) {
 // FamilyMemberSignOut.Update() 更新“离开&家庭茶团成员声明”
 func (fms *FamilyMemberSignOut) Update() (err error) {
 	statement := "UPDATE family_member_sign_outs SET family_id = $2, user_id = $3, role = $4, is_adult = $5, title = $6, content = $7, place_id = $8, status = $9, updated_at = $10, is_adopted = $11, author_user_id = $12 WHERE id = $1"
-	_, err = db.Exec(statement, fms.Id, fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), fms.IsAdopted, fms.AuthorUserId)
+	_, err = DB.Exec(statement, fms.Id, fms.FamilyId, fms.UserId, fms.Role, fms.IsAdult, fms.Title, fms.Content, fms.PlaceId, fms.Status, time.Now(), fms.IsAdopted, fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -240,7 +240,7 @@ type FamilyMemberSignInReply struct {
 // FamilyMemberSignInReply.Create() 创建“家庭茶团成员声明回复”
 func (fmsr *FamilyMemberSignInReply) Create() (err error) {
 	statement := "INSERT INTO family_member_sign_in_replies (uuid, sign_in_id, user_id, is_confirm, created_at) VALUES ($1, $2, $3, $4, $5) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -255,7 +255,7 @@ func (fmsr *FamilyMemberSignInReply) Create() (err error) {
 // FamilyMemberSignInReply.GetByUuid() 根据uuid获取“家庭茶团成员声明回复”
 func (fmsr *FamilyMemberSignInReply) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, sign_in_id, user_id, is_confirm, created_at FROM family_member_sign_in_replies WHERE uuid = $1"
-	err = db.QueryRow(statement, fmsr.Uuid).Scan(&fmsr.Id, &fmsr.Uuid, &fmsr.SignInId, &fmsr.UserId, &fmsr.IsConfirm, &fmsr.CreatedAt)
+	err = DB.QueryRow(statement, fmsr.Uuid).Scan(&fmsr.Id, &fmsr.Uuid, &fmsr.SignInId, &fmsr.UserId, &fmsr.IsConfirm, &fmsr.CreatedAt)
 	if err != nil {
 		return
 	}
@@ -265,7 +265,7 @@ func (fmsr *FamilyMemberSignInReply) GetByUuid() (err error) {
 // FamilyMemberSignInReply.Get() 根据id获取“家庭茶团成员声明回复”
 func (fmsr *FamilyMemberSignInReply) Get() (err error) {
 	statement := "SELECT id, uuid, sign_in_id, user_id, is_confirm, created_at FROM family_member_sign_in_replies WHERE id = $1"
-	err = db.QueryRow(statement, fmsr.Id).Scan(&fmsr.Id, &fmsr.Uuid, &fmsr.SignInId, &fmsr.UserId, &fmsr.IsConfirm, &fmsr.CreatedAt)
+	err = DB.QueryRow(statement, fmsr.Id).Scan(&fmsr.Id, &fmsr.Uuid, &fmsr.SignInId, &fmsr.UserId, &fmsr.IsConfirm, &fmsr.CreatedAt)
 	if err != nil {
 		return
 	}
@@ -310,7 +310,7 @@ func (fms *FamilyMemberSignIn) GetRole() string {
 // FamilyMemberSignIn.Create() 创建“家庭茶团成员声明”
 func (fms *FamilyMemberSignIn) Create() (err error) {
 	statement := "INSERT INTO family_member_sign_ins (uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, is_adopted, author_user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -325,7 +325,7 @@ func (fms *FamilyMemberSignIn) Create() (err error) {
 // FamilyMemberSignIn.Get() 根据id获取“家庭茶团成员声明”
 func (fms *FamilyMemberSignIn) Get() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_ins WHERE id = $1"
-	err = db.QueryRow(statement, fms.Id).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	err = DB.QueryRow(statement, fms.Id).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -333,7 +333,7 @@ func (fms *FamilyMemberSignIn) Get() (err error) {
 }
 func (fms *FamilyMemberSignIn) Update() (err error) {
 	statement := "UPDATE family_member_sign_ins SET role = $2, is_adult = $3, title = $4, content = $5, place_id=$6, status = $7, updated_at = $8 WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -348,7 +348,7 @@ func (fms *FamilyMemberSignIn) Update() (err error) {
 // FamilyMemberSignIn.GetByUUID() 根据uuid获取“家庭茶团成员声明”
 func (fms *FamilyMemberSignIn) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_ins WHERE uuid = $1"
-	err = db.QueryRow(statement, fms.Uuid).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	err = DB.QueryRow(statement, fms.Uuid).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -358,7 +358,7 @@ func (fms *FamilyMemberSignIn) GetByUuid() (err error) {
 // FamilyMemberSignIn.GetByFamilyIdMemberUserId() 根据family_id和user_id获取“家庭茶团成员声明”
 func (fms *FamilyMemberSignIn) GetByFamilyIdMemberUserId() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id FROM family_member_sign_ins WHERE family_id = $1 AND user_id = $2"
-	err = db.QueryRow(statement, fms.FamilyId, fms.UserId).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+	err = DB.QueryRow(statement, fms.FamilyId, fms.UserId).Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult, &fms.Title, &fms.Content, &fms.PlaceId, &fms.Status, &fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
 	if err != nil {
 		return
 	}
@@ -398,7 +398,7 @@ type UserDefaultFamily struct {
 // UserDefaultFamily.Create() 创建用户的“默认家庭”设置记录
 func (udf *UserDefaultFamily) Create() (err error) {
 	statement := "INSERT INTO user_default_families (user_id, family_id) VALUES ($1, $2) RETURNING id"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -425,7 +425,7 @@ func (user *User) GetLastDefaultFamily() (Family, error) {
         LIMIT 1`
 
 	var family Family
-	err := db.QueryRow(query, user.Id).Scan(
+	err := DB.QueryRow(query, user.Id).Scan(
 		&family.Id, &family.Uuid, &family.AuthorId, &family.Name,
 		&family.Introduction, &family.IsMarried, &family.HasChild,
 		&family.HusbandFromFamilyId, &family.WifeFromFamilyId,
@@ -488,7 +488,7 @@ func ResignMemberFamilies(user_id int) ([]Family, error) {
 		FROM family_member_sign_outs fmso LEFT JOIN families f ON fmso.family_id = f.id 
 		WHERE fmso.user_id = $1 AND f.deleted_at IS NULL ORDER BY fmso.created_at DESC`
 
-	rows, err := db.QueryContext(ctx, query, user_id)
+	rows, err := DB.QueryContext(ctx, query, user_id)
 	if err != nil {
 		return nil, wrapError("ResignMemberFamilies", err)
 	}
@@ -504,7 +504,7 @@ func GetAllAuthorFamilies(user_id int) ([]Family, error) {
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
 		FROM families WHERE author_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
 
-	rows, err := db.QueryContext(ctx, query, user_id)
+	rows, err := DB.QueryContext(ctx, query, user_id)
 	if err != nil {
 		return nil, wrapError("GetAllAuthorFamilies", err)
 	}
@@ -517,7 +517,7 @@ func CountAllAuthorFamilies(user_id int) (int, error) {
 	defer cancel()
 
 	var count int
-	err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM families WHERE author_id = $1 AND deleted_at IS NULL", user_id).Scan(&count)
+	err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM families WHERE author_id = $1 AND deleted_at IS NULL", user_id).Scan(&count)
 	return count, wrapError("CountAllAuthorFamilies", err)
 }
 
@@ -527,7 +527,7 @@ func CountAllfamilies(user_id int) (int, error) {
 	defer cancel()
 
 	var count int
-	err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE user_id = $1", user_id).Scan(&count)
+	err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE user_id = $1", user_id).Scan(&count)
 	return count, wrapError("CountAllfamilies", err)
 }
 
@@ -543,7 +543,7 @@ func GetAllFamilies(user_id int) ([]Family, error) {
 		FROM family_members fm LEFT JOIN families f ON fm.family_id = f.id 
 		WHERE fm.user_id = $1 AND f.deleted_at IS NULL ORDER BY f.created_at DESC`
 
-	rows, err := db.QueryContext(ctx, query, user_id)
+	rows, err := DB.QueryContext(ctx, query, user_id)
 	if err != nil {
 		return nil, wrapError("GetAllFamilies", err)
 	}
@@ -618,7 +618,7 @@ func (f *Family) Create() error {
 		husband_from_family_id, wife_from_family_id, status, created_at, logo, is_open, perspective_user_id) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid`
 
-	err := db.QueryRowContext(ctx, query, Random_UUID(), f.AuthorId, f.Name, f.Introduction,
+	err := DB.QueryRowContext(ctx, query, Random_UUID(), f.AuthorId, f.Name, f.Introduction,
 		f.IsMarried, f.HasChild, f.HusbandFromFamilyId, f.WifeFromFamilyId, f.Status,
 		time.Now(), f.Logo, f.IsOpen, f.PerspectiveUserId).Scan(&f.Id, &f.Uuid)
 
@@ -628,7 +628,7 @@ func (f *Family) Create() error {
 // Family.Update() 更新家庭
 func (f *Family) Update() (err error) {
 	statement := "UPDATE families SET name=$1, introduction=$2, is_married=$3, has_child=$4, husband_from_family_id=$5, wife_from_family_id=$6, status=$7, updated_at=$8, logo=$9, is_open=$10 WHERE id=$11"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -646,7 +646,7 @@ func (f *Family) Get() (err error) {
 		return fmt.Errorf("family not found with id: %d", f.Id)
 	}
 	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id FROM families WHERE id=$1 AND deleted_at IS NULL"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -689,7 +689,7 @@ func GetFamiliesByAuthorId(authorId int) ([]Family, error) {
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
 		FROM families WHERE author_id=$1 AND deleted_at IS NULL`
 
-	rows, err := db.QueryContext(ctx, query, authorId)
+	rows, err := DB.QueryContext(ctx, query, authorId)
 	if err != nil {
 		return nil, wrapError("GetFamiliesByAuthorId", err)
 	}
@@ -703,7 +703,7 @@ func (f *Family) GetByUuid() (err error) {
 		return nil
 	}
 	statement := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id FROM families WHERE uuid=$1 AND deleted_at IS NULL"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -717,7 +717,7 @@ func (f *Family) GetByUuid() (err error) {
 
 // Family.Founder() 获取家庭登记者
 func (f *Family) Founder() (user User, err error) {
-	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", f.AuthorId).
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", f.AuthorId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
@@ -728,7 +728,7 @@ func (f *Family) IsMember(user_id int) (isMember bool, err error) {
 		return false, fmt.Errorf("family not found with id: %d", f.Id)
 	}
 	statement := "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND user_id=$2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return false, err
 	}
@@ -745,7 +745,7 @@ func (f *Family) IsMember(user_id int) (isMember bool, err error) {
 // Family.IsParentMember() 根据user_id，检查用户是否是家庭男女主人(父母)成员
 func (f *Family) IsParentMember(user_id int) (isMember bool, err error) {
 	statement := "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND user_id=$2 AND role IN ($3, $4)"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return false, err
 	}
@@ -761,7 +761,7 @@ func (f *Family) IsParentMember(user_id int) (isMember bool, err error) {
 
 // Family.AllMembers() 获取家庭所有成员
 func (f *Family) AllMembers() (members []FamilyMember, err error) {
-	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1", f.Id)
+	rows, err := DB.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1", f.Id)
 	if err != nil {
 		return
 	}
@@ -782,7 +782,7 @@ func GetAllMembersUserIdsByFamilyId(family_id int) (userIds []int, err error) {
 	if family_id == FamilyIdUnknown {
 		return nil, fmt.Errorf("family not found with id: %d", family_id)
 	}
-	rows, err := db.Query("SELECT user_id FROM family_members WHERE family_id=$1", family_id)
+	rows, err := DB.Query("SELECT user_id FROM family_members WHERE family_id=$1", family_id)
 	if err != nil {
 		return
 	}
@@ -810,7 +810,7 @@ func (fm *FamilyMember) Create() error {
 		is_adopted, birthday, death_date, order_of_seniority, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid`
 
-	err := db.QueryRowContext(ctx, query, Random_UUID(), fm.FamilyId, fm.UserId, fm.Role,
+	err := DB.QueryRowContext(ctx, query, Random_UUID(), fm.FamilyId, fm.UserId, fm.Role,
 		fm.IsAdult, fm.NickName, fm.IsAdopted, fm.Birthday, fm.DeathDate, fm.OrderOfSeniority, time.Now()).Scan(&fm.Id, &fm.Uuid)
 
 	return wrapError("FamilyMember.Create", err)
@@ -819,7 +819,7 @@ func (fm *FamilyMember) Create() error {
 // FamilyMember.Get() 根据id获取家庭成员
 func (fm *FamilyMember) Get() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE id=$1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -834,7 +834,7 @@ func (fm *FamilyMember) Get() (err error) {
 // FamilyMember.GetByUserIdFamilyId() 根据user_id获取指定的家庭成员
 func (fm *FamilyMember) GetByUserIdFamilyId() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE user_id=$1 and family_id = $2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -849,7 +849,7 @@ func (fm *FamilyMember) GetByUserIdFamilyId() (err error) {
 // FamilyMember.GetByRoleFamilyId() 根据role获取指定的家庭成员
 func (fm *FamilyMember) GetByRoleFamilyId() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE role=$1 and family_id = $2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -863,7 +863,7 @@ func (fm *FamilyMember) GetByRoleFamilyId() (err error) {
 
 // FamilyMember.ParentMember() 获取家庭成员的父母成员,return parentMembers []FamilyMember,err error
 func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
-	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleHusband, FamilyMemberRoleWife)
+	rows, err := DB.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleHusband, FamilyMemberRoleWife)
 	if err != nil {
 		return
 	}
@@ -881,7 +881,7 @@ func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
 
 // FamilyMember.ChildMembers() 获取家庭成员的子女成员列表
 func (f *Family) ChildMembers() (child_members []FamilyMember, err error) {
-	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleDaughter, FamilyMemberRoleSon)
+	rows, err := DB.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleDaughter, FamilyMemberRoleSon)
 	if err != nil {
 		return
 	}
@@ -899,7 +899,7 @@ func (f *Family) ChildMembers() (child_members []FamilyMember, err error) {
 
 // FamilyMember.OtherMembers() 获取家庭成员的其他成员列表
 func (f *Family) OtherMembers() (other_members []FamilyMember, err error) {
-	rows, err := db.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleUnknown, FamilyMemberRolePet)
+	rows, err := DB.Query("SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE family_id=$1 AND role IN ($2, $3)", f.Id, FamilyMemberRoleUnknown, FamilyMemberRolePet)
 	if err != nil {
 		return
 	}
@@ -923,14 +923,14 @@ func (fm *FamilyMember) CreatedAtDate() string {
 // FamilyMember.GetByUuid() 根据uuid获取家庭成员
 func (fm *FamilyMember) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, family_id, user_id, role, is_adult, nick_name, is_adopted, birthday, death_date, order_of_seniority, created_at, updated_at FROM family_members WHERE uuid=$1"
-	err = db.QueryRow(statement, fm.Uuid).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Birthday, &fm.DeathDate, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
+	err = DB.QueryRow(statement, fm.Uuid).Scan(&fm.Id, &fm.Uuid, &fm.FamilyId, &fm.UserId, &fm.Role, &fm.IsAdult, &fm.NickName, &fm.IsAdopted, &fm.Birthday, &fm.DeathDate, &fm.OrderOfSeniority, &fm.CreatedAt, &fm.UpdatedAt)
 	return
 }
 
 // FamilyMember.UpdateMemberInfo() 更新家庭成员信息
 func (fm *FamilyMember) UpdateMemberInfo() (err error) {
 	statement := "UPDATE family_members SET nick_name=$1, birthday=$2, death_date=$3, order_of_seniority=$4, updated_at=$5 WHERE id=$6"
-	_, err = db.Exec(statement, fm.NickName, fm.Birthday, fm.DeathDate, fm.OrderOfSeniority, time.Now(), fm.Id)
+	_, err = DB.Exec(statement, fm.NickName, fm.Birthday, fm.DeathDate, fm.OrderOfSeniority, time.Now(), fm.Id)
 	return
 }
 
@@ -945,7 +945,7 @@ func CountFamilyMembers(familyId int) (int, error) {
 	defer cancel()
 
 	var count int
-	err := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE family_id=$1", familyId).Scan(&count)
+	err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE family_id=$1", familyId).Scan(&count)
 	return count, wrapError("CountFamilyMembers", err)
 }
 
@@ -954,7 +954,7 @@ func CountFamilyParentAndChildMembers(familyId int, ctx context.Context) (count 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	err = db.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND role IN ($2, $3, $4, $5)", familyId, FamilyMemberRoleHusband, FamilyMemberRoleWife, FamilyMemberRoleDaughter, FamilyMemberRoleSon).Scan(&count)
+	err = DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND role IN ($2, $3, $4, $5)", familyId, FamilyMemberRoleHusband, FamilyMemberRoleWife, FamilyMemberRoleDaughter, FamilyMemberRoleSon).Scan(&count)
 	if err != nil {
 		return
 	}
@@ -979,7 +979,7 @@ func (f *Family) SoftDelete() error {
 	f.DeletedAt = &now
 
 	query := "UPDATE families SET deleted_at = $1, updated_at = $2 WHERE id = $3 AND deleted_at IS NULL"
-	result, err := db.ExecContext(ctx, query, now, now, f.Id)
+	result, err := DB.ExecContext(ctx, query, now, now, f.Id)
 	if err != nil {
 		return wrapError("Family.SoftDelete", err)
 	}
@@ -1005,7 +1005,7 @@ func (f *Family) Restore() error {
 	f.UpdatedAt = &now
 
 	query := "UPDATE families SET deleted_at = NULL, updated_at = $1 WHERE id = $2 AND deleted_at IS NOT NULL"
-	result, err := db.ExecContext(ctx, query, now, f.Id)
+	result, err := DB.ExecContext(ctx, query, now, f.Id)
 	if err != nil {
 		return wrapError("Family.Restore", err)
 	}
@@ -1035,7 +1035,7 @@ func GetDeletedFamiliesByAuthorId(authorId int) ([]Family, error) {
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
 		FROM families WHERE author_id=$1 AND deleted_at IS NOT NULL ORDER BY deleted_at DESC`
 
-	rows, err := db.QueryContext(ctx, query, authorId)
+	rows, err := DB.QueryContext(ctx, query, authorId)
 	if err != nil {
 		return nil, wrapError("GetDeletedFamiliesByAuthorId", err)
 	}
@@ -1052,7 +1052,7 @@ func GetFamilyIncludingDeleted(family_id int) (family Family, err error) {
 	defer cancel()
 
 	query := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id FROM families WHERE id=$1"
-	err = db.QueryRowContext(ctx, query, family_id).Scan(
+	err = DB.QueryRowContext(ctx, query, family_id).Scan(
 		&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction,
 		&family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId,
 		&family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen, &family.DeletedAt, &family.PerspectiveUserId)
@@ -1076,7 +1076,7 @@ func SearchFamilyByName(keyword string, limit int, ctx context.Context) ([]Famil
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
 		FROM families WHERE name LIKE $1 AND deleted_at IS NULL AND is_open = true LIMIT $2`
 
-	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, query, "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, wrapError("SearchFamilyByName", err)
 	}
