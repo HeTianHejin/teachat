@@ -1646,5 +1646,15 @@ func createTeamWithFounderMember(team *dao.Team, founderUserId int) error {
 		return err
 	}
 
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	// 在事务提交后，为团队创建茶叶账户
+	if err := dao.EnsureTeamTeaAccountExists(team.Id); err != nil {
+		util.Debug(" Cannot create team tea account", err)
+		return err
+	}
+
+	return nil
 }

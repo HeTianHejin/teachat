@@ -1,0 +1,277 @@
+{{ define "content" }}
+
+{{/* 团队待审批操作页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+  <li><a href="/v1/team/tea/account?team_id={{ .Team.Id }}">团队茶叶账户</a></li>
+  <li class="active">待审批操作</li>
+</ol>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h3>
+                    {{ .Team.Name }}
+                    <small>待审批操作</small>
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- 团队账户概览 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        茶叶罐状态
+                        <span class="pull-right">
+                            状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">
+                                {{ .StatusDisplay }}
+                            </span>
+                            <a href="/v1/team/tea/account?team_id={{ .Team.Id }}" class="btn btn-xs btn-default">
+                                <span class="glyphicon glyphicon-arrow-left"></span> 返回账户
+                            </a>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>当前余额: <strong>{{ .BalanceDisplay }}</strong></h4>
+                            <p class="text-muted">团队茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>待审批操作: <strong>{{ len .Operations }}</strong></h4>
+                            <p class="text-muted">需要核心成员审批的操作</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="btn-group-vertical" role="group" style="width: 100%;">
+                                <a href="/v1/tea/team/transactions/page?team_id={{ .Team.Id }}" class="btn btn-info">
+                                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                                    收支明细
+                                </a>
+                                <a href="/v1/tea/team/operations/history/page?team_id={{ .Team.Id }}" class="btn btn-default">
+                                    <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
+                                    操作记录
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 待审批操作列表 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                        待审批操作列表
+                        <span class="badge pull-right">{{ len .Operations }}</span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ if .Operations }}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>操作UUID</th>
+                                    <th>操作类型</th>
+                                    <th>数量</th>
+                                    <th>操作人</th>
+                                    <th>目标</th>
+                                    <th>备注</th>
+                                    <th>过期时间</th>
+                                    <th>创建时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .Operations }}
+                                <tr>
+                                    <td><code>{{ .Uuid }}</code></td>
+                                    <td>
+                                        {{ if eq .OperationType "deposit" }}
+                                        <span class="label label-success">存入</span>
+                                        {{ else if eq .OperationType "withdraw" }}
+                                        <span class="label label-warning">提取</span>
+                                        {{ else if eq .OperationType "transfer_out" }}
+                                        <span class="label label-info">转出</span>
+                                        {{ else if eq .OperationType "transfer_in" }}
+                                        <span class="label label-primary">转入</span>
+                                        {{ else }}
+                                        <span class="label label-default">{{ .OperationType }}</span>
+                                        {{ end }}
+                                    </td>
+                                    <td><strong>{{ printf "%.3f" .AmountGrams }}克</strong></td>
+                                    <td>
+                                        <span class="text-primary">{{ .OperatorName }}</span>
+                                        <br><small class="text-muted">ID: {{ .OperatorUserId }}</small>
+                                    </td>
+                                    <td>
+                                        {{ if .TargetTeamName }}
+                                        <span class="text-info">团队: {{ .TargetTeamName }}</span>
+                                        <br><small class="text-muted">ID: {{ .TargetTeamId }}</small>
+                                        {{ else if .TargetUserName }}
+                                        <span class="text-success">用户: {{ .TargetUserName }}</span>
+                                        <br><small class="text-muted">ID: {{ .TargetUserId }}</small>
+                                        {{ else }}
+                                        <span class="text-muted">-</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if .Notes }}
+                                        <span title="{{ .Notes }}">{{ .Notes }}</span>
+                                        {{ else }}
+                                        <span class="text-muted">无</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        <span class="{{ if .IsExpiring }}text-danger{{ else }}text-info{{ end }}">
+                                            {{ .ExpiresAt }}
+                                        </span>
+                                        {{ if .IsExpiring }}
+                                        <br><small class="text-danger">即将过期</small>
+                                        {{ end }}
+                                    </td>
+                                    <td><small class="text-muted">{{ .CreatedAt }}</small></td>
+                                    <td>
+                                        <div class="btn-group btn-group-xs" role="group">
+                                            <button class="btn btn-success" onclick="approveOperation('{{ .Uuid }}')" title="批准操作">
+                                                <span class="glyphicon glyphicon-ok"></span>
+                                            </button>
+                                            <button class="btn btn-danger" onclick="rejectOperation('{{ .Uuid }}')" title="拒绝操作">
+                                                <span class="glyphicon glyphicon-remove"></span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页导航 -->
+                    <nav>
+                        <ul class="pagination pagination-sm">
+                            {{ if gt .CurrentPage 0 }}
+                            <li>
+                                <a href="?team_id={{ .Team.Id }}&page={{ sub .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="上一页">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {{ end }}
+                            
+                            <li class="active">
+                                <span>第 {{ add .CurrentPage 1 }} 页</span>
+                            </li>
+                            
+                            {{ if eq (len .Operations) .Limit }}
+                            <li>
+                                <a href="?team_id={{ .Team.Id }}&page={{ add .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="下一页">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                            {{ end }}
+                        </ul>
+                    </nav>
+
+                    {{ else }}
+                    <div class="text-center" style="padding: 40px;">
+                        <span class="glyphicon glyphicon-check" style="font-size: 48px; color: #5cb85c;"></span>
+                        <h4 style="margin-top: 15px;">暂无待审批操作</h4>
+                        <p class="text-muted">所有操作都已处理完成</p>
+                        <a href="/v1/tea/team/operations/history/page?team_id={{ .Team.Id }}" class="btn btn-default">
+                            <span class="glyphicon glyphicon-list-alt"></span> 查看操作历史
+                        </a>
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const teamId = {{ .Team.Id }};
+
+// 批准操作
+function approveOperation(operationUuid) {
+    if (!confirm('确定要批准这个操作吗？')) {
+        return;
+    }
+    
+    fetch('/v1/tea/team/operation/approve', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            operation_uuid: operationUuid
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('操作已批准');
+            window.location.reload();
+        } else {
+            alert('批准失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('批准请求失败，请重试');
+    });
+}
+
+// 拒绝操作
+function rejectOperation(operationUuid) {
+    const reason = prompt('请输入拒绝原因:');
+    if (!reason) {
+        return;
+    }
+    
+    fetch('/v1/tea/team/operation/reject', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            operation_uuid: operationUuid,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('操作已拒绝');
+            window.location.reload();
+        } else {
+            alert('拒绝失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('拒绝请求失败，请重试');
+    });
+}
+
+// 页面加载完成后的初始化
+$(document).ready(function() {
+    // 可以添加其他初始化逻辑
+});
+</script>
+{{ end }}

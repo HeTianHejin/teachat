@@ -1,0 +1,290 @@
+{{ define "content" }}
+
+{{/* 这是团队操作记录页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+  <li><a href="/v1/tea/team/account/page?team_id={{ .Team.Id }}">团队茶叶账户</a></li>
+  <li class="active">
+      #{{ .Team.Id }}
+    操作记录</li>
+</ol>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h3>
+                    {{ .Team.Name }}
+                    <small>操作记录</small>
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- 团队账户概览 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        团队茶叶账户
+                        <span class="pull-right">
+                            状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">
+                                {{ .StatusDisplay }}
+                            </span>
+                            {{ if .UserIsCoreMember }}
+                            <a href="/v1/team/manage?uuid={{ .Team.Uuid }}" class="btn btn-xs btn-default">
+                                <span class="glyphicon glyphicon-cog"></span> 管理
+                            </a>
+                            {{ end }}
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>当前余额: <strong>{{ .BalanceDisplay }}</strong></h4>
+                            <p class="text-muted">团队茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>历史记录: <strong>{{ len .Operations }}</strong></h4>
+                            <p class="text-muted">团队操作历史总数</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="btn-group-vertical" role="group" style="width: 100%;">
+                                <a href="/v1/team/tea/account?team_id={{ .Team.Id }}" class="btn btn-info">
+                                    <span class="glyphicon glyphicon-home" aria-hidden="true"></span>
+                                    账户首页
+                                </a>
+                                <a href="/v1/tea/team/transactions/page?team_id={{ .Team.Id }}" class="btn btn-default">
+                                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                                    收支明细
+                                </a>
+                                {{ if .UserIsCoreMember }}
+                                <a href="/v1/tea/team/operations/pending/page?team_id={{ .Team.Id }}" class="btn btn-warning">
+                                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                    待审批操作
+                                </a>
+                                {{ end }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作记录列表 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
+                        操作记录
+                        <div class="pull-right">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-xs btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    筛选状态 <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" onclick="filterOperations('all')">全部状态</a></li>
+                                    <li><a href="#" onclick="filterOperations('pending')">待审批</a></li>
+                                    <li><a href="#" onclick="filterOperations('approved')">已批准</a></li>
+                                    <li><a href="#" onclick="filterOperations('rejected')">已拒绝</a></li>
+                                    <li><a href="#" onclick="filterOperations('expired')">已过期</a></li>
+                                </ul>
+                            </div>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-xs btn-info dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    筛选类型 <span class="caret"></span>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" onclick="filterByType('all')">全部类型</a></li>
+                                    <li><a href="#" onclick="filterByType('deposit')">存入</a></li>
+                                    <li><a href="#" onclick="filterByType('withdraw')">提取</a></li>
+                                    <li><a href="#" onclick="filterByType('transfer_out')">转出</a></li>
+                                    <li><a href="#" onclick="filterByType('transfer_in')">转入</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ if .Operations }}
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="operationsTable">
+                            <thead>
+                                <tr>
+                                    <th>创建时间</th>
+                                    <th>操作类型</th>
+                                    <th>数量</th>
+                                    <th>状态</th>
+                                    <th>操作人</th>
+                                    <th>目标</th>
+                                    <th>备注</th>
+                                    <th>过期时间</th>
+                                    <th>审批人</th>
+                                    <th>审批时间</th>
+                                    <th>拒绝原因</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .Operations }}
+                                <tr data-status="{{ .Status }}" data-type="{{ .OperationType }}">
+                                    <td>{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</td>
+                                    <td>
+                                        {{ if eq .OperationType "deposit" }}
+                                        <span class="label label-success">{{ .TypeDisplay }}</span>
+                                        {{ else if eq .OperationType "withdraw" }}
+                                        <span class="label label-warning">{{ .TypeDisplay }}</span>
+                                        {{ else if eq .OperationType "transfer_out" }}
+                                        <span class="label label-info">{{ .TypeDisplay }}</span>
+                                        {{ else if eq .OperationType "transfer_in" }}
+                                        <span class="label label-primary">{{ .TypeDisplay }}</span>
+                                        {{ else }}
+                                        <span class="label label-default">{{ .TypeDisplay }}</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>{{ printf "%.3f" .AmountGrams }}克</td>
+                                    <td>
+                                        {{ if eq .Status "pending" }}
+                                        <span class="label label-warning">{{ .StatusDisplay }}</span>
+                                        {{ else if eq .Status "approved" }}
+                                        <span class="label label-success">{{ .StatusDisplay }}</span>
+                                        {{ else if eq .Status "rejected" }}
+                                        <span class="label label-danger">{{ .StatusDisplay }}</span>
+                                        {{ else if eq .Status "expired" }}
+                                        <span class="label label-default">{{ .StatusDisplay }}</span>
+                                        {{ else }}
+                                        <span class="label label-default">{{ .StatusDisplay }}</span>
+                                        {{ end }}
+                                        {{ if .IsExpired }}
+                                        <span class="label label-danger">已过期</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>{{ .OperatorName }}</td>
+                                    <td>
+                                        {{ if .TargetTeamName }}
+                                        <span class="text-info">团队: {{ .TargetTeamName }}</span>
+                                        {{ else if .TargetUserName }}
+                                        <span class="text-success">用户: {{ .TargetUserName }}</span>
+                                        {{ else }}
+                                        -
+                                        {{ end }}
+                                    </td>
+                                    <td>{{ .Notes }}</td>
+                                    <td>{{ .ExpiresAt.Format "2006-01-02 15:04:05" }}</td>
+                                    <td>{{ .ApproverName }}</td>
+                                    <td>
+                                        {{ if .ApprovedAt }}
+                                        {{ .ApprovedAt.Format "2006-01-02 15:04:05" }}
+                                        {{ else }}
+                                        -
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if .RejectionReason }}
+                                        <span class="text-danger">{{ .RejectionReason }}</span>
+                                        {{ else }}
+                                        -
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ else }}
+                    <p class="text-muted">暂无操作记录</p>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分页 -->
+    <div class="row">
+        <div class="col-md-12 text-center">
+            <nav aria-label="操作记录分页">
+                <ul class="pagination">
+                    {{ if gt .CurrentPage 0 }}
+                    <li>
+                        <a href="?team_id={{ .Team.Id }}&page={{ sub .CurrentPage 1 }}" aria-label="上一页">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {{ else }}
+                    <li class="disabled">
+                        <span aria-hidden="true">&laquo;</span>
+                    </li>
+                    {{ end }}
+                    
+                    <li class="active">
+                        <span>第 {{ add .CurrentPage 1 }} 页</span>
+                    </li>
+                    
+                    {{ if eq (len .Operations) .Limit }}
+                    <li>
+                        <a href="?team_id={{ .Team.Id }}&page={{ add .CurrentPage 1 }}" aria-label="下一页">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    {{ else }}
+                    <li class="disabled">
+                        <span aria-hidden="true">&raquo;</span>
+                    </li>
+                    {{ end }}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+// 按状态筛选操作
+function filterOperations(status) {
+    const rows = document.querySelectorAll('#operationsTable tbody tr');
+    
+    rows.forEach(row => {
+        if (status === 'all') {
+            row.style.display = '';
+        } else {
+            const rowStatus = row.getAttribute('data-status');
+            if (rowStatus === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+}
+
+// 按类型筛选操作
+function filterByType(type) {
+    const rows = document.querySelectorAll('#operationsTable tbody tr');
+    
+    rows.forEach(row => {
+        if (type === 'all') {
+            row.style.display = '';
+        } else {
+            const rowType = row.getAttribute('data-type');
+            if (rowType === type) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+}
+
+// 页面加载完成后的初始化
+$(document).ready(function() {
+    // 可以添加其他初始化逻辑
+});
+</script>
+{{ end }}

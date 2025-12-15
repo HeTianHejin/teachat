@@ -169,27 +169,12 @@ POST /v1/tea/transfer/reject
 }
 ```
 
-## 测试环境
-
-### 测试页面
-访问 `http://localhost:端口/tea_account_test` 可以测试完整的功能。
-
-### 测试数据
-- 已为71个现有用户创建茶叶账户
-- 前5个用户账户有100.5克初始余额
-
 ## 部署说明
 
 ### 数据库更新
 ```sql
 -- 执行茶叶支付系统表创建
 psql -h localhost -U postgres -d teachat -f sql/tea_payment_system.sql
-```
-
-### 编译运行
-```bash
-go build -o teachat .
-./teachat
 ```
 
 ## 后续扩展建议

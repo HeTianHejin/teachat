@@ -1,0 +1,450 @@
+{{ define "content" }}
+
+{{/* 这是指定团队茶叶账户  */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+  <li class="active">
+      #{{ .Team.Id }}
+    团队茶叶账户</li>
+</ol>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h3>
+                    {{ .Team.Name }}
+                    <small>团队资产管理</small>
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 团队茶叶账户概览 -->
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        茶叶罐
+                        <span class="pull-right">
+                            状态: <span class="label {{ if eq (index .TeamAccountData 0).TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">
+                                {{ (index .TeamAccountData 0).StatusDisplay }}
+                            </span>
+                            {{ if (index .TeamAccountData 0).UserIsCoreMember }}
+                            <a href="/v1/team/manage?uuid={{ .Team.Uuid }}" class="btn btn-xs btn-default">
+                                <span class="glyphicon glyphicon-cog"></span> 管理
+                            </a>
+                            {{ end }}
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        {{ $teamData := index .TeamAccountData 0 }}
+                        <div class="col-md-4">
+                            <h4>当前余额: <strong>{{ $teamData.BalanceDisplay }}</strong></h4>
+                            <p class="text-muted">团队茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>待审批操作: <strong>{{ len $teamData.PendingOperations }}</strong></h4>
+                            <p class="text-muted">需要核心成员审批的操作</p>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="btn-group-vertical" role="group" style="width: 100%;">
+                                <a href="/v1/tea/team/transactions/page?team_id={{ $teamData.TeamId }}" class="btn btn-info">
+                                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                                    收支明细
+                                </a>
+                                <a href="/v1/tea/team/operations/history/page?team_id={{ $teamData.TeamId }}" class="btn btn-default">
+                                    <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
+                                    操作记录
+                                </a>
+                                {{ if $teamData.UserIsCoreMember }}
+                                <a href="/v1/tea/team/operations/pending/page?team_id={{ $teamData.TeamId }}" class="btn btn-warning">
+                                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                    待审批操作
+                                </a>
+                                {{ end }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ if (index .TeamAccountData 0).UserIsCoreMember }}
+    <!-- 核心成员操作区域 -->
+    <div class="row">
+        <!-- 转账管理 -->
+        <div class="col-md-6 col-md-offset-3">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
+                        团队转账
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <form id="transferForm">
+                        <div class="form-group">
+                            <label for="transferAmount">转账数量(克):</label>
+                            <input type="number" class="form-control" id="transferAmount" required min="0.001" step="0.001" placeholder="0.000">
+                            <small class="help-block">当前余额: {{ (index .TeamAccountData 0).BalanceDisplay }}</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="transferType">转账类型:</label>
+                            <select class="form-control" id="transferType" onchange="toggleTransferTarget()">
+                                <option value="team">转到其他团队</option>
+                                <option value="user">转到用户账户</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="targetTeamGroup">
+                            <label for="transferTargetTeam">目标团队ID:</label>
+                            <input type="number" class="form-control" id="transferTargetTeam" placeholder="团队ID">
+                        </div>
+                        <div class="form-group" id="targetUserGroup" style="display: none;">
+                            <label for="transferTargetUser">目标用户ID:</label>
+                            <input type="number" class="form-control" id="transferTargetUser" placeholder="用户ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="transferNotes">备注说明:</label>
+                            <textarea class="form-control" id="transferNotes" rows="2" placeholder="转账说明..."></textarea>
+                        </div>
+                        <button type="button" class="btn btn-info btn-block" onclick="submitOperation('transfer_out')">
+                            <span class="glyphicon glyphicon-send"></span> 发起转账操作
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+
+    <!-- 待审批操作列表 (仅核心成员可见) -->
+    {{ if (index .TeamAccountData 0).UserIsCoreMember }}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                        待审批操作
+                        <a href="/v1/tea/team/operations/pending/page?team_id={{ (index .TeamAccountData 0).TeamId }}" class="btn btn-xs btn-info pull-right">
+                            查看全部
+                        </a>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ $pendingOps := (index .TeamAccountData 0).PendingOperations }}
+                    {{ if $pendingOps }}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>操作类型</th>
+                                    <th>数量</th>
+                                    <th>操作人</th>
+                                    <th>目标</th>
+                                    <th>备注</th>
+                                    <th>过期时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range $pendingOps }}
+                                <tr>
+                                    <td>
+                                        {{ if eq .OperationType "deposit" }}
+                                        <span class="label label-success">存入</span>
+                                        {{ else if eq .OperationType "withdraw" }}
+                                        <span class="label label-warning">提取</span>
+                                        {{ else if eq .OperationType "transfer_out" }}
+                                        <span class="label label-info">转出</span>
+                                        {{ else if eq .OperationType "transfer_in" }}
+                                        <span class="label label-primary">转入</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>{{ printf "%.3f" .AmountGrams }}克</td>
+                                    <td>{{ .OperatorName }}</td>
+                                    <td>
+                                        {{ if .TargetTeamName }}
+                                        <span class="text-info">{{ .TargetTeamName }}</span>
+                                        {{ else if .TargetUserName }}
+                                        <span class="text-success">{{ .TargetUserName }}</span>
+                                        {{ else }}
+                                        -
+                                        {{ end }}
+                                    </td>
+                                    <td>{{ .Notes }}</td>
+                                    <td>{{ .ExpiresAt }}</td>
+                                    <td>
+                                        <button class="btn btn-xs btn-success" onclick="approveOperation('{{ .Uuid }}')">
+                                            <span class="glyphicon glyphicon-ok"></span> 批准
+                                        </button>
+                                        <button class="btn btn-xs btn-danger" onclick="rejectOperation('{{ .Uuid }}')">
+                                            <span class="glyphicon glyphicon-remove"></span> 拒绝
+                                        </button>
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ else }}
+                    <p class="text-muted">暂无待审批的操作</p>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+
+    <!-- 最近交易记录 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
+                        最近交易记录
+                        <a href="/v1/tea/team/transactions/page?team_id={{ (index .TeamAccountData 0).TeamId }}" class="btn btn-xs btn-info pull-right">
+                            查看全部
+                        </a>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ $recentTx := (index .TeamAccountData 0).RecentTransactions }}
+                    {{ if $recentTx }}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>类型</th>
+                                    <th>数量</th>
+                                    <th>余额变化</th>
+                                    <th>余额</th>
+                                    <th>描述</th>
+                                    <th>相关方</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range $recentTx }}
+                                <tr>
+                                    <td>{{ .CreatedAt }}</td>
+                                    <td>
+                                        {{ if eq .TransactionType "deposit" }}
+                                        <span class="label label-success">存入</span>
+                                        {{ else if eq .TransactionType "withdraw" }}
+                                        <span class="label label-warning">提取</span>
+                                        {{ else if eq .TransactionType "transfer_out" }}
+                                        <span class="label label-info">转出</span>
+                                        {{ else if eq .TransactionType "transfer_in" }}
+                                        <span class="label label-primary">转入</span>
+                                        {{ else if eq .TransactionType "system_grant" }}
+                                        <span class="label label-success">系统发放</span>
+                                        {{ else if eq .TransactionType "system_deduct" }}
+                                        <span class="label label-danger">系统扣除</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>{{ printf "%.3f" .AmountGrams }}克</td>
+                                    <td class="{{ if or (eq .TransactionType "deposit") (eq .TransactionType "transfer_in") (eq .TransactionType "system_grant") }}text-success{{ else }}text-danger{{ end }}">
+                                        {{ if or (eq .TransactionType "deposit") (eq .TransactionType "transfer_in") (eq .TransactionType "system_grant") }}
+                                        +{{ printf "%.3f" .AmountGrams }}
+                                        {{ else }}
+                                        -{{ printf "%.3f" .AmountGrams }}
+                                        {{ end }}克
+                                    </td>
+                                    <td>{{ printf "%.3f" .BalanceAfter }}克</td>
+                                    <td>{{ .Description }}</td>
+                                    <td>
+                                        {{ if .RelatedTeamName }}
+                                        <span class="text-info">团队: {{ .RelatedTeamName }}</span>
+                                        {{ else if .RelatedUserName }}
+                                        <span class="text-success">用户: {{ .RelatedUserName }}</span>
+                                        {{ else }}
+                                        -
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ else }}
+                    <p class="text-muted">暂无交易记录</p>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+     </div>
+</div>
+
+<script>
+const teamId = {{ (index .TeamAccountData 0).TeamId }};
+
+// 切换转账目标类型
+function toggleTransferTarget() {
+    const transferType = document.getElementById('transferType').value;
+    const targetTeamGroup = document.getElementById('targetTeamGroup');
+    const targetUserGroup = document.getElementById('targetUserGroup');
+    
+    if (transferType === 'team') {
+        targetTeamGroup.style.display = 'block';
+        targetUserGroup.style.display = 'none';
+    } else {
+        targetTeamGroup.style.display = 'none';
+        targetUserGroup.style.display = 'block';
+    }
+}
+
+// 提交操作请求
+function submitOperation(operationType) {
+    let operationData = {
+        operation_type: operationType,
+        amount_grams: 0,
+        notes: '',
+        expire_hours: 24,
+        target_team_id: null,
+        target_user_id: null
+    };
+    
+    if (operationType === 'transfer_out') {
+        operationData.amount_grams = parseFloat(document.getElementById('transferAmount').value);
+        operationData.notes = document.getElementById('transferNotes').value;
+        const transferType = document.getElementById('transferType').value;
+        if (transferType === 'team') {
+            const targetTeamId = document.getElementById('transferTargetTeam').value;
+            if (targetTeamId) {
+                operationData.target_team_id = parseInt(targetTeamId);
+            }
+        } else {
+            const targetUserId = document.getElementById('transferTargetUser').value;
+            if (targetUserId) {
+                operationData.target_user_id = parseInt(targetUserId);
+            }
+        }
+    }
+    
+    // 验证数据
+    if (!operationData.amount_grams || operationData.amount_grams <= 0) {
+        alert('请输入有效的操作数量');
+        return;
+    }
+    
+    // 检查是否向自由人团队转账（自由人团队ID为2）
+    if (operationType === 'transfer_out' && operationData.target_team_id === 2) {
+        alert('不能向自由人团队转账，自由人团队不支持茶叶资产');
+        return;
+    }
+    
+    // 发送操作请求
+    fetch('/v1/tea/team/operation/new?team_id=' + teamId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify(operationData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            if (data.data && data.data.status === 'approved') {
+                alert('操作已成功执行！');
+            } else {
+                alert('操作发起成功！等待其他核心成员审批。');
+            }
+            // 重置表单
+            if (operationType === 'transfer_out') {
+                document.getElementById('transferForm').reset();
+            }
+            // 可以选择刷新页面显示最新状态
+            window.location.reload();
+        } else {
+            alert('操作失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('操作请求失败，请重试');
+    });
+}
+
+// 批准操作
+function approveOperation(operationUuid) {
+    if (!confirm('确定要批准这个操作吗？')) {
+        return;
+    }
+    
+    fetch('/v1/tea/team/operation/approve', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            operation_uuid: operationUuid
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('操作已批准');
+            window.location.reload();
+        } else {
+            alert('批准失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('批准请求失败，请重试');
+    });
+}
+
+// 拒绝操作
+function rejectOperation(operationUuid) {
+    const reason = prompt('请输入拒绝原因:');
+    if (!reason) {
+        return;
+    }
+    
+    fetch('/v1/tea/team/operation/reject', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+        body: JSON.stringify({
+            operation_uuid: operationUuid,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('操作已拒绝');
+            window.location.reload();
+        } else {
+            alert('拒绝失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('拒绝请求失败，请重试');
+    });
+}
+
+// 页面加载完成后的初始化
+$(document).ready(function() {
+    // 初始化转账目标显示
+    toggleTransferTarget();
+});
+</script>
+{{ end }}
