@@ -151,7 +151,7 @@ func SearchTeamsByTag(tag string) ([]Team, error) {
               WHERE tags LIKE $1 AND deleted_at IS NULL 
               ORDER BY created_at DESC`
     
-    rows, err := db.Query(query, "%"+tag+"%")
+    rows, err := DB.Query(query, "%"+tag+"%")
     if err != nil {
         return nil, err
     }
@@ -179,7 +179,7 @@ func SearchGroupsByTag(tag string) ([]Group, error) {
               WHERE tags LIKE $1 AND deleted_at IS NULL 
               ORDER BY created_at DESC`
     
-    rows, err := db.Query(query, "%"+tag+"%")
+    rows, err := DB.Query(query, "%"+tag+"%")
     if err != nil {
         return nil, err
     }
@@ -206,7 +206,7 @@ func SearchGroupsByTag(tag string) ([]Group, error) {
 // UpdateTags 更新团队标签
 func (team *Team) UpdateTags() error {
     statement := `UPDATE teams SET tags = $1, updated_at = $2 WHERE id = $3`
-    stmt, err := db.Prepare(statement)
+    stmt, err := DB.Prepare(statement)
     if err != nil {
         return err
     }
@@ -218,7 +218,7 @@ func (team *Team) UpdateTags() error {
 // UpdateTags 更新集团标签
 func (group *Group) UpdateTags() error {
     statement := `UPDATE groups SET tags = $1, updated_at = $2 WHERE id = $3`
-    stmt, err := db.Prepare(statement)
+    stmt, err := DB.Prepare(statement)
     if err != nil {
         return err
     }

@@ -100,7 +100,7 @@ func GetTeamTeaAccountByTeamId(teamId int) (TeamTeaAccount, error) {
 	}
 
 	account := TeamTeaAccount{}
-	err := db.QueryRow("SELECT id, uuid, team_id, balance_grams, status, COALESCE(frozen_reason, '') as frozen_reason, created_at, updated_at FROM team_tea_accounts WHERE team_id = $1", teamId).
+	err := DB.QueryRow("SELECT id, uuid, team_id, balance_grams, status, COALESCE(frozen_reason, '') as frozen_reason, created_at, updated_at FROM team_tea_accounts WHERE team_id = $1", teamId).
 		Scan(&account.Id, &account.Uuid, &account.TeamId, &account.BalanceGrams, &account.Status, &account.FrozenReason, &account.CreatedAt, &account.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -114,7 +114,7 @@ func GetTeamTeaAccountByTeamId(teamId int) (TeamTeaAccount, error) {
 // Create 创建团队茶叶账户
 func (account *TeamTeaAccount) Create() error {
 	statement := "INSERT INTO team_tea_accounts (team_id, balance_grams, status) VALUES ($1, $2, $3) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func (account *TeamTeaAccount) Create() error {
 // UpdateStatus 更新账户状态
 func (account *TeamTeaAccount) UpdateStatus(status, reason string) error {
 	statement := "UPDATE team_tea_accounts SET status = $2, frozen_reason = $3, updated_at = $4 WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -154,7 +154,7 @@ func CreateTeamTeaOperation(teamId, operatorUserId int, operationType string, am
 	}
 
 	// 开始事务
-	tx, err := db.Begin()
+	tx, err := DB.Begin()
 	if err != nil {
 		return TeamTeaOperation{}, fmt.Errorf("开始事务失败: %v", err)
 	}
@@ -385,7 +385,7 @@ func executeTeamTeaOperationInTx(tx *sql.Tx, operation TeamTeaOperation, approve
 // ApproveTeamTeaOperation 审批团队茶叶操作
 func ApproveTeamTeaOperation(operationUuid string, approverUserId int) error {
 	// 开始事务
-	tx, err := db.Begin()
+	tx, err := DB.Begin()
 	if err != nil {
 		return fmt.Errorf("开始事务失败: %v", err)
 	}
@@ -551,7 +551,7 @@ func ApproveTeamTeaOperation(operationUuid string, approverUserId int) error {
 // RejectTeamTeaOperation 拒绝团队茶叶操作
 func RejectTeamTeaOperation(operationUuid string, approverUserId int, reason string) error {
 	// 开始事务
-	tx, err := db.Begin()
+	tx, err := DB.Begin()
 	if err != nil {
 		return fmt.Errorf("开始事务失败: %v", err)
 	}
@@ -588,7 +588,7 @@ func RejectTeamTeaOperation(operationUuid string, approverUserId int, reason str
 // GetTeamPendingOperations 获取团队待审批操作列表
 func GetTeamPendingOperations(teamId int, page, limit int) ([]TeamTeaOperation, error) {
 	offset := (page - 1) * limit
-	rows, err := db.Query(`SELECT id, uuid, team_id, operation_type, amount_grams, status, 
+	rows, err := DB.Query(`SELECT id, uuid, team_id, operation_type, amount_grams, status, 
 		operator_user_id, approver_user_id, target_team_id, target_user_id, notes, 
 		rejection_reason, expires_at, approved_at, created_at, updated_at 
 		FROM team_tea_operations WHERE team_id = $1 AND status = $2 AND expires_at > NOW() 
@@ -622,12 +622,12 @@ func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string)
 	var err error
 
 	if transactionType == "" {
-		rows, err = db.Query(`SELECT id, uuid, team_id, operation_id, transaction_type, 
+		rows, err = DB.Query(`SELECT id, uuid, team_id, operation_id, transaction_type, 
 			amount_grams, balance_before, balance_after, description, related_team_id, related_user_id, created_at 
 			FROM team_tea_transactions WHERE team_id = $1 
 			ORDER BY created_at DESC LIMIT $2 OFFSET $3`, teamId, limit, offset)
 	} else {
-		rows, err = db.Query(`SELECT id, uuid, team_id, operation_id, transaction_type, 
+		rows, err = DB.Query(`SELECT id, uuid, team_id, operation_id, transaction_type, 
 			amount_grams, balance_before, balance_after, description, related_team_id, related_user_id, created_at 
 			FROM team_tea_transactions WHERE team_id = $1 AND transaction_type = $2 
 			ORDER BY created_at DESC LIMIT $3 OFFSET $4`, teamId, transactionType, limit, offset)
@@ -656,7 +656,7 @@ func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string)
 // GetTeamTeaOperations 获取团队操作历史
 func GetTeamTeaOperations(teamId int, page, limit int) ([]TeamTeaOperation, error) {
 	offset := (page - 1) * limit
-	rows, err := db.Query(`SELECT id, uuid, team_id, operation_type, amount_grams, status, 
+	rows, err := DB.Query(`SELECT id, uuid, team_id, operation_type, amount_grams, status, 
 		operator_user_id, approver_user_id, target_team_id, target_user_id, notes, 
 		rejection_reason, expires_at, approved_at, created_at, updated_at 
 		FROM team_tea_operations WHERE team_id = $1 
@@ -690,7 +690,7 @@ func EnsureTeamTeaAccountExists(teamId int) error {
 	}
 
 	var exists bool
-	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM team_tea_accounts WHERE team_id = $1)", teamId).Scan(&exists)
+	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM team_tea_accounts WHERE team_id = $1)", teamId).Scan(&exists)
 	if err != nil {
 		return fmt.Errorf("检查团队账户存在性失败: %v", err)
 	}
@@ -716,7 +716,7 @@ func CheckTeamAccountFrozen(teamId int) (bool, string, error) {
 
 	var status string
 	var frozenReason sql.NullString
-	err := db.QueryRow("SELECT status, frozen_reason FROM team_tea_accounts WHERE team_id = $1", teamId).
+	err := DB.QueryRow("SELECT status, frozen_reason FROM team_tea_accounts WHERE team_id = $1", teamId).
 		Scan(&status, &frozenReason)
 	if err != nil {
 		return false, "", fmt.Errorf("查询团队账户状态失败: %v", err)
@@ -744,7 +744,7 @@ func CanUserManageTeamAccount(userId, teamId int) (bool, error) {
 // GetTeamTeaOperationByUuid 根据UUID获取团队茶叶操作
 func GetTeamTeaOperationByUuid(uuid string) (TeamTeaOperation, error) {
 	operation := TeamTeaOperation{}
-	err := db.QueryRow(`SELECT id, uuid, team_id, operation_type, amount_grams, status, 
+	err := DB.QueryRow(`SELECT id, uuid, team_id, operation_type, amount_grams, status, 
 		operator_user_id, approver_user_id, target_team_id, target_user_id, notes, 
 		rejection_reason, expires_at, approved_at, created_at, updated_at 
 		FROM team_tea_operations WHERE uuid = $1`, uuid).
@@ -764,7 +764,7 @@ func GetTeamTeaOperationByUuid(uuid string) (TeamTeaOperation, error) {
 // IsTeamMember 检查用户是否是团队成员
 func IsTeamMember(userId, teamId int) (bool, error) {
 	var count int
-	err := db.QueryRow(`
+	err := DB.QueryRow(`
 		SELECT COUNT(*) FROM team_members 
 		WHERE team_id = $1 AND user_id = $2 AND status = $3
 	`, teamId, userId, TeMemberStatusActive).Scan(&count)
@@ -791,7 +791,7 @@ func GetUserJoinedTeams(userId int) ([]Team, error) {
 		ORDER BY t.created_at DESC
 	`
 
-	rows, err := db.Query(query, userId, TeMemberStatusActive, TeamIdFreelancer)
+	rows, err := DB.Query(query, userId, TeMemberStatusActive, TeamIdFreelancer)
 	if err != nil {
 		return nil, fmt.Errorf("查询用户团队失败: %v", err)
 	}
