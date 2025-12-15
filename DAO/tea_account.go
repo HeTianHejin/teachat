@@ -41,7 +41,7 @@ type TeaAccount struct {
 	UserId       int
 	BalanceGrams float64 // 茶叶数量(克)
 	Status       string  // normal, frozen
-	FrozenReason string
+	FrozenReason *string
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
 }
@@ -52,6 +52,7 @@ type TeaTransfer struct {
 	Uuid            string
 	FromUserId      int
 	ToUserId        int
+	ToTeamId        int // 团队ID，为0时表示用户间转账
 	AmountGrams     float64
 	Status          string // pending, confirmed, rejected, expired
 	PaymentTime     *time.Time
@@ -80,7 +81,7 @@ type TeaTransaction struct {
 // GetTeaAccountByUserId 根据用户ID获取茶叶账户
 func GetTeaAccountByUserId(userId int) (TeaAccount, error) {
 	account := TeaAccount{}
-	err := db.QueryRow("SELECT id, uuid, user_id, balance_grams, status, frozen_reason, created_at, updated_at FROM tea_accounts WHERE user_id = $1", userId).
+	err := DB.QueryRow("SELECT id, uuid, user_id, balance_grams, status, frozen_reason, created_at, updated_at FROM tea_accounts WHERE user_id = $1", userId).
 		Scan(&account.Id, &account.Uuid, &account.UserId, &account.BalanceGrams, &account.Status, &account.FrozenReason, &account.CreatedAt, &account.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -94,7 +95,7 @@ func GetTeaAccountByUserId(userId int) (TeaAccount, error) {
 // Create 创建茶叶账户
 func (account *TeaAccount) Create() error {
 	statement := "INSERT INTO tea_accounts (user_id, balance_grams, status) VALUES ($1, $2, $3) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -110,7 +111,7 @@ func (account *TeaAccount) Create() error {
 // UpdateStatus 更新账户状态
 func (account *TeaAccount) UpdateStatus(status, reason string) error {
 	statement := "UPDATE tea_accounts SET status = $2, frozen_reason = $3, updated_at = $4 WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -122,14 +123,18 @@ func (account *TeaAccount) UpdateStatus(status, reason string) error {
 	}
 
 	account.Status = status
-	account.FrozenReason = reason
+	if reason != "" {
+		account.FrozenReason = &reason
+	} else {
+		account.FrozenReason = nil
+	}
 	return nil
 }
 
 // SystemAdjustBalance 系统调整余额
 func (account *TeaAccount) SystemAdjustBalance(amount float64, description string, adminUserId int) error {
 	// 开始事务
-	tx, err := db.Begin()
+	tx, err := DB.Begin()
 	if err != nil {
 		return fmt.Errorf("开始事务失败: %v", err)
 	}
@@ -190,7 +195,7 @@ func CreateTeaTransfer(fromUserId, toUserId int, amount float64, notes string, e
 	}
 
 	// 开始事务
-	tx, err := db.Begin()
+	tx, err := DB.Begin()
 	if err != nil {
 		return TeaTransfer{}, fmt.Errorf("开始事务失败: %v", err)
 	}
@@ -242,10 +247,87 @@ func CreateTeaTransfer(fromUserId, toUserId int, amount float64, notes string, e
 	return transfer, nil
 }
 
+// CreateTeaTransferToTeam 发起用户向团队的茶叶转账
+func CreateTeaTransferToTeam(fromUserId, toTeamId int, amount float64, notes string, expireHours int) (TeaTransfer, error) {
+	// 验证参数
+	if amount <= 0 {
+		return TeaTransfer{}, fmt.Errorf("转账金额必须大于0")
+	}
+
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return TeaTransfer{}, fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 检查转出账户余额
+	var fromBalance float64
+	err = tx.QueryRow("SELECT balance_grams, status FROM tea_accounts WHERE user_id = $1 FOR UPDATE", fromUserId).
+		Scan(&fromBalance, new(string))
+	if err != nil {
+		return TeaTransfer{}, fmt.Errorf("查询转出账户失败: %v", err)
+	}
+	if fromBalance < amount {
+		return TeaTransfer{}, fmt.Errorf("余额不足")
+	}
+
+	// 确保接收方团队账户存在
+	var toAccountId int
+	err = tx.QueryRow("SELECT id FROM team_tea_accounts WHERE team_id = $1", toTeamId).Scan(&toAccountId)
+	if err != nil {
+		return TeaTransfer{}, fmt.Errorf("接收方团队账户不存在: %v", err)
+	}
+
+	// 创建转账记录
+	transfer := TeaTransfer{
+		FromUserId:  fromUserId,
+		ToUserId:    0, // 团队转账时to_user_id为0，使用to_team_id
+		AmountGrams: amount,
+		Status:      TransferStatus_Pending,
+		Notes:       notes,
+		ExpiresAt:   time.Now().Add(time.Duration(expireHours) * time.Hour),
+		CreatedAt:   time.Now(),
+	}
+
+	err = tx.QueryRow(`INSERT INTO tea_transfers 
+		(from_user_id, to_user_id, amount_grams, status, notes, expires_at, to_team_id) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id, uuid`,
+		fromUserId, 0, amount, TransferStatus_Pending, notes, transfer.ExpiresAt, toTeamId).
+		Scan(&transfer.Id, &transfer.Uuid)
+	if err != nil {
+		return TeaTransfer{}, fmt.Errorf("创建转账记录失败: %v", err)
+	}
+
+	// 扣除转出账户余额
+	_, err = tx.Exec("UPDATE tea_accounts SET balance_grams = balance_grams - $1, updated_at = $2 WHERE user_id = $3",
+		amount, time.Now(), fromUserId)
+	if err != nil {
+		return TeaTransfer{}, fmt.Errorf("扣除转出账户余额失败: %v", err)
+	}
+
+	// 创建转出交易记录
+	_, err = tx.Exec(`INSERT INTO tea_transactions 
+		(user_id, amount_grams, balance_before, balance_after, transaction_type, description, related_team_id) 
+		SELECT $1, $2, balance_grams, balance_grams - $2, $3, $4, $5 FROM tea_accounts WHERE user_id = $1`,
+		fromUserId, amount, TransactionType_TransferOut, 
+		fmt.Sprintf("向团队转账: %s", notes), toTeamId)
+	if err != nil {
+		return TeaTransfer{}, fmt.Errorf("创建转出交易记录失败: %v", err)
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return TeaTransfer{}, fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	return transfer, nil
+}
+
 // ConfirmTeaTransfer 确认接收转账
 func ConfirmTeaTransfer(transferUuid string, toUserId int) error {
 	// 开始事务
-	tx, err := db.Begin()
+	tx, err := DB.Begin()
 	if err != nil {
 		return fmt.Errorf("开始事务失败: %v", err)
 	}
@@ -345,7 +427,7 @@ func ConfirmTeaTransfer(transferUuid string, toUserId int) error {
 // RejectTeaTransfer 拒绝转账
 func RejectTeaTransfer(transferUuid string, toUserId int, reason string) error {
 	// 开始事务
-	tx, err := db.Begin()
+	tx, err := DB.Begin()
 	if err != nil {
 		return fmt.Errorf("开始事务失败: %v", err)
 	}
@@ -385,7 +467,7 @@ func RejectTeaTransfer(transferUuid string, toUserId int, reason string) error {
 // GetPendingTransfers 获取用户待确认转账列表
 func GetPendingTransfers(userId int, page, limit int) ([]TeaTransfer, error) {
 	offset := (page - 1) * limit
-	rows, err := db.Query(`SELECT id, uuid, from_user_id, to_user_id, amount_grams, status, 
+	rows, err := DB.Query(`SELECT id, uuid, from_user_id, to_user_id, amount_grams, status, 
 		payment_time, notes, rejection_reason, expires_at, created_at, updated_at 
 		FROM tea_transfers WHERE to_user_id = $1 AND status = $2 AND expires_at > NOW() 
 		ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
@@ -417,12 +499,12 @@ func GetUserTransactions(userId int, page, limit int, transactionType string) ([
 	var err error
 
 	if transactionType == "" {
-		rows, err = db.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
+		rows, err = DB.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
 			amount_grams, balance_before, balance_after, description, related_user_id, created_at 
 			FROM tea_transactions WHERE user_id = $1 
 			ORDER BY created_at DESC LIMIT $2 OFFSET $3`, userId, limit, offset)
 	} else {
-		rows, err = db.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
+		rows, err = DB.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
 			amount_grams, balance_before, balance_after, description, related_user_id, created_at 
 			FROM tea_transactions WHERE user_id = $1 AND transaction_type = $2 
 			ORDER BY created_at DESC LIMIT $3 OFFSET $4`, userId, transactionType, limit, offset)
@@ -451,7 +533,7 @@ func GetUserTransactions(userId int, page, limit int, transactionType string) ([
 // GetTransferHistory 获取用户转账历史
 func GetTransferHistory(userId int, page, limit int) ([]TeaTransfer, error) {
 	offset := (page - 1) * limit
-	rows, err := db.Query(`SELECT id, uuid, from_user_id, to_user_id, amount_grams, status, 
+	rows, err := DB.Query(`SELECT id, uuid, from_user_id, to_user_id, amount_grams, status, 
 		payment_time, notes, rejection_reason, expires_at, created_at, updated_at 
 		FROM tea_transfers WHERE from_user_id = $1 OR to_user_id = $1 
 		ORDER BY created_at DESC LIMIT $2 OFFSET $3`, userId, limit, offset)
@@ -478,7 +560,7 @@ func GetTransferHistory(userId int, page, limit int) ([]TeaTransfer, error) {
 // EnsureTeaAccountExists 确保用户有茶叶账户
 func EnsureTeaAccountExists(userId int) error {
 	var exists bool
-	err := db.QueryRow("SELECT EXISTS(SELECT 1 FROM tea_accounts WHERE user_id = $1)", userId).Scan(&exists)
+	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM tea_accounts WHERE user_id = $1)", userId).Scan(&exists)
 	if err != nil {
 		return fmt.Errorf("检查账户存在性失败: %v", err)
 	}
@@ -499,7 +581,7 @@ func EnsureTeaAccountExists(userId int) error {
 func CheckAccountFrozen(userId int) (bool, string, error) {
 	var status string
 	var frozenReason sql.NullString
-	err := db.QueryRow("SELECT status, frozen_reason FROM tea_accounts WHERE user_id = $1", userId).
+	err := DB.QueryRow("SELECT status, frozen_reason FROM tea_accounts WHERE user_id = $1", userId).
 		Scan(&status, &frozenReason)
 	if err != nil {
 		return false, "", fmt.Errorf("查询账户状态失败: %v", err)

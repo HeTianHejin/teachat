@@ -17,7 +17,7 @@ type TeamTeaAccountResponse struct {
 	TeamName     string  `json:"team_name,omitempty"`
 	BalanceGrams float64 `json:"balance_grams"`
 	Status       string  `json:"status"`
-	FrozenReason string  `json:"frozen_reason,omitempty"`
+	FrozenReason *string `json:"frozen_reason,omitempty"`
 	CreatedAt    string  `json:"created_at"`
 }
 
@@ -839,10 +839,96 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取待审批操作
-	pendingOperations, _ := dao.GetTeamTeaOperations(team.Id, 0, 10)
+	pendingOperationsData, _ := dao.GetTeamPendingOperations(team.Id, 1, 10)
+	
+	// 增强待审批操作数据，添加相关团队和用户信息
+	type EnhancedPendingOperation struct {
+		dao.TeamTeaOperation
+		OperatorName   string
+		TargetTeamName string
+		TargetUserName string
+		TypeDisplay    string
+	}
+	
+	var pendingOperations []EnhancedPendingOperation
+	for _, op := range pendingOperationsData {
+		enhanced := EnhancedPendingOperation{
+			TeamTeaOperation: op,
+		}
+		
+		// 获取操作人信息
+		operatorUser, _ := dao.GetUser(op.OperatorUserId)
+		if operatorUser.Id > 0 {
+			enhanced.OperatorName = operatorUser.Name
+		}
+		
+		// 获取目标团队信息
+		if op.TargetTeamId != nil {
+			targetTeam, _ := dao.GetTeam(*op.TargetTeamId)
+			if targetTeam.Id > 0 {
+				enhanced.TargetTeamName = targetTeam.Name
+			}
+		}
+		
+		// 获取目标用户信息
+		if op.TargetUserId != nil {
+			targetUser, _ := dao.GetUser(*op.TargetUserId)
+			if targetUser.Id > 0 {
+				enhanced.TargetUserName = targetUser.Name
+			}
+		}
+		
+		// 添加操作类型显示
+		switch op.OperationType {
+		case dao.TeamOperationType_Deposit:
+			enhanced.TypeDisplay = "存入"
+		case dao.TeamOperationType_Withdraw:
+			enhanced.TypeDisplay = "提取"
+		case dao.TeamOperationType_TransferOut:
+			enhanced.TypeDisplay = "转出"
+		case dao.TeamOperationType_TransferIn:
+			enhanced.TypeDisplay = "转入"
+		default:
+			enhanced.TypeDisplay = "未知"
+		}
+		
+		pendingOperations = append(pendingOperations, enhanced)
+	}
 
 	// 获取最近交易
-	recentTransactions, _ := dao.GetTeamTeaTransactions(team.Id, 0, 10, "")
+	recentTransactionsData, _ := dao.GetTeamTeaTransactions(team.Id, 0, 10, "")
+	
+	// 增强交易数据，添加相关团队和用户信息
+	type EnhancedRecentTransaction struct {
+		dao.TeamTeaTransaction
+		RelatedTeamName string
+		RelatedUserName string
+	}
+	
+	var recentTransactions []EnhancedRecentTransaction
+	for _, tx := range recentTransactionsData {
+		enhanced := EnhancedRecentTransaction{
+			TeamTeaTransaction: tx,
+		}
+		
+		// 获取相关团队信息
+		if tx.RelatedTeamId != nil {
+			relatedTeam, _ := dao.GetTeam(*tx.RelatedTeamId)
+			if relatedTeam.Id > 0 {
+				enhanced.RelatedTeamName = relatedTeam.Name
+			}
+		}
+		
+		// 获取相关用户信息
+		if tx.RelatedUserId != nil {
+			relatedUser, _ := dao.GetUser(*tx.RelatedUserId)
+			if relatedUser.Id > 0 {
+				enhanced.RelatedUserName = relatedUser.Name
+			}
+		}
+		
+		recentTransactions = append(recentTransactions, enhanced)
+	}
 
 	// 检查用户权限
 	isCoreMember, err := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
@@ -1406,10 +1492,13 @@ func TeamOperationsHistoryGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // getTeamAccountStatusDisplay 获取团队账户状态显示
-func getTeamAccountStatusDisplay(status, frozenReason string) string {
+func getTeamAccountStatusDisplay(status string, frozenReason *string) string {
 	switch status {
 	case dao.TeamTeaAccountStatus_Frozen:
-		return "已冻结 (" + frozenReason + ")"
+		if frozenReason != nil {
+			return "已冻结 (" + *frozenReason + ")"
+		}
+		return "已冻结"
 	default:
 		return "正常"
 	}

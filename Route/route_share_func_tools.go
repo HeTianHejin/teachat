@@ -62,6 +62,7 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 		"trim": func(s string) string {
 			return strings.TrimSpace(s)
 		},
+		"FormatFloat": util.FormatFloat,
 	})
 
 	// 手动解析模板并处理错误

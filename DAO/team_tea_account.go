@@ -45,7 +45,7 @@ type TeamTeaAccount struct {
 	TeamId       int
 	BalanceGrams float64 // 茶叶数量(克)
 	Status       string  // normal, frozen
-	FrozenReason string
+	FrozenReason *string
 	CreatedAt    time.Time
 	UpdatedAt    *time.Time
 }
@@ -90,17 +90,18 @@ type TeamTeaTransaction struct {
 func GetTeamTeaAccountByTeamId(teamId int) (TeamTeaAccount, error) {
 	// 自由人团队没有茶叶资产，返回特殊的冻结账户
 	if teamId == TeamIdFreelancer {
+		reason := "自由人团队不支持茶叶资产"
 		account := TeamTeaAccount{
 			TeamId:       TeamIdFreelancer,
 			BalanceGrams: 0.0,
 			Status:       TeamTeaAccountStatus_Frozen,
-			FrozenReason: "自由人团队不支持茶叶资产",
+			FrozenReason: &reason,
 		}
 		return account, nil
 	}
 
 	account := TeamTeaAccount{}
-	err := DB.QueryRow("SELECT id, uuid, team_id, balance_grams, status, COALESCE(frozen_reason, '') as frozen_reason, created_at, updated_at FROM team_tea_accounts WHERE team_id = $1", teamId).
+	err := DB.QueryRow("SELECT id, uuid, team_id, balance_grams, status, frozen_reason, created_at, updated_at FROM team_tea_accounts WHERE team_id = $1", teamId).
 		Scan(&account.Id, &account.Uuid, &account.TeamId, &account.BalanceGrams, &account.Status, &account.FrozenReason, &account.CreatedAt, &account.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -142,7 +143,11 @@ func (account *TeamTeaAccount) UpdateStatus(status, reason string) error {
 	}
 
 	account.Status = status
-	account.FrozenReason = reason
+	if reason != "" {
+		account.FrozenReason = &reason
+	} else {
+		account.FrozenReason = nil
+	}
 	return nil
 }
 
@@ -345,7 +350,7 @@ func executeTeamTeaOperationInTx(tx *sql.Tx, operation TeamTeaOperation, approve
 		_, err = tx.Exec(`INSERT INTO tea_transactions 
 			(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-			*operation.TargetUserId, &operation.Uuid, TransactionType_TransferIn, operation.AmountGrams,
+			*operation.TargetUserId, nil, TransactionType_TransferIn, operation.AmountGrams,
 			userBalance, userNewBalance, "团队转账转入", nil)
 		if err != nil {
 			return fmt.Errorf("记录用户交易流水失败: %v", err)
@@ -498,7 +503,7 @@ func ApproveTeamTeaOperation(operationUuid string, approverUserId int) error {
 		_, err = tx.Exec(`INSERT INTO tea_transactions 
 			(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-			*operation.TargetUserId, &operation.Uuid, TransactionType_TransferIn, operation.AmountGrams,
+			*operation.TargetUserId, nil, TransactionType_TransferIn, operation.AmountGrams,
 			userBalance, userNewBalance, "团队转账转入", nil)
 		if err != nil {
 			return fmt.Errorf("记录用户交易流水失败: %v", err)

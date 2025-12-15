@@ -309,6 +309,39 @@ func main() {
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
 
+	// 茶叶账户系统路由
+	mux.HandleFunc("/v1/tea/account", route.GetTeaAccount)
+	mux.HandleFunc("/v1/tea/account/freeze", route.FreezeTeaAccount)
+	mux.HandleFunc("/v1/tea/account/unfreeze", route.UnfreezeTeaAccount)
+
+	mux.HandleFunc("/v1/tea/transfer/new", route.CreateTeaTransfer)
+	mux.HandleFunc("/v1/tea/transfer/confirm", route.ConfirmTeaTransfer)
+	mux.HandleFunc("/v1/tea/transfer/reject", route.RejectTeaTransfer)
+	mux.HandleFunc("/v1/tea/transfers/pending", route.GetPendingTransfers)
+	mux.HandleFunc("/v1/tea/transfers/pending/page", route.HandlePendingTransfers) // 待确认转账页面路由
+	mux.HandleFunc("/v1/tea/transfers/history", route.GetTransferHistory)
+	mux.HandleFunc("/v1/tea/transfers/history/page", route.HandleTransferHistory) // 转账历史页面路由
+	mux.HandleFunc("/v1/tea/transactions", route.GetUserTransactions)
+	mux.HandleFunc("/v1/tea/transactions/page", route.HandleUserTransactions) // 个人交易流水页面路由
+
+	// 团队茶叶账户系统路由
+	mux.HandleFunc("/v1/tea/team/account", route.GetTeamTeaAccount)
+	mux.HandleFunc("/v1/tea/team/operation/new", route.CreateTeamTeaOperation)
+	mux.HandleFunc("/v1/tea/team/operation/approve", route.ApproveTeamTeaOperation)
+	mux.HandleFunc("/v1/tea/team/operation/reject", route.RejectTeamTeaOperation)
+	mux.HandleFunc("/v1/tea/team/operations/pending", route.GetTeamPendingOperations)
+	mux.HandleFunc("/v1/tea/team/operations/pending/page", route.HandleTeamPendingOperations) // 团队待审批操作页面路由
+	mux.HandleFunc("/v1/tea/team/operations/history", route.GetTeamTeaOperations)
+	mux.HandleFunc("/v1/tea/team/operations/history/page", route.HandleTeamTeaOperations) // 团队操作记录页面路由
+	mux.HandleFunc("/v1/tea/team/transactions", route.GetTeamTeaTransactions)
+	mux.HandleFunc("/v1/tea/team/transactions/page", route.HandleTeamTeaTransactions) // 团队交易流水页面路由
+	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeamTeaAccount)
+	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeamTeaAccount)
+	mux.HandleFunc("/v1/team/tea/account", route.HandleTeamTeaAccount) // 团队茶叶账户页面路由
+
+	// 写字台路由
+	mux.HandleFunc("/v1/desk", route.HandleDesk)
+
 	// define in help.go 帮助 文档 信息
 	mux.HandleFunc("/v1/help/faq", route.FAQ)
 	mux.HandleFunc("/v1/help/doc", route.Doc)

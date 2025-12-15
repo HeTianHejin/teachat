@@ -32,7 +32,7 @@
 魔法：活动所需的思考能力；
 风险：活动可能遇到的作业风险；
 隐患：活动环境存在的安全隐患；
-手艺：解决问题的技艺方法，包含约茶、看看、脑火、建议、物资、手艺六个解题步骤；
+手艺：解决问题的技艺方法，包含约茶、看看、脑火、建议、物资、动手六个解题步骤，手艺的过程记录，可以实现横向比较，优胜竞争可望促进技术事业发展。
 
 ### 是非特点
 1、观点式发言，立场式回复。发贴者在发布新贴时，首先需要选择一个标题前缀：我觉得（ithink）/出主意（idea），这将提示用户要明确这是一个必须以断言开场展开讨论的议程。对应地，跟帖者在回复时，首先必须表明自己的立场是支持或者反对，没有模糊立场选项；  
@@ -54,12 +54,13 @@
 ## 项目目录
 *使用 golang，postgreSQL，bootstrap 3。  
 *目录结构简要说明：
+main.go 主程序入口文件，包含main()函数，初始化配置文件，路由注册，启动web服务等；
 public文件夹存放静态资源文件（css/js/image/help等）；  
 templates文件夹存放*.go.html模版文件;  
-DAO文件夹存放数据库连接属性；定义所需的原始数据结构type * struct，分类属性定义声明const，相关的CURD方法，模版填充需要包装数据结构（TemplateData/bean）声明在template_struct_*； 
-Route文件夹存放路由处理函数，输出最终正式页面generateHTML方法，route_share_func_*存放共享的从数据库获取包装数据方法（fetch*Bean）/辅助函数；  
+DAO文件夹（package dao）存放数据库连接属性；定义所需的原始数据结构type * struct，分类属性定义声明const，相关的CURD方法，模版填充需要包装数据结构（TemplateData/bean）声明在template_struct_*； 
+Route文件夹（package route）存放路由处理函数，输出最终正式页面generateHTML方法，route_share_func_*存放共享的从数据库获取包装数据方法（fetch*Bean）/辅助函数；  
 sql文件夹存放建表语句schema.sql，预填充数据seed_data.sql文件。  
-util文件夹存放一般的工具函数；
+util（package util）文件夹存放一般的工具函数；
 
 ## 本地运行需要做的 
 
