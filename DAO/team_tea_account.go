@@ -38,6 +38,12 @@ const (
 	TeamTransactionType_SystemDeduct = "system_deduct"
 )
 
+// 流通对象类型常量
+const (
+	TransactionTargetType_User = "u" // 个人
+	TransactionTargetType_Team = "t" // 团队
+)
+
 // 团队茶叶账户结构体
 type TeamTeaAccount struct {
 	Id           int
@@ -83,6 +89,7 @@ type TeamTeaTransaction struct {
 	Description     string
 	RelatedTeamId   *int
 	RelatedUserId   *int
+	TargetType      string // 流通对象类型: "u"-个人, "t"-团队
 	CreatedAt       time.Time
 }
 
@@ -315,10 +322,10 @@ func executeTeamTeaOperationInTx(tx *sql.Tx, operation TeamTeaOperation, approve
 
 		// 记录目标团队交易流水
 		_, err = tx.Exec(`INSERT INTO team_tea_transactions 
-			(team_id, operation_id, transaction_type, amount_grams, balance_before, balance_after, description, related_team_id, related_user_id) 
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			(team_id, operation_id, transaction_type, amount_grams, balance_before, balance_after, description, related_team_id, related_user_id, target_type) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			*operation.TargetTeamId, &operation.Uuid, TeamTransactionType_TransferIn, operation.AmountGrams,
-			targetBalance, targetNewBalance, "团队转账转入", &operation.TeamId, &approverUserId)
+			targetBalance, targetNewBalance, "团队转账转入", &operation.TeamId, &approverUserId, TransactionTargetType_Team)
 		if err != nil {
 			return fmt.Errorf("记录目标团队交易流水失败: %v", err)
 		}
@@ -348,10 +355,10 @@ func executeTeamTeaOperationInTx(tx *sql.Tx, operation TeamTeaOperation, approve
 
 		// 记录用户交易流水
 		_, err = tx.Exec(`INSERT INTO tea_transactions 
-			(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id, target_type) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 			*operation.TargetUserId, nil, TransactionType_TransferIn, operation.AmountGrams,
-			userBalance, userNewBalance, "团队转账转入", nil)
+			userBalance, userNewBalance, "团队转账转入", nil, TransactionTargetType_User)
 		if err != nil {
 			return fmt.Errorf("记录用户交易流水失败: %v", err)
 		}
@@ -366,20 +373,28 @@ func executeTeamTeaOperationInTx(tx *sql.Tx, operation TeamTeaOperation, approve
 
 	// 记录交易流水
 	description := "茶叶存入"
+	var targetType string
 	switch operation.OperationType {
 	case TeamOperationType_Withdraw:
 		description = "茶叶提取"
+		targetType = TransactionTargetType_User // 提取到个人用户
 	case TeamOperationType_TransferOut:
 		description = "茶叶转出"
+		if operation.TargetTeamId != nil {
+			targetType = TransactionTargetType_Team // 转给团队
+		} else if operation.TargetUserId != nil {
+			targetType = TransactionTargetType_User // 转给个人用户
+		}
 	case TeamOperationType_TransferIn:
 		description = "茶叶转入"
+		targetType = TransactionTargetType_Team // 从团队转入
 	}
 
 	_, err = tx.Exec(`INSERT INTO team_tea_transactions 
-		(team_id, operation_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		(team_id, operation_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id, target_type) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		operation.TeamId, &operation.Uuid, transactionType, operation.AmountGrams,
-		currentBalance, newBalance, description, &approverUserId)
+		currentBalance, newBalance, description, &approverUserId, targetType)
 	if err != nil {
 		return fmt.Errorf("记录交易流水失败: %v", err)
 	}
@@ -399,10 +414,10 @@ func ApproveTeamTeaOperation(operationUuid string, approverUserId int) error {
 	// 获取操作信息
 	var operation TeamTeaOperation
 	err = tx.QueryRow(`SELECT id, uuid, team_id, operation_type, amount_grams, status, expires_at, 
-		target_team_id, target_user_id FROM team_tea_operations WHERE uuid = $1 FOR UPDATE`, operationUuid).
+		target_team_id, target_user_id, operator_user_id FROM team_tea_operations WHERE uuid = $1 FOR UPDATE`, operationUuid).
 		Scan(&operation.Id, &operation.Uuid, &operation.TeamId, &operation.OperationType,
 			&operation.AmountGrams, &operation.Status, &operation.ExpiresAt,
-			&operation.TargetTeamId, &operation.TargetUserId)
+			&operation.TargetTeamId, &operation.TargetUserId, &operation.OperatorUserId)
 	if err != nil {
 		return fmt.Errorf("操作记录不存在: %v", err)
 	}
@@ -410,6 +425,11 @@ func ApproveTeamTeaOperation(operationUuid string, approverUserId int) error {
 	// 验证状态
 	if operation.Status != TeamOperationStatus_Pending {
 		return fmt.Errorf("操作状态异常")
+	}
+
+	// 检查操作人和审批人不能是同一人
+	if operation.OperatorUserId == approverUserId {
+		return fmt.Errorf("操作人不能同时担任审批人")
 	}
 	if time.Now().After(operation.ExpiresAt) {
 		// 操作已过期，更新状态
@@ -468,10 +488,10 @@ func ApproveTeamTeaOperation(operationUuid string, approverUserId int) error {
 
 		// 记录目标团队交易流水
 		_, err = tx.Exec(`INSERT INTO team_tea_transactions 
-			(team_id, operation_id, transaction_type, amount_grams, balance_before, balance_after, description, related_team_id, related_user_id) 
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+			(team_id, operation_id, transaction_type, amount_grams, balance_before, balance_after, description, related_team_id, related_user_id, target_type) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
 			*operation.TargetTeamId, &operation.Uuid, TeamTransactionType_TransferIn, operation.AmountGrams,
-			targetBalance, targetNewBalance, "团队转账转入", &operation.TeamId, &approverUserId)
+			targetBalance, targetNewBalance, "团队转账转入", &operation.TeamId, &approverUserId, TransactionTargetType_Team)
 		if err != nil {
 			return fmt.Errorf("记录目标团队交易流水失败: %v", err)
 		}
@@ -501,10 +521,10 @@ func ApproveTeamTeaOperation(operationUuid string, approverUserId int) error {
 
 		// 记录用户交易流水
 		_, err = tx.Exec(`INSERT INTO tea_transactions 
-			(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+			(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id, target_type) 
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 			*operation.TargetUserId, nil, TransactionType_TransferIn, operation.AmountGrams,
-			userBalance, userNewBalance, "团队转账转入", nil)
+			userBalance, userNewBalance, "团队转账转入", nil, TransactionTargetType_User)
 		if err != nil {
 			return fmt.Errorf("记录用户交易流水失败: %v", err)
 		}
@@ -527,20 +547,28 @@ func ApproveTeamTeaOperation(operationUuid string, approverUserId int) error {
 
 	// 记录交易流水
 	description := "茶叶存入"
+	var targetType string
 	switch operation.OperationType {
 	case TeamOperationType_Withdraw:
 		description = "茶叶提取"
+		targetType = TransactionTargetType_User // 提取到个人用户
 	case TeamOperationType_TransferOut:
 		description = "茶叶转出"
+		if operation.TargetTeamId != nil {
+			targetType = TransactionTargetType_Team // 转给团队
+		} else if operation.TargetUserId != nil {
+			targetType = TransactionTargetType_User // 转给个人用户
+		}
 	case TeamOperationType_TransferIn:
 		description = "茶叶转入"
+		targetType = TransactionTargetType_Team // 从团队转入
 	}
 
 	_, err = tx.Exec(`INSERT INTO team_tea_transactions 
-		(team_id, operation_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		(team_id, operation_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id, target_type) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		operation.TeamId, &operation.Uuid, transactionType, operation.AmountGrams,
-		currentBalance, newBalance, description, &approverUserId)
+		currentBalance, newBalance, description, &approverUserId, targetType)
 	if err != nil {
 		return fmt.Errorf("记录交易流水失败: %v", err)
 	}
@@ -564,8 +592,8 @@ func RejectTeamTeaOperation(operationUuid string, approverUserId int, reason str
 
 	// 获取操作信息
 	var operation TeamTeaOperation
-	err = tx.QueryRow("SELECT id, status FROM team_tea_operations WHERE uuid = $1 FOR UPDATE", operationUuid).
-		Scan(&operation.Id, &operation.Status)
+	err = tx.QueryRow("SELECT id, status, operator_user_id FROM team_tea_operations WHERE uuid = $1 FOR UPDATE", operationUuid).
+		Scan(&operation.Id, &operation.Status, &operation.OperatorUserId)
 	if err != nil {
 		return fmt.Errorf("操作记录不存在: %v", err)
 	}
@@ -573,6 +601,11 @@ func RejectTeamTeaOperation(operationUuid string, approverUserId int, reason str
 	// 验证状态
 	if operation.Status != TeamOperationStatus_Pending {
 		return fmt.Errorf("操作状态异常")
+	}
+
+	// 检查操作人和审批人不能是同一人
+	if operation.OperatorUserId == approverUserId {
+		return fmt.Errorf("操作人不能同时担任审批人")
 	}
 
 	// 更新操作状态
@@ -628,12 +661,12 @@ func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string)
 
 	if transactionType == "" {
 		rows, err = DB.Query(`SELECT id, uuid, team_id, operation_id, transaction_type, 
-			amount_grams, balance_before, balance_after, description, related_team_id, related_user_id, created_at 
+			amount_grams, balance_before, balance_after, description, related_team_id, related_user_id, target_type, created_at 
 			FROM team_tea_transactions WHERE team_id = $1 
 			ORDER BY created_at DESC LIMIT $2 OFFSET $3`, teamId, limit, offset)
 	} else {
 		rows, err = DB.Query(`SELECT id, uuid, team_id, operation_id, transaction_type, 
-			amount_grams, balance_before, balance_after, description, related_team_id, related_user_id, created_at 
+			amount_grams, balance_before, balance_after, description, related_team_id, related_user_id, target_type, created_at 
 			FROM team_tea_transactions WHERE team_id = $1 AND transaction_type = $2 
 			ORDER BY created_at DESC LIMIT $3 OFFSET $4`, teamId, transactionType, limit, offset)
 	}
@@ -648,7 +681,7 @@ func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string)
 		var transaction TeamTeaTransaction
 		err = rows.Scan(&transaction.Id, &transaction.Uuid, &transaction.TeamId, &transaction.OperationId,
 			&transaction.TransactionType, &transaction.AmountGrams, &transaction.BalanceBefore,
-			&transaction.BalanceAfter, &transaction.Description, &transaction.RelatedTeamId, &transaction.RelatedUserId, &transaction.CreatedAt)
+			&transaction.BalanceAfter, &transaction.Description, &transaction.RelatedTeamId, &transaction.RelatedUserId, &transaction.TargetType, &transaction.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("扫描交易流水失败: %v", err)
 		}

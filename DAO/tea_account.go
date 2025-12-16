@@ -168,9 +168,9 @@ func (account *TeaAccount) SystemAdjustBalance(amount float64, description strin
 	}
 
 	_, err = tx.Exec(`INSERT INTO tea_transactions 
-		(user_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		account.UserId, transactionType, amount, currentBalance, newBalance, description, &adminUserId)
+		(user_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id, target_type) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		account.UserId, transactionType, amount, currentBalance, newBalance, description, &adminUserId, TransactionTargetType_User)
 	if err != nil {
 		return fmt.Errorf("记录交易流水失败: %v", err)
 	}
@@ -308,10 +308,10 @@ func CreateTeaTransferToTeam(fromUserId, toTeamId int, amount float64, notes str
 
 	// 创建转出交易记录
 	_, err = tx.Exec(`INSERT INTO tea_transactions 
-		(user_id, amount_grams, balance_before, balance_after, transaction_type, description, related_team_id) 
-		SELECT $1, $2, balance_grams, balance_grams - $2, $3, $4, $5 FROM tea_accounts WHERE user_id = $1`,
+		(user_id, amount_grams, balance_before, balance_after, transaction_type, description, related_team_id, target_type) 
+		SELECT $1, $2, balance_grams, balance_grams - $2, $3, $4, $5, $6 FROM tea_accounts WHERE user_id = $1`,
 		fromUserId, amount, TransactionType_TransferOut, 
-		fmt.Sprintf("向团队转账: %s", notes), toTeamId)
+		fmt.Sprintf("向团队转账: %s", notes), toTeamId, TransactionTargetType_Team)
 	if err != nil {
 		return TeaTransfer{}, fmt.Errorf("创建转出交易记录失败: %v", err)
 	}
@@ -398,20 +398,20 @@ func ConfirmTeaTransfer(transferUuid string, toUserId int) error {
 
 	// 记录交易流水：转出方
 	_, err = tx.Exec(`INSERT INTO tea_transactions 
-		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id, target_type) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		fromUserId, &transfer.Uuid, TransactionType_TransferOut, transfer.AmountGrams,
-		fromBalance, fromBalance-transfer.AmountGrams, "转账转出", &toUserId)
+		fromBalance, fromBalance-transfer.AmountGrams, "转账转出", &toUserId, TransactionTargetType_User)
 	if err != nil {
 		return fmt.Errorf("记录转出交易流水失败: %v", err)
 	}
 
 	// 记录交易流水：接收方
 	_, err = tx.Exec(`INSERT INTO tea_transactions 
-		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, related_user_id, target_type) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		toUserId, &transfer.Uuid, TransactionType_TransferIn, transfer.AmountGrams,
-		toBalance, toBalance+transfer.AmountGrams, "转账转入", &fromUserId)
+		toBalance, toBalance+transfer.AmountGrams, "转账转入", &fromUserId, TransactionTargetType_User)
 	if err != nil {
 		return fmt.Errorf("记录接收交易流水失败: %v", err)
 	}

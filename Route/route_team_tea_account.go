@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"time"
 	dao "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // 团队茶叶账户相关响应结构体
@@ -47,7 +47,7 @@ type TeamTeaOperationResponse struct {
 	TargetUserId    *int    `json:"target_user_id,omitempty"`
 	TargetUserName  string  `json:"target_user_name,omitempty"`
 	Notes           string  `json:"notes"`
-	RejectionReason *string  `json:"rejection_reason,omitempty"`
+	RejectionReason *string `json:"rejection_reason,omitempty"`
 	ExpiresAt       string  `json:"expires_at"`
 	ApprovedAt      *string `json:"approved_at,omitempty"`
 	CreatedAt       string  `json:"created_at"`
@@ -67,6 +67,8 @@ type TeamTeaTransactionResponse struct {
 	RelatedTeamName string  `json:"related_team_name,omitempty"`
 	RelatedUserId   *int    `json:"related_user_id,omitempty"`
 	RelatedUserName string  `json:"related_user_name,omitempty"`
+	TargetType      string  `json:"target_type"`      // 流通对象类型: u-个人, t-团队
+	TargetTypeText  string  `json:"target_type_text"` // 流通对象类型显示文本
 	CreatedAt       string  `json:"created_at"`
 }
 
@@ -648,7 +650,18 @@ func GetTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
 			Description:     tx.Description,
 			RelatedTeamId:   tx.RelatedTeamId,
 			RelatedUserId:   tx.RelatedUserId,
+			TargetType:      tx.TargetType,
 			CreatedAt:       tx.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+
+		// 设置流通对象类型显示文本
+		switch tx.TargetType {
+		case dao.TransactionTargetType_User:
+			response.TargetTypeText = "个人"
+		case dao.TransactionTargetType_Team:
+			response.TargetTypeText = "团队"
+		default:
+			response.TargetTypeText = "未知"
 		}
 
 		// 获取相关团队信息
@@ -840,7 +853,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 
 	// 获取待审批操作
 	pendingOperationsData, _ := dao.GetTeamPendingOperations(team.Id, 1, 10)
-	
+
 	// 增强待审批操作数据，添加相关团队和用户信息
 	type EnhancedPendingOperation struct {
 		dao.TeamTeaOperation
@@ -849,19 +862,19 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		TargetUserName string
 		TypeDisplay    string
 	}
-	
+
 	var pendingOperations []EnhancedPendingOperation
 	for _, op := range pendingOperationsData {
 		enhanced := EnhancedPendingOperation{
 			TeamTeaOperation: op,
 		}
-		
+
 		// 获取操作人信息
 		operatorUser, _ := dao.GetUser(op.OperatorUserId)
 		if operatorUser.Id > 0 {
 			enhanced.OperatorName = operatorUser.Name
 		}
-		
+
 		// 获取目标团队信息
 		if op.TargetTeamId != nil {
 			targetTeam, _ := dao.GetTeam(*op.TargetTeamId)
@@ -869,7 +882,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.TargetTeamName = targetTeam.Name
 			}
 		}
-		
+
 		// 获取目标用户信息
 		if op.TargetUserId != nil {
 			targetUser, _ := dao.GetUser(*op.TargetUserId)
@@ -877,7 +890,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.TargetUserName = targetUser.Name
 			}
 		}
-		
+
 		// 添加操作类型显示
 		switch op.OperationType {
 		case dao.TeamOperationType_Deposit:
@@ -891,26 +904,37 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		default:
 			enhanced.TypeDisplay = "未知"
 		}
-		
+
 		pendingOperations = append(pendingOperations, enhanced)
 	}
 
 	// 获取最近交易
 	recentTransactionsData, _ := dao.GetTeamTeaTransactions(team.Id, 0, 10, "")
-	
+
 	// 增强交易数据，添加相关团队和用户信息
 	type EnhancedRecentTransaction struct {
 		dao.TeamTeaTransaction
 		RelatedTeamName string
 		RelatedUserName string
+		TargetTypeText  string
 	}
-	
+
 	var recentTransactions []EnhancedRecentTransaction
 	for _, tx := range recentTransactionsData {
 		enhanced := EnhancedRecentTransaction{
 			TeamTeaTransaction: tx,
 		}
-		
+
+		// 设置流通对象类型显示文本
+		switch tx.TargetType {
+		case dao.TransactionTargetType_User:
+			enhanced.TargetTypeText = "个人"
+		case dao.TransactionTargetType_Team:
+			enhanced.TargetTypeText = "团队"
+		default:
+			enhanced.TargetTypeText = "未知"
+		}
+
 		// 获取相关团队信息
 		if tx.RelatedTeamId != nil {
 			relatedTeam, _ := dao.GetTeam(*tx.RelatedTeamId)
@@ -918,7 +942,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.RelatedTeamName = relatedTeam.Name
 			}
 		}
-		
+
 		// 获取相关用户信息
 		if tx.RelatedUserId != nil {
 			relatedUser, _ := dao.GetUser(*tx.RelatedUserId)
@@ -926,7 +950,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.RelatedUserName = relatedUser.Name
 			}
 		}
-		
+
 		recentTransactions = append(recentTransactions, enhanced)
 	}
 
@@ -1085,11 +1109,12 @@ func TeamTeaTransactionsGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-// 增强交易数据，添加相关团队和用户信息
+	// 增强交易数据，添加相关团队和用户信息
 	type EnhancedTransaction struct {
 		dao.TeamTeaTransaction
 		RelatedTeamName string
 		RelatedUserName string
+		TargetTypeText  string
 	}
 
 	var enhancedTransactions []EnhancedTransaction
@@ -1097,7 +1122,17 @@ func TeamTeaTransactionsGet(w http.ResponseWriter, r *http.Request) {
 		enhanced := EnhancedTransaction{
 			TeamTeaTransaction: tx,
 		}
-		
+
+		// 设置流通对象类型显示文本
+		switch tx.TargetType {
+		case dao.TransactionTargetType_User:
+			enhanced.TargetTypeText = "个人"
+		case dao.TransactionTargetType_Team:
+			enhanced.TargetTypeText = "团队"
+		default:
+			enhanced.TargetTypeText = "未知"
+		}
+
 		// 获取相关团队信息
 		if tx.RelatedTeamId != nil {
 			relatedTeam, _ := dao.GetTeam(*tx.RelatedTeamId)
@@ -1105,7 +1140,7 @@ func TeamTeaTransactionsGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.RelatedTeamName = relatedTeam.Name
 			}
 		}
-		
+
 		// 获取相关用户信息
 		if tx.RelatedUserId != nil {
 			relatedUser, _ := dao.GetUser(*tx.RelatedUserId)
@@ -1113,22 +1148,22 @@ func TeamTeaTransactionsGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.RelatedUserName = relatedUser.Name
 			}
 		}
-		
+
 		enhancedTransactions = append(enhancedTransactions, enhanced)
 	}
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser        dao.User
-		Team            *dao.Team
-		TeamAccount     dao.TeamTeaAccount
-		Transactions    []EnhancedTransaction
+		SessUser         dao.User
+		Team             *dao.Team
+		TeamAccount      dao.TeamTeaAccount
+		Transactions     []EnhancedTransaction
 		UserIsCoreMember bool
-		BalanceDisplay  string
-		StatusDisplay   string
-		CurrentPage     int
-		Limit           int
-		FilterType      string
+		BalanceDisplay   string
+		StatusDisplay    string
+		CurrentPage      int
+		Limit            int
+		FilterType       string
 	}
 
 	pageData.SessUser = s_u
@@ -1241,13 +1276,13 @@ func TeamPendingOperationsGet(w http.ResponseWriter, r *http.Request) {
 		enhanced := EnhancedOperation{
 			TeamTeaOperation: op,
 		}
-		
+
 		// 获取操作人信息
 		operatorUser, _ := dao.GetUser(op.OperatorUserId)
 		if operatorUser.Id > 0 {
 			enhanced.OperatorName = operatorUser.Name
 		}
-		
+
 		// 获取审批人信息
 		if op.ApproverUserId != nil {
 			approverUser, _ := dao.GetUser(*op.ApproverUserId)
@@ -1255,7 +1290,7 @@ func TeamPendingOperationsGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.ApproverName = approverUser.Name
 			}
 		}
-		
+
 		// 获取目标团队信息
 		if op.TargetTeamId != nil {
 			targetTeam, _ := dao.GetTeam(*op.TargetTeamId)
@@ -1263,7 +1298,7 @@ func TeamPendingOperationsGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.TargetTeamName = targetTeam.Name
 			}
 		}
-		
+
 		// 获取目标用户信息
 		if op.TargetUserId != nil {
 			targetUser, _ := dao.GetUser(*op.TargetUserId)
@@ -1271,21 +1306,21 @@ func TeamPendingOperationsGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.TargetUserName = targetUser.Name
 			}
 		}
-		
+
 		enhancedOperations = append(enhancedOperations, enhanced)
 	}
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser        dao.User
-		Team            *dao.Team
-		TeamAccount     dao.TeamTeaAccount
-		Operations      []EnhancedOperation
+		SessUser         dao.User
+		Team             *dao.Team
+		TeamAccount      dao.TeamTeaAccount
+		Operations       []EnhancedOperation
 		UserIsCoreMember bool
-		BalanceDisplay  string
-		StatusDisplay   string
-		CurrentPage     int
-		Limit           int
+		BalanceDisplay   string
+		StatusDisplay    string
+		CurrentPage      int
+		Limit            int
 	}
 
 	pageData.SessUser = s_u
@@ -1298,7 +1333,7 @@ func TeamPendingOperationsGet(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "team_pending_operations")
+	generateHTML(w, &pageData, "layout", "navbar.private", "team_tea_pending_operations")
 }
 
 // TeamOperationsHistoryGet 获取团队操作记录页面
@@ -1400,13 +1435,13 @@ func TeamOperationsHistoryGet(w http.ResponseWriter, r *http.Request) {
 		enhanced := EnhancedOperation{
 			TeamTeaOperation: op,
 		}
-		
+
 		// 获取操作人信息
 		operatorUser, _ := dao.GetUser(op.OperatorUserId)
 		if operatorUser.Id > 0 {
 			enhanced.OperatorName = operatorUser.Name
 		}
-		
+
 		// 获取审批人信息
 		if op.ApproverUserId != nil {
 			approverUser, _ := dao.GetUser(*op.ApproverUserId)
@@ -1414,7 +1449,7 @@ func TeamOperationsHistoryGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.ApproverName = approverUser.Name
 			}
 		}
-		
+
 		// 获取目标团队信息
 		if op.TargetTeamId != nil {
 			targetTeam, _ := dao.GetTeam(*op.TargetTeamId)
@@ -1422,7 +1457,7 @@ func TeamOperationsHistoryGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.TargetTeamName = targetTeam.Name
 			}
 		}
-		
+
 		// 获取目标用户信息
 		if op.TargetUserId != nil {
 			targetUser, _ := dao.GetUser(*op.TargetUserId)
@@ -1430,7 +1465,7 @@ func TeamOperationsHistoryGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.TargetUserName = targetUser.Name
 			}
 		}
-		
+
 		// 添加状态显示
 		switch op.Status {
 		case dao.TeamOperationStatus_Pending:
@@ -1444,7 +1479,7 @@ func TeamOperationsHistoryGet(w http.ResponseWriter, r *http.Request) {
 		default:
 			enhanced.StatusDisplay = "未知"
 		}
-		
+
 		// 添加操作类型显示
 		switch op.OperationType {
 		case dao.TeamOperationType_Deposit:
@@ -1458,24 +1493,24 @@ func TeamOperationsHistoryGet(w http.ResponseWriter, r *http.Request) {
 		default:
 			enhanced.TypeDisplay = "未知"
 		}
-		
+
 		// 检查是否过期
 		enhanced.IsExpired = op.ExpiresAt.Before(time.Now())
-		
+
 		enhancedOperations = append(enhancedOperations, enhanced)
 	}
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser        dao.User
-		Team            *dao.Team
-		TeamAccount     dao.TeamTeaAccount
-		Operations      []EnhancedOperation
+		SessUser         dao.User
+		Team             *dao.Team
+		TeamAccount      dao.TeamTeaAccount
+		Operations       []EnhancedOperation
 		UserIsCoreMember bool
-		BalanceDisplay  string
-		StatusDisplay   string
-		CurrentPage     int
-		Limit           int
+		BalanceDisplay   string
+		StatusDisplay    string
+		CurrentPage      int
+		Limit            int
 	}
 
 	pageData.SessUser = s_u
@@ -1488,7 +1523,7 @@ func TeamOperationsHistoryGet(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "team_operations_history")
+	generateHTML(w, &pageData, "layout", "navbar.private", "team_tea_operations_history")
 }
 
 // getTeamAccountStatusDisplay 获取团队账户状态显示

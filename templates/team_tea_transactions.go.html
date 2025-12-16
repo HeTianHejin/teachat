@@ -95,13 +95,14 @@
                                     <th>余额变化</th>
                                     <th>余额</th>
                                     <th>描述</th>
+                                    <th>流通对象</th>
                                     <th>相关方</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {{ range .Transactions }}
                                 <tr>
-                                    <td>{{ .CreatedAt }}</td>
+                                    <td>{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</td>
                                     <td>
                                         {{ if eq .TransactionType "deposit" }}
                                         <span class="label label-success">存入</span>
@@ -130,10 +131,23 @@
                                     <td>{{ printf "%.3f" .BalanceAfter }}克</td>
                                     <td>{{ .Description }}</td>
                                     <td>
+                                        {{ if .TargetTypeText }}
+                                            {{ if eq .TargetTypeText "个人" }}
+                                            <span class="label label-success">{{ .TargetTypeText }}</span>
+                                            {{ else if eq .TargetTypeText "团队" }}
+                                            <span class="label label-info">{{ .TargetTypeText }}</span>
+                                            {{ else }}
+                                            <span class="label label-default">{{ .TargetTypeText }}</span>
+                                            {{ end }}
+                                        {{ else }}
+                                            <span class="label label-default">未知</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
                                         {{ if .RelatedTeamName }}
-                                            <span class="text-info">团队: {{ .RelatedTeamName }}</span>
+                                            <span class="text-info">团队: {{ .RelatedTeamName }} (ID: {{ .RelatedTeamId }})</span>
                                         {{ else if .RelatedUserName }}
-                                            <span class="text-success">用户: {{ .RelatedUserName }}</span>
+                                            <span class="text-success">用户: {{ .RelatedUserName }} (ID: {{ .RelatedUserId }})</span>
                                         {{ else if .RelatedTeamId }}
                                             <span class="text-muted">团队ID: {{ .RelatedTeamId }}</span>
                                         {{ else if .RelatedUserId }}

@@ -131,7 +131,15 @@
                                     <td>{{ FormatFloat .BalanceAfter 3 }} 克</td>
                                     <td>
                                         {{ if .RelatedUserName }}
-                                        <a href="/v1/user/biography?uuid={{ .RelatedUserId }}">{{ .RelatedUserName }}</a>
+                                        <div>
+                                            <span class="label label-success">个人</span>
+                                            <a href="/v1/user/biography?uuid={{ .TeaTransaction.RelatedUserId }}" class="text-success"> {{ .RelatedUserName }} (ID: {{ .TeaTransaction.RelatedUserId }})</a>
+                                        </div>
+                                        {{ else if .TeaTransaction.RelatedUserId }}
+                                        <div>
+                                            <span class="label label-success">个人</span>
+                                            <span class="text-muted"> ID: {{ .TeaTransaction.RelatedUserId }}</span>
+                                        </div>
                                         {{ else }}
                                         -
                                         {{ end }}

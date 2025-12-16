@@ -670,7 +670,7 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "transfer_history")
+	generateHTML(w, &pageData, "layout", "navbar.private", "user_tea_transfer_history")
 }
 
 // GetUserTransactions 获取用户交易流水
@@ -855,7 +855,7 @@ func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
 	pageData.Limit = limit
 	pageData.FilterType = transactionType
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "user_transactions")
+	generateHTML(w, &pageData, "layout", "navbar.private", "user_tea_transactions")
 }
 
 // FreezeTeaAccount 冻结茶叶账户（管理员功能）

@@ -50,19 +50,28 @@ func DeskGet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// 获取待确认转账数量
+	pendingTransfers, err := dao.GetPendingTransfers(s_u.Id, 1, 1) // 只需要获取数量
+	var pendingCount int
+	if err == nil {
+		pendingCount = len(pendingTransfers)
+	}
+
 	// 创建写字台数据结构
 	var deskData struct {
-		SessUser    dao.User
-		TeaAccount  *dao.TeaAccount
-		AccountInfo struct {
+		SessUser     dao.User
+		TeaAccount   *dao.TeaAccount
+		AccountInfo  struct {
 			BalanceDisplay string
 			StatusDisplay  string
 			IsFrozen       bool
 		}
+		PendingTransferCount int
 	}
 
 	deskData.SessUser = s_u
 	deskData.TeaAccount = accountInfo
+	deskData.PendingTransferCount = pendingCount
 
 	// 格式化余额显示
 	if accountInfo.BalanceGrams >= 1 {

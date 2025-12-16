@@ -120,11 +120,25 @@
                                     </td>
                                     <td>
                                         {{ if .TargetTeamName }}
-                                        <span class="text-info">团队: {{ .TargetTeamName }}</span>
-                                        <br><small class="text-muted">ID: {{ .TargetTeamId }}</small>
+                                        <div>
+                                            <span class="label label-info">团队</span>
+                                            <span class="text-info"> {{ .TargetTeamName }} (ID: {{ .TargetTeamId }})</span>
+                                        </div>
                                         {{ else if .TargetUserName }}
-                                        <span class="text-success">用户: {{ .TargetUserName }}</span>
-                                        <br><small class="text-muted">ID: {{ .TargetUserId }}</small>
+                                        <div>
+                                            <span class="label label-success">个人</span>
+                                            <span class="text-success"> {{ .TargetUserName }} (ID: {{ .TargetUserId }})</span>
+                                        </div>
+                                        {{ else if .TargetTeamId }}
+                                        <div>
+                                            <span class="label label-info">团队</span>
+                                            <span class="text-muted"> ID: {{ .TargetTeamId }}</span>
+                                        </div>
+                                        {{ else if .TargetUserId }}
+                                        <div>
+                                            <span class="label label-success">个人</span>
+                                            <span class="text-muted"> ID: {{ .TargetUserId }}</span>
+                                        </div>
                                         {{ else }}
                                         <span class="text-muted">-</span>
                                         {{ end }}
@@ -138,13 +152,13 @@
                                     </td>
                                     <td>
                                         <span class="{{ if .IsExpiring }}text-danger{{ else }}text-info{{ end }}">
-                                            {{ .ExpiresAt }}
+                                            {{ .ExpiresAt.Format "2006-01-02 15:04:05" }}
                                         </span>
                                         {{ if .IsExpiring }}
                                         <br><small class="text-danger">即将过期</small>
                                         {{ end }}
                                     </td>
-                                    <td><small class="text-muted">{{ .CreatedAt }}</small></td>
+                                    <td><small class="text-muted">{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</small></td>
                                     <td>
                                         <div class="btn-group btn-group-xs" role="group">
                                             <button class="btn btn-success" onclick="approveOperation('{{ .Uuid }}')" title="批准操作">

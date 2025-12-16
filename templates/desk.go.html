@@ -8,6 +8,28 @@
 
 <div class="container">
 
+    <!-- 待确认转账提示 -->
+    {{ if gt .PendingTransferCount 0 }}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4>
+                    <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
+                    您有待确认的转账！
+                </h4>
+                <p>
+                    您有 <strong>{{ .PendingTransferCount }}</strong> 笔待确认的转账记录，
+                    请及时处理以免过期。
+                    <a href="/v1/tea/transfers/pending/page" class="btn btn-warning btn-sm">立即查看</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+
     <div class="row">
         <!-- 个人茶叶账户概览 -->
         <div class="col-md-12">
@@ -37,9 +59,12 @@
                                     <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
                                     转账记录
                                 </a>
-                                <a href="/v1/tea/transfers/pending/page" class="btn btn-warning">
+                                <a href="/v1/tea/transfers/pending/page" class="btn {{ if gt .PendingTransferCount 0 }}btn-danger{{ else }}btn-warning{{ end }}">
                                     <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
                                     待确认转账
+                                    {{ if gt .PendingTransferCount 0 }}
+                                    <span class="badge">{{ .PendingTransferCount }}</span>
+                                    {{ end }}
                                 </a>
                             </div>
                         </div>
@@ -61,12 +86,21 @@
                 </div>
                 <div class="panel-body">
                     <div class="list-group">
-                        <a href="/v1/tea/transfers/pending/page" class="list-group-item">
+                        <a href="/v1/tea/transfers/pending/page" class="list-group-item {{ if gt .PendingTransferCount 0 }}list-group-item-warning{{ end }}">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
                                 查看待确认转账
+                                {{ if gt .PendingTransferCount 0 }}
+                                <span class="badge">{{ .PendingTransferCount }}</span>
+                                {{ end }}
                             </h4>
-                            <p class="list-group-item-text">确认其他茶友向您转账的茶叶</p>
+                            <p class="list-group-item-text">
+                                {{ if gt .PendingTransferCount 0 }}
+                                <strong>您有 {{ .PendingTransferCount }} 笔待确认转账，请及时处理！</strong>
+                                {{ else }}
+                                确认其他茶友向您转账的茶叶
+                                {{ end }}
+                            </p>
                         </a>
                         <a href="/v1/tea/transactions/page?type=transfer_in" class="list-group-item">
                             <h4 class="list-group-item-heading">
@@ -132,9 +166,12 @@
                         </div>
                         <div class="col-md-3">
                             <div class="text-center">
-                                <a href="/v1/tea/transfers/pending/page" class="btn btn-lg btn-warning">
+                                <a href="/v1/tea/transfers/pending/page" class="btn btn-lg {{ if gt .PendingTransferCount 0 }}btn-danger{{ else }}btn-warning{{ end }}">
                                     <span class="glyphicon glyphicon-bell" aria-hidden="true"></span><br>
                                     待确认
+                                    {{ if gt .PendingTransferCount 0 }}
+                                    <br><span class="badge">{{ .PendingTransferCount }}</span>
+                                    {{ end }}
                                 </a>
                             </div>
                         </div>

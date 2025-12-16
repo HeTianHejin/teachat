@@ -65,11 +65,11 @@
             </tr>
             <tr>
                 <td>登记日期</td>
-                <td>{{ .CreatedAt }}</td>
+                <td>{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</td>
             </tr>
             <tr>
                 <td>更新日期</td>
-                <td>{{ .UpdatedAt }}</td>
+                <td>{{ .UpdatedAt.Format "2006-01-02 15:04:05" }}</td>
             </tr>
         </tbody>
     </table>
