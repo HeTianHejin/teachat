@@ -62,9 +62,11 @@ func DeskGet(w http.ResponseWriter, r *http.Request) {
 		SessUser     dao.User
 		TeaAccount   *dao.TeaAccount
 		AccountInfo  struct {
-			BalanceDisplay string
-			StatusDisplay  string
-			IsFrozen       bool
+			BalanceDisplay         string
+			LockedBalanceDisplay   string
+			AvailableBalanceDisplay string
+			StatusDisplay          string
+			IsFrozen               bool
 		}
 		PendingTransferCount int
 	}
@@ -73,11 +75,26 @@ func DeskGet(w http.ResponseWriter, r *http.Request) {
 	deskData.TeaAccount = accountInfo
 	deskData.PendingTransferCount = pendingCount
 
-	// 格式化余额显示
+	// 格式化总余额显示
 	if accountInfo.BalanceGrams >= 1 {
 		deskData.AccountInfo.BalanceDisplay = util.FormatFloat(accountInfo.BalanceGrams, 2) + " 克"
 	} else {
 		deskData.AccountInfo.BalanceDisplay = util.FormatFloat(accountInfo.BalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 格式化锁定余额显示
+	if accountInfo.LockedBalanceGrams >= 1 {
+		deskData.AccountInfo.LockedBalanceDisplay = util.FormatFloat(accountInfo.LockedBalanceGrams, 2) + " 克"
+	} else {
+		deskData.AccountInfo.LockedBalanceDisplay = util.FormatFloat(accountInfo.LockedBalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 计算和格式化可用余额显示
+	availableBalance := accountInfo.BalanceGrams - accountInfo.LockedBalanceGrams
+	if availableBalance >= 1 {
+		deskData.AccountInfo.AvailableBalanceDisplay = util.FormatFloat(availableBalance, 2) + " 克"
+	} else {
+		deskData.AccountInfo.AvailableBalanceDisplay = util.FormatFloat(availableBalance*1000, 0) + " 毫克"
 	}
 
 	// 状态显示

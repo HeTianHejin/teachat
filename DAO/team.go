@@ -741,6 +741,26 @@ func (user *User) CountTeamsByFounderId() (count int, err error) {
 	return
 }
 
+// GetTeamByID 根据UUID或ID获取一个$事业茶团详情
+func GetTeamByID(uuid string) (team Team, err error) {
+	if uuid == "" {
+		return team, fmt.Errorf("uuid is empty")
+	}
+	// 先以uuid查询，如果不存在，再以id查询
+	team = Team{}
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE uuid = $1 AND deleted_at IS NULL", uuid).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", uuid).
+				Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+		} else {
+			return team, fmt.Errorf("查询团队失败:参数: %s, %v", uuid, err)
+		}
+	}
+	return
+}
+
 // 根据用户提交的当前Uuid获取一个$事业茶团详情
 func GetTeamByUUID(uuid string) (team Team, err error) {
 

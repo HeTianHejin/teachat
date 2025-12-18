@@ -319,6 +319,8 @@ func main() {
 	mux.HandleFunc("/v1/tea/transfer/reject", route.RejectTeaTransfer)
 	mux.HandleFunc("/v1/tea/transfers/pending", route.GetPendingTransfers)
 	mux.HandleFunc("/v1/tea/transfers/pending/page", route.HandlePendingTransfers) // 待确认转账页面路由
+	mux.HandleFunc("/v1/tea/transfers/team/pending", route.GetTeamPendingIncomingTransfers) // 团队待确认转入转账API
+	mux.HandleFunc("/v1/tea/transfers/team/pending/page", route.HandleTeamPendingIncomingTransfers) // 团队待确认转入转账页面路由
 	mux.HandleFunc("/v1/tea/transfers/history", route.GetTransferHistory)
 	mux.HandleFunc("/v1/tea/transfers/history/page", route.HandleTransferHistory) // 转账历史页面路由
 	mux.HandleFunc("/v1/tea/transactions", route.GetUserTransactions)
@@ -356,6 +358,21 @@ func main() {
 		WriteTimeout:   time.Duration(util.Config.WriteTimeout) * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
+	// 启动定时处理过期转账的任务
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute) // 每5分钟检查一次
+		defer ticker.Stop()
+
+		for range ticker.C {
+			log.Println("开始处理过期转账...")
+			if err := route.ProcessExpiredTransfersJob(); err != nil {
+				log.Printf("处理过期转账失败: %v", err)
+			} else {
+				log.Println("过期转账处理完成")
+			}
+		}
+	}()
+
 	// 设置优雅关闭
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

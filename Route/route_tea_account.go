@@ -34,6 +34,7 @@ type TransferResponse struct {
 	Uuid            string  `json:"uuid"`
 	FromUserId      int     `json:"from_user_id"`
 	ToUserId        int     `json:"to_user_id"`
+	ToTeamId        int     `json:"to_team_id"`
 	AmountGrams     float64 `json:"amount_grams"`
 	Status          string  `json:"status"`
 	PaymentTime     *string `json:"payment_time,omitempty"`
@@ -195,7 +196,8 @@ func CreateTeaTransfer(w http.ResponseWriter, r *http.Request) {
 	response := TransferResponse{
 		Uuid:        transfer.Uuid,
 		FromUserId:  transfer.FromUserId,
-		ToUserId:    transfer.ToUserId,
+		ToUserId:    getToUserId(transfer.ToUserId),
+		ToTeamId:    getToTeamId(transfer.ToTeamId),
 		AmountGrams: transfer.AmountGrams,
 		Status:      transfer.Status,
 		Notes:       transfer.Notes,
@@ -319,7 +321,8 @@ func GetPendingTransfers(w http.ResponseWriter, r *http.Request) {
 		response := TransferResponse{
 			Uuid:        transfer.Uuid,
 			FromUserId:  transfer.FromUserId,
-			ToUserId:    transfer.ToUserId,
+			ToUserId:    getToUserId(transfer.ToUserId),
+			ToTeamId:    getToTeamId(transfer.ToTeamId),
 			AmountGrams: transfer.AmountGrams,
 			Status:      transfer.Status,
 			Notes:       transfer.Notes,
@@ -328,6 +331,20 @@ func GetPendingTransfers(w http.ResponseWriter, r *http.Request) {
 		}
 		if fromUser.Name != "" {
 			response.FromUserName = fromUser.Name
+		}
+		
+		// 如果是用户间转账，获取接收用户名
+		if transfer.ToUserId != nil && *transfer.ToUserId > 0 {
+			toUser, _ := dao.GetUser(*transfer.ToUserId)
+			if toUser.Id > 0 {
+				response.ToUserName = toUser.Name
+			}
+		} else if transfer.ToTeamId != nil && *transfer.ToTeamId > 0 {
+			// 如果是团队转账，获取团队名称
+			team, _ := dao.GetTeam(*transfer.ToTeamId)
+			if team.Id > 0 {
+				response.ToUserName = team.Name + " (团队)"
+			}
 		}
 
 		responses = append(responses, response)
@@ -390,6 +407,7 @@ func PendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	type EnhancedPendingTransfer struct {
 		dao.TeaTransfer
 		FromUserName  string
+		ToUserName    string
 		AmountDisplay string
 		IsExpired     bool
 		CanAccept     bool
@@ -407,6 +425,19 @@ func PendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 		fromUser, _ := dao.GetUser(transfer.FromUserId)
 		if fromUser.Id > 0 {
 			enhanced.FromUserName = fromUser.Name
+		}
+		
+		// 获取接收方信息（用户或团队）
+		if transfer.ToUserId != nil && *transfer.ToUserId > 0 {
+			toUser, _ := dao.GetUser(*transfer.ToUserId)
+			if toUser.Id > 0 {
+				enhanced.ToUserName = toUser.Name
+			}
+		} else if transfer.ToTeamId != nil && *transfer.ToTeamId > 0 {
+			team, _ := dao.GetTeam(*transfer.ToTeamId)
+			if team.Id > 0 {
+				enhanced.ToUserName = team.Name + " (团队)"
+			}
 		}
 
 		// 格式化金额显示
@@ -438,13 +469,15 @@ func PendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser       dao.User
-		TeaAccount     dao.TeaAccount
-		Transfers      []EnhancedPendingTransfer
-		BalanceDisplay string
-		StatusDisplay  string
-		CurrentPage    int
-		Limit          int
+		SessUser               dao.User
+		TeaAccount             dao.TeaAccount
+		Transfers              []EnhancedPendingTransfer
+		BalanceDisplay         string
+		LockedBalanceDisplay   string
+		AvailableBalanceDisplay string
+		StatusDisplay          string
+		CurrentPage            int
+		Limit                  int
 	}
 
 	pageData.SessUser = s_u
@@ -456,6 +489,21 @@ func PendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 		pageData.BalanceDisplay = util.FormatFloat(account.BalanceGrams, 2) + " 克"
 	} else {
 		pageData.BalanceDisplay = util.FormatFloat(account.BalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 格式化锁定余额显示
+	if account.LockedBalanceGrams >= 1 {
+		pageData.LockedBalanceDisplay = util.FormatFloat(account.LockedBalanceGrams, 2) + " 克"
+	} else {
+		pageData.LockedBalanceDisplay = util.FormatFloat(account.LockedBalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 计算和格式化可用余额显示
+	availableBalance := account.BalanceGrams - account.LockedBalanceGrams
+	if availableBalance >= 1 {
+		pageData.AvailableBalanceDisplay = util.FormatFloat(availableBalance, 2) + " 克"
+	} else {
+		pageData.AvailableBalanceDisplay = util.FormatFloat(availableBalance*1000, 0) + " 毫克"
 	}
 
 	// 状态显示
@@ -499,12 +547,16 @@ func GetTransferHistory(w http.ResponseWriter, r *http.Request) {
 	for _, transfer := range transfers {
 		// 获取用户名
 		fromUser, _ := dao.GetUser(transfer.FromUserId)
-		toUser, _ := dao.GetUser(transfer.ToUserId)
+		var toUser dao.User
+		if transfer.ToUserId != nil && *transfer.ToUserId > 0 {
+			toUser, _ = dao.GetUser(*transfer.ToUserId)
+		}
 
 		response := TransferResponse{
 			Uuid:            transfer.Uuid,
 			FromUserId:      transfer.FromUserId,
-			ToUserId:        transfer.ToUserId,
+			ToUserId:        getToUserId(transfer.ToUserId),
+			ToTeamId:        getToTeamId(transfer.ToTeamId),
 			AmountGrams:     transfer.AmountGrams,
 			Status:          transfer.Status,
 			Notes:           transfer.Notes,
@@ -517,6 +569,14 @@ func GetTransferHistory(w http.ResponseWriter, r *http.Request) {
 		}
 		if toUser.Name != "" {
 			response.ToUserName = toUser.Name
+		}
+		
+		// 如果是团队转账，显示团队名称
+		if transfer.ToTeamId != nil && *transfer.ToTeamId > 0 {
+			team, _ := dao.GetTeam(*transfer.ToTeamId)
+			if team.Id > 0 {
+				response.ToUserName = team.Name + " (团队)"
+			}
 		}
 		if transfer.PaymentTime != nil {
 			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
@@ -582,29 +642,59 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// 增强转账数据，添加用户信息和状态显示
 	type EnhancedTransfer struct {
 		dao.TeaTransfer
-		FromUserName  string
-		ToUserName    string
-		StatusDisplay string
-		AmountDisplay string
-		IsExpired     bool
-		IsIncoming    bool
+		FromUserName    string
+		ToUserName      string
+		ToUserType      string // "user" 或 "team"
+		ToUserId        int    // 接收方用户ID（如果是用户转账）
+		ToTeamId        int    // 接收方团队ID（如果是团队转账）
+		ToTeamUuid      string // 接收方团队UUID（用于链接）
+		StatusDisplay   string
+		AmountDisplay   string
+		IsExpired       bool
+		IsIncoming      bool
 	}
 
 	var enhancedTransfers []EnhancedTransfer
 	for _, transfer := range transfers {
 		enhanced := EnhancedTransfer{
 			TeaTransfer: transfer,
-			IsIncoming:  transfer.ToUserId == s_u.Id,
 		}
 
-		// 获取用户信息
+		// 判断是否为收入（转给当前用户或转给当前用户所在的团队）
+		if transfer.ToUserId != nil && *transfer.ToUserId == s_u.Id {
+			enhanced.IsIncoming = true
+		} else if transfer.ToTeamId != nil {
+			// 检查用户是否是该团队成员
+			isMember, _ := dao.IsTeamMember(s_u.Id, *transfer.ToTeamId)
+			enhanced.IsIncoming = isMember
+		} else {
+			enhanced.IsIncoming = false
+		}
+
+		// 获取发送方用户信息
 		fromUser, _ := dao.GetUser(transfer.FromUserId)
 		if fromUser.Id > 0 {
 			enhanced.FromUserName = fromUser.Name
 		}
-		toUser, _ := dao.GetUser(transfer.ToUserId)
-		if toUser.Id > 0 {
-			enhanced.ToUserName = toUser.Name
+		
+		// 获取接收方信息（用户或团队）
+		if transfer.ToUserId != nil && *transfer.ToUserId > 0 {
+			// 用户间转账
+			toUser, _ := dao.GetUser(*transfer.ToUserId)
+			if toUser.Id > 0 {
+				enhanced.ToUserName = toUser.Name
+				enhanced.ToUserType = "user"
+				enhanced.ToUserId = *transfer.ToUserId
+			}
+		} else if transfer.ToTeamId != nil && *transfer.ToTeamId > 0 {
+			// 团队转账
+			team, _ := dao.GetTeam(*transfer.ToTeamId)
+			if team.Id > 0 {
+				enhanced.ToUserName = team.Name
+				enhanced.ToUserType = "team"
+				enhanced.ToTeamId = *transfer.ToTeamId
+				enhanced.ToTeamUuid = team.Uuid
+			}
 		}
 
 		// 添加状态显示
@@ -636,13 +726,15 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser       dao.User
-		TeaAccount     dao.TeaAccount
-		Transfers      []EnhancedTransfer
-		BalanceDisplay string
-		StatusDisplay  string
-		CurrentPage    int
-		Limit          int
+		SessUser               dao.User
+		TeaAccount             dao.TeaAccount
+		Transfers              []EnhancedTransfer
+		BalanceDisplay         string
+		LockedBalanceDisplay    string
+		AvailableBalanceDisplay string
+		StatusDisplay          string
+		CurrentPage            int
+		Limit                 int
 	}
 
 	pageData.SessUser = s_u
@@ -654,6 +746,21 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 		pageData.BalanceDisplay = util.FormatFloat(account.BalanceGrams, 2) + " 克"
 	} else {
 		pageData.BalanceDisplay = util.FormatFloat(account.BalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 格式化锁定余额显示
+	if account.LockedBalanceGrams >= 1 {
+		pageData.LockedBalanceDisplay = util.FormatFloat(account.LockedBalanceGrams, 2) + " 克"
+	} else {
+		pageData.LockedBalanceDisplay = util.FormatFloat(account.LockedBalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 计算和格式化可用余额显示
+	availableBalance := account.BalanceGrams - account.LockedBalanceGrams
+	if availableBalance >= 1 {
+		pageData.AvailableBalanceDisplay = util.FormatFloat(availableBalance, 2) + " 克"
+	} else {
+		pageData.AvailableBalanceDisplay = util.FormatFloat(availableBalance*1000, 0) + " 毫克"
 	}
 
 	// 状态显示
@@ -819,14 +926,16 @@ func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser       dao.User
-		TeaAccount     dao.TeaAccount
-		Transactions   []EnhancedTransaction
-		BalanceDisplay string
-		StatusDisplay  string
-		CurrentPage    int
-		Limit          int
-		FilterType     string
+		SessUser               dao.User
+		TeaAccount             dao.TeaAccount
+		Transactions           []EnhancedTransaction
+		BalanceDisplay         string
+		LockedBalanceDisplay   string
+		AvailableBalanceDisplay string
+		StatusDisplay          string
+		CurrentPage            int
+		Limit                  int
+		FilterType             string
 	}
 
 	pageData.SessUser = s_u
@@ -838,6 +947,21 @@ func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
 		pageData.BalanceDisplay = util.FormatFloat(account.BalanceGrams, 2) + " 克"
 	} else {
 		pageData.BalanceDisplay = util.FormatFloat(account.BalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 格式化锁定余额显示
+	if account.LockedBalanceGrams >= 1 {
+		pageData.LockedBalanceDisplay = util.FormatFloat(account.LockedBalanceGrams, 2) + " 克"
+	} else {
+		pageData.LockedBalanceDisplay = util.FormatFloat(account.LockedBalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 计算和格式化可用余额显示
+	availableBalance := account.BalanceGrams - account.LockedBalanceGrams
+	if availableBalance >= 1 {
+		pageData.AvailableBalanceDisplay = util.FormatFloat(availableBalance, 2) + " 克"
+	} else {
+		pageData.AvailableBalanceDisplay = util.FormatFloat(availableBalance*1000, 0) + " 毫克"
 	}
 
 	// 状态显示
@@ -1024,4 +1148,288 @@ func respondWithPagination(w http.ResponseWriter, message string, data interface
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
+}
+
+// 辅助函数：获取ToUserId，处理nil指针
+func getToUserId(toUserId *int) int {
+	if toUserId == nil {
+		return 0
+	}
+	return *toUserId
+}
+
+// 辅助函数：获取ToTeamId，处理nil指针
+func getToTeamId(toTeamId *int) int {
+	if toTeamId == nil {
+		return 0
+	}
+	return *toTeamId
+}
+
+// GetTeamPendingIncomingTransfers 获取团队待确认转入转账列表
+func GetTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
+	// 验证用户登录
+	user, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
+	}
+
+	// 获取团队ID
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		respondWithError(w, http.StatusBadRequest, "团队ID不能为空")
+		return
+	}
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
+
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队成员身份失败")
+		return
+	}
+	if !isMember {
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看团队待确认转账")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取团队待确认转入转账
+	transfers, err := dao.GetPendingTransfersForTeam(teamId, page, limit)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取团队待确认转账失败")
+		return
+	}
+
+	// 转换响应格式
+	var responses []TransferResponse
+	for _, transfer := range transfers {
+		// 获取用户名
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
+
+		response := TransferResponse{
+			Uuid:        transfer.Uuid,
+			FromUserId:  transfer.FromUserId,
+			ToUserId:    getToUserId(transfer.ToUserId),
+			ToTeamId:    getToTeamId(transfer.ToTeamId),
+			AmountGrams: transfer.AmountGrams,
+			Status:      transfer.Status,
+			Notes:       transfer.Notes,
+			ExpiresAt:   transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
+			CreatedAt:   transfer.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+		if fromUser.Name != "" {
+			response.FromUserName = fromUser.Name
+		}
+		
+		// 如果是团队转账，获取团队名称
+		if transfer.ToTeamId != nil && *transfer.ToTeamId > 0 {
+			team, _ := dao.GetTeam(*transfer.ToTeamId)
+			if team.Id > 0 {
+				response.ToUserName = team.Name + " (团队)"
+			}
+		}
+
+		responses = append(responses, response)
+	}
+
+	respondWithPagination(w, "获取团队待确认转账成功", responses, page, limit, 0) // TODO: 实现总数统计
+}
+
+// HandleTeamPendingIncomingTransfers 处理团队待确认转入转账页面请求
+func HandleTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	TeamPendingIncomingTransfersGet(w, r)
+}
+
+// TeamPendingIncomingTransfersGet 获取团队待确认转入转账页面
+func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 获取团队ID
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		report(w, s_u, "必须指定团队ID。")
+		return
+	}
+
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		report(w, s_u, "团队ID无效。")
+		return
+	}
+
+	// 获取指定团队信息
+	team, err := dao.GetTeam(teamId)
+	if err != nil {
+		util.Debug("cannot get team by id", teamId, err)
+		report(w, s_u, "团队不存在。")
+		return
+	}
+
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamMember(s_u.Id, teamId)
+	if err != nil || !isMember {
+		report(w, s_u, "您不是该团队成员，无法查看待确认转入。")
+		return
+	}
+
+	// 确保团队有茶叶账户
+	err = dao.EnsureTeamTeaAccountExists(team.Id)
+	if err != nil {
+		util.Debug("cannot ensure team tea account exists", err)
+		report(w, s_u, "获取团队茶叶账户失败。")
+		return
+	}
+
+	// 获取团队茶叶账户
+	teamAccount, err := dao.GetTeamTeaAccountByTeamId(team.Id)
+	if err != nil {
+		util.Debug("cannot get team tea account", err)
+		report(w, s_u, "获取团队茶叶账户失败。")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取团队待确认转入转账
+	transfers, err := dao.GetPendingTransfersForTeam(team.Id, page, limit)
+	if err != nil {
+		util.Debug("cannot get team pending incoming transfers", err)
+		report(w, s_u, "获取团队待确认转入失败。")
+		return
+	}
+
+	// 增强转账数据，添加用户信息和状态显示
+	type EnhancedPendingIncomingTransfer struct {
+		dao.TeaTransfer
+		FromUserName  string
+		AmountDisplay string
+		IsExpired     bool
+		CanAccept     bool
+		TimeRemaining string
+	}
+
+	var enhancedTransfers []EnhancedPendingIncomingTransfer
+	for _, transfer := range transfers {
+		enhanced := EnhancedPendingIncomingTransfer{
+			TeaTransfer: transfer,
+			CanAccept:   !transfer.ExpiresAt.Before(time.Now()),
+		}
+
+		// 获取发送方用户信息
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
+		if fromUser.Id > 0 {
+			enhanced.FromUserName = fromUser.Name
+		}
+
+		// 格式化金额显示
+		if transfer.AmountGrams >= 1 {
+			enhanced.AmountDisplay = util.FormatFloat(transfer.AmountGrams, 3) + " 克"
+		} else {
+			enhanced.AmountDisplay = util.FormatFloat(transfer.AmountGrams*1000, 0) + " 毫克"
+		}
+
+		// 检查是否过期
+		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
+
+		// 计算剩余时间
+		if enhanced.CanAccept {
+			timeRemaining := time.Until(transfer.ExpiresAt)
+			if timeRemaining > time.Hour {
+				enhanced.TimeRemaining = fmt.Sprintf("%.0f小时", timeRemaining.Hours())
+			} else if timeRemaining > time.Minute {
+				enhanced.TimeRemaining = fmt.Sprintf("%.0f分钟", timeRemaining.Minutes())
+			} else {
+				enhanced.TimeRemaining = "即将过期"
+			}
+		} else {
+			enhanced.TimeRemaining = "已过期"
+		}
+
+		enhancedTransfers = append(enhancedTransfers, enhanced)
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser               dao.User
+		Team                   *dao.Team
+		TeamAccount            dao.TeamTeaAccount
+		Transfers              []EnhancedPendingIncomingTransfer
+		BalanceDisplay         string
+		LockedBalanceDisplay   string
+		AvailableBalanceDisplay string
+		StatusDisplay          string
+		CurrentPage            int
+		Limit                  int
+	}
+
+	pageData.SessUser = s_u
+	pageData.Team = &team
+	pageData.TeamAccount = teamAccount
+	pageData.Transfers = enhancedTransfers
+
+	// 格式化余额显示
+	if teamAccount.BalanceGrams >= 1 {
+		pageData.BalanceDisplay = util.FormatFloat(teamAccount.BalanceGrams, 2) + " 克"
+	} else {
+		pageData.BalanceDisplay = util.FormatFloat(teamAccount.BalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 格式化锁定余额显示
+	if teamAccount.LockedBalanceGrams >= 1 {
+		pageData.LockedBalanceDisplay = util.FormatFloat(teamAccount.LockedBalanceGrams, 2) + " 克"
+	} else {
+		pageData.LockedBalanceDisplay = util.FormatFloat(teamAccount.LockedBalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 计算和格式化可用余额显示
+	availableBalance := teamAccount.BalanceGrams - teamAccount.LockedBalanceGrams
+	if availableBalance >= 1 {
+		pageData.AvailableBalanceDisplay = util.FormatFloat(availableBalance, 2) + " 克"
+	} else {
+		pageData.AvailableBalanceDisplay = util.FormatFloat(availableBalance*1000, 0) + " 毫克"
+	}
+
+	// 状态显示
+	if teamAccount.Status == dao.TeamTeaAccountStatus_Frozen {
+		if teamAccount.FrozenReason != nil {
+			pageData.StatusDisplay = "已冻结 (" + *teamAccount.FrozenReason + ")"
+		} else {
+			pageData.StatusDisplay = "已冻结"
+		}
+	} else {
+		pageData.StatusDisplay = "正常"
+	}
+
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "team_pending_incoming_transfers")
+}
+
+// ProcessExpiredTransfersJob 定时任务：处理过期转账
+func ProcessExpiredTransfersJob() error {
+	return dao.ProcessExpiredTransfers()
 }

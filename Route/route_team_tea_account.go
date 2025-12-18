@@ -851,8 +851,11 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 获取待审批操作
+	// 获取待审批操作（团队内部的转出等操作）
 	pendingOperationsData, _ := dao.GetTeamPendingOperations(team.Id, 1, 10)
+	
+	// 获取待确认接收的转账（其他用户转入该团队的转账）
+	pendingIncomingTransfersData, _ := dao.GetPendingTransfersForTeam(team.Id, 1, 10)
 
 	// 增强待审批操作数据，添加相关团队和用户信息
 	type EnhancedPendingOperation struct {
@@ -906,6 +909,56 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		pendingOperations = append(pendingOperations, enhanced)
+	}
+
+	// 增强待确认转入转账数据，添加发送方用户信息
+	type EnhancedPendingIncomingTransfer struct {
+		dao.TeaTransfer
+		FromUserName  string
+		AmountDisplay string
+		IsExpired     bool
+		CanAccept     bool
+		TimeRemaining string
+	}
+
+	var pendingIncomingTransfers []EnhancedPendingIncomingTransfer
+	for _, transfer := range pendingIncomingTransfersData {
+		enhanced := EnhancedPendingIncomingTransfer{
+			TeaTransfer: transfer,
+			CanAccept:   !transfer.ExpiresAt.Before(time.Now()),
+		}
+
+		// 获取发送方用户信息
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
+		if fromUser.Id > 0 {
+			enhanced.FromUserName = fromUser.Name
+		}
+
+		// 格式化金额显示
+		if transfer.AmountGrams >= 1 {
+			enhanced.AmountDisplay = util.FormatFloat(transfer.AmountGrams, 3) + " 克"
+		} else {
+			enhanced.AmountDisplay = util.FormatFloat(transfer.AmountGrams*1000, 0) + " 毫克"
+		}
+
+		// 检查是否过期
+		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
+
+		// 计算剩余时间
+		if enhanced.CanAccept {
+			timeRemaining := time.Until(transfer.ExpiresAt)
+			if timeRemaining > time.Hour {
+				enhanced.TimeRemaining = fmt.Sprintf("%.0f小时", timeRemaining.Hours())
+			} else if timeRemaining > time.Minute {
+				enhanced.TimeRemaining = fmt.Sprintf("%.0f分钟", timeRemaining.Minutes())
+			} else {
+				enhanced.TimeRemaining = "即将过期"
+			}
+		} else {
+			enhanced.TimeRemaining = "已过期"
+		}
+
+		pendingIncomingTransfers = append(pendingIncomingTransfers, enhanced)
 	}
 
 	// 获取最近交易
@@ -965,16 +1018,19 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	// 创建团队账户数据
 	teamAccountData := []map[string]interface{}{
 		{
-			"TeamId":             team.Id,
-			"TeamUuid":           team.Uuid,
-			"TeamName":           team.Name,
-			"TeamAbbrev":         team.Abbreviation,
-			"TeamAccount":        teamAccount,
-			"UserIsCoreMember":   isCoreMember,
-			"PendingOperations":  pendingOperations,
-			"RecentTransactions": recentTransactions,
-			"BalanceDisplay":     formatTeaBalance(teamAccount.BalanceGrams),
-			"StatusDisplay":      getTeamAccountStatusDisplay(teamAccount.Status, teamAccount.FrozenReason),
+			"TeamId":                   team.Id,
+			"TeamUuid":                 team.Uuid,
+			"TeamName":                 team.Name,
+			"TeamAbbrev":               team.Abbreviation,
+			"TeamAccount":              teamAccount,
+			"UserIsCoreMember":         isCoreMember,
+			"PendingOperations":        pendingOperations,
+			"PendingIncomingTransfers":  pendingIncomingTransfers,
+			"RecentTransactions":       recentTransactions,
+			"BalanceDisplay":           formatTeaBalance(teamAccount.BalanceGrams),
+			"LockedBalanceDisplay":      formatTeaBalance(teamAccount.LockedBalanceGrams),
+			"AvailableBalanceDisplay":  formatTeaBalance(teamAccount.BalanceGrams - teamAccount.LockedBalanceGrams),
+			"StatusDisplay":            getTeamAccountStatusDisplay(teamAccount.Status, teamAccount.FrozenReason),
 		},
 	}
 
@@ -1269,6 +1325,7 @@ func TeamPendingOperationsGet(w http.ResponseWriter, r *http.Request) {
 		ApproverName   string
 		TargetTeamName string
 		TargetUserName string
+		IsExpiring     bool
 	}
 
 	var enhancedOperations []EnhancedOperation
@@ -1306,6 +1363,10 @@ func TeamPendingOperationsGet(w http.ResponseWriter, r *http.Request) {
 				enhanced.TargetUserName = targetUser.Name
 			}
 		}
+
+		// 检查是否即将过期（24小时内过期）
+		hoursUntilExpiry := time.Until(op.ExpiresAt).Hours()
+		enhanced.IsExpiring = hoursUntilExpiry > 0 && hoursUntilExpiry <= 24
 
 		enhancedOperations = append(enhancedOperations, enhanced)
 	}

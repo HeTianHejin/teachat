@@ -45,9 +45,17 @@
                 </div>
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <h4>当前余额: <strong>{{ .AccountInfo.BalanceDisplay }}</strong></h4>
+                        <div class="col-md-4">
+                            <h4>总余额: <strong>{{ .AccountInfo.BalanceDisplay }}</strong></h4>
                             <p class="text-muted">您的茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>锁定余额: <strong>{{ .AccountInfo.LockedBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">待确认操作中锁定的茶叶</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>可用余额: <strong>{{ .AccountInfo.AvailableBalanceDisplay }}</strong></h4>
+                            <p class="text-muted"><strong>可以立即使用的茶叶</strong></p>
                         </div>
                         <div class="col-md-6">
                             <div class="btn-group-vertical" role="group" style="width: 100%;">
@@ -235,7 +243,7 @@
                     <div class="form-group">
                         <label for="amountGrams">转账数量(克):</label>
                         <input type="number" class="form-control" id="amountGrams" name="amount_grams" required min="0.001" step="0.001">
-                        <small class="help-block">可输入小数，最小单位0.001克(1毫克)</small>
+                        <small class="help-block">可输入小数，最小单位0.001克(1毫克)。当前可用余额: <strong>{{ .AccountInfo.AvailableBalanceDisplay }}</strong></small>
                     </div>
                     <div class="form-group">
                         <label for="notes">备注说明:</label>
@@ -350,7 +358,7 @@ function submitTransfer() {
             if (transferType === 'user') {
                 alert('转账发起成功！接收方需要确认才能完成转账。');
             } else {
-                alert('向团队转账成功！茶叶已直接转入团队账户。');
+                alert('转出操作成功！有效期内对方不接收则退回。');
             }
             $('#transferModal').modal('hide');
             form.reset();

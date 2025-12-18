@@ -504,7 +504,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	team, err := dao.GetTeamByUUID(uuid)
+	team, err := dao.GetTeamByID(uuid)
 	if err != nil {
 		util.Debug(uuid, " Cannot get team given uuid.")
 		report(w, s_u, "你好，满头大汗的茶博士未能帮忙查看这个茶团资料，请稍后再试。")

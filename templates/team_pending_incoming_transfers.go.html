@@ -1,0 +1,322 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+   <li>{{ .SessUser.Name }} 的写字台</li>
+  <li><a href="/v1/team/tea/account?team_id={{ .Team.Id }}">管理团队茶叶账户</a></li>
+  <li class="active">待确认接收的转入</li>
+</ol>
+
+<div class="container">
+
+    <div class="row">
+        <!-- 团队茶叶账户概览 -->
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        {{ .Team.Name }} 团队茶叶罐
+                        <span class="pull-right">
+                            状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ .StatusDisplay }}</span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>总余额: <strong>{{ .BalanceDisplay }}</strong></h4>
+                            <p class="text-muted">团队的茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>锁定余额: <strong>{{ .LockedBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>可用余额: <strong>{{ .AvailableBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">可以立即使用的茶叶</p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="btn-group-vertical" role="group" style="width: 100%;">
+                                <a href="/v1/tea/team/transactions/page?team_id={{ .Team.Id }}" class="btn btn-info">
+                                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                                    收支明细
+                                </a>
+                                <a href="/v1/team/tea/account?team_id={{ .Team.Id }}" class="btn btn-default">
+                                    <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                    返回团队账户
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h4>待确认转入说明</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <ul class="list-unstyled">
+                                        <li><span class="glyphicon glyphicon-ok-circle text-success"></span> 绿色表示可以确认接收</li>
+                                        <li><span class="glyphicon glyphicon-exclamation-sign text-warning"></span> 黄色表示即将过期</li>
+                                        <li><span class="glyphicon glyphicon-remove-circle text-danger"></span> 红色表示已过期无法确认</li>
+                                        <li><span class="glyphicon glyphicon-info-sign text-info"></span> 团队任何成员都可以确认接收转入</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 待确认转入列表 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                        待确认接收的转入
+                        {{ if gt (len .Transfers) 0 }}
+                        <span class="badge">{{ len .Transfers }}</span>
+                        {{ end }}
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ if gt (len .Transfers) 0 }}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>发送方</th>
+                                    <th>金额</th>
+                                    <th>说明</th>
+                                    <th>剩余时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range $transfer := .Transfers }}
+                                <tr class="{{ if $transfer.IsExpired }}danger{{ else if lt $transfer.TimeRemaining "1小时" }}warning{{ else }}success{{ end }}">
+                                    <td>
+                                        <strong>{{ $transfer.FromUserName }}</strong>
+                                        <br><small class="text-muted">ID: {{ $transfer.FromUserId }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="label {{ if $transfer.CanAccept }}label-success{{ else }}label-default{{ end }}">
+                                            {{ $transfer.AmountDisplay }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ if $transfer.Notes }}
+                                        <span class="text-muted">{{ $transfer.Notes }}</span>
+                                        {{ else }}
+                                        <span class="text-muted">无</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if $transfer.CanAccept }}
+                                        <span class="text-{{ if lt $transfer.TimeRemaining "1小时" }}warning{{ else }}success{{ end }}">
+                                            <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                            {{ $transfer.TimeRemaining }}
+                                        </span>
+                                        {{ else }}
+                                        <span class="text-danger">
+                                            <span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span>
+                                            {{ $transfer.TimeRemaining }}
+                                        </span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if $transfer.CanAccept }}
+                                        <span class="label label-success">可确认</span>
+                                        {{ else }}
+                                        <span class="label label-default">已过期</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if $transfer.CanAccept }}
+                                        <button type="button" class="btn btn-success btn-sm" 
+                                                onclick="confirmTransfer('{{ $transfer.Uuid }}', '{{ $transfer.FromUserName }}', '{{ $transfer.AmountDisplay }}')">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                            确认接收
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" 
+                                                onclick="rejectTransfer('{{ $transfer.Uuid }}', '{{ $transfer.FromUserName }}', '{{ $transfer.AmountDisplay }}')">
+                                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                            拒绝接收
+                                        </button>
+                                        {{ else }}
+                                        <button type="button" class="btn btn-default btn-sm" disabled>
+                                            <span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span>
+                                            无法操作
+                                        </button>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ else }}
+                    <div class="alert alert-info" role="alert">
+                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                        <strong>暂无待确认转入</strong>
+                        <br>当前没有需要确认接收的茶叶转账。
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- 确认转账模态框 -->
+<div class="modal fade" id="confirmTransferModal" tabindex="-1" role="dialog" aria-labelledby="confirmTransferModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="confirmTransferModalLabel">
+                    <span class="glyphicon glyphicon-ok-circle text-success" aria-hidden="true"></span>
+                    确认接收茶叶转账
+                </h4>
+            </div>
+            <div class="modal-body">
+                <p>您确定要确认接收以下茶叶转账吗？</p>
+                <ul class="list-unstyled">
+                    <li><strong>发送方：</strong><span id="confirmFromUser"></span></li>
+                    <li><strong>金额：</strong><span id="confirmAmount"></span></li>
+                </ul>
+                <div class="alert alert-success">
+                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                    确认接收后，茶叶将立即转入团队账户，可供团队使用。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" id="confirmTransferBtn">
+                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                    确认接收
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 拒绝转账模态框 -->
+<div class="modal fade" id="rejectTransferModal" tabindex="-1" role="dialog" aria-labelledby="rejectTransferModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="rejectTransferModalLabel">
+                    <span class="glyphicon glyphicon-remove-circle text-danger" aria-hidden="true"></span>
+                    拒绝接收茶叶转账
+                </h4>
+            </div>
+            <div class="modal-body">
+                <p>您确定要拒绝接收以下茶叶转账吗？</p>
+                <ul class="list-unstyled">
+                    <li><strong>发送方：</strong><span id="rejectFromUser"></span></li>
+                    <li><strong>金额：</strong><span id="rejectAmount"></span></li>
+                </ul>
+                <div class="form-group">
+                    <label for="rejectReason">拒绝原因（可选）：</label>
+                    <textarea class="form-control" id="rejectReason" rows="3" placeholder="请输入拒绝原因..."></textarea>
+                </div>
+                <div class="alert alert-warning">
+                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                    拒绝接收后，转账将被取消，发送方的茶叶将解除锁定。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="rejectTransferBtn">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    拒绝接收
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTransferUuid = '';
+
+function confirmTransfer(uuid, fromUser, amount) {
+    currentTransferUuid = uuid;
+    document.getElementById('confirmFromUser').textContent = fromUser;
+    document.getElementById('confirmAmount').textContent = amount;
+    $('#confirmTransferModal').modal('show');
+}
+
+function rejectTransfer(uuid, fromUser, amount) {
+    currentTransferUuid = uuid;
+    document.getElementById('rejectFromUser').textContent = fromUser;
+    document.getElementById('rejectAmount').textContent = amount;
+    document.getElementById('rejectReason').value = '';
+    $('#rejectTransferModal').modal('show');
+}
+
+// 确认接收转账
+document.getElementById('confirmTransferBtn').addEventListener('click', function() {
+    fetch('/v1/tea/transfer/confirm', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            transfer_uuid: currentTransferUuid
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('转账确认成功！');
+            location.reload();
+        } else {
+            alert('转账确认失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('网络错误，请稍后重试');
+    });
+    $('#confirmTransferModal').modal('hide');
+});
+
+// 拒绝接收转账
+document.getElementById('rejectTransferBtn').addEventListener('click', function() {
+    const reason = document.getElementById('rejectReason').value;
+    
+    fetch('/v1/tea/transfer/reject', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            transfer_uuid: currentTransferUuid,
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('转账拒绝成功！');
+            location.reload();
+        } else {
+            alert('转账拒绝失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('网络错误，请稍后重试');
+    });
+    $('#rejectTransferModal').modal('hide');
+});
+</script>
+
+{{ end }}

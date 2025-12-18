@@ -46,14 +46,15 @@ const (
 
 // 团队茶叶账户结构体
 type TeamTeaAccount struct {
-	Id           int
-	Uuid         string
-	TeamId       int
-	BalanceGrams float64 // 茶叶数量(克)
-	Status       string  // normal, frozen
-	FrozenReason *string
-	CreatedAt    time.Time
-	UpdatedAt    *time.Time
+	Id               int
+	Uuid             string
+	TeamId           int
+	BalanceGrams     float64 // 茶叶数量(克)
+	LockedBalanceGrams float64 // 被锁定的茶叶数量(克)
+	Status           string  // normal, frozen
+	FrozenReason     *string
+	CreatedAt        time.Time
+	UpdatedAt        *time.Time
 }
 
 // 团队茶叶操作结构体
@@ -108,8 +109,8 @@ func GetTeamTeaAccountByTeamId(teamId int) (TeamTeaAccount, error) {
 	}
 
 	account := TeamTeaAccount{}
-	err := DB.QueryRow("SELECT id, uuid, team_id, balance_grams, status, frozen_reason, created_at, updated_at FROM team_tea_accounts WHERE team_id = $1", teamId).
-		Scan(&account.Id, &account.Uuid, &account.TeamId, &account.BalanceGrams, &account.Status, &account.FrozenReason, &account.CreatedAt, &account.UpdatedAt)
+	err := DB.QueryRow("SELECT id, uuid, team_id, balance_grams, locked_balance_grams, status, frozen_reason, created_at, updated_at FROM team_tea_accounts WHERE team_id = $1", teamId).
+		Scan(&account.Id, &account.Uuid, &account.TeamId, &account.BalanceGrams, &account.LockedBalanceGrams, &account.Status, &account.FrozenReason, &account.CreatedAt, &account.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return account, fmt.Errorf("团队茶叶账户不存在")

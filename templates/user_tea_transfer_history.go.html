@@ -23,9 +23,17 @@
                 </div>
                 <div class="panel-body">
                     <div class="row">
-                        <div class="col-md-6">
-                            <h4>当前余额: <strong>{{ .BalanceDisplay }}</strong></h4>
+                        <div class="col-md-4">
+                            <h4>总余额: <strong>{{ .BalanceDisplay }}</strong></h4>
                             <p class="text-muted">您的茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>锁定余额: <strong>{{ .LockedBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>可用余额: <strong>{{ .AvailableBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">可以立即使用的茶叶</p>
                         </div>
                         <div class="col-md-6">
                             <div class="btn-group-vertical" role="group" style="width: 100%;">
@@ -89,13 +97,18 @@
                                     <td>
                                         {{ if .IsIncoming }}
                                         <div>
-                                            <span class="label label-success">个人</span>
+                                            <span class="label label-default">个人</span>
                                             <a href="/v1/user/biography?uuid={{ .FromUserId }}" class="text-success"> {{ .FromUserName }} (ID: {{ .FromUserId }})</a>
                                         </div>
                                         {{ else }}
                                         <div>
-                                            <span class="label label-success">个人</span>
+                                            {{ if eq .ToUserType "team" }}
+                                            <span class="label label-primary">团队</span>
+                                            <a href="/v1/team/detail?uuid={{ .ToTeamId }}" class="text-primary"> {{ .ToUserName }} (团队ID: {{ .ToTeamId }})</a>
+                                            {{ else }}
+                                            <span class="label label-default">个人</span>
                                             <a href="/v1/user/biography?uuid={{ .ToUserId }}" class="text-success"> {{ .ToUserName }} (ID: {{ .ToUserId }})</a>
+                                            {{ end }}
                                         </div>
                                         {{ end }}
                                     </td>
@@ -323,7 +336,7 @@ function submitTransfer() {
             if (transferType === 'user') {
                 alert('转账发起成功！接收方需要确认才能完成转账。');
             } else {
-                alert('向团队转账成功！茶叶已直接转入团队账户。');
+                alert('转出操作成功！有效期内对方不接收则退回。');
             }
             $('#transferModal').modal('hide');
             form.reset();
