@@ -1,4 +1,7 @@
 {
-    "window.density.editorTabHeight": "default",
-    "codingcopilot.submitMessageShortcut": "Ctrl/Cmd + Enter",
+    "go.lintTool": "staticcheck",
+    "gopls": {
+        "ui.diagnostic.staticcheck": false,
+        "vulncheck": "Imports"
+    }
 }

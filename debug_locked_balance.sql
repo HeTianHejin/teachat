@@ -18,7 +18,7 @@ SELECT
     locked_balance_grams,
     (balance_grams - locked_balance_grams) as available_balance,
     status
-FROM team_tea_accounts 
+FROM tea.team.accounts 
 WHERE locked_balance_grams < 0;
 
 -- 检查是否有可用余额为负数的记录
@@ -41,7 +41,7 @@ SELECT
     locked_balance_grams,
     (balance_grams - locked_balance_grams) as available_balance,
     status
-FROM team_tea_accounts 
+FROM tea.team.accounts 
 WHERE (balance_grams - locked_balance_grams) < 0;
 
 -- 检查待确认转账的总金额与锁定余额的关系

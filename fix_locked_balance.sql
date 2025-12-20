@@ -2,7 +2,7 @@
 
 -- 1. 首先备份相关表
 CREATE TABLE tea_accounts_backup AS SELECT * FROM tea_accounts;
-CREATE TABLE team_tea_accounts_backup AS SELECT * FROM team_tea_accounts;
+CREATE TABLE tea.team.accounts_backup AS SELECT * FROM tea.team.accounts;
 CREATE TABLE tea_transfers_backup AS SELECT * FROM tea_transfers;
 
 -- 2. 计算每个用户的实际待确认转账金额
@@ -44,4 +44,4 @@ SELECT
     COUNT(*) as total_accounts,
     COUNT(CASE WHEN locked_balance_grams < 0 THEN 1 END) as negative_locked_balance,
     COUNT(CASE WHEN (balance_grams - locked_balance_grams) < 0 THEN 1 END) as negative_available_balance
-FROM team_tea_accounts;
+FROM tea.team.accounts;

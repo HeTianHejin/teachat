@@ -93,7 +93,7 @@ COMMENT ON COLUMN tea_transactions.related_user_id IS '交易相关用户ID（�
 -- ============================================
 
 -- 团队茶叶账户表
-CREATE TABLE team_tea_accounts (
+CREATE TABLE tea.team.accounts (
     id                    SERIAL PRIMARY KEY,
     uuid                  UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
     team_id               INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
@@ -105,14 +105,14 @@ CREATE TABLE team_tea_accounts (
 );
 
 -- 创建索引
-CREATE UNIQUE INDEX idx_team_tea_accounts_team_id ON team_tea_accounts(team_id);
-CREATE INDEX idx_team_tea_accounts_status ON team_tea_accounts(status);
+CREATE UNIQUE INDEX idx_tea.team.accounts_team_id ON tea.team.accounts(team_id);
+CREATE INDEX idx_tea.team.accounts_status ON tea.team.accounts(status);
 
 -- 添加表注释
-COMMENT ON TABLE team_tea_accounts IS '团队茶叶账户表';
-COMMENT ON COLUMN team_tea_accounts.balance_grams IS '团队茶叶余额，单位为克，精确到3位小数(毫克)';
-COMMENT ON COLUMN team_tea_accounts.status IS '团队账户状态: normal-正常, frozen-冻结';
-COMMENT ON COLUMN team_tea_accounts.frozen_reason IS '团队账户冻结原因说明';
+COMMENT ON TABLE tea.team.accounts IS '团队茶叶账户表';
+COMMENT ON COLUMN tea.team.accounts.balance_grams IS '团队茶叶余额，单位为克，精确到3位小数(毫克)';
+COMMENT ON COLUMN tea.team.accounts.status IS '团队账户状态: normal-正常, frozen-冻结';
+COMMENT ON COLUMN tea.team.accounts.frozen_reason IS '团队账户冻结原因说明';
 
 -- 团队茶叶操作记录表（需要双重审批）
 CREATE TABLE team_tea_operations (
@@ -156,7 +156,7 @@ COMMENT ON COLUMN team_tea_operations.expires_at IS '审批过期时间，超过
 COMMENT ON COLUMN team_tea_operations.approved_at IS '实际审批完成时间';
 
 -- 团队茶叶交易流水表
-CREATE TABLE team_tea_transactions (
+CREATE TABLE tea.team.transactions (
     id                    SERIAL PRIMARY KEY,
     uuid                  UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
     team_id               INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
@@ -172,19 +172,19 @@ CREATE TABLE team_tea_transactions (
 );
 
 -- 创建索引
-CREATE INDEX idx_team_tea_transactions_team_id ON team_tea_transactions(team_id);
-CREATE INDEX idx_team_tea_transactions_type ON team_tea_transactions(transaction_type);
-CREATE INDEX idx_team_tea_transactions_created_at ON team_tea_transactions(created_at);
-CREATE INDEX idx_team_tea_transactions_operation_id ON team_tea_transactions(operation_id);
+CREATE INDEX idx_tea.team.transactions_team_id ON tea.team.transactions(team_id);
+CREATE INDEX idx_tea.team.transactions_type ON tea.team.transactions(transaction_type);
+CREATE INDEX idx_tea.team.transactions_created_at ON tea.team.transactions(created_at);
+CREATE INDEX idx_tea.team.transactions_operation_id ON tea.team.transactions(operation_id);
 
 -- 添加表注释
-COMMENT ON TABLE team_tea_transactions IS '团队茶叶交易流水记录表';
-COMMENT ON COLUMN team_tea_transactions.transaction_type IS '交易类型: deposit-存入, withdraw-提取, transfer_out-转出, transfer_in-转入, system_grant-系统发放, system_deduct-系统扣除';
-COMMENT ON COLUMN team_tea_transactions.balance_before IS '交易前余额';
-COMMENT ON COLUMN team_tea_transactions.balance_after IS '交易后余额';
-COMMENT ON COLUMN team_tea_transactions.description IS '交易描述';
-COMMENT ON COLUMN team_tea_transactions.related_team_id IS '交易相关团队ID（如转账的对方团队）';
-COMMENT ON COLUMN team_tea_transactions.related_user_id IS '交易相关用户ID（如操作人、审批人）';
+COMMENT ON TABLE tea.team.transactions IS '团队茶叶交易流水记录表';
+COMMENT ON COLUMN tea.team.transactions.transaction_type IS '交易类型: deposit-存入, withdraw-提取, transfer_out-转出, transfer_in-转入, system_grant-系统发放, system_deduct-系统扣除';
+COMMENT ON COLUMN tea.team.transactions.balance_before IS '交易前余额';
+COMMENT ON COLUMN tea.team.transactions.balance_after IS '交易后余额';
+COMMENT ON COLUMN tea.team.transactions.description IS '交易描述';
+COMMENT ON COLUMN tea.team.transactions.related_team_id IS '交易相关团队ID（如转账的对方团队）';
+COMMENT ON COLUMN tea.team.transactions.related_user_id IS '交易相关用户ID（如操作人、审批人）';
 
 -- ============================================
 -- 系统配置和约束
@@ -203,7 +203,7 @@ ALTER TABLE tea_transactions ADD CONSTRAINT check_tea_transaction_type
     CHECK (transaction_type IN ('transfer_out', 'transfer_in', 'system_grant', 'system_deduct', 'refund'));
 
 -- 团队账户状态枚举约束
-ALTER TABLE team_tea_accounts ADD CONSTRAINT check_team_tea_account_status 
+ALTER TABLE tea.team.accounts ADD CONSTRAINT check_tea.team.account_status 
     CHECK (status IN ('normal', 'frozen'));
 
 -- 团队操作状态枚举约束
@@ -215,7 +215,7 @@ ALTER TABLE team_tea_operations ADD CONSTRAINT check_team_tea_operation_type
     CHECK (operation_type IN ('deposit', 'withdraw', 'transfer_out', 'transfer_in'));
 
 -- 团队交易类型枚举约束
-ALTER TABLE team_tea_transactions ADD CONSTRAINT check_team_tea_transaction_type 
+ALTER TABLE tea.team.transactions ADD CONSTRAINT check_team_tea_transaction_type 
     CHECK (transaction_type IN ('deposit', 'withdraw', 'transfer_out', 'transfer_in', 'system_grant', 'system_deduct'));
 
 -- 金额不能为负数约束
@@ -229,13 +229,13 @@ ALTER TABLE tea_transactions ADD CONSTRAINT check_tea_transaction_amount_positiv
     CHECK (amount_grams > 0);
 
 -- 团队账户金额约束
-ALTER TABLE team_tea_accounts ADD CONSTRAINT check_team_tea_account_balance_positive 
+ALTER TABLE tea.team.accounts ADD CONSTRAINT check_tea.team.account_balance_positive 
     CHECK (balance_grams >= 0);
 
 ALTER TABLE team_tea_operations ADD CONSTRAINT check_team_tea_operation_amount_positive 
     CHECK (amount_grams > 0);
 
-ALTER TABLE team_tea_transactions ADD CONSTRAINT check_team_tea_transaction_amount_positive 
+ALTER TABLE tea.team.transactions ADD CONSTRAINT check_team_tea_transaction_amount_positive 
     CHECK (amount_grams > 0);
 
 -- ============================================
@@ -269,8 +269,8 @@ CREATE TRIGGER tea_transfers_updated_at_trigger
     FOR EACH ROW EXECUTE FUNCTION update_tea_transfers_updated_at();
 
 -- 团队茶叶账户表更新时间触发器
-CREATE TRIGGER team_tea_accounts_updated_at_trigger
-    BEFORE UPDATE ON team_tea_accounts
+CREATE TRIGGER tea.team.accounts_updated_at_trigger
+    BEFORE UPDATE ON tea.team.accounts
     FOR EACH ROW EXECUTE FUNCTION update_tea_transfers_updated_at();
 
 -- 团队茶叶操作表更新时间触发器
@@ -306,7 +306,7 @@ LEFT JOIN tea_accounts ta ON u.id = ta.user_id;
 COMMENT ON VIEW user_tea_account_summary IS '用户茶叶账户汇总信息视图';
 
 -- 团队账户汇总视图
-CREATE VIEW team_tea_account_summary AS
+CREATE VIEW tea.team.account_summary AS
 SELECT 
     t.id as team_id,
     t.uuid as team_uuid,
@@ -320,13 +320,13 @@ SELECT
     -- 总操作次数
     (SELECT COUNT(*) FROM team_tea_operations WHERE team_id = t.id) as total_operations,
     -- 总交易次数
-    (SELECT COUNT(*) FROM team_tea_transactions WHERE team_id = t.id) as total_transactions,
+    (SELECT COUNT(*) FROM tea.team.transactions WHERE team_id = t.id) as total_transactions,
     -- 账户创建时间
     tta.created_at as account_created_at
 FROM teams t
-LEFT JOIN team_tea_accounts tta ON t.id = tta.team_id;
+LEFT JOIN tea.team.accounts tta ON t.id = tta.team_id;
 
-COMMENT ON VIEW team_tea_account_summary IS '团队茶叶账户汇总信息视图';
+COMMENT ON VIEW tea.team.account_summary IS '团队茶叶账户汇总信息视图';
 
 -- ============================================
 -- 初始化数据：为现有用户创建茶叶账户
@@ -342,11 +342,11 @@ WHERE NOT EXISTS (
 );
 
 -- 为现有团队创建茶叶账户（如果还没有的话）
-INSERT INTO team_tea_accounts (team_id, balance_grams, status)
+INSERT INTO tea.team.accounts (team_id, balance_grams, status)
 SELECT id, 0.000, 'normal'
 FROM teams t
 WHERE NOT EXISTS (
-    SELECT 1 FROM team_tea_accounts tta 
+    SELECT 1 FROM tea.team.accounts tta 
     WHERE tta.team_id = t.id
 );
 

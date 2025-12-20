@@ -328,18 +328,11 @@ func main() {
 
 	// 团队茶叶账户系统路由
 	mux.HandleFunc("/v1/tea/team/account", route.GetTeamTeaAccount)
-	mux.HandleFunc("/v1/tea/team/operation/new", route.CreateTeamTeaOperation)
-	mux.HandleFunc("/v1/tea/team/operation/approve", route.ApproveTeamTeaOperation)
-	mux.HandleFunc("/v1/tea/team/operation/reject", route.RejectTeamTeaOperation)
-	mux.HandleFunc("/v1/tea/team/operations/pending", route.GetTeamPendingOperations)
-	mux.HandleFunc("/v1/tea/team/operations/pending/page", route.HandleTeamPendingOperations) // 团队待审批操作页面路由
-	mux.HandleFunc("/v1/tea/team/operations/history", route.GetTeamTeaOperations)
-	mux.HandleFunc("/v1/tea/team/operations/history/page", route.HandleTeamTeaOperations) // 团队操作记录页面路由
 	mux.HandleFunc("/v1/tea/team/transactions", route.GetTeamTeaTransactions)
-	mux.HandleFunc("/v1/tea/team/transactions/page", route.HandleTeamTeaTransactions) // 团队交易流水页面路由
-	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeamTeaAccount)
-	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeamTeaAccount)
+	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeamAccount)
+	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeamAccount)
 	mux.HandleFunc("/v1/team/tea/account", route.HandleTeamTeaAccount) // 团队茶叶账户页面路由
+	mux.HandleFunc("/v1/team/tea/transactions", route.HandleTeamTeaTransactions) // 团队交易流水页面路由
 
 	// 写字台路由
 	mux.HandleFunc("/v1/desk", route.HandleDesk)

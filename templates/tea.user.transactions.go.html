@@ -130,15 +130,25 @@
                                     <td>{{ FormatFloat .BalanceBefore 3 }} 克</td>
                                     <td>{{ FormatFloat .BalanceAfter 3 }} 克</td>
                                     <td>
-                                        {{ if .RelatedUserName }}
+                                        {{ if .TargetUserName }}
                                         <div>
                                             <span class="label label-success">个人</span>
-                                            <a href="/v1/user/biography?uuid={{ .TeaTransaction.RelatedUserId }}" class="text-success"> {{ .RelatedUserName }} (ID: {{ .TeaTransaction.RelatedUserId }})</a>
+                                            <a href="/v1/user/biography?uuid={{ .TargetUserId }}" class="text-success"> {{ .TargetUserName }} (ID: {{ .TargetUserId }})</a>
                                         </div>
-                                        {{ else if .TeaTransaction.RelatedUserId }}
+                                        {{ else if .TargetUserId }}
                                         <div>
                                             <span class="label label-success">个人</span>
-                                            <span class="text-muted"> ID: {{ .TeaTransaction.RelatedUserId }}</span>
+                                            <span class="text-muted"> ID: {{ .TargetUserId }}</span>
+                                        </div>
+                                        {{ else if .TargetTeamName }}
+                                        <div>
+                                            <span class="label label-info">团队</span>
+                                            <a href="/v1/team/biography?uuid={{ .TargetTeamId }}" class="text-info"> {{ .TargetTeamName }} (ID: {{ .TargetTeamId }})</a>
+                                        </div>
+                                        {{ else if .TargetTeamId }}
+                                        <div>
+                                            <span class="label label-info">团队</span>
+                                            <span class="text-muted"> ID: {{ .TargetTeamId }}</span>
                                         </div>
                                         {{ else }}
                                         -

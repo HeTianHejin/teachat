@@ -21,7 +21,7 @@
 ALTER TABLE tea_accounts ADD COLUMN locked_balance_grams FLOAT DEFAULT 0.0;
 
 -- 团队茶叶账户表  
-ALTER TABLE team_tea_accounts ADD COLUMN locked_balance_grams FLOAT DEFAULT 0.0;
+ALTER TABLE tea.team.accounts ADD COLUMN locked_balance_grams FLOAT DEFAULT 0.0;
 ```
 
 ### 2. 核心逻辑变更
