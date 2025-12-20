@@ -32,8 +32,8 @@
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
                         {{ .Team.Name }} 团队茶叶账户
                         <span class="pull-right">
-                            状态: <span class="label {{ if eq (index .TeamAccountData 0).TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">
-                                {{ (index .TeamAccountData 0).StatusDisplay }}
+                            状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">
+                                {{ if eq .TeamAccount.Status "frozen" }}已冻结{{ else }}正常{{ end }}
                             </span>
                         </span>
                     </h3>
@@ -41,15 +41,15 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <h4>总余额: <strong>{{ (index .TeamAccountData 0).BalanceDisplay }}</strong></h4>
+                            <h4>总余额: <strong>{{ printf "%.3f" .TeamAccount.BalanceGrams }} 克</strong></h4>
                             <p class="text-muted">团队茶叶资产总量</p>
                         </div>
                         <div class="col-md-4">
-                            <h4>锁定余额: <strong>{{ (index .TeamAccountData 0).LockedBalanceDisplay }}</strong></h4>
+                            <h4>锁定余额: <strong>{{ printf "%.3f" .TeamAccount.LockedBalanceGrams }} 克</strong></h4>
                             <p class="text-muted">待确认操作中锁定的茶叶</p>
                         </div>
                         <div class="col-md-4">
-                            <h4>可用余额: <strong>{{ (index .TeamAccountData 0).AvailableBalanceDisplay }}</strong></h4>
+                            <h4>可用余额: <strong>{{ printf "%.3f" .TeamAccount.AvailableBalanceGrams }} 克</strong></h4>
                             <p class="text-muted">可以立即使用的茶叶</p>
                         </div>
                         <div class="col-md-6">
@@ -58,16 +58,16 @@
                                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
                                     返回团队详情
                                 </a>
-                                <a href="/v1/tea/team/transactions/page?team_id={{ (index .TeamAccountData 0).TeamId }}" class="btn btn-info">
+                                <a href="/v1/tea/team/transactions/page?team_id={{ .TeamAccount.TeamId }}" class="btn btn-info">
                                     <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
                                     收支明细
                                 </a>
-                                <a href="/v1/tea/team/operations/history/page?team_id={{ (index .TeamAccountData 0).TeamId }}" class="btn btn-default">
+                                <a href="/v1/tea/team/operations/history/page?team_id={{ .TeamAccount.TeamId }}" class="btn btn-default">
                                     <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
                                     操作记录
                                 </a>
-                                {{ if (index .TeamAccountData 0).UserIsCoreMember }}
-                                <a href="/v1/tea/team/operations/pending/page?team_id={{ (index .TeamAccountData 0).TeamId }}" class="btn btn-warning">
+                                {{ if .UserIsCoreMember }}
+                                <a href="/v1/tea/team/operations/pending/page?team_id={{ .TeamAccount.TeamId }}" class="btn btn-warning">
                                     <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
                                     待审批操作
                                 </a>
@@ -83,7 +83,7 @@
 
 
 
-    {{ if (index .TeamAccountData 0).UserIsCoreMember }}
+    {{ if .UserIsCoreMember }}
     <!-- 功能快捷入口 (仅核心成员可见) -->
     <div class="row">
         <!-- 收入管理 -->
@@ -97,24 +97,14 @@
                 </div>
                 <div class="panel-body">
                     <div class="list-group">
-                        <a href="/v1/tea/transfers/team/pending/page?team_id={{ (index .TeamAccountData 0).TeamId }}" class="list-group-item {{ if gt (len (index .TeamAccountData 0).PendingIncomingTransfers) 0 }}list-group-item-success{{ end }}">
+                        <a href="/v1/tea/transfers/team/pending/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 待确认接收的操作
-                                {{ if gt (len (index .TeamAccountData 0).PendingIncomingTransfers) 0 }}
-                                <span class="badge">{{ len (index .TeamAccountData 0).PendingIncomingTransfers }}</span>
-                                {{ end }}
                             </h4>
-                            <p class="list-group-item-text">
-                                {{ if gt (len (index .TeamAccountData 0).PendingIncomingTransfers) 0 }}
-                                <strong>有 {{ len (index .TeamAccountData 0).PendingIncomingTransfers }} 笔待确认转入，请及时处理！</strong>
-                                {{ else }}
-                                确认接受其他用户转入的茶叶
-                                {{ end }}
-                            </p>
+                            <p class="list-group-item-text">确认接受其他用户转入的茶叶</p>
                         </a>
-
-                        <a href="/v1/tea/team/transactions/page?team_id={{ (index .TeamAccountData 0).TeamId }}&type=transfer_in" class="list-group-item">
+                        <a href="/v1/tea/team/transactions/page?team_id={{ .TeamAccount.TeamId }}&type=transfer_in" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 收入记录
@@ -145,7 +135,7 @@
                             </h4>
                             <p class="list-group-item-text">向其他团队或用户转账茶叶</p>
                         </a>
-                        <a href="/v1/tea/team/transactions/page?team_id={{ (index .TeamAccountData 0).TeamId }}&type=transfer_out" class="list-group-item">
+                        <a href="/v1/tea/team/transactions/page?team_id={{ .TeamAccount.TeamId }}&type=transfer_out" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 支出记录
@@ -171,8 +161,7 @@
                     </h3>
                 </div>
                 <div class="panel-body">
-                    {{ $recentTx := (index .TeamAccountData 0).RecentTransactions }}
-                    {{ if $recentTx }}
+                    {{ if .Transactions }}
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead>
@@ -187,7 +176,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {{ range $recentTx }}
+                                {{ range .Transactions }}
                                 <tr class="{{ if or (eq .TransactionType "deposit") (eq .TransactionType "transfer_in") (eq .TransactionType "system_grant") }}success{{ else }}danger{{ end }}">
                                     <td>{{ .CreatedAt.Format "01-02 15:04" }}</td>
                                     <td>
@@ -211,48 +200,11 @@
                                     </td>
                                     <td>{{ printf "%.3f" .BalanceAfter }} 克</td>
                                     <td>
-                                        {{ if .TargetTeamName }}
-                                            {{ if eq .TransactionType "transfer_out" }}
-                                            <span class="text-info">目标团队: {{ .TargetTeamName }} (ID: {{ .TargetTeamId }})</span>
-                                            {{ else if eq .TransactionType "transfer_in" }}
-                                            <span class="text-info">来源团队: {{ .TargetTeamName }} (ID: {{ .TargetTeamId }})</span>
-                                            {{ else }}
-                                            <span class="text-info">团队: {{ .TargetTeamName }} (ID: {{ .TargetTeamId }})</span>
-                                            {{ end }}
-                                        {{ else if .TargetUserName }}
-                                            {{ if eq .TransactionType "transfer_out" }}
-                                            <span class="text-success">目标用户: {{ .TargetUserName }} (ID: {{ .TargetUserId }})</span>
-                                            {{ else if eq .TransactionType "transfer_in" }}
-                                            <span class="text-success">来源用户: {{ .TargetUserName }} (ID: {{ .TargetUserId }})</span>
-                                            {{ else }}
-                                            <span class="text-success">用户: {{ .TargetUserName }} (ID: {{ .TargetUserId }})</span>
-                                            {{ end }}
-                                        {{ else if .RelatedUserName }}
-                                            {{ if eq .TransactionType "withdraw" }}
-                                            <span class="text-success">操作人: {{ .RelatedUserName }} (ID: {{ .OperatorUserId }})</span>
-                                            {{ else if eq .TransactionType "deposit" }}
-                                            <span class="text-success">操作人: {{ .RelatedUserName }} (ID: {{ .OperatorUserId }})</span>
-                                            {{ else }}
-                                            <span class="text-success">用户: {{ .RelatedUserName }} (ID: {{ .OperatorUserId }})</span>
-                                            {{ end }}
-                                        {{ else if .TargetTeamId }}
-                                            {{ if eq .TransactionType "transfer_out" }}
-                                            <span class="text-muted">目标团队ID: {{ .TargetTeamId }}</span>
-                                            {{ else if eq .TransactionType "transfer_in" }}
-                                            <span class="text-muted">来源团队ID: {{ .TargetTeamId }}</span>
-                                            {{ else }}
-                                            <span class="text-muted">团队ID: {{ .TargetTeamId }}</span>
-                                            {{ end }}
+                                        {{ if .TargetTeamId }}
+                                            <span class="text-info">团队ID: {{ .TargetTeamId }}</span>
                                         {{ else if .TargetUserId }}
-                                            {{ if eq .TransactionType "transfer_out" }}
-                                            <span class="text-muted">目标用户ID: {{ .TargetUserId }}</span>
-                                            {{ else if eq .TransactionType "transfer_in" }}
-                                            <span class="text-muted">来源用户ID: {{ .TargetUserId }}</span>
-                                            {{ else }}
-                                            <span class="text-muted">用户ID: {{ .TargetUserId }}</span>
-                                            {{ end }}
-                                        {{ else }}
-                                        -
+                                            <span class="text-success">用户ID: {{ .TargetUserId }}</span>
+                                        {{ else }}-
                                         {{ end }}
                                     </td>
                                     <td><small class="text-muted">{{ .Description }}</small></td>
@@ -308,7 +260,7 @@
                     <div class="form-group">
                         <label for="amountGrams">转账数量(克):</label>
                         <input type="number" class="form-control" id="amountGrams" name="amount_grams" required min="0.001" step="0.001">
-                        <small class="help-block">当前余额: {{ (index .TeamAccountData 0).BalanceDisplay }}，可输入小数，最小单位0.001克(1毫克)</small>
+                        <small class="help-block">当前余额: {{ printf "%.3f" .TeamAccount.BalanceGrams }} 克，可输入小数，最小单位0.001克(1毫克)</small>
                     </div>
                     <div class="form-group">
                         <label for="notes">备注说明:</label>
@@ -336,7 +288,7 @@
 </div>
 
 <script>
-const teamId = {{ (index .TeamAccountData 0).TeamId }};
+const teamId = "{{ .TeamAccount.TeamId }}";
 
 // 切换转账目标类型
 function toggleTransferTarget() {

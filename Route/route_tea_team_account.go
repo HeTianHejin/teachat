@@ -24,6 +24,21 @@ type UnfreezeTeamAccountRequest struct {
 	TeamId int `json:"team_id"`
 }
 
+// TeamAccountWithAvailable 用于模板渲染，包含可用余额
+type TeamAccountWithAvailable struct {
+	dao.TeamTeaAccount
+	AvailableBalanceGrams float64
+}
+
+// PageData 用于模板渲染
+type PageData struct {
+	SessUser         dao.User
+	Team             *dao.Team
+	TeamAccount      TeamAccountWithAvailable
+	Transactions     []dao.TeaTransaction
+	UserIsCoreMember bool
+}
+
 // GetTeamTeaAccount 获取团队茶叶账户信息
 func GetTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -349,6 +364,12 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 计算可用余额
+	teamAccountWithAvailable := TeamAccountWithAvailable{
+		TeamTeaAccount:        teamAccount,
+		AvailableBalanceGrams: teamAccount.BalanceGrams - teamAccount.LockedBalanceGrams,
+	}
+
 	// 获取团队交易流水
 	transactions, err := dao.GetTeamTeaTransactions(team.Id, 1, 20, "")
 	if err != nil {
@@ -357,18 +378,15 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建页面数据结构
-	var pageData struct {
-		SessUser     dao.User
-		Team         *dao.Team
-		TeamAccount  dao.TeamTeaAccount
-		Transactions []dao.TeaTransaction
+	// 判断是否核心成员
+	isCoreMember, _ := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
+	pageData := PageData{
+		SessUser:         s_u,
+		Team:             singleTeam,
+		TeamAccount:      teamAccountWithAvailable,
+		Transactions:     transactions,
+		UserIsCoreMember: isCoreMember,
 	}
-
-	pageData.SessUser = s_u
-	pageData.Team = singleTeam
-	pageData.TeamAccount = teamAccount
-	pageData.Transactions = transactions
-
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")
 }
