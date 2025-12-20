@@ -62,7 +62,7 @@ func GetTeamTeaAccountByTeamId(teamId int) (TeamTeaAccount, error) {
 	}
 
 	account := TeamTeaAccount{}
-	err := DB.QueryRow("SELECT id, uuid, team_id, balance_grams, locked_balance_grams, status, frozen_reason, created_at, updated_at FROM tea.team.accounts WHERE team_id = $1", teamId).
+	err := DB.QueryRow("SELECT id, uuid, team_id, balance_grams, locked_balance_grams, status, frozen_reason, created_at, updated_at FROM tea.team_accounts WHERE team_id = $1", teamId).
 		Scan(&account.Id, &account.Uuid, &account.TeamId, &account.BalanceGrams, &account.LockedBalanceGrams, &account.Status, &account.FrozenReason, &account.CreatedAt, &account.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -75,7 +75,7 @@ func GetTeamTeaAccountByTeamId(teamId int) (TeamTeaAccount, error) {
 
 // Create 创建团队茶叶账户
 func (account *TeamTeaAccount) Create() error {
-	statement := "INSERT INTO tea.team.accounts (team_id, balance_grams, status) VALUES ($1, $2, $3) RETURNING id, uuid"
+	statement := "INSERT INTO tea.team_accounts (team_id, balance_grams, status) VALUES ($1, $2, $3) RETURNING id, uuid"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (account *TeamTeaAccount) Create() error {
 
 // UpdateStatus 更新账户状态
 func (account *TeamTeaAccount) UpdateStatus(status, reason string) error {
-	statement := "UPDATE tea.team.accounts SET status = $2, frozen_reason = $3, updated_at = $4 WHERE id = $1"
+	statement := "UPDATE tea.team_accounts SET status = $2, frozen_reason = $3, updated_at = $4 WHERE id = $1"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
@@ -120,7 +120,7 @@ func EnsureTeamTeaAccountExists(teamId int) error {
 	}
 
 	var exists bool
-	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM tea.team.accounts WHERE team_id = $1)", teamId).Scan(&exists)
+	err := DB.QueryRow("SELECT EXISTS(SELECT 1 FROM tea.team_accounts WHERE team_id = $1)", teamId).Scan(&exists)
 	if err != nil {
 		return fmt.Errorf("检查团队账户存在性失败: %v", err)
 	}
@@ -146,7 +146,7 @@ func CheckTeamAccountFrozen(teamId int) (bool, string, error) {
 
 	var status string
 	var frozenReason sql.NullString
-	err := DB.QueryRow("SELECT status, frozen_reason FROM tea.team.accounts WHERE team_id = $1", teamId).
+	err := DB.QueryRow("SELECT status, frozen_reason FROM tea.team_accounts WHERE team_id = $1", teamId).
 		Scan(&status, &frozenReason)
 	if err != nil {
 		return false, "", fmt.Errorf("查询团队账户状态失败: %v", err)

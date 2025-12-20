@@ -17,8 +17,8 @@ ADD COLUMN IF NOT EXISTS from_team_id INTEGER REFERENCES teams(id);
 ALTER TABLE tea_accounts 
 ADD COLUMN IF NOT EXISTS locked_balance_grams DECIMAL(15,3) NOT NULL DEFAULT 0.000;
 
--- 5. 添加 locked_balance_grams 字段到 tea.team.accounts（如果不存在）
-ALTER TABLE tea.team.accounts 
+-- 5. 添加 locked_balance_grams 字段到 tea.team_accounts（如果不存在）
+ALTER TABLE tea.team_accounts 
 ADD COLUMN IF NOT EXISTS locked_balance_grams DECIMAL(15,3) NOT NULL DEFAULT 0.000;
 
 -- 6. 添加审批相关字段
@@ -87,7 +87,7 @@ COMMENT ON COLUMN tea_transfers.reception_rejection_reason IS '接收拒绝原�
 COMMENT ON COLUMN tea_transfers.rejected_by IS '拒绝人ID';
 COMMENT ON COLUMN tea_transfers.rejected_at IS '拒绝时间';
 COMMENT ON COLUMN tea_accounts.locked_balance_grams IS '被锁定的茶叶数量，单位为克';
-COMMENT ON COLUMN tea.team.accounts.locked_balance_grams IS '团队被锁定的茶叶数量，单位为克';
+COMMENT ON COLUMN tea.team_accounts.locked_balance_grams IS '团队被锁定的茶叶数量，单位为克';
 COMMENT ON COLUMN tea_transactions.target_team_id IS '交易相关团队ID';
 COMMENT ON COLUMN tea_transactions.target_type IS '目标类型: u-用户, t-团队';
 

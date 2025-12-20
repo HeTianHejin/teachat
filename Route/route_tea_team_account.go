@@ -358,10 +358,10 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser       dao.User
-		Team           *dao.Team
-		TeamAccount    dao.TeamTeaAccount
-		Transactions   []dao.TeaTransaction
+		SessUser     dao.User
+		Team         *dao.Team
+		TeamAccount  dao.TeamTeaAccount
+		Transactions []dao.TeaTransaction
 	}
 
 	pageData.SessUser = s_u
@@ -370,7 +370,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	pageData.Transactions = transactions
 
 	// 生成页面
-	generateHTML(w, &pageData, "layout", "navbar.private", "team.tea.account")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")
 }
 
 // HandleTeamTeaTransactions 处理团队交易流水页面请求
@@ -449,11 +449,11 @@ func HandleTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser      dao.User
-		Team          *dao.Team
-		Transactions  []dao.TeaTransaction
-		CurrentPage   int
-		Limit         int
+		SessUser        dao.User
+		Team            *dao.Team
+		Transactions    []dao.TeaTransaction
+		CurrentPage     int
+		Limit           int
 		TransactionType string
 	}
 

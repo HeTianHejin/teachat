@@ -7,7 +7,7 @@ SELECT
     data_type,
     is_nullable
 FROM information_schema.columns 
-WHERE table_name IN ('tea_accounts', 'tea.team.accounts', 'tea_transactions')
+WHERE table_name IN ('tea_accounts', 'tea.team_accounts', 'tea_transactions')
     AND table_schema = 'public'
 ORDER BY table_name, ordinal_position;
 
@@ -22,11 +22,11 @@ FROM tea_accounts
 UNION ALL
 
 SELECT 
-    'tea.team.accounts' as table_name,
+    'tea.team_accounts' as table_name,
     COUNT(*) as total_accounts,
     COALESCE(SUM(balance_grams), 0) as total_balance,
     COALESCE(SUM(locked_balance_grams), 0) as total_locked
-FROM tea.team.accounts
+FROM tea.team_accounts
 WHERE team_id != 2; -- 排除自由人团队
 
 -- 3. 检查茶叶交易流水

@@ -780,7 +780,7 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.transacter_history")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.transfer_history")
 }
 
 // GetUserTransactions 获取用户交易流水

@@ -3,13 +3,13 @@
 
 -- 1. 清空旧表数据
 TRUNCATE TABLE team_tea_operations CASCADE;
-TRUNCATE TABLE tea.team.transactions CASCADE;
+TRUNCATE TABLE tea.team_transactions CASCADE;
 TRUNCATE TABLE tea_transfers CASCADE;
 TRUNCATE TABLE tea_transactions CASCADE;
 
 -- 2. 重置茶叶账户余额（可选，如果需要从零开始测试）
 UPDATE tea_accounts SET balance_grams = 0, locked_balance_grams = 0, updated_at = NOW();
-UPDATE tea.team.accounts SET balance_grams = 0, locked_balance_grams = 0, updated_at = NOW() WHERE team_id != 1; -- 不包括自由人团队
+UPDATE tea.team_accounts SET balance_grams = 0, locked_balance_grams = 0, updated_at = NOW() WHERE team_id != 1; -- 不包括自由人团队
 
 -- 3. 确保所有必要的茶叶账户存在
 INSERT INTO tea_accounts (user_id, balance_grams, status, created_at, updated_at)
@@ -19,10 +19,10 @@ WHERE tm.user_id NOT IN (SELECT user_id FROM tea_accounts)
   AND tm.status = 'active';
 
 -- 4. 确保所有团队茶叶账户存在（除自由人团队外）
-INSERT INTO tea.team.accounts (team_id, balance_grams, status, created_at, updated_at)
+INSERT INTO tea.team_accounts (team_id, balance_grams, status, created_at, updated_at)
 SELECT DISTINCT t.id, 0, 'normal', NOW(), NOW()
 FROM teams t
-WHERE t.id NOT IN (SELECT team_id FROM tea.team.accounts)
+WHERE t.id NOT IN (SELECT team_id FROM tea.team_accounts)
   AND t.id != 2  -- 排除自由人团队
   AND t.deleted_at IS NULL;
 
@@ -37,7 +37,7 @@ FROM tea_accounts WHERE user_id = 1 AND balance_grams = 100;
 
 -- 7. 清理孤立的数据
 DELETE FROM team_tea_operations WHERE team_id NOT IN (SELECT id FROM teams);
-DELETE FROM tea.team.transactions WHERE team_id NOT IN (SELECT id FROM teams);
+DELETE FROM tea.team_transactions WHERE team_id NOT IN (SELECT id FROM teams);
 
 -- 8. 验证数据一致性
 -- 检查账户余额总和
@@ -49,11 +49,11 @@ SELECT
 FROM tea_accounts
 UNION ALL
 SELECT 
-    'tea.team.accounts' as table_name,
+    'tea.team_accounts' as table_name,
     COUNT(*) as account_count,
     COALESCE(SUM(balance_grams), 0) as total_balance,
     COALESCE(SUM(locked_balance_grams), 0) as total_locked
-FROM tea.team.accounts
+FROM tea.team_accounts
 WHERE team_id != 2; -- 排除自由人团队
 
 -- 9. 显示清理完成信息
