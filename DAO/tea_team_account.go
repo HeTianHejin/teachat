@@ -6,36 +6,34 @@ import (
 	"time"
 )
 
-// 团队茶叶账户状态常量
+/*
+团队茶叶账户转账流程：
+1、发起方法：团队转出额度茶叶，无论接收方是团队还是用户（个人），都要求由1成员填写转账表单，第一步创建待审核转账表单，
+2、审核方法：由任意1核心成员审批待审核表单，
+2.1、如果审核批准，转账表单状态更新为已批准，执行第3步锁定转账额度，
+2.2、如果审核否决，转账表单状态更新为已否决，记录审批操作记录，流程结束。
+3、锁定方法：已批准的转出团队账户转出额度茶叶数量被锁定，防止重复发起转账；
+4.1、接收方法：目标接受方，用户或者团队任意1状态正常成员，有效期内，操作接收，继续第5步结算双方账户，
+4.2、拒收方法，目标接受方，用户或者团队任意1状态正常成员，有效期内，操作拒收，转账表单状态更新为已拒收，解锁被转出方锁定茶叶，记录拒收操作用户id及时间原因，流程结束。
+5、结算方法：按锁定额度（接收额度）清算双方账户数额，创建出入流水记录；
+6、超时处理：自动解锁转出用户账户被锁定额度茶叶，不创建交易流水明细记录。
+*/
+
+// // 团队茶叶账户状态常量
 const (
-	TeamTeaAccountStatus_Normal = "normal"
-	TeamTeaAccountStatus_Frozen = "frozen"
+	TeaTeamAccountStatus_Normal  = "normal"
+	TeaTeamAccountStatus_Frozen  = "frozen"
+	TeaTeamAccountStatus_Deleted = "deleted"
 )
 
-// 团队交易类型常量（已统一使用 tea_transactions 表）
-// 为了向后兼容保留这些常量，但实际使用 tea_account.go 中的 TransactionType_*
+// 团队转账类型常量
 const (
-	TransactionType_Deposit  = "deposit"
-	TransactionType_Withdraw = "withdraw"
+	TransferType_TeamInitiated        = "team_initiated"         // 团队发起转账（单人团队自动审批）
+	TransferType_TeamApprovalRequired = "team_approval_required" // 团队转账（需要审批）
 )
-
-// 流通对象类型常量
-const (
-	TransactionTargetType_User = "u" // 个人
-	TransactionTargetType_Team = "t" // 团队
-)
-
-// 茶叶账户流转规则：
-// 个人对个人或者团队转账茶叶，无需审批，操作转出方的额定茶叶数量被锁定，接收方需要在有效期内确认接收，
-// 接收方个人如果确认接受，按锁定额度清算双方账户数额并记录流水明细。
-// 团队转出茶叶，无论对团队还是个人，都要求1成员发起转账操作，1核心成员审批，转出操作才生效；
-// 团队审批转出的茶叶额定数量同个人账户一样会被锁定，等待接收方有效期内接收/拒绝，
-// 团队接收茶叶转入，有效期内仅需要任意1成员确认接收即可结算双方账户，记录出入流水记录；
-// 如果对方接收，才真正清算双方账户数额，创建实际流通交易流水记录，如果被接收方拒绝或者超时，解锁被转出方锁定茶叶，不创建交易流水记录。
-// 超时处理，解锁转出方被锁定茶叶，双方无交易流水，有操作记录。
 
 // 团队茶叶账户结构体
-type TeamTeaAccount struct {
+type TeaTeamAccount struct {
 	Id                 int
 	Uuid               string
 	TeamId             int
@@ -47,21 +45,64 @@ type TeamTeaAccount struct {
 	UpdatedAt          *time.Time
 }
 
-// GetTeamTeaAccountByTeamId 根据团队ID获取茶叶账户
-func GetTeamTeaAccountByTeamId(teamId int) (TeamTeaAccount, error) {
+// 团队茶叶转账结构体（（单人团队自动批准,>2需内部核心成员审批，不能自己审批自己）
+// payer转出，发起流程
+// 转帐发起操作记录（从转出方视角）
+// 注意不能转出0/负数，不能转给自己和自由人团队id=TeamIdFreelancer
+type TeaTeamTransferOut struct {
+	Id         int
+	Uuid       string
+	FromTeamId int // 转出方，户主，团队id
+
+	// 系统默认提交用户是，转出方发起操作人id
+	InitiatorUserId int // 必须是团队成员
+
+	// 操作人填写，接收方（必填其一）
+	ToUserId    *int    // 用户接收
+	ToTeamId    *int    // 团队接收
+	AmountGrams float64 // 转账额度数量（克），也是锁定额度
+	Notes       string  // 转账备注
+
+	// StatusPendingApproval  = "pending_approval"  // 待审批（团队转出）
+	// StatusApproved         = "approved"          // 审批通过
+	// StatusApprovalRejected = "approval_rejected" // 审批拒绝
+	// StatusPendingReceipt   = "pending_receipt"   // 待接收
+	// StatusCompleted        = "completed"         // 已完成
+	// StatusRejected         = "rejected"          // 以拒收
+	// StatusExpired          = "expired"           // 已超时
+	Status string // 统一状态枚举，系统自动管理
+
+	// 审批相关（团队转出时使用）
+	TransferType string // 1、单人团队自动批准'team_initiated', 2、多人团队审批'team_approval_required'
+	// 审批人填写，A/R必填二选一
+	ApproverUserId          *int       // 审批人ID
+	ApprovedAt              *time.Time // 审批时间
+	ApprovalRejectionReason *string    // 审批拒绝原因
+	RejectedBy              *int       // 拒绝人ID
+	RejectedAt              *time.Time // 拒绝时间
+
+	// 时间管理
+	CreatedAt   time.Time  // 创建，流程开始时间，也是锁定额度起始时间
+	ExpiresAt   time.Time  // 过期时间，也是锁定额度截止时间
+	PaymentTime *time.Time // 实际支付时间（已批准+已接收）
+	UpdatedAt   *time.Time
+}
+
+// GetTeaTeamAccountByTeamId 根据团队ID获取茶叶账户
+func GetTeaTeamAccountByTeamId(teamId int) (TeaTeamAccount, error) {
 	// 自由人团队没有茶叶资产，返回特殊的冻结账户
 	if teamId == TeamIdFreelancer {
 		reason := "自由人团队不支持茶叶资产"
-		account := TeamTeaAccount{
+		account := TeaTeamAccount{
 			TeamId:       TeamIdFreelancer,
 			BalanceGrams: 0.0,
-			Status:       TeamTeaAccountStatus_Frozen,
+			Status:       TeaTeamAccountStatus_Frozen,
 			FrozenReason: &reason,
 		}
 		return account, nil
 	}
 
-	account := TeamTeaAccount{}
+	account := TeaTeamAccount{}
 	err := DB.QueryRow("SELECT id, uuid, team_id, balance_grams, locked_balance_grams, status, frozen_reason, created_at, updated_at FROM tea.team_accounts WHERE team_id = $1", teamId).
 		Scan(&account.Id, &account.Uuid, &account.TeamId, &account.BalanceGrams, &account.LockedBalanceGrams, &account.Status, &account.FrozenReason, &account.CreatedAt, &account.UpdatedAt)
 	if err != nil {
@@ -74,7 +115,7 @@ func GetTeamTeaAccountByTeamId(teamId int) (TeamTeaAccount, error) {
 }
 
 // Create 创建团队茶叶账户
-func (account *TeamTeaAccount) Create() error {
+func (account *TeaTeamAccount) Create() error {
 	statement := "INSERT INTO tea.team_accounts (team_id, balance_grams, status) VALUES ($1, $2, $3) RETURNING id, uuid"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
@@ -90,7 +131,7 @@ func (account *TeamTeaAccount) Create() error {
 }
 
 // UpdateStatus 更新账户状态
-func (account *TeamTeaAccount) UpdateStatus(status, reason string) error {
+func (account *TeaTeamAccount) UpdateStatus(status, reason string) error {
 	statement := "UPDATE tea.team_accounts SET status = $2, frozen_reason = $3, updated_at = $4 WHERE id = $1"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
@@ -112,8 +153,8 @@ func (account *TeamTeaAccount) UpdateStatus(status, reason string) error {
 	return nil
 }
 
-// EnsureTeamTeaAccountExists 确保团队有茶叶账户
-func EnsureTeamTeaAccountExists(teamId int) error {
+// EnsureTeaTeamAccountExists 确保团队有茶叶账户
+func EnsureTeaTeamAccountExists(teamId int) error {
 	// 自由人团队不应该有茶叶资产
 	if teamId == TeamIdFreelancer {
 		return nil
@@ -126,10 +167,10 @@ func EnsureTeamTeaAccountExists(teamId int) error {
 	}
 
 	if !exists {
-		account := &TeamTeaAccount{
+		account := &TeaTeamAccount{
 			TeamId:       teamId,
 			BalanceGrams: 0.0,
-			Status:       TeamTeaAccountStatus_Normal,
+			Status:       TeaTeamAccountStatus_Normal,
 		}
 		return account.Create()
 	}
@@ -152,7 +193,7 @@ func CheckTeamAccountFrozen(teamId int) (bool, string, error) {
 		return false, "", fmt.Errorf("查询团队账户状态失败: %v", err)
 	}
 
-	if status == TeamTeaAccountStatus_Frozen {
+	if status == TeaTeamAccountStatus_Frozen {
 		return true, frozenReason.String, nil
 	}
 
@@ -160,7 +201,7 @@ func CheckTeamAccountFrozen(teamId int) (bool, string, error) {
 }
 
 // GetTeamTeaTransactions 获取团队交易流水（使用统一的 tea_transactions 表）
-func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string) ([]TeaTransaction, error) {
+func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string) ([]TransactionRecord, error) {
 	offset := (page - 1) * limit
 	var rows *sql.Rows
 	var err error
@@ -168,12 +209,12 @@ func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string)
 	if transactionType == "" {
 		rows, err = DB.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
 			amount_grams, balance_before, balance_after, description, target_user_id, target_team_id, target_type, created_at 
-			FROM tea_transactions WHERE (user_id = $1 OR target_team_id = $1) 
+			FROM tea.transaction_records WHERE (user_id = $1 OR target_team_id = $1) 
 			ORDER BY created_at DESC LIMIT $2 OFFSET $3`, teamId, limit, offset)
 	} else {
 		rows, err = DB.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
 			amount_grams, balance_before, balance_after, description, target_user_id, target_team_id, target_type, created_at 
-			FROM tea_transactions WHERE (user_id = $1 OR target_team_id = $1) AND transaction_type = $2 
+			FROM tea.transaction_records WHERE (user_id = $1 OR target_team_id = $1) AND transaction_type = $2 
 			ORDER BY created_at DESC LIMIT $3 OFFSET $4`, teamId, transactionType, limit, offset)
 	}
 
@@ -182,9 +223,9 @@ func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string)
 	}
 	defer rows.Close()
 
-	var transactions []TeaTransaction
+	var transactions []TransactionRecord
 	for rows.Next() {
-		var transaction TeaTransaction
+		var transaction TransactionRecord
 		err = rows.Scan(&transaction.Id, &transaction.Uuid, &transaction.UserId, &transaction.TransferId,
 			&transaction.TransactionType, &transaction.AmountGrams, &transaction.BalanceBefore,
 			&transaction.BalanceAfter, &transaction.Description, &transaction.TargetUserId,
@@ -201,7 +242,7 @@ func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string)
 // CreateTeamTeaTransaction 创建团队交易流水记录（使用统一的 tea_transactions 表）
 func CreateTeamTeaTransaction(teamId int, transactionType string, amountGrams, balanceBefore, balanceAfter float64, description string, targetUserId, targetTeamId, operatorUserId, approverUserId *int, targetType string) error {
 	// 对于团队交易，user_id 字段存储 team_id
-	_, err := DB.Exec(`INSERT INTO tea_transactions 
+	_, err := DB.Exec(`INSERT INTO tea.transaction_records 
 		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, target_user_id, target_team_id, target_type) 
 		VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, $8, $9)`,
 		teamId, transactionType, amountGrams, balanceBefore, balanceAfter, description, targetUserId, targetTeamId, targetType)
