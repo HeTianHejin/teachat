@@ -10,8 +10,8 @@ import (
 	"time"
 )
 
-// 茶叶账户相关响应结构体
-type TeaAccountResponse struct {
+// 茶叶用户账户相关响应结构体
+type TeaUsrAccountResponse struct {
 	Uuid         string  `json:"uuid"`
 	UserId       int     `json:"user_id"`
 	BalanceGrams float64 `json:"balance_grams"`
@@ -105,7 +105,7 @@ func GetTeaAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := TeaAccountResponse{
+	response := TeaUsrAccountResponse{
 		Uuid:         account.Uuid,
 		UserId:       account.UserId,
 		BalanceGrams: account.BalanceGrams,
@@ -178,10 +178,10 @@ func CreateTeaTransfer(w http.ResponseWriter, r *http.Request) {
 
 	if req.ToUserId > 0 {
 		// 用户间转账
-		transfer, err = dao.CreateTeaTransfer(user.Id, req.ToUserId, req.AmountGrams, req.Notes, req.ExpireHours)
+		transfer, err = dao.CreateUtoUTeaTransfer(user.Id, req.ToUserId, req.AmountGrams, req.Notes, req.ExpireHours)
 	} else {
 		// 用户向团队转账
-		transfer, err = dao.CreateTeaTransferToTeam(user.Id, req.ToTeamId, req.AmountGrams, req.Notes, req.ExpireHours)
+		transfer, err = dao.CreatePtoTTeaTransferToTeam(user.Id, req.ToTeamId, req.AmountGrams, req.Notes, req.ExpireHours)
 	}
 
 	if err != nil {
@@ -473,7 +473,7 @@ func PendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	// 创建页面数据结构
 	var pageData struct {
 		SessUser                dao.User
-		TeaAccount              dao.TeaAccount
+		TeaAccount              dao.TeaUserAccount
 		Transfers               []EnhancedPendingTransfer
 		BalanceDisplay          string
 		LockedBalanceDisplay    string
@@ -730,7 +730,7 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 	// 创建页面数据结构
 	var pageData struct {
 		SessUser                dao.User
-		TeaAccount              dao.TeaAccount
+		TeaAccount              dao.TeaUserAccount
 		Transfers               []EnhancedTransfer
 		BalanceDisplay          string
 		LockedBalanceDisplay    string
@@ -926,9 +926,6 @@ func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
 		case dao.TransactionType_SystemDeduct:
 			enhanced.TypeDisplay = "系统扣除"
 			enhanced.IsIncome = false
-		case dao.TransactionType_Refund:
-			enhanced.TypeDisplay = "退款"
-			enhanced.IsIncome = true
 		default:
 			enhanced.TypeDisplay = "未知"
 			enhanced.IsIncome = false
@@ -940,7 +937,7 @@ func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
 	// 创建页面数据结构
 	var pageData struct {
 		SessUser                dao.User
-		TeaAccount              dao.TeaAccount
+		TeaAccount              dao.TeaUserAccount
 		Transactions            []EnhancedTransaction
 		BalanceDisplay          string
 		LockedBalanceDisplay    string
@@ -1308,7 +1305,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保团队有茶叶账户
-	err = dao.EnsureTeamTeaAccountExists(team.Id)
+	err = dao.EnsureTeaTeamAccountExists(team.Id)
 	if err != nil {
 		util.Debug("cannot ensure team tea account exists", err)
 		report(w, s_u, "获取团队茶叶账户失败。")
@@ -1316,7 +1313,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队茶叶账户
-	teamAccount, err := dao.GetTeamTeaAccountByTeamId(team.Id)
+	teamAccount, err := dao.GetTeaTeamAccountByTeamId(team.Id)
 	if err != nil {
 		util.Debug("cannot get team tea account", err)
 		report(w, s_u, "获取团队茶叶账户失败。")
@@ -1388,7 +1385,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	var pageData struct {
 		SessUser                dao.User
 		Team                    *dao.Team
-		TeamAccount             dao.TeamTeaAccount
+		TeamAccount             dao.TeaTeamAccount
 		Transfers               []EnhancedPendingIncomingTransfer
 		BalanceDisplay          string
 		LockedBalanceDisplay    string
@@ -1426,7 +1423,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 状态显示
-	if teamAccount.Status == dao.TeamTeaAccountStatus_Frozen {
+	if teamAccount.Status == dao.TeaTeamAccountStatus_Frozen {
 		if teamAccount.FrozenReason != nil {
 			pageData.StatusDisplay = "已冻结 (" + *teamAccount.FrozenReason + ")"
 		} else {

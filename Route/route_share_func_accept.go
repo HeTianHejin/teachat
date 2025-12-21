@@ -162,13 +162,13 @@ func acceptNewTeam(objectId int) (*dao.Team, error) {
 		util.Debug("Cannot update t class", objectId, err)
 		return nil, errors.New("你好，一畦春韭绿，十里稻花香。")
 	}
-	
+
 	// 确保团队茶叶账户存在
-	if err := dao.EnsureTeamTeaAccountExists(t.Id); err != nil {
+	if err := dao.EnsureTeaTeamAccountExists(t.Id); err != nil {
 		util.Debug("Cannot ensure team tea account exists", objectId, err)
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说团队茶叶账户准备失败。")
 	}
-	
+
 	return &t, nil
 }
 

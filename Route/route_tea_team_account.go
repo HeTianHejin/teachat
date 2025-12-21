@@ -26,7 +26,7 @@ type UnfreezeTeamAccountRequest struct {
 
 // TeamAccountWithAvailable 用于模板渲染，包含可用余额
 type TeamAccountWithAvailable struct {
-	dao.TeamTeaAccount
+	dao.TeaTeamAccount
 	AvailableBalanceGrams float64
 }
 
@@ -79,14 +79,14 @@ func GetTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保团队有茶叶账户
-	err = dao.EnsureTeamTeaAccountExists(teamId)
+	err = dao.EnsureTeaTeamAccountExists(teamId)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取团队茶叶账户失败")
 		return
 	}
 
 	// 获取团队茶叶账户
-	account, err := dao.GetTeamTeaAccountByTeamId(teamId)
+	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "团队茶叶账户不存在")
 		return
@@ -226,13 +226,13 @@ func FreezeTeamAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取账户并冻结
-	account, err := dao.GetTeamTeaAccountByTeamId(req.TeamId)
+	account, err := dao.GetTeaTeamAccountByTeamId(req.TeamId)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "团队账户不存在")
 		return
 	}
 
-	err = account.UpdateStatus(dao.TeamTeaAccountStatus_Frozen, req.Reason)
+	err = account.UpdateStatus(dao.TeaTeamAccountStatus_Frozen, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "冻结账户失败")
 		return
@@ -279,13 +279,13 @@ func UnfreezeTeamAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取账户并解冻
-	account, err := dao.GetTeamTeaAccountByTeamId(req.TeamId)
+	account, err := dao.GetTeaTeamAccountByTeamId(req.TeamId)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "团队账户不存在")
 		return
 	}
 
-	err = account.UpdateStatus(dao.TeamTeaAccountStatus_Normal, "")
+	err = account.UpdateStatus(dao.TeaTeamAccountStatus_Normal, "")
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "解冻账户失败")
 		return
@@ -349,7 +349,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	singleTeam := &team
 
 	// 确保团队有茶叶账户
-	err = dao.EnsureTeamTeaAccountExists(team.Id)
+	err = dao.EnsureTeaTeamAccountExists(team.Id)
 	if err != nil {
 		util.Debug("cannot ensure team tea account exists", err)
 		report(w, s_u, "获取团队茶叶账户失败。")
@@ -357,7 +357,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队茶叶账户
-	teamAccount, err := dao.GetTeamTeaAccountByTeamId(team.Id)
+	teamAccount, err := dao.GetTeaTeamAccountByTeamId(team.Id)
 	if err != nil {
 		util.Debug("cannot get team tea account", err)
 		report(w, s_u, "获取团队茶叶账户失败。")
@@ -366,7 +366,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 
 	// 计算可用余额
 	teamAccountWithAvailable := TeamAccountWithAvailable{
-		TeamTeaAccount:        teamAccount,
+		TeaTeamAccount:        teamAccount,
 		AvailableBalanceGrams: teamAccount.BalanceGrams - teamAccount.LockedBalanceGrams,
 	}
 

@@ -38,12 +38,12 @@ func DeskGet(w http.ResponseWriter, r *http.Request) {
 
 	// 获取用户茶叶账户信息
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
-	var accountInfo *dao.TeaAccount
+	var accountInfo *dao.TeaUserAccount
 	if err == nil {
 		accountInfo = &account
 	} else {
 		// 如果获取失败，创建一个空的账户信息
-		accountInfo = &dao.TeaAccount{
+		accountInfo = &dao.TeaUserAccount{
 			UserId:       s_u.Id,
 			BalanceGrams: 0.0,
 			Status:       dao.TeaAccountStatus_Normal,
@@ -60,7 +60,7 @@ func DeskGet(w http.ResponseWriter, r *http.Request) {
 	// 创建写字台数据结构
 	var deskData struct {
 		SessUser     dao.User
-		TeaAccount   *dao.TeaAccount
+		TeaAccount   *dao.TeaUserAccount
 		AccountInfo  struct {
 			BalanceDisplay         string
 			LockedBalanceDisplay   string
