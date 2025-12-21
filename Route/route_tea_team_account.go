@@ -35,7 +35,7 @@ type PageData struct {
 	SessUser         dao.User
 	Team             *dao.Team
 	TeamAccount      TeamAccountWithAvailable
-	Transactions     []dao.TeaTransaction
+	TransactionHistory []map[string]interface{}
 	UserIsCoreMember bool
 }
 
@@ -111,8 +111,8 @@ func GetTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "获取团队茶叶账户成功", response)
 }
 
-// GetTeamTeaTransactions 获取团队交易流水记录
-func GetTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
+// GetTeamTeaTransactionHistory 获取团队交易历史（从转出表中查询）
+func GetTeamTeaTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -145,14 +145,13 @@ func GetTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
 	// 检查用户是否是团队成员
 	isMember, err := dao.IsTeamMember(user.Id, teamId)
 	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看交易流水")
+		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看交易历史")
 		return
 	}
 
 	// 获取分页参数
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
-	transactionType := r.URL.Query().Get("transaction_type")
 
 	page := 1
 	limit := 20
@@ -168,14 +167,14 @@ func GetTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 获取团队交易流水
-	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit, transactionType)
+	// 获取团队交易历史
+	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取交易流水失败")
+		respondWithError(w, http.StatusInternalServerError, "获取交易历史失败")
 		return
 	}
 
-	respondWithSuccess(w, "获取团队交易流水成功", transactions)
+	respondWithSuccess(w, "获取团队交易历史成功", transactions)
 }
 
 // FreezeTeamAccount 冻结团队茶叶账户
@@ -370,11 +369,11 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		AvailableBalanceGrams: teamAccount.BalanceGrams - teamAccount.LockedBalanceGrams,
 	}
 
-	// 获取团队交易流水
-	transactions, err := dao.GetTeamTeaTransactions(team.Id, 1, 20, "")
+	// 获取团队交易历史
+	transactionHistory, err := dao.GetTeamTeaTransactions(team.Id, 1, 20)
 	if err != nil {
-		util.Debug("cannot get team transactions", err)
-		transactions = []dao.TeaTransaction{}
+		util.Debug("cannot get team transaction history", err)
+		transactionHistory = []map[string]interface{}{}
 	}
 
 	// 创建页面数据结构
@@ -384,15 +383,15 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		SessUser:         s_u,
 		Team:             singleTeam,
 		TeamAccount:      teamAccountWithAvailable,
-		Transactions:     transactions,
+		TransactionHistory: transactionHistory,
 		UserIsCoreMember: isCoreMember,
 	}
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")
 }
 
-// HandleTeamTeaTransactions 处理团队交易流水页面请求
-func HandleTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
+// HandleTeamTeaTransactionHistory 处理团队交易历史页面请求
+func HandleTeamTeaTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -435,14 +434,13 @@ func HandleTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
 	// 检查用户是否是团队成员
 	isMember, err := dao.IsTeamMember(user.Id, teamId)
 	if err != nil || !isMember {
-		report(w, user, "您不是该团队成员，无法查看交易流水。")
+		report(w, user, "您不是该团队成员，无法查看交易历史。")
 		return
 	}
 
 	// 获取分页参数
 	pageStr := r.URL.Query().Get("page")
 	limitStr := r.URL.Query().Get("limit")
-	transactionType := r.URL.Query().Get("type")
 
 	page := 1
 	limit := 20
@@ -458,21 +456,20 @@ func HandleTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 获取团队交易流水
-	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit, transactionType)
+	// 获取团队交易历史
+	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
 	if err != nil {
-		util.Debug("cannot get team transactions", err)
-		transactions = []dao.TeaTransaction{}
+		util.Debug("cannot get team transaction history", err)
+		transactions = []map[string]interface{}{}
 	}
 
 	// 创建页面数据结构
 	var pageData struct {
 		SessUser        dao.User
 		Team            *dao.Team
-		Transactions    []dao.TeaTransaction
+		Transactions    []map[string]interface{}
 		CurrentPage     int
 		Limit           int
-		TransactionType string
 	}
 
 	pageData.SessUser = user
@@ -480,8 +477,7 @@ func HandleTeamTeaTransactions(w http.ResponseWriter, r *http.Request) {
 	pageData.Transactions = transactions
 	pageData.CurrentPage = page
 	pageData.Limit = limit
-	pageData.TransactionType = transactionType
 
 	// 生成页面
-	generateHTML(w, &pageData, "layout", "navbar.private", "team.tea.transactions")
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.tea.transaction_history")
 }

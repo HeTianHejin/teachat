@@ -122,23 +122,13 @@ type TeaTransferIn struct {
 	CreatedAt time.Time
 }
 
-// 交易记录结构体
-// 用户茶叶交易流水，实时查询出入表数据生成
-type TransactionRecord struct {
-	Id              int
-	Uuid            string
-	UserId          int
-	TransferId      *string
-	TransactionType string
-	AmountGrams     float64
-	BalanceBefore   float64
-	BalanceAfter    float64
-	Description     string
-	TargetUserId    *int
-	TargetTeamId    *int
-	TargetType      string
-	CreatedAt       time.Time
-}
+// 账户持有人类型常量
+const (
+	AccountHolderType_User = "u" // 用户
+	AccountHolderType_Team = "t" // 团队
+)
+
+// 注：原TransactionRecord结构体已废弃，交易流水数据可以从转出表和转入表中推导出来
 
 // GetTeaAccountByUserId 根据用户ID获取茶叶账户
 func GetTeaAccountByUserId(userId int) (TeaUserAccount, error) {
@@ -222,21 +212,6 @@ func (account *TeaUserAccount) SystemAdjustBalance(amount float64, description s
 		return fmt.Errorf("更新账户余额失败: %v", err)
 	}
 
-	// 记录交易流水
-	transactionType := TransactionType_SystemGrant
-	if amount < 0 {
-		transactionType = TransactionType_SystemDeduct
-		amount = -amount // 取绝对值
-	}
-
-	_, err = tx.Exec(`INSERT INTO tea.transaction_records 
-		(user_id, transaction_type, amount_grams, balance_before, balance_after, description, target_user_id, target_type) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		account.UserId, transactionType, amount, currentBalance, newBalance, description, &adminUserId, TransactionTargetType_User)
-	if err != nil {
-		return fmt.Errorf("记录交易流水失败: %v", err)
-	}
-
 	// 提交事务
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("提交事务失败: %v", err)
@@ -246,8 +221,8 @@ func (account *TeaUserAccount) SystemAdjustBalance(amount float64, description s
 	return nil
 }
 
-// CreateUtoUTeaTransfer 创建用户对用户类型转账记录
-func CreateUtoUTeaTransfer(fromUserId, toUserId int, amount float64, notes string, expireHours int) (TeaUserTransferOut, error) {
+// CreateTeaTransferUserToUser 创建用户对用户类型转账记录
+func CreateTeaTransferUserToUser(fromUserId, toUserId int, amount float64, notes string, expireHours int) (TeaUserTransferOut, error) {
 	// 验证参数
 	if amount <= 0 {
 		return TeaUserTransferOut{}, fmt.Errorf("转账失败：转账金额必须大于0")
@@ -320,8 +295,8 @@ func CreateUtoUTeaTransfer(fromUserId, toUserId int, amount float64, notes strin
 	return transfer, nil
 }
 
-// CreatePtoTTeaTransferToTeam 发起用户向团队的茶叶转账
-func CreatePtoTTeaTransferToTeam(fromUserId, toTeamId int, amount float64, notes string, expireHours int) (TeaUserTransferOut, error) {
+// CreateTeaTransferUserToTeam 发起用户向团队的茶叶转账
+func CreateTeaTransferUserToTeam(fromUserId, toTeamId int, amount float64, notes string, expireHours int) (TeaUserTransferOut, error) {
 	// 验证参数
 	if amount <= 0 {
 		return TeaUserTransferOut{}, fmt.Errorf("转账失败：转账金额必须大于0")
@@ -496,10 +471,10 @@ func confirmTeamTransfer(tx *sql.Tx, transfer TeaUserTransferOut, toUserId int) 
 	}
 
 	// 记录交易流水
-	err = recordTeamTransferTransactions(tx, transfer, fromBalance, newFromBalance, teamBalance)
-	if err != nil {
-		return err
-	}
+	// err = recordTeamTransferTransactions(transfer, fromBalance, newFromBalance, teamBalance)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
@@ -567,63 +542,25 @@ func confirmPersonalTransfer(tx *sql.Tx, transfer TeaUserTransferOut, toUserId i
 	}
 
 	// 记录交易流水
-	err = recordPersonalTransferTransactions(tx, transfer, fromBalance, newFromBalance, toBalance, toUserId)
-	if err != nil {
-		return err
-	}
+	// err = recordPersonalTransferTransactions(tx, transfer, fromBalance, newFromBalance, toBalance, toUserId)
+	// if err != nil {
+	// 	return err
+	// }
 
 	return nil
 }
 
-// recordTeamTransferTransactions 记录团队转账的交易流水
-func recordTeamTransferTransactions(tx *sql.Tx, transfer TeaUserTransferOut, fromBalance, newFromBalance, teamBalance float64) error {
-	// 记录转出方交易流水
-	_, err := tx.Exec(`INSERT INTO tea.transaction_records 
-		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, target_team_id, target_type) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		transfer.FromUserId, &transfer.Uuid, TransactionType_TransferOut, transfer.AmountGrams,
-		fromBalance, newFromBalance, fmt.Sprintf("向团队转账: %s", transfer.Notes), transfer.ToTeamId, TransactionTargetType_Team)
-	if err != nil {
-		return fmt.Errorf("记录转出交易流水失败: %v", err)
-	}
+// recordTeamTransferTransactions 记录团队转账的交易流水（已废弃，不再使用交易流水表）
+// func recordTeamTransferTransactions(transfer TeaUserTransferOut, fromBalance, newFromBalance, teamBalance float64) error {
+// 	// 注：交易流水表已废弃，不再记录交易流水
+// 	return nil
+// }
 
-	// 记录团队转入交易流水
-	_, err = tx.Exec(`INSERT INTO tea.transaction_records 
-		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, target_user_id, target_type) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		*transfer.ToTeamId, &transfer.Uuid, TransactionType_TransferIn, transfer.AmountGrams,
-		teamBalance, teamBalance+transfer.AmountGrams, "用户转账转入", &transfer.FromUserId, TransactionTargetType_User)
-	if err != nil {
-		return fmt.Errorf("记录团队转入交易流水失败: %v", err)
-	}
-
-	return nil
-}
-
-// recordPersonalTransferTransactions 记录用户转账的交易流水
-func recordPersonalTransferTransactions(tx *sql.Tx, transfer TeaUserTransferOut, fromBalance, newFromBalance, toBalance float64, toUserId int) error {
-	// 记录转出方交易流水
-	_, err := tx.Exec(`INSERT INTO tea.transaction_records 
-		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, target_user_id, target_type) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		transfer.FromUserId, &transfer.Uuid, TransactionType_TransferOut, transfer.AmountGrams,
-		fromBalance, newFromBalance, fmt.Sprintf("转账给用户: %s", transfer.Notes), toUserId, TransactionTargetType_User)
-	if err != nil {
-		return fmt.Errorf("记录转出交易流水失败: %v", err)
-	}
-
-	// 记录接收方交易流水
-	_, err = tx.Exec(`INSERT INTO tea.transaction_records 
-		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, target_user_id, target_type) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		toUserId, &transfer.Uuid, TransactionType_TransferIn, transfer.AmountGrams,
-		toBalance, toBalance+transfer.AmountGrams, "转账转入", &transfer.FromUserId, TransactionTargetType_User)
-	if err != nil {
-		return fmt.Errorf("记录转入交易流水失败: %v", err)
-	}
-
-	return nil
-}
+// recordPersonalTransferTransactions 记录用户转账的交易流水（已废弃，不再使用交易流水表）
+// func recordPersonalTransferTransactions(tx *sql.Tx, transfer TeaUserTransferOut, fromBalance, newFromBalance, toBalance float64, toUserId int) error {
+// 	// 注：交易流水表已废弃，不再记录交易流水
+// 	return nil
+// }
 
 // ConfirmTeaTransfer 确认接收转账（支持用户间转账和用户向团队转账）
 func ConfirmTeaTransfer(transferUuid string, toUserId int) error {
@@ -859,38 +796,79 @@ func GetPendingTransfers(userId int, page, limit int) ([]TeaUserTransferOut, err
 	return transfers, nil
 }
 
-// GetUserTransactions 获取用户交易流水
-func GetUserTransactions(userId int, page, limit int, transactionType string) ([]TransactionRecord, error) {
+// GetUserTransactions 获取用户交易历史（从转出表和转入表中查询）
+func GetUserTransactions(userId int, page, limit int) ([]map[string]interface{}, error) {
 	offset := (page - 1) * limit
-	var rows *sql.Rows
-	var err error
 
-	if transactionType == "" {
-		rows, err = DB.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
-			amount_grams, balance_before, balance_after, description, target_user_id, target_team_id, target_type, created_at 
-			FROM tea.transaction_records WHERE user_id = $1 
-			ORDER BY created_at DESC LIMIT $2 OFFSET $3`, userId, limit, offset)
-	} else {
-		rows, err = DB.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
-			amount_grams, balance_before, balance_after, description, target_user_id, target_team_id, target_type, created_at 
-			FROM tea.transaction_records WHERE user_id = $1 AND transaction_type = $2 
-			ORDER BY created_at DESC LIMIT $3 OFFSET $4`, userId, transactionType, limit, offset)
-	}
+	// 查询用户作为转出方的交易历史
+	rows, err := DB.Query(`
+		SELECT 
+			'outgoing' as transaction_type,
+			uuid,
+			from_user_id,
+			to_user_id,
+			to_team_id,
+			amount_grams,
+			status,
+			notes,
+			payment_time,
+			created_at
+		FROM tea.user_transfer_out 
+		WHERE from_user_id = $1 AND status = 'completed'
+		
+		UNION ALL
+		
+		-- 查询用户作为接收方的交易历史
+		SELECT 
+			'incoming' as transaction_type,
+			uto.uuid,
+			uto.from_user_id,
+			uto.to_user_id,
+			uto.to_team_id,
+			uto.amount_grams,
+			uto.status,
+			uto.notes,
+			uto.payment_time,
+			uto.created_at
+		FROM tea.user_transfer_out uto
+		INNER JOIN tea.transfer_in ti ON uto.id = ti.user_transfer_out_id
+		WHERE (uto.to_user_id = $1 OR (uto.to_team_id IS NOT NULL AND EXISTS (
+			SELECT 1 FROM team_members WHERE team_id = uto.to_team_id AND user_id = $1 AND status = 'active'
+		))) AND uto.status = 'completed' AND ti.status = 'completed'
+		
+		ORDER BY created_at DESC LIMIT $2 OFFSET $3
+	`, userId, limit, offset)
 
 	if err != nil {
-		return nil, fmt.Errorf("查询交易流水失败: %v", err)
+		return nil, fmt.Errorf("查询交易历史失败: %v", err)
 	}
 	defer rows.Close()
 
-	var transactions []TransactionRecord
+	var transactions []map[string]interface{}
 	for rows.Next() {
-		var transaction TransactionRecord
-		err = rows.Scan(&transaction.Id, &transaction.Uuid, &transaction.UserId, &transaction.TransferId,
-			&transaction.TransactionType, &transaction.AmountGrams, &transaction.BalanceBefore,
-			&transaction.BalanceAfter, &transaction.Description, &transaction.TargetUserId,
-			&transaction.TargetTeamId, &transaction.TargetType, &transaction.CreatedAt)
+		var transactionType, uuid, status, notes string
+		var fromUserId int
+		var toUserId, toTeamId sql.NullInt64
+		var amountGrams float64
+		var paymentTime, createdAt sql.NullTime
+
+		err = rows.Scan(&transactionType, &uuid, &fromUserId, &toUserId, &toTeamId,
+			&amountGrams, &status, &notes, &paymentTime, &createdAt)
 		if err != nil {
-			return nil, fmt.Errorf("扫描交易流水失败: %v", err)
+			return nil, fmt.Errorf("扫描交易记录失败: %v", err)
+		}
+
+		transaction := map[string]interface{}{
+			"transaction_type": transactionType,
+			"uuid":             uuid,
+			"from_user_id":     fromUserId,
+			"to_user_id":       getNullableInt64(toUserId),
+			"to_team_id":       getNullableInt64(toTeamId),
+			"amount_grams":     amountGrams,
+			"status":           status,
+			"notes":            notes,
+			"payment_time":     getNullableTime(paymentTime),
+			"created_at":       getNullableTime(createdAt),
 		}
 		transactions = append(transactions, transaction)
 	}
@@ -1056,4 +1034,18 @@ func GetTransferIns(userId int, page, limit int) ([]TeaTransferIn, error) {
 	return transfers, nil
 }
 
+// // getNullableInt64 处理sql.NullInt64，返回正确的值（有效时返回int64，无效时返回nil）
+// func getNullableInt64(nullInt sql.NullInt64) interface{} {
+// 	if nullInt.Valid {
+// 		return nullInt.Int64
+// 	}
+// 	return nil
+// }
 
+// // getNullableTime 处理sql.NullTime，返回正确的值（有效时返回time.Time，无效时返回nil）
+// func getNullableTime(nullTime sql.NullTime) interface{} {
+// 	if nullTime.Valid {
+// 		return nullTime.Time
+// 	}
+// 	return nil
+// }

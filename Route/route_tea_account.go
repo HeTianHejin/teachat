@@ -46,18 +46,20 @@ type TransferResponse struct {
 	ToUserName      string  `json:"to_user_name,omitempty"`
 }
 
-// 交易流水响应结构体
-type TransactionResponse struct {
+// 交易历史响应结构体
+type TransactionHistoryResponse struct {
+	TransactionType string  `json:"transaction_type"` // "incoming" 或 "outgoing"
 	Uuid            string  `json:"uuid"`
-	UserId          int     `json:"user_id"`
-	TransferId      *string `json:"transfer_id,omitempty"`
-	TransactionType string  `json:"transaction_type"`
+	FromUserId      int     `json:"from_user_id"`
+	ToUserId        int     `json:"to_user_id"`
+	ToTeamId        int     `json:"to_team_id"`
 	AmountGrams     float64 `json:"amount_grams"`
-	BalanceBefore   float64 `json:"balance_before"`
-	BalanceAfter    float64 `json:"balance_after"`
-	Description     string  `json:"description"`
-	TargetUserId    *int    `json:"target_user_id,omitempty"`
+	Status          string  `json:"status"`
+	Notes           string  `json:"notes"`
+	PaymentTime     string  `json:"payment_time"`
 	CreatedAt       string  `json:"created_at"`
+	FromUserName    string  `json:"from_user_name,omitempty"`
+	ToUserName      string  `json:"to_user_name,omitempty"`
 }
 
 // 通用API响应结构体
@@ -174,14 +176,14 @@ func CreateTeaTransfer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建转账
-	var transfer dao.TeaTransfer
+	var transfer dao.TeaUserTransferOut
 
 	if req.ToUserId > 0 {
 		// 用户间转账
-		transfer, err = dao.CreateUtoUTeaTransfer(user.Id, req.ToUserId, req.AmountGrams, req.Notes, req.ExpireHours)
+		transfer, err = dao.CreateTeaTransferUserToUser(user.Id, req.ToUserId, req.AmountGrams, req.Notes, req.ExpireHours)
 	} else {
 		// 用户向团队转账
-		transfer, err = dao.CreatePtoTTeaTransferToTeam(user.Id, req.ToTeamId, req.AmountGrams, req.Notes, req.ExpireHours)
+		transfer, err = dao.CreateTeaTransferUserToTeam(user.Id, req.ToTeamId, req.AmountGrams, req.Notes, req.ExpireHours)
 	}
 
 	if err != nil {
@@ -198,7 +200,7 @@ func CreateTeaTransfer(w http.ResponseWriter, r *http.Request) {
 
 	response := TransferResponse{
 		Uuid:        transfer.Uuid,
-		FromUserId:  *transfer.FromUserId,
+		FromUserId:  transfer.FromUserId,
 		ToUserId:    getToUserId(transfer.ToUserId),
 		ToTeamId:    getToTeamId(transfer.ToTeamId),
 		AmountGrams: transfer.AmountGrams,
@@ -319,11 +321,11 @@ func GetPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	var responses []TransferResponse
 	for _, transfer := range transfers {
 		// 获取用户名
-		fromUser, _ := dao.GetUser(*transfer.FromUserId)
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
 
 		response := TransferResponse{
 			Uuid:        transfer.Uuid,
-			FromUserId:  *transfer.FromUserId,
+			FromUserId:  transfer.FromUserId,
 			ToUserId:    getToUserId(transfer.ToUserId),
 			ToTeamId:    getToTeamId(transfer.ToTeamId),
 			AmountGrams: transfer.AmountGrams,
@@ -408,7 +410,7 @@ func PendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 
 	// 增强转账数据，添加用户信息和状态显示
 	type EnhancedPendingTransfer struct {
-		dao.TeaTransfer
+		dao.TeaUserTransferOut
 		FromUserName  string
 		ToUserName    string
 		AmountDisplay string
@@ -420,12 +422,12 @@ func PendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	var enhancedTransfers []EnhancedPendingTransfer
 	for _, transfer := range transfers {
 		enhanced := EnhancedPendingTransfer{
-			TeaTransfer: transfer,
-			CanAccept:   !transfer.ExpiresAt.Before(time.Now()),
+			TeaUserTransferOut: transfer,
+			CanAccept:          !transfer.ExpiresAt.Before(time.Now()),
 		}
 
 		// 获取发送方用户信息
-		fromUser, _ := dao.GetUser(*transfer.FromUserId)
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
 		if fromUser.Id > 0 {
 			enhanced.FromUserName = fromUser.Name
 		}
@@ -549,7 +551,7 @@ func GetTransferHistory(w http.ResponseWriter, r *http.Request) {
 	var responses []TransferResponse
 	for _, transfer := range transfers {
 		// 获取用户名
-		fromUser, _ := dao.GetUser(*transfer.FromUserId)
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
 		var toUser dao.User
 		if transfer.ToUserId != nil && *transfer.ToUserId > 0 {
 			toUser, _ = dao.GetUser(*transfer.ToUserId)
@@ -557,13 +559,13 @@ func GetTransferHistory(w http.ResponseWriter, r *http.Request) {
 
 		response := TransferResponse{
 			Uuid:            transfer.Uuid,
-			FromUserId:      *transfer.FromUserId,
+			FromUserId:      transfer.FromUserId,
 			ToUserId:        getToUserId(transfer.ToUserId),
 			ToTeamId:        getToTeamId(transfer.ToTeamId),
 			AmountGrams:     transfer.AmountGrams,
 			Status:          transfer.Status,
 			Notes:           transfer.Notes,
-			RejectionReason: transfer.ReceptionRejectionReason,
+			RejectionReason: nil, // TeaUserTransferOut 没有 ReceptionRejectionReason 字段
 			ExpiresAt:       transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
 			CreatedAt:       transfer.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
@@ -644,7 +646,7 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 
 	// 增强转账数据，添加用户信息和状态显示
 	type EnhancedTransfer struct {
-		dao.TeaTransfer
+		dao.TeaUserTransferOut
 		FromUserName  string
 		ToUserName    string
 		ToUserType    string // "user" 或 "team"
@@ -660,7 +662,7 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 	var enhancedTransfers []EnhancedTransfer
 	for _, transfer := range transfers {
 		enhanced := EnhancedTransfer{
-			TeaTransfer: transfer,
+			TeaUserTransferOut: transfer,
 		}
 
 		// 判断是否为收入（转给当前用户或转给当前用户所在的团队）
@@ -675,7 +677,7 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 获取发送方用户信息
-		fromUser, _ := dao.GetUser(*transfer.FromUserId)
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
 		if fromUser.Id > 0 {
 			enhanced.FromUserName = fromUser.Name
 		}
@@ -783,8 +785,8 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.transfer_history")
 }
 
-// GetUserTransactions 获取用户交易流水
-func GetUserTransactions(w http.ResponseWriter, r *http.Request) {
+// GetUserTransactionHistory 获取用户交易历史（从转出表和转入表中查询）
+func GetUserTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
@@ -795,49 +797,59 @@ func GetUserTransactions(w http.ResponseWriter, r *http.Request) {
 	// 获取分页参数
 	page, limit := getPaginationParams(r)
 
-	// 获取交易类型过滤参数
-	transactionType := r.URL.Query().Get("type")
-
-	// 获取交易流水
-	transactions, err := dao.GetUserTransactions(user.Id, page, limit, transactionType)
+	// 获取交易历史
+	transactions, err := dao.GetUserTransactions(user.Id, page, limit)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取交易流水失败")
+		respondWithError(w, http.StatusInternalServerError, "获取交易历史失败")
 		return
 	}
 
 	// 转换响应格式
-	var responses []TransactionResponse
+	var responses []TransactionHistoryResponse
 	for _, tx := range transactions {
-		response := TransactionResponse{
-			Uuid:            tx.Uuid,
-			UserId:          tx.UserId,
-			TransferId:      tx.TransferId,
-			TransactionType: tx.TransactionType,
-			AmountGrams:     tx.AmountGrams,
-			BalanceBefore:   tx.BalanceBefore,
-			BalanceAfter:    tx.BalanceAfter,
-			Description:     tx.Description,
-			TargetUserId:    tx.TargetUserId,
-			CreatedAt:       tx.CreatedAt.Format("2006-01-02 15:04:05"),
+		response := TransactionHistoryResponse{
+			TransactionType: tx["transaction_type"].(string),
+			Uuid:            tx["uuid"].(string),
+			FromUserId:      int(tx["from_user_id"].(int64)),
+			ToUserId:        int(tx["to_user_id"].(int64)),
+			ToTeamId:        int(tx["to_team_id"].(int64)),
+			AmountGrams:     tx["amount_grams"].(float64),
+			Status:          tx["status"].(string),
+			Notes:           tx["notes"].(string),
+			PaymentTime:     tx["payment_time"].(time.Time).Format("2006-01-02 15:04:05"),
+			CreatedAt:       tx["created_at"].(time.Time).Format("2006-01-02 15:04:05"),
+		}
+
+		// 获取用户名信息
+		fromUser, _ := dao.GetUser(response.FromUserId)
+		if fromUser.Name != "" {
+			response.FromUserName = fromUser.Name
+		}
+
+		if response.ToUserId > 0 {
+			toUser, _ := dao.GetUser(response.ToUserId)
+			if toUser.Name != "" {
+				response.ToUserName = toUser.Name
+			}
 		}
 
 		responses = append(responses, response)
 	}
 
-	respondWithPagination(w, "获取交易流水成功", responses, page, limit, 0) // TODO: 实现总数统计
+	respondWithPagination(w, "获取交易历史成功", responses, page, limit, 0) // TODO: 实现总数统计
 }
 
-// HandleUserTransactions 处理个人交易流水页面请求
-func HandleUserTransactions(w http.ResponseWriter, r *http.Request) {
+// HandleUserTransactionHistory 处理个人交易历史页面请求
+func HandleUserTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	UserTransactionsGet(w, r)
+	UserTransactionHistoryGet(w, r)
 }
 
-// UserTransactionsGet 获取个人交易流水页面
-func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
+// UserTransactionHistoryGet 获取个人交易历史页面
+func UserTransactionHistoryGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -869,66 +881,76 @@ func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
 	// 获取分页参数
 	page, limit := getPaginationParams(r)
 
-	// 获取交易类型过滤参数
-	transactionType := r.URL.Query().Get("type")
-
-	// 获取交易流水
-	transactions, err := dao.GetUserTransactions(s_u.Id, page, limit, transactionType)
+	// 获取交易历史
+	transactions, err := dao.GetUserTransactions(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get user transactions", err)
-		report(w, s_u, "获取交易流水失败。")
+		util.Debug("cannot get user transaction history", err)
+		report(w, s_u, "获取交易历史失败。")
 		return
 	}
 
-	// 增强交易数据，添加目标用户信息和目标团队信息
+	// 增强交易数据，添加用户信息
 	type EnhancedTransaction struct {
-		dao.TeaTransaction
-		TargetUserName string
-		TargetTeamName string
-		TargetTeamId   int
-		TypeDisplay    string
-		IsIncome       bool
+		TransactionType string
+		Uuid            string
+		FromUserId      int
+		ToUserId        int
+		ToTeamId        int
+		AmountGrams     float64
+		Status          string
+		Notes           string
+		PaymentTime     time.Time
+		CreatedAt       time.Time
+		FromUserName    string
+		ToUserName      string
+		TypeDisplay     string
+		IsIncome        bool
+		AmountDisplay   string
 	}
 
 	var enhancedTransactions []EnhancedTransaction
 	for _, tx := range transactions {
 		enhanced := EnhancedTransaction{
-			TeaTransaction: tx,
+			TransactionType: tx["transaction_type"].(string),
+			Uuid:            tx["uuid"].(string),
+			FromUserId:      int(tx["from_user_id"].(int64)),
+			ToUserId:        int(tx["to_user_id"].(int64)),
+			ToTeamId:        int(tx["to_team_id"].(int64)),
+			AmountGrams:     tx["amount_grams"].(float64),
+			Status:          tx["status"].(string),
+			Notes:           tx["notes"].(string),
+			PaymentTime:     tx["payment_time"].(time.Time),
+			CreatedAt:       tx["created_at"].(time.Time),
 		}
 
-		// 获取目标用户信息或目标团队信息
-		if tx.TargetUserId != nil {
-			// 目标用户相关
-			targetUser, _ := dao.GetUser(*tx.TargetUserId)
-			if targetUser.Id > 0 {
-				enhanced.TargetUserName = targetUser.Name
-			}
-		} else if tx.TargetTeamId != nil {
-			// 目标团队相关
-			targetTeam, _ := dao.GetTeam(*tx.TargetTeamId)
-			if targetTeam.Id > 0 {
-				enhanced.TargetTeamName = targetTeam.Name
-				enhanced.TargetTeamId = *tx.TargetTeamId
+		// 获取发送方用户信息
+		fromUser, _ := dao.GetUser(enhanced.FromUserId)
+		if fromUser.Name != "" {
+			enhanced.FromUserName = fromUser.Name
+		}
+
+		// 获取接收方信息
+		if enhanced.ToUserId > 0 {
+			toUser, _ := dao.GetUser(enhanced.ToUserId)
+			if toUser.Name != "" {
+				enhanced.ToUserName = toUser.Name
 			}
 		}
 
 		// 添加交易类型显示和收入/支出判断
-		switch tx.TransactionType {
-		case dao.TransactionType_TransferIn:
-			enhanced.TypeDisplay = "转入"
+		if enhanced.TransactionType == "incoming" {
+			enhanced.TypeDisplay = "收入"
 			enhanced.IsIncome = true
-		case dao.TransactionType_TransferOut:
-			enhanced.TypeDisplay = "转出"
+		} else {
+			enhanced.TypeDisplay = "支出"
 			enhanced.IsIncome = false
-		case dao.TransactionType_SystemGrant:
-			enhanced.TypeDisplay = "系统发放"
-			enhanced.IsIncome = true
-		case dao.TransactionType_SystemDeduct:
-			enhanced.TypeDisplay = "系统扣除"
-			enhanced.IsIncome = false
-		default:
-			enhanced.TypeDisplay = "未知"
-			enhanced.IsIncome = false
+		}
+
+		// 格式化金额显示
+		if enhanced.AmountGrams >= 1 {
+			enhanced.AmountDisplay = util.FormatFloat(enhanced.AmountGrams, 3) + " 克"
+		} else {
+			enhanced.AmountDisplay = util.FormatFloat(enhanced.AmountGrams*1000, 0) + " 毫克"
 		}
 
 		enhancedTransactions = append(enhancedTransactions, enhanced)
@@ -945,7 +967,6 @@ func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
 		StatusDisplay           string
 		CurrentPage             int
 		Limit                   int
-		FilterType              string
 	}
 
 	pageData.SessUser = s_u
@@ -987,9 +1008,8 @@ func UserTransactionsGet(w http.ResponseWriter, r *http.Request) {
 
 	pageData.CurrentPage = page
 	pageData.Limit = limit
-	pageData.FilterType = transactionType
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.transactions")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.transaction_history")
 }
 
 // FreezeTeaAccount 冻结茶叶账户（管理员功能）
@@ -1222,11 +1242,11 @@ func GetTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
 	var responses []TransferResponse
 	for _, transfer := range transfers {
 		// 获取用户名
-		fromUser, _ := dao.GetUser(*transfer.FromUserId)
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
 
 		response := TransferResponse{
 			Uuid:        transfer.Uuid,
-			FromUserId:  *transfer.FromUserId,
+			FromUserId:  transfer.FromUserId,
 			ToUserId:    getToUserId(transfer.ToUserId),
 			ToTeamId:    getToTeamId(transfer.ToTeamId),
 			AmountGrams: transfer.AmountGrams,
@@ -1333,7 +1353,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 
 	// 增强转账数据，添加用户信息和状态显示
 	type EnhancedPendingIncomingTransfer struct {
-		dao.TeaTransfer
+		dao.TeaUserTransferOut
 		FromUserName  string
 		AmountDisplay string
 		IsExpired     bool
@@ -1344,12 +1364,12 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	var enhancedTransfers []EnhancedPendingIncomingTransfer
 	for _, transfer := range transfers {
 		enhanced := EnhancedPendingIncomingTransfer{
-			TeaTransfer: transfer,
-			CanAccept:   !transfer.ExpiresAt.Before(time.Now()),
+			TeaUserTransferOut: transfer,
+			CanAccept:          !transfer.ExpiresAt.Before(time.Now()),
 		}
 
 		// 获取发送方用户信息
-		fromUser, _ := dao.GetUser(*transfer.FromUserId)
+		fromUser, _ := dao.GetUser(transfer.FromUserId)
 		if fromUser.Id > 0 {
 			enhanced.FromUserName = fromUser.Name
 		}

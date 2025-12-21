@@ -48,7 +48,7 @@ type TeaTeamAccount struct {
 // 团队茶叶转账结构体（（单人团队自动批准,>2需内部核心成员审批，不能自己审批自己）
 // payer转出，发起流程
 // 转帐发起操作记录（从转出方视角）
-// 注意不能转出0/负数，不能转给自己和自由人团队id=TeamIdFreelancer
+// 注意不能转出0/负数，不能转给自己和自由人团队id=TeamIdFreelancer(2)
 type TeaTeamTransferOut struct {
 	Id         int
 	Uuid       string
@@ -200,38 +200,117 @@ func CheckTeamAccountFrozen(teamId int) (bool, string, error) {
 	return false, "", nil
 }
 
-// GetTeamTeaTransactions 获取团队交易流水（使用统一的 tea_transactions 表）
-func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string) ([]TransactionRecord, error) {
+// GetTeamTeaTransactions 获取团队交易历史（从转出表和转入表中查询）
+func GetTeamTeaTransactions(teamId int, page, limit int) ([]map[string]interface{}, error) {
 	offset := (page - 1) * limit
-	var rows *sql.Rows
-	var err error
 
-	if transactionType == "" {
-		rows, err = DB.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
-			amount_grams, balance_before, balance_after, description, target_user_id, target_team_id, target_type, created_at 
-			FROM tea.transaction_records WHERE (user_id = $1 OR target_team_id = $1) 
-			ORDER BY created_at DESC LIMIT $2 OFFSET $3`, teamId, limit, offset)
-	} else {
-		rows, err = DB.Query(`SELECT id, uuid, user_id, transfer_id, transaction_type, 
-			amount_grams, balance_before, balance_after, description, target_user_id, target_team_id, target_type, created_at 
-			FROM tea.transaction_records WHERE (user_id = $1 OR target_team_id = $1) AND transaction_type = $2 
-			ORDER BY created_at DESC LIMIT $3 OFFSET $4`, teamId, transactionType, limit, offset)
-	}
+	// 查询团队作为转出方的交易历史
+	rows, err := DB.Query(`
+		SELECT 
+			'outgoing' as transaction_type,
+			uuid,
+			from_team_id,
+			initiator_user_id,
+			to_user_id,
+			to_team_id,
+			amount_grams,
+			status,
+			notes,
+			payment_time,
+			created_at
+		FROM tea.team_transfer_out 
+		WHERE from_team_id = $1 AND status = 'completed'
+		
+		UNION ALL
+		
+		-- 查询团队作为接收方的交易历史（从团队转出表）
+		SELECT 
+			'incoming' as transaction_type,
+			uuid,
+			from_team_id,
+			initiator_user_id,
+			to_user_id,
+			to_team_id,
+			amount_grams,
+			status,
+			notes,
+			payment_time,
+			created_at
+		FROM tea.team_transfer_out 
+		WHERE to_team_id = $1 AND status = 'completed'
+		
+		UNION ALL
+		
+		-- 查询团队作为接收方的交易历史（从用户转出表 + 转入表）
+		SELECT 
+			'incoming' as transaction_type,
+			uto.uuid,
+			NULL as from_team_id,
+			uto.from_user_id as initiator_user_id,
+			uto.to_user_id,
+			uto.to_team_id,
+			uto.amount_grams,
+			uto.status,
+			uto.notes,
+			uto.payment_time,
+			uto.created_at
+		FROM tea.user_transfer_out uto
+		INNER JOIN tea.transfer_in ti ON uto.id = ti.user_transfer_out_id
+		WHERE uto.to_team_id = $1 AND uto.status = 'completed' AND ti.status = 'completed'
+		
+		UNION ALL
+		
+		-- 查询团队作为接收方的交易历史（从团队转出表 + 转入表）
+		SELECT 
+			'incoming' as transaction_type,
+			tto.uuid,
+			tto.from_team_id,
+			tto.initiator_user_id,
+			tto.to_user_id,
+			tto.to_team_id,
+			tto.amount_grams,
+			tto.status,
+			tto.notes,
+			tto.payment_time,
+			tto.created_at
+		FROM tea.team_transfer_out tto
+		INNER JOIN tea.transfer_in ti ON tto.id = ti.team_transfer_out_id
+		WHERE tto.to_team_id = $1 AND tto.status = 'completed' AND ti.status = 'completed'
+		
+		ORDER BY created_at DESC LIMIT $2 OFFSET $3
+	`, teamId, limit, offset)
 
 	if err != nil {
-		return nil, fmt.Errorf("查询团队交易流水失败: %v", err)
+		return nil, fmt.Errorf("查询团队交易历史失败: %v", err)
 	}
 	defer rows.Close()
 
-	var transactions []TransactionRecord
+	var transactions []map[string]interface{}
 	for rows.Next() {
-		var transaction TransactionRecord
-		err = rows.Scan(&transaction.Id, &transaction.Uuid, &transaction.UserId, &transaction.TransferId,
-			&transaction.TransactionType, &transaction.AmountGrams, &transaction.BalanceBefore,
-			&transaction.BalanceAfter, &transaction.Description, &transaction.TargetUserId,
-			&transaction.TargetTeamId, &transaction.TargetType, &transaction.CreatedAt)
+		var transactionType, uuid, status, notes string
+		var fromTeamId, initiatorUserId sql.NullInt64
+		var toUserId, toTeamId sql.NullInt64
+		var amountGrams float64
+		var paymentTime, createdAt sql.NullTime
+
+		err = rows.Scan(&transactionType, &uuid, &fromTeamId, &initiatorUserId, &toUserId, &toTeamId,
+			&amountGrams, &status, &notes, &paymentTime, &createdAt)
 		if err != nil {
-			return nil, fmt.Errorf("扫描团队交易流水失败: %v", err)
+			return nil, fmt.Errorf("扫描团队交易记录失败: %v", err)
+		}
+
+		transaction := map[string]interface{}{
+			"transaction_type":  transactionType,
+			"uuid":              uuid,
+			"from_team_id":      getNullableInt64(fromTeamId),
+			"initiator_user_id": getNullableInt64(initiatorUserId),
+			"to_user_id":        getNullableInt64(toUserId),
+			"to_team_id":        getNullableInt64(toTeamId),
+			"amount_grams":      amountGrams,
+			"status":            status,
+			"notes":             notes,
+			"payment_time":      getNullableTime(paymentTime),
+			"created_at":        getNullableTime(createdAt),
 		}
 		transactions = append(transactions, transaction)
 	}
@@ -239,16 +318,9 @@ func GetTeamTeaTransactions(teamId int, page, limit int, transactionType string)
 	return transactions, nil
 }
 
-// CreateTeamTeaTransaction 创建团队交易流水记录（使用统一的 tea_transactions 表）
+// CreateTeamTeaTransaction 创建团队交易流水记录（已废弃，不再使用交易流水表）
 func CreateTeamTeaTransaction(teamId int, transactionType string, amountGrams, balanceBefore, balanceAfter float64, description string, targetUserId, targetTeamId, operatorUserId, approverUserId *int, targetType string) error {
-	// 对于团队交易，user_id 字段存储 team_id
-	_, err := DB.Exec(`INSERT INTO tea.transaction_records 
-		(user_id, transfer_id, transaction_type, amount_grams, balance_before, balance_after, description, target_user_id, target_team_id, target_type) 
-		VALUES ($1, NULL, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		teamId, transactionType, amountGrams, balanceBefore, balanceAfter, description, targetUserId, targetTeamId, targetType)
-	if err != nil {
-		return fmt.Errorf("创建团队交易流水失败: %v", err)
-	}
+	// 注：交易流水表已废弃，不再记录交易流水
 	return nil
 }
 
@@ -320,4 +392,762 @@ func GetUserJoinedTeams(userId int) ([]Team, error) {
 	}
 
 	return teams, nil
+}
+
+// CreateTeaTransferTeamToUser 创建团队向用户转账记录
+func CreateTeaTransferTeamToUser(fromTeamId, initiatorUserId, toUserId int, amount float64, notes string, expireHours int) (TeaTeamTransferOut, error) {
+	// 验证参数
+	if amount <= 0 {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：转账金额必须大于0")
+	}
+	if fromTeamId == TeamIdFreelancer {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：自由人团队不能发起转账")
+	}
+
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 检查转出团队账户余额和锁定金额
+	var teamBalance, teamLockedBalance float64
+	var teamStatus string
+	err = tx.QueryRow("SELECT balance_grams, locked_balance_grams, status FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", fromTeamId).
+		Scan(&teamBalance, &teamLockedBalance, &teamStatus)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：查询转出团队账户失败 - %v", err)
+	}
+
+	// 计算可用余额 = 总余额 - 锁定金额
+	availableBalance := teamBalance - teamLockedBalance
+	if availableBalance < amount {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：团队可用余额不足。总余额: %.3f克, 锁定余额: %.3f克, 可用余额: %.3f克", teamBalance, teamLockedBalance, availableBalance)
+	}
+
+	// 检查发起人是否是团队成员
+	isMember, err := IsTeamMember(initiatorUserId, fromTeamId)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("检查团队成员身份失败: %v", err)
+	}
+	if !isMember {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：只有团队成员才能发起团队转账")
+	}
+
+	// 确保接收方用户账户存在
+	var toAccountId int
+	err = tx.QueryRow("SELECT id FROM tea.user_accounts WHERE user_id = $1", toUserId).Scan(&toAccountId)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：接收方用户账户不存在 - %v", err)
+	}
+
+	// 确定转账类型（单人团队自动批准，多人团队需要审批）
+	transferType := TransferType_TeamApprovalRequired
+	teamMemberCount, err := getTeamMemberCount(tx, fromTeamId)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("查询团队成员数量失败: %v", err)
+	}
+	if teamMemberCount == 1 {
+		transferType = TransferType_TeamInitiated
+	}
+
+	// 创建团队操作记录
+	operation := TeaTeamTransferOut{
+		FromTeamId:      fromTeamId,
+		InitiatorUserId: initiatorUserId,
+		ToUserId:        &toUserId,
+		ToTeamId:        nil,
+		AmountGrams:     amount,
+		Notes:           notes,
+		Status:          StatusPendingApproval,
+		TransferType:    transferType,
+		ExpiresAt:       time.Now().Add(time.Duration(expireHours) * time.Hour),
+		CreatedAt:       time.Now(),
+	}
+
+	// 如果是单人团队，自动批准
+	if transferType == TransferType_TeamInitiated {
+		operation.Status = StatusApproved
+		operation.ApproverUserId = &initiatorUserId
+		approvedTime := time.Now()
+		operation.ApprovedAt = &approvedTime
+	}
+
+	err = tx.QueryRow(`INSERT INTO tea.team_transfer_out 
+		(from_team_id, initiator_user_id, to_user_id, amount_grams, notes, status, transfer_type, approver_user_id, approved_at, expires_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid`,
+		fromTeamId, initiatorUserId, toUserId, amount, notes, operation.Status, transferType, operation.ApproverUserId, operation.ApprovedAt, operation.ExpiresAt).
+		Scan(&operation.Id, &operation.Uuid)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：创建团队转出记录失败 - %v", err)
+	}
+
+	// 锁定团队账户的相应金额
+	_, err = tx.Exec("UPDATE tea.team_accounts SET locked_balance_grams = locked_balance_grams + $1, updated_at = $2 WHERE team_id = $3",
+		amount, time.Now(), fromTeamId)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：锁定团队账户金额失败 - %v", err)
+	}
+
+	// 如果是单人团队，直接创建待接收的转账记录
+	if transferType == TransferType_TeamInitiated {
+		err = createTeamTransferOutRecord(tx, operation)
+		if err != nil {
+			return TeaTeamTransferOut{}, fmt.Errorf("创建团队转出记录失败: %v", err)
+		}
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：提交事务失败 - %v", err)
+	}
+
+	return operation, nil
+}
+
+// CreateTeaTransferTeamToTeam 创建团队向团队转账记录
+func CreateTeaTransferTeamToTeam(fromTeamId, initiatorUserId, toTeamId int, amount float64, notes string, expireHours int) (TeaTeamTransferOut, error) {
+	// 验证参数
+	if amount <= 0 {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：转账金额必须大于0")
+	}
+	if fromTeamId == TeamIdFreelancer || toTeamId == TeamIdFreelancer {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：自由人团队不能参与转账")
+	}
+	if fromTeamId == toTeamId {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：不能向自己团队转账")
+	}
+
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 检查转出团队账户余额和锁定金额
+	var teamBalance, teamLockedBalance float64
+	var teamStatus string
+	err = tx.QueryRow("SELECT balance_grams, locked_balance_grams, status FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", fromTeamId).
+		Scan(&teamBalance, &teamLockedBalance, &teamStatus)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：查询转出团队账户失败 - %v", err)
+	}
+
+	// 计算可用余额 = 总余额 - 锁定金额
+	availableBalance := teamBalance - teamLockedBalance
+	if availableBalance < amount {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：团队可用余额不足。总余额: %.3f克, 锁定余额: %.3f克, 可用余额: %.3f克", teamBalance, teamLockedBalance, availableBalance)
+	}
+
+	// 检查发起人是否是团队成员
+	isMember, err := IsTeamMember(initiatorUserId, fromTeamId)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("检查团队成员身份失败: %v", err)
+	}
+	if !isMember {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：只有团队成员才能发起团队转账")
+	}
+
+	// 确保接收方团队账户存在
+	var toAccountId int
+	err = tx.QueryRow("SELECT id FROM tea.team_accounts WHERE team_id = $1", toTeamId).Scan(&toAccountId)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：接收方团队账户不存在 - %v", err)
+	}
+
+	// 确定转账类型（单人团队自动批准，多人团队需要审批）
+	transferType := TransferType_TeamApprovalRequired
+	teamMemberCount, err := getTeamMemberCount(tx, fromTeamId)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("查询团队成员数量失败: %v", err)
+	}
+	if teamMemberCount == 1 {
+		transferType = TransferType_TeamInitiated
+	}
+
+	// 创建团队操作记录
+	operation := TeaTeamTransferOut{
+		FromTeamId:      fromTeamId,
+		InitiatorUserId: initiatorUserId,
+		ToUserId:        nil,
+		ToTeamId:        &toTeamId,
+		AmountGrams:     amount,
+		Notes:           notes,
+		Status:          StatusPendingApproval,
+		TransferType:    transferType,
+		ExpiresAt:       time.Now().Add(time.Duration(expireHours) * time.Hour),
+		CreatedAt:       time.Now(),
+	}
+
+	// 如果是单人团队，自动批准
+	if transferType == TransferType_TeamInitiated {
+		operation.Status = StatusApproved
+		operation.ApproverUserId = &initiatorUserId
+		approvedTime := time.Now()
+		operation.ApprovedAt = &approvedTime
+	}
+
+	err = tx.QueryRow(`INSERT INTO tea.team_transfer_out 
+		(from_team_id, initiator_user_id, to_team_id, amount_grams, notes, status, transfer_type, approver_user_id, approved_at, expires_at) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid`,
+		fromTeamId, initiatorUserId, toTeamId, amount, notes, operation.Status, transferType, operation.ApproverUserId, operation.ApprovedAt, operation.ExpiresAt).
+		Scan(&operation.Id, &operation.Uuid)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：创建团队转出记录失败 - %v", err)
+	}
+
+	// 锁定团队账户的相应金额
+	_, err = tx.Exec("UPDATE tea.team_accounts SET locked_balance_grams = locked_balance_grams + $1, updated_at = $2 WHERE team_id = $3",
+		amount, time.Now(), fromTeamId)
+	if err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：锁定团队账户金额失败 - %v", err)
+	}
+
+	// 如果是单人团队，直接创建待接收的转账记录
+	if transferType == TransferType_TeamInitiated {
+		err = createTeamTransferOutRecord(tx, operation)
+		if err != nil {
+			return TeaTeamTransferOut{}, fmt.Errorf("创建团队转出记录失败: %v", err)
+		}
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return TeaTeamTransferOut{}, fmt.Errorf("转账失败：提交事务失败 - %v", err)
+	}
+
+	return operation, nil
+}
+
+// getTeamMemberCount 获取团队成员数量
+func getTeamMemberCount(tx *sql.Tx, teamId int) (int, error) {
+	var count int
+	err := tx.QueryRow(`
+		SELECT COUNT(*) FROM team_members 
+		WHERE team_id = $1 AND status = $2
+	`, teamId, TeMemberStatusActive).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// createTeamTransferOutRecord 创建团队转出记录（审批通过后使用）
+func createTeamTransferOutRecord(tx *sql.Tx, operation TeaTeamTransferOut) error {
+	// 更新团队转出记录状态为待接收
+	_, err := tx.Exec(`UPDATE tea.team_transfer_out SET 
+		status = $1, updated_at = $2 
+		WHERE id = $3`,
+		StatusPendingReceipt, time.Now(), operation.Id)
+	if err != nil {
+		return fmt.Errorf("更新团队转出记录状态失败: %v", err)
+	}
+
+	return nil
+}
+
+// ApproveTeamTransfer 审批团队转账
+func ApproveTeamTransfer(operationUuid string, approverUserId int) error {
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("审批失败：开始事务失败 - %v", err)
+	}
+	defer tx.Rollback()
+
+	// 获取操作记录
+	var operation TeaTeamTransferOut
+	err = tx.QueryRow(`SELECT id, uuid, from_team_id, initiator_user_id, to_user_id, to_team_id, amount_grams, status 
+		FROM tea.team_transfer_out WHERE uuid = $1 FOR UPDATE`, operationUuid).
+		Scan(&operation.Id, &operation.Uuid, &operation.FromTeamId, &operation.InitiatorUserId,
+			&operation.ToUserId, &operation.ToTeamId, &operation.AmountGrams, &operation.Status)
+	if err != nil {
+		return fmt.Errorf("审批失败：操作记录不存在 - %v", err)
+	}
+
+	// 验证状态
+	if operation.Status != StatusPendingApproval {
+		return fmt.Errorf("审批失败：操作状态异常")
+	}
+
+	// 检查审批人是否是团队成员（不能自己审批自己）
+	isMember, err := IsTeamMember(approverUserId, operation.FromTeamId)
+	if err != nil {
+		return fmt.Errorf("检查团队成员身份失败: %v", err)
+	}
+	if !isMember {
+		return fmt.Errorf("审批失败：只有团队成员才能审批")
+	}
+
+	// 检查不能自己审批自己
+	if approverUserId == operation.InitiatorUserId {
+		return fmt.Errorf("审批失败：不能自己审批自己发起的操作")
+	}
+
+	// 更新操作状态为已批准
+	approvedAt := time.Now()
+	_, err = tx.Exec(`UPDATE tea.team_transfer_out SET 
+		status = $1, approver_user_id = $2, approved_at = $3, updated_at = $4 
+		WHERE id = $5`,
+		StatusApproved, approverUserId, approvedAt, approvedAt, operation.Id)
+	if err != nil {
+		return fmt.Errorf("审批失败：更新操作状态失败 - %v", err)
+	}
+
+	// 创建团队转出记录
+	err = createTeamTransferOutRecord(tx, operation)
+	if err != nil {
+		return fmt.Errorf("创建团队转出记录失败: %v", err)
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	return nil
+}
+
+// RejectTeamTransfer 拒绝团队转账
+func RejectTeamTransfer(operationUuid string, approverUserId int, reason string) error {
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("拒绝失败：开始事务失败 - %v", err)
+	}
+	defer tx.Rollback()
+
+	// 获取操作记录
+	var operation TeaTeamTransferOut
+	err = tx.QueryRow(`SELECT id, uuid, from_team_id, initiator_user_id, amount_grams, status 
+		FROM tea.team_transfer_out WHERE uuid = $1 FOR UPDATE`, operationUuid).
+		Scan(&operation.Id, &operation.Uuid, &operation.FromTeamId, &operation.InitiatorUserId,
+			&operation.AmountGrams, &operation.Status)
+	if err != nil {
+		return fmt.Errorf("拒绝失败：操作记录不存在 - %v", err)
+	}
+
+	// 验证状态
+	if operation.Status != StatusPendingApproval {
+		return fmt.Errorf("拒绝失败：操作状态异常")
+	}
+
+	// 检查审批人是否是团队成员（不能自己审批自己）
+	isMember, err := IsTeamMember(approverUserId, operation.FromTeamId)
+	if err != nil {
+		return fmt.Errorf("检查团队成员身份失败: %v", err)
+	}
+	if !isMember {
+		return fmt.Errorf("拒绝失败：只有团队成员才能审批")
+	}
+
+	// 检查不能自己审批自己
+	if approverUserId == operation.InitiatorUserId {
+		return fmt.Errorf("拒绝失败：不能自己审批自己发起的操作")
+	}
+
+	// 获取团队账户锁定金额
+	var teamLockedBalance float64
+	err = tx.QueryRow("SELECT locked_balance_grams FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", operation.FromTeamId).Scan(&teamLockedBalance)
+	if err != nil {
+		return fmt.Errorf("查询团队账户锁定金额失败: %v", err)
+	}
+
+	// 解锁团队账户的锁定金额
+	newLockedBalance := teamLockedBalance - operation.AmountGrams
+	if newLockedBalance < 0 {
+		newLockedBalance = 0
+	}
+
+	_, err = tx.Exec("UPDATE tea.team_accounts SET locked_balance_grams = $1, updated_at = $2 WHERE team_id = $3",
+		newLockedBalance, time.Now(), operation.FromTeamId)
+	if err != nil {
+		return fmt.Errorf("解锁团队账户金额失败: %v", err)
+	}
+
+	// 更新操作状态为已拒绝
+	rejectedAt := time.Now()
+	_, err = tx.Exec(`UPDATE tea.team_transfer_out SET 
+		status = $1, approver_user_id = $2, approval_rejection_reason = $3, rejected_by = $4, rejected_at = $5, updated_at = $6 
+		WHERE id = $7`,
+		StatusApprovalRejected, approverUserId, reason, approverUserId, rejectedAt, rejectedAt, operation.Id)
+	if err != nil {
+		return fmt.Errorf("拒绝失败：更新操作状态失败 - %v", err)
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	return nil
+}
+
+// GetPendingTeamOperations 获取团队待审批操作列表
+func GetPendingTeamOperations(teamId int, page, limit int) ([]TeaTeamTransferOut, error) {
+	offset := (page - 1) * limit
+	rows, err := DB.Query(`SELECT id, uuid, from_team_id, initiator_user_id, to_user_id, to_team_id, 
+		amount_grams, status, notes, transfer_type, expires_at, created_at 
+		FROM tea.team_transfer_out 
+		WHERE from_team_id = $1 AND status = $2 AND expires_at > NOW() 
+		ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
+		teamId, StatusPendingApproval, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("查询待审批操作失败: %v", err)
+	}
+	defer rows.Close()
+
+	var operations []TeaTeamTransferOut
+	for rows.Next() {
+		var operation TeaTeamTransferOut
+		err = rows.Scan(&operation.Id, &operation.Uuid, &operation.FromTeamId, &operation.InitiatorUserId,
+			&operation.ToUserId, &operation.ToTeamId, &operation.AmountGrams, &operation.Status,
+			&operation.Notes, &operation.TransferType, &operation.ExpiresAt, &operation.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("扫描操作记录失败: %v", err)
+		}
+		operations = append(operations, operation)
+	}
+
+	return operations, nil
+}
+
+// GetPendingTeamTransfers 获取团队待接收转账列表
+func GetPendingTeamTransfers(teamId int, page, limit int) ([]TeaTeamTransferOut, error) {
+	offset := (page - 1) * limit
+	rows, err := DB.Query(`SELECT id, uuid, from_team_id, initiator_user_id, to_user_id, to_team_id, 
+		amount_grams, status, notes, transfer_type, expires_at, created_at 
+		FROM tea.team_transfer_out 
+		WHERE to_team_id = $1 AND status = $2 AND expires_at > NOW() 
+		ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
+		teamId, StatusPendingReceipt, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("查询待接收转账失败: %v", err)
+	}
+	defer rows.Close()
+
+	var operations []TeaTeamTransferOut
+	for rows.Next() {
+		var operation TeaTeamTransferOut
+		err = rows.Scan(&operation.Id, &operation.Uuid, &operation.FromTeamId, &operation.InitiatorUserId,
+			&operation.ToUserId, &operation.ToTeamId, &operation.AmountGrams, &operation.Status,
+			&operation.Notes, &operation.TransferType, &operation.ExpiresAt, &operation.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("扫描操作记录失败: %v", err)
+		}
+		operations = append(operations, operation)
+	}
+
+	return operations, nil
+}
+
+// ConfirmTeamTransfer 确认接收团队转账
+func ConfirmTeamTransfer(transferUuid string, confirmUserId int) error {
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("确认转账失败：开始事务失败 - %v", err)
+	}
+	defer tx.Rollback()
+
+	// 获取转账信息
+	var transfer TeaTeamTransferOut
+	err = tx.QueryRow(`SELECT id, uuid, from_team_id, to_team_id, to_user_id, amount_grams, status, expires_at 
+		FROM tea.team_transfer_out WHERE uuid = $1 FOR UPDATE`, transferUuid).
+		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromTeamId, &transfer.ToTeamId, &transfer.ToUserId,
+			&transfer.AmountGrams, &transfer.Status, &transfer.ExpiresAt)
+	if err != nil {
+		return fmt.Errorf("确认转账失败：转账记录不存在 - %v", err)
+	}
+
+	// 验证状态
+	if transfer.Status != StatusPendingReceipt {
+		return fmt.Errorf("确认转账失败：转账状态异常")
+	}
+	if time.Now().After(transfer.ExpiresAt) {
+		// 转账已过期，更新状态
+		_, _ = tx.Exec("UPDATE tea.team_transfer_out SET status = $1, updated_at = $2 WHERE id = $3",
+			StatusExpired, time.Now(), transfer.Id)
+		return fmt.Errorf("确认转账失败：转账已过期")
+	}
+
+	// 检查确认权限
+	if transfer.ToTeamId != nil && *transfer.ToTeamId > 0 {
+		// 团队转账：检查用户是否是团队成员
+		isMember, err := IsTeamMember(confirmUserId, *transfer.ToTeamId)
+		if err != nil {
+			return fmt.Errorf("检查团队成员身份失败: %v", err)
+		}
+		if !isMember {
+			return fmt.Errorf("只有团队成员才能确认团队转账")
+		}
+	} else if transfer.ToUserId != nil && *transfer.ToUserId > 0 {
+		// 用户转账：检查接收用户ID
+		if *transfer.ToUserId != confirmUserId {
+			return fmt.Errorf("无权确认此转账")
+		}
+	}
+
+	// 根据转账类型执行不同的确认逻辑
+	if transfer.ToTeamId != nil && *transfer.ToTeamId > 0 {
+		err = confirmTeamToTeamTransfer(tx, transfer, confirmUserId)
+	} else if transfer.ToUserId != nil && *transfer.ToUserId > 0 {
+		err = confirmTeamToUserTransfer(tx, transfer, confirmUserId)
+	} else {
+		return fmt.Errorf("转账目标不明确")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	return nil
+}
+
+// confirmTeamToTeamTransfer 确认团队向团队转账
+func confirmTeamToTeamTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, confirmUserId int) error {
+	// 确保接收方团队账户存在
+	var toTeamBalance float64
+	err := tx.QueryRow("SELECT balance_grams FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", *transfer.ToTeamId).Scan(&toTeamBalance)
+	if err != nil {
+		return fmt.Errorf("查询接收团队账户余额失败: %v", err)
+	}
+
+	// 获取转出团队账户信息
+	var fromTeamBalance, fromTeamLockedBalance float64
+	err = tx.QueryRow("SELECT balance_grams, locked_balance_grams FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", transfer.FromTeamId).
+		Scan(&fromTeamBalance, &fromTeamLockedBalance)
+	if err != nil {
+		return fmt.Errorf("查询转出团队账户信息失败: %v", err)
+	}
+
+	// 检查余额是否足够
+	if fromTeamLockedBalance < transfer.AmountGrams {
+		return fmt.Errorf("锁定余额不足，无法完成转账。当前锁定余额: %.3f克, 转账金额: %.3f克", fromTeamLockedBalance, transfer.AmountGrams)
+	}
+	if fromTeamBalance < transfer.AmountGrams {
+		return fmt.Errorf("账户余额不足，无法完成转账。当前余额: %.3f克, 转账金额: %.3f克", fromTeamBalance, transfer.AmountGrams)
+	}
+
+	// 更新账户余额
+	newFromTeamBalance := fromTeamBalance - transfer.AmountGrams
+	newFromTeamLockedBalance := fromTeamLockedBalance - transfer.AmountGrams
+
+	_, err = tx.Exec("UPDATE tea.team_accounts SET balance_grams = $1, locked_balance_grams = $2, updated_at = $3 WHERE team_id = $4",
+		newFromTeamBalance, newFromTeamLockedBalance, time.Now(), transfer.FromTeamId)
+	if err != nil {
+		return fmt.Errorf("更新转出团队账户余额失败: %v", err)
+	}
+
+	_, err = tx.Exec("UPDATE tea.team_accounts SET balance_grams = $1, updated_at = $2 WHERE team_id = $3",
+		toTeamBalance+transfer.AmountGrams, time.Now(), *transfer.ToTeamId)
+	if err != nil {
+		return fmt.Errorf("更新接收团队账户余额失败: %v", err)
+	}
+
+	// 更新转账状态，设置实际支付时间
+	paymentTime := time.Now()
+	_, err = tx.Exec(`UPDATE tea.team_transfer_out SET 
+		status = $1, 
+		payment_time = $2, 
+		updated_at = $3 
+		WHERE id = $4`,
+		StatusCompleted, paymentTime, paymentTime, transfer.Id)
+	if err != nil {
+		return fmt.Errorf("更新转账状态失败: %v", err)
+	}
+
+	// 创建转入记录（团队转账确认时创建转入记录，关联到确认用户）
+	_, err = tx.Exec(`INSERT INTO tea.transfer_in 
+		(user_id, team_transfer_out_id, status, confirmed_by, created_at) 
+		VALUES ($1, $2, $3, $4, $5)`,
+		confirmUserId, transfer.Id, StatusCompleted, confirmUserId, paymentTime)
+	if err != nil {
+		return fmt.Errorf("创建转入记录失败: %v", err)
+	}
+
+	// 记录交易流水
+	// err = recordTeamToTeamTransferTransactions(tx, transfer, fromTeamBalance, newFromTeamBalance, toTeamBalance)
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+// confirmTeamToUserTransfer 确认团队向用户转账
+func confirmTeamToUserTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, _ int) error {
+	// 确保接收方用户账户存在
+	var toUserBalance float64
+	err := tx.QueryRow("SELECT balance_grams FROM tea.user_accounts WHERE user_id = $1 FOR UPDATE", *transfer.ToUserId).Scan(&toUserBalance)
+	if err != nil {
+		return fmt.Errorf("查询接收用户账户余额失败: %v", err)
+	}
+
+	// 获取转出团队账户信息
+	var fromTeamBalance, fromTeamLockedBalance float64
+	err = tx.QueryRow("SELECT balance_grams, locked_balance_grams FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", transfer.FromTeamId).
+		Scan(&fromTeamBalance, &fromTeamLockedBalance)
+	if err != nil {
+		return fmt.Errorf("查询转出团队账户信息失败: %v", err)
+	}
+
+	// 检查余额是否足够
+	if fromTeamLockedBalance < transfer.AmountGrams {
+		return fmt.Errorf("锁定余额不足，无法完成转账。当前锁定余额: %.3f克, 转账金额: %.3f克", fromTeamLockedBalance, transfer.AmountGrams)
+	}
+	if fromTeamBalance < transfer.AmountGrams {
+		return fmt.Errorf("账户余额不足，无法完成转账。当前余额: %.3f克, 转账金额: %.3f克", fromTeamBalance, transfer.AmountGrams)
+	}
+
+	// 更新账户余额
+	newFromTeamBalance := fromTeamBalance - transfer.AmountGrams
+	newFromTeamLockedBalance := fromTeamLockedBalance - transfer.AmountGrams
+
+	_, err = tx.Exec("UPDATE tea.team_accounts SET balance_grams = $1, locked_balance_grams = $2, updated_at = $3 WHERE team_id = $4",
+		newFromTeamBalance, newFromTeamLockedBalance, time.Now(), transfer.FromTeamId)
+	if err != nil {
+		return fmt.Errorf("更新转出团队账户余额失败: %v", err)
+	}
+
+	_, err = tx.Exec("UPDATE tea.user_accounts SET balance_grams = $1, updated_at = $2 WHERE user_id = $3",
+		toUserBalance+transfer.AmountGrams, time.Now(), *transfer.ToUserId)
+	if err != nil {
+		return fmt.Errorf("更新接收用户账户余额失败: %v", err)
+	}
+
+	// 更新转账状态，设置实际支付时间
+	paymentTime := time.Now()
+	_, err = tx.Exec(`UPDATE tea.team_transfer_out SET 
+		status = $1, 
+		payment_time = $2, 
+		updated_at = $3 
+		WHERE id = $4`,
+		StatusCompleted, paymentTime, paymentTime, transfer.Id)
+	if err != nil {
+		return fmt.Errorf("更新转账状态失败: %v", err)
+	}
+
+	// 记录交易流水
+	// err = recordTeamToUserTransferTransactions(tx, transfer, fromTeamBalance, newFromTeamBalance, toUserBalance)
+	// if err != nil {
+	// 	return err
+	// }
+
+	return nil
+}
+
+// recordTeamToTeamTransferTransactions 记录团队向团队转账的交易流水（已废弃，不再使用交易流水表）
+// func recordTeamToTeamTransferTransactions(transfer TeaTeamTransferOut, fromBalance, newFromBalance, toBalance float64) error {
+// 	// 注：交易流水表已废弃，不再记录交易流水
+// 	return nil
+// }
+
+// recordTeamToUserTransferTransactions 记录团队向用户转账的交易流水（已废弃，不再使用交易流水表）
+// func recordTeamToUserTransferTransactions(tx *sql.Tx, transfer TeaTeamTransferOut, fromBalance, newFromBalance, toBalance float64) error {
+// 	// 注：交易流水表已废弃，不再记录交易流水
+// 	return nil
+// }
+
+// getNullableInt64 处理sql.NullInt64，返回正确的值（有效时返回int64，无效时返回nil）
+func getNullableInt64(nullInt sql.NullInt64) interface{} {
+	if nullInt.Valid {
+		return nullInt.Int64
+	}
+	return nil
+}
+
+// getNullableTime 处理sql.NullTime，返回正确的值（有效时返回time.Time，无效时返回nil）
+func getNullableTime(nullTime sql.NullTime) interface{} {
+	if nullTime.Valid {
+		return nullTime.Time
+	}
+	return nil
+}
+
+// RejectTeamTransferReceipt 拒绝接收团队转账
+func RejectTeamTransferReceipt(transferUuid string, rejectUserId int, reason string) error {
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("拒绝转账失败：开始事务失败 - %v", err)
+	}
+	defer tx.Rollback()
+
+	// 获取转账信息
+	var transfer TeaTeamTransferOut
+	err = tx.QueryRow(`SELECT id, uuid, from_team_id, to_team_id, to_user_id, amount_grams, status 
+		FROM tea.team_transfer_out WHERE uuid = $1 FOR UPDATE`, transferUuid).
+		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromTeamId, &transfer.ToTeamId, &transfer.ToUserId,
+			&transfer.AmountGrams, &transfer.Status)
+	if err != nil {
+		return fmt.Errorf("拒绝转账失败：转账记录不存在 - %v", err)
+	}
+
+	// 验证状态
+	if transfer.Status != StatusPendingReceipt {
+		return fmt.Errorf("拒绝转账失败：转账状态异常")
+	}
+
+	// 检查拒绝权限
+	if transfer.ToTeamId != nil && *transfer.ToTeamId > 0 {
+		// 团队转账：检查用户是否是团队成员
+		isMember, err := IsTeamMember(rejectUserId, *transfer.ToTeamId)
+		if err != nil {
+			return fmt.Errorf("检查团队成员身份失败: %v", err)
+		}
+		if !isMember {
+			return fmt.Errorf("只有团队成员才能拒绝团队转账")
+		}
+	} else if transfer.ToUserId != nil && *transfer.ToUserId > 0 {
+		// 用户转账：检查接收用户ID
+		if *transfer.ToUserId != rejectUserId {
+			return fmt.Errorf("无权拒绝此转账")
+		}
+	}
+
+	// 获取转出团队账户的锁定金额信息
+	var fromTeamLockedBalance float64
+	err = tx.QueryRow("SELECT locked_balance_grams FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", transfer.FromTeamId).Scan(&fromTeamLockedBalance)
+	if err != nil {
+		return fmt.Errorf("查询转出团队账户锁定金额失败: %v", err)
+	}
+
+	// 解锁转出团队账户的锁定金额
+	newFromTeamLockedBalance := fromTeamLockedBalance - transfer.AmountGrams
+
+	// 检查锁定余额是否足够解锁
+	if newFromTeamLockedBalance < 0 {
+		return fmt.Errorf("锁定余额不足，无法拒绝转账。当前锁定余额: %.3f克, 转账金额: %.3f克", fromTeamLockedBalance, transfer.AmountGrams)
+	}
+
+	_, err = tx.Exec("UPDATE tea.team_accounts SET locked_balance_grams = $1, updated_at = $2 WHERE team_id = $3",
+		newFromTeamLockedBalance, time.Now(), transfer.FromTeamId)
+	if err != nil {
+		return fmt.Errorf("解锁转出团队账户金额失败: %v", err)
+	}
+
+	// 更新转账状态
+	_, err = tx.Exec(`UPDATE tea.team_transfer_out SET 
+		status = $1, 
+		updated_at = $2 
+		WHERE id = $3`,
+		StatusRejected, time.Now(), transfer.Id)
+	if err != nil {
+		return fmt.Errorf("更新转账状态失败: %v", err)
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	return nil
 }
