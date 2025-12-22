@@ -3,7 +3,7 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
    <li>{{ .SessUser.Name }} 的写字台</li>
-  <li><a href="/v1/team/tea/account?team_id={{ .Team.Id }}">管理团队茶叶账户</a></li>
+  <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">管理团队茶叶账户</a></li>
   <li class="active">待确认接收的转入</li>
 </ol>
 
@@ -42,7 +42,7 @@
                                     <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
                                     收支明细
                                 </a>
-                                <a href="/v1/team/tea/account?team_id={{ .Team.Id }}" class="btn btn-default">
+                                <a href="/v1/tea/team/account?team_id={{ .Team.Id }}" class="btn btn-default">
                                     <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                     返回团队账户
                                 </a>
@@ -263,7 +263,7 @@ function rejectTransfer(uuid, fromUser, amount) {
 
 // 确认接收转账
 document.getElementById('confirmTransferBtn').addEventListener('click', function() {
-    fetch('/v1/tea/transfer/confirm', {
+    fetch('/v1/tea/user/transfer/confirm', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -292,7 +292,7 @@ document.getElementById('confirmTransferBtn').addEventListener('click', function
 document.getElementById('rejectTransferBtn').addEventListener('click', function() {
     const reason = document.getElementById('rejectReason').value;
     
-    fetch('/v1/tea/transfer/reject', {
+    fetch('/v1/tea/user/transfer/reject', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

@@ -41,11 +41,11 @@
                                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
                                     返回写字台
                                 </a>
-                                <a href="/v1/tea/transactions/page" class="btn btn-info">
+                                <a href="/v1/tea/user/transactions/page" class="btn btn-info">
                                     <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
                                     收支明细
                                 </a>
-                                <a href="/v1/tea/transfers/pending/page" class="btn btn-warning">
+                                <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning">
                                     <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
                                     待确认转账
                                 </a>
@@ -145,7 +145,7 @@
                         <ul class="pagination pagination-sm">
                             {{ if gt .CurrentPage 1 }}
                             <li>
-                                <a href="/v1/tea/transfers/history/page?page={{ sub .CurrentPage 1 }}" aria-label="上一页">
+                                <a href="/v1/tea/user/transfers/history/page?page={{ sub .CurrentPage 1 }}" aria-label="上一页">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
@@ -156,7 +156,7 @@
                             </li>
                             
                             <li>
-                                <a href="/v1/tea/transfers/history/page?page={{ add .CurrentPage 1 }}" aria-label="下一页">
+                                <a href="/v1/tea/user/transfers/history/page?page={{ add .CurrentPage 1 }}" aria-label="下一页">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
                             </li>
@@ -323,7 +323,7 @@ function submitTransfer() {
     }
     
     // 发送转账请求
-    fetch('/v1/tea/transfer/new', {
+    fetch('/v1/tea/user/transfer/new', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',

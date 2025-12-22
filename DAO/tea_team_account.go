@@ -342,7 +342,7 @@ func IsTeamMember(userId, teamId int) (bool, error) {
 	err := DB.QueryRow(`
 		SELECT COUNT(*) FROM team_members 
 		WHERE team_id = $1 AND user_id = $2 AND status = $3
-	`, teamId, userId, TeMemberStatusActive).Scan(&count)
+	`, teamId, userId, TeamMemberStatusActive).Scan(&count)
 
 	if err != nil {
 		return false, err
@@ -366,7 +366,7 @@ func GetUserJoinedTeams(userId int) ([]Team, error) {
 		ORDER BY t.created_at DESC
 	`
 
-	rows, err := DB.Query(query, userId, TeMemberStatusActive, TeamIdFreelancer)
+	rows, err := DB.Query(query, userId, TeamMemberStatusActive, TeamIdFreelancer)
 	if err != nil {
 		return nil, fmt.Errorf("查询用户团队失败: %v", err)
 	}
@@ -627,7 +627,7 @@ func getTeamMemberCount(tx *sql.Tx, teamId int) (int, error) {
 	err := tx.QueryRow(`
 		SELECT COUNT(*) FROM team_members 
 		WHERE team_id = $1 AND status = $2
-	`, teamId, TeMemberStatusActive).Scan(&count)
+	`, teamId, TeamMemberStatusActive).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
@@ -843,6 +843,18 @@ func GetPendingTeamTransfers(teamId int, page, limit int) ([]TeaTeamTransferOut,
 	return operations, nil
 }
 
+// CountPendingTeamTransfers 获取团队待确认接收操作数量
+func CountPendingTeamTransfers(teamId int) (int, error) {
+	var count int
+	err := DB.QueryRow(`SELECT COUNT(*) FROM tea.team_transfer_out 
+		WHERE to_team_id = $1 AND status = $2 AND expires_at > NOW()`,
+		teamId, StatusPendingReceipt).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("查询待确认接收操作数量失败: %v", err)
+	}
+	return count, nil
+}
+
 // ConfirmTeamTransfer 确认接收团队转账
 func ConfirmTeamTransfer(transferUuid string, confirmUserId int) error {
 	// 开始事务
@@ -1056,21 +1068,7 @@ func confirmTeamToUserTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, _ int) e
 // 	return nil
 // }
 
-// getNullableInt64 处理sql.NullInt64，返回正确的值（有效时返回int64，无效时返回nil）
-func getNullableInt64(nullInt sql.NullInt64) interface{} {
-	if nullInt.Valid {
-		return nullInt.Int64
-	}
-	return nil
-}
 
-// getNullableTime 处理sql.NullTime，返回正确的值（有效时返回time.Time，无效时返回nil）
-func getNullableTime(nullTime sql.NullTime) interface{} {
-	if nullTime.Valid {
-		return nullTime.Time
-	}
-	return nil
-}
 
 // RejectTeamTransferReceipt 拒绝接收团队转账
 func RejectTeamTransferReceipt(transferUuid string, rejectUserId int, reason string) error {

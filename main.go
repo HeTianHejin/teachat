@@ -309,33 +309,32 @@ func main() {
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
 
-	// 茶叶账户系统路由
-	mux.HandleFunc("/v1/tea/account", route.GetTeaAccount)
-	mux.HandleFunc("/v1/tea/account/freeze", route.FreezeTeaAccount)
-	mux.HandleFunc("/v1/tea/account/unfreeze", route.UnfreezeTeaAccount)
+	// 写字台路由(茶叶账户)
+	mux.HandleFunc("/v1/desk", route.HandleDesk)
+	// 用户茶叶账户系统路由
+	mux.HandleFunc("/v1/tea/user/account", route.GetTeaUserAccount)
+	mux.HandleFunc("/v1/tea/user/account/freeze", route.FreezeTeaUserAccount)
+	mux.HandleFunc("/v1/tea/user/account/unfreeze", route.UnfreezeTeaUserAccount)
 
-	mux.HandleFunc("/v1/tea/transfer/new", route.CreateTeaTransfer)
-	mux.HandleFunc("/v1/tea/transfer/confirm", route.ConfirmTeaTransfer)
-	mux.HandleFunc("/v1/tea/transfer/reject", route.RejectTeaTransfer)
-	mux.HandleFunc("/v1/tea/transfers/pending", route.GetPendingTransfers)
-	mux.HandleFunc("/v1/tea/transfers/pending/page", route.HandlePendingTransfers)                  // 待确认转账页面路由
-	mux.HandleFunc("/v1/tea/transfers/team/pending", route.GetTeamPendingIncomingTransfers)         // 团队待确认转入转账API
-	mux.HandleFunc("/v1/tea/transfers/team/pending/page", route.HandleTeamPendingIncomingTransfers) // 团队待确认转入转账页面路由
-	mux.HandleFunc("/v1/tea/transfers/history", route.GetTransferHistory)
-	mux.HandleFunc("/v1/tea/transfers/history/page", route.HandleTransferHistory) // 转账历史页面路由
-	//mux.HandleFunc("/v1/tea/transactions", route.GetUserTransactions)
-	//mux.HandleFunc("/v1/tea/transactions/page", route.HandleUserTransactions) // 个人交易流水页面路由
+	mux.HandleFunc("/v1/tea/user/transfer/new", route.CreateTeaUserTransfer)                   // 用户创建转账API
+	mux.HandleFunc("/v1/tea/user/transfer/confirm", route.ConfirmTeaUserTransfer)              // 用户确认转账API
+	mux.HandleFunc("/v1/tea/user/transfer/reject", route.RejectTeaUserTransfer)                // 用户拒绝转账API
+	mux.HandleFunc("/v1/tea/user/transfers/pending", route.GetTeaUserPendingTransfers)         // 用户待确认转账API
+	mux.HandleFunc("/v1/tea/user/transfers/pending/page", route.HandleTeaUserPendingTransfers) // 用户待确认转账页面路由
+	mux.HandleFunc("/v1/tea/user/transfers/history", route.GetteaUserTransferHistory)          // 转账历史API
+	mux.HandleFunc("/v1/tea/user/transfers/history/page", route.HandleTeaUserTransferHistory)  // 转账历史页面路由
+	mux.HandleFunc("/v1/tea/user/transactions", route.GetTeaUserTransactionHistory)            // 个人交易流水API
+	mux.HandleFunc("/v1/tea/user/transactions/page", route.HandleTeaUserTransactionHistory)    // 个人交易流水页面路由
 
 	// 团队茶叶账户系统路由
-	mux.HandleFunc("/v1/tea/team/account", route.GetTeamTeaAccount)
-	//mux.HandleFunc("/v1/tea/team/transactions", route.GetTeamTeaTransactions)
-	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeamAccount)
-	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeamAccount)
-	mux.HandleFunc("/v1/team/tea/account", route.HandleTeamTeaAccount) // 团队茶叶账户页面路由
-	//mux.HandleFunc("/v1/team/tea/transactions", route.HandleTeamTeaTransactions) // 团队交易流水页面路由
-
-	// 写字台路由
-	mux.HandleFunc("/v1/desk", route.HandleDesk)
+	mux.HandleFunc("/v1/tea/team/account/api", route.GetTeaTeamAccount)                                // 团队茶叶账户API
+	mux.HandleFunc("/v1/tea/team/transactions/api", route.GetTeaTeamTransactionHistory)                // 团队交易历史API
+	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeaTeamAccount)
+	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeaTeamAccount)
+	mux.HandleFunc("/v1/tea/team/account", route.HandleTeaTeamTeaAccount)                              // 团队茶叶账户页面路由
+	mux.HandleFunc("/v1/tea/team/transfers/pending/page", route.HandleTeaTeamPendingIncomingTransfers) // 团队待确认转入转账页面路由
+	mux.HandleFunc("/v1/tea/team/transfers/pending/api", route.GetTeaTeamPendingIncomingTransfers)     // 团队待确认转入转账API
+	mux.HandleFunc("/v1/tea/team/transactions", route.HandleTeaTeamTransactionHistory)                 // 团队交易流水页面路由
 
 	// define in help.go 帮助 文档 信息
 	mux.HandleFunc("/v1/help/faq", route.FAQ)

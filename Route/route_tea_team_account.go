@@ -2,6 +2,7 @@ package route
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	dao "teachat/DAO"
@@ -32,15 +33,16 @@ type TeamAccountWithAvailable struct {
 
 // PageData 用于模板渲染
 type PageData struct {
-	SessUser         dao.User
-	Team             *dao.Team
-	TeamAccount      TeamAccountWithAvailable
-	TransactionHistory []map[string]interface{}
-	UserIsCoreMember bool
+	SessUser             dao.User
+	Team                 *dao.Team
+	TeamAccount          TeamAccountWithAvailable
+	TransactionHistory   []map[string]interface{}
+	UserIsCoreMember     bool
+	PendingIncomingCount int
 }
 
-// GetTeamTeaAccount 获取团队茶叶账户信息
-func GetTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
+// GetTeaTeamAccount 获取团队茶叶账户信息
+func GetTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -111,8 +113,8 @@ func GetTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "获取团队茶叶账户成功", response)
 }
 
-// GetTeamTeaTransactionHistory 获取团队交易历史（从转出表中查询）
-func GetTeamTeaTransactionHistory(w http.ResponseWriter, r *http.Request) {
+// GetTeaTeamTransactionHistory 获取团队交易历史（从转出表中查询）
+func GetTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -177,8 +179,8 @@ func GetTeamTeaTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "获取团队交易历史成功", transactions)
 }
 
-// FreezeTeamAccount 冻结团队茶叶账户
-func FreezeTeamAccount(w http.ResponseWriter, r *http.Request) {
+// FreezeTeaTeamAccount 冻结团队茶叶账户
+func FreezeTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -240,8 +242,8 @@ func FreezeTeamAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "团队账户冻结成功", nil)
 }
 
-// UnfreezeTeamAccount 解冻团队茶叶账户
-func UnfreezeTeamAccount(w http.ResponseWriter, r *http.Request) {
+// UnfreezeTeaTeamAccount 解冻团队茶叶账户
+func UnfreezeTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -293,8 +295,8 @@ func UnfreezeTeamAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "团队账户解冻成功", nil)
 }
 
-// HandleTeamTeaAccount 处理团队茶叶账户页面请求
-func HandleTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
+// HandleTeaTeamTeaAccount 处理团队茶叶账户页面请求
+func HandleTeaTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -376,22 +378,30 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		transactionHistory = []map[string]interface{}{}
 	}
 
+	// 获取待确认接收操作数量
+	pendingIncomingCount, err := dao.CountPendingTeamTransfers(team.Id)
+	if err != nil {
+		util.Debug("cannot get pending incoming transfers count", err)
+		pendingIncomingCount = 0
+	}
+
 	// 创建页面数据结构
 	// 判断是否核心成员
 	isCoreMember, _ := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
 	pageData := PageData{
-		SessUser:         s_u,
-		Team:             singleTeam,
-		TeamAccount:      teamAccountWithAvailable,
-		TransactionHistory: transactionHistory,
-		UserIsCoreMember: isCoreMember,
+		SessUser:             s_u,
+		Team:                 singleTeam,
+		TeamAccount:          teamAccountWithAvailable,
+		TransactionHistory:   transactionHistory,
+		UserIsCoreMember:     isCoreMember,
+		PendingIncomingCount: pendingIncomingCount,
 	}
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")
 }
 
-// HandleTeamTeaTransactionHistory 处理团队交易历史页面请求
-func HandleTeamTeaTransactionHistory(w http.ResponseWriter, r *http.Request) {
+// HandleTeaTeamTransactionHistory 处理团队交易历史页面请求
+func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -463,21 +473,55 @@ func HandleTeamTeaTransactionHistory(w http.ResponseWriter, r *http.Request) {
 		transactions = []map[string]interface{}{}
 	}
 
+	// 获取团队茶叶账户信息
+	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
+	if err != nil {
+		util.Debug("cannot get team tea account", err)
+		teamAccount = dao.TeaTeamAccount{}
+	}
+
+	// 获取过滤器类型
+	filterType := r.URL.Query().Get("type")
+
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser        dao.User
-		Team            *dao.Team
-		Transactions    []map[string]interface{}
-		CurrentPage     int
-		Limit           int
+		SessUser       dao.User
+		Team           *dao.Team
+		TeamAccount    dao.TeaTeamAccount
+		Transactions   []map[string]interface{}
+		CurrentPage    int
+		Limit          int
+		FilterType     string
+		BalanceDisplay string
+		StatusDisplay  string
 	}
 
 	pageData.SessUser = user
 	pageData.Team = &team
+	pageData.TeamAccount = teamAccount
 	pageData.Transactions = transactions
 	pageData.CurrentPage = page
 	pageData.Limit = limit
+	pageData.FilterType = filterType
+
+	// 格式化余额显示
+	if teamAccount.BalanceGrams >= 1 {
+		pageData.BalanceDisplay = fmt.Sprintf("%.2f 克", teamAccount.BalanceGrams)
+	} else {
+		pageData.BalanceDisplay = fmt.Sprintf("%.0f 毫克", teamAccount.BalanceGrams*1000)
+	}
+
+	// 状态显示
+	if teamAccount.Status == "frozen" {
+		if teamAccount.FrozenReason != nil {
+			pageData.StatusDisplay = "已冻结 (" + *teamAccount.FrozenReason + ")"
+		} else {
+			pageData.StatusDisplay = "已冻结"
+		}
+	} else {
+		pageData.StatusDisplay = "正常"
+	}
 
 	// 生成页面
-	generateHTML(w, &pageData, "layout", "navbar.private", "team.tea.transaction_history")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.transactions")
 }

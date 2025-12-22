@@ -833,11 +833,11 @@ func GetUserTransactions(userId int, page, limit int) ([]map[string]interface{},
 		FROM tea.user_transfer_out uto
 		INNER JOIN tea.transfer_in ti ON uto.id = ti.user_transfer_out_id
 		WHERE (uto.to_user_id = $1 OR (uto.to_team_id IS NOT NULL AND EXISTS (
-			SELECT 1 FROM team_members WHERE team_id = uto.to_team_id AND user_id = $1 AND status = 'active'
+			SELECT 1 FROM team_members WHERE team_id = uto.to_team_id AND user_id = $1 AND status = $2
 		))) AND uto.status = 'completed' AND ti.status = 'completed'
 		
-		ORDER BY created_at DESC LIMIT $2 OFFSET $3
-	`, userId, limit, offset)
+		ORDER BY created_at DESC LIMIT $3 OFFSET $4
+	`, userId, TeamMemberStatusActive, limit, offset)
 
 	if err != nil {
 		return nil, fmt.Errorf("查询交易历史失败: %v", err)
@@ -1034,18 +1034,20 @@ func GetTransferIns(userId int, page, limit int) ([]TeaTransferIn, error) {
 	return transfers, nil
 }
 
-// // getNullableInt64 处理sql.NullInt64，返回正确的值（有效时返回int64，无效时返回nil）
-// func getNullableInt64(nullInt sql.NullInt64) interface{} {
-// 	if nullInt.Valid {
-// 		return nullInt.Int64
-// 	}
-// 	return nil
-// }
+// 辅助函数
+// getNullableInt64 处理sql.NullInt64，返回正确的值（有效时返回int64，无效时返回nil）
+func getNullableInt64(nullInt sql.NullInt64) interface{} {
+	if nullInt.Valid {
+		return nullInt.Int64
+	}
+	return nil
+}
 
-// // getNullableTime 处理sql.NullTime，返回正确的值（有效时返回time.Time，无效时返回nil）
-// func getNullableTime(nullTime sql.NullTime) interface{} {
-// 	if nullTime.Valid {
-// 		return nullTime.Time
-// 	}
-// 	return nil
-// }
+// 辅助函数
+// getNullableTime 处理sql.NullTime，返回正确的值（有效时返回time.Time，无效时返回nil）
+func getNullableTime(nullTime sql.NullTime) interface{} {
+	if nullTime.Valid {
+		return nullTime.Time
+	}
+	return nil
+}

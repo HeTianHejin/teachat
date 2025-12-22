@@ -106,7 +106,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		TeamId: dao.TeamIdFreelancer,
 		UserId: newU.Id,
 		Role:   "taster",
-		Status: dao.TeMemberStatusActive,
+		Status: dao.TeamMemberStatusActive,
 	}
 	if err = team_member.Create(); err != nil {
 		util.Debug(" Cannot create default_free team_member", err)

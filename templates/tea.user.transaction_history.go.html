@@ -35,11 +35,11 @@
                                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
                                     返回写字台
                                 </a>
-                                <a href="/v1/tea/transfers/history/page" class="btn btn-default">
+                                <a href="/v1/tea/user/transfers/history/page" class="btn btn-default">
                                     <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
                                     转账记录
                                 </a>
-                                <a href="/v1/tea/transfers/pending/page" class="btn btn-warning">
+                                <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning">
                                     <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
                                     待确认转账
                                 </a>
@@ -102,17 +102,25 @@
                                     </td>
                                     <td>
                                         {{ if .FromUserName }}
-                                        <a href="/v1/user/biography?uuid={{ .FromUserId }}" class="text-primary">{{ .FromUserName }}</a>
+                                        <div class="text-primary">
+                                            <a href="/v1/user/biography?uuid={{ .FromUserId }}">{{ .FromUserName }}</a>
+                                            <br><small class="text-muted">ID: {{ .FromUserId }}</small>
+                                        </div>
                                         {{ else }}
                                         <span class="text-muted">用户 ID: {{ .FromUserId }}</span>
                                         {{ end }}
                                     </td>
                                     <td>
                                         {{ if .ToUserName }}
-                                        <a href="/v1/user/biography?uuid={{ .ToUserId }}" class="text-success">{{ .ToUserName }}</a>
+                                        <div class="text-success">
+                                            <a href="/v1/user/biography?uuid={{ .ToUserId }}">{{ .ToUserName }}</a>
+                                            <br><small class="text-muted">ID: {{ .ToUserId }}</small>
+                                        </div>
                                         {{ else if gt .ToTeamId 0 }}
-                                        <span class="label label-info">团队</span>
-                                        <span class="text-muted">团队 ID: {{ .ToTeamId }}</span>
+                                        <div>
+                                            <span class="label label-info">团队</span>
+                                            <br><small class="text-muted">团队 ID: {{ .ToTeamId }}</small>
+                                        </div>
                                         {{ else }}
                                         <span class="text-muted">用户 ID: {{ .ToUserId }}</span>
                                         {{ end }}
@@ -138,7 +146,7 @@
                         <ul class="pagination pagination-sm">
                             {{ if gt .CurrentPage 1 }}
                             <li>
-                                <a href="/v1/tea/transactions/history/page?page={{ sub .CurrentPage 1 }}" aria-label="上一页">
+                                <a href="/v1/tea/user/transactions/history/page?page={{ sub .CurrentPage 1 }}" aria-label="上一页">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
@@ -149,7 +157,7 @@
                             </li>
                             
                             <li>
-                                <a href="/v1/tea/transactions/history/page?page={{ add .CurrentPage 1 }}" aria-label="下一页">
+                                <a href="/v1/tea/user/transactions/history/page?page={{ add .CurrentPage 1 }}" aria-label="下一页">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
                             </li>

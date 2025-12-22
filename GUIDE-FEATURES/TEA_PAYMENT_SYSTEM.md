@@ -52,19 +52,19 @@
 
 #### 路由层 (`Route/route_tea_account.go`)
 - **账户相关API**:
-  - `GET /v1/tea/account` - 获取账户信息
-  - `POST /v1/tea/account/freeze` - 冻结账户（管理员）
-  - `POST /v1/tea/account/unfreeze` - 解冻账户（管理员）
+  - `GET /v1/tea/user/account` - 获取账户信息
+  - `POST /v1/tea/user/account/freeze` - 冻结账户（管理员）
+  - `POST /v1/tea/user/account/unfreeze` - 解冻账户（管理员）
 
 - **转账相关API**:
-  - `POST /v1/tea/transfer/new` - 发起转账
-  - `POST /v1/tea/transfer/confirm` - 确认接收
-  - `POST /v1/tea/transfer/reject` - 拒绝转账
-  - `GET /v1/tea/transfers/pending` - 待确认转账列表
-  - `GET /v1/tea/transfers/history` - 转账历史
+  - `POST /v1/tea/user/transfer/new` - 发起转账
+  - `POST /v1/tea/user/transfer/confirm` - 确认接收
+  - `POST /v1/tea/user/transfer/reject` - 拒绝转账
+  - `GET /v1/tea/user/transfers/pending` - 待确认转账列表
+  - `GET /v1/tea/user/transfers/history` - 转账历史
 
 - **流水相关API**:
-  - `GET /v1/tea/transactions` - 交易流水
+  - `GET /v1/tea/user/transactions` - 交易流水
 
 ### 3. 安全机制
 
@@ -100,7 +100,7 @@
 
 ### 获取账户信息
 ```
-GET /v1/tea/account
+GET /v1/tea/user/account
 响应:
 {
   "success": true,
@@ -117,7 +117,7 @@ GET /v1/tea/account
 
 ### 发起转账
 ```
-POST /v1/tea/transfer/new
+POST /v1/tea/user/transfer/new
 请求:
 {
   "to_user_id": 2,
@@ -142,7 +142,7 @@ POST /v1/tea/transfer/new
 
 ### 确认接收
 ```
-POST /v1/tea/transfer/confirm
+POST /v1/tea/user/transfer/confirm
 请求:
 {
   "transfer_uuid": "xxx"
@@ -156,7 +156,7 @@ POST /v1/tea/transfer/confirm
 
 ### 拒绝转账
 ```
-POST /v1/tea/transfer/reject
+POST /v1/tea/user/transfer/reject
 请求:
 {
   "transfer_uuid": "xxx",

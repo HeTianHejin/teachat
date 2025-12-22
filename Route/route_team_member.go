@@ -1386,7 +1386,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			TeamId: invitation.TeamId,
 			UserId: reply_user.Id,
 			Role:   invitation.Role,
-			Status: dao.TeMemberStatusActive,
+			Status: dao.TeamMemberStatusActive,
 		}
 
 		// 如果team_member.Role == "CEO",采取更换CEO方法
@@ -2294,7 +2294,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
-			member.Status = dao.TeMemberStatusResigned
+			member.Status = dao.TeamMemberStatusResigned
 			if err = member.UpdateRoleStatus(); err != nil {
 				util.Debug("Cannot update member status", err)
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -2349,7 +2349,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
-			member.Status = dao.TeMemberStatusResigned
+			member.Status = dao.TeamMemberStatusResigned
 			if err = member.UpdateRoleStatus(); err != nil {
 				util.Debug("Cannot update member status", err)
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")

@@ -61,7 +61,7 @@ DAO文件夹（package dao）存放数据库连接属性；定义所需的原始
 Route文件夹（package route）存放路由处理函数，输出最终正式页面generateHTML方法，route_share_func_*存放共享的从数据库获取包装数据方法（fetch*Bean）/辅助函数；  
 sql文件夹存放建表语句schema.sql，预填充数据seed_data.sql文件。  
 util（package util）文件夹存放一般的工具函数；
-
+文件、变量及函数命名模式： 【模块】【分类】【具体内容】.go 例如：route_tea_account.go，DAO/tea_account.go等。  
 ## 本地运行需要做的 
 
 提示：建议按自己的pc系统搜索对应Golang编程环境搭建教程作业，以下是大致步骤。  

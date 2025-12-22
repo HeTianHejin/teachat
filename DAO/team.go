@@ -124,11 +124,11 @@ const (
 type TeamMemberStatus int
 
 const (
-	TeMemberStatusBlacklist TeamMemberStatus = 0 // 黑名单（禁止参与）
-	TeMemberStatusActive    TeamMemberStatus = 1 // 正常（活跃成员）
-	TeMemberStatusSuspended TeamMemberStatus = 2 // 暂停（临时限制）
-	TeMemberStatusResigned  TeamMemberStatus = 3 // 已退出（主动离开）
-	TeMemberStatusPending   TeamMemberStatus = 4 // 待审核（申请中）
+	TeamMemberStatusBlacklist TeamMemberStatus = 0 // 黑名单（禁止参与）
+	TeamMemberStatusActive    TeamMemberStatus = 1 // 正常（活跃成员）
+	TeamMemberStatusSuspended TeamMemberStatus = 2 // 暂停（临时限制）
+	TeamMemberStatusResigned  TeamMemberStatus = 3 // 已退出（主动离开）
+	TeamMemberStatusPending   TeamMemberStatus = 4 // 待审核（申请中）
 )
 
 // TeamMember 团队成员=当前$事业茶团加入成员记录
@@ -147,15 +147,15 @@ type TeamMember struct {
 // GetStatus 返回团队成员状态的中文描述
 func (member *TeamMember) GetStatus() string {
 	switch member.Status {
-	case TeMemberStatusBlacklist:
+	case TeamMemberStatusBlacklist:
 		return "黑名单"
-	case TeMemberStatusActive:
+	case TeamMemberStatusActive:
 		return "正常品茶"
-	case TeMemberStatusSuspended:
+	case TeamMemberStatusSuspended:
 		return "暂停品茶"
-	case TeMemberStatusResigned:
+	case TeamMemberStatusResigned:
 		return "退出茶团"
-	case TeMemberStatusPending:
+	case TeamMemberStatusPending:
 		return "待审核"
 	default:
 		return "未知"
@@ -549,7 +549,7 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 	teams := make([]Team, 0, estimatedCapacity)
 
 	query += ` LIMIT $6` // 限制最大团队数
-	rows, err := DB.Query(query, TeamClassSpaceship, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive, estimatedCapacity)
+	rows, err := DB.Query(query, TeamClassSpaceship, TeamClassOpen, TeamClassClose, user.Id, TeamMemberStatusActive, estimatedCapacity)
 	if err != nil {
 		return nil, err
 	}
@@ -578,7 +578,7 @@ func (user *User) SurvivalTeamsCount() (count int, err error) {
         JOIN team_members ON teams.id = team_members.team_id
         WHERE teams.class IN ($1, $2) AND team_members.user_id = $3 AND team_members.status = $4 AND teams.deleted_at IS NULL`
 
-	err = DB.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, TeMemberStatusActive).Scan(&count)
+	err = DB.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, TeamMemberStatusActive).Scan(&count)
 
 	return
 }
@@ -716,7 +716,7 @@ func GetNumAllTeams() (count int) {
 // 统计某个$事业茶团的成员数
 // AWS CodeWhisperer assist in writing
 func (team *Team) NumMembers() (count int) {
-	rows, _ := DB.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND status < $2", team.Id, TeMemberStatusResigned)
+	rows, _ := DB.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND status < $2", team.Id, TeamMemberStatusResigned)
 	for rows.Next() {
 		if err := rows.Scan(&count); err != nil {
 			return
@@ -789,7 +789,7 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
-	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2 AND status = $3", team.Id, "taster", TeMemberStatusActive)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2 AND status = $3", team.Id, "taster", TeamMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -812,7 +812,7 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
-	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5) AND status = $6", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO, TeMemberStatusActive)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5) AND status = $6", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO, TeamMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -1194,7 +1194,7 @@ func (tM *TeamMember) CreateWithTx(tx *sql.Tx) (err error) {
 
 // GetResignedMembersByTeamId 获取已离开的成员列表
 func GetResignedMembersByTeamId(teamId int) ([]TeamMember, error) {
-	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND status = $2 ORDER BY updated_at DESC", teamId, TeMemberStatusResigned)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND status = $2 ORDER BY updated_at DESC", teamId, TeamMemberStatusResigned)
 	if err != nil {
 		return nil, err
 	}

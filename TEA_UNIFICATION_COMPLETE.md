@@ -76,8 +76,8 @@ POST /v1/tea/team/account/unfreeze         # 解冻团队账户
 
 ### 页面路由
 ```
-GET /v1/team/tea/account                    # 团队茶叶账户页面
-GET /v1/team/tea/transactions              # 团队交易流水页面
+GET /v1/tea/team/account                    # 团队茶叶账户页面
+GET /v1/tea/team/transactions              # 团队交易流水页面
 ```
 
 ## 业务规则

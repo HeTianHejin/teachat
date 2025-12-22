@@ -321,7 +321,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				TeamId: team.Id,
 				UserId: team.FounderId,
 				Role:   RoleCEO,
-				Status: dao.TeMemberStatusActive,
+				Status: dao.TeamMemberStatusActive,
 			}
 			if err = teamMember.Create(); err != nil {
 				util.Debug("Cannot create team-member", err)

@@ -1640,7 +1640,7 @@ func createTeamWithFounderMember(team *dao.Team, founderUserId int) error {
 		TeamId: team.Id,
 		UserId: founderUserId,
 		Role:   dao.RoleCEO,
-		Status: dao.TeMemberStatusActive,
+		Status: dao.TeamMemberStatusActive,
 	}
 	if err := member.CreateWithTx(tx); err != nil {
 		return err

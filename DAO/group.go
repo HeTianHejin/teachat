@@ -347,7 +347,7 @@ func (group *Group) IsFirstTeamMember(userId int) (bool, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM team_members 
 	          WHERE team_id = $1 AND user_id = $2 AND status = $3`
-	err := DB.QueryRow(query, group.FirstTeamId, userId, TeMemberStatusActive).Scan(&count)
+	err := DB.QueryRow(query, group.FirstTeamId, userId, TeamMemberStatusActive).Scan(&count)
 	if err != nil {
 		return false, err
 	}
@@ -364,7 +364,7 @@ func (group *Group) IsFirstTeamCoreMember(userId int) (bool, error) {
 	query := `SELECT COUNT(*) FROM team_members
 	          WHERE team_id = $1 AND user_id = $2 AND status = $3 
 	          AND role IN ($4, $5, $6, $7)`
-	err := DB.QueryRow(query, group.FirstTeamId, userId, TeMemberStatusActive,
+	err := DB.QueryRow(query, group.FirstTeamId, userId, TeamMemberStatusActive,
 		RoleCEO, RoleCTO, RoleCMO, RoleCFO).Scan(&count)
 	if err != nil {
 		return false, err

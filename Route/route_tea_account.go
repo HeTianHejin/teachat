@@ -78,8 +78,8 @@ type PageInfo struct {
 	TotalPages int `json:"total_pages"`
 }
 
-// GetTeaAccount 获取用户茶叶账户信息
-func GetTeaAccount(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserAccount 获取用户茶叶账户信息
+func GetTeaUserAccount(w http.ResponseWriter, r *http.Request) {
 	// 检查是否已经登录
 	s, err := session(r)
 	if err != nil {
@@ -119,8 +119,8 @@ func GetTeaAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "获取账户信息成功", response)
 }
 
-// CreateTeaTransfer 发起茶叶转账
-func CreateTeaTransfer(w http.ResponseWriter, r *http.Request) {
+// CreateTeaUserTransfer 发起茶叶转账
+func CreateTeaUserTransfer(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -159,7 +159,7 @@ func CreateTeaTransfer(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查是否向自由人团队转账（自由人团队ID为2）
-	if req.ToTeamId == 2 {
+	if req.ToTeamId == dao.TeamIdFreelancer {
 		respondWithError(w, http.StatusBadRequest, "不能向自由人团队转账，自由人团队不支持茶叶资产")
 		return
 	}
@@ -219,8 +219,8 @@ func CreateTeaTransfer(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "转账发起成功", response)
 }
 
-// ConfirmTeaTransfer 确认接收转账
-func ConfirmTeaTransfer(w http.ResponseWriter, r *http.Request) {
+// ConfirmTeaUserTransfer 确认接收转账
+func ConfirmTeaUserTransfer(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -258,8 +258,8 @@ func ConfirmTeaTransfer(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "转账确认成功", nil)
 }
 
-// RejectTeaTransfer 拒绝转账
-func RejectTeaTransfer(w http.ResponseWriter, r *http.Request) {
+// RejectTeaUserTransfer 拒绝转账
+func RejectTeaUserTransfer(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -298,8 +298,8 @@ func RejectTeaTransfer(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "转账拒绝成功", nil)
 }
 
-// GetPendingTransfers 获取待确认转账列表
-func GetPendingTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserPendingTransfers 获取待确认转账列表
+func GetTeaUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
@@ -358,8 +358,8 @@ func GetPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	respondWithPagination(w, "获取待确认转账成功", responses, page, limit, 0) // TODO: 实现总数统计
 }
 
-// HandlePendingTransfers 处理待确认转账页面请求
-func HandlePendingTransfers(w http.ResponseWriter, r *http.Request) {
+// HandleTeaUserPendingTransfers 处理待确认转账页面请求
+func HandleTeaUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -525,11 +525,11 @@ func PendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "pending_transfers")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.pending_transfers")
 }
 
-// GetTransferHistory 获取转账历史
-func GetTransferHistory(w http.ResponseWriter, r *http.Request) {
+// GetteaUserTransferHistory 获取转账历史
+func GetteaUserTransferHistory(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
@@ -594,8 +594,8 @@ func GetTransferHistory(w http.ResponseWriter, r *http.Request) {
 	respondWithPagination(w, "获取转账历史成功", responses, page, limit, 0) // TODO: 实现总数统计
 }
 
-// HandleTransferHistory 处理转账历史页面请求
-func HandleTransferHistory(w http.ResponseWriter, r *http.Request) {
+// HandleTeaUserTransferHistory 处理转账历史页面请求
+func HandleTeaUserTransferHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -785,8 +785,8 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.transfer_history")
 }
 
-// GetUserTransactionHistory 获取用户交易历史（从转出表和转入表中查询）
-func GetUserTransactionHistory(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserTransactionHistory 获取用户交易历史（从转出表和转入表中查询）
+func GetTeaUserTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
@@ -810,14 +810,14 @@ func GetUserTransactionHistory(w http.ResponseWriter, r *http.Request) {
 		response := TransactionHistoryResponse{
 			TransactionType: tx["transaction_type"].(string),
 			Uuid:            tx["uuid"].(string),
-			FromUserId:      int(tx["from_user_id"].(int64)),
-			ToUserId:        int(tx["to_user_id"].(int64)),
-			ToTeamId:        int(tx["to_team_id"].(int64)),
+			FromUserId:      tx["from_user_id"].(int),
+			ToUserId:        safeInt(tx["to_user_id"]),
+			ToTeamId:        safeInt(tx["to_team_id"]),
 			AmountGrams:     tx["amount_grams"].(float64),
 			Status:          tx["status"].(string),
 			Notes:           tx["notes"].(string),
-			PaymentTime:     tx["payment_time"].(time.Time).Format("2006-01-02 15:04:05"),
-			CreatedAt:       tx["created_at"].(time.Time).Format("2006-01-02 15:04:05"),
+			PaymentTime:     safeTime(tx["payment_time"]).Format("2006-01-02 15:04:05"),
+			CreatedAt:       safeTime(tx["created_at"]).Format("2006-01-02 15:04:05"),
 		}
 
 		// 获取用户名信息
@@ -839,8 +839,8 @@ func GetUserTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	respondWithPagination(w, "获取交易历史成功", responses, page, limit, 0) // TODO: 实现总数统计
 }
 
-// HandleUserTransactionHistory 处理个人交易历史页面请求
-func HandleUserTransactionHistory(w http.ResponseWriter, r *http.Request) {
+// HandleTeaUserTransactionHistory 处理个人交易历史页面请求
+func HandleTeaUserTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -913,14 +913,14 @@ func UserTransactionHistoryGet(w http.ResponseWriter, r *http.Request) {
 		enhanced := EnhancedTransaction{
 			TransactionType: tx["transaction_type"].(string),
 			Uuid:            tx["uuid"].(string),
-			FromUserId:      int(tx["from_user_id"].(int64)),
-			ToUserId:        int(tx["to_user_id"].(int64)),
-			ToTeamId:        int(tx["to_team_id"].(int64)),
+			FromUserId:      tx["from_user_id"].(int),
+			ToUserId:        safeInt(tx["to_user_id"]),
+			ToTeamId:        safeInt(tx["to_team_id"]),
 			AmountGrams:     tx["amount_grams"].(float64),
 			Status:          tx["status"].(string),
 			Notes:           tx["notes"].(string),
-			PaymentTime:     tx["payment_time"].(time.Time),
-			CreatedAt:       tx["created_at"].(time.Time),
+			PaymentTime:     safeTime(tx["payment_time"]),
+			CreatedAt:       safeTime(tx["created_at"]),
 		}
 
 		// 获取发送方用户信息
@@ -1012,8 +1012,8 @@ func UserTransactionHistoryGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.transaction_history")
 }
 
-// FreezeTeaAccount 冻结茶叶账户（管理员功能）
-func FreezeTeaAccount(w http.ResponseWriter, r *http.Request) {
+// FreezeTeaUserAccount 冻结茶叶账户（管理员功能）
+func FreezeTeaUserAccount(w http.ResponseWriter, r *http.Request) {
 	// 验证管理员权限
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
@@ -1061,8 +1061,8 @@ func FreezeTeaAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "账户冻结成功", nil)
 }
 
-// UnfreezeTeaAccount 解冻茶叶账户（管理员功能）
-func UnfreezeTeaAccount(w http.ResponseWriter, r *http.Request) {
+// UnfreezeTeaUserAccount 解冻茶叶账户（管理员功能）
+func UnfreezeTeaUserAccount(w http.ResponseWriter, r *http.Request) {
 	// 验证管理员权限
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
@@ -1196,8 +1196,8 @@ func getToTeamId(toTeamId *int) int {
 	return *toTeamId
 }
 
-// GetTeamPendingIncomingTransfers 获取团队待确认转入转账列表
-func GetTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaTeamPendingIncomingTransfers 获取团队待确认转入转账列表
+func GetTeaTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
@@ -1273,8 +1273,8 @@ func GetTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
 	respondWithPagination(w, "获取团队待确认转账成功", responses, page, limit, 0) // TODO: 实现总数统计
 }
 
-// HandleTeamPendingIncomingTransfers 处理团队待确认转入转账页面请求
-func HandleTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
+// HandleTeaTeamPendingIncomingTransfers 处理团队待确认转入转账页面请求
+func HandleTeaTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -1456,10 +1456,38 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "team_pending_incoming_transfers")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_incoming_transfers.go.html")
 }
 
 // ProcessExpiredTransfersJob 定时任务：处理过期转账
 func ProcessExpiredTransfersJob() error {
 	return dao.ProcessExpiredTransfers()
+}
+
+// 辅助函数：安全获取int值，处理nil和interface{}类型
+func safeInt(val interface{}) int {
+	if val == nil {
+		return 0
+	}
+	switch v := val.(type) {
+	case int:
+		return v
+	case int64:
+		return int(v)
+	case float64:
+		return int(v)
+	default:
+		return 0
+	}
+}
+
+// 辅助函数：安全获取time.Time值，处理nil和interface{}类型
+func safeTime(val interface{}) time.Time {
+	if val == nil {
+		return time.Time{}
+	}
+	if t, ok := val.(time.Time); ok {
+		return t
+	}
+	return time.Time{}
 }
