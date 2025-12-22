@@ -371,13 +371,6 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		AvailableBalanceGrams: teamAccount.BalanceGrams - teamAccount.LockedBalanceGrams,
 	}
 
-	// 获取团队交易历史
-	transactionHistory, err := dao.GetTeamTeaTransactions(team.Id, 1, 20)
-	if err != nil {
-		util.Debug("cannot get team transaction history", err)
-		transactionHistory = []map[string]interface{}{}
-	}
-
 	// 获取待确认接收操作数量
 	pendingIncomingCount, err := dao.CountPendingTeamTransfers(team.Id)
 	if err != nil {
@@ -392,7 +385,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		SessUser:             s_u,
 		Team:                 singleTeam,
 		TeamAccount:          teamAccountWithAvailable,
-		TransactionHistory:   transactionHistory,
+		TransactionHistory:   []map[string]interface{}{}, // 空数组，不再显示最近交易记录
 		UserIsCoreMember:     isCoreMember,
 		PendingIncomingCount: pendingIncomingCount,
 	}
@@ -467,11 +460,11 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队交易历史
-	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
-	if err != nil {
-		util.Debug("cannot get team transaction history", err)
-		transactions = []map[string]interface{}{}
-	}
+	// transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
+	// if err != nil {
+	// 	util.Debug("cannot get team transaction history", err)
+	// 	transactions = []map[string]interface{}{}
+	// }
 
 	// 获取团队茶叶账户信息
 	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
@@ -485,10 +478,10 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser       dao.User
-		Team           *dao.Team
-		TeamAccount    dao.TeaTeamAccount
-		Transactions   []map[string]interface{}
+		SessUser    dao.User
+		Team        *dao.Team
+		TeamAccount dao.TeaTeamAccount
+		//Transactions   []map[string]interface{}
 		CurrentPage    int
 		Limit          int
 		FilterType     string
@@ -499,7 +492,7 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	pageData.SessUser = user
 	pageData.Team = &team
 	pageData.TeamAccount = teamAccount
-	pageData.Transactions = transactions
+	//pageData.Transactions = transactions
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 	pageData.FilterType = filterType

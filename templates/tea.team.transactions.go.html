@@ -93,7 +93,7 @@
                                     <th>类型</th>
                                     <th>数量</th>
                                     <th>余额变化</th>
-                                    <th>余额</th>
+                                    
                                     <th>描述</th>
                                     <th>流通对象</th>
                                     <th>相关方</th>
@@ -117,7 +117,6 @@
                                         -{{ printf "%.3f" .amount_grams }}
                                         {{ end }}克
                                     </td>
-                                    <td>{{ if .BalanceAfter }}{{ printf "%.3f" .BalanceAfter }}克{{ else }}-{{ end }}</td>
                                     <td><small class="text-muted">{{ .notes }}</small></td>
                                     <td>
                                         {{ if .to_team_id }}
