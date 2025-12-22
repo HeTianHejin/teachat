@@ -476,12 +476,19 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	// 获取过滤器类型
 	filterType := r.URL.Query().Get("type")
 
+	// 获取团队交易历史
+	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
+	if err != nil {
+		util.Debug("cannot get team transaction history", err)
+		transactions = []map[string]interface{}{}
+	}
+
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser    dao.User
-		Team        *dao.Team
-		TeamAccount dao.TeaTeamAccount
-		//Transactions   []map[string]interface{}
+		SessUser       dao.User
+		Team           *dao.Team
+		TeamAccount    dao.TeaTeamAccount
+		Transactions   []map[string]interface{}
 		CurrentPage    int
 		Limit          int
 		FilterType     string
@@ -492,7 +499,7 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	pageData.SessUser = user
 	pageData.Team = &team
 	pageData.TeamAccount = teamAccount
-	//pageData.Transactions = transactions
+	pageData.Transactions = transactions
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 	pageData.FilterType = filterType
@@ -517,4 +524,127 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.transactions")
+}
+
+// HandleTeaTeamOperationsHistory 处理团队操作历史页面请求
+func HandleTeaTeamOperationsHistory(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	user, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, user, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 必须指定团队ID
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		report(w, user, "必须指定团队ID。")
+		return
+	}
+
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		report(w, user, "团队ID无效。")
+		return
+	}
+
+	// 获取团队信息
+	team, err := dao.GetTeam(teamId)
+	if err != nil {
+		util.Debug("cannot get team by id", teamId, err)
+		report(w, user, "团队不存在。")
+		return
+	}
+
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	if err != nil || !isMember {
+		report(w, user, "您不是该团队成员，无法查看操作历史。")
+		return
+	}
+
+	// 获取分页参数
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	page := 1
+	limit := 20
+
+	if pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+
+	// 获取团队所有操作历史（包括待审批、已审批、已完成、已拒绝等所有状态）
+	operations, err := dao.GetTeamTransferOutOperations(teamId, page, limit)
+	if err != nil {
+		util.Debug("cannot get team operations history", err)
+		operations = []dao.TeaTeamTransferOut{}
+	}
+
+	// 获取团队茶叶账户信息
+	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
+	if err != nil {
+		util.Debug("cannot get team tea account", err)
+		teamAccount = dao.TeaTeamAccount{}
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser    dao.User
+		Team        *dao.Team
+		TeamAccount struct {
+			dao.TeaTeamAccount
+			BalanceDisplay string
+			StatusDisplay  string
+		}
+		Operations  []dao.TeaTeamTransferOut
+		CurrentPage int
+		Limit       int
+	}
+
+	pageData.SessUser = user
+	pageData.Team = &team
+	pageData.TeamAccount.TeaTeamAccount = teamAccount
+	pageData.Operations = operations
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	// 格式化余额显示
+	if teamAccount.BalanceGrams >= 1 {
+		pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%.2f 克", teamAccount.BalanceGrams)
+	} else {
+		pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%.0f 毫克", teamAccount.BalanceGrams*1000)
+	}
+
+	// 状态显示
+	if teamAccount.Status == "frozen" {
+		if teamAccount.FrozenReason != nil {
+			pageData.TeamAccount.StatusDisplay = "已冻结 (" + *teamAccount.FrozenReason + ")"
+		} else {
+			pageData.TeamAccount.StatusDisplay = "已冻结"
+		}
+	} else {
+		pageData.TeamAccount.StatusDisplay = "正常"
+	}
+
+	// 生成页面
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.operations.history")
 }

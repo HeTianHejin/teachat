@@ -335,6 +335,7 @@ func main() {
 	mux.HandleFunc("/v1/tea/team/transfers/pending/page", route.HandleTeaTeamPendingIncomingTransfers) // 团队待确认转入转账页面路由
 	mux.HandleFunc("/v1/tea/team/transfers/pending/api", route.GetTeaTeamPendingIncomingTransfers)     // 团队待确认转入转账API
 	mux.HandleFunc("/v1/tea/team/transactions/page", route.HandleTeaTeamTransactionHistory)                 // 团队交易流水页面路由
+	mux.HandleFunc("/v1/tea/team/operations/history/page", route.HandleTeaTeamOperationsHistory)             // 团队操作历史页面路由
 
 	// define in help.go 帮助 文档 信息
 	mux.HandleFunc("/v1/help/faq", route.FAQ)

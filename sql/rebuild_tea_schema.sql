@@ -37,6 +37,7 @@ CREATE TABLE tea.user_transfer_out (
     amount_grams          DECIMAL(15,3) NOT NULL,
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_receipt', -- 转账状态
     notes                 TEXT, -- 转账备注
+    balance_after_transfer DECIMAL(15,3), -- 转出后账户余额
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     payment_time          TIMESTAMP, -- 实际支付时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -54,10 +55,11 @@ CREATE INDEX idx_tea_user_transfer_out_expires_at ON tea.user_transfer_out(expir
 CREATE TABLE tea.transfer_in (
     id                    SERIAL PRIMARY KEY,
     uuid                  UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
-    user_id               INTEGER NOT NULL REFERENCES users(id),
+    holder_id             INTEGER NOT NULL, -- 账户持有人ID（用户ID或团队ID）
     user_transfer_out_id  INTEGER REFERENCES tea.user_transfer_out(id), -- 用户转出记录ID
     team_transfer_out_id  INTEGER, -- 团队转出记录ID（预留）
     status                VARCHAR(20) NOT NULL, -- 转入状态
+    balance_after_receipt DECIMAL(15,3), -- 接收后账户余额
     confirmed_by          INTEGER REFERENCES users(id), -- 确认人
     rejected_by           INTEGER REFERENCES users(id), -- 拒绝人
     reception_rejection_reason TEXT, -- 拒收原因
@@ -65,7 +67,7 @@ CREATE TABLE tea.transfer_in (
 );
 
 -- 创建索引
-CREATE INDEX idx_tea_transfer_in_user_id ON tea.transfer_in(user_id);
+CREATE INDEX idx_tea_transfer_in_holder_id ON tea.transfer_in(holder_id);
 CREATE INDEX idx_tea_transfer_in_user_transfer_out ON tea.transfer_in(user_transfer_out_id);
 CREATE INDEX idx_tea_transfer_in_status ON tea.transfer_in(status);
 
@@ -103,6 +105,7 @@ CREATE TABLE tea.team_transfer_out (
     approval_rejection_reason TEXT, -- 审批拒绝原因
     rejected_by           INTEGER REFERENCES users(id), -- 拒绝人ID
     rejected_at           TIMESTAMP, -- 拒绝时间
+    balance_after_transfer DECIMAL(15,3), -- 转出后团队账户余额
     payment_time          TIMESTAMP, -- 实际支付时间（接收方确认后）
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at            TIMESTAMP NOT NULL, -- 过期时间

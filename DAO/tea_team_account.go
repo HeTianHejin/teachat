@@ -81,6 +81,9 @@ type TeaTeamTransferOut struct {
 	RejectedBy              *int       // 拒绝人ID
 	RejectedAt              *time.Time // 拒绝时间
 
+	// 余额记录
+	BalanceAfterTransfer float64 // 转出后团队账户余额
+
 	// 时间管理
 	CreatedAt   time.Time  // 创建，流程开始时间，也是锁定额度起始时间
 	ExpiresAt   time.Time  // 过期时间，也是锁定额度截止时间
@@ -492,7 +495,7 @@ func CreateTeaTransferTeamToUser(fromTeamId, initiatorUserId, toUserId int, amou
 
 	// 如果是单人团队，直接创建待接收的转账记录
 	if transferType == TransferType_TeamInitiated {
-		err = createTeamTransferOutRecord(tx, operation)
+		err = UpdateTeamTransferOutRecordStatusPendingReceipt(tx, operation)
 		if err != nil {
 			return TeaTeamTransferOut{}, fmt.Errorf("创建团队转出记录失败: %v", err)
 		}
@@ -607,7 +610,7 @@ func CreateTeaTransferTeamToTeam(fromTeamId, initiatorUserId, toTeamId int, amou
 
 	// 如果是单人团队，直接创建待接收的转账记录
 	if transferType == TransferType_TeamInitiated {
-		err = createTeamTransferOutRecord(tx, operation)
+		err = UpdateTeamTransferOutRecordStatusPendingReceipt(tx, operation)
 		if err != nil {
 			return TeaTeamTransferOut{}, fmt.Errorf("创建团队转出记录失败: %v", err)
 		}
@@ -634,8 +637,8 @@ func getTeamMemberCount(tx *sql.Tx, teamId int) (int, error) {
 	return count, nil
 }
 
-// createTeamTransferOutRecord 创建团队转出记录（审批通过后使用）
-func createTeamTransferOutRecord(tx *sql.Tx, operation TeaTeamTransferOut) error {
+// UpdateTeamTransferOutRecordStatusPendingReceipt 更新团队转出记录状态为待接收（审批通过后使用）
+func UpdateTeamTransferOutRecordStatusPendingReceipt(tx *sql.Tx, operation TeaTeamTransferOut) error {
 	// 更新团队转出记录状态为待接收
 	_, err := tx.Exec(`UPDATE tea.team_transfer_out SET 
 		status = $1, updated_at = $2 
@@ -697,7 +700,7 @@ func ApproveTeamTransfer(operationUuid string, approverUserId int) error {
 	}
 
 	// 创建团队转出记录
-	err = createTeamTransferOutRecord(tx, operation)
+	err = UpdateTeamTransferOutRecordStatusPendingReceipt(tx, operation)
 	if err != nil {
 		return fmt.Errorf("创建团队转出记录失败: %v", err)
 	}
@@ -789,7 +792,7 @@ func RejectTeamTransfer(operationUuid string, approverUserId int, reason string)
 func GetPendingTeamOperations(teamId int, page, limit int) ([]TeaTeamTransferOut, error) {
 	offset := (page - 1) * limit
 	rows, err := DB.Query(`SELECT id, uuid, from_team_id, initiator_user_id, to_user_id, to_team_id, 
-		amount_grams, status, notes, transfer_type, expires_at, created_at 
+		amount_grams, status, notes, transfer_type, balance_after_transfer, expires_at, created_at 
 		FROM tea.team_transfer_out 
 		WHERE from_team_id = $1 AND status = $2 AND expires_at > NOW() 
 		ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
@@ -804,7 +807,7 @@ func GetPendingTeamOperations(teamId int, page, limit int) ([]TeaTeamTransferOut
 		var operation TeaTeamTransferOut
 		err = rows.Scan(&operation.Id, &operation.Uuid, &operation.FromTeamId, &operation.InitiatorUserId,
 			&operation.ToUserId, &operation.ToTeamId, &operation.AmountGrams, &operation.Status,
-			&operation.Notes, &operation.TransferType, &operation.ExpiresAt, &operation.CreatedAt)
+			&operation.Notes, &operation.TransferType, &operation.BalanceAfterTransfer, &operation.ExpiresAt, &operation.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("扫描操作记录失败: %v", err)
 		}
@@ -818,7 +821,7 @@ func GetPendingTeamOperations(teamId int, page, limit int) ([]TeaTeamTransferOut
 func GetPendingTeamTransfers(teamId int, page, limit int) ([]TeaTeamTransferOut, error) {
 	offset := (page - 1) * limit
 	rows, err := DB.Query(`SELECT id, uuid, from_team_id, initiator_user_id, to_user_id, to_team_id, 
-		amount_grams, status, notes, transfer_type, expires_at, created_at 
+		amount_grams, status, notes, transfer_type, balance_after_transfer, expires_at, created_at 
 		FROM tea.team_transfer_out 
 		WHERE to_team_id = $1 AND status = $2 AND expires_at > NOW() 
 		ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
@@ -833,7 +836,7 @@ func GetPendingTeamTransfers(teamId int, page, limit int) ([]TeaTeamTransferOut,
 		var operation TeaTeamTransferOut
 		err = rows.Scan(&operation.Id, &operation.Uuid, &operation.FromTeamId, &operation.InitiatorUserId,
 			&operation.ToUserId, &operation.ToTeamId, &operation.AmountGrams, &operation.Status,
-			&operation.Notes, &operation.TransferType, &operation.ExpiresAt, &operation.CreatedAt)
+			&operation.Notes, &operation.TransferType, &operation.BalanceAfterTransfer, &operation.ExpiresAt, &operation.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("扫描操作记录失败: %v", err)
 		}
@@ -964,23 +967,24 @@ func confirmTeamToTeamTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, confirmU
 		return fmt.Errorf("更新接收团队账户余额失败: %v", err)
 	}
 
-	// 更新转账状态，设置实际支付时间
+	// 更新转账状态，设置实际支付时间，记录转出后余额
 	paymentTime := time.Now()
 	_, err = tx.Exec(`UPDATE tea.team_transfer_out SET 
 		status = $1, 
 		payment_time = $2, 
-		updated_at = $3 
-		WHERE id = $4`,
-		StatusCompleted, paymentTime, paymentTime, transfer.Id)
+		balance_after_transfer = $3,
+		updated_at = $4 
+		WHERE id = $5`,
+		StatusCompleted, paymentTime, newFromTeamBalance, paymentTime, transfer.Id)
 	if err != nil {
 		return fmt.Errorf("更新转账状态失败: %v", err)
 	}
 
-	// 创建转入记录（团队转账确认时创建转入记录，关联到确认用户）
+	// 创建转入记录（团队转账确认时创建转入记录，关联到确认用户，记录接收后余额）
 	_, err = tx.Exec(`INSERT INTO tea.transfer_in 
-		(user_id, team_transfer_out_id, status, confirmed_by, created_at) 
-		VALUES ($1, $2, $3, $4, $5)`,
-		confirmUserId, transfer.Id, StatusCompleted, confirmUserId, paymentTime)
+		(holder_id, team_transfer_out_id, status, balance_after_receipt, confirmed_by, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6)`,
+		confirmUserId, transfer.Id, StatusCompleted, toTeamBalance+transfer.AmountGrams, confirmUserId, paymentTime)
 	if err != nil {
 		return fmt.Errorf("创建转入记录失败: %v", err)
 	}
@@ -995,7 +999,7 @@ func confirmTeamToTeamTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, confirmU
 }
 
 // confirmTeamToUserTransfer 确认团队向用户转账
-func confirmTeamToUserTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, _ int) error {
+func confirmTeamToUserTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, confirmUserId int) error {
 	// 确保接收方用户账户存在
 	var toUserBalance float64
 	err := tx.QueryRow("SELECT balance_grams FROM tea.user_accounts WHERE user_id = $1 FOR UPDATE", *transfer.ToUserId).Scan(&toUserBalance)
@@ -1035,23 +1039,27 @@ func confirmTeamToUserTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, _ int) e
 		return fmt.Errorf("更新接收用户账户余额失败: %v", err)
 	}
 
-	// 更新转账状态，设置实际支付时间
+	// 更新转账状态，设置实际支付时间，记录转出后余额
 	paymentTime := time.Now()
 	_, err = tx.Exec(`UPDATE tea.team_transfer_out SET 
 		status = $1, 
 		payment_time = $2, 
-		updated_at = $3 
-		WHERE id = $4`,
-		StatusCompleted, paymentTime, paymentTime, transfer.Id)
+		balance_after_transfer = $3,
+		updated_at = $4 
+		WHERE id = $5`,
+		StatusCompleted, paymentTime, newFromTeamBalance, paymentTime, transfer.Id)
 	if err != nil {
 		return fmt.Errorf("更新转账状态失败: %v", err)
 	}
 
-	// 记录交易流水
-	// err = recordTeamToUserTransferTransactions(tx, transfer, fromTeamBalance, newFromTeamBalance, toUserBalance)
-	// if err != nil {
-	// 	return err
-	// }
+	// 创建转入记录（团队向用户转账确认时创建转入记录，关联到确认用户，记录接收后余额）
+	_, err = tx.Exec(`INSERT INTO tea.transfer_in 
+		(holder_id, team_transfer_out_id, status, balance_after_receipt, confirmed_by, created_at) 
+		VALUES ($1, $2, $3, $4, $5, $6)`,
+		*transfer.ToUserId, transfer.Id, StatusCompleted, toUserBalance+transfer.AmountGrams, confirmUserId, paymentTime)
+	if err != nil {
+		return fmt.Errorf("创建转入记录失败: %v", err)
+	}
 
 	return nil
 }
@@ -1146,4 +1154,85 @@ func RejectTeamTransferReceipt(transferUuid string, rejectUserId int, reason str
 	}
 
 	return nil
+}
+
+// 作为接收方“确认接收”操作历史
+// GetTeamTransferInOperations 获取团队所有转入记录（接收）
+func GetTeamTransferInOperations(teamId int, page, limit int) ([]TeaTransferIn, error) {
+	offset := (page - 1) * limit
+
+	// 查询团队转入记录（从transfer_in表，结合team_transfer_out表获取完整信息）
+	rows, err := DB.Query(`
+		SELECT ti.id, ti.uuid, ti.holder_id, ti.team_transfer_out_id,
+			   ti.status, ti.balance_after_receipt, ti.confirmed_by, 
+			   ti.rejected_by, ti.reception_rejection_reason, ti.created_at,
+			   tto.from_team_id, tto.initiator_user_id, tto.to_team_id,
+			   tto.to_user_id, tto.amount_grams, tto.notes, tto.payment_time
+		FROM tea.transfer_in ti
+		INNER JOIN tea.team_transfer_out tto ON ti.team_transfer_out_id = tto.id
+		WHERE ti.holder_id = $1
+		ORDER BY ti.created_at DESC LIMIT $2 OFFSET $3`,
+		teamId, limit, offset)
+
+	if err != nil {
+		return nil, fmt.Errorf("查询团队转入记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	var transfers []TeaTransferIn
+	for rows.Next() {
+		var transfer TeaTransferIn
+		var fromTeamId, initiatorUserId sql.NullInt64
+		var toTeamId, toUserId sql.NullInt64
+		var amountGrams float64
+		var notes string
+		var paymentTime sql.NullTime
+
+		err = rows.Scan(
+			&transfer.Id, &transfer.Uuid, &transfer.HolderId, &transfer.TeamTransferOutId,
+			&transfer.Status, &transfer.BalanceAfterReceipt, &transfer.ConfirmedBy,
+			&transfer.RejectedBy, &transfer.ReceptionRejectionReason, &transfer.CreatedAt,
+			&fromTeamId, &initiatorUserId, &toTeamId, &toUserId, &amountGrams, &notes, &paymentTime)
+		if err != nil {
+			return nil, fmt.Errorf("扫描转入记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+
+	return transfers, nil
+}
+
+// GetTeamTransferOutOperations 获取团队所有转出操作历史（包括各种状态）
+func GetTeamTransferOutOperations(teamId int, page, limit int) ([]TeaTeamTransferOut, error) {
+	offset := (page - 1) * limit
+
+	// 查询团队作为转出方所有操作历史（包括各种状态）
+	rows, err := DB.Query(`SELECT id, uuid, from_team_id, initiator_user_id, to_user_id, to_team_id, 
+		amount_grams, status, notes, transfer_type, approver_user_id, approved_at, approval_rejection_reason, 
+		rejected_by, rejected_at, balance_after_transfer, expires_at, payment_time, created_at 
+		FROM tea.team_transfer_out 
+		WHERE from_team_id = $1 OR to_team_id = $1
+		ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
+		teamId, limit, offset)
+
+	if err != nil {
+		return nil, fmt.Errorf("查询团队操作历史失败: %v", err)
+	}
+	defer rows.Close()
+
+	var operations []TeaTeamTransferOut
+	for rows.Next() {
+		var operation TeaTeamTransferOut
+		err = rows.Scan(&operation.Id, &operation.Uuid, &operation.FromTeamId, &operation.InitiatorUserId,
+			&operation.ToUserId, &operation.ToTeamId, &operation.AmountGrams, &operation.Status,
+			&operation.Notes, &operation.TransferType, &operation.ApproverUserId, &operation.ApprovedAt,
+			&operation.ApprovalRejectionReason, &operation.RejectedBy, &operation.RejectedAt,
+			&operation.BalanceAfterTransfer, &operation.ExpiresAt, &operation.PaymentTime, &operation.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("扫描操作记录失败: %v", err)
+		}
+		operations = append(operations, operation)
+	}
+
+	return operations, nil
 }
