@@ -1456,7 +1456,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_incoming_transfers.go.html")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_incoming_transfers")
 }
 
 // ProcessExpiredTransfersJob 定时任务：处理过期转账

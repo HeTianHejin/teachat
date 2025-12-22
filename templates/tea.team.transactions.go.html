@@ -101,89 +101,78 @@
                             </thead>
                             <tbody>
                                 {{ range .Transactions }}
-                                <tr>
-                                    <td>{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</td>
+                                <tr class="{{ if eq .transaction_type "incoming" }}success{{ else }}danger{{ end }}">
+                                    <td>{{ if .created_at }}{{ .created_at.Format "2006-01-02 15:04:05" }}{{ else }}-{{ end }}</td>
                                     <td>
-                                        {{ if eq .TransactionType "deposit" }}
-                                        <span class="label label-success">存入</span>
-                                        {{ else if eq .TransactionType "withdraw" }}
-                                        <span class="label label-warning">提取</span>
-                                        {{ else if eq .TransactionType "transfer_out" }}
-                                        <span class="label label-info">转出</span>
-                                        {{ else if eq .TransactionType "transfer_in" }}
-                                        <span class="label label-primary">转入</span>
-                                        {{ else if eq .TransactionType "system_grant" }}
-                                        <span class="label label-success">系统发放</span>
-                                        {{ else if eq .TransactionType "system_deduct" }}
-                                        <span class="label label-danger">系统扣除</span>
-                                        {{ else }}
-                                        <span class="label label-default">{{ .TransactionType }}</span>
-                                        {{ end }}
+                                        <span class="label {{ if eq .transaction_type "incoming" }}label-success{{ else }}label-danger{{ end }}">
+                                            {{ if eq .transaction_type "incoming" }}转入
+                                            {{ else }}转出{{ end }}
+                                        </span>
                                     </td>
-                                    <td>{{ printf "%.3f" .AmountGrams }}克</td>
-                                    <td class="{{ if or (eq .TransactionType "deposit") (eq .TransactionType "transfer_in") (eq .TransactionType "system_grant") }}text-success{{ else }}text-danger{{ end }}">
-                                        {{ if or (eq .TransactionType "deposit") (eq .TransactionType "transfer_in") (eq .TransactionType "system_grant") }}
-                                        +{{ printf "%.3f" .AmountGrams }}
+                                    <td>{{ printf "%.3f" .amount_grams }}克</td>
+                                    <td class="{{ if eq .transaction_type "incoming" }}text-success{{ else }}text-danger{{ end }}">
+                                        {{ if eq .transaction_type "incoming" }}
+                                        +{{ printf "%.3f" .amount_grams }}
                                         {{ else }}
-                                        -{{ printf "%.3f" .AmountGrams }}
+                                        -{{ printf "%.3f" .amount_grams }}
                                         {{ end }}克
                                     </td>
-                                    <td>{{ printf "%.3f" .BalanceAfter }}克</td>
-                                    <td>{{ .Description }}</td>
+                                    <td>{{ if .BalanceAfter }}{{ printf "%.3f" .BalanceAfter }}克{{ else }}-{{ end }}</td>
+                                    <td><small class="text-muted">{{ .notes }}</small></td>
                                     <td>
-                                        {{ if .TargetTypeText }}
-                                            {{ if eq .TargetTypeText "个人" }}
-                                            <span class="label label-success">{{ .TargetTypeText }}</span>
-                                            {{ else if eq .TargetTypeText "团队" }}
-                                            <span class="label label-info">{{ .TargetTypeText }}</span>
-                                            {{ else }}
-                                            <span class="label label-default">{{ .TargetTypeText }}</span>
-                                            {{ end }}
+                                        {{ if .to_team_id }}
+                                            <span class="label label-info">团队</span>
+                                        {{ else if .to_user_id }}
+                                            <span class="label label-success">个人</span>
+                                        {{ else if .from_team_id }}
+                                            <span class="label label-info">团队</span>
+                                        {{ else if .from_user_id }}
+                                            <span class="label label-success">个人</span>
                                         {{ else }}
                                             <span class="label label-default">未知</span>
                                         {{ end }}
                                     </td>
                                     <td>
-                                        {{ if .TargetTeamName }}
-                                            {{ if eq .TransactionType "transfer_out" }}
-                                            <span class="text-info">目标团队: {{ .TargetTeamName }} (ID: {{ .TargetTeamId }})</span>
-                                            {{ else if eq .TransactionType "transfer_in" }}
-                                            <span class="text-info">来源团队: {{ .TargetTeamName }} (ID: {{ .TargetTeamId }})</span>
+                                        {{ if .to_team_name }}
+                                            {{ if eq .transaction_type "incoming" }}
+                                            <span class="text-info">来源团队: {{ .to_team_name }} (ID: {{ .to_team_id }})</span>
                                             {{ else }}
-                                            <span class="text-info">团队: {{ .TargetTeamName }} (ID: {{ .TargetTeamId }})</span>
+                                            <span class="text-info">目标团队: {{ .to_team_name }} (ID: {{ .to_team_id }})</span>
                                             {{ end }}
-                                        {{ else if .TargetUserName }}
-                                            {{ if eq .TransactionType "transfer_out" }}
-                                            <span class="text-success">目标用户: {{ .TargetUserName }} (ID: {{ .TargetUserId }})</span>
-                                            {{ else if eq .TransactionType "transfer_in" }}
-                                            <span class="text-success">来源用户: {{ .TargetUserName }} (ID: {{ .TargetUserId }})</span>
+                                        {{ else if .to_user_name }}
+                                            {{ if eq .transaction_type "incoming" }}
+                                            <span class="text-success">来源用户: {{ .to_user_name }} (ID: {{ .to_user_id }})</span>
                                             {{ else }}
-                                            <span class="text-success">用户: {{ .TargetUserName }} (ID: {{ .TargetUserId }})</span>
+                                            <span class="text-success">目标用户: {{ .to_user_name }} (ID: {{ .to_user_id }})</span>
                                             {{ end }}
-                                        {{ else if .RelatedUserName }}
-                                            {{ if eq .TransactionType "withdraw" }}
-                                            <span class="text-success">操作人: {{ .RelatedUserName }} (ID: {{ .OperatorUserId }})</span>
-                                            {{ else if eq .TransactionType "deposit" }}
-                                            <span class="text-success">操作人: {{ .RelatedUserName }} (ID: {{ .OperatorUserId }})</span>
+                                        {{ else if .from_team_name }}
+                                            {{ if eq .transaction_type "incoming" }}
+                                            <span class="text-warning">来源团队: {{ .from_team_name }} (ID: {{ .from_team_id }})</span>
                                             {{ else }}
-                                            <span class="text-success">用户: {{ .RelatedUserName }} (ID: {{ .OperatorUserId }})</span>
+                                            <span class="text-warning">目标团队: {{ .from_team_name }} (ID: {{ .from_team_id }})</span>
                                             {{ end }}
-                                        {{ else if .TargetTeamId }}
-                                            {{ if eq .TransactionType "transfer_out" }}
-                                            <span class="text-muted">目标团队ID: {{ .TargetTeamId }}</span>
-                                            {{ else if eq .TransactionType "transfer_in" }}
-                                            <span class="text-muted">来源团队ID: {{ .TargetTeamId }}</span>
+                                        {{ else if .from_user_name }}
+                                            <span class="text-success">用户: {{ .from_user_name }} (ID: {{ .from_user_id }})</span>
+                                        {{ else if .to_team_id }}
+                                            {{ if eq .transaction_type "incoming" }}
+                                            <span class="text-muted">来源团队ID: {{ .to_team_id }}</span>
                                             {{ else }}
-                                            <span class="text-muted">团队ID: {{ .TargetTeamId }}</span>
+                                            <span class="text-muted">目标团队ID: {{ .to_team_id }}</span>
                                             {{ end }}
-                                        {{ else if .TargetUserId }}
-                                            {{ if eq .TransactionType "transfer_out" }}
-                                            <span class="text-muted">目标用户ID: {{ .TargetUserId }}</span>
-                                            {{ else if eq .TransactionType "transfer_in" }}
-                                            <span class="text-muted">来源用户ID: {{ .TargetUserId }}</span>
+                                        {{ else if .to_user_id }}
+                                            {{ if eq .transaction_type "incoming" }}
+                                            <span class="text-muted">来源用户ID: {{ .to_user_id }}</span>
                                             {{ else }}
-                                            <span class="text-muted">用户ID: {{ .TargetUserId }}</span>
+                                            <span class="text-muted">目标用户ID: {{ .to_user_id }}</span>
                                             {{ end }}
+                                        {{ else if .from_team_id }}
+                                            {{ if eq .transaction_type "incoming" }}
+                                            <span class="text-muted">来源团队ID: {{ .from_team_id }}</span>
+                                            {{ else }}
+                                            <span class="text-muted">目标团队ID: {{ .from_team_id }}</span>
+                                            {{ end }}
+                                        {{ else if .from_user_id }}
+                                            <span class="text-muted">用户ID: {{ .from_user_id }}</span>
                                         {{ else }}
                                         -
                                         {{ end }}

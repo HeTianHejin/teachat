@@ -319,10 +319,10 @@ func GetTeamTeaTransactions(teamId int, page, limit int) ([]map[string]interface
 }
 
 // CreateTeamTeaTransaction 创建团队交易流水记录（已废弃，不再使用交易流水表）
-func CreateTeamTeaTransaction(teamId int, transactionType string, amountGrams, balanceBefore, balanceAfter float64, description string, targetUserId, targetTeamId, operatorUserId, approverUserId *int, targetType string) error {
-	// 注：交易流水表已废弃，不再记录交易流水
-	return nil
-}
+// func CreateTeamTeaTransaction(teamId int, transactionType string, amountGrams, balanceBefore, balanceAfter float64, description string, targetUserId, targetTeamId, operatorUserId, approverUserId *int, targetType string) error {
+// 	// 注：交易流水表已废弃，不再记录交易流水
+// 	return nil
+// }
 
 // CanUserManageTeamAccount 检查用户是否可以管理团队账户
 func CanUserManageTeamAccount(userId, teamId int) (bool, error) {
@@ -1067,8 +1067,6 @@ func confirmTeamToUserTransfer(tx *sql.Tx, transfer TeaTeamTransferOut, _ int) e
 // 	// 注：交易流水表已废弃，不再记录交易流水
 // 	return nil
 // }
-
-
 
 // RejectTeamTransferReceipt 拒绝接收团队转账
 func RejectTeamTransferReceipt(transferUuid string, rejectUserId int, reason string) error {
