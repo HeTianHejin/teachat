@@ -23,7 +23,7 @@
                 <p>
                     您有 <strong>{{ .PendingTransferCount }}</strong> 笔待确认的转账记录，
                     请及时处理以免过期。
-                    <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning btn-sm">立即查看</a>
+                    <a href="/v1/tea/user/transfers/pending/user_to_user/page" class="btn btn-warning btn-sm">立即查看</a>
                 </p>
             </div>
         </div>
@@ -57,25 +57,7 @@
                             <h4>可用余额: <strong>{{ .AccountInfo.AvailableBalanceDisplay }}</strong></h4>
                             <p class="text-muted"><strong>可以立即使用的茶叶</strong></p>
                         </div>
-                        <div class="col-md-6">
-                            <div class="btn-group-vertical" role="group" style="width: 100%;">
-                                <a href="/v1/tea/user/transactions/page" class="btn btn-info">
-                                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-                                    收支明细
-                                </a>
-                                <a href="/v1/tea/user/transfers/history/page" class="btn btn-default">
-                                    <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
-                                    转账记录
-                                </a>
-                                <a href="/v1/tea/user/transfers/pending/page" class="btn {{ if gt .PendingTransferCount 0 }}btn-danger{{ else }}btn-warning{{ end }}">
-                                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
-                                    待确认转账
-                                    {{ if gt .PendingTransferCount 0 }}
-                                    <span class="badge">{{ .PendingTransferCount }}</span>
-                                    {{ end }}
-                                </a>
-                            </div>
-                        </div>
+                      
                     </div>
                 </div>
             </div>
@@ -94,7 +76,7 @@
                 </div>
                 <div class="panel-body">
                     <div class="list-group">
-                        <a href="/v1/tea/user/transfers/pending/page" class="list-group-item {{ if gt .PendingTransferCount 0 }}list-group-item-warning{{ end }}">
+                        <a href="/v1/tea/user/transfers/pending/user_to_user/page" class="list-group-item {{ if gt .PendingTransferCount 0 }}list-group-item-warning{{ end }}">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
                                 查看待确认转账
@@ -110,7 +92,7 @@
                                 {{ end }}
                             </p>
                         </a>
-                        <a href="/v1/tea/user/transactions/page?type=transfer_in" class="list-group-item">
+                        <a href="/v1/tea/user/transfers/in/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 收入记录
@@ -139,7 +121,7 @@
                             </h4>
                             <p class="list-group-item-text">向其他茶友转账茶叶</p>
                         </a>
-                        <a href="/v1/tea/user/transactions/page?type=transfer_out" class="list-group-item">
+                        <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 支出记录
@@ -152,58 +134,7 @@
         </div>
     </div>
 
-    <!-- 快速操作区域 -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <span class="glyphicon glyphicon-flash" aria-hidden="true"></span>
-                        快速操作
-                    </h3>
-                </div>
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <button class="btn btn-lg btn-success" onclick="showTransferModal()">
-                                    <span class="glyphicon glyphicon-send" aria-hidden="true"></span><br>
-                                    转账茶叶
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <a href="/v1/tea/user/transfers/pending/page" class="btn btn-lg {{ if gt .PendingTransferCount 0 }}btn-danger{{ else }}btn-warning{{ end }}">
-                                    <span class="glyphicon glyphicon-bell" aria-hidden="true"></span><br>
-                                    待确认
-                                    {{ if gt .PendingTransferCount 0 }}
-                                    <br><span class="badge">{{ .PendingTransferCount }}</span>
-                                    {{ end }}
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <a href="/v1/tea/user/transactions/page" class="btn btn-lg btn-info">
-                                    <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span><br>
-                                    收支明细
-                                </a>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <a href="/v1/tea/user/account" class="btn btn-lg btn-primary">
-                                    <span class="glyphicon glyphicon-cog" aria-hidden="true"></span><br>
-                                    账户详情
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
 
 </div>
@@ -224,21 +155,9 @@
             <div class="modal-body">
                 <form id="transferForm">
                     <div class="form-group">
-                        <label for="transferType">转账类型:</label>
-                        <select class="form-control" id="transferType" onchange="toggleTransferTarget()">
-                            <option value="user">转到个人</option>
-                            <option value="team">转到团队</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="toUserGroup">
                         <label for="toUserId">接收方用户ID:</label>
                         <input type="number" class="form-control" id="toUserId" name="to_user_id" required min="1">
                         <small class="help-block">请输入要转账的茶友用户ID</small>
-                    </div>
-                    <div class="form-group" id="toTeamGroup" style="display: none;">
-                        <label for="toTeamId">接收方团队ID:</label>
-                        <input type="number" class="form-control" id="toTeamId" name="to_team_id" required min="1">
-                        <small class="help-block">请输入要转账的团队ID</small>
                     </div>
                     <div class="form-group">
                         <label for="amountGrams">转账数量(克):</label>
@@ -271,31 +190,6 @@
 </div>
 
 <script>
-// 切换转账目标类型
-function toggleTransferTarget() {
-    const transferType = document.getElementById('transferType').value;
-    const toUserGroup = document.getElementById('toUserGroup');
-    const toTeamGroup = document.getElementById('toTeamGroup');
-    const toUserId = document.getElementById('toUserId');
-    const toTeamId = document.getElementById('toTeamId');
-    
-    if (transferType === 'user') {
-        toUserGroup.style.display = 'block';
-        toTeamGroup.style.display = 'none';
-        toUserId.required = true;
-        toTeamId.required = false;
-        toUserId.value = '';
-        toTeamId.value = '';
-    } else {
-        toUserGroup.style.display = 'none';
-        toTeamGroup.style.display = 'block';
-        toUserId.required = false;
-        toTeamId.required = true;
-        toUserId.value = '';
-        toTeamId.value = '';
-    }
-}
-
 // 显示转账模态框
 function showTransferModal() {
     $('#transferModal').modal('show');
@@ -306,37 +200,17 @@ function submitTransfer() {
     var form = document.getElementById('transferForm');
     var formData = new FormData(form);
     
-    var transferType = document.getElementById('transferType').value;
     var transferData = {
+        to_user_id: parseInt(formData.get('to_user_id')),
         amount_grams: parseFloat(formData.get('amount_grams')),
         notes: formData.get('notes') || '',
         expire_hours: parseInt(formData.get('expire_hours'))
     };
     
-    if (transferType === 'user') {
-        transferData.to_user_id = parseInt(formData.get('to_user_id'));
-        transferData.to_team_id = 0;
-    } else {
-        transferData.to_user_id = 0;
-        transferData.to_team_id = parseInt(formData.get('to_team_id'));
-    }
-    
     // 验证数据
-    if (transferType === 'user') {
-        if (!transferData.to_user_id || transferData.to_user_id <= 0) {
-            alert('请输入有效的接收方用户ID');
-            return;
-        }
-    } else {
-        if (!transferData.to_team_id || transferData.to_team_id <= 0) {
-            alert('请输入有效的接收方团队ID');
-            return;
-        }
-        // 检查是否向自由人团队转账（自由人团队ID为2）
-        if (transferData.to_team_id === 2) {
-            alert('不能向自由人团队转账，自由人团队不支持茶叶资产');
-            return;
-        }
+    if (!transferData.to_user_id || transferData.to_user_id <= 0) {
+        alert('请输入有效的接收方用户ID');
+        return;
     }
     
     if (!transferData.amount_grams || transferData.amount_grams <= 0) {
@@ -344,8 +218,8 @@ function submitTransfer() {
         return;
     }
     
-    // 发送转账请求
-    fetch('/v1/tea/user/transfer/new', {
+    // 发送用户对用户转账请求
+    fetch('/v1/tea/user/transfer/user_to_user', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -355,14 +229,9 @@ function submitTransfer() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            if (transferType === 'user') {
-                alert('转账发起成功！接收方需要确认才能完成转账。');
-            } else {
-                alert('转出操作成功！有效期内对方不接收则退回。');
-            }
+            alert('转账发起成功！接收方需要确认才能完成转账。');
             $('#transferModal').modal('hide');
             form.reset();
-            toggleTransferTarget(); // 重置显示状态
             // 可以选择刷新页面或跳转到转账记录页面
             // window.location.reload();
         } else {

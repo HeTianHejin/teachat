@@ -36,22 +36,7 @@
                             <h4>可用余额: <strong>{{ .AvailableBalanceDisplay }}</strong></h4>
                             <p class="text-muted">可以立即使用的茶叶</p>
                         </div>
-                        <div class="col-md-6">
-                            <div class="btn-group-vertical" role="group" style="width: 100%;">
-                                <a href="/v1/tea/user/transactions/page" class="btn btn-info">
-                                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-                                    收支明细
-                                </a>
-                                <a href="/v1/tea/user/transfers/history/page" class="btn btn-default">
-                                    <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
-                                    转账记录
-                                </a>
-                                <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning">
-                                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
-                                    待确认转账
-                                </a>
-                            </div>
-                        </div>
+                      
                     </div>
                 </div>
             </div>
@@ -146,10 +131,7 @@
                         <span class="glyphicon glyphicon-bell" style="font-size: 48px; color: #ccc;" aria-hidden="true"></span>
                         <h3 class="text-muted">暂无待确认转账</h3>
                         <p class="text-muted">当有其他茶友向您转账时，将显示在这里</p>
-                        <a href="/v1/tea/user/transactions/page" class="btn btn-info">
-                            <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-                            查看收支明细
-                        </a>
+                       
                     </div>
                     {{ end }}
                 </div>
@@ -222,7 +204,7 @@ function acceptTransfer(transferUuid) {
         return;
     }
     
-    fetch('/v1/tea/user/transfer/confirm', {
+    fetch('/v1/tea/user/transfer/confirm/user_to_user', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -253,7 +235,7 @@ function rejectTransfer(transferUuid) {
         return; // 用户点击了取消
     }
     
-    fetch('/v1/tea/user/transfer/reject', {
+    fetch('/v1/tea/user/transfer/reject/user_to_user', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
