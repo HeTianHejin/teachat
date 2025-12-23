@@ -140,22 +140,24 @@ type TeaUserFromUserTransferIn struct {
 	Id   int
 	Uuid string
 	// 系统填写，对接转出表单，必填
-	UserToUserTransferOutId int     // 用户对用户转出记录id
-	ToUserId                int     // 接收用户id，账户持有人ID
-	ToUserName              string  // 接收用户名称，对账单审计用
-	FromUserId              int     // 转出用户id
-	FromUserName            string  // 转出用户名称，对账单审计用
-	AmountGrams             float64 // 接收转账额度（克），对账单审计用
-	BalanceAfterReceipt     float64 // 接收后账户余额，对账单审计用
+	UserToUserTransferOutId int    // 用户对用户转出记录id
+	ToUserId                int    // 接收用户id，账户持有人ID
+	ToUserName              string // 接收用户名称，对账单审计用
+	FromUserId              int    // 转出用户id
+	FromUserName            string // 转出用户名称，对账单审计用
+
+	AmountGrams         float64 // 接收转账额度（克），对账单审计用
+	Notes               string  // 转出方备注（从转出表复制过来）
+	BalanceAfterReceipt float64 // 接收后账户余额，对账单审计用
 
 	// 已完成	StatusCompleted        = "completed"
 	// 已拒收	StatusRejected         = "rejected"
 	Status string //方便阅读，对账单审计用
 
 	// 接收方ToUser操作，Confirmed/Rejected二选一
-	IsConfirmed              bool   // 默认false，默认不接收，避免转账错误被误接收
-	OperationalUserId        int    // 操作用户id，确认接收或者拒绝接收的用户id
-	ReceptionRejectionReason string // 如果拒绝，填写原因
+	IsConfirmed              bool           // 默认false，默认不接收，避免转账错误被误接收
+	OperationalUserId        int            // 操作用户id，确认接收或者拒绝接收的用户id
+	ReceptionRejectionReason sql.NullString // 如果拒绝，填写原因
 
 	ExpiresAt time.Time // 过期时间，接收截止时间，也是FromUser解锁额度时间
 	CreatedAt time.Time // 必填，如果接收，是接收、清算时间；如果拒绝，是拒绝时间
@@ -172,6 +174,7 @@ type TeaUserFromTeamTransferIn struct {
 	FromTeamId              int     // 转出团队id
 	FromTeamName            string  // 转出团队名称，对账单审计用
 	AmountGrams             float64 // 接收转账额度（克），对账单审计用
+	Notes                   string  // 转出方备注（从转出表复制过来）
 	BalanceAfterReceipt     float64 // 接收后账户余额，对账单审计用
 
 	// 已完成	StatusCompleted        = "completed"
@@ -570,12 +573,12 @@ func confirmUserToUserTransfer(tx *sql.Tx, transfer TeaUserToUserTransferOut, to
 	}
 
 	// 创建转入记录，记录接收后余额
-	_, err = tx.Exec(`INSERT INTO tea.user_from_user_transfer_in 
-		(user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name, 
-		amount_grams, balance_after_receipt, status, is_confirmed, operational_user_id, expires_at, created_at) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+	_, err = tx.Exec(`INSERT INTO tea.user_from_user_transfer_in
+		(user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name,
+		amount_grams, notes, balance_after_receipt, status, is_confirmed, operational_user_id, expires_at, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 		transfer.Id, toUserId, transfer.ToUserName, transfer.FromUserId, transfer.FromUserName,
-		transfer.AmountGrams, toUserBalance+transfer.AmountGrams, TeaTransferStatusCompleted, true, toUserId, transfer.ExpiresAt, paymentTime)
+		transfer.AmountGrams, transfer.Notes, toUserBalance+transfer.AmountGrams, TeaTransferStatusCompleted, true, toUserId, transfer.ExpiresAt, paymentTime)
 	if err != nil {
 		return fmt.Errorf("创建转入记录失败: %v", err)
 	}
@@ -700,12 +703,12 @@ func RejectTeaTransfer(transferUuid string, toUserId int, reason string) error {
 	}
 
 	// 创建拒收记录
-	_, err = tx.Exec(`INSERT INTO tea.user_from_user_transfer_in 
-		(user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name, 
-		amount_grams, status, is_confirmed, operational_user_id, reception_rejection_reason, created_at) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+	_, err = tx.Exec(`INSERT INTO tea.user_from_user_transfer_in
+		(user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name,
+		amount_grams, notes, status, is_confirmed, operational_user_id, reception_rejection_reason, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
 		transfer.Id, toUserId, transfer.ToUserName, transfer.FromUserId, transfer.FromUserName,
-		transfer.AmountGrams, TeaTransferStatusRejected, false, toUserId, reason, time.Now())
+		transfer.AmountGrams, transfer.Notes, TeaTransferStatusRejected, false, toUserId, reason, time.Now())
 	if err != nil {
 		return fmt.Errorf("创建拒收记录失败: %v", err)
 	}
@@ -1013,8 +1016,8 @@ func GetTransferIns(userId int, page, limit int) ([]TeaUserFromUserTransferIn, e
 	// 查询用户转入记录（从user_from_user_transfer_in表）
 	rows, err := DB.Query(`
 		SELECT id, uuid, user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name,
-			   amount_grams, balance_after_receipt, status, is_confirmed, operational_user_id, reception_rejection_reason, expires_at, created_at
-		FROM tea.user_from_user_transfer_in 
+			   amount_grams, notes, balance_after_receipt, status, is_confirmed, operational_user_id, reception_rejection_reason, expires_at, created_at
+		FROM tea.user_from_user_transfer_in
 		WHERE to_user_id = $1
 		ORDER BY created_at DESC LIMIT $2 OFFSET $3`,
 		userId, limit, offset)
@@ -1028,7 +1031,7 @@ func GetTransferIns(userId int, page, limit int) ([]TeaUserFromUserTransferIn, e
 		var transfer TeaUserFromUserTransferIn
 		err = rows.Scan(
 			&transfer.Id, &transfer.Uuid, &transfer.UserToUserTransferOutId, &transfer.ToUserId, &transfer.ToUserName,
-			&transfer.FromUserId, &transfer.FromUserName, &transfer.AmountGrams, &transfer.BalanceAfterReceipt,
+			&transfer.FromUserId, &transfer.FromUserName, &transfer.AmountGrams, &transfer.Notes, &transfer.BalanceAfterReceipt,
 			&transfer.Status, &transfer.IsConfirmed, &transfer.OperationalUserId, &transfer.ReceptionRejectionReason,
 			&transfer.ExpiresAt, &transfer.CreatedAt)
 		if err != nil {

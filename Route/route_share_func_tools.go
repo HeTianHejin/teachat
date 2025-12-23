@@ -46,8 +46,30 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 		"sub": func(a, b int) int {
 			return a - b
 		},
+		"subtract": func(a, b int) int {
+			return a - b
+		},
 		"add": func(a, b int) int {
 			return a + b
+		},
+		"max": func(a, b int) int {
+			if a > b {
+				return a
+			}
+			return b
+		},
+		"min": func(a, b int) int {
+			if a < b {
+				return a
+			}
+			return b
+		},
+		"seq": func(start, end int) []int {
+			var items []int
+			for i := start; i <= end; i++ {
+				items = append(items, i)
+			}
+			return items
 		},
 		"iterate": func(count int) []int {
 			var items []int

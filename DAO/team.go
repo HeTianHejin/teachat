@@ -885,27 +885,6 @@ func (team *Team) IsMember(user_id int) (is_member bool, err error) {
 	return team_member.UserId > 0, nil
 }
 
-// IsTeamMember 检查用户是否是团队成员（独立函数，无需Team实例）
-func IsTeamMember(userId, teamId int) (bool, error) {
-	if teamId == TeamIdNone {
-		return false, fmt.Errorf("team not found with id: %d", teamId)
-	}
-	if teamId == TeamIdFreelancer {
-		return true, nil
-	}
-	teamMember, err := GetMemberByTeamIdUserId(teamId, userId)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// 没有找到团队记录,不可能是成员
-			return false, nil
-		} else {
-			return false, err
-		}
-	}
-
-	return teamMember.UserId > 0, nil
-}
-
 // team *Team.IsCoreMember() 检查当前用户是否$事业茶团核心成员（CEO/CTO/CMO/CFO）
 func (team *Team) IsCoreMember(user_id int) (bool, error) {
 	if team.Id == TeamIdNone {

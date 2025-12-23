@@ -1,0 +1,250 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/desk">{{ .SessUser.Name }} 的写字台</a></li>
+  <li class="active">收入记录</li>
+</ol>
+
+<div class="container">
+
+    <div class="row">
+        <!-- 个人茶叶账户概览 -->
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        个人茶叶账户
+                        <span class="pull-right">
+                            状态: <span class="label {{ if eq .TeaAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ .StatusDisplay }}</span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>总余额: <strong>{{ .BalanceDisplay }}</strong></h4>
+                            <p class="text-muted">您的茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>锁定余额: <strong>{{ .LockedBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>可用余额: <strong>{{ .AvailableBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">可以立即使用的茶叶</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 收入记录导航 -->
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="/v1/tea/user/transfers/ins/user_from_user/page">
+                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+                        用户转入
+                    </a>
+                </li>
+                <li>
+                    <a href="/v1/tea/user/transfers/ins/user_from_team/page">
+                        <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
+                        团队转入
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 收入记录列表 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                        用户转入记录
+                        <small class="pull-right">从其他茶友处收到的茶叶</small>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ if .Transfers }}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>发送方</th>
+                                    <th>接收方</th>
+                                    <th>数量</th>
+                                    <th>接收后余额</th>
+                                    <th>状态</th>
+                                    <th>过期时间</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .Transfers }}
+                                <tr class="{{ if .IsExpired }}danger{{ else }}success{{ end }}">
+                                    <td>{{ .CreatedAt.Format "2006-01-02 15:04" }}</td>
+                                    <td>
+                                        <span class="label label-info">个人</span>
+                                        {{ .FromUserName }} (ID: {{ .FromUserId }})
+                                    </td>
+                                    <td>
+                                        <span class="label label-default">个人</span>
+                                        {{ .ToUserName }} (ID: {{ .ToUserId }})
+                                    </td>
+                                    <td>
+                                        <span class="label label-success">{{ .AmountDisplay }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">
+                                            {{ if .BalanceAfterReceipt }}
+                                                {{ FormatFloat .BalanceAfterReceipt 3 }} 克
+                                            {{ else }}
+                                                -
+                                            {{ end }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="label 
+                                            {{ if eq .StatusDisplay "已完成" }}label-success
+                                            {{ else if eq .StatusDisplay "待确认" }}label-warning
+                                            {{ else if eq .StatusDisplay "已拒绝" }}label-danger
+                                            {{ else if eq .StatusDisplay "已过期" }}label-default
+                                            {{ else }}label-primary{{ end }}">
+                                            {{ .StatusDisplay }}
+                                        </span>
+                                        {{ if .IsConfirmed }}
+                                        <span class="label label-success">已确认</span>
+                                        {{ else }}
+                                        <span class="label label-warning">未确认</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if .IsExpired }}
+                                        <span class="text-danger">{{ .ExpiresAt.Format "2006-01-02 15:04" }}</span>
+                                        {{ else }}
+                                        <span class="text-success">{{ .ExpiresAt.Format "2006-01-02 15:04" }}</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if .Notes }}
+                                        <small class="text-muted">{{ .Notes }}</small>
+                                        {{ else }}
+                                        <small class="text-muted">-</small>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页导航 -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            {{ if gt .CurrentPage 1 }}
+                            <li>
+                                <a href="?page={{ subtract .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo; 上一页</span>
+                                </a>
+                            </li>
+                            {{ else }}
+                            <li class="disabled">
+                                <a href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo; 上一页</span>
+                                </a>
+                            </li>
+                            {{ end }}
+
+                            {{ $currentPage := .CurrentPage }}
+                            {{ $startPage := max 1 (subtract $currentPage 2) }}
+                            {{ $endPage := add $startPage 4 }}
+                            
+                            {{ range $i := seq $startPage $endPage }}
+                                {{ if eq $i $currentPage }}
+                                <li class="active"><a href="?page={{ $i }}&limit={{ $.Limit }}">{{ $i }}</a></li>
+                                {{ else }}
+                                <li><a href="?page={{ $i }}&limit={{ $.Limit }}">{{ $i }}</a></li>
+                                {{ end }}
+                            {{ end }}
+
+                            <li>
+                                <a href="?page={{ add .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="Next">
+                                    <span aria-hidden="true">下一页 &raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {{ else }}
+                    <div class="alert alert-info">
+                        <h4><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> 暂无转入记录</h4>
+                        <p>您还没有收到过其他茶友的茶叶转账。</p>
+                        <p>当其他茶友向您转账时，记录将显示在这里。</p>
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="btn-group">
+                <a href="/v1/desk" class="btn btn-default">
+                    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                    返回写字台
+                </a>
+                <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning">
+                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                    待确认转账
+                </a>
+                <a href="/v1/tea/user/transfers/history/user_to_user/page" class="btn btn-info">
+                    <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
+                    转账历史
+                </a>
+                <a href="/v1/tea/user/transfers/ins/user_from_team/page" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
+                    查看团队转入
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{{ end }}
+
+{{ define "scripts" }}
+<script>
+$(document).ready(function() {
+    // 高亮当前选项卡
+    $('.nav-tabs a[href="' + window.location.pathname + '"]').parent().addClass('active');
+    
+    // 页面加载时显示加载状态
+    $('.pagination a').on('click', function(e) {
+        $('.panel-body').addClass('loading');
+    });
+});
+</script>
+<style>
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+.nav-tabs {
+    margin-bottom: 20px;
+}
+.table-responsive {
+    margin-bottom: 20px;
+}
+</style>
+{{ end }}

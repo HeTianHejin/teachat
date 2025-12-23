@@ -1,6 +1,7 @@
 package route
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -424,7 +425,7 @@ func GetTeaUserFromUserTransferInsAPI(w http.ResponseWriter, r *http.Request) {
 			Status:                  transfer.Status,
 			IsConfirmed:             transfer.IsConfirmed,
 			OperationalUserId:       transfer.OperationalUserId,
-			RejectionReason:         transfer.ReceptionRejectionReason,
+			RejectionReason:         transfer.ReceptionRejectionReason.String,
 			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
 			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
@@ -616,7 +617,7 @@ func GetTeaUserFromTeamTransferInsAPI(w http.ResponseWriter, r *http.Request) {
 			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
 			Status:                  transfer.Status,
 			IsConfirmed:             transfer.IsConfirmed,
-			RejectionReason:         &transfer.ReceptionRejectionReason,
+			RejectionReason:         getNullableString(transfer.ReceptionRejectionReason),
 			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
 			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
@@ -1288,6 +1289,14 @@ func getToTeamId(toTeamId *int) int {
 		return 0
 	}
 	return *toTeamId
+}
+
+// 辅助函数：处理sql.NullString，返回*string（有效时返回指针，无效时返回nil）
+func getNullableString(nullString sql.NullString) *string {
+	if nullString.Valid {
+		return &nullString.String
+	}
+	return nil
 }
 
 // GetTeaTeamPendingIncomingTransfers 获取团队待确认转入转账列表

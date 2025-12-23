@@ -106,6 +106,7 @@ CREATE TABLE tea.user_from_user_transfer_in (
     from_user_id          INTEGER NOT NULL REFERENCES users(id), -- 转出用户id
     from_user_name        VARCHAR(255) NOT NULL, -- 转出用户名称
     amount_grams          DECIMAL(15,3) NOT NULL, -- 接收转账额度（克）
+    notes                 TEXT, -- 转出方备注（从转出表复制过来）
     balance_after_receipt DECIMAL(15,3), -- 接收后账户余额
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
@@ -134,6 +135,7 @@ CREATE TABLE tea.user_from_team_transfer_in (
     from_team_id          INTEGER NOT NULL REFERENCES teams(id), -- 转出团队id
     from_team_name        VARCHAR(255) NOT NULL, -- 转出团队名称
     amount_grams          DECIMAL(15,3) NOT NULL, -- 接收转账额度（克）
+    notes                 TEXT, -- 转出方备注（从转出表复制过来）
     balance_after_receipt DECIMAL(15,3), -- 接收后账户余额
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
