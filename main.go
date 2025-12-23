@@ -315,7 +315,6 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/account", route.GetTeaUserAccount)
 	mux.HandleFunc("/v1/tea/user/account/freeze", route.FreezeTeaUserAccount)
 	mux.HandleFunc("/v1/tea/user/account/unfreeze", route.UnfreezeTeaUserAccount)
-
 	mux.HandleFunc("/v1/tea/user/transfer/user_to_user", route.CreateTeaUserToUserTransferAPI)                        // 用户对用户创建转账API
 	mux.HandleFunc("/v1/tea/user/transfer/user_to_team", route.CreateTeaUserToTeamTransferAPI)                        // 用户对团队创建转账API
 	mux.HandleFunc("/v1/tea/user/transfers/outs/user_to_user", route.GetTeaUserToUserTransferOutsAPI)                 // 用户对用户转出记录API
@@ -332,12 +331,11 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_team", route.GetTeaUserFromTeamTransferInsAPI)               // 用户接收团队转入记录API
 	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user/page", route.HandleTeaUserFromUserTransferIns)          // 用户接收用户转入记录页面路由
 	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_team/page", route.HandleTeaUserFromTeamTransferIns)          // 用户接收团队转入记录页面路由
-
 	// 新增：区分用户对用户和用户对团队转账的确认/拒绝路由
-	mux.HandleFunc("/v1/tea/user/transfer/confirm/user_to_user", route.ConfirmTeaUserToUserTransferAPI)               // 确认接收用户对用户转账API
-	mux.HandleFunc("/v1/tea/user/transfer/reject/user_to_user", route.RejectTeaUserToUserTransferAPI)                 // 拒绝接收用户对用户转账API
-	mux.HandleFunc("/v1/tea/user/transfer/confirm/user_to_team", route.ConfirmTeaUserToTeamTransferAPI)               // 确认接收用户对团队转账API
-	mux.HandleFunc("/v1/tea/user/transfer/reject/user_to_team", route.RejectTeaUserToTeamTransferAPI)                 // 拒绝接收用户对团队转账API
+	mux.HandleFunc("/v1/tea/user/transfer/confirm/user_to_user", route.ConfirmTeaUserToUserTransferAPI) // 确认接收用户对用户转账API
+	mux.HandleFunc("/v1/tea/user/transfer/reject/user_to_user", route.RejectTeaUserToUserTransferAPI)   // 拒绝接收用户对用户转账API
+	mux.HandleFunc("/v1/tea/user/transfer/confirm/user_to_team", route.ConfirmTeaUserToTeamTransferAPI) // 确认接收用户对团队转账API
+	mux.HandleFunc("/v1/tea/user/transfer/reject/user_to_team", route.RejectTeaUserToTeamTransferAPI)   // 拒绝接收用户对团队转账API
 
 	// 团队茶叶账户系统路由
 	// mux.HandleFunc("/v1/tea/team/account/api", route.GetTeaTeamAccount)                                // 团队茶叶账户API
