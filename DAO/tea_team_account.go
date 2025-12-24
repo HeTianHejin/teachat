@@ -13,7 +13,7 @@ import (
 2.1、如果审核批准，转账表单状态更新为已批准，执行第3步锁定转账额度，
 2.2、如果审核否决，转账表单状态更新为已否决，记录审批操作记录，流程结束。
 3、锁定方法：已批准的转出团队账户转出额度茶叶数量被锁定，防止重复发起转账；
-4.1、接收方法：目标接受方，用户或者团队任意1状态正常成员，有效期内，操作接收，继续第5步结算双方账户，
+4.1、接收方法：目标接受方，用户或者团队任意1状态正常成员TeamMemberStatusActive(1)，有效期内，操作接收，继续第5步结算双方账户，
 4.2、拒收方法，目标接受方，用户或者团队任意1状态正常成员，有效期内，操作拒收，转账表单状态更新为已拒收，解锁被转出方锁定茶叶，记录拒收操作用户id及时间原因，流程结束。
 5、结算方法：按锁定额度（接收额度）清算双方账户数额，创建出入流水记录；
 6、超时处理：自动解锁转出用户账户被锁定额度茶叶，不创建交易流水明细记录。
@@ -362,7 +362,7 @@ func CanUserManageTeamAccount(userId, teamId int) (bool, error) {
 	return isCoreMember, nil
 }
 
-// IsTeamMember 检查用户是否是团队成员
+// IsTeamMember 检查用户是否是团队成员正常状态TeamMemberStatusActive(1)
 func IsTeamMember(userId, teamId int) (bool, error) {
 	var count int
 	err := DB.QueryRow(`
@@ -375,49 +375,6 @@ func IsTeamMember(userId, teamId int) (bool, error) {
 	}
 
 	return count > 0, nil
-}
-
-// GetUserJoinedTeams 获取用户加入的团队列表
-func GetUserJoinedTeams(userId int) ([]Team, error) {
-	query := `
-		SELECT t.id, t.uuid, t.name, t.mission, t.founder_id, 
-		       t.created_at, t.class, t.abbreviation, t.logo, 
-		       t.is_private, t.updated_at, t.deleted_at, t.tags
-		FROM teams t
-		INNER JOIN team_members tm ON t.id = tm.team_id
-		WHERE tm.user_id = $1 
-		  AND tm.status = $2 
-		  AND t.deleted_at IS NULL
-		  AND t.id != $3
-		ORDER BY t.created_at DESC
-	`
-
-	rows, err := DB.Query(query, userId, TeamMemberStatusActive, TeamIdFreelancer)
-	if err != nil {
-		return nil, fmt.Errorf("查询用户团队失败: %v", err)
-	}
-	defer rows.Close()
-
-	var teams []Team
-	for rows.Next() {
-		var team Team
-		err := rows.Scan(
-			&team.Id, &team.Uuid, &team.Name, &team.Mission,
-			&team.FounderId, &team.CreatedAt, &team.Class,
-			&team.Abbreviation, &team.Logo, &team.IsPrivate,
-			&team.UpdatedAt, &team.DeletedAt, &team.Tags,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("扫描团队数据失败: %v", err)
-		}
-		teams = append(teams, team)
-	}
-
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("遍历团队数据失败: %v", err)
-	}
-
-	return teams, nil
 }
 
 // CreateTeaTransferTeamToUser 创建团队向用户转账记录
@@ -1634,23 +1591,23 @@ func GetTeamTransferInOperations(teamId int, page, limit int) ([]map[string]inte
 				&expiresAt, &createdAt)
 			if err == nil {
 				transfer := map[string]interface{}{
-					"transfer_type":                 transferType,
-					"id":                            id,
-					"uuid":                          uuid,
-					"user_to_team_transfer_out_id":   userToTeamTransferOutId,
-					"to_team_id":                    toTeamId,
-					"to_team_name":                  toTeamName,
-					"from_user_id":                  fromUserId,
-					"from_user_name":                fromUserName,
-					"amount_grams":                  amountGrams,
-					"notes":                         notes,
-					"status":                        status,
-					"balance_after_transfer":        balanceAfterTransfer,
-					"is_confirmed":                  isConfirmed,
-					"operational_user_id":           operationalUserId,
-					"reception_rejection_reason":     getNullableString(receptionRejectionReason),
-					"expires_at":                    expiresAt,
-					"created_at":                    createdAt,
+					"transfer_type":                transferType,
+					"id":                           id,
+					"uuid":                         uuid,
+					"user_to_team_transfer_out_id": userToTeamTransferOutId,
+					"to_team_id":                   toTeamId,
+					"to_team_name":                 toTeamName,
+					"from_user_id":                 fromUserId,
+					"from_user_name":               fromUserName,
+					"amount_grams":                 amountGrams,
+					"notes":                        notes,
+					"status":                       status,
+					"balance_after_transfer":       balanceAfterTransfer,
+					"is_confirmed":                 isConfirmed,
+					"operational_user_id":          operationalUserId,
+					"reception_rejection_reason":   getNullableString(receptionRejectionReason),
+					"expires_at":                   expiresAt,
+					"created_at":                   createdAt,
 				}
 				transfers = append(transfers, transfer)
 			}
@@ -1696,23 +1653,23 @@ func GetTeamTransferInOperations(teamId int, page, limit int) ([]map[string]inte
 				&expiresAt, &createdAt)
 			if err == nil {
 				transfer := map[string]interface{}{
-					"transfer_type":                 transferType,
-					"id":                            id,
-					"uuid":                          uuid,
-					"team_to_team_transfer_out_id":   teamToTeamTransferOutId,
-					"to_team_id":                    toTeamId,
-					"to_team_name":                  toTeamName,
-					"from_team_id":                  fromTeamId,
-					"from_team_name":                fromTeamName,
-					"amount_grams":                  amountGrams,
-					"notes":                         notes,
-					"status":                        status,
-					"balance_after_transfer":        balanceAfterTransfer,
-					"is_confirmed":                  isConfirmed,
-					"operational_user_id":           operationalUserId,
-					"reception_rejection_reason":     getNullableString(receptionRejectionReason),
-					"expires_at":                    expiresAt,
-					"created_at":                    createdAt,
+					"transfer_type":                transferType,
+					"id":                           id,
+					"uuid":                         uuid,
+					"team_to_team_transfer_out_id": teamToTeamTransferOutId,
+					"to_team_id":                   toTeamId,
+					"to_team_name":                 toTeamName,
+					"from_team_id":                 fromTeamId,
+					"from_team_name":               fromTeamName,
+					"amount_grams":                 amountGrams,
+					"notes":                        notes,
+					"status":                       status,
+					"balance_after_transfer":       balanceAfterTransfer,
+					"is_confirmed":                 isConfirmed,
+					"operational_user_id":          operationalUserId,
+					"reception_rejection_reason":   getNullableString(receptionRejectionReason),
+					"expires_at":                   expiresAt,
+					"created_at":                   createdAt,
 				}
 				transfers = append(transfers, transfer)
 			}
@@ -1764,26 +1721,26 @@ func GetTeamTransferOutOperations(teamId int, page, limit int) ([]map[string]int
 				&balanceAfterTransfer, &expiresAt, &paymentTime, &createdAt)
 			if err == nil {
 				operation := map[string]interface{}{
-					"transfer_type":               transferType,
-					"id":                          id,
-					"uuid":                        uuid,
-					"from_team_id":                fromTeamId,
-					"from_team_name":              fromTeamName,
-					"to_user_id":                  toUserId,
-					"to_user_name":                toUserName,
-					"initiator_user_id":           initiatorUserId,
-					"amount_grams":                amountGrams,
-					"notes":                       notes,
-					"status":                      status,
-					"approver_user_id":            getNullableInt64(approverUserId),
-					"approved_at":                 getNullableTime(approvedAt),
-					"approval_rejection_reason":    getNullableString(approvalRejectionReason),
-					"rejected_by":                 getNullableInt64(rejectedBy),
-					"rejected_at":                 getNullableTime(rejectedAt),
-					"balance_after_transfer":       balanceAfterTransfer,
-					"expires_at":                  expiresAt,
-					"payment_time":                getNullableTime(paymentTime),
-					"created_at":                  createdAt,
+					"transfer_type":             transferType,
+					"id":                        id,
+					"uuid":                      uuid,
+					"from_team_id":              fromTeamId,
+					"from_team_name":            fromTeamName,
+					"to_user_id":                toUserId,
+					"to_user_name":              toUserName,
+					"initiator_user_id":         initiatorUserId,
+					"amount_grams":              amountGrams,
+					"notes":                     notes,
+					"status":                    status,
+					"approver_user_id":          getNullableInt64(approverUserId),
+					"approved_at":               getNullableTime(approvedAt),
+					"approval_rejection_reason": getNullableString(approvalRejectionReason),
+					"rejected_by":               getNullableInt64(rejectedBy),
+					"rejected_at":               getNullableTime(rejectedAt),
+					"balance_after_transfer":    balanceAfterTransfer,
+					"expires_at":                expiresAt,
+					"payment_time":              getNullableTime(paymentTime),
+					"created_at":                createdAt,
 				}
 				operations = append(operations, operation)
 			}
@@ -1827,26 +1784,26 @@ func GetTeamTransferOutOperations(teamId int, page, limit int) ([]map[string]int
 				&balanceAfterTransfer, &expiresAt, &paymentTime, &createdAt)
 			if err == nil {
 				operation := map[string]interface{}{
-					"transfer_type":               transferType,
-					"id":                          id,
-					"uuid":                        uuid,
-					"from_team_id":                fromTeamId,
-					"from_team_name":              fromTeamName,
-					"to_team_id":                  toTeamId,
-					"to_team_name":                toTeamName,
-					"initiator_user_id":           initiatorUserId,
-					"amount_grams":                amountGrams,
-					"notes":                       notes,
-					"status":                      status,
-					"approver_user_id":            getNullableInt64(approverUserId),
-					"approved_at":                 getNullableTime(approvedAt),
-					"approval_rejection_reason":    getNullableString(approvalRejectionReason),
-					"rejected_by":                 getNullableInt64(rejectedBy),
-					"rejected_at":                 getNullableTime(rejectedAt),
-					"balance_after_transfer":       balanceAfterTransfer,
-					"expires_at":                  expiresAt,
-					"payment_time":                getNullableTime(paymentTime),
-					"created_at":                  createdAt,
+					"transfer_type":             transferType,
+					"id":                        id,
+					"uuid":                      uuid,
+					"from_team_id":              fromTeamId,
+					"from_team_name":            fromTeamName,
+					"to_team_id":                toTeamId,
+					"to_team_name":              toTeamName,
+					"initiator_user_id":         initiatorUserId,
+					"amount_grams":              amountGrams,
+					"notes":                     notes,
+					"status":                    status,
+					"approver_user_id":          getNullableInt64(approverUserId),
+					"approved_at":               getNullableTime(approvedAt),
+					"approval_rejection_reason": getNullableString(approvalRejectionReason),
+					"rejected_by":               getNullableInt64(rejectedBy),
+					"rejected_at":               getNullableTime(rejectedAt),
+					"balance_after_transfer":    balanceAfterTransfer,
+					"expires_at":                expiresAt,
+					"payment_time":              getNullableTime(paymentTime),
+					"created_at":                createdAt,
 				}
 				operations = append(operations, operation)
 			}
