@@ -39,9 +39,7 @@ type TeaTeamAccount struct {
 	UpdatedAt          *time.Time
 }
 
-// 团队对用户，专用转账
-// 注意：不能转出0或者负数，不能转给被冻结User茶叶账户
-// 注意流程：审批通过后，才会创建待接收记录（TeaUserFromTeamTransferIn）
+// 团队对用户转账结构体（完全匹配数据库表结构）
 type TeaTeamToUserTransferOut struct {
 	Id           int
 	Uuid         string
@@ -71,9 +69,7 @@ type TeaTeamToUserTransferOut struct {
 	UpdatedAt            *time.Time
 }
 
-// 团队对团队转账
-// 注意不能转出0/负数，不能转给自己/自由人团队id=TeamIdFreelancer(2)，不能转给被冻结Team茶叶账户
-// 注意流程：审批通过后，才会创建待接收记录（TeaTeamFromTeamTransferIn）
+// 团队对团队转账结构体（完全匹配数据库表结构）
 type TeaTeamToTeamTransferOut struct {
 	Id           int
 	Uuid         string
@@ -103,7 +99,7 @@ type TeaTeamToTeamTransferOut struct {
 	UpdatedAt            *time.Time
 }
 
-// 团队接收用户转入记录
+// 团队接收用户转入记录结构体（完全匹配数据库表结构）
 type TeaTeamFromUserTransferIn struct {
 	Id                      int
 	Uuid                    string
@@ -126,7 +122,7 @@ type TeaTeamFromUserTransferIn struct {
 	CreatedAt time.Time // 必填，如果接收，是接收、清算时间；如果拒绝，是拒绝时间
 }
 
-// 团队接收团队转入记录
+// 团队接收团队转入记录结构体（完全匹配数据库表结构）
 type TeaTeamFromTeamTransferIn struct {
 	Id                      int
 	Uuid                    string
@@ -1858,6 +1854,66 @@ func GetTeamTransferOutOperations(teamId int, page, limit int) ([]map[string]int
 	}
 
 	return operations, nil
+}
+
+// GetPendingTeamIncomingTransfers 获取团队所有待确认转入转账（包括用户转入和团队转入）
+func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]interface{}, error) {
+	offset := (page - 1) * limit
+	transfers := []map[string]interface{}{}
+
+	// 查询用户向团队的待接收转账
+	rows, err := DB.Query(`
+		SELECT 'user_to_team' as transfer_type,
+			   id, uuid, from_user_id, from_user_name, to_team_id, to_team_name,
+			   amount_grams, status, notes, balance_after_transfer, expires_at, created_at
+		FROM tea.user_to_team_transfer_out
+		WHERE to_team_id = $1 AND status = $2 AND expires_at > NOW()
+		UNION ALL
+		SELECT 'team_to_team' as transfer_type,
+			   id, uuid, from_team_id, from_team_name, to_team_id, to_team_name,
+			   amount_grams, status, notes, balance_after_transfer, expires_at, created_at
+		FROM tea.team_to_team_transfer_out
+		WHERE to_team_id = $1 AND status = $2 AND expires_at > NOW()
+		ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
+		teamId, TeaTransferStatusPendingReceipt, teamId, TeaTransferStatusPendingReceipt, limit, offset)
+
+	if err != nil {
+		return nil, fmt.Errorf("查询团队待确认转入转账失败: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var transferType string
+		var id, fromId, toTeamId int
+		var uuid, fromName, toTeamName, notes, status string
+		var amountGrams, balanceAfterTransfer float64
+		var expiresAt, createdAt time.Time
+
+		err = rows.Scan(&transferType, &id, &uuid, &fromId, &fromName, &toTeamId, &toTeamName,
+			&amountGrams, &status, &notes, &balanceAfterTransfer, &expiresAt, &createdAt)
+		if err != nil {
+			return nil, fmt.Errorf("扫描转账记录失败: %v", err)
+		}
+
+		transfer := map[string]interface{}{
+			"transfer_type":          transferType,
+			"id":                     id,
+			"uuid":                   uuid,
+			"from_id":                fromId,
+			"from_name":              fromName,
+			"to_team_id":             toTeamId,
+			"to_team_name":           toTeamName,
+			"amount_grams":           amountGrams,
+			"status":                 status,
+			"notes":                  notes,
+			"balance_after_transfer": balanceAfterTransfer,
+			"expires_at":             expiresAt,
+			"created_at":             createdAt,
+		}
+		transfers = append(transfers, transfer)
+	}
+
+	return transfers, nil
 }
 
 // 辅助函数：处理sql.NullString
