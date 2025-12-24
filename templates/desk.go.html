@@ -92,12 +92,19 @@
                                 {{ end }}
                             </p>
                         </a>
-                        <a href="/v1/tea/user/transfers/ins/user_from_user/page" class="list-group-item">
+                        <a href="/v1/tea/user/transfers/ins/user_from_user/completed/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 收入记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转入茶叶的记录</p>
+                            <p class="list-group-item-text">查看所有转入到账的记录（仅已完成）</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/ins/user_from_user/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                接收历史
+                            </h4>
+                            <p class="list-group-item-text">查看所有接收操作的记录（包括成功、拒绝、超时）</p>
                         </a>
                     </div>
                 </div>
@@ -119,14 +126,21 @@
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 发起转账
                             </h4>
-                            <p class="list-group-item-text">向其他茶友转账茶叶</p>
+                            <p class="list-group-item-text">向其他茶友或团队转账茶叶</p>
                         </a>
                         <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 支出记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转出茶叶的记录</p>
+                            <p class="list-group-item-text">查看所有转出到账的记录</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                支出历史
+                            </h4>
+                            <p class="list-group-item-text">查看所有转出操作的记录</p>
                         </a>
                     </div>
                 </div>
@@ -155,9 +169,21 @@
             <div class="modal-body">
                 <form id="transferForm">
                     <div class="form-group">
+                        <label for="transferType">转账类型:</label>
+                        <select class="form-control" id="transferType" name="transfer_type" onchange="toggleRecipientFields()">
+                            <option value="user">转给用户</option>
+                            <option value="team">转给团队</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="userRecipientGroup">
                         <label for="toUserId">接收方用户ID:</label>
-                        <input type="number" class="form-control" id="toUserId" name="to_user_id" required min="1">
+                        <input type="number" class="form-control" id="toUserId" name="to_user_id" min="1">
                         <small class="help-block">请输入要转账的茶友用户ID</small>
+                    </div>
+                    <div class="form-group" id="teamRecipientGroup" style="display: none;">
+                        <label for="toTeamId">接收方团队ID:</label>
+                        <input type="number" class="form-control" id="toTeamId" name="to_team_id" min="1">
+                        <small class="help-block">请输入要转账的团队ID</small>
                     </div>
                     <div class="form-group">
                         <label for="amountGrams">转账数量(克):</label>
@@ -195,31 +221,70 @@ function showTransferModal() {
     $('#transferModal').modal('show');
 }
 
+// 切换接收方字段显示
+function toggleRecipientFields() {
+    var transferType = document.getElementById('transferType').value;
+    var userGroup = document.getElementById('userRecipientGroup');
+    var teamGroup = document.getElementById('teamRecipientGroup');
+    
+    if (transferType === 'user') {
+        userGroup.style.display = 'block';
+        teamGroup.style.display = 'none';
+        document.getElementById('toUserId').required = true;
+        document.getElementById('toTeamId').required = false;
+    } else {
+        userGroup.style.display = 'none';
+        teamGroup.style.display = 'block';
+        document.getElementById('toUserId').required = false;
+        document.getElementById('toTeamId').required = true;
+    }
+}
+
 // 提交转账请求
 function submitTransfer() {
     var form = document.getElementById('transferForm');
     var formData = new FormData(form);
+    var transferType = formData.get('transfer_type');
     
     var transferData = {
-        to_user_id: parseInt(formData.get('to_user_id')),
         amount_grams: parseFloat(formData.get('amount_grams')),
         notes: formData.get('notes') || '',
         expire_hours: parseInt(formData.get('expire_hours'))
     };
     
-    // 验证数据
-    if (!transferData.to_user_id || transferData.to_user_id <= 0) {
-        alert('请输入有效的接收方用户ID');
-        return;
+    var apiUrl;
+    var recipientType;
+    
+    if (transferType === 'user') {
+        transferData.to_user_id = parseInt(formData.get('to_user_id'));
+        apiUrl = '/v1/tea/user/transfer/user_to_user';
+        recipientType = '用户';
+        
+        // 验证用户ID
+        if (!transferData.to_user_id || transferData.to_user_id <= 0) {
+            alert('请输入有效的接收方用户ID');
+            return;
+        }
+    } else {
+        transferData.to_team_id = parseInt(formData.get('to_team_id'));
+        apiUrl = '/v1/tea/user/transfer/user_to_team';
+        recipientType = '团队';
+        
+        // 验证团队ID
+        if (!transferData.to_team_id || transferData.to_team_id <= 0) {
+            alert('请输入有效的接收方团队ID');
+            return;
+        }
     }
     
+    // 验证转账数量
     if (!transferData.amount_grams || transferData.amount_grams <= 0) {
         alert('请输入有效的转账数量');
         return;
     }
     
-    // 发送用户对用户转账请求
-    fetch('/v1/tea/user/transfer/user_to_user', {
+    // 发送转账请求
+    fetch(apiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -229,9 +294,10 @@ function submitTransfer() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('转账发起成功！接收方需要确认才能完成转账。');
+            alert('向' + recipientType + '转账发起成功！接收方需要确认才能完成转账。');
             $('#transferModal').modal('hide');
             form.reset();
+            toggleRecipientFields(); // 重置字段显示
             // 可以选择刷新页面或跳转到转账记录页面
             // window.location.reload();
         } else {
@@ -246,7 +312,8 @@ function submitTransfer() {
 
 // 页面加载完成后的初始化
 $(document).ready(function() {
-    // 可以在这里添加更多页面初始化逻辑
+    // 初始化字段显示状态
+    toggleRecipientFields();
 });
 </script>
 

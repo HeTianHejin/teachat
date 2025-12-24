@@ -362,8 +362,8 @@ func CanUserManageTeamAccount(userId, teamId int) (bool, error) {
 	return isCoreMember, nil
 }
 
-// IsTeamMember 检查用户是否是团队成员正常状态TeamMemberStatusActive(1)
-func IsTeamMember(userId, teamId int) (bool, error) {
+// IsTeamActiveMember 检查用户是否是团队成员正常状态TeamMemberStatusActive(1)
+func IsTeamActiveMember(userId, teamId int) (bool, error) {
 	var count int
 	err := DB.QueryRow(`
 		SELECT COUNT(*) FROM team_members 
@@ -410,7 +410,7 @@ func CreateTeaTransferTeamToUser(fromTeamId, initiatorUserId, toUserId int, amou
 	}
 
 	// 检查发起人是否是团队成员
-	isMember, err := IsTeamMember(initiatorUserId, fromTeamId)
+	isMember, err := IsTeamActiveMember(initiatorUserId, fromTeamId)
 	if err != nil {
 		return TeaTeamToUserTransferOut{}, fmt.Errorf("检查团队成员身份失败: %v", err)
 	}
@@ -537,7 +537,7 @@ func CreateTeaTransferTeamToTeam(fromTeamId, initiatorUserId, toTeamId int, amou
 	}
 
 	// 检查发起人是否是团队成员
-	isMember, err := IsTeamMember(initiatorUserId, fromTeamId)
+	isMember, err := IsTeamActiveMember(initiatorUserId, fromTeamId)
 	if err != nil {
 		return TeaTeamToTeamTransferOut{}, fmt.Errorf("检查团队成员身份失败: %v", err)
 	}
@@ -670,7 +670,7 @@ func ApproveTeamToUserTransfer(transferUuid string, approverUserId int) error {
 	}
 
 	// 检查审批人是否是团队成员（不能自己审批自己）
-	isMember, err := IsTeamMember(approverUserId, transfer.FromTeamId)
+	isMember, err := IsTeamActiveMember(approverUserId, transfer.FromTeamId)
 	if err != nil {
 		return fmt.Errorf("检查团队成员身份失败: %v", err)
 	}
@@ -724,7 +724,7 @@ func RejectTeamToUserTransfer(transferUuid string, approverUserId int, reason st
 	}
 
 	// 检查审批人是否是团队成员（不能自己审批自己）
-	isMember, err := IsTeamMember(approverUserId, transfer.FromTeamId)
+	isMember, err := IsTeamActiveMember(approverUserId, transfer.FromTeamId)
 	if err != nil {
 		return fmt.Errorf("检查团队成员身份失败: %v", err)
 	}
@@ -986,7 +986,7 @@ func ApproveTeamToTeamTransfer(transferUuid string, approverUserId int) error {
 	}
 
 	// 检查审批人是否是团队成员（不能自己审批自己）
-	isMember, err := IsTeamMember(approverUserId, transfer.FromTeamId)
+	isMember, err := IsTeamActiveMember(approverUserId, transfer.FromTeamId)
 	if err != nil {
 		return fmt.Errorf("检查团队成员身份失败: %v", err)
 	}
@@ -1040,7 +1040,7 @@ func RejectTeamToTeamTransfer(transferUuid string, approverUserId int, reason st
 	}
 
 	// 检查审批人是否是团队成员（不能自己审批自己）
-	isMember, err := IsTeamMember(approverUserId, transfer.FromTeamId)
+	isMember, err := IsTeamActiveMember(approverUserId, transfer.FromTeamId)
 	if err != nil {
 		return fmt.Errorf("检查团队成员身份失败: %v", err)
 	}
@@ -1119,7 +1119,7 @@ func ConfirmTeamToTeamTransfer(transferUuid string, confirmUserId int) error {
 	}
 
 	// 检查确认权限（只有接收方团队成员才能确认）
-	isMember, err := IsTeamMember(confirmUserId, transfer.ToTeamId)
+	isMember, err := IsTeamActiveMember(confirmUserId, transfer.ToTeamId)
 	if err != nil {
 		return fmt.Errorf("检查团队成员身份失败: %v", err)
 	}
@@ -1223,7 +1223,7 @@ func RejectTeamToTeamTransferReceipt(transferUuid string, rejectUserId int, reas
 	}
 
 	// 检查拒绝权限（只有接收方团队成员才能拒绝）
-	isMember, err := IsTeamMember(rejectUserId, transfer.ToTeamId)
+	isMember, err := IsTeamActiveMember(rejectUserId, transfer.ToTeamId)
 	if err != nil {
 		return fmt.Errorf("检查团队成员身份失败: %v", err)
 	}
@@ -1832,7 +1832,7 @@ func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]
 		FROM tea.team_to_team_transfer_out
 		WHERE to_team_id = $1 AND status = $2 AND expires_at > NOW()
 		ORDER BY created_at DESC LIMIT $3 OFFSET $4`,
-		teamId, TeaTransferStatusPendingReceipt, teamId, TeaTransferStatusPendingReceipt, limit, offset)
+		teamId, TeaTransferStatusPendingReceipt, limit, offset)
 
 	if err != nil {
 		return nil, fmt.Errorf("查询团队待确认转入转账失败: %v", err)
@@ -1843,7 +1843,8 @@ func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]
 		var transferType string
 		var id, fromId, toTeamId int
 		var uuid, fromName, toTeamName, notes, status string
-		var amountGrams, balanceAfterTransfer float64
+		var amountGrams float64
+		var balanceAfterTransfer sql.NullFloat64
 		var expiresAt, createdAt time.Time
 
 		err = rows.Scan(&transferType, &id, &uuid, &fromId, &fromName, &toTeamId, &toTeamName,
@@ -1863,7 +1864,7 @@ func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]
 			"amount_grams":           amountGrams,
 			"status":                 status,
 			"notes":                  notes,
-			"balance_after_transfer": balanceAfterTransfer,
+			"balance_after_transfer": getNullableFloat64(balanceAfterTransfer),
 			"expires_at":             expiresAt,
 			"created_at":             createdAt,
 		}
@@ -1877,6 +1878,14 @@ func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]
 func getNullableString(nullString sql.NullString) interface{} {
 	if nullString.Valid {
 		return nullString.String
+	}
+	return nil
+}
+
+// 辅助函数：处理sql.NullFloat64
+func getNullableFloat64(nullFloat sql.NullFloat64) interface{} {
+	if nullFloat.Valid {
+		return nullFloat.Float64
 	}
 	return nil
 }

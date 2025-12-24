@@ -326,9 +326,11 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/transfers/history/user_to_team", route.GetTeaUserToTeamTransferHistoryAPI)           // 用户对团队转账历史API
 	mux.HandleFunc("/v1/tea/user/transfers/history/user_to_user/page", route.HandleTeaUserTransferHistory)            // 用户对用户转账历史页面路由
 	mux.HandleFunc("/v1/tea/user/transfers/history/user_to_team/page", route.HandleTeaTeamTransferHistory)            // 用户对团队转账历史页面路由
-	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user", route.GetTeaUserFromUserTransferInsAPI)               // 用户接收用户转入记录API
+	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user", route.GetTeaUserFromUserTransferInsAPI)               // 用户接收用户转入记录API - 接收历史（所有状态）
+	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user/completed", route.GetTeaUserCompletedTransferInsAPI)     // 用户接收用户转入记录API - 收入记录（仅已完成）
 	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_team", route.GetTeaUserFromTeamTransferInsAPI)               // 用户接收团队转入记录API
-	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user/page", route.HandleTeaUserFromUserTransferIns)          // 用户接收用户转入记录页面路由
+	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user/page", route.HandleTeaUserFromUserTransferIns)          // 用户接收用户转入记录页面路由 - 接收历史（所有状态）
+	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user/completed/page", route.HandleTeaUserCompletedTransferIns) // 用户接收用户转入记录页面路由 - 收入记录（仅已完成）
 	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_team/page", route.HandleTeaUserFromTeamTransferIns)          // 用户接收团队转入记录页面路由
 	// 新增：区分用户对用户和用户对团队转账的确认/拒绝路由
 	mux.HandleFunc("/v1/tea/user/transfer/confirm/user_to_user", route.ConfirmTeaUserToUserTransferAPI) // 确认接收用户对用户转账API

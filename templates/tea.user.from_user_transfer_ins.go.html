@@ -1,9 +1,9 @@
-{{ define "content" }}
+    {{ define "content" }}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/desk">{{ .SessUser.Name }} 的写字台</a></li>
-  <li class="active">收入记录</li>
+  <li class="active">接收历史</li>
 </ol>
 
 <div class="container">
@@ -64,12 +64,12 @@
     <!-- 收入记录列表 -->
     <div class="row">
         <div class="col-md-12">
-            <div class="panel panel-success">
+            <div class="panel panel-info">
                 <div class="panel-heading">
                     <h3 class="panel-title">
-                        <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
-                        用户转入记录
-                        <small class="pull-right">从其他茶友处收到的茶叶</small>
+                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                        用户接收历史
+                        <small class="pull-right">显示所有接收操作（包括成功、拒绝、超时）</small>
                     </h3>
                 </div>
                 <div class="panel-body">
@@ -82,10 +82,11 @@
                                     <th>发送方</th>
                                     <th>接收方</th>
                                     <th>数量</th>
-                                    <th>接收后余额</th>
+                                    <th>操作后余额</th>
                                     <th>状态</th>
                                     <th>过期时间</th>
                                     <th>备注</th>
+                                    <th>拒绝原因</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -137,6 +138,13 @@
                                     <td>
                                         {{ if .Notes }}
                                         <small class="text-muted">{{ .Notes }}</small>
+                                        {{ else }}
+                                        <small class="text-muted">-</small>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if and (eq .StatusDisplay "已拒绝") .ReceptionRejectionReason.Valid }}
+                                        <small class="text-danger">{{ .ReceptionRejectionReason.String }}</small>
                                         {{ else }}
                                         <small class="text-muted">-</small>
                                         {{ end }}
@@ -211,9 +219,9 @@
                     <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
                     转账历史
                 </a>
-                <a href="/v1/tea/user/transfers/ins/user_from_team/page" class="btn btn-primary">
-                    <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
-                    查看团队转入
+                <a href="/v1/tea/user/transfers/ins/user_from_user/completed/page" class="btn btn-success">
+                    <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                    查看收入记录
                 </a>
             </div>
         </div>

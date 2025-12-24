@@ -7,6 +7,7 @@ import (
 	"strconv"
 	dao "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // 团队茶叶账户相关响应结构体
@@ -74,7 +75,7 @@ func GetTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看茶叶账户")
 		return
@@ -145,7 +146,7 @@ func GetTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看交易历史")
 		return
@@ -341,7 +342,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(s_u.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(s_u.Id, teamId)
 	if err != nil || !isMember {
 		report(w, s_u, "您不是该团队成员，无法查看茶叶账户。")
 		return
@@ -435,7 +436,7 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		report(w, user, "您不是该团队成员，无法查看交易历史。")
 		return
@@ -568,7 +569,7 @@ func HandleTeaTeamOperationsHistory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		report(w, user, "您不是该团队成员，无法查看操作历史。")
 		return
@@ -695,7 +696,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, req.FromTeamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, req.FromTeamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能发起团队转账")
 		return
@@ -753,7 +754,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, req.FromTeamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, req.FromTeamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能发起团队转账")
 		return
@@ -790,7 +791,7 @@ func GetTeaTeamToUserTransferOutsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转出记录")
 		return
@@ -827,7 +828,7 @@ func GetTeaTeamToTeamTransferOutsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转出记录")
 		return
@@ -864,7 +865,7 @@ func GetTeaTeamPendingTeamToUserTransfersAPI(w http.ResponseWriter, r *http.Requ
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看待确认转账")
 		return
@@ -901,7 +902,7 @@ func GetTeaTeamPendingTeamToTeamTransfersAPI(w http.ResponseWriter, r *http.Requ
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看待确认转账")
 		return
@@ -938,7 +939,7 @@ func GetTeaTeamToUserTransferHistoryAPI(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转账历史")
 		return
@@ -975,7 +976,7 @@ func GetTeaTeamToTeamTransferHistoryAPI(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转账历史")
 		return
@@ -1012,7 +1013,7 @@ func GetTeaTeamFromUserTransferInsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转入记录")
 		return
@@ -1049,7 +1050,7 @@ func GetTeaTeamFromTeamTransferInsAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转入记录")
 		return
@@ -1155,6 +1156,7 @@ func ConfirmTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
+		TeamId       int    `json:"team_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
@@ -1163,6 +1165,22 @@ func ConfirmTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	if req.TransferUuid == "" {
 		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
+		return
+	}
+
+	if req.TeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
+
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamActiveMember(user.Id, req.TeamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队成员身份失败")
+		return
+	}
+	if !isMember {
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能确认接收团队转账")
 		return
 	}
 
@@ -1190,6 +1208,7 @@ func RejectTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
+		TeamId       int    `json:"team_id"`
 		Reason       string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -1199,6 +1218,22 @@ func RejectTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	if req.TransferUuid == "" {
 		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
+		return
+	}
+
+	if req.TeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
+
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamActiveMember(user.Id, req.TeamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队成员身份失败")
+		return
+	}
+	if !isMember {
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能拒绝接收团队转账")
 		return
 	}
 
@@ -1427,8 +1462,166 @@ func HandleTeaTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Reques
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// 实现页面渲染逻辑
-	respondWithError(w, http.StatusNotImplemented, "页面功能待实现")
+	TeamPendingIncomingTransfersGet(w, r)
+}
+
+// TeamPendingIncomingTransfersGet 获取团队待确认转入转账页面
+func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 必须指定团队ID
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		report(w, s_u, "必须指定团队ID。")
+		return
+	}
+
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		report(w, s_u, "团队ID无效。")
+		return
+	}
+
+	// 获取团队信息
+	team, err := dao.GetTeam(teamId)
+	if err != nil {
+		util.Debug("cannot get team by id", teamId, err)
+		report(w, s_u, "团队不存在。")
+		return
+	}
+
+	// 检查用户是否是团队正常成员
+	isMember, err := dao.IsTeamActiveMember(s_u.Id, teamId)
+	if err != nil || !isMember {
+		report(w, s_u, "只有团队成员才能查看待确认转账。")
+		return
+	}
+
+	// 获取团队茶叶账户
+	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
+	if err != nil {
+		util.Debug("cannot get team tea account", err)
+		report(w, s_u, "获取团队茶叶账户失败。")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取待确认转入转账
+	transfers, err := dao.GetPendingTeamIncomingTransfers(teamId, page, limit)
+	if err != nil {
+		util.Debug("cannot get pending incoming transfers", err)
+		report(w, s_u, "获取待确认转账失败。")
+		return
+	}
+
+	// 增强转账数据，添加预处理字段
+	type EnhancedTransfer struct {
+		Uuid          string
+		TransferType  string
+		FromId        int
+		FromName      string
+		TeamId        int
+		ToTeamName    string
+		AmountDisplay string
+		Notes         string
+		CreatedAt     string
+		ExpiresAt     string
+		StatusDisplay string
+		IsExpired     bool
+		IsNearExpiry  bool
+		CanConfirm    bool
+	}
+
+	var enhancedTransfers []EnhancedTransfer
+	for _, transfer := range transfers {
+		enhanced := EnhancedTransfer{
+			Uuid:         safeString(transfer["uuid"]),
+			TransferType: safeString(transfer["transfer_type"]),
+			FromId:       int(safeInt64(transfer["from_id"])),
+			FromName:     safeString(transfer["from_name"]),
+			Notes:        safeString(transfer["notes"]),
+			CreatedAt:    safeString(transfer["created_at"]),
+			ExpiresAt:    safeString(transfer["expires_at"]),
+		}
+
+		// 获取发送方信息
+		if enhanced.TransferType == "user_to_team" {
+			enhanced.FromName = safeString(transfer["from_user_name"])
+		} else if enhanced.TransferType == "team_to_team" {
+			enhanced.ToTeamName = safeString(transfer["from_team_name"])
+		}
+
+		// 格式化金额显示
+		amountGrams := safeFloat64(transfer["amount_grams"])
+		if amountGrams >= 1 {
+			enhanced.AmountDisplay = fmt.Sprintf("%.3f 克", amountGrams)
+		} else {
+			enhanced.AmountDisplay = fmt.Sprintf("%.0f 毫克", amountGrams*1000)
+		}
+
+		// 格式化时间显示和检查过期状态
+		if createdAt, ok := transfer["created_at"].(time.Time); ok {
+			enhanced.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
+		} else {
+			enhanced.CreatedAt = safeString(transfer["created_at"])
+		}
+
+		if expiresAt, ok := transfer["expires_at"].(time.Time); ok {
+			enhanced.ExpiresAt = expiresAt.Format("2006-01-02 15:04:05")
+			// 检查是否过期和即将过期
+			nowTime := time.Now()
+			enhanced.IsExpired = expiresAt.Before(nowTime)
+			enhanced.IsNearExpiry = !enhanced.IsExpired && expiresAt.Sub(nowTime) < time.Hour
+		} else {
+			enhanced.ExpiresAt = safeString(transfer["expires_at"])
+			// 如果无法解析时间，默认为未过期
+			enhanced.IsExpired = false
+			enhanced.IsNearExpiry = false
+		}
+		enhanced.CanConfirm = !enhanced.IsExpired
+
+		// 状态显示
+		if enhanced.IsExpired {
+			enhanced.StatusDisplay = "已过期"
+		} else if enhanced.IsNearExpiry {
+			enhanced.StatusDisplay = "即将过期"
+		} else {
+			enhanced.StatusDisplay = "可确认"
+		}
+
+		enhancedTransfers = append(enhancedTransfers, enhanced)
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser    dao.User
+		Team        *dao.Team
+		TeamAccount dao.TeaTeamAccount
+		Transfers   []EnhancedTransfer
+		CurrentPage int
+		Limit       int
+	}
+
+	pageData.SessUser = s_u
+	pageData.Team = &team
+	pageData.TeamAccount = teamAccount
+	pageData.Transfers = enhancedTransfers
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_incoming_transfers")
 }
 
 // GetTeaTeamPendingIncomingTransfers 获取团队待确认转入转账API
@@ -1452,7 +1645,7 @@ func GetTeaTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamMember(user.Id, teamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
 		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看待确认转账")
 		return
@@ -1466,4 +1659,51 @@ func GetTeaTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 
 	respondWithPagination(w, "获取团队待确认转入转账成功", transfers, page, limit, 0)
+}
+
+// 辅助函数：安全获取字符串值
+func safeString(val interface{}) string {
+	if val == nil {
+		return ""
+	}
+	if s, ok := val.(string); ok {
+		return s
+	}
+	return fmt.Sprintf("%v", val)
+}
+
+// 辅助函数：安全获取float64值
+func safeFloat64(val interface{}) float64 {
+	if val == nil {
+		return 0
+	}
+	switch v := val.(type) {
+	case float64:
+		return v
+	case float32:
+		return float64(v)
+	case int:
+		return float64(v)
+	case int64:
+		return float64(v)
+	default:
+		return 0
+	}
+}
+
+// 辅助函数：安全获取int64值
+func safeInt64(val interface{}) int64 {
+	if val == nil {
+		return 0
+	}
+	switch v := val.(type) {
+	case int64:
+		return v
+	case int:
+		return int64(v)
+	case float64:
+		return int64(v)
+	default:
+		return 0
+	}
 }
