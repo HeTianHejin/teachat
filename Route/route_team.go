@@ -1007,7 +1007,7 @@ func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
 	if s_u.Id == team.FounderId {
 		//如果是创建者，那么就可以上传图标
 
-		generateHTML(w, &uuid, "layout", "navbar.private", "team_avatar.upload")
+		generateHTML(w, &uuid, "layout", "navbar.private", "team_team.avatar_upload")
 		return
 	}
 	report(w, s_u, "你好，茶博士摸摸头，居然说只有团建人可以修改这个茶团相关资料。")
@@ -1107,7 +1107,7 @@ func TeamApplications(w http.ResponseWriter, r *http.Request) {
 		HasNext:                page < totalPages,
 	}
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "team.applications", "component_member_application_bean")
+	generateHTML(w, &pageData, "layout", "navbar.private", "team_member.applications", "component_member_application_bean")
 }
 
 // GET /v1/team/invitations?uuid=&page=

@@ -53,11 +53,11 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	if user.Id == s_u.Id {
 		//是本人,则打开编辑页
 		uB.IsAuthor = true
-		generateHTML(w, &uB, "layout", "navbar.private", "biography.private")
+		generateHTML(w, &uB, "layout", "navbar.private", "user.biography.private")
 		return
 	} else {
 		//不是简介主人,打开公开介绍页
-		generateHTML(w, &uB, "layout", "navbar.private", "biography.public")
+		generateHTML(w, &uB, "layout", "navbar.private", "user.biography.public")
 	}
 
 }

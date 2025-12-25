@@ -6,7 +6,7 @@ import (
 	util "teachat/Util"
 )
 
-// GET /v1/notification/invitation_group
+// GET /v1/group/notification/invitation
 // 查看集团邀请函列表
 func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -77,12 +77,12 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	pageData.GroupInvitationRejectedCount = rejectedCount
 	pageData.GroupInvitationTotalCount = len(invitations)
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "notification.invitation_group")
+	generateHTML(w, &pageData, "layout", "navbar.private", "group.notification.invitation")
 }
 
-// GET /v1/notification/invitation_team
+// GET /v1/team/notification/invitation
 // 用户关于团队邀请函的通知
-func InvitationsTeam(w http.ResponseWriter, r *http.Request) {
+func TeamNotificationInvitations(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := session(r)
 	if err != nil {
@@ -117,7 +117,7 @@ func InvitationsTeam(w http.ResponseWriter, r *http.Request) {
 	lbPD.InvitationBeanSlice = i_b_slice
 
 	//向用户返回接收邀请函的表单页面
-	generateHTML(w, &lbPD, "layout", "navbar.private", "notification.invitation_team")
+	generateHTML(w, &lbPD, "layout", "navbar.private", "user.notification.invitation")
 }
 
 // Get /v1/notification/accetp
@@ -150,6 +150,6 @@ func AcceptNotifications(w http.ResponseWriter, r *http.Request) {
 	amPD.GroupInvitationUnreadCount, _ = dao.CountGroupInvitationsByUserIdAndStatus(s_u.Id, 0)
 
 	//向用户返回表单页面
-	generateHTML(w, &amPD, "layout", "navbar.private", "notification.accept")
+	generateHTML(w, &amPD, "layout", "navbar.private", "accept.notifications")
 
 }

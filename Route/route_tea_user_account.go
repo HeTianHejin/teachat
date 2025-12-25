@@ -2390,32 +2390,32 @@ func UserFromTeamTransferInsGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // 辅助函数：安全获取int值，处理nil和any类型
-func safeInt(val any) int {
-	if val == nil {
-		return 0
-	}
-	switch v := val.(type) {
-	case int:
-		return v
-	case int64:
-		return int(v)
-	case float64:
-		return int(v)
-	default:
-		return 0
-	}
-}
+// func safeInt(val any) int {
+// 	if val == nil {
+// 		return 0
+// 	}
+// 	switch v := val.(type) {
+// 	case int:
+// 		return v
+// 	case int64:
+// 		return int(v)
+// 	case float64:
+// 		return int(v)
+// 	default:
+// 		return 0
+// 	}
+// }
 
 // 辅助函数：安全获取time.Time值，处理nil和any类型
-func safeTime(val any) time.Time {
-	if val == nil {
-		return time.Time{}
-	}
-	if t, ok := val.(time.Time); ok {
-		return t
-	}
-	return time.Time{}
-}
+// func safeTime(val any) time.Time {
+// 	if val == nil {
+// 		return time.Time{}
+// 	}
+// 	if t, ok := val.(time.Time); ok {
+// 		return t
+// 	}
+// 	return time.Time{}
+// }
 
 // 辅助函数：处理sql.NullString，返回*string（有效时返回指针，无效时返回nil）
 func getNullableString(nullString sql.NullString) *string {

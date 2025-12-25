@@ -140,7 +140,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
 
-	generateHTML(w, &mBD, "layout", "navbar.private", "message_box.detail")
+	generateHTML(w, &mBD, "layout", "navbar.private", "team.message_box.detail")
 }
 
 // POST /v1/message/delete?id=xxx
@@ -495,7 +495,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
 
-	generateHTML(w, &mSPD, "layout", "navbar.private", "message.send")
+	generateHTML(w, &mSPD, "layout", "navbar.private", "team.message.send")
 }
 
 // POST /v1/message/send
@@ -681,7 +681,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	s_u.Footprint = r.URL.Path
 	s_u.Query = r.URL.RawQuery
 
-	generateHTML(w, &mASPD, "layout", "navbar.private", "message.announcement.send")
+	generateHTML(w, &mASPD, "layout", "navbar.private", "team.message.announcement.send")
 }
 
 // POST /v1/message/announcement/send

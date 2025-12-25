@@ -167,6 +167,7 @@
       <!-- 团队功能导航 -->
       <ul class="nav nav-tabs nav-justified">
         <li class="active"><a href="#">在座成员</a></li>
+        <li ><a href="#">作业成就</a></li>
         <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">茶叶账户</a></li>
         <li><a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}">技能</a></li>
         <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">法力</a></li>
@@ -217,6 +218,9 @@
           <a href="/v1/message/send?team_uuid={{ $.TeamBean.Team.Uuid }}&receiver_id={{ .Member.Id }}" class="btn btn-sm btn-primary">
             <i class="bi bi-envelope"></i> 发送纸条
           </a>
+          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}" class="btn btn-sm btn-success">
+            <i class="bi bi-book"></i> 工作簿
+          </a>
         </div>
         {{ end }}
 
@@ -257,6 +261,9 @@
         <div class="btn-group" role="group" style="margin-top: 10px;">
           <a href="/v1/message/send?team_uuid={{ $.TeamBean.Team.Uuid }}&receiver_id={{ .Member.Id }}" class="btn btn-sm btn-primary">
             <i class="bi bi-envelope"></i> 发送纸条
+          </a>
+          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}" class="btn btn-sm btn-success">
+            <i class="bi bi-book"></i> 工作簿
           </a>
         </div>
         {{ end }}

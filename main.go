@@ -83,6 +83,7 @@ func main() {
 	mux.HandleFunc("/v1/team/members/left", route.TeamMembersLeft)
 
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
+	mux.HandleFunc("/v1/team/notification/invitation", route.TeamNotificationInvitations)
 	mux.HandleFunc("/v1/team/edit", route.HandleEditTeam)
 	mux.HandleFunc("/v1/team/member_add", route.TeamMemberAddGet)
 	mux.HandleFunc("/v1/team/search_user", route.HandleTeamSearchUser)
@@ -107,11 +108,11 @@ func main() {
 	mux.HandleFunc("/v1/team_member/application/review", route.HandleMemberApplicationReview)
 	mux.HandleFunc("/v1/team_member/application/detail", route.MemberApplicationDetail)
 	// 申请加盟书-2成员个人
-	mux.HandleFunc("/v1/applications/member", route.ApplyTeams)
+	mux.HandleFunc("/v1/applications/team_member", route.ApplyTeams)
 	// 邀请函-成员个人
 	mux.HandleFunc("/v1/invitations/member", route.InvitationsReceived)
 	// 退出声明-成员个人
-	mux.HandleFunc("/v1/resignations/member", route.ResignationsReceived)
+	mux.HandleFunc("/v1/resignations/team_member", route.ResignationsReceived)
 	// 邀请函相关
 	mux.HandleFunc("/v1/team_member/invite", route.HandleInviteMember)
 	mux.HandleFunc("/v1/team_member/invitation/read", route.HandleMemberInvitationRead)
@@ -244,8 +245,7 @@ func main() {
 
 	//defined in route_notification.go
 	mux.HandleFunc("/v1/notification/accept", route.AcceptNotifications)
-	mux.HandleFunc("/v1/notification/invitation_team", route.InvitationsTeam)
-	mux.HandleFunc("/v1/notification/invitation_group", route.InvitationGroup)
+	mux.HandleFunc("/v1/group/notification/invitation", route.InvitationGroup)
 
 	//defined in route_place.go
 	mux.HandleFunc("/v1/place/new", route.NewPlace)

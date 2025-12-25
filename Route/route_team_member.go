@@ -721,7 +721,7 @@ func MemberApplicationDetail(w http.ResponseWriter, r *http.Request) {
 	aR.Applicant = applicant
 	aR.ApplicantDefaultTeam = applicant_default_team
 
-	generateHTML(w, &aR, "layout", "navbar.private", "application.detail")
+	generateHTML(w, &aR, "layout", "navbar.private", "team_member.application.detail")
 }
 
 // POST /v1/team_member/application/review
@@ -1056,7 +1056,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//渲染页面
-	generateHTML(w, &aR, "layout", "navbar.private", "team.application_review", "component_member_application_bean")
+	generateHTML(w, &aR, "layout", "navbar.private", "team_member.application.review", "component_member_application_bean")
 }
 
 // POST /v1/team_member/application/new
@@ -1926,7 +1926,7 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 	mAL.MemberApplicationBeanSlice = apply_bean_slice
 
 	// 渲染页面
-	generateHTML(w, &mAL, "layout", "navbar.private", "team.applications", "component_member_application_bean")
+	generateHTML(w, &mAL, "layout", "navbar.private", "team_member.applications", "component_member_application_bean")
 
 }
 
@@ -2016,7 +2016,7 @@ func TeamMemberResigned(w http.ResponseWriter, r *http.Request) {
 		HasNext:          page < totalPages,
 	}
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "team.resignations")
+	generateHTML(w, &pageData, "layout", "navbar.private", "team_member.resignations")
 }
 
 // /v1/team_member/resignation/detail
@@ -2126,7 +2126,7 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 		IsCoreMember:       isCoreMember,
 	}
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "team.resignation_detail")
+	generateHTML(w, &pageData, "layout", "navbar.private", "team_member.resignation.detail")
 }
 
 // GET /v1/invitations/member
@@ -2176,7 +2176,7 @@ func InvitationsReceived(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 渲染页面
-	generateHTML(w, &pageData, "layout", "navbar.private", "invitations.member")
+	generateHTML(w, &pageData, "layout", "navbar.private", "team.invitations.user")
 }
 
 // POST /v1/team_member/resignation/detail
@@ -2373,7 +2373,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /v1/resignations/member
+// GET /v1/resignations/team_member
 // 某个成员，查看自己的全部退出茶团声明列表
 func ResignationsReceived(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -2428,10 +2428,10 @@ func ResignationsReceived(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 渲染页面
-	generateHTML(w, &pageData, "layout", "navbar.private", "resignations.member")
+	generateHTML(w, &pageData, "layout", "navbar.private", "team_member.resignations")
 }
 
-// GET /v1/applications/member
+// GET /v1/applications/team_member
 // 某个成员，查看自己全部茶团加盟申请书列表
 func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -2469,6 +2469,6 @@ func ApplyTeams(w http.ResponseWriter, r *http.Request) {
 	mAL.MemberApplicationBeanSlice = apply_bean_slice
 
 	// 渲染页面
-	generateHTML(w, &mAL, "layout", "navbar.private", "applications.team_member", "component_member_application_bean")
+	generateHTML(w, &mAL, "layout", "navbar.private", "team_member.applications.user", "component_member_application_bean")
 
 }
