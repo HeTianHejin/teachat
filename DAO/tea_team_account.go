@@ -50,14 +50,14 @@ type TeaTeamToUserTransferOut struct {
 
 	InitiatorUserId int     // 发起转账的用户id（团队成员）
 	AmountGrams     float64 // 转账茶叶数量(克)，即锁定数量
-	Notes           string  // 转账备注
+	Notes           string  // 转账备注,默认值:'-'
 
 	// 审批相关（团队转出时使用）
 	IsOnlyOneMemberTeam bool // 默认值false:多人团队审批(必填)，true:单人团队自动批准
 	// 审批人填写，必填
 	IsApproved              bool      // 是否批准，审批人填写（必填）,默认false
 	ApproverUserId          int       // 审批人ID，团队核心成员id，多人团队不能是发起人id，（必填）单人团队自动批准时，审批人是发起人自己
-	ApprovalRejectionReason string    // 审批意见，如果拒绝，填写原因
+	ApprovalRejectionReason string    // 审批意见，如果拒绝，填写原因,默认值:'-'
 	ApprovedAt              time.Time // 审批时间
 
 	// 注意流程：审批通过后，才会创建待接收记录（TeaUserFromTeamTransferIn）
@@ -80,14 +80,14 @@ type TeaTeamToTeamTransferOut struct {
 
 	InitiatorUserId int     // 发起转账的用户id（团队成员）
 	AmountGrams     float64 // 转账茶叶数量(克)，即锁定数量
-	Notes           string  // 转账备注
+	Notes           string  // 转账备注,默认值:'-'
 
 	// 审批相关（团队转出时使用）
 	IsOnlyOneMemberTeam bool // 默认值false:多人团队审批(必填)，true:单人团队自动批准
 	// 审批人填写，必填
 	IsApproved              bool      // 是否批准，审批人填写（必填）,默认false
 	ApproverUserId          int       // 审批人ID，团队核心成员id，多人团队不能是发起人id，（必填）单人团队自动批准时，审批人是发起人自己
-	ApprovalRejectionReason string    // 审批意见，如果拒绝，填写原因
+	ApprovalRejectionReason string    // 审批意见，如果拒绝，填写原因,默认值:'-'
 	ApprovedAt              time.Time // 审批时间
 
 	// 注意流程：审批通过后，才会创建待接收记录（TeaTeamFromTeamTransferIn）
@@ -109,14 +109,14 @@ type TeaTeamFromUserTransferIn struct {
 	FromUserId              int     // 转出用户ID
 	FromUserName            string  // 转出用户名称
 	AmountGrams             float64 // 转账茶叶数量(克)
-	Notes                   string  // 转账备注
+	Notes                   string  // 转账备注,默认值:'-'
 	Status                  string  // 包含接收状态，待接收，已完成，已拒收，已过期等状态
 	BalanceAfterTransfer    float64 // 转账后余额(克)
 
 	// 接收方ToTeam成员操作，Confirmed/Rejected二选一
 	IsConfirmed              bool   // 默认false，默认不接收，避免转账错误被误接收
 	OperationalUserId        int    // 操作用户id，确认接收或者拒绝接收的用户id（团队成员）
-	ReceptionRejectionReason string // 如果拒绝，填写原因
+	ReceptionRejectionReason string // 如果拒绝，填写原因,默认值:'-'
 
 	ExpiresAt time.Time // 过期时间，接收截止时间，也是FromUser解锁额度时间
 	CreatedAt time.Time // 必填，如果接收，是接收、清算时间；如果拒绝，是拒绝时间
@@ -132,14 +132,14 @@ type TeaTeamFromTeamTransferIn struct {
 	FromTeamId              int     // 转出团队ID
 	FromTeamName            string  // 转出团队名称
 	AmountGrams             float64 // 转账茶叶数量(克)
-	Notes                   string  // 转账备注
+	Notes                   string  // 转账备注,默认值:'-'
 	Status                  string  // 包含接收状态，待接收，已完成，已拒收，已过期等状态
 	BalanceAfterTransfer    float64 // 转账后余额(克)
 
 	// 接收方ToTeam成员操作，Confirmed/Rejected二选一
 	IsConfirmed              bool   // 默认false，默认不接收，避免转账错误被误接收
 	OperationalUserId        int    // 操作用户id，确认接收或者拒绝接收的用户id（团队成员）
-	ReceptionRejectionReason string // 如果拒绝，填写原因
+	ReceptionRejectionReason string // 如果拒绝，填写原因,默认值:'-'
 
 	ExpiresAt time.Time // 过期时间，接收截止时间，也是FromTeam解锁额度时间
 	CreatedAt time.Time // 必填，如果接收，是接收、清算时间；如果拒绝，是拒绝时间

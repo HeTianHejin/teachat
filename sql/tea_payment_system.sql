@@ -225,7 +225,7 @@ CREATE TABLE tea.team_to_team_transfer_out (
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
     approved_at           TIMESTAMP, -- 审批时间
-    approval_rejection_reason TEXT, -- 审批拒绝原因
+    approval_rejection_reason TEXT  NOT NULL DEFAULT '-', -- 审批拒绝原因
     rejected_by           INTEGER REFERENCES users(id), -- 拒绝人ID
     rejected_at           TIMESTAMP, -- 拒绝时间
     balance_after_transfer DECIMAL(15,3), -- 转账后余额(克)

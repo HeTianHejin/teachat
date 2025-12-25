@@ -88,7 +88,7 @@ type TeaUserToUserTransferOut struct {
 
 	//转出用户填写
 	AmountGrams float64 // 转账额度（克）
-	Notes       string  // 转账备注
+	Notes       string  // 转账备注，默认值:'-'
 
 	// 待接收	StatusPendingReceipt   = "pending_receipt"
 	// 已完成	StatusCompleted        = "completed"
@@ -117,7 +117,7 @@ type TeaUserToTeamTransferOut struct {
 
 	//转出用户填写
 	AmountGrams float64
-	Notes       string // 转账备注
+	Notes       string // 转账备注,默认值:'-'
 
 	// 待接收	StatusPendingReceipt   = "pending_receipt"
 	// 已完成	StatusCompleted        = "completed"
@@ -147,7 +147,7 @@ type TeaUserFromUserTransferIn struct {
 	FromUserName            string // 转出用户名称，对账单审计用
 
 	AmountGrams         float64 // 接收转账额度（克），对账单审计用
-	Notes               string  // 转出方备注（从转出表复制过来）
+	Notes               string  // 转出方备注（从转出表复制过来）,默认值:'-'
 	BalanceAfterReceipt float64 // 接收后账户余额，对账单审计用
 
 	// 已完成	StatusCompleted        = "completed"
@@ -174,7 +174,7 @@ type TeaUserFromTeamTransferIn struct {
 	FromTeamId              int     // 转出团队id
 	FromTeamName            string  // 转出团队名称，对账单审计用
 	AmountGrams             float64 // 接收转账额度（克），对账单审计用
-	Notes                   string  // 转出方备注（从转出表复制过来）
+	Notes                   string  // 转出方备注（从转出表复制过来）,默认值:'-'
 	BalanceAfterReceipt     float64 // 接收后账户余额，对账单审计用
 
 	// 已完成	StatusCompleted        = "completed"
@@ -1062,8 +1062,7 @@ func GetCompletedTransferIns(userId int, page, limit int) ([]TeaUserFromUserTran
 	return transfers, nil
 }
 
-// 辅助函数
-// getNullableInt64 处理sql.NullInt64，返回正确的值（有效时返回int64，无效时返回nil）
+// getNullableInt64 辅助函数，处理sql.NullInt64，返回正确的值（有效时返回int64，无效时返回nil）
 func getNullableInt64(nullInt sql.NullInt64) interface{} {
 	if nullInt.Valid {
 		return nullInt.Int64
@@ -1071,8 +1070,7 @@ func getNullableInt64(nullInt sql.NullInt64) interface{} {
 	return nil
 }
 
-// 辅助函数
-// getNullableTime 处理sql.NullTime，返回正确的值（有效时返回time.Time，无效时返回nil）
+// getNullableTime 辅助函数，处理sql.NullTime，返回正确的值（有效时返回time.Time，无效时返回nil）
 func getNullableTime(nullTime sql.NullTime) interface{} {
 	if nullTime.Valid {
 		return nullTime.Time
