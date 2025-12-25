@@ -34,12 +34,13 @@ type TeamAccountWithAvailable struct {
 
 // PageData 用于模板渲染
 type PageData struct {
-	SessUser             dao.User
-	Team                 *dao.Team
-	TeamAccount          TeamAccountWithAvailable
-	TransactionHistory   []map[string]interface{}
-	UserIsCoreMember     bool
-	PendingIncomingCount int
+	SessUser               dao.User
+	Team                   *dao.Team
+	TeamAccount            TeamAccountWithAvailable
+	TransactionHistory     []map[string]interface{}
+	UserIsCoreMember       bool
+	PendingIncomingCount   int
+	PendingApprovalCount   int
 }
 
 // GetTeaTeamAccount 获取团队茶叶账户信息
@@ -379,16 +380,24 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		pendingIncomingCount = 0
 	}
 
+	// 获取待审批操作数量
+	pendingApprovalCount, err := dao.CountPendingTeamApprovals(team.Id)
+	if err != nil {
+		util.Debug("cannot get pending approval operations count", err)
+		pendingApprovalCount = 0
+	}
+
 	// 创建页面数据结构
 	// 判断是否核心成员
 	isCoreMember, _ := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
 	pageData := PageData{
-		SessUser:             s_u,
-		Team:                 singleTeam,
-		TeamAccount:          teamAccountWithAvailable,
-		TransactionHistory:   []map[string]interface{}{}, // 空数组，不再显示最近交易记录
-		UserIsCoreMember:     isCoreMember,
-		PendingIncomingCount: pendingIncomingCount,
+		SessUser:               s_u,
+		Team:                   singleTeam,
+		TeamAccount:            teamAccountWithAvailable,
+		TransactionHistory:     []map[string]interface{}{}, // 空数组，不再显示最近交易记录
+		UserIsCoreMember:       isCoreMember,
+		PendingIncomingCount:   pendingIncomingCount,
+		PendingApprovalCount:   pendingApprovalCount,
 	}
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")

@@ -1421,6 +1421,23 @@ func CountPendingTeamReceipts(teamId int) (int, error) {
 	return count, nil
 }
 
+// CountPendingTeamApprovals 获取团队待审批操作数量
+func CountPendingTeamApprovals(teamId int) (int, error) {
+	var count int
+	err := DB.QueryRow(`SELECT COUNT(*) FROM (
+		SELECT id FROM tea.team_to_user_transfer_out
+		WHERE from_team_id = $1 AND status = $2
+		UNION ALL
+		SELECT id FROM tea.team_to_team_transfer_out
+		WHERE from_team_id = $1 AND status = $2
+	) AS combined`,
+		teamId, TeaTransferStatusPendingApproval).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("查询待审批操作数量失败: %v", err)
+	}
+	return count, nil
+}
+
 // ============================================
 // 兼容性函数（为向后兼容保留的统一接口）
 // ============================================
