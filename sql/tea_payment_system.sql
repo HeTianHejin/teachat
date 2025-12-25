@@ -49,7 +49,7 @@ CREATE TABLE tea.user_to_user_transfer_out (
     to_user_id            INTEGER NOT NULL REFERENCES users(id), -- 接收方用户ID
     to_user_name          VARCHAR(255) NOT NULL, -- 接收方用户名称
     amount_grams          DECIMAL(15,3) NOT NULL, -- 转账额度（克）
-    notes                 TEXT, -- 转账备注
+    notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_receipt', -- 转账状态
     balance_after_transfer DECIMAL(15,3), -- 转出后账户余额（克）
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -77,7 +77,7 @@ CREATE TABLE tea.user_to_team_transfer_out (
     to_team_id            INTEGER NOT NULL REFERENCES teams(id), -- 接收方团队ID
     to_team_name          VARCHAR(255) NOT NULL, -- 接收方团队名称
     amount_grams          DECIMAL(15,3) NOT NULL, -- 转账额度（克）
-    notes                 TEXT, -- 转账备注
+    notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_receipt', -- 转账状态
     balance_after_transfer DECIMAL(15,3), -- 转出后账户余额（克）
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -106,12 +106,12 @@ CREATE TABLE tea.user_from_user_transfer_in (
     from_user_id          INTEGER NOT NULL REFERENCES users(id), -- 转出用户id
     from_user_name        VARCHAR(255) NOT NULL, -- 转出用户名称
     amount_grams          DECIMAL(15,3) NOT NULL, -- 接收转账额度（克）
-    notes                 TEXT, -- 转出方备注（从转出表复制过来）
+    notes                 TEXT NOT NULL DEFAULT '-', -- 转出方备注（从转出表复制过来）
     balance_after_receipt DECIMAL(15,3), -- 接收后账户余额
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
-    reception_rejection_reason TEXT, -- 拒收原因
+    reception_rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -135,12 +135,12 @@ CREATE TABLE tea.user_from_team_transfer_in (
     from_team_id          INTEGER NOT NULL REFERENCES teams(id), -- 转出团队id
     from_team_name        VARCHAR(255) NOT NULL, -- 转出团队名称
     amount_grams          DECIMAL(15,3) NOT NULL, -- 接收转账额度（克）
-    notes                 TEXT, -- 转出方备注（从转出表复制过来）
+    notes                 TEXT NOT NULL DEFAULT '-', -- 转出方备注（从转出表复制过来）
     balance_after_receipt DECIMAL(15,3), -- 接收后账户余额
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
-    reception_rejection_reason TEXT, -- 拒收原因
+    reception_rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -187,11 +187,11 @@ CREATE TABLE tea.team_to_user_transfer_out (
     to_user_name          VARCHAR(255) NOT NULL, -- 接收用户名称
     initiator_user_id     INTEGER NOT NULL REFERENCES users(id), -- 发起转账的用户id
     amount_grams          DECIMAL(15,3) NOT NULL, -- 转账茶叶数量(克)
-    notes                 TEXT, -- 转账备注
+    notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
     approved_at           TIMESTAMP, -- 审批时间
-    approval_rejection_reason TEXT, -- 审批拒绝原因
+    approval_rejection_reason TEXT  NOT NULL DEFAULT '-', -- 审批拒绝原因
     rejected_by           INTEGER REFERENCES users(id), -- 拒绝人ID
     rejected_at           TIMESTAMP, -- 拒绝时间
     balance_after_transfer DECIMAL(15,3), -- 转账后余额(克)
@@ -221,7 +221,7 @@ CREATE TABLE tea.team_to_team_transfer_out (
     to_team_name          VARCHAR(255) NOT NULL, -- 接收团队名称
     initiator_user_id     INTEGER NOT NULL REFERENCES users(id), -- 发起转账的用户id
     amount_grams          DECIMAL(15,3) NOT NULL, -- 转账茶叶数量(克)
-    notes                 TEXT, -- 转账备注
+    notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
     approved_at           TIMESTAMP, -- 审批时间
@@ -255,11 +255,11 @@ CREATE TABLE tea.team_from_user_transfer_in (
     from_user_id          INTEGER NOT NULL REFERENCES users(id), -- 转出用户ID
     from_user_name        VARCHAR(255) NOT NULL, -- 转出用户名称
     amount_grams          DECIMAL(15,3) NOT NULL, -- 转账茶叶数量(克)
-    notes                 TEXT, -- 转账备注
+    notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
-    reception_rejection_reason TEXT, -- 拒收原因
+    reception_rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -282,11 +282,11 @@ CREATE TABLE tea.team_from_team_transfer_in (
     from_team_id          INTEGER NOT NULL REFERENCES teams(id), -- 转出团队ID
     from_team_name        VARCHAR(255) NOT NULL, -- 转出团队名称
     amount_grams          DECIMAL(15,3) NOT NULL, -- 转账茶叶数量(克)
-    notes                 TEXT, -- 转账备注
+    notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
-    reception_rejection_reason TEXT, -- 拒收原因
+    reception_rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
