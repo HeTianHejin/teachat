@@ -524,7 +524,7 @@ func GetSkillsBySkillUsers(skillUsers []SkillUser, ctx context.Context) ([]Skill
 	}
 
 	placeholders := make([]string, len(skillIds))
-	args := make([]interface{}, len(skillIds))
+	args := make([]any, len(skillIds))
 	for i, id := range skillIds {
 		placeholders[i] = fmt.Sprintf("$%d", i+1)
 		args[i] = id

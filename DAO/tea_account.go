@@ -820,7 +820,7 @@ func GetPendingTransfers(userId int, page, limit int) ([]TeaUserToUserTransferOu
 }
 
 // GetUserTransactions 获取用户交易历史（仅限用户对用户转账）
-func GetUserTransactions(userId int, page, limit int) ([]map[string]interface{}, error) {
+func GetUserTransactions(userId int, page, limit int) ([]map[string]any, error) {
 	offset := (page - 1) * limit
 
 	// 查询用户作为转出方的交易历史
@@ -867,7 +867,7 @@ func GetUserTransactions(userId int, page, limit int) ([]map[string]interface{},
 	}
 	defer rows.Close()
 
-	var transactions []map[string]interface{}
+	var transactions []map[string]any
 	for rows.Next() {
 		var transactionType, uuid, status, notes, fromUserName, toUserName string
 		var fromUserId, toUserId int
@@ -880,7 +880,7 @@ func GetUserTransactions(userId int, page, limit int) ([]map[string]interface{},
 			return nil, fmt.Errorf("扫描交易记录失败: %v", err)
 		}
 
-		transaction := map[string]interface{}{
+		transaction := map[string]any{
 			"transaction_type": transactionType,
 			"uuid":             uuid,
 			"from_user_id":     fromUserId,
@@ -1063,7 +1063,7 @@ func GetCompletedTransferIns(userId int, page, limit int) ([]TeaUserFromUserTran
 }
 
 // getNullableInt64 辅助函数，处理sql.NullInt64，返回正确的值（有效时返回int64，无效时返回nil）
-func getNullableInt64(nullInt sql.NullInt64) interface{} {
+func getNullableInt64(nullInt sql.NullInt64) any {
 	if nullInt.Valid {
 		return nullInt.Int64
 	}
@@ -1071,7 +1071,7 @@ func getNullableInt64(nullInt sql.NullInt64) interface{} {
 }
 
 // getNullableTime 辅助函数，处理sql.NullTime，返回正确的值（有效时返回time.Time，无效时返回nil）
-func getNullableTime(nullTime sql.NullTime) interface{} {
+func getNullableTime(nullTime sql.NullTime) any {
 	if nullTime.Valid {
 		return nullTime.Time
 	}

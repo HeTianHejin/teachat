@@ -706,7 +706,7 @@ func GetMagicsByMagicUsers(magicUsers []MagicUser, ctx context.Context) ([]Magic
 	}
 
 	placeholders := make([]string, len(magicIds))
-	args := make([]interface{}, len(magicIds))
+	args := make([]any, len(magicIds))
 	for i, id := range magicIds {
 		placeholders[i] = fmt.Sprintf("$%d", i+1)
 		args[i] = id
@@ -750,7 +750,7 @@ func GetMagicsByMagicTeams(magicTeams []MagicTeam, ctx context.Context) ([]Magic
 	}
 
 	placeholders := make([]string, len(magicIds))
-	args := make([]interface{}, len(magicIds))
+	args := make([]any, len(magicIds))
 	for i, id := range magicIds {
 		placeholders[i] = fmt.Sprintf("$%d", i+1)
 		args[i] = id

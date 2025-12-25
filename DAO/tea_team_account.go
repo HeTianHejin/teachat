@@ -258,7 +258,7 @@ func CheckTeamAccountFrozen(teamId int) (bool, string, error) {
 }
 
 // GetTeamTeaTransactions 获取团队交易历史（从转出表和转入表中查询）
-func GetTeamTeaTransactions(teamId int, page, limit int) ([]map[string]interface{}, error) {
+func GetTeamTeaTransactions(teamId int, page, limit int) ([]map[string]any, error) {
 	offset := (page - 1) * limit
 
 	// 查询团队作为转出方向用户的交易历史
@@ -310,7 +310,7 @@ func GetTeamTeaTransactions(teamId int, page, limit int) ([]map[string]interface
 	}
 	defer rows.Close()
 
-	var transactions []map[string]interface{}
+	var transactions []map[string]any
 	for rows.Next() {
 		var transactionType, targetType, uuid, status, notes string
 		var fromTeamId, initiatorUserId sql.NullInt64
@@ -324,7 +324,7 @@ func GetTeamTeaTransactions(teamId int, page, limit int) ([]map[string]interface
 			return nil, fmt.Errorf("扫描团队交易记录失败: %v", err)
 		}
 
-		transaction := map[string]interface{}{
+		transaction := map[string]any{
 			"transaction_type":  transactionType,
 			"target_type":       targetType,
 			"uuid":              uuid,
@@ -1516,7 +1516,7 @@ func RejectTeamTransferReceipt(transferUuid string, rejectUserId int, reason str
 
 // GetPendingTeamOperations 获取团队待审批操作列表（兼容函数）
 // 注意：这是兼容函数，建议使用具体的 GetPendingTeamToUserOperations 或 GetPendingTeamToTeamOperations
-func GetPendingTeamOperations(teamId int, page, limit int) (interface{}, error) {
+func GetPendingTeamOperations(teamId int, page, limit int) (any, error) {
 	// 获取团队对用户待审批操作
 	userTransfers, err := GetPendingTeamToUserOperations(teamId, page, limit)
 	if err != nil {
@@ -1539,7 +1539,7 @@ func GetPendingTeamOperations(teamId int, page, limit int) (interface{}, error) 
 
 // GetPendingTeamTransfers 获取团队待接收转账列表（兼容函数）
 // 注意：这是兼容函数，建议使用具体的 GetPendingTeamToUserReceipts 或 GetPendingTeamToTeamReceipts
-func GetPendingTeamTransfers(teamId int, page, limit int) (interface{}, error) {
+func GetPendingTeamTransfers(teamId int, page, limit int) (any, error) {
 	// 获取用户向团队待接收操作
 	userReceipts, err := GetPendingTeamToUserReceipts(teamId, page, limit)
 	if err != nil {
@@ -1565,9 +1565,9 @@ func GetPendingTeamTransfers(teamId int, page, limit int) (interface{}, error) {
 // ============================================
 
 // GetTeamTransferInOperations 获取团队所有转入记录（接收）
-func GetTeamTransferInOperations(teamId int, page, limit int) ([]map[string]interface{}, error) {
+func GetTeamTransferInOperations(teamId int, page, limit int) ([]map[string]any, error) {
 	offset := (page - 1) * limit
-	transfers := []map[string]interface{}{}
+	transfers := []map[string]any{}
 
 	// 查询团队接收用户转入记录
 	rows, err := DB.Query(`
@@ -1607,7 +1607,7 @@ func GetTeamTransferInOperations(teamId int, page, limit int) ([]map[string]inte
 				&isConfirmed, &operationalUserId, &receptionRejectionReason,
 				&expiresAt, &createdAt)
 			if err == nil {
-				transfer := map[string]interface{}{
+				transfer := map[string]any{
 					"transfer_type":                transferType,
 					"id":                           id,
 					"uuid":                         uuid,
@@ -1669,7 +1669,7 @@ func GetTeamTransferInOperations(teamId int, page, limit int) ([]map[string]inte
 				&isConfirmed, &operationalUserId, &receptionRejectionReason,
 				&expiresAt, &createdAt)
 			if err == nil {
-				transfer := map[string]interface{}{
+				transfer := map[string]any{
 					"transfer_type":                transferType,
 					"id":                           id,
 					"uuid":                         uuid,
@@ -1697,9 +1697,9 @@ func GetTeamTransferInOperations(teamId int, page, limit int) ([]map[string]inte
 }
 
 // GetTeamTransferOutOperations 获取团队所有转出操作历史（包括各种状态）
-func GetTeamTransferOutOperations(teamId int, page, limit int) ([]map[string]interface{}, error) {
+func GetTeamTransferOutOperations(teamId int, page, limit int) ([]map[string]any, error) {
 	offset := (page - 1) * limit
-	operations := []map[string]interface{}{}
+	operations := []map[string]any{}
 
 	// 查询团队向用户转出操作历史
 	rows, err := DB.Query(`
@@ -1737,7 +1737,7 @@ func GetTeamTransferOutOperations(teamId int, page, limit int) ([]map[string]int
 				&approvalRejectionReason, &rejectedBy, &rejectedAt,
 				&balanceAfterTransfer, &expiresAt, &paymentTime, &createdAt)
 			if err == nil {
-				operation := map[string]interface{}{
+				operation := map[string]any{
 					"transfer_type":             transferType,
 					"id":                        id,
 					"uuid":                      uuid,
@@ -1800,7 +1800,7 @@ func GetTeamTransferOutOperations(teamId int, page, limit int) ([]map[string]int
 				&approvalRejectionReason, &rejectedBy, &rejectedAt,
 				&balanceAfterTransfer, &expiresAt, &paymentTime, &createdAt)
 			if err == nil {
-				operation := map[string]interface{}{
+				operation := map[string]any{
 					"transfer_type":             transferType,
 					"id":                        id,
 					"uuid":                      uuid,
@@ -1831,9 +1831,9 @@ func GetTeamTransferOutOperations(teamId int, page, limit int) ([]map[string]int
 }
 
 // GetPendingTeamIncomingTransfers 获取团队所有待确认转入转账（包括用户转入和团队转入）
-func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]interface{}, error) {
+func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]any, error) {
 	offset := (page - 1) * limit
-	transfers := []map[string]interface{}{}
+	transfers := []map[string]any{}
 
 	// 查询用户向团队的待接收转账
 	rows, err := DB.Query(`
@@ -1870,7 +1870,7 @@ func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]
 			return nil, fmt.Errorf("扫描转账记录失败: %v", err)
 		}
 
-		transfer := map[string]interface{}{
+		transfer := map[string]any{
 			"transfer_type":          transferType,
 			"id":                     id,
 			"uuid":                   uuid,
@@ -1892,7 +1892,7 @@ func GetPendingTeamIncomingTransfers(teamId int, page, limit int) ([]map[string]
 }
 
 // 辅助函数：处理sql.NullString
-func getNullableString(nullString sql.NullString) interface{} {
+func getNullableString(nullString sql.NullString) any {
 	if nullString.Valid {
 		return nullString.String
 	}
@@ -1900,7 +1900,7 @@ func getNullableString(nullString sql.NullString) interface{} {
 }
 
 // 辅助函数：处理sql.NullFloat64
-func getNullableFloat64(nullFloat sql.NullFloat64) interface{} {
+func getNullableFloat64(nullFloat sql.NullFloat64) any {
 	if nullFloat.Valid {
 		return nullFloat.Float64
 	}

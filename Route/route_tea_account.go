@@ -115,10 +115,10 @@ type TransactionHistoryResponse struct {
 
 // 通用API响应结构体
 type ApiResponse struct {
-	Success  bool        `json:"success"`
-	Message  string      `json:"message"`
-	Data     interface{} `json:"data,omitempty"`
-	PageInfo *PageInfo   `json:"page_info,omitempty"`
+	Success  bool      `json:"success"`
+	Message  string    `json:"message"`
+	Data     any       `json:"data,omitempty"`
+	PageInfo *PageInfo `json:"page_info,omitempty"`
 }
 
 // 分页信息结构体
@@ -1276,7 +1276,7 @@ func getPaginationParams(r *http.Request) (page, limit int) {
 }
 
 // 辅助函数：返回成功响应
-func respondWithSuccess(w http.ResponseWriter, message string, data interface{}) {
+func respondWithSuccess(w http.ResponseWriter, message string, data any) {
 	response := ApiResponse{
 		Success: true,
 		Message: message,
@@ -1308,7 +1308,7 @@ func getCurrentUserFromSession(r *http.Request) (dao.User, error) {
 }
 
 // 辅助函数：返回分页响应
-func respondWithPagination(w http.ResponseWriter, message string, data interface{}, page, limit, total int) {
+func respondWithPagination(w http.ResponseWriter, message string, data any, page, limit, total int) {
 	totalPages := (total + limit - 1) / limit
 	pageInfo := PageInfo{
 		Page:       page,
@@ -2311,8 +2311,8 @@ func UserFromTeamTransferInsGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_transfer_ins")
 }
 
-// 辅助函数：安全获取int值，处理nil和interface{}类型
-func safeInt(val interface{}) int {
+// 辅助函数：安全获取int值，处理nil和any类型
+func safeInt(val any) int {
 	if val == nil {
 		return 0
 	}
@@ -2328,8 +2328,8 @@ func safeInt(val interface{}) int {
 	}
 }
 
-// 辅助函数：安全获取time.Time值，处理nil和interface{}类型
-func safeTime(val interface{}) time.Time {
+// 辅助函数：安全获取time.Time值，处理nil和any类型
+func safeTime(val any) time.Time {
 	if val == nil {
 		return time.Time{}
 	}

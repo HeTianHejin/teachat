@@ -34,13 +34,13 @@ type TeamAccountWithAvailable struct {
 
 // PageData 用于模板渲染
 type PageData struct {
-	SessUser               dao.User
-	Team                   *dao.Team
-	TeamAccount            TeamAccountWithAvailable
-	TransactionHistory     []map[string]interface{}
-	UserIsCoreMember       bool
-	PendingIncomingCount   int
-	PendingApprovalCount   int
+	SessUser             dao.User
+	Team                 *dao.Team
+	TeamAccount          TeamAccountWithAvailable
+	TransactionHistory   []map[string]any
+	UserIsCoreMember     bool
+	PendingIncomingCount int
+	PendingApprovalCount int
 }
 
 // GetTeaTeamAccount 获取团队茶叶账户信息
@@ -391,13 +391,13 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	// 判断是否核心成员
 	isCoreMember, _ := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
 	pageData := PageData{
-		SessUser:               s_u,
-		Team:                   singleTeam,
-		TeamAccount:            teamAccountWithAvailable,
-		TransactionHistory:     []map[string]interface{}{}, // 空数组，不再显示最近交易记录
-		UserIsCoreMember:       isCoreMember,
-		PendingIncomingCount:   pendingIncomingCount,
-		PendingApprovalCount:   pendingApprovalCount,
+		SessUser:             s_u,
+		Team:                 singleTeam,
+		TeamAccount:          teamAccountWithAvailable,
+		TransactionHistory:   []map[string]any{}, // 空数组，不再显示最近交易记录
+		UserIsCoreMember:     isCoreMember,
+		PendingIncomingCount: pendingIncomingCount,
+		PendingApprovalCount: pendingApprovalCount,
 	}
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")
@@ -473,7 +473,7 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	// transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
 	// if err != nil {
 	// 	util.Debug("cannot get team transaction history", err)
-	// 	transactions = []map[string]interface{}{}
+	// 	transactions = []map[string]any{}
 	// }
 
 	// 获取团队茶叶账户信息
@@ -490,7 +490,7 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
 	if err != nil {
 		util.Debug("cannot get team transaction history", err)
-		transactions = []map[string]interface{}{}
+		transactions = []map[string]any{}
 	}
 
 	// 创建页面数据结构
@@ -498,7 +498,7 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 		SessUser       dao.User
 		Team           *dao.Team
 		TeamAccount    dao.TeaTeamAccount
-		Transactions   []map[string]interface{}
+		Transactions   []map[string]any
 		CurrentPage    int
 		Limit          int
 		FilterType     string
@@ -606,7 +606,7 @@ func HandleTeaTeamOperationsHistory(w http.ResponseWriter, r *http.Request) {
 	operations, err := dao.GetTeamTransferOutOperations(teamId, page, limit)
 	if err != nil {
 		util.Debug("cannot get team operations history", err)
-		operations = []map[string]interface{}{}
+		operations = []map[string]any{}
 	}
 
 	// 获取团队茶叶账户信息
@@ -625,7 +625,7 @@ func HandleTeaTeamOperationsHistory(w http.ResponseWriter, r *http.Request) {
 			BalanceDisplay string
 			StatusDisplay  string
 		}
-		Operations  []map[string]interface{}
+		Operations  []map[string]any
 		CurrentPage int
 		Limit       int
 	}
@@ -1671,7 +1671,7 @@ func GetTeaTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) 
 }
 
 // 辅助函数：安全获取字符串值
-func safeString(val interface{}) string {
+func safeString(val any) string {
 	if val == nil {
 		return ""
 	}
@@ -1682,7 +1682,7 @@ func safeString(val interface{}) string {
 }
 
 // 辅助函数：安全获取float64值
-func safeFloat64(val interface{}) float64 {
+func safeFloat64(val any) float64 {
 	if val == nil {
 		return 0
 	}
@@ -1701,7 +1701,7 @@ func safeFloat64(val interface{}) float64 {
 }
 
 // 辅助函数：安全获取int64值
-func safeInt64(val interface{}) int64 {
+func safeInt64(val any) int64 {
 	if val == nil {
 		return 0
 	}
