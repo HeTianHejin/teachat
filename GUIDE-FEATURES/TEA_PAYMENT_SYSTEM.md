@@ -50,7 +50,7 @@
   - 多维度查询支持
   - 关联转账追踪
 
-#### 路由层 (`Route/route_tea_account.go`)
+#### 路由层 (`Route/route_tea_user_account.go`)
 - **账户相关API**:
   - `GET /v1/tea/user/account` - 获取账户信息
   - `POST /v1/tea/user/account/freeze` - 冻结账户（管理员）

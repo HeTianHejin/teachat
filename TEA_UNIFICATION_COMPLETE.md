@@ -119,7 +119,7 @@ GET /v1/tea/team/transactions              # 团队交易流水页面
 ### 修改的文件
 - `DAO/tea.team.account.go` - 移除重复结构体，添加统一查询方法
 - `Route/route_tea.team.account.go` - 更新为新的统一实现
-- `Route/route_tea_account.go` - 修复指针解引用问题
+- `Route/route_tea_user_account.go` - 修复指针解引用问题
 - `main.go` - 移除旧路由，添加新路由
 
 ### 删除的文件

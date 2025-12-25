@@ -43,8 +43,8 @@ type PageData struct {
 	PendingApprovalCount int
 }
 
-// GetTeaTeamAccount 获取团队茶叶账户信息
-func GetTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
+// GetTeaTeamAccountAPI 获取团队茶叶账户信息
+func GetTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -115,8 +115,8 @@ func GetTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "获取团队茶叶账户成功", response)
 }
 
-// GetTeaTeamTransactionHistory 获取团队交易历史（从转出表中查询）
-func GetTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
+// GetTeaTeamTransactionHistoryAPI 获取团队交易历史（从转出表中查询）
+func GetTeaTeamTransactionHistoryAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -181,8 +181,8 @@ func GetTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "获取团队交易历史成功", transactions)
 }
 
-// FreezeTeaTeamAccount 冻结团队茶叶账户
-func FreezeTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
+// FreezeTeaTeamAccountAPI 冻结团队茶叶账户
+func FreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -244,8 +244,8 @@ func FreezeTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "团队账户冻结成功", nil)
 }
 
-// UnfreezeTeaTeamAccount 解冻团队茶叶账户
-func UnfreezeTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
+// UnfreezeTeaTeamAccountAPI 解冻团队茶叶账户
+func UnfreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -1633,8 +1633,8 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_incoming_transfers")
 }
 
-// GetTeaTeamPendingIncomingTransfers 获取团队待确认转入转账API
-func GetTeaTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaTeamPendingIncomingTransfersAPI 获取团队待确认转入转账API
+func GetTeaTeamPendingIncomingTransfersAPI(w http.ResponseWriter, r *http.Request) {
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "请先登录")

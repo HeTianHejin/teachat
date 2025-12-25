@@ -21,15 +21,6 @@ type TeaUsrAccountResponse struct {
 	CreatedAt    string  `json:"created_at"`
 }
 
-// 转账请求结构体
-type CreateTransferRequest struct {
-	ToUserId    int     `json:"to_user_id,omitempty"`
-	ToTeamId    int     `json:"to_team_id,omitempty"`
-	AmountGrams float64 `json:"amount_grams"`
-	Notes       string  `json:"notes"`
-	ExpireHours int     `json:"expire_hours"`
-}
-
 // 用户对用户转账响应结构体
 type UserToUserTransferResponse struct {
 	Uuid            string  `json:"uuid"`
@@ -66,10 +57,10 @@ type UserToTeamTransferResponse struct {
 type UserFromUserTransferResponse struct {
 	Uuid                    string  `json:"uuid"`
 	UserToUserTransferOutId int     `json:"user_to_user_transfer_out_id"`
-	ToUserId                int     `json:"to_user_id"`
-	ToUserName              string  `json:"to_user_name"`
 	FromUserId              int     `json:"from_user_id"`
 	FromUserName            string  `json:"from_user_name"`
+	ToUserId                int     `json:"to_user_id"`
+	ToUserName              string  `json:"to_user_name"`
 	AmountGrams             float64 `json:"amount_grams"`
 	BalanceAfterReceipt     float64 `json:"balance_after_receipt"`
 	Status                  string  `json:"status"`
@@ -84,10 +75,10 @@ type UserFromUserTransferResponse struct {
 type UserFromTeamTransferResponse struct {
 	Uuid                    string  `json:"uuid"`
 	TeamToUserTransferOutId int     `json:"team_to_user_transfer_out_id"`
-	ToUserId                int     `json:"to_user_id"`
-	ToUserName              string  `json:"to_user_name"`
 	FromTeamId              int     `json:"from_team_id"`
 	FromTeamName            string  `json:"from_team_name"`
+	ToUserId                int     `json:"to_user_id"`
+	ToUserName              string  `json:"to_user_name"`
 	AmountGrams             float64 `json:"amount_grams"`
 	BalanceAfterReceipt     float64 `json:"balance_after_receipt"`
 	Status                  string  `json:"status"`
@@ -95,22 +86,6 @@ type UserFromTeamTransferResponse struct {
 	RejectionReason         *string `json:"rejection_reason,omitempty"`
 	ExpiresAt               string  `json:"expires_at"`
 	CreatedAt               string  `json:"created_at"`
-}
-
-// 交易历史响应结构体
-type TransactionHistoryResponse struct {
-	TransactionType string  `json:"transaction_type"` // "incoming" 或 "outgoing"
-	Uuid            string  `json:"uuid"`
-	FromUserId      int     `json:"from_user_id"`
-	ToUserId        int     `json:"to_user_id"`
-	ToTeamId        int     `json:"to_team_id"`
-	AmountGrams     float64 `json:"amount_grams"`
-	Status          string  `json:"status"`
-	Notes           string  `json:"notes"`
-	PaymentTime     string  `json:"payment_time"`
-	CreatedAt       string  `json:"created_at"`
-	FromUserName    string  `json:"from_user_name,omitempty"`
-	ToUserName      string  `json:"to_user_name,omitempty"`
 }
 
 // 通用API响应结构体
@@ -129,8 +104,111 @@ type PageInfo struct {
 	TotalPages int `json:"total_pages"`
 }
 
-// GetTeaUserAccount 获取用户茶叶账户信息
-func GetTeaUserAccount(w http.ResponseWriter, r *http.Request) {
+// HandleTeaUserAccount 处理用户茶叶账户（茶叶罐）页面请求
+func HandleTeaUserAccount(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	TeaUserAcountGet(w, r)
+}
+
+// TeaUserAcountGet 获取茶叶罐页面
+func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 确保用户有茶叶账户
+	err = dao.EnsureTeaAccountExists(s_u.Id)
+	if err != nil {
+		util.Debug("cannot ensure tea account exists", err)
+		// 不阻止流程，即使账户创建失败也显示页面
+	}
+
+	// 获取用户茶叶账户信息
+	account, err := dao.GetTeaAccountByUserId(s_u.Id)
+	var accountInfo *dao.TeaUserAccount
+	if err == nil {
+		accountInfo = &account
+	} else {
+		// 如果获取失败，创建一个空的账户信息
+		accountInfo = &dao.TeaUserAccount{
+			UserId:       s_u.Id,
+			BalanceGrams: 0.0,
+			Status:       dao.TeaAccountStatus_Normal,
+		}
+	}
+
+	// 获取待确认用户对用户转账数量
+	pendingTransfers, err := dao.GetPendingTransfers(s_u.Id, 1, 1) // 只需要获取数量
+	var pendingCount int
+	if err == nil {
+		pendingCount = len(pendingTransfers)
+	}
+
+	// 创建茶叶罐数据结构
+	var deskData struct {
+		SessUser    dao.User
+		TeaAccount  *dao.TeaUserAccount
+		AccountInfo struct {
+			BalanceDisplay          string
+			LockedBalanceDisplay    string
+			AvailableBalanceDisplay string
+			StatusDisplay           string
+			IsFrozen                bool
+		}
+		PendingTransferCount int
+	}
+
+	deskData.SessUser = s_u
+	deskData.TeaAccount = accountInfo
+	deskData.PendingTransferCount = pendingCount
+
+	// 格式化总余额显示
+	if accountInfo.BalanceGrams >= 1 {
+		deskData.AccountInfo.BalanceDisplay = util.FormatFloat(accountInfo.BalanceGrams, 2) + " 克"
+	} else {
+		deskData.AccountInfo.BalanceDisplay = util.FormatFloat(accountInfo.BalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 格式化锁定余额显示
+	if accountInfo.LockedBalanceGrams >= 1 {
+		deskData.AccountInfo.LockedBalanceDisplay = util.FormatFloat(accountInfo.LockedBalanceGrams, 2) + " 克"
+	} else {
+		deskData.AccountInfo.LockedBalanceDisplay = util.FormatFloat(accountInfo.LockedBalanceGrams*1000, 0) + " 毫克"
+	}
+
+	// 计算和格式化可用余额显示
+	availableBalance := accountInfo.BalanceGrams - accountInfo.LockedBalanceGrams
+	if availableBalance >= 1 {
+		deskData.AccountInfo.AvailableBalanceDisplay = util.FormatFloat(availableBalance, 2) + " 克"
+	} else {
+		deskData.AccountInfo.AvailableBalanceDisplay = util.FormatFloat(availableBalance*1000, 0) + " 毫克"
+	}
+
+	// 状态显示
+	if accountInfo.Status == dao.TeaAccountStatus_Frozen {
+		deskData.AccountInfo.StatusDisplay = "已冻结"
+		deskData.AccountInfo.IsFrozen = true
+	} else {
+		deskData.AccountInfo.StatusDisplay = "正常"
+		deskData.AccountInfo.IsFrozen = false
+	}
+
+	generateHTML(w, &deskData, "layout", "navbar.private", "tea.user.account")
+}
+
+// GetTeaUserAccountAPI 获取用户茶叶账户信息API
+func GetTeaUserAccountAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查是否已经登录
 	s, err := session(r)
 	if err != nil {
@@ -1160,8 +1238,8 @@ func TransferHistoryGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.transfer_history")
 }
 
-// FreezeTeaUserAccount 冻结茶叶账户（管理员功能）
-func FreezeTeaUserAccount(w http.ResponseWriter, r *http.Request) {
+// FreezeTeaUserAccountAPI 冻结茶叶账户（管理员功能）
+func FreezeTeaUserAccountAPI(w http.ResponseWriter, r *http.Request) {
 	// 验证管理员权限
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
@@ -1209,8 +1287,8 @@ func FreezeTeaUserAccount(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "账户冻结成功", nil)
 }
 
-// UnfreezeTeaUserAccount 解冻茶叶账户（管理员功能）
-func UnfreezeTeaUserAccount(w http.ResponseWriter, r *http.Request) {
+// UnfreezeTeaUserAccountAPI 解冻茶叶账户（管理员功能）
+func UnfreezeTeaUserAccountAPI(w http.ResponseWriter, r *http.Request) {
 	// 验证管理员权限
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {
