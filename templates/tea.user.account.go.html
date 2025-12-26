@@ -1,0 +1,320 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+   <li>{{ .SessUser.Name }} 的茶叶罐</li>
+  <li class="active">管理 #{{ .SessUser.Id }} 个人茶叶账户</li>
+</ol>
+
+<div class="container">
+
+    <!-- 待确认转账提示 -->
+    {{ if gt .PendingTransferCount 0 }}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4>
+                    <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
+                    您有待确认的转账！
+                </h4>
+                <p>
+                    您有 <strong>{{ .PendingTransferCount }}</strong> 笔待确认的转账记录，
+                    请及时处理以免过期。
+                    <a href="/v1/tea/user/transfers/pending/user_to_user/page" class="btn btn-warning btn-sm">立即查看</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+
+    <div class="row">
+        <!-- 个人茶叶账户概览 -->
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        茶叶罐
+                        <span class="pull-right">
+                            状态: <span class="label {{ if .AccountInfo.IsFrozen }}label-danger{{ else }}label-success{{ end }}">{{ .AccountInfo.StatusDisplay }}</span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>总余额: <strong>{{ .AccountInfo.BalanceDisplay }}</strong></h4>
+                            <p class="text-muted">您的茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>锁定余额: <strong>{{ .AccountInfo.LockedBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">待确认操作中锁定的茶叶</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>可用余额: <strong>{{ .AccountInfo.AvailableBalanceDisplay }}</strong></h4>
+                            <p class="text-muted"><strong>可以立即使用的茶叶</strong></p>
+                        </div>
+                      
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 功能快捷入口 -->
+        <div class="col-md-6">
+            <div class="panel panel-success">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                        收入管理
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="list-group">
+                        <a href="/v1/tea/user/transfers/pending/user_to_user/page" class="list-group-item {{ if gt .PendingTransferCount 0 }}list-group-item-warning{{ end }}">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
+                                查看待确认转账
+                                {{ if gt .PendingTransferCount 0 }}
+                                <span class="badge">{{ .PendingTransferCount }}</span>
+                                {{ end }}
+                            </h4>
+                            <p class="list-group-item-text">
+                                {{ if gt .PendingTransferCount 0 }}
+                                <strong>您有 {{ .PendingTransferCount }} 笔待确认转账，请及时处理！</strong>
+                                {{ else }}
+                                确认其他茶友向您转账的茶叶
+                                {{ end }}
+                            </p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/ins/user_from_user/completed/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                收入记录
+                            </h4>
+                            <p class="list-group-item-text">查看所有转入茶叶的记录（仅成功到账）</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/ins/user_from_user/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                接收历史
+                            </h4>
+                            <p class="list-group-item-text">查看所有接收茶叶操作的记录（包括成功、拒绝、超时）</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-minus" aria-hidden="true"></span>
+                        支出管理
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="list-group">
+                        <a href="#" onclick="showTransferModal()" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                发起转账
+                            </h4>
+                            <p class="list-group-item-text">向其他茶友或团队转账茶叶</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                支出记录
+                            </h4>
+                            <p class="list-group-item-text">查看所有转出茶叶的记录（仅成功到账）</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                支出历史
+                            </h4>
+                            <p class="list-group-item-text">查看所有转出操作的记录（包含成功、拒绝、超时）</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    
+
+
+</div>
+
+<!-- 转账模态框 -->
+<div class="modal fade" id="transferModal" tabindex="-1" role="dialog" aria-labelledby="transferModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="transferModalLabel">
+                    <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
+                    发起茶叶转账
+                </h4>
+            </div>
+            <div class="modal-body">
+                <form id="transferForm">
+                    <div class="form-group">
+                        <label for="transferType">转账类型:</label>
+                        <select class="form-control" id="transferType" name="transfer_type" onchange="toggleRecipientFields()">
+                            <option value="user">转给用户</option>
+                            <option value="team">转给团队</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="userRecipientGroup">
+                        <label for="toUserId">接收方用户ID:</label>
+                        <input type="number" class="form-control" id="toUserId" name="to_user_id" min="1">
+                        <small class="help-block">请输入要转账的茶友用户ID</small>
+                    </div>
+                    <div class="form-group" id="teamRecipientGroup" style="display: none;">
+                        <label for="toTeamId">接收方团队ID:</label>
+                        <input type="number" class="form-control" id="toTeamId" name="to_team_id" min="1">
+                        <small class="help-block">请输入要转账的团队ID</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="amountGrams">转账数量(克):</label>
+                        <input type="number" class="form-control" id="amountGrams" name="amount_grams" required min="0.001" step="0.001">
+                        <small class="help-block">可输入小数，最小单位0.001克(1毫克)。当前可用余额: <strong>{{ .AccountInfo.AvailableBalanceDisplay }}</strong></small>
+                    </div>
+                    <div class="form-group">
+                        <label for="notes">备注说明:</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="转账说明..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="expireHours">有效期(小时):</label>
+                        <select class="form-control" id="expireHours" name="expire_hours">
+                            <option value="6">6小时</option>
+                            <option value="12">12小时</option>
+                            <option value="24" selected>24小时</option>
+                            <option value="48">48小时</option>
+                            <option value="72">3天</option>
+                            <option value="168">7天</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" onclick="submitTransfer()">确认转账</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// 显示转账模态框
+function showTransferModal() {
+    $('#transferModal').modal('show');
+}
+
+// 切换接收方字段显示
+function toggleRecipientFields() {
+    var transferType = document.getElementById('transferType').value;
+    var userGroup = document.getElementById('userRecipientGroup');
+    var teamGroup = document.getElementById('teamRecipientGroup');
+    
+    if (transferType === 'user') {
+        userGroup.style.display = 'block';
+        teamGroup.style.display = 'none';
+        document.getElementById('toUserId').required = true;
+        document.getElementById('toTeamId').required = false;
+    } else {
+        userGroup.style.display = 'none';
+        teamGroup.style.display = 'block';
+        document.getElementById('toUserId').required = false;
+        document.getElementById('toTeamId').required = true;
+    }
+}
+
+// 提交转账请求
+function submitTransfer() {
+    var form = document.getElementById('transferForm');
+    var formData = new FormData(form);
+    var transferType = formData.get('transfer_type');
+    
+    var transferData = {
+        amount_grams: parseFloat(formData.get('amount_grams')),
+        notes: formData.get('notes') || '',
+        expire_hours: parseInt(formData.get('expire_hours'))
+    };
+    
+    var apiUrl;
+    var recipientType;
+    
+    if (transferType === 'user') {
+        transferData.to_user_id = parseInt(formData.get('to_user_id'));
+        apiUrl = '/v1/tea/user/transfer/user_to_user';
+        recipientType = '用户';
+        
+        // 验证用户ID
+        if (!transferData.to_user_id || transferData.to_user_id <= 0) {
+            alert('请输入有效的接收方用户ID');
+            return;
+        }
+    } else {
+        transferData.to_team_id = parseInt(formData.get('to_team_id'));
+        apiUrl = '/v1/tea/user/transfer/user_to_team';
+        recipientType = '团队';
+        
+        // 验证团队ID
+        if (!transferData.to_team_id || transferData.to_team_id <= 0) {
+            alert('请输入有效的接收方团队ID');
+            return;
+        }
+    }
+    
+    // 验证转账数量
+    if (!transferData.amount_grams || transferData.amount_grams <= 0) {
+        alert('请输入有效的转账数量');
+        return;
+    }
+    
+    // 发送转账请求
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(transferData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('向' + recipientType + '转账发起成功！接收方需要确认才能完成转账。');
+            $('#transferModal').modal('hide');
+            form.reset();
+            toggleRecipientFields(); // 重置字段显示
+            // 可以选择刷新页面或跳转到转账记录页面
+            // window.location.reload();
+        } else {
+            alert('转账失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('转账请求失败，请重试');
+    });
+}
+
+// 页面加载完成后的初始化
+$(document).ready(function() {
+    // 初始化字段显示状态
+    toggleRecipientFields();
+});
+</script>
+
+{{ end }}

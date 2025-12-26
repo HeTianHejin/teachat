@@ -1,0 +1,70 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+  <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">团队法力</a></li>
+  <li class="active">编辑法力记录</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-edit"></span> 编辑团队法力记录
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    <div class="well">
+      <h4>{{ .Magic.Name }}</h4>
+      <p>{{ .Magic.Description }}</p>
+      <p><strong>分类：</strong>{{ .Magic.CategoryString }}</p>
+    </div>
+
+    <form role="form" action="/v1/magic_team/edit" method="post">
+      <input type="hidden" name="id" value="{{ .MagicTeam.Id }}">
+      <input type="hidden" name="return_url" value="{{ .ReturnURL }}">
+
+      <div class="form-group">
+        <label for="level">团队掌握段位 (1-9)</label>
+        <select class="form-control" id="level" name="level" required>
+          <option value="1" {{ if eq .MagicTeam.Level 1 }}selected{{ end }}>1段 - 入门</option>
+          <option value="2" {{ if eq .MagicTeam.Level 2 }}selected{{ end }}>2段 - 初级</option>
+          <option value="3" {{ if eq .MagicTeam.Level 3 }}selected{{ end }}>3段 - 中级</option>
+          <option value="4" {{ if eq .MagicTeam.Level 4 }}selected{{ end }}>4段 - 中高级</option>
+          <option value="5" {{ if eq .MagicTeam.Level 5 }}selected{{ end }}>5段 - 高级</option>
+          <option value="6" {{ if eq .MagicTeam.Level 6 }}selected{{ end }}>6段 - 资深</option>
+          <option value="7" {{ if eq .MagicTeam.Level 7 }}selected{{ end }}>7段 - 专家</option>
+          <option value="8" {{ if eq .MagicTeam.Level 8 }}selected{{ end }}>8段 - 大师</option>
+          <option value="9" {{ if eq .MagicTeam.Level 9 }}selected{{ end }}>9段 - 宗师</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="status">团队法力状态</label>
+        <select class="form-control" id="status" name="status" required>
+          <option value="0" {{ if eq .MagicTeam.Status 0 }}selected{{ end }}>混乱 - 团队内部冲突、沟通不畅、目标不明</option>
+          <option value="1" {{ if eq .MagicTeam.Status 1 }}selected{{ end }}>清晰 - 团队思路清晰、目标明确</option>
+          <option value="2" {{ if eq .MagicTeam.Status 2 }}selected{{ end }}>协同 - 团队配合默契、高效协作</option>
+          <option value="3" {{ if eq .MagicTeam.Status 3 }}selected{{ end }}>创新 - 团队创新力强、突破性思维</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-ok"></span> 保存
+        </button>
+        <a href="{{ if .ReturnURL }}{{ .ReturnURL }}{{ else }}/v1/magics/team_list?uuid={{ .Team.Uuid }}{{ end }}" class="btn btn-default">
+          <span class="glyphicon glyphicon-remove"></span> 取消
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：团队法力段位和状态反映了团队的智慧协同水平。
+  </div>
+</div>
+
+{{ end }}

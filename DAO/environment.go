@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -248,7 +248,7 @@ func GetEnvironmentLevelDescription(field string, level int) string {
 // Environment.Create() 创建作业环境
 func (e *Environment) Create() (err error) {
 	statement := "INSERT INTO environments (uuid, name, summary, user_id, temperature, humidity, pm25, noise, light, wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -268,7 +268,7 @@ func (e *Environment) GetByIdOrUUID() (err error) {
 	}
 
 	statement := "SELECT id, uuid, name, summary, user_id, temperature, humidity, pm25, noise, light, wind, flow, rain, pressure, smoke, dust, odor, visibility, created_at, updated_at FROM environments WHERE id=$1 OR uuid=$2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -295,7 +295,7 @@ func fetchDefaultEnvs(ctx context.Context) ([]Environment, error) {
         WHERE id IN ($1, $2, $3, $4)
         ORDER BY id`
 
-	rows, err := db.QueryContext(ctx, query, 1, 2, 3, 4)
+	rows, err := DB.QueryContext(ctx, query, 1, 2, 3, 4)
 	if err != nil {
 		return nil, fmt.Errorf("query default environments: %w", err)
 	}
@@ -357,7 +357,7 @@ func SearchEnvironmentByName(keyword string, limit int, ctx context.Context) ([]
         ORDER BY created_at DESC 
         LIMIT $2`
 
-	rows, err := db.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, query, "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, fmt.Errorf("search environments: %w", err)
 	}

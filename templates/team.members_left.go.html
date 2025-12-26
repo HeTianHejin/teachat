@@ -1,0 +1,66 @@
+{{ define "content" }}
+
+{{/* 所有人可见的已离开成员列表页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li class="active">离开成员</li>
+</ol>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h4 style="margin: 0;">
+            <i class="glyphicon glyphicon-user"></i> 已离开成员列表
+        </h4>
+    </div>
+    <div class="panel-body">
+        <p style="color: #666;">
+            以下是曾经加入过 <strong>{{ .Team.Name }}</strong> 但已离开的成员记录。
+        </p>
+    </div>
+</div>
+
+{{ if .LeftMemberSlice }}
+
+{{ range .LeftMemberSlice }}
+
+<div class="media">
+    <div class="media-body">
+        <h4 class="media-heading">
+            茶友ID: {{ .UserId }}
+            <span class="label label-default" style="margin-left: 10px;">{{ .GetStatus }}</span>
+        </h4>
+        <p style="color: #666;">
+            <i class="glyphicon glyphicon-briefcase"></i> 离开时角色：<span class="label label-info">{{ .Role }}</span>
+        </p>
+        <p style="color: #999; font-size: smaller;">
+            <i class="glyphicon glyphicon-time"></i> 加入时间：{{ .CreatedAtDate }}
+            {{ if .UpdatedAt }}
+            <span style="margin-left: 15px;"><i class="glyphicon glyphicon-log-out"></i> 离开时间：{{ .UpdatedAt.Format "2006-01-02" }}</span>
+            {{ end }}
+        </p>
+    </div>
+</div>
+
+<hr />
+
+{{ end }}
+
+{{ else }}
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <p class="text-center" style="color: #999;">暂无离开成员记录。</p>
+  </div>
+</div>
+
+{{ end }}
+
+<div style="margin-top: 20px; text-align: center;">
+    <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" class="btn btn-default">
+        <i class="glyphicon glyphicon-arrow-left"></i> 返回团队详情
+    </a>
+</div>
+
+{{ end }}

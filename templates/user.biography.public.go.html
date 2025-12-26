@@ -1,0 +1,91 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+
+    <li>大堂</li>
+    <li>茶友名片</li>
+    <li class="active">
+        {{ .User.Name }}
+        <span style="font-style: italic;">@洞天福地</span>
+    </li>
+</ol>
+
+<div class="media">
+    <div class="media-left">
+        <a href="#">
+            <img class="img-circle" src="/v1/static/image/{{ .User.Avatar }}.jpeg" alt="个人头像">
+        </a>
+    </div>
+    <div class="media-body">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                {{ .User.Name }}
+                <span class="pull-right" style="font-style: italic;"> {{ .User.Email }}</span>
+            </div>
+            <div class="panel-body">
+                <p>茶油号：{{ .User.Id }}</p>
+                <span> {{ .User.Biography }}</span>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">默认&家庭茶团</div>
+    <div class="panel-body">
+        {{ with .DefaultFamily }}
+        <a href="/v1/family/detail?id={{ .Uuid }}">{{ .Name }}</a>
+        {{ else }}
+        无&家庭纪录
+        {{ end }}
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">默认$事业茶团</div>
+    <div class="panel-body">
+        {{ with .DefaultTeam }}
+        @<a href="/v1/team/detail?uuid={{ .Uuid }}">{{ .Abbreviation }}</a>
+        {{ if .Tags }}
+        <span class="text-muted" style="margin-left: 10px;">
+            <small><span class="glyphicon glyphicon-tag"></span> {{ .Tags }}</small>
+        </span>
+        {{ end }}
+        {{ else }}
+        无$团队纪录
+        {{ end }}
+    </div>
+
+</div>
+
+
+<ul class="nav nav-pills" style="margin-bottom: 20px;">
+    <li role="presentation" class="active"><a href="#">关注</a></li>
+    <li role="presentation"><a href="/v1/achievement/list?user_uuid={{ .User.Uuid }}">查看成就</a></li>
+    <li role="presentation"><a href="/v1/family_member/sign_in_new?id={{ .User.Uuid }}">这是家人</a></li>
+</ul>
+
+<ul class="nav nav-tabs nav-justified" style="margin-top: 0px;margin-bottom: 20px;">
+    <li role="presentation" class="active"><a href="/v1/user/amuse">自泡茶</a></li>
+    <li role="presentation"><a href="/v1/user/work">功夫茶</a></li>
+    <li role="presentation"><a href="/v1/user/thread">参与茶议</a></li>
+</ul>
+
+<div class="list-group">
+    <a href="/v1/user/monologue/index" class="list-group-item">
+        <h4 class="list-group-item-heading">独白</h5>
+            <p class="list-group-item-text">...莫若随花飞到天尽头，天尽头，何处有香丘...</p>
+    </a>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <span>宝贝</span>
+    </div>
+    <div class="panel-body">
+        <span> {{ .User.Biography }}</span>
+    </div>
+</div>
+
+{{ end }}

@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-// 茶话会 teaParty，活动愿景Vision,主题；
-// 别名茶围，objective,声明围炉品茶讨论范围：一个目标/需求？
+// 茶话会，teaParty，活动愿景Vision,目标；
+// 别名茶围，objective,声明围炉品茶讨论范围：一个目的/需求？
 // 规则1：如果class=1为开放式，则下面的茶台可以是开放式class=1，也可以是封闭式class=2；
 // 规则2：如果class=2为封闭式，则下面的茶台都是封闭式class=2，仅限茶话会创建者指定团队成员可以创建茶议，实际上，由于品味可以被旁观者引用成为拓展茶议，所以封闭式也是相对而言的封闭。
 // 开放式茶台是任何注册用户都可以入座创建茶议，封闭式茶台是开台人（台主）指定团队成员可以创建茶议，
@@ -38,9 +38,9 @@ const (
 	ObClassOpen                            // 1: 开放式茶话会 (Open tea talk)
 	ObClassClose                           // 2: 封闭式茶话会 (Closed tea talk)
 	_                                      // 跳过 3-9
-	ObClassOpenStraw           = 10        // 10: 开放式草围 (Open straw ring)
+	ObClassOpenDraft           = 10        // 10: 开放式草围 (Open draft ring)
 	_                                      // 跳过 11-19
-	ObClassCloseStraw          = 20        // 20: 封闭式草围 (Closed straw ring)
+	ObClassCloseDraft          = 20        // 20: 封闭式草围 (Closed draft ring)
 	_                                      // 跳过 21-30
 	ObClassNeighborRejectOpen  = 31        // 31: 友邻婉拒开围 (Neighbor rejected opening)
 	ObClassNeighborRejectClose = 32        // 32: 友邻婉拒闭围 (Neighbor rejected closing)
@@ -60,7 +60,7 @@ var ObStatus = map[int]string{
 // objective.Create() Create a new record based on the given objective struct{},return a new objective and error
 func (objective *Objective) Create() (err error) {
 	statement := "INSERT INTO objectives (uuid, title, body, created_at, user_id, class, family_id, cover, team_id, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id,uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -82,7 +82,7 @@ func (objective *Objective) CreateWithTx(tx *sql.Tx) (err error) {
 // objective.Update() Update the given objective struct{}
 func (objective *Objective) Update() (err error) {
 	statement := "UPDATE objectives SET title = $1, body = $2, edit_at = $3, family_id = $4, cover = $5, team_id = $6, is_private = $7 WHERE id = $8"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -94,7 +94,7 @@ func (objective *Objective) Update() (err error) {
 // objective.UpdateClass() Update the given objective class
 func (objective *Objective) UpdateClass() (err error) {
 	statement := "UPDATE objectives SET class = $1, edit_at = $2 WHERE id = $3"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -106,7 +106,7 @@ func (objective *Objective) UpdateClass() (err error) {
 // objective.Delete() Delete the given objective struct{}
 // func (objective *Objective) Delete() (err error) {
 // 	statement := "DELETE FROM objectives WHERE id = $1"
-// 	stmt, err := db.Prepare(statement)
+// 	stmt, err := DB.Prepare(statement)
 // 	if err != nil {
 // 		return
 // 	}
@@ -117,28 +117,28 @@ func (objective *Objective) UpdateClass() (err error) {
 
 // objective.GetByUuid() Get the given objective by uuid
 func (objective *Objective) GetByUuid() (err error) {
-	err = db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE uuid = $1", objective.Uuid).
+	err = DB.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE uuid = $1", objective.Uuid).
 		Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.FamilyId, &objective.Cover, &objective.TeamId, &objective.IsPrivate)
 	return
 }
 
 // objective.GetByUuid() Get the given objective by id
 func (objective *Objective) Get() (err error) {
-	err = db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE id = $1", objective.Id).
+	err = DB.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE id = $1", objective.Id).
 		Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.FamilyId, &objective.Cover, &objective.TeamId, &objective.IsPrivate)
 	return
 }
 
 // project.Objective() Get the objective by .objective_id
 func (pr *Project) Objective() (objective Objective, err error) {
-	err = db.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE id = $1", pr.ObjectiveId).
+	err = DB.QueryRow("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE id = $1", pr.ObjectiveId).
 		Scan(&objective.Id, &objective.Uuid, &objective.Title, &objective.Body, &objective.CreatedAt, &objective.UserId, &objective.Class, &objective.EditAt, &objective.FamilyId, &objective.Cover, &objective.TeamId, &objective.IsPrivate)
 	return
 }
 
 // objective.GetByUserId() Get the given objective by user_id
 func (objective *Objective) GetByUserId() (objectives []Objective, err error) {
-	rows, err := db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE user_id = $1", objective.UserId)
+	rows, err := DB.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE user_id = $1", objective.UserId)
 	if err != nil {
 		return
 	}
@@ -174,7 +174,7 @@ func (objective *Objective) EditAtDate() string {
 // get the number of projects for this objective
 // 获取指定茶话会下的茶台数量
 func (objective *Objective) NumReplies() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM projects WHERE objective_id = $1", objective.Id)
+	rows, err := DB.Query("SELECT count(*) FROM projects WHERE objective_id = $1", objective.Id)
 	if err != nil {
 		return
 	}
@@ -190,7 +190,7 @@ func (objective *Objective) NumReplies() (count int) {
 
 // objective.GetByTitle() Get the given objective by title
 func (objective *Objective) GetByTitle() (objectives []Objective, err error) {
-	rows, err := db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE title = $1", objective.Title)
+	rows, err := DB.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE title = $1", objective.Title)
 	if err != nil {
 		return
 	}
@@ -208,19 +208,19 @@ func (objective *Objective) GetByTitle() (objectives []Objective, err error) {
 
 // objective.CountByTeamId() Count the given objective by team_id
 func (objective *Objective) CountByTeamId() (count int, err error) {
-	err = db.QueryRow("SELECT COUNT(*) FROM objectives WHERE team_id = $1", objective.TeamId).Scan(&count)
+	err = DB.QueryRow("SELECT COUNT(*) FROM objectives WHERE team_id = $1", objective.TeamId).Scan(&count)
 	return
 }
 
 // InvitedTeamsCount() 通过ObjectiveId获取茶话会邀请的茶团数量
 func (objective *Objective) InvitedTeamsCount() (count int, err error) {
-	err = db.QueryRow("SELECT COUNT(*) FROM objective_invited_teams WHERE objective_id = $1", objective.Id).Scan(&count)
+	err = DB.QueryRow("SELECT COUNT(*) FROM objective_invited_teams WHERE objective_id = $1", objective.Id).Scan(&count)
 	return
 }
 
 // InvitedTeamIds() 通过ObjectiveId获取封闭式茶话会的邀请茶团号列表
 func (objective *Objective) InvitedTeamIds() (team_id_slice []int, err error) {
-	rows, err := db.Query("SELECT team_id FROM objective_invited_teams WHERE objective_id = $1", objective.Id)
+	rows, err := DB.Query("SELECT team_id FROM objective_invited_teams WHERE objective_id = $1", objective.Id)
 	if err != nil {
 		return
 	}
@@ -258,7 +258,7 @@ func (ob *Objective) IsInvitedMember(user_id int) (ok bool, err error) {
 
 	if !ob.IsPrivate {
 		// 被邀请的对象是$事业团队 []Team.Id
-		// 迭代team_ids,用data.GetMemberUserIdsByTeamId()获取全部user_ids；
+		// 迭代team_ids,用dao.GetMemberUserIdsByTeamId()获取全部user_ids；
 		// 以UserId == u.Id？检查当前用户是否是茶话会邀请团队成员
 		for _, team_id := range team_ids {
 			user_ids, _ := GetAllMemberUserIdsByTeamId(team_id)
@@ -310,7 +310,7 @@ func (objective *Objective) IsEdited() bool {
 // 创建封闭式茶话会的许可茶团号
 func (obLicenseTeam *ObjectiveInvitedTeam) Create() (err error) {
 	statement := "INSERT INTO objective_invited_teams (objective_id, team_id, created_at) VALUES ($1, $2, $3) RETURNING id"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -332,13 +332,13 @@ func (obLicenseTeam *ObjectiveInvitedTeam) CreateWithTx(tx *sql.Tx) (err error) 
 // delete一个封闭式茶话会的许可茶团号
 func (obLicenseTeam *ObjectiveInvitedTeam) Delete() (err error) {
 	statement := "DELETE FROM objective_invited_teams WHERE objective_id = $1 AND team_id = $2"
-	_, err = db.Exec(statement, obLicenseTeam.ObjectiveId, obLicenseTeam.TeamId)
+	_, err = DB.Exec(statement, obLicenseTeam.ObjectiveId, obLicenseTeam.TeamId)
 	return
 }
 
 // Get class=1 or class=2,limit ，return []Objective
 func GetPublicObjectives(limit int) (objectives []Objective, err error) {
-	rows, err := db.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE class IN (1,2) ORDER BY created_at DESC LIMIT $1", limit)
+	rows, err := DB.Query("SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE class IN (1,2) ORDER BY created_at DESC LIMIT $1", limit)
 	if err != nil {
 		return
 	}
@@ -361,7 +361,7 @@ func CreateObjectiveWithTeams(objective *Objective, teamIDs []int) error {
 	defer cancel()
 
 	// 开始事务
-	tx, err := db.BeginTx(ctx, nil)
+	tx, err := DB.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("事务启动失败: %w", err)
 	}
@@ -396,7 +396,7 @@ func SearchObjectiveByTitle(keyword string, limit int, ctx context.Context) (obj
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE title ILIKE $1 ORDER BY created_at DESC LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, title, body, created_at, user_id, class, edit_at, family_id, cover, team_id, is_private FROM objectives WHERE title ILIKE $1 ORDER BY created_at DESC LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return
 	}

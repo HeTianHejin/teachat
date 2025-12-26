@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -37,21 +37,21 @@ func RiskNewGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	var riskData struct {
-		SessUser  data.User
+		SessUser  dao.User
 		ReturnURL string
 	}
-	riskData.SessUser = user
+	riskData.SessUser = s_u
 	riskData.ReturnURL = r.URL.Query().Get("return_url")
 
-	renderHTML(w, &riskData, "layout", "navbar.private", "risk.new")
+	generateHTML(w, &riskData, "layout", "navbar.private", "risk.new")
 }
 
 // POST /v1/risk/new
@@ -61,10 +61,10 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -73,11 +73,11 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 	description := strings.TrimSpace(r.PostFormValue("description"))
 
 	if name == "" {
-		report(w, r, "风险名称不能为空。")
+		report(w, s_u, "风险名称不能为空。")
 		return
 	}
 	if description == "" {
-		report(w, r, "风险描述不能为空。")
+		report(w, s_u, "风险描述不能为空。")
 		return
 	}
 
@@ -87,8 +87,8 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 		severity = 3 // 默认中风险
 	}
 
-	risk := data.Risk{
-		UserId:      user.Id,
+	risk := dao.Risk{
+		UserId:      s_u.Id,
 		Name:        name,
 		Nickname:    strings.TrimSpace(r.PostFormValue("nickname")),
 		Keywords:    strings.TrimSpace(r.PostFormValue("keywords")),
@@ -99,7 +99,7 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := risk.Create(); err != nil {
 		util.Debug("Cannot create risk", err)
-		report(w, r, "创建风险记录失败，请重试。")
+		report(w, s_u, "创建风险记录失败，请重试。")
 		return
 	}
 
@@ -130,48 +130,48 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
-	risk := data.Risk{Id: id}
+	risk := dao.Risk{Id: id}
 	if err := risk.GetByIdOrUUID(); err != nil {
 		util.Debug("Cannot get risk by id", id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	// 获取记录者信息
-	recorder, err := data.GetUser(risk.UserId)
+	recorder, err := dao.GetUser(risk.UserId)
 	if err != nil {
 		util.Debug("Cannot get recorder user", risk.UserId, err)
 		// 如果获取记录者失败，使用默认值
-		recorder = data.User{Id: 0, Name: "未知用户"}
+		recorder = dao.User{Id: 0, Name: "未知用户"}
 	}
 
 	var riskData struct {
-		SessUser data.User
-		Risk     data.Risk
-		Recorder data.User
+		SessUser dao.User
+		Risk     dao.Risk
+		Recorder dao.User
 	}
-	riskData.SessUser = user
+	riskData.SessUser = s_u
 	riskData.Risk = risk
 	riskData.Recorder = recorder
 
-	renderHTML(w, &riskData, "layout", "navbar.private", "risk.detail")
+	generateHTML(w, &riskData, "layout", "navbar.private", "risk.detail")
 }

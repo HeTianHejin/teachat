@@ -62,6 +62,9 @@
           <i class="bi-geo" style="font-size: 1.2rem; color: black;"></i>
           <a href="/v1/place/detail?uuid={{ .QuoteProjectBean.Place.Uuid }}">{{ .QuoteProjectBean.Place.Name }}</a>
         </div>
+        <hr />
+
+        {{/* 检查是否见证者，如果是，再检查茶议类型以决定功能按钮  */}}
         {{ if .IsVerifier }}{{/* 检查是否见证者，如果是，再检查茶议类型以决定功能按钮  */}}
         {{ if (eq .ThreadBean.Thread.Category 2) }} {{/* 检查茶议类型--约茶 */}}
         {{ with .Appointment }}{{/* 约茶非空检查-开始 */}}
@@ -130,16 +133,22 @@
         {{ end }}{{/* “建议”非空检查-结束 */}}
 
         {{ else if (eq .ThreadBean.Thread.Category 6) }} {{/* 检查茶议类型--宝贝 */}}
-        <a class="btn btn-default" href="/v1/project_goods/new?uuid={{ .QuoteProjectBean.Project.Uuid }}"
-          role="button">+ 宝贝</a>
+        {{/* 提供添加物资的按钮 */}}
+        {{ if .IsGoodsReadinessCompleted }}
+        <a class="btn btn-default" href="/v1/goods/project_detail?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">查看-宝贝</a>
+        {{ else }}
+        <a class="btn btn-default" href="/v1/goods/project_new?project_id={{ .QuoteProjectBean.Project.Id }}" role="button">+ 宝贝</a>
+        <a class="btn btn-default" href="/v1/goods/project_detail?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">查看-宝贝</a>
+        {{ end }}
+        
         {{ else if (eq .ThreadBean.Thread.Category 7) }} {{/* 检查茶议类型--手艺 */}}
         <div style="display: flex; justify-content: space-between;">
-          <a class="btn btn-default" href="/v1/handicraft/new?uuid={{ .QuoteProjectBean.Project.Uuid }}" role="button">+
+          <a class="btn btn-default" href="/v1/handicraft/new?project_uuid={{ .QuoteProjectBean.Project.Uuid }}"
+            role="button">+
             手艺</a>
-          <a class="btn btn-danger" href="/v1/thread/completed?uuid={{ .QuoteProjectBean.Project.Uuid }}"
-            role="button">茶议完成</a>
+
         </div>
-        {{ end }} {{/* 检查茶议类型--完成 */}}
+        {{ end }} {{/* 检查茶议类型以决定处理方法--完成 */}}
         {{ end }} {{/* 检查是否见证者--完成 */}}
         <hr />
 
@@ -150,7 +159,7 @@
                 class="label label-default">品味</span></a>{{ .QuotePostBean.Post.Body }} ...
           </p>
           <footer style="font-size: small;">
-            <a href="/v1/user/biography?id={{ .QuotePostBean.Author.Uuid }}"
+            <a href="/v1/user/biography?uuid={{ .QuotePostBean.Author.Uuid }}"
               style="color: black;">{{ .QuotePostBean.Author.Name }}</a>
             {{if .QuotePostBean.Author.Gender }}
             <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
@@ -179,7 +188,7 @@
           <footer style="font-size: small;">
 
             <cite title="Source Title"> <a
-                href="/v1/user/biography?id={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
+                href="/v1/user/biography?uuid={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
               {{if .QuoteProjectBean.Author.Gender }}
               <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
               {{ else }}

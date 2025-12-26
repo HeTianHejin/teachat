@@ -1,0 +1,14 @@
+{{ define "content" }}
+
+{{/* 这是物资详情页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/goods">物资</a></li>
+    <li class="active">宝贝详情</li>
+  </ol>
+
+ {{ template "component_goods_detail" .Goods }}
+
+
+{{ end }}

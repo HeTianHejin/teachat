@@ -39,11 +39,31 @@
       </div>
 
       <div class="form-group">
-        <label for="mission">请介绍集团愿景（18～456字）</label>
+        <label for="mission">请介绍集团愿景（17～456字，需要友邻蒙评通过）</label>
         <textarea class="form-control" name="mission" id="mission" rows="3" minlength="17" maxlength="567"
           required></textarea>
       </div>
 
+      <div class="form-group">
+        <label for="tags">分类标签（用逗号分隔）</label>
+        <input type="text" class="form-control" name="tags" id="tags" 
+               placeholder="如：诗词书法,文化艺术" 
+               maxlength="200" />
+        <p class="help-block">标签帮助其他用户快速找到同行业的集团，建议3-5个标签</p>
+      </div>
+
+      <div class="form-group">
+        <label for="first_team_id">选择最高管理团队</label>
+        <select class="form-control" name="first_team_id" id="first_team_id" required>
+          <option value="">请选择一个团队</option>
+          {{ range .Teams }}
+          <option value="{{ .Id }}" {{ if eq .Uuid $.PreSelectedTeam }}selected{{ end }}>
+            {{ .Abbreviation }} - {{ .Name }}
+          </option>
+          {{ end }}
+        </select>
+        <p class="help-block">最高管理团队将成为集团的核心管理层</p>
+      </div>
 
       <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
         <button type="submit" class="btn btn-default">提交</button>

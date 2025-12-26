@@ -1,0 +1,142 @@
+{{ define "content" }}
+
+{{/* 这是，茶团加盟申请书审查页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li class="active">审查加盟申请书</li>
+</ol>
+
+
+
+<div class="media">
+    <div class="media-left">
+        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
+            <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="团队团标">
+        </a>
+    </div>
+
+    <div class="media-body">
+        <div class="panel panel-info">
+
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; font-size: smaller;text-align: center;">
+                            {{ .Team.CreatedAtDate }}
+                        </span>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; text-align: right;">
+                            <span class="label label-success">{{ .Team.TeamProperty }}
+                            </span>
+                        </span>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <h4 class="text-center">加盟茶团申请书</h4>
+                <p>
+                    致 <strong>{{ .Team.Name }}</strong> 团队：
+                </p>
+                <p>
+                    {{ .Application.Content }}
+                </p>
+                <p class="text-right">申请人：
+                    <a href="/v1/user/biography?uuid={{ .Applicant.Uuid }}">{{ .Applicant.Name }}</a>
+                    {{if .Applicant.Gender }}
+                    <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+                    {{ else }}
+                    <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+                    {{ end }}
+                    <a href="/v1/team/detail?uuid={{ .ApplicantDefaultTeam.Uuid }}" style="color: black;">{{ .ApplicantDefaultTeam.Abbreviation }}</a>
+      
+                </p>
+                <p class="text-right">
+                    {{ .Application.CreatedAtDate }}
+                </p>
+                
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+{{ if .Application.Check }}
+{{/* 处理茶团申请书 */}}
+<div class="panel panel-default">
+    <div class="panel-heading">
+        审查加盟申请书
+    </div>
+    <div class="panel-body">
+        <form class="form-horizontal" role="form" action="/v1/team_member/application/review" method="post">
+            <div class="form-group">
+                
+                        <label for="radio" class="col-sm-2 control-label">选择：</label>
+                        <div name="radio" class="col-sm-10">
+                            <div class="col-sm-6">
+                                <input type="radio" name="approval" id="accept" value="1" checked />
+                                <label for="accept">批准</label>
+                            </div>
+                            <div class="col-sm-6">
+                                <input type="radio" name="approval" id="reject" value="0" />
+                                <label for="decline">婉拒</label>
+                            </div>
+                        </div>
+                
+            </div>
+            <div class="form-group">
+                <label for="reply" class="col-sm-2 control-label">回复：</label>
+                <div class="col-sm-10">
+                    <textarea class="form-control" name="reply" id="reply" rows="3"
+                        maxlength="567" placeholder="致申请人的话" required></textarea>
+                </div>
+            </div>
+            {{/* 申请书ID */}}
+            <input type="hidden" name="application_id" id="application_id" value="{{ .Application.Id }}">
+           
+
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-2">
+                    <button type="submit" class="btn btn-default">
+                        <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 提交
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="panel-footer">
+        提示：批准申请即可让申请人加入茶团。
+    </div>
+</div>
+
+{{ else }}
+{{/* 展示申请书回复 */}}
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        茶团审查后答复：
+    </div>
+    <div class="panel-body">
+        <p>{{ .Application.Reply.ReplyContent }}</p>
+        <span style="font-size: smaller;"> {{ .Application.ReplyCreatedAtDate }}</span>
+    </div>
+</div>
+
+{{/* 展示申请书回复 */}}
+
+{{ end }}
+
+{{ end }}

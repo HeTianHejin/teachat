@@ -1,0 +1,85 @@
+{{ define "content"}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/family/home">家庭事项</a></li>
+  <li><a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}">{{ .FamilyBean.Family.Name }}</a></li>
+  <li class="active">成员详情</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4>家庭成员详情</h4>
+  </div>
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left">
+        {{ template "component_avatar_name_gender" .FamilyMemberBean.Member }}
+      </div>
+      <div class="media-body">
+        <h4>{{ .FamilyMemberBean.Member.Name }}</h4>
+        <p><span style="font-style: italic;">{{ .FamilyMemberBean.Member.Email }}</span></p>
+      </div>
+    </div>
+
+    <hr>
+
+    <dl class="dl-horizontal">
+      <dt>家庭角色</dt>
+      <dd>{{ .FamilyMemberBean.FamilyMember.GetRole }}</dd>
+
+      {{ if .FamilyMemberBean.FamilyMember.NickName }}
+      <dt>昵称</dt>
+      <dd>{{ .FamilyMemberBean.FamilyMember.NickName }}</dd>
+      {{ end }}
+
+      <dt>是否成年</dt>
+      <dd>{{ .FamilyMemberBean.FamilyMember.GetIsAdult }}</dd>
+
+      {{ if .FamilyMemberBean.FamilyMember.Birthday }}
+      <dt>生日</dt>
+      <dd>{{ .FamilyMemberBean.FamilyMember.Birthday.Format "2006-01-02" }}</dd>
+
+      <dt>年龄</dt>
+      <dd>{{ .FamilyMemberBean.FamilyMember.GetAgeString }}岁</dd>
+      {{ end }}
+
+      {{ if .FamilyMemberBean.FamilyMember.DeathDate }}
+      <dt>忌日</dt>
+      <dd>{{ .FamilyMemberBean.FamilyMember.DeathDate.Format "2006-01-02" }} <span class="label label-default" style="background-color: #999;">已故</span></dd>
+      {{ end }}
+
+      {{ if gt .FamilyMemberBean.FamilyMember.OrderOfSeniority 0 }}
+      <dt>排行</dt>
+      <dd>老{{ .FamilyMemberBean.FamilyMember.OrderOfSeniority }}</dd>
+      {{ end }}
+
+      {{ if .FamilyMemberBean.FamilyMember.IsAdopted }}
+      <dt>领养</dt>
+      <dd><span class="label label-info">领养</span></dd>
+      {{ end }}
+
+      <dt>登记时间</dt>
+      <dd>{{ .FamilyMemberBean.FamilyMember.CreatedAtDate }}</dd>
+
+      <dt>默认家庭</dt>
+      <dd><a href="/v1/family/detail?id={{ .FamilyMemberBean.MemberDefaultFamily.Uuid }}">{{ .FamilyMemberBean.MemberDefaultFamily.Name }}</a></dd>
+
+      <dt>默认团队</dt>
+      <dd><a href="/v1/team/detail?uuid={{ .FamilyMemberBean.MemberDefaultTeam.Uuid }}">{{ .FamilyMemberBean.MemberDefaultTeam.Abbreviation }}</a></dd>
+    </dl>
+
+    <hr>
+
+    <div class="form-group">
+      <a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}" class="btn btn-default">返回家庭</a>
+      {{ if .IsParent }}
+      <a href="/v1/family_member/edit?id={{ .FamilyMemberBean.FamilyMember.Uuid }}" class="btn btn-primary">
+        <i class="bi-pencil"></i> 编辑
+      </a>
+      {{ end }}
+    </div>
+  </div>
+</div>
+
+{{ end }}

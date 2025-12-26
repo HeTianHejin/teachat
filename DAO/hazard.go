@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -141,7 +141,7 @@ func (m *SafetyMeasure) PriorityName() string {
 
 // 获取隐患的所有防范措施
 func (h *Hazard) GetSafetyMeasures() ([]SafetyMeasure, error) {
-	rows, err := db.Query("SELECT id, uuid, hazard_id, user_id, title, description, priority, status, planned_date, completed_date, created_at, updated_at FROM safety_measures WHERE hazard_id = $1 ORDER BY priority DESC, created_at DESC", h.Id)
+	rows, err := DB.Query("SELECT id, uuid, hazard_id, user_id, title, description, priority, status, planned_date, completed_date, created_at, updated_at FROM safety_measures WHERE hazard_id = $1 ORDER BY priority DESC, created_at DESC", h.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +162,7 @@ func (h *Hazard) GetSafetyMeasures() ([]SafetyMeasure, error) {
 // 创建安全防范措施
 func (m *SafetyMeasure) Create() error {
 	statement := "INSERT INTO safety_measures (uuid, hazard_id, user_id, title, description, priority, status, planned_date, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, created_at"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (m *SafetyMeasure) Create() error {
 // 更新安全防范措施
 func (m *SafetyMeasure) Update() error {
 	statement := "UPDATE safety_measures SET title = $2, description = $3, priority = $4, status = $5, planned_date = $6, completed_date = $7, updated_at = $8 WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -187,14 +187,14 @@ func (m *SafetyMeasure) Update() error {
 // 根据ID获取安全防范措施
 func GetSafetyMeasureById(id int) (SafetyMeasure, error) {
 	var m SafetyMeasure
-	err := db.QueryRow("SELECT id, uuid, hazard_id, user_id, title, description, priority, status, planned_date, completed_date, created_at, updated_at FROM safety_measures WHERE id = $1", id).Scan(&m.Id, &m.Uuid, &m.HazardId, &m.UserId, &m.Title, &m.Description, &m.Priority, &m.Status, &m.PlannedDate, &m.CompletedDate, &m.CreatedAt, &m.UpdatedAt)
+	err := DB.QueryRow("SELECT id, uuid, hazard_id, user_id, title, description, priority, status, planned_date, completed_date, created_at, updated_at FROM safety_measures WHERE id = $1", id).Scan(&m.Id, &m.Uuid, &m.HazardId, &m.UserId, &m.Title, &m.Description, &m.Priority, &m.Status, &m.PlannedDate, &m.CompletedDate, &m.CreatedAt, &m.UpdatedAt)
 	return m, err
 }
 
 // 删除安全防范措施
 func (m *SafetyMeasure) Delete() error {
 	statement := "DELETE FROM safety_measures WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -206,7 +206,7 @@ func (m *SafetyMeasure) Delete() error {
 // 创建隐患
 func (h *Hazard) Create() error {
 	statement := "INSERT INTO hazards (uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, created_at"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -219,7 +219,7 @@ func (h *Hazard) Create() error {
 // 更新隐患
 func (h *Hazard) Update() error {
 	statement := "UPDATE hazards SET name = $2, nickname = $3, keywords = $4, description = $5, source = $6, severity = $7, category = $8, updated_at = $9 WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -233,7 +233,7 @@ func (h *Hazard) GetByIdOrUUID() error {
 	var err error
 	if h.Id > 0 || h.Uuid != "" {
 		statement := "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE id = $1 OR uuid = $2"
-		stmt, err := db.Prepare(statement)
+		stmt, err := DB.Prepare(statement)
 		if err != nil {
 			return err
 		}
@@ -251,13 +251,13 @@ func (h *Hazard) GetByIdOrUUID() error {
 // 删除隐患（同时删除相关的防范措施）
 func (h *Hazard) Delete() error {
 	// 先删除相关的防范措施
-	_, err := db.Exec("DELETE FROM safety_measures WHERE hazard_id = $1", h.Id)
+	_, err := DB.Exec("DELETE FROM safety_measures WHERE hazard_id = $1", h.Id)
 	if err != nil {
 		return err
 	}
 	// 再删除隐患本身
 	statement := "DELETE FROM hazards WHERE id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (h *Hazard) Delete() error {
 
 // 获取所有隐患
 func GetAllHazards() ([]Hazard, error) {
-	rows, err := db.Query("SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards ORDER BY severity DESC, created_at DESC")
+	rows, err := DB.Query("SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards ORDER BY severity DESC, created_at DESC")
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func GetAllHazards() ([]Hazard, error) {
 
 // 按名称搜索隐患
 func SearchHazardByName(keyword string, limit int, ctx context.Context) ([]Hazard, error) {
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE name ILIKE $1 OR nickname ILIKE $1 OR keywords ILIKE $1 ORDER BY severity DESC, created_at DESC LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE name ILIKE $1 OR nickname ILIKE $1 OR keywords ILIKE $1 ORDER BY severity DESC, created_at DESC LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +308,7 @@ func SearchHazardByName(keyword string, limit int, ctx context.Context) ([]Hazar
 
 // 获取默认隐患列表（预设的常见隐患）
 func GetDefaultHazards(ctx context.Context) ([]Hazard, error) {
-	rows, err := db.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE id IN (1, 2, 3) ORDER BY id")
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, user_id, name, nickname, keywords, description, source, severity, category, created_at, updated_at FROM hazards WHERE id IN (1, 2, 3) ORDER BY id")
 	if err != nil {
 		return nil, err
 	}

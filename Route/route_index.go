@@ -2,38 +2,38 @@ package route
 
 import (
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
 // GET //First page
 // 打开首页,展示最热门的茶议？
 func Index(w http.ResponseWriter, r *http.Request) {
-	var indexPD data.IndexPageData
-	var tb_slice []data.ThreadBean
+	var indexPD dao.IndexPageData
+	var tb_slice []dao.ThreadBean
 
 	//读取最热的茶议dozen?
 	num := 12
 
 	// 读取最热的茶议
-	thread_slice, err := data.HotThreads(num, r.Context())
+	thread_slice, err := dao.HotThreads(num, r.Context())
 	if err != nil {
 		util.Debug(" Cannot read hot thread slice", err)
-		report(w, r, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
+		report(w, dao.UserUnknown, "你好，茶博士摸摸头，竟然惊讶地说茶语本被狗叼进花园里去了，请稍后再试。")
 		return
 	}
 	len := len(thread_slice)
 
 	if len == 0 {
 		util.Debug(" Cannot read hot thread slice", err)
-		report(w, r, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
+		report(w, dao.UserUnknown, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
 
 	tb_slice, err = fetchThreadBeanSlice(thread_slice, r)
 	if err != nil {
 		util.Debug(" Cannot read thread and author slice", err)
-		report(w, r, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中。")
+		report(w, dao.UserUnknown, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你忙碌中。")
 		return
 	}
 
@@ -43,7 +43,7 @@ func Index(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		//游客
-		indexPD.SessUser = data.User{
+		indexPD.SessUser = dao.User{
 			Id:   0,
 			Name: "游客",
 		}
@@ -51,14 +51,14 @@ func Index(w http.ResponseWriter, r *http.Request) {
 			thread_slice[i].ActiveData.IsAuthor = false
 		}
 		//展示游客首页
-		renderHTML(w, &indexPD, "layout", "navbar.public", "index", "component_avatar_name_gender")
+		generateHTML(w, &indexPD, "layout", "navbar.public", "index", "component_avatar_name_gender")
 		return
 	}
 	//已登录
 	sUser, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot read user info from session", err)
-		report(w, r, "你好，茶博士摸摸头，说有眼不识泰山。")
+		report(w, dao.UserUnknown, "你好，茶博士摸摸头，说有眼不识泰山。")
 		return
 	}
 	indexPD.SessUser = sUser
@@ -70,29 +70,28 @@ func Index(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	//展示茶客的首页
-	renderHTML(w, &indexPD, "layout", "navbar.private", "index", "component_avatar_name_gender")
+	generateHTML(w, &indexPD, "layout", "navbar.private", "index", "component_avatar_name_gender")
 
 }
 
 // GET
 // show About page 区别是导航条不同
 func About(w http.ResponseWriter, r *http.Request) {
-	var uB data.UserBean
+	var uB dao.UserDefaultDataBean
 	sess, err := session(r)
 	if err != nil {
 		//游客
-		uB.IsAuthor = false
-		uB.SessUser = data.User{
+		uB.SessUser = dao.User{
 			Id:   0,
 			Name: "游客",
 		}
-		renderHTML(w, &uB, "layout", "navbar.public", "about")
+		generateHTML(w, &uB, "layout", "navbar.public", "about")
 		return
 	} else {
 		//已登录
 		uB.SessUser, _ = sess.User()
 		//展示tea客的首页
-		renderHTML(w, &uB, "layout", "navbar.private", "about")
+		generateHTML(w, &uB, "layout", "navbar.private", "about")
 	}
 
 }

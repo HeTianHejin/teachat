@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -34,7 +34,7 @@ type SeeSeek struct {
 	VerifierFamilyId int
 	VerifierTeamId   int
 
-	Category int           //分类：0、公开，1、保密，仅当事家庭/团队可见内容
+	Category int           //分类：0、公开，1、私密，仅当事家庭/团队可见内容
 	Status   SeeSeekStatus //状态：0、未开始，1、进行中，2、暂停，3、已终止，4、已结束
 	Step     int           //当前步骤：1、环境条件，2、场所隐患，3、风险评估，4、感官观察，5、检测报告
 
@@ -44,7 +44,7 @@ type SeeSeek struct {
 
 const (
 	SeeSeekCategoryPublic = iota // 公开
-	SeeSeekCategorySecret        // 保密
+	SeeSeekCategorySecret        // 私密
 )
 
 type SeeSeekStatus int
@@ -94,7 +94,7 @@ func (s *SeeSeek) Create(ctx context.Context) (err error) {
 		 verifier_user_id, verifier_team_id, verifier_family_id, category, status, step) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -118,7 +118,7 @@ func (s *SeeSeek) GetByIdOrUUID(ctx context.Context) (err error) {
 		verifier_user_id, verifier_team_id, verifier_family_id, category, status, step,
 		created_at, updated_at
 		FROM see_seeks WHERE id=$1 OR uuid=$2`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -172,7 +172,7 @@ func (sse *SeeSeekEnvironment) Create() (err error) {
 		(uuid, see_seek_id, environment_id, created_at) 
 		VALUES ($1, $2, $3, $4) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -185,7 +185,7 @@ func (sse *SeeSeekEnvironment) Create() (err error) {
 func (sse *SeeSeekEnvironment) Get() (err error) {
 	statement := `SELECT id, uuid, see_seek_id, environment_id, created_at, updated_at
 		FROM see_seek_environments WHERE id=$1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -213,7 +213,7 @@ func (ssh *SeeSeekHazard) Create() (err error) {
 		(uuid, see_seek_id, hazard_id, created_at)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -226,7 +226,7 @@ func (ssh *SeeSeekHazard) Create() (err error) {
 func (ssh *SeeSeekHazard) Get() (err error) {
 	statement := `SELECT id, uuid, see_seek_id, hazard_id, created_at, updated_at
 		FROM see_seek_hazards WHERE id=$1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -242,7 +242,7 @@ func (ssh *SeeSeekHazard) Get() (err error) {
 func IsHazardIdExists(hazardId int) (bool, error) {
 	var exists bool
 	statement := `SELECT EXISTS(SELECT 1 FROM hazards WHERE id=$1)`
-	err := db.QueryRow(statement, hazardId).Scan(&exists)
+	err := DB.QueryRow(statement, hazardId).Scan(&exists)
 	if err != nil {
 		return false, err
 	}
@@ -252,7 +252,7 @@ func IsHazardIdExists(hazardId int) (bool, error) {
 // SeeSeekHazard.DeleteBySeeSeekId()
 func DeleteSeeSeekHazardsBySeeSeekId(seeSeekId int) error {
 	statement := `DELETE FROM see_seek_hazards WHERE see_seek_id=$1`
-	_, err := db.Exec(statement, seeSeekId)
+	_, err := DB.Exec(statement, seeSeekId)
 	return err
 }
 
@@ -272,7 +272,7 @@ func (ssr *SeeSeekRisk) Create() (err error) {
 		(uuid, see_seek_id, risk_id, created_at)
 		VALUES ($1, $2, $3, $4)
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -285,7 +285,7 @@ func (ssr *SeeSeekRisk) Create() (err error) {
 func (ssr *SeeSeekRisk) Get() (err error) {
 	statement := `SELECT id, uuid, see_seek_id, risk_id, created_at, updated_at
 		FROM see_seek_risks WHERE id=$1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -300,7 +300,7 @@ func (ssr *SeeSeekRisk) Get() (err error) {
 // SeeSeekRisk.DeleteBySeeSeekId()
 func DeleteSeeSeekRisksBySeeSeekId(seeSeekId int) error {
 	statement := `DELETE FROM see_seek_risks WHERE see_seek_id=$1`
-	_, err := db.Exec(statement, seeSeekId)
+	_, err := DB.Exec(statement, seeSeekId)
 	return err
 }
 
@@ -328,7 +328,7 @@ func (ssl *SeeSeekLook) Create() (err error) {
 		(uuid, see_seek_id, classify, status, outline, is_deform, skin, is_graze, color, is_change, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -340,7 +340,7 @@ func (ssl *SeeSeekLook) Create() (err error) {
 // SeeSeekLook.DeleteBySeeSeekId()
 func DeleteSeeSeekLooksBySeeSeekId(seeSeekId int) error {
 	statement := `DELETE FROM see_seek_looks WHERE see_seek_id=$1`
-	_, err := db.Exec(statement, seeSeekId)
+	_, err := DB.Exec(statement, seeSeekId)
 	return err
 }
 
@@ -364,7 +364,7 @@ func (ssl *SeeSeekListen) Create() (err error) {
 		(uuid, see_seek_id, classify, status, sound, is_abnormal, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -376,7 +376,7 @@ func (ssl *SeeSeekListen) Create() (err error) {
 // SeeSeekListen.DeleteBySeeSeekId()
 func DeleteSeeSeekListensBySeeSeekId(seeSeekId int) error {
 	statement := `DELETE FROM see_seek_listens WHERE see_seek_id=$1`
-	_, err := db.Exec(statement, seeSeekId)
+	_, err := DB.Exec(statement, seeSeekId)
 	return err
 }
 
@@ -400,7 +400,7 @@ func (sss *SeeSeekSmell) Create() (err error) {
 		(uuid, see_seek_id, classify, status, odour, is_foul_odour, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -412,7 +412,7 @@ func (sss *SeeSeekSmell) Create() (err error) {
 // SeeSeekSmell.DeleteBySeeSeekId()
 func DeleteSeeSeekSmellsBySeeSeekId(seeSeekId int) error {
 	statement := `DELETE FROM see_seek_smells WHERE see_seek_id=$1`
-	_, err := db.Exec(statement, seeSeekId)
+	_, err := DB.Exec(statement, seeSeekId)
 	return err
 }
 
@@ -441,7 +441,7 @@ func (sst *SeeSeekTouch) Create() (err error) {
 		(uuid, see_seek_id, classify, status, temperature, is_fever, stretch, is_stiff, shake, is_shake, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -453,7 +453,7 @@ func (sst *SeeSeekTouch) Create() (err error) {
 // SeeSeekTouch.DeleteBySeeSeekId()
 func DeleteSeeSeekTouchesBySeeSeekId(seeSeekId int) error {
 	statement := `DELETE FROM see_seek_touches WHERE see_seek_id=$1`
-	_, err := db.Exec(statement, seeSeekId)
+	_, err := DB.Exec(statement, seeSeekId)
 	return err
 }
 
@@ -467,7 +467,7 @@ func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) 
 		payer_user_id, payer_team_id, payer_family_id, payee_user_id, payee_team_id, payee_family_id,
 		verifier_user_id, verifier_team_id, verifier_family_id, category, status, step, created_at, updated_at
 		FROM see_seeks WHERE project_id = $1 ORDER BY created_at DESC LIMIT 1`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return s, err
 	}
@@ -492,7 +492,7 @@ func GetSeeSeekByProjectId(projectId int, ctx context.Context) (SeeSeek, error) 
 func (s *SeeSeek) Update() error {
 	statement := `UPDATE see_seeks SET name = $2, nickname = $3, description = $4, 
 		status = $5, step = $6, start_time = $7, end_time = $8, updated_at = $9  WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -503,7 +503,7 @@ func (s *SeeSeek) Update() error {
 
 // 获取SeeSeek的环境记录
 func (s *SeeSeek) GetEnvironments() ([]SeeSeekEnvironment, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, environment_id, created_at, updated_at FROM see_seek_environments WHERE see_seek_id = $1", s.Id)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, environment_id, created_at, updated_at FROM see_seek_environments WHERE see_seek_id = $1", s.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -523,7 +523,7 @@ func (s *SeeSeek) GetEnvironments() ([]SeeSeekEnvironment, error) {
 
 // 获取SeeSeek的隐患记录
 func (s *SeeSeek) GetHazards() ([]SeeSeekHazard, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, hazard_id, created_at, updated_at FROM see_seek_hazards WHERE see_seek_id = $1", s.Id)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, hazard_id, created_at, updated_at FROM see_seek_hazards WHERE see_seek_id = $1", s.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -543,7 +543,7 @@ func (s *SeeSeek) GetHazards() ([]SeeSeekHazard, error) {
 
 // 获取SeeSeek的风险记录
 func (s *SeeSeek) GetRisks() ([]SeeSeekRisk, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, risk_id, created_at, updated_at FROM see_seek_risks WHERE see_seek_id = $1", s.Id)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, risk_id, created_at, updated_at FROM see_seek_risks WHERE see_seek_id = $1", s.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -563,7 +563,7 @@ func (s *SeeSeek) GetRisks() ([]SeeSeekRisk, error) {
 
 // 获取SeeSeek的视觉观察记录
 func (s *SeeSeek) GetLooks() ([]SeeSeekLook, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, classify, status, outline, is_deform, skin, is_graze, color, is_change, created_at, updated_at FROM see_seek_looks WHERE see_seek_id = $1", s.Id)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, classify, status, outline, is_deform, skin, is_graze, color, is_change, created_at, updated_at FROM see_seek_looks WHERE see_seek_id = $1", s.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -583,7 +583,7 @@ func (s *SeeSeek) GetLooks() ([]SeeSeekLook, error) {
 
 // 获取SeeSeek的听觉观察记录
 func (s *SeeSeek) GetListens() ([]SeeSeekListen, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, classify, status, sound, is_abnormal, created_at, updated_at FROM see_seek_listens WHERE see_seek_id = $1", s.Id)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, classify, status, sound, is_abnormal, created_at, updated_at FROM see_seek_listens WHERE see_seek_id = $1", s.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -603,7 +603,7 @@ func (s *SeeSeek) GetListens() ([]SeeSeekListen, error) {
 
 // 获取SeeSeek的嗅觉观察记录
 func (s *SeeSeek) GetSmells() ([]SeeSeekSmell, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, classify, status, odour, is_foul_odour, created_at, updated_at FROM see_seek_smells WHERE see_seek_id = $1", s.Id)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, classify, status, odour, is_foul_odour, created_at, updated_at FROM see_seek_smells WHERE see_seek_id = $1", s.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -623,7 +623,7 @@ func (s *SeeSeek) GetSmells() ([]SeeSeekSmell, error) {
 
 // 获取SeeSeek的触觉观察记录
 func (s *SeeSeek) GetTouches() ([]SeeSeekTouch, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, classify, status, temperature, is_fever, stretch, is_stiff, shake, is_shake, created_at, updated_at FROM see_seek_touches WHERE see_seek_id = $1", s.Id)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, classify, status, temperature, is_fever, stretch, is_stiff, shake, is_shake, created_at, updated_at FROM see_seek_touches WHERE see_seek_id = $1", s.Id)
 	if err != nil {
 		return nil, err
 	}
@@ -643,7 +643,7 @@ func (s *SeeSeek) GetTouches() ([]SeeSeekTouch, error) {
 
 // 获取SeeSeek的检测报告记录
 func (s *SeeSeek) GetExaminationReports() ([]SeeSeekExaminationReport, error) {
-	rows, err := db.Query("SELECT id, uuid, see_seek_id, classify, status, name, nickname, description, sample_type, sample_order, instrument_goods_id, report_title, report_content, master_user_id, reviewer_user_id, report_date, attachment, tags, created_at, updated_at FROM see_seek_examination_reports WHERE see_seek_id = $1", s.Id)
+	rows, err := DB.Query("SELECT id, uuid, see_seek_id, classify, status, name, nickname, description, sample_type, sample_order, instrument_goods_id, report_title, report_content, master_user_id, reviewer_user_id, report_date, attachment, tags, created_at, updated_at FROM see_seek_examination_reports WHERE see_seek_id = $1", s.Id)
 	if err != nil {
 		return nil, err
 	}

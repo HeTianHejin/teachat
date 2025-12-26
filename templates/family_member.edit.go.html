@@ -1,0 +1,64 @@
+{{ define "content"}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/family/home">家庭事项</a></li>
+  <li><a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}">{{ .FamilyBean.Family.Name }}</a></li>
+  <li class="active">编辑成员资料</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4>编辑家庭成员资料</h4>
+  </div>
+  <div class="panel-body">
+    <form action="/v1/family_member/edit" method="post">
+      <input type="hidden" name="member_id" value="{{ .FamilyMemberBean.FamilyMember.Uuid }}">
+      
+      <div class="form-group">
+        <label>成员姓名</label>
+        <p class="form-control-static">{{ .FamilyMemberBean.Member.Name }}</p>
+      </div>
+
+      <div class="form-group">
+        <label>家庭角色</label>
+        <p class="form-control-static">{{ .FamilyMemberBean.FamilyMember.GetRole }}</p>
+      </div>
+
+      <div class="form-group">
+        <label for="nickname">昵称</label>
+        <input type="text" class="form-control" id="nickname" name="nickname" 
+               value="{{ .FamilyMemberBean.FamilyMember.NickName }}" 
+               placeholder="例如：狗剩、小宝">
+      </div>
+
+      <div class="form-group">
+        <label for="birthday">生日</label>
+        <input type="date" class="form-control" id="birthday" name="birthday" 
+               value="{{ if .FamilyMemberBean.FamilyMember.Birthday }}{{ .FamilyMemberBean.FamilyMember.Birthday.Format "2006-01-02" }}{{ end }}">
+        <p class="help-block">设置生日后将自动计算年龄</p>
+      </div>
+
+      <div class="form-group">
+        <label for="death_date">忌日</label>
+        <input type="date" class="form-control" id="death_date" name="death_date" 
+               value="{{ if .FamilyMemberBean.FamilyMember.DeathDate }}{{ .FamilyMemberBean.FamilyMember.DeathDate.Format "2006-01-02" }}{{ end }}">
+        <p class="help-block">如已故，请填写忌日</p>
+      </div>
+
+      <div class="form-group">
+        <label for="order">排行</label>
+        <input type="number" class="form-control" id="order" name="order" 
+               value="{{ .FamilyMemberBean.FamilyMember.OrderOfSeniority }}" 
+               min="0" placeholder="家中排行老几">
+      </div>
+
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">保存</button>
+        <a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ end }}

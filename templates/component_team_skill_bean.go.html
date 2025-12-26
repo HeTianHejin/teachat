@@ -1,0 +1,53 @@
+{{ define "component_team_skill_bean" }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div class="row">
+      <div class="col-xs-8">
+        <strong>{{ .Skill.Name }}</strong>
+        {{ if .Skill.Nickname }}
+          <small class="text-muted">({{ .Skill.Nickname }})</small>
+        {{ end }}
+      </div>
+      <div class="col-xs-4 text-right">
+        <span class="label label-{{ if eq .Skill.Category 2 }}primary{{ else if eq .Skill.Category 1 }}success{{ else }}default{{ end }}">
+          {{ .Skill.CategoryString }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-8">
+        <p>{{ .Skill.Description }}</p>
+        <p><strong>体力等级：</strong>{{ .Skill.StrengthLevelString }}</p>
+        <p><strong>难度等级：</strong>{{ .Skill.DifficultyLevelString }}</p>
+      </div>
+      <div class="col-md-4">
+        <div class="well well-sm text-center">
+          <h4>团队掌握情况</h4>
+          <p><strong>等级：</strong>
+            <span class="label label-{{ if ge .SkillTeam.Level 7 }}success{{ else if ge .SkillTeam.Level 4 }}info{{ else }}default{{ end }}">
+              {{ .SkillTeam.Level }}级
+            </span>
+          </p>
+          <p><strong>状态：</strong>
+            <span class="label label-{{ if eq .SkillTeam.Status 3 }}success{{ else if eq .SkillTeam.Status 2 }}info{{ else if eq .SkillTeam.Status 1 }}warning{{ else }}default{{ end }}">
+              {{ .SkillTeam.StatusString }}
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <a href="/v1/skill/detail?id={{ .Skill.Id }}" class="btn btn-sm btn-default">
+      <span class="glyphicon glyphicon-eye-open"></span> 查看详情
+    </a>
+    <a href="/v1/skill_team/edit?id={{ .SkillTeam.Id }}" class="btn btn-sm btn-primary">
+      <span class="glyphicon glyphicon-edit"></span> 编辑
+    </a>
+  </div>
+</div>
+
+{{ end }}

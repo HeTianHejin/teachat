@@ -1,0 +1,38 @@
+{{ define "content" }}
+{{/* 这是用户正在申请加盟的全部茶团，申请书列表页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/myoffice">我的@个人办公室</a></li>
+  <li class="active">@我的茶团关系</li>
+</ol>
+
+<div style="margin: 20px;">
+  <ul class="nav nav-tabs nav-justified">
+    <li role="presentation"><a href="/v1/teams/hold">我建的团</a></li>
+    <li role="presentation"><a href="/v1/teams/joined">已经加入</a></li>
+    <li role="presentation"><a href="/v1/teams/employed">核心管理</a></li>
+    <li role="presentation" class="active"><a href="#">查看申请</a></li>
+    <li role="presentation"><a href="/v1/invitations/member">查看邀请</a></li>
+    <li role="presentation"><a href="/v1/resignations/team_member">查看退团</a></li>
+  </ul>
+</div>
+
+{{/*  这是指定茶友的全部加盟申请书列表页面  */}}
+
+{{ range .MemberApplicationBeanSlice }}
+
+
+{{ template "component_member_application_bean" . }}
+
+  <hr />
+
+
+
+{{ else }}
+<div class="alert alert-info" role="alert">没有加盟申请书记录。
+</div>
+
+{{ end }}{{/* 展示全部申请书结束 */}}
+
+{{ end }}

@@ -3,28 +3,12 @@
 {{/*  这是 全部已加入的茶团展示 页面  */}}
 
 <ol class="breadcrumb">
-
-  <li>大堂</li>
-  <li class="active">和我有关的 @茶团</li>
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="#">团队事项</a></li>
+  <li class="active">已加入的团队</li>
 </ol>
 
-<div style="margin: 20px;">
-
-  <ul class="nav nav-tabs nav-justified">
-    <li role="presentation"><a href="/v1/teams/hold">我建的团</a></li>
-    <li role="presentation" class="active"><a href="#">已经加入</a></li>
-    <li role="presentation"><a href="/v1/teams/employed">核心管理</a></li>
-    <li role="presentation"><a href="/v1/teams/application">申请加盟</a></li>
-  </ul>
-
-</div>
-
-<div class="well">
-  <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
-    <a href="/v1/team/new">$茶团</a>
-</div>
-
-
+{{ template "team_nav" . }}
 
 {{ if .IsEmpty }}
 {{/*  显示没有已加入的茶团  */}}
@@ -44,10 +28,10 @@
 {{ template "component_team" . }}
 
 <div style="margin: 1rem;">
-{{/*  显示退出茶团-功能按钮  */}}
-    <a class="btn btn-default" href="/v1/team_member/resign?id={{ .Team.Uuid }}" role="button">
+{{/*  显示退出-功能按钮  */}}
+    <a class="btn btn-default" href="/v1/team_member/resign?uuid={{ .Team.Uuid }}" role="button">
       <i class="bi-escape" style="font-size: 1.5rem; color: red;"></i>
-      退出茶团</a>
+      退出</a>
 
       <span style="margin-inline-start: 2rem;">
         {{/* 显示设置默认$事业茶团-功能按钮  */}}

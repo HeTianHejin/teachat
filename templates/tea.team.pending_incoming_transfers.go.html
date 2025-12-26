@@ -1,0 +1,360 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+  <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">团队茶叶账户</a></li>
+  <li class="active">待确认接收的转入</li>
+</ol>
+
+<div class="container">
+
+    <div class="row">
+        <!-- 团队茶叶账户概览 -->
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        {{ .Team.Name }} 团队茶叶罐
+                        <span class="pull-right">
+                            状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ if eq .TeamAccount.Status "frozen" }}已冻结{{ else }}正常{{ end }}</span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>总余额: <strong>{{ printf "%.3f" .TeamAccount.BalanceGrams }} 克</strong></h4>
+                            <p class="text-muted">团队的茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>锁定余额: <strong>{{ printf "%.3f" .TeamAccount.LockedBalanceGrams }} 克</strong></h4>
+                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>可用余额: <strong>{{ printf "%.3f" (sub .TeamAccount.BalanceGrams .TeamAccount.LockedBalanceGrams) }} 克</strong></h4>
+                            <p class="text-muted">可以立即使用的茶叶</p>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="btn-group-vertical" role="group" style="width: 100%;">
+                                <a href="/v1/tea/team/transactions/page?team_id={{ .Team.Id }}" class="btn btn-info">
+                                    <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                                    收支明细
+                                </a>
+                                <a href="/v1/tea/team/account?team_id={{ .Team.Id }}" class="btn btn-default">
+                                    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                    返回团队账户
+                                </a>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="panel panel-info">
+                                <div class="panel-heading">
+                                    <h4>待确认转入说明</h4>
+                                </div>
+                                <div class="panel-body">
+                                    <ul class="list-unstyled">
+                                        <li><span class="glyphicon glyphicon-ok-circle text-success"></span> 绿色表示可以确认接收</li>
+                                        <li><span class="glyphicon glyphicon-exclamation-sign text-warning"></span> 黄色表示即将过期</li>
+                                        <li><span class="glyphicon glyphicon-remove-circle text-danger"></span> 红色表示已过期无法确认</li>
+                                        <li><span class="glyphicon glyphicon-info-sign text-info"></span> 团队正常成员可以确认接收转入</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 待确认转入列表 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                        待确认接收的转入
+                        {{ if gt (len .Transfers) 0 }}
+                        <span class="badge">{{ len .Transfers }}</span>
+                        {{ end }}
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ if gt (len .Transfers) 0 }}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>发送方</th>
+                                    <th>类型</th>
+                                    <th>金额</th>
+                                    <th>说明</th>
+                                    <th>发起时间</th>
+                                    <th>过期时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range $transfer := .Transfers }}
+                                <tr class="{{ if $transfer.IsExpired }}danger{{ else if $transfer.IsNearExpiry }}warning{{ else }}success{{ end }}">
+                                    <td>
+                                        {{ if eq $transfer.TransferType "user_to_team" }}
+                                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+                                        <strong>{{ $transfer.FromName }}</strong>
+                                        <br><small class="text-muted">用户ID: {{ $transfer.FromId }}</small>
+                                        {{ else if eq $transfer.TransferType "team_to_team" }}
+                                        <span class="glyphicon glyphicon-tower" aria-hidden="true"></span>
+                                        <strong>{{ $transfer.FromName }}</strong>
+                                        <br><small class="text-muted">团队ID: {{ $transfer.FromId }}</small>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if eq $transfer.TransferType "user_to_team" }}
+                                        <span class="label label-primary">用户转账</span>
+                                        {{ else if eq $transfer.TransferType "team_to_team" }}
+                                        <span class="label label-info">团队转账</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        <span class="label {{ if not $transfer.IsExpired }}label-success{{ else }}label-default{{ end }}">
+                                            {{ $transfer.AmountDisplay }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {{ if $transfer.Notes }}
+                                        <span class="text-muted">{{ $transfer.Notes }}</span>
+                                        {{ else }}
+                                        <span class="text-muted">无</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ $transfer.CreatedAt }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ $transfer.ExpiresAt }}</small>
+                                    </td>
+                                    <td>
+                                        {{ if $transfer.CanConfirm }}
+                                        <span class="label label-success">{{ $transfer.StatusDisplay }}</span>
+                                        {{ else }}
+                                        <span class="label label-default">{{ $transfer.StatusDisplay }}</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if $transfer.CanConfirm }}
+                                        <button type="button" class="btn btn-success btn-sm" 
+                                                onclick="confirmTransfer('{{ $transfer.Uuid }}', '{{ $transfer.TransferType }}', '{{ $transfer.FromName }}', '{{ $transfer.AmountDisplay }}', {{ $.Team.Id }})">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                            确认
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" 
+                                                onclick="rejectTransfer('{{ $transfer.Uuid }}', '{{ $transfer.TransferType }}', '{{ $transfer.FromName }}', '{{ $transfer.AmountDisplay }}', {{ $.Team.Id }})">
+                                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                            拒绝
+                                        </button>
+                                        {{ else }}
+                                        <button type="button" class="btn btn-default btn-sm" disabled>
+                                            <span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span>
+                                            已过期
+                                        </button>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ else }}
+                    <div class="alert alert-info" role="alert">
+                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                        <strong>暂无待确认转入</strong>
+                        <br>当前没有需要确认接收的茶叶转账。
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- 确认转账模态框 -->
+<div class="modal fade" id="confirmTransferModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                <h4 class="modal-title">
+                    <span class="glyphicon glyphicon-ok-circle text-success"></span>
+                    确认接收茶叶转账
+                </h4>
+            </div>
+            <div class="modal-body">
+                <p>您确定要确认接收以下茶叶转账吗？</p>
+                <ul class="list-unstyled">
+                    <li><strong>发送方：</strong><span id="confirmFromUser"></span></li>
+                    <li><strong>金额：</strong><span id="confirmAmount"></span></li>
+                </ul>
+                <div class="alert alert-success">
+                    <span class="glyphicon glyphicon-info-sign"></span>
+                    确认接收后，茶叶将立即转入团队账户。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-success" id="confirmTransferBtn">
+                    <span class="glyphicon glyphicon-ok"></span>
+                    确认接收
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 拒绝转账模态框 -->
+<div class="modal fade" id="rejectTransferModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
+                <h4 class="modal-title">
+                    <span class="glyphicon glyphicon-remove-circle text-danger"></span>
+                    拒绝接收茶叶转账
+                </h4>
+            </div>
+            <div class="modal-body">
+                <p>您确定要拒绝接收以下茶叶转账吗？</p>
+                <ul class="list-unstyled">
+                    <li><strong>发送方：</strong><span id="rejectFromUser"></span></li>
+                    <li><strong>金额：</strong><span id="rejectAmount"></span></li>
+                </ul>
+                <div class="form-group">
+                    <label for="rejectReason">拒绝原因（可选）：</label>
+                    <textarea class="form-control" id="rejectReason" rows="3" placeholder="请输入拒绝原因..."></textarea>
+                </div>
+                <div class="alert alert-warning">
+                    <span class="glyphicon glyphicon-info-sign"></span>
+                    拒绝接收后，转账将被取消，发送方的茶叶将解除锁定。
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-danger" id="rejectTransferBtn">
+                    <span class="glyphicon glyphicon-remove"></span>
+                    拒绝接收
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTransferUuid = '';
+let currentTransferType = '';
+let currentTeamId = 0;
+
+function confirmTransfer(uuid, transferType, fromUser, amount, teamId) {
+    currentTransferUuid = uuid;
+    currentTransferType = transferType;
+    currentTeamId = teamId;
+    document.getElementById('confirmFromUser').textContent = fromUser;
+    document.getElementById('confirmAmount').textContent = amount;
+    $('#confirmTransferModal').modal('show');
+}
+
+function rejectTransfer(uuid, transferType, fromUser, amount, teamId) {
+    currentTransferUuid = uuid;
+    currentTransferType = transferType;
+    currentTeamId = teamId;
+    document.getElementById('rejectFromUser').textContent = fromUser;
+    document.getElementById('rejectAmount').textContent = amount;
+    document.getElementById('rejectReason').value = '';
+    $('#rejectTransferModal').modal('show');
+}
+
+// 确认接收转账
+document.getElementById('confirmTransferBtn').addEventListener('click', function() {
+    let apiUrl;
+    let requestBody = {
+        transfer_uuid: currentTransferUuid
+    };
+    
+    if (currentTransferType === 'user_to_team') {
+        apiUrl = '/v1/tea/user/transfer/confirm/user_to_team';
+        requestBody.team_id = currentTeamId;
+    } else if (currentTransferType === 'team_to_team') {
+        apiUrl = '/v1/tea/team/transfer/confirm/team_to_team';
+        requestBody.team_id = currentTeamId;
+    }
+    
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('转账确认成功！');
+            location.reload();
+        } else {
+            alert('转账确认失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('网络错误，请稍后重试');
+    });
+    $('#confirmTransferModal').modal('hide');
+});
+
+// 拒绝接收转账
+document.getElementById('rejectTransferBtn').addEventListener('click', function() {
+    const reason = document.getElementById('rejectReason').value;
+    
+    let apiUrl;
+    let requestBody = {
+        transfer_uuid: currentTransferUuid,
+        reason: reason
+    };
+    
+    if (currentTransferType === 'user_to_team') {
+        apiUrl = '/v1/tea/user/transfer/reject/user_to_team';
+        requestBody.team_id = currentTeamId;
+    } else if (currentTransferType === 'team_to_team') {
+        apiUrl = '/v1/tea/team/transfer/reject/team_to_team';
+        requestBody.team_id = currentTeamId;
+    }
+    
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('转账拒绝成功！');
+            location.reload();
+        } else {
+            alert('转账拒绝失败：' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('网络错误，请稍后重试');
+    });
+    $('#rejectTransferModal').modal('hide');
+});
+</script>
+
+{{ end }}

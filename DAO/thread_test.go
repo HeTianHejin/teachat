@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -365,7 +365,7 @@ func TestCreateRequiredThreads(t *testing.T) {
 	userId := 1
 	ctx := context.Background()
 
-	err := CreateRequiredThreads(objective, project, userId, ctx)
+	err := CreateRequiredThreads(objective, project, userId, Templates4step, ctx)
 	if err != nil {
 		t.Logf("CreateRequiredThreads() error (expected if data doesn't exist): %v", err)
 	}

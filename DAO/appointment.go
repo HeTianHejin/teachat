@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -94,7 +94,7 @@ func (t *ProjectAppointment) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `INSERT INTO project_appointments (project_id, note, start_time, end_time, place_id, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id,created_at`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -102,7 +102,7 @@ func (t *ProjectAppointment) Create(ctx context.Context) (err error) {
 	err = stmt.QueryRowContext(ctx, t.ProjectId, t.Note, t.StartTime, t.EndTime, t.PlaceId, t.PayerTeamId, t.PayerFamilyId, t.PayeeTeamId, t.PayeeFamilyId, t.VerifierUserId, t.VerifierFamilyId, t.VerifierTeamId, t.PayerUserId, t.PayeeUserId, t.Status).Scan(&t.Id, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
+			util.Debug("Query timed out", err)
 		}
 		return
 	}
@@ -113,7 +113,7 @@ func (t *ProjectAppointment) GetByIdOrUUID(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `SELECT id, uuid, project_id, note, start_time, end_time, place_id, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status, confirmed_at, rejected_at, created_at, updated_at FROM project_appointments WHERE id=$1 OR uuid=$2`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -122,7 +122,7 @@ func (t *ProjectAppointment) GetByIdOrUUID(ctx context.Context) (err error) {
 	if err != nil {
 
 		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("query ProjectAppointment timed out")
+			util.Debug("query ProjectAppointment timed out", err)
 		}
 		return err
 	}
@@ -135,7 +135,7 @@ func (t *ProjectAppointment) Update(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `UPDATE project_appointments SET note=$1, start_time=$2, end_time=$3, place_id=$4, payer_team_id=$5, payer_family_id=$6, payee_team_id=$7, payee_family_id=$8, verifier_user_id=$9, verifier_family_id=$10, verifier_team_id=$11, payer_user_id=$12, payee_user_id=$13, status=$14, confirmed_at=$15, rejected_at=$16, updated_at=$17 WHERE id=$18`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (t *ProjectAppointment) Update(ctx context.Context) (err error) {
 	_, err = stmt.ExecContext(ctx, t.Note, t.StartTime, t.EndTime, t.PlaceId, t.PayerTeamId, t.PayerFamilyId, t.PayeeTeamId, t.PayeeFamilyId, t.VerifierUserId, t.VerifierFamilyId, t.VerifierTeamId, t.PayerUserId, t.PayeeUserId, t.Status, t.ConfirmedAt, t.RejectedAt, time.Now(), t.Id)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
+			util.Debug("Query timed out", err)
 		}
 		return
 	}
@@ -167,7 +167,7 @@ func (project *Project) AppointmentStatusString(ctx context.Context) string {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	projectAppointment := ProjectAppointment{ProjectId: project.Id}
-	err := db.QueryRowContext(ctx, `select status from project_appointments where project_id = $1`, project.Id).Scan(&projectAppointment.Status)
+	err := DB.QueryRowContext(ctx, `select status from project_appointments where project_id = $1`, project.Id).Scan(&projectAppointment.Status)
 	if err != nil {
 		return "未知"
 	}
@@ -195,7 +195,7 @@ func GetAppointmentByProjectId(project_id int, ctx context.Context) (p_a Project
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `SELECT id, uuid, project_id, note, start_time, end_time, place_id, payer_team_id, payer_family_id, payee_team_id, payee_family_id, verifier_user_id, verifier_family_id, verifier_team_id, payer_user_id, payee_user_id, status, confirmed_at, rejected_at, created_at, updated_at FROM project_appointments WHERE project_id = $1`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -203,7 +203,7 @@ func GetAppointmentByProjectId(project_id int, ctx context.Context) (p_a Project
 	err = stmt.QueryRowContext(ctx, project_id).Scan(&p_a.Id, &p_a.Uuid, &p_a.ProjectId, &p_a.Note, &p_a.StartTime, &p_a.EndTime, &p_a.PlaceId, &p_a.PayerTeamId, &p_a.PayerFamilyId, &p_a.PayeeTeamId, &p_a.PayeeFamilyId, &p_a.VerifierUserId, &p_a.VerifierFamilyId, &p_a.VerifierTeamId, &p_a.PayerUserId, &p_a.PayeeUserId, &p_a.Status, &p_a.ConfirmedAt, &p_a.RejectedAt, &p_a.CreatedAt, &p_a.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			util.Debug("Query timed out")
+			util.Debug("Query timed out", err)
 		}
 		return
 	}

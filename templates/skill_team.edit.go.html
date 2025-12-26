@@ -1,0 +1,70 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+  <li><a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}">团队技能</a></li>
+  <li class="active">编辑技能记录</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-edit"></span> 编辑团队技能记录
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    <div class="well">
+      <h4>{{ .Skill.Name }}</h4>
+      <p>{{ .Skill.Description }}</p>
+      <p><strong>分类：</strong>{{ .Skill.CategoryString }}</p>
+    </div>
+
+    <form role="form" action="/v1/skill_team/edit" method="post">
+      <input type="hidden" name="id" value="{{ .SkillTeam.Id }}">
+      <input type="hidden" name="return_url" value="{{ .ReturnURL }}">
+
+      <div class="form-group">
+        <label for="level">团队掌握等级 (1-9)</label>
+        <select class="form-control" id="level" name="level" required>
+          <option value="1" {{ if eq .SkillTeam.Level 1 }}selected{{ end }}>1级 - 入门</option>
+          <option value="2" {{ if eq .SkillTeam.Level 2 }}selected{{ end }}>2级 - 初级</option>
+          <option value="3" {{ if eq .SkillTeam.Level 3 }}selected{{ end }}>3级 - 中级</option>
+          <option value="4" {{ if eq .SkillTeam.Level 4 }}selected{{ end }}>4级 - 中高级</option>
+          <option value="5" {{ if eq .SkillTeam.Level 5 }}selected{{ end }}>5级 - 高级</option>
+          <option value="6" {{ if eq .SkillTeam.Level 6 }}selected{{ end }}>6级 - 资深</option>
+          <option value="7" {{ if eq .SkillTeam.Level 7 }}selected{{ end }}>7级 - 专家</option>
+          <option value="8" {{ if eq .SkillTeam.Level 8 }}selected{{ end }}>8级 - 大师</option>
+          <option value="9" {{ if eq .SkillTeam.Level 9 }}selected{{ end }}>9级 - 宗师</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="status">团队技能状态</label>
+        <select class="form-control" id="status" name="status" required>
+          <option value="0" {{ if eq .SkillTeam.Status 0 }}selected{{ end }}>不可用 - 团队解散、设备损坏、人员离职</option>
+          <option value="1" {{ if eq .SkillTeam.Status 1 }}selected{{ end }}>低效 - 人员不足、设备老化、经验不足</option>
+          <option value="2" {{ if eq .SkillTeam.Status 2 }}selected{{ end }}>正常 - 团队正常运作水平</option>
+          <option value="3" {{ if eq .SkillTeam.Status 3 }}selected{{ end }}>高效 - 专业团队、设备先进、经验丰富</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-ok"></span> 保存
+        </button>
+        <a href="{{ if .ReturnURL }}{{ .ReturnURL }}{{ else }}/v1/skills/team_list?uuid={{ .Team.Uuid }}{{ end }}" class="btn btn-default">
+          <span class="glyphicon glyphicon-remove"></span> 取消
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：团队技能等级和状态反映了团队的整体能力水平。
+  </div>
+</div>
+
+{{ end }}

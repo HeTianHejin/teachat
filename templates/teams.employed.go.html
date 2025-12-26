@@ -1,24 +1,14 @@
 {{ define "content" }}
 
-{{/*  这是 全部已加入的茶团展示 页面  */}}
+{{/*  这是用户已加入的茶团展示 页面  */}}
 
 <ol class="breadcrumb">
-
-  <li>大堂</li>
-  <li class="active">已加入茶团@茶团</li>
-
+  <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li class="active">参与管理的团队</li>
 </ol>
 
-<div style="margin: 20px;">
-
-  <ul class="nav nav-tabs nav-justified">
-    <li role="presentation"><a href="/v1/teams/hold">我的茶团</a></li>
-    <li role="presentation"><a href="/v1/teams/joined">已进茶团</a></li>
-    <li role="presentation" class="active"><a href="/v1/teams/employed">核心管理</a></li>
-    <li role="presentation"><a href="/v1/teams/application">申请加盟</a></li>
-  </ul>
-
-</div>
+{{ template "team_nav" . }}
 
 {{ template "teams_public" .TeamBeanSlice }}
 

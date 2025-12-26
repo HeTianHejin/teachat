@@ -1,84 +1,57 @@
 {{ define "content" }}
-
 {{/* 这是家庭物资详情页面 */}}
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/goods/my">物资清单</a></li>
-    <li class="active">宝贝详情</li>
-  </ol>
+    <li><a href="/v1/family/detail?uuid={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+    <li><a href="/v1/goods/family?uuid={{ .Family.Uuid }}">装备物资</a></li>
+    <li class="active">{{ .Goods.Name }} 详情</li>
+</ol>
 
-  <div class=" media">
-    <div class="media-left">
-      <a href="#">
-        <img class="media-object" src="/v1/static/bootstrap-icons/bag.svg" alt="goods photo" width="32" height="32">
-      </a>
+{{ template "component_goods_detail" .Goods }}
+
+<!-- 家庭使用状态 -->
+<div class="panel panel-info">
+    <div class="panel-heading">
+        <h3 class="panel-title">在家庭中的使用状态</h3>
     </div>
-    <div class="media-body">
-      <h4 class="media-heading"><a href="/v1/goods/detail?id={{ .Uuid }}">
-          {{ .Name }}
-        </a></h4>
-
-      <table class="table table-bordered">
-        <colgroup>
-          <col class="col-xs-1">
-          <col class="col-xs-7">
-        </colgroup>
-       
-        <tbody>
-          <tr>
-            <th scope="row">
-               别名 
-            </th>
-            <td>{{ .Nickname }}</td>
-          </tr>
-          <tr>
-            <th scope="row">
-               用途 
-            </th>
-            <td>{{ .Applicability }}</td>
-          </tr>
-          <tr>
-            <th scope="row">
-               品牌 
-            </th>
-            <td>{{ .Brandname }}</td>
-          </tr>
-          <tr>
-            <th scope="row">
-               制造商 
-            </th>
-            <td>{{ .Manufacturer }}</td>
-          </tr>
-          <tr>
-            <th scope="row">
-               款式 
-            </th>
-            <td>{{ .Color }}</td>
-          </tr>
-          <tr>
-            <th scope="row">
-               型号 
-            </th>
-            <td>{{ .Model }}</td>
-          </tr>
-          <tr>
-            <th scope="row">
-               描述 
-            </th>
-            <td>{{ .Describe }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="panel-body">
+        <div class="row">
+            <div class="col-md-6">
+                <strong>当前状态：</strong>
+                {{ $avail := .GoodsFamily.Availability }}
+                {{ if eq $avail 0 }}
+                    <span class="label label-success">可用</span>
+                {{ else if eq $avail 1 }}
+                    <span class="label label-info">使用中</span>
+                {{ else if eq $avail 2 }}
+                    <span class="label label-default">闲置</span>
+                {{ else if eq $avail 3 }}
+                    <span class="label label-danger">已报废</span>
+                {{ else if eq $avail 4 }}
+                    <span class="label label-danger">已遗失</span>
+                {{ else if eq $avail 5 }}
+                    <span class="label label-warning">已转让</span>
+                {{ end }}
+            </div>
+            <div class="col-md-6">
+                <strong>状态更新时间：</strong>
+                {{ if .GoodsFamily.UpdatedAt }}
+                    {{ .GoodsFamily.UpdatedAt.Format "2006-01-02 15:04" }}
+                {{ else }}
+                    <span class="text-muted">未更新</span>
+                {{ end }}
+            </div>
+        </div>
     </div>
+</div>
 
-  </div>
-
-  <p>
-    <a href="#">
-      <i class="bi-clipboard-plus" style="font-size: 2rem; color: cornflowerblue;"></i>
-       收藏这货资料
+<!-- 操作按钮 -->
+<div class="text-center" style="margin-top: 20px;">
+   
+    <a href="/v1/goods/family_update?id={{ .Goods.Id }}&family_id={{ .Family.Id }}" class="btn btn-default">
+        <i class="bi-pencil"></i> 编辑家庭物资信息
     </a>
-  </p>
-
+   
+</div>
 {{ end }}

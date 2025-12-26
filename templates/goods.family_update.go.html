@@ -1,0 +1,307 @@
+{{ define "content" }}
+{{/* 这是家庭物资编辑页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/family/detail?uuid={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+    <li><a href="/v1/goods/family?uuid={{ .Family.Uuid }}">装备物资</a></li>
+    <li><a href="/v1/goods/family_detail?id={{ .Goods.Id }}&family_id={{ .Family.Id }}">{{ .Goods.Name }}</a></li>
+    <li class="active">编辑物资</li>
+</ol>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">编辑物资信息</h3>
+    </div>
+    <div class="panel-body">
+        <form action="/v1/goods/family_update" method="post" class="form-horizontal">
+            <input type="hidden" name="id" value="{{ .Goods.Id }}">
+            <input type="hidden" name="family_id" value="{{ .Family.Id }}">
+
+            <!-- 基础信息 -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">基础信息</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="goods_name" class="col-sm-2 control-label">物资名称</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="goods_name" name="goods_name" value="{{ .Goods.Name }}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="nickname" class="col-sm-2 control-label">昵称/别名</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="nickname" name="nickname" value="{{ .Goods.Nickname }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="designer" class="col-sm-2 control-label">设计者</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="designer" name="designer" value="{{ .Goods.Designer }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">物资类型</label>
+                        <div class="col-sm-10">
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="category" value="1" {{ if eq .Goods.Category 1 }}checked{{ end }} required>
+                                    实体物资（有重力）
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="category" value="0" {{ if eq .Goods.Category 0 }}checked{{ end }} required>
+                                    虚拟物资（无重力）
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">交易属性</label>
+                        <div class="col-sm-10">
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="features" value="0" {{ if eq .Goods.Features 0 }}checked{{ end }} required>
+                                    可以买卖
+                                </label>
+                            </div>
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="features" value="1" {{ if eq .Goods.Features 1 }}checked{{ end }} required>
+                                    不可交易
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="physical_state" class="col-sm-2 control-label">物理状态</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="physical_state" name="physical_state">
+                                <option value="0" {{ if eq .Goods.PhysicalState 0 }}selected{{ end }}>全新</option>
+                                <option value="1" {{ if eq .Goods.PhysicalState 1 }}selected{{ end }}>已使用</option>
+                                <option value="2" {{ if eq .Goods.PhysicalState 2 }}selected{{ end }}>磨损</option>
+                                <option value="3" {{ if eq .Goods.PhysicalState 3 }}selected{{ end }}>损坏</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="operational_state" class="col-sm-2 control-label">功能状态</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="operational_state" name="operational_state">
+                                <option value="0" {{ if eq .Goods.OperationalState 0 }}selected{{ end }}>正常</option>
+                                <option value="1" {{ if eq .Goods.OperationalState 1 }}selected{{ end }}>故障</option>
+                                <option value="2" {{ if eq .Goods.OperationalState 2 }}selected{{ end }}>维修中</option>
+                                <option value="3" {{ if eq .Goods.OperationalState 3 }}selected{{ end }}>已过期</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="availability" class="col-sm-2 control-label">可用性</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="availability" name="availability">
+                                <option value="0" {{ if eq .GoodsFamily.Availability 0 }}selected{{ end }}>可用</option>
+                                <option value="1" {{ if eq .GoodsFamily.Availability 1 }}selected{{ end }}>使用中</option>
+                                <option value="2" {{ if eq .GoodsFamily.Availability 2 }}selected{{ end }}>闲置</option>
+                                <option value="3" {{ if eq .GoodsFamily.Availability 3 }}selected{{ end }}>已报废</option>
+                                <option value="4" {{ if eq .GoodsFamily.Availability 4 }}selected{{ end }}>已遗失</option>
+                                <option value="5" {{ if eq .GoodsFamily.Availability 5 }}selected{{ end }}>已转让</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="price" class="col-sm-2 control-label">价格（元）</label>
+                        <div class="col-sm-10">
+                            <div class="input-group">
+                                <span class="input-group-addon">¥</span>
+                                <input type="number" class="form-control" id="price" name="price" 
+                                       step="0.01" min="0" value="{{ .Goods.Price }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 规格信息 -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">规格信息</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="brandname" class="col-sm-2 control-label">品牌</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="brandname" name="brandname" value="{{ .Goods.BrandName }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="model" class="col-sm-2 control-label">型号</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="model" name="model" value="{{ .Goods.Model }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="specification" class="col-sm-2 control-label">规格</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="specification" name="specification" value="{{ .Goods.Specification }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="serial_number" class="col-sm-2 control-label">序列号</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="serial_number" name="serial_number" value="{{ .Goods.SerialNumber }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="color" class="col-sm-2 control-label">颜色/款式</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="color" name="color" value="{{ .Goods.Color }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="size" class="col-sm-2 control-label">码数</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="size" name="size" value="{{ .Goods.Size }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="weight" class="col-sm-2 control-label">重量（kg）</label>
+                        <div class="col-sm-10">
+                            <input type="number" class="form-control" id="weight" name="weight" 
+                                   step="0.01" min="0" value="{{ .Goods.Weight }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="dimensions" class="col-sm-2 control-label">尺寸（长X宽X高）</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="dimensions" name="dimensions" value="{{ .Goods.Dimensions }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="material" class="col-sm-2 control-label">材质</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="material" name="material" value="{{ .Goods.Material }}" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 生产信息 -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">生产信息</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="manufacturer" class="col-sm-2 control-label">生产商</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="manufacturer" name="manufacturer" value="{{ .Goods.Manufacturer }}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="origin" class="col-sm-2 control-label">原产地</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="origin" name="origin" value="{{ .Goods.Origin }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="engine_type" class="col-sm-2 control-label">动力类型</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="engine_type" name="engine_type" value="{{ .Goods.EngineType }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="connection_type" class="col-sm-2 control-label">联网方式</label>
+                        <div class="col-sm-10">
+                            <select class="form-control" id="connection_type" name="connection_type">
+                                <option value="">-- 请选择 --</option>
+                                <option value="wifi" {{ if eq .Goods.NetworkConnectionType "wifi" }}selected{{ end }}>Wi-Fi</option>
+                                <option value="bluetooth" {{ if eq .Goods.NetworkConnectionType "bluetooth" }}selected{{ end }}>蓝牙</option>
+                                <option value="cellular" {{ if eq .Goods.NetworkConnectionType "cellular" }}selected{{ end }}>蜂窝网络</option>
+                                <option value="cable" {{ if eq .Goods.NetworkConnectionType "cable" }}selected{{ end }}>有线电缆</option>
+                                <option value="other" {{ if eq .Goods.NetworkConnectionType "other" }}selected{{ end }}>其他网络</option>
+                                <option value="none" {{ if eq .Goods.NetworkConnectionType "none" }}selected{{ end }}>无需联网</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="official_website" class="col-sm-2 control-label">厂商链接</label>
+                        <div class="col-sm-10">
+                            <input type="url" class="form-control" id="official_website" name="official_website" value="{{ .Goods.ManufacturerURL }}">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="purchase_url" class="col-sm-2 control-label">购买链接</label>
+                        <div class="col-sm-10">
+                            <input type="url" class="form-control" id="purchase_url" name="purchase_url" value="{{ .Goods.PurchaseURL }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用途描述 -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">用途描述</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label for="applicability" class="col-sm-2 control-label">主要用途</label>
+                        <div class="col-sm-10">
+                            <input type="text" class="form-control" id="applicability" name="applicability" value="{{ .Goods.Applicability }}" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="describe" class="col-sm-2 control-label">详细描述</label>
+                        <div class="col-sm-10">
+                            <textarea class="form-control" id="describe" name="describe" rows="6" required>{{ .Goods.Describe }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <button type="submit" class="btn btn-primary">保存更改</button>
+                    <a href="/v1/goods/family_detail?id={{ .Goods.Id }}&family_id={{ .Family.Id }}" class="btn btn-default">取消</a>
+                    {{ if ne .GoodsFamily.Availability 3 }}
+                    <button type="button" class="btn btn-danger pull-right" data-toggle="modal" data-target="#scrapModal">
+                        标记为报废
+                    </button>
+                    {{ end }}
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 报废确认模态框 -->
+<div class="modal fade" id="scrapModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">确认标记为报废</h4>
+            </div>
+            <div class="modal-body">
+                <p>确定要将物资 <strong>{{ .Goods.Name }}</strong> 标记为报废状态吗？</p>
+                <p class="text-danger">此操作不可逆，请谨慎操作！</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+                <form action="/v1/goods/family_scrap" method="post" style="display: inline;">
+                    <input type="hidden" name="uuid" value="{{ .Goods.Uuid }}">
+                    <input type="hidden" name="family_id" value="{{ .Family.Id }}">
+                    <button type="submit" class="btn btn-danger">确认报废</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ end }}

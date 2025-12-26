@@ -1,0 +1,47 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/manage?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+  <li class="active">邀请新人</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>搜索并邀请新成员加入茶团</strong>
+  </div>
+
+  <div class="panel-body">
+    <form role="form" action="/v1/team/search_user" method="post">
+      <input type="hidden" name="team_uuid" value="{{ .Team.Uuid }}" />
+
+      <div class="form-group">
+        <label for="search_type">搜索方式：</label>
+        <select name="search_type" class="form-control" id="search_type" required>
+          <option value="user_name">茶友花名</option>
+          <option value="user_id">茶友茶号</option>
+          <option value="user_email">茶友邮箱</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="keyword">搜索关键词：</label>
+        <input type="text" class="form-control" name="keyword" id="keyword" 
+               minlength="1" maxlength="32" placeholder="请输入搜索关键词" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <button class="btn btn-primary" type="submit">
+          <span class="glyphicon glyphicon-search"></span> 搜索
+        </button>
+        <a href="/v1/team/manage?uuid={{ .Team.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    提示：搜索到茶友后，可以向其发送加入茶团的邀请函。
+  </div>
+</div>
+
+{{ end }}

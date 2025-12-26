@@ -1,0 +1,58 @@
+
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li class="active">增加成员</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>为 {{ .Group.Name }} 集团搜索并邀请团队</strong>
+  </div>
+
+  <div class="panel-body">
+    <form role="form" action="/v1/group/search_team" method="post">
+      <input type="hidden" name="group_uuid" value="{{ .Group.Uuid }}" />
+
+      <div class="form-group">
+        <label for="radio">选择查询方式：</label>
+        <fieldset id="radio">
+          <input type="radio" name="search_type" id="team_id" style="width: fit-content;" value="team_id" />
+          <label for="team_id">团队编号</label>
+
+          <input type="radio" name="search_type" id="team_abbr" style="width: fit-content;" value="team_abbr" checked />
+          <label for="team_abbr">团队简称</label>
+        </fieldset>
+      </div>
+
+      <div class="form-group">
+        <label for="keyword">搜索关键词：</label>
+        <input type="text" class="form-control" name="keyword" id="keyword" 
+               placeholder="输入团队编号或简称" minlength="1" maxlength="32" required autofocus />
+      </div>
+
+      <div class="form-group">
+        <button class="btn btn-primary" type="submit">
+          <span class="glyphicon glyphicon-search" aria-hidden="true"></span> 查询团队
+        </button>
+      </div>
+    </form>
+
+    <hr />
+
+    <div class="alert alert-info" role="alert">
+      <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+      茶博士：如果知道团队编号，查询速度会更快。搜索到团队后，点击“邀请加入集团”按钮即可发送邀请函。
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <a href="/v1/group/detail?id={{ .Group.Uuid }}" class="btn btn-default">
+      <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span> 返回集团详情
+    </a>
+  </div>
+</div>
+
+{{ end }}

@@ -1,0 +1,177 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">技能详情</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="glyphicon glyphicon-cog"></span>
+    技能 #{{ .Skill.Id }} - {{ .Skill.Name }}
+    <span class="label label-{{ if .Skill.IsHighLevel }}success{{ else }}default{{ end }} pull-right">
+      {{ .Skill.Level }}级
+    </span>
+  </div>
+  <div class="panel-body">
+    
+    <!-- 基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>基本信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>ID</strong></td>
+            <td>{{ .Skill.Id }}</td>
+          </tr>
+          <tr>
+            <td><strong>技能名称</strong></td>
+            <td>{{ .Skill.Name }}</td>
+          </tr>
+          {{ if .Skill.Nickname }}
+          <tr>
+            <td><strong>技能别名</strong></td>
+            <td>{{ .Skill.Nickname }}</td>
+          </tr>
+          {{ end }}
+          <tr>
+            <td><strong>技能类型</strong></td>
+            <td>
+              <span class="label label-default">{{ .Skill.CategoryString }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>技能等级</strong></td>
+            <td>
+              <span class="label label-{{ if .Skill.IsHighLevel }}success{{ else }}default{{ end }}">
+                {{ .Skill.Level }}级
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>体力要求</strong></td>
+            <td>
+              <span class="label label-{{ if .Skill.IsHighStrength }}warning{{ else }}info{{ end }}">
+                {{ .Skill.StrengthLevelString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>掌握难度</strong></td>
+            <td>
+              <span class="label label-{{ if .Skill.IsHighDifficulty }}danger{{ else }}info{{ end }}">
+                {{ .Skill.DifficultyLevelString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .Skill.CreatedDateTime }}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>详细描述</h4>
+        <div class="well">
+          <p>{{ .Skill.Description }}</p>
+        </div>
+        
+        <h5>技能特征</h5>
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="text-center">
+              <h6>体力要求</h6>
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ if .Skill.IsHighStrength }}warning{{ else }}info{{ end }}" 
+                     style="width: {{ .Skill.StrengthLevel }}0%">
+                  {{ .Skill.StrengthLevelString }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-center">
+              <h6>掌握难度</h6>
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ if .Skill.IsHighDifficulty }}danger{{ else }}info{{ end }}" 
+                     style="width: {{ .Skill.DifficultyLevel }}0%">
+                  {{ .Skill.DifficultyLevelString }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-center">
+              <h6>技能等级</h6>
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ if .Skill.IsHighLevel }}success{{ else }}default{{ end }}" 
+                     style="width: {{ .Skill.Level }}0%">
+                  {{ .Skill.Level }}级
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 技能等级说明 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>技能等级说明</h4>
+        <div class="alert alert-{{ if .Skill.IsHighLevel }}success{{ else }}info{{ end }}">
+          <strong>{{ .Skill.Level }}级技能：</strong>
+          {{ if eq .Skill.Level 5 }}
+            专家级别，具备深厚的理论基础和丰富的实践经验，能够指导他人并解决复杂问题。
+          {{ else if eq .Skill.Level 4 }}
+            高级水平，能够独立完成复杂任务，具备较强的问题解决能力。
+          {{ else if eq .Skill.Level 3 }}
+            中级水平，能够熟练完成常规任务，具备一定的独立工作能力。
+          {{ else if eq .Skill.Level 2 }}
+            初级水平，掌握基本操作，能够在指导下完成任务。
+          {{ else }}
+            入门级别，刚开始学习，需要持续练习和指导。
+          {{ end }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="javascript:history.back()" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回
+      </a>
+      <button type="button" class="btn btn-info" onclick="copySkillId()">
+        <span class="glyphicon glyphicon-copy"></span> 复制ID
+      </button>
+    </div>
+  </div>
+  
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：技能是个人能力的重要体现，持续学习和实践是提升技能的关键。技能ID：{{ .Skill.Id }}
+  </div>
+</div>
+
+<script>
+  function copySkillId() {
+    var skillId = "{{ .Skill.Id }}";
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(skillId).then(function() {
+        alert('技能ID已复制到剪贴板：' + skillId);
+      });
+    } else {
+      // 兼容旧浏览器
+      var textArea = document.createElement("textarea");
+      textArea.value = skillId;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('技能ID已复制到剪贴板：' + skillId);
+    }
+  }
+</script>
+
+{{ end }}

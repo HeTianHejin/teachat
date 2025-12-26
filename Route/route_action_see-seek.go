@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 	"strconv"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
 )
@@ -31,7 +31,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -39,42 +39,42 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	// 解析表单数据
 	if err := r.ParseForm(); err != nil {
 		util.Debug(" Cannot parse form", err)
-		report(w, r, "表单数据解析失败")
+		report(w, s_u, "表单数据解析失败")
 		return
 	}
 
 	// 获取项目信息
 	projectUuid := r.FormValue("project_uuid")
 	if projectUuid == "" {
-		report(w, r, "项目信息缺失")
+		report(w, s_u, "项目信息缺失")
 		return
 	}
 
-	t_proj := data.Project{Uuid: projectUuid}
+	t_proj := dao.Project{Uuid: projectUuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", projectUuid, err)
-		report(w, r, "项目不存在")
+		report(w, s_u, "项目不存在")
 		return
 	}
 
 	// 尝试读取是否已经存在seeseek记录
-	existingSeeSeek, err := data.GetSeeSeekByProjectId(t_proj.Id, r.Context())
+	existingSeeSeek, err := dao.GetSeeSeekByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" failed to check existing see-seek by project_id", err)
-		report(w, r, "查询已有看看记录失败")
+		report(w, s_u, "查询已有看看记录失败")
 		return
 	}
 	if err == nil && existingSeeSeek.Id > 0 {
 		// 已存在看看记录
-		if existingSeeSeek.Status == data.SeeSeekStatusCompleted {
-			report(w, r, "该项目的看看记录已完成，不能重复创建")
+		if existingSeeSeek.Status == dao.SeeSeekStatusCompleted {
+			report(w, s_u, "该项目的看看记录已完成，不能重复创建")
 			return
 		}
 	}
@@ -89,7 +89,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// 验证必填字段
 	if name == "" || description == "" || startTimeStr == "" {
-		report(w, r, "请填写完整的基本信息")
+		report(w, s_u, "请填写完整的基本信息")
 		return
 	}
 
@@ -97,7 +97,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	startTime, err := time.Parse("2006-01-02T15:04", startTimeStr)
 	if err != nil {
 		util.Debug(" Cannot parse start time", startTimeStr, err)
-		report(w, r, "开始时间格式不正确")
+		report(w, s_u, "开始时间格式不正确")
 		return
 	}
 
@@ -108,14 +108,14 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// 验证环境条件必须选择
 	if environmentId <= 0 {
-		report(w, r, "请务必选择环境条件")
+		report(w, s_u, "请务必选择环境条件")
 		return
 	}
 	// 尝试查找环境条件，测试是否存在该id的环境条件记录
-	env := data.Environment{Id: environmentId}
+	env := dao.Environment{Id: environmentId}
 	if err := env.GetByIdOrUUID(); err != nil {
 		util.Debug(" Cannot get environment by id", environmentId, err)
-		report(w, r, "环境条件不存在，请确认")
+		report(w, s_u, "环境条件不存在，请确认")
 		return
 	}
 
@@ -128,7 +128,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	payeeFamilyId, _ := strconv.Atoi(r.FormValue("payee_family_id"))
 
 	// 创建SeeSeek记录
-	seeSeek := data.SeeSeek{
+	seeSeek := dao.SeeSeek{
 		Name:             name,
 		Nickname:         nickname,
 		Description:      description,
@@ -141,28 +141,28 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 		PayeeTeamId:      payeeTeamId,
 		PayeeFamilyId:    payeeFamilyId,
 		VerifierUserId:   s_u.Id,
-		VerifierFamilyId: data.FamilyIdUnknown,
-		VerifierTeamId:   data.TeamIdVerifier,
+		VerifierFamilyId: dao.FamilyIdUnknown,
+		VerifierTeamId:   dao.TeamIdVerifier,
 		Category:         category,
-		Status:           data.SeeSeekStatusInProgress, // 进行中
-		Step:             data.SeeSeekStepEnvironment,  // 步骤1：环境条件
+		Status:           dao.SeeSeekStatusInProgress, // 进行中
+		Step:             dao.SeeSeekStepEnvironment,  // 步骤1：环境条件
 		StartTime:        startTime,
 	}
 
 	if err := seeSeek.Create(r.Context()); err != nil {
 		util.Debug(" Cannot create see seek", err)
-		report(w, r, "创建看看记录失败")
+		report(w, s_u, "创建看看记录失败")
 		return
 	}
 
 	// 创建环境关联记录
-	seeSeekEnv := data.SeeSeekEnvironment{
+	seeSeekEnv := dao.SeeSeekEnvironment{
 		SeeSeekId:     seeSeek.Id,
 		EnvironmentId: environmentId,
 	}
 	if err := seeSeekEnv.Create(); err != nil {
 		util.Debug(" Cannot create see seek environment", err)
-		report(w, r, "创建环境关联记录失败")
+		report(w, s_u, "创建环境关联记录失败")
 		return
 	}
 
@@ -182,67 +182,67 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
 	if uuid == "" {
-		util.Debug(" No uuid provided in query")
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		util.Debug(" No uuid provided in query", err)
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
-	t_proj := data.Project{Uuid: uuid}
+	t_proj := dao.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
 		util.Debug(" Cannot get project by uuid", uuid, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	// 检测当前会话茶友是否见证者
 	is_verifier := isVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	//读取茶台的“约茶”资料
-	proj_appointment, err := data.GetAppointmentByProjectId(t_proj.Id, r.Context())
+	proj_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get project appointment", t_proj.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	proj_appointment_bean, err := fetchAppointmentBean(proj_appointment)
 	if err != nil {
 		util.Debug(" Cannot get project appointment bean", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	t_obje, err := t_proj.Objective()
 	if err != nil {
 		util.Debug(" Cannot get objective given proj_id", t_proj.Id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	projBean, err := fetchProjectBean(t_proj)
 	if err != nil {
 		util.Debug(" Cannot get projBean", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	objeBean, err := fetchObjectiveBean(t_obje)
 	if err != nil {
 		util.Debug(" Cannot get objeBean", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	// 检查是否已存在当前project_id的see-seek记录
-	existingSeeSeek, err := data.GetSeeSeekByProjectId(t_proj.Id, r.Context())
+	existingSeeSeek, err := dao.GetSeeSeekByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
 		util.Debug(" Cannot get existing see-seek", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	if err == nil && existingSeeSeek.Id > 0 {
@@ -253,16 +253,16 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//读取预设的4个通用场所环境,id为1,2,3,4
-	environments, err := data.GetDefaultEnvironments(r.Context())
+	environments, err := dao.GetDefaultEnvironments(r.Context())
 	if err != nil {
 		util.Debug(" Cannot get default environments", err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	// 准备页面数据
 
-	var sSDpD data.SeeSeekDetailTemplateData
+	var sSDpD dao.SeeSeekDetailTemplateData
 	sSDpD.SessUser = s_u
 	sSDpD.IsVerifier = is_verifier
 
@@ -281,7 +281,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	sSDpD.ProjectAppointment = proj_appointment_bean
 	sSDpD.Environments = environments
 
-	renderHTML(w, &sSDpD, "layout", "navbar.private", "action.see-seek.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &sSDpD, "layout", "navbar.private", "action.see-seek.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }
 
 // Handler /v1/see-seek/detail
@@ -300,52 +300,52 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	// 获取SeeSeek记录
-	seeSeek := data.SeeSeek{Uuid: uuid}
+	seeSeek := dao.SeeSeek{Uuid: uuid}
 	if err := seeSeek.GetByIdOrUUID(r.Context()); err != nil {
 		if err == sql.ErrNoRows {
 			//尝试project的uuid
-			project := data.Project{Uuid: uuid}
+			project := dao.Project{Uuid: uuid}
 			if err := project.GetByUuid(); err != nil {
 				util.Debug("Cannot get project by uuid", uuid, err)
-				report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
-			seeSeek, err = data.GetSeeSeekByProjectId(project.Id, r.Context())
+			seeSeek, err = dao.GetSeeSeekByProjectId(project.Id, r.Context())
 			if err != nil {
 				if err == sql.ErrNoRows {
-					report(w, r, "该项目还没有“看看”记录")
+					report(w, s_u, "该项目还没有“看看”记录")
 					return
 				}
 				util.Debug("Cannot get SeeSeek by project_id", project.Id, err)
-				report(w, r, "该项目的“看看”记录似乎被水泡糊了")
+				report(w, s_u, "该项目的“看看”记录似乎被水泡糊了")
 				return
 			}
 		} else {
 			util.Debug("Cannot get SeeSeek by uuid", uuid, err)
-			report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
 	}
 
 	// 获取项目信息
-	project := data.Project{Id: seeSeek.ProjectId}
+	project := dao.Project{Id: seeSeek.ProjectId}
 	if err := project.Get(); err != nil {
 		util.Debug("Cannot get project", err)
-		report(w, r, "获取项目信息失败")
+		report(w, s_u, "获取项目信息失败")
 		return
 	}
 
@@ -353,7 +353,7 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 	objective, err := project.Objective()
 	if err != nil {
 		util.Debug("Cannot get objective", err)
-		report(w, r, "获取目标信息失败")
+		report(w, s_u, "获取目标信息失败")
 		return
 	}
 
@@ -361,32 +361,32 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 	seeSeekBean, err := fetchSeeSeekBean(seeSeek)
 	if err != nil {
 		util.Debug("Cannot fetch SeeSeek bean", err)
-		report(w, r, "获取看看记录详情失败")
+		report(w, s_u, "获取看看记录详情失败")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
 		util.Debug("Cannot fetch project bean", err)
-		report(w, r, "获取项目详情失败")
+		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
 		util.Debug("Cannot fetch objective bean", err)
-		report(w, r, "获取目标详情失败")
+		report(w, s_u, "获取目标详情失败")
 		return
 	}
 
 	// 准备页面数据
-	templateData := data.SeeSeekDetailTemplateData{
-		SessUser:           user,
-		IsVerifier:         isVerifier(user.Id),
+	templateData := dao.SeeSeekDetailTemplateData{
+		SessUser:           s_u,
+		IsVerifier:         isVerifier(s_u.Id),
 		SeeSeekBean:        seeSeekBean,
 		ProjectBean:        projectBean,
 		QuoteObjectiveBean: objectiveBean,
 	}
 
-	renderHTML(w, &templateData, "layout", "navbar.private", "action.see-seek.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
+	generateHTML(w, &templateData, "layout", "navbar.private", "action.see-seek.detail", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
 }

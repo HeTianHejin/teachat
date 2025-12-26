@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -37,21 +37,21 @@ func EnvironmentNewGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	var envData struct {
-		SessUser  data.User
+		SessUser  dao.User
 		ReturnURL string
 	}
-	envData.SessUser = user
+	envData.SessUser = s_u
 	envData.ReturnURL = r.URL.Query().Get("return_url")
 
-	renderHTML(w, &envData, "layout", "navbar.private", "project.environment.new")
+	generateHTML(w, &envData, "layout", "navbar.private", "project.environment.new")
 }
 
 // POST /v1/environment/new
@@ -64,17 +64,17 @@ func EnvironmentNewPost(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	// 验证当前用户身份是否见证者茶团成员
 	if !(isVerifier(s_u.Id)) {
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
-	env := data.Environment{
+	env := dao.Environment{
 		Name:        r.PostFormValue("name"),
 		Summary:     r.PostFormValue("summary"),
 		UserId:      s_u.Id, // 记录见证者ID
@@ -95,7 +95,7 @@ func EnvironmentNewPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := env.Create(); err != nil {
 		util.Debug("Cannot create environment", err)
-		report(w, r, "创建环境条件失败，请重试。")
+		report(w, s_u, "创建环境条件失败，请重试。")
 		return
 	}
 
@@ -126,50 +126,50 @@ func EnvironmentDetailGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
-	env := data.Environment{Id: id}
+	env := dao.Environment{Id: id}
 	if err := env.GetByIdOrUUID(); err != nil {
 		util.Debug("Cannot get environment by id", id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	// 获取记录者信息
-	recorder, err := data.GetUser(env.UserId)
+	recorder, err := dao.GetUser(env.UserId)
 	if err != nil {
 		util.Debug("Cannot get recorder user", env.UserId, err)
 		// 如果获取记录者失败，使用默认值
-		recorder = data.User{Id: 0, Name: "未知用户"}
+		recorder = dao.User{Id: 0, Name: "未知用户"}
 	}
 
 	var envData struct {
-		SessUser    data.User
-		Environment data.Environment
-		Recorder    data.User
+		SessUser    dao.User
+		Environment dao.Environment
+		Recorder    dao.User
 	}
-	envData.SessUser = user
+	envData.SessUser = s_u
 	envData.Environment = env
 	envData.Recorder = recorder
 
-	renderHTML(w, &envData, "layout", "navbar.private", "project.environment.detail")
+	generateHTML(w, &envData, "layout", "navbar.private", "project.environment.detail")
 }
 
 func parseInt(s string) int {

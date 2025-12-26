@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -18,7 +18,7 @@ type LastQuery struct {
 // Create() 新建一条 LastQuery记录
 func (lq *LastQuery) Create() (err error) {
 	statement := `INSERT INTO last_queries (user_id, path, query, query_at) VALUES ($1, $2, $3, $4) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -33,7 +33,7 @@ func (lq *LastQuery) Create() (err error) {
 // Get() 读取一条 LastQuery记录
 func (lq *LastQuery) Get() (err error) {
 	statement := `SELECT id, user_id, path, query, query_at FROM last_queries WHERE user_id = $1 ORDER BY query_at DESC LIMIT 1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -48,23 +48,21 @@ func (lq *LastQuery) Get() (err error) {
 // AcceptObject 友邻蒙评对象
 type AcceptObject struct {
 	Id         int
-	ObjectType int // 1:茶话会，2:茶台， 3:茶议，4: 品味， 5:茶团
+	ObjectType int // 1:茶话会，2:茶台， 3:茶议，4: 品味， 5:茶团， 6:集团
 	ObjectId   int
-
-	// 页面动态数据,不存储到数据库中
-	// PageData AcceptObjectPageData
 }
 
 const (
-	AcceptObjectTypeOb = 1 //objective
-	AcceptObjectTypePr = 2 //project
-	AcceptObjectTypeTh = 3 //thread
-	AcceptObjectTypePo = 4 //post
-	AcceptObjectTypeTe = 5 //team
+	AcceptObjectTypeObjective = iota + 1 //objective （目标）
+	AcceptObjectTypeProject              //project （项目）
+	AcceptObjectTypeThread               //thread （茶议）
+	AcceptObjectTypePost                 //post （品味）
+	AcceptObjectTypeTeam                 //team （茶团）
+	AcceptObjectTypeGroup                //group（集团）
 )
 
-// 用户新消息统计
-type NewMessageCount struct {
+// 用户新通知统计
+type NewNotificationCount struct {
 	Id     int
 	UserId int
 	Count  int
@@ -86,7 +84,7 @@ type Acceptance struct {
 // Create() Acceptance新建一条 友邻蒙评 记录
 func (a *Acceptance) Create() (err error) {
 	statement := `INSERT INTO acceptances (accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -100,7 +98,7 @@ func (a *Acceptance) Create() (err error) {
 // Update() 根据id更新一条友邻蒙评 Y记录
 func (a *Acceptance) Update() (err error) {
 	statement := `UPDATE acceptances SET y_accept = $1, y_user_id = $2, y_accepted_at = $3 WHERE id = $4`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -114,7 +112,7 @@ func (a *Acceptance) Update() (err error) {
 
 // Get() 获取一条友友邻蒙评记录
 func (a *Acceptance) Get() (err error) {
-	err = db.QueryRow(`SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at FROM acceptances WHERE id = $1`, a.Id).Scan(&a.Id, &a.AcceptObjectId, &a.XAccept, &a.XUserId, &a.XAcceptedAt, &a.YAccept, &a.YUserId, &a.YAcceptedAt)
+	err = DB.QueryRow(`SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at FROM acceptances WHERE id = $1`, a.Id).Scan(&a.Id, &a.AcceptObjectId, &a.XAccept, &a.XUserId, &a.XAcceptedAt, &a.YAccept, &a.YUserId, &a.YAcceptedAt)
 	if err != nil {
 		return err
 	}
@@ -130,7 +128,7 @@ func (a *Acceptance) GetByAcceptObjectId() (Acceptance, error) {
               FROM acceptances 
               WHERE accept_object_id = $1`
 
-	row := db.QueryRowContext(ctx, query, a.AcceptObjectId)
+	row := DB.QueryRowContext(ctx, query, a.AcceptObjectId)
 	var acceptance Acceptance
 	err := row.Scan(&acceptance.Id, &acceptance.AcceptObjectId, &acceptance.XAccept, &acceptance.XUserId, &acceptance.XAcceptedAt, &acceptance.YAccept, &acceptance.YUserId, &acceptance.YAcceptedAt)
 	if err != nil {
@@ -142,7 +140,7 @@ func (a *Acceptance) GetByAcceptObjectId() (Acceptance, error) {
 // Create（） AcceptObject新建一条蒙评接纳对象的记录
 func (a *AcceptObject) Create() (err error) {
 	statement := `INSERT INTO accept_objects (object_type, object_id) VALUES ($1, $2) RETURNING id`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -156,7 +154,7 @@ func (a *AcceptObject) Create() (err error) {
 
 // Get() 据id获取友邻蒙评对象
 func (a *AcceptObject) Get() (err error) {
-	err = db.QueryRow(`SELECT id, object_type, object_id FROM accept_objects WHERE id = $1`, a.Id).Scan(&a.Id, &a.ObjectType, &a.ObjectId)
+	err = DB.QueryRow(`SELECT id, object_type, object_id FROM accept_objects WHERE id = $1`, a.Id).Scan(&a.Id, &a.ObjectType, &a.ObjectId)
 	if err != nil {
 		return err
 	}
@@ -209,10 +207,10 @@ func (ao *AcceptObject) GetObjectByACId() (object any, err error) {
 	}
 }
 
-// 创建一个消息计数
-func (m *NewMessageCount) Save() error {
-	statement := `INSERT INTO new_message_counts (user_id, count) VALUES ($1, $2)`
-	stmt, err := db.Prepare(statement)
+// 创建一个通知计数
+func (m *NewNotificationCount) Save() error {
+	statement := `INSERT INTO new_notification_counts (user_id, count) VALUES ($1, $2)`
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -224,10 +222,10 @@ func (m *NewMessageCount) Save() error {
 	return nil
 }
 
-// update(） 修改一个消息计数
-func (m *NewMessageCount) Update() error {
-	statement := `UPDATE new_message_counts SET count = $1 WHERE id = $2`
-	stmt, err := db.Prepare(statement)
+// update(） 修改一个通知计数
+func (m *NewNotificationCount) Update() error {
+	statement := `UPDATE new_notification_counts SET count = $1 WHERE id = $2`
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -239,38 +237,38 @@ func (m *NewMessageCount) Update() error {
 	return nil
 }
 
-// 根据.UserId获取用户新消息的消息计数
-func (m *NewMessageCount) GetByUserId() error {
-	err := db.QueryRow(`SELECT id, count FROM new_message_counts WHERE user_id = $1`, m.UserId).Scan(&m.Id, &m.Count)
+// 根据.UserId获取用户新通知的通知计数
+func (m *NewNotificationCount) GetByUserId() error {
+	err := DB.QueryRow(`SELECT id, count FROM new_notification_counts WHERE user_id = $1`, m.UserId).Scan(&m.Id, &m.Count)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// 检查new_message_counts表里是否已经存在用户id，返回bool，true为存在
-func (m *NewMessageCount) Check() (valid bool, err error) {
-	err = db.QueryRow("SELECT EXISTS(SELECT 1 FROM new_message_counts WHERE user_id = $1)", m.UserId).Scan(&valid)
+// 检查new_notification_counts表里是否已经存在用户id，返回bool，true为存在
+func (m *NewNotificationCount) Check() (valid bool, err error) {
+	err = DB.QueryRow("SELECT EXISTS(SELECT 1 FROM new_notification_counts WHERE user_id = $1)", m.UserId).Scan(&valid)
 	if err != nil {
 		return false, err
 	}
 	return valid, nil
 }
 
-// GetUserMessage() 获取用户消息数
-func (user *User) GetNewMessageCount() (count int, err error) {
-	err = db.QueryRow(`SELECT count FROM new_message_counts WHERE user_id = $1`, user.Id).Scan(&count)
+// GetUserNotification() 获取用户通知数
+func (user *User) GetNewNotificationCount() (count int, err error) {
+	err = DB.QueryRow(`SELECT count FROM new_notification_counts WHERE user_id = $1`, user.Id).Scan(&count)
 	if err != nil {
 		return 0, err
 	}
 	return count, err
 }
 
-// 根据count是否大于0来判断是否有未读消息
-func (user *User) HasUnreadMessage() (has bool) {
-	// 友邻蒙评未读消息数量
-	count1, _ := user.GetNewMessageCount()
-	// 邀请函未读消息数量
+// 根据count是否大于0来判断是否有未读通知
+func (user *User) HasUnreadNotification() (has bool) {
+	// 友邻蒙评未读通知数量
+	count1, _ := user.GetNewNotificationCount()
+	// 邀请函未读通知数量
 	count2 := user.InvitationUnviewedCount()
 
 	count := count1 + count2
@@ -278,37 +276,37 @@ func (user *User) HasUnreadMessage() (has bool) {
 	return count > 0
 }
 
-// AddNewUserMessages() 添加一条用户新信息数
-// 首先检查new_message_counts记录里是否已经存在用户id，
+// AddNewUserNotifications() 添加一条用户新通知数
+// 首先检查new_notification_counts记录里是否已经存在用户id，
 // 如果没有，执行save()，如果有，执行update()
-func AddUserMessageCount(user_id int) error {
-	messageCount := NewMessageCount{
+func AddUserNotificationCount(user_id int) error {
+	notificationCount := NewNotificationCount{
 		UserId: user_id,
 	}
 	// 这里检查是否存在此用户记录
-	exists, err := messageCount.Check()
+	exists, err := notificationCount.Check()
 	if err != nil {
 		return err
 	}
 
 	if exists {
 		// User record exists, update the count +1
-		if err := messageCount.GetByUserId(); err != nil {
+		if err := notificationCount.GetByUserId(); err != nil {
 			return err
 		}
-		messageCount.Count += 1
-		return messageCount.Update()
+		notificationCount.Count += 1
+		return notificationCount.Update()
 	} else {
 		// User record doesn't exist, create a new one
-		messageCount.Count = 1
-		return messageCount.Save()
+		notificationCount.Count = 1
+		return notificationCount.Save()
 	}
 
 }
 
-// SubtractUserMessageCount() 减去通知小黑板上用户1消息数
-func SubtractUserMessageCount(user_id int) error {
-	mesC := NewMessageCount{
+// SubtractUserNotificationCount() 减去通知小黑板上用户1通知数
+func SubtractUserNotificationCount(user_id int) error {
+	mesC := NewNotificationCount{
 		UserId: user_id,
 	}
 
@@ -316,13 +314,13 @@ func SubtractUserMessageCount(user_id int) error {
 		// 不存在，返回错误
 		return err
 	}
-	// 存在，-1消息记录，执行update()
+	// 存在，-1通知记录，执行update()
 	if err := mesC.GetByUserId(); err != nil {
 		return err
 	}
 
 	if mesC.Count <= 0 {
-		return errors.New("error in the number of messages, The number of messages must not be negative")
+		return errors.New("error in the number of notifications, The number of notifications must not be negative")
 	}
 
 	mesC.Count -= 1
@@ -341,5 +339,10 @@ const (
 	SearchTypePlaceName       = 5  // 按茶室地方名称查询
 	SearchTypeEnvironment     = 6  // 按环境条件名称查询
 	SearchTypeHazard          = 7  // 按隐患名称查询
+	SearchTypeRisk            = 8  //按风险名称查询
+	SearchTypeGoods           = 9  // 按物资名称查询
 	SearchTypeUserId          = 10 // 按用户id查询
+	SearchTypeSkill           = 11 // 按技能名称查询
+	SearchTypeMagic           = 12 // 按法力名称查询
+	SearchTypeFamilyName      = 13 // 按家庭名称查询
 )

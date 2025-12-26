@@ -1,0 +1,127 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">新建视觉证据</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">新建视觉证据</h3>
+  </div>
+  <div class="panel-body">
+    <form id="evidenceForm" method="post" action="/v1/evidence/new" enctype="multipart/form-data" class="form-horizontal">
+      
+      <div class="form-group">
+        <label for="description" class="col-sm-2 control-label">可视凭据描述 *</label>
+        <div class="col-sm-10">
+          <textarea class="form-control" name="description" id="description" rows="3" 
+                    placeholder="描述这个证据的内容和用途" required minlength="5" maxlength="500"></textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="category" class="col-sm-2 control-label">凭据类型 *</label>
+        <div class="col-sm-10">
+          <select class="form-control" name="category" id="category" required>
+            <option value="1">图片</option>
+            <option value="2">视频</option>
+            <option value="3">音频</option>
+            <option value="4">其他</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="file" class="col-sm-2 control-label">上传文件</label>
+        <div class="col-sm-10">
+          <input type="file" class="form-control" name="file" id="file" 
+                 accept="image/*,video/*,audio/*">
+          <small class="help-block">支持图片、视频、音频文件，最大10MB</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="col-sm-2 control-label">或</label>
+        <div class="col-sm-10">
+          <p class="form-control-static">填写外部链接</p>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="original_url" class="col-sm-2 control-label">原始URL</label>
+        <div class="col-sm-10">
+          <input type="url" class="form-control" name="original_url" id="original_url" 
+                 placeholder="https://example.com/file.jpg" maxlength="500">
+          <small class="help-block">如果证据存储在外部，请填写URL地址</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="note" class="col-sm-2 control-label">备注说明</label>
+        <div class="col-sm-10">
+          <textarea class="form-control" name="note" id="note" rows="2" 
+                    placeholder="特别说明或补充信息" maxlength="500"></textarea>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="visibility" class="col-sm-2 control-label">可见性 *</label>
+        <div class="col-sm-10">
+          <select class="form-control" name="visibility" id="visibility" required>
+            <option value="0">公开</option>
+            <option value="1">私有</option>
+          </select>
+          <small class="help-block">私有证据仅当事家庭/团队可见</small>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">
+            <span class="glyphicon glyphicon-save"></span> 保存证据
+          </button>
+          <button type="button" class="btn btn-default" onclick="window.close()">取消</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：视觉证据用于记录和证明手工艺作业的真实性。
+  </div>
+</div>
+
+<script>
+document.getElementById('evidenceForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  
+  var formData = new FormData(this);
+  
+  fetch('/v1/evidence/new', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('证据创建成功！ID: ' + data.id);
+      if (window.opener) {
+        // 如果是弹窗打开的，通知父窗口
+        window.opener.postMessage({type: 'evidenceCreated', id: data.id}, '*');
+        window.close();
+      } else {
+        window.location.href = '/v1/';
+      }
+    } else {
+      alert('创建失败：' + (data.message || '未知错误'));
+    }
+  })
+  .catch(error => {
+    alert('创建失败：' + error);
+  });
+});
+</script>
+
+{{ end }}

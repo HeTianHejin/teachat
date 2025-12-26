@@ -39,7 +39,7 @@ type Configuration struct {
 	MaxTeamMembers         int64 // 团队最大成员数
 	MaxTeamsCount          int64 // 个人创建的团队数上限
 	MaxSurvivalTeams       int64 // 个人最大活跃团队数
-	PoliteMode             bool  // Debug模式
+	PoliteMode             bool  // Debug模式(是否启用“友邻蒙评”审茶)
 	DefaultSearchResultNum int64 // 默认搜索结果数
 
 	// SysMail_Username string
@@ -125,4 +125,10 @@ func PrintStdout(a ...any) {
 func FileExist(path string) bool {
 	_, err := os.Lstat(path)
 	return !os.IsNotExist(err)
+}
+
+// FormatFloat 格式化浮点数，保留指定位数小数
+func FormatFloat(num float64, precision int) string {
+	format := fmt.Sprintf("%%.%df", precision)
+	return fmt.Sprintf(format, num)
 }

@@ -1,4 +1,4 @@
-package data
+package dao
 
 // 某个茶话页面渲染所需的动态数据
 type PublicPData struct {
@@ -10,8 +10,8 @@ type PublicPData struct {
 type ObjectiveDetail struct {
 	SessUser User // 当前会话用户
 	//IsAuthor   bool // 是否为作者
-	IsAdmin    bool // 是否为管理员
-	IsMaster   bool // 是否为管理员
+	IsAdmin    bool // 是否为茶围目标管理员
+	IsMaster   bool // 是否为茶台项目管理员
 	IsVerifier bool // 是否为见证员
 	IsGuest    bool // 是否为游客
 	IsInvited  bool // 是否受邀请茶友
@@ -76,8 +76,8 @@ type ProjectBean struct {
 // 某个茶台详情页面渲染所需的动态数据
 type ProjectDetail struct {
 	SessUser                 User   // 当前会话用户
-	IsAdmin                  bool   // 是否为茶围管理员
-	IsMaster                 bool   // 是否为茶台管理员
+	IsAdmin                  bool   // 是否为茶围目标管理员
+	IsMaster                 bool   // 是否为茶台项目管理员
 	IsVerifier               bool   // 是否为见证员
 	IsInvited                bool   // 是否受邀请茶友
 	IsGuest                  bool   // 是否为游客
@@ -102,12 +102,13 @@ type ProjectDetail struct {
 	ThreadCount           int // project下所有Threads个数
 	ThreadIsApprovedCount int //project（茶台）已采纳茶议数量
 
-	IsAppointmentCompleted bool // 约茶是否完成
-	IsSeeSeekCompleted     bool // 看看是否完成
-	IsBrainFireCompleted   bool // 脑火是否完成
-	IsSuggestionCompleted  bool // 建议是否完成
-	IsGoodsReady           bool // 物资是否备齐
-	IsHandicraftCompleted  bool // 手工艺是否完成
+	IsAppointmentCompleted    bool // 约茶是否完成
+	IsSeeSeekCompleted        bool // 看看是否完成
+	IsBrainFireCompleted      bool // 脑火是否完成
+	IsSuggestionCompleted     bool // 建议是否完成
+	IsGoodsReadinessCompleted bool // 物资是否完成
+
+	IsHandicraftsCompleted bool // 手工艺是否全部完成
 
 	IsOverTwelve bool //是否超过12个
 }
@@ -164,12 +165,12 @@ type ThreadDetail struct {
 
 	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
-	Appointment ProjectAppointment // 约茶
-	SeeSeek     SeeSeek            // 看看
-	BrainFire   BrainFire          //脑火
-	Suggestion  Suggestion         //建议
-	Goods       Goods              //物资
-	Handicraft  Handicraft         //手工艺
+	Appointment               ProjectAppointment // 约茶
+	SeeSeek                   SeeSeek            // 看看
+	BrainFire                 BrainFire          //脑火
+	Suggestion                Suggestion         //建议
+	IsGoodsReadinessCompleted bool               //物资已备齐
+	IsHandicraftsCompleted    bool               // 所有手工艺已完成
 
 	StatsSet StatsSet //涉及人事统计值集合
 }
@@ -203,12 +204,12 @@ type ThreadSupplement struct {
 	PostBeanSlice      []PostBean // 普通跟贴豆荚队列
 	PostBeanAdminSlice []PostBean //茶围管理团队回复切片
 
-	Appointment ProjectAppointment // 约茶状态
-	SeeSeek     SeeSeek            // SeeSeek
-	BrainFire   BrainFire
-	Suggestion  Suggestion
-	Goods       Goods
-	Handicraft  Handicraft
+	Appointment               ProjectAppointment // 约茶状态
+	SeeSeek                   SeeSeek            // SeeSeek
+	BrainFire                 BrainFire
+	Suggestion                Suggestion
+	IsGoodsReadinessCompleted bool
+	Handicraft                Handicraft
 }
 
 // 用于跟贴详情页面渲染
@@ -216,9 +217,9 @@ type PostDetail struct {
 	SessUser                 User     // 当前会话用户
 	IsGuest                  bool     // 是否为游客
 	IsAuthor                 bool     // 是否为品味作者
-	IsAdmin                  bool     // 是否为茶围管理成员
-	IsMaster                 bool     // 是否为茶台管理成员
-	IsVerifier               bool     // 是否为见证员
+	IsAdmin                  bool     // 是否为茶围（目标）管理成员
+	IsMaster                 bool     // 是否为茶台（项目）管理成员
+	IsVerifier               bool     // 是否为见证团队成员
 	SessUserDefaultFamily    Family   // 当前会话用户默认&家庭茶团
 	SessUserSurvivalFamilies []Family // 当前会话用户全部&家庭茶团
 	SessUserDefaultTeam      Team
@@ -254,10 +255,11 @@ type IndexPageData struct {
 	ThreadBeanSlice []ThreadBean // Threads和作者资料荚
 }
 
-// 接纳茶语消息页面数据
-type AcceptMessagePageData struct {
-	SessUser           User
-	AcceptMessageSlice []AcceptMessage
+// 接纳茶语通知页面数据
+type AcceptNotificationPageData struct {
+	SessUser                   User
+	AcceptNotificationSlice    []AcceptNotification
+	GroupInvitationUnreadCount int
 }
 
 // 接纳茶语对象页面数据

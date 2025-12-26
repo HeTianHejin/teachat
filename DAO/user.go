@@ -1,11 +1,9 @@
-package data
+package dao
 
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
-	util "teachat/Util"
 	"time"
 )
 
@@ -29,14 +27,34 @@ type User struct {
 	Query     string //查询参数
 }
 
+// 系统预设用户ID常量
 const (
-	UserId_None              = 0
-	UserId_Captain_Spaceship = 1
-	UserId_Verifier          = 67 // 见证团队代表人id
+	UserId_None              = 0 //
+	UserId_Captain_Spaceship = 1 // 太空船长
+	UserId_Verifier          = 2 // 见证团队代表人id
 )
-const sessionDuration = 7 * 24 * time.Hour
+
+// 系统预设“游客”用户
+var UserUnknown = User{
+	Id:   UserId_None,
+	Uuid: "x",
+	Name: "游客",
+}
+
+// 系统预设用户UUID常量
+const (
+	UserUUIDCaptain  = "396d7fac-2f29-44a7-7f77-63cbaf423438"
+	UserUUIDVerifier = "070a7e98-d5ab-4506-4e59-093a053bc32b"
+	UserUUIDUnknown  = "x"
+)
 
 var UserRole = map[string]string{
+	"captain": "太空船长",
+
+	// 茶博士 ——古时专指陆羽。陆羽著《茶经》，唐德宗李适曾当面称陆羽为“茶博士”。
+	// 茶博士 -teaOffice，是古代中华传统文化对茶馆工作人员的昵称，如：富家宴会，犹有专供茶事之人，谓之茶博士。——唐代《西湖志馀》
+	// 现在多指精通茶艺的师傅，尤其是四川的长嘴壶茶艺，茶博士个个都是身怀绝技的“高手”。
+	"teaoffice":    "茶博士",
 	"traveller":    "太空旅客",
 	"hijacker":     "劫机者",
 	"zebra":        "莽撞者",
@@ -46,6 +64,9 @@ var UserRole = map[string]string{
 
 const (
 	// 用户角色
+	User_Role_Captain      = "captain"      //太空船长
+	User_Role_TeaOffice    = "teaoffice"    //茶博士
+	User_Role_Verifier     = "verifier"     //见证者
 	User_Role_Traveller    = "traveller"    //太空普通旅客
 	User_Role_Hijacker     = "hijacker"     //劫机者
 	User_Role_Zebra        = "zebra"        //莽撞者
@@ -61,7 +82,7 @@ const (
 func SearchUserByNameKeyword(keyword string, limit int, ctx context.Context) ([]User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := db.QueryContext(ctx, "SELECT * FROM users WHERE name LIKE $1 Limit $2", "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT * FROM users WHERE name LIKE $1 Limit $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -92,34 +113,6 @@ type UserUnactivated struct {
 	Avatar    string
 }
 
-// 朋友
-type Friend struct {
-	Id                int
-	Uuid              string
-	UserId            int
-	FriendUserId      int    //朋友的用户号
-	Nickname          string //绰号，备注名
-	Note              string //备注事项
-	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
-	IsRival           bool   //是否竞争对手
-	CreatedAt         time.Time
-	UpdatedAt         *time.Time
-}
-
-// fans 粉丝
-type Fan struct {
-	Id                int
-	Uuid              string
-	UserId            int
-	FanUserId         int
-	Nickname          string //绰号，备注名
-	Note              string //备注事项
-	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
-	IsBlackSlice      bool   //是否黑名单
-	CreatedAt         time.Time
-	UpdatedAt         *time.Time
-}
-
 // follow 关注的
 type Follow struct {
 	Id                int
@@ -132,16 +125,6 @@ type Follow struct {
 	IsDisdain         bool   //是否鄙视，蔑视
 	CreatedAt         time.Time
 	UpdatedAt         *time.Time
-}
-
-// 会话
-type Session struct {
-	Id        int
-	Uuid      string
-	Email     string
-	UserId    int
-	CreatedAt time.Time
-	Gender    int
 }
 
 // 用户的星标本（收藏夹），收藏的茶议=3或者茶话会=1/茶台=2/茶团=5，甚至是品味post=4
@@ -160,140 +143,17 @@ type UserStar struct {
 // 茶议=3或者茶话会=1,茶台=2,茶团=5，品味post=4， 好东西=6，魔法=7，宝物=8，
 // 未知=9=？
 var ObjectName = map[int]string{
-	1: "objective",
-	2: "project",
-	3: "thread",
-	4: "post",
-	5: "team",
-	6: "goody",
-	7: "magic",
-	8: "treasure",
-	9: "?",
-}
-
-// Create a new session for an existing user
-func (user *User) CreateSession() (session Session, err error) {
-	statement := "INSERT INTO sessions (uuid, email, user_id, created_at, gender) VALUES ($1, $2, $3, $4 ,$5) RETURNING id, uuid, email, user_id, created_at, gender"
-	stmt, err := db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-
-	// use QueryRow to return a row and scan the returned id into the Session struct
-	err = stmt.QueryRow(Random_UUID(), user.Email, user.Id, time.Now(), user.Gender).Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
-	return
-}
-
-// Get the session for an existing user
-func (user *User) Session() (session Session, err error) {
-	session = Session{}
-	err = db.QueryRow("SELECT id, uuid, email, user_id, created_at, gender FROM sessions WHERE user_id = $1", user.Id).
-		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
-	return
-}
-
-// 删除用户的session
-func (user *User) DeleteSession() (err error) {
-	statement := /* sql */ "DELETE FROM sessions WHERE user_id = $1"
-	stmt, err := db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(user.Id)
-	return
-}
-
-// Check if session is valid in the database
-func (session *Session) Check() (bool, error) {
-	err := db.QueryRow(
-		"SELECT id, uuid, email, user_id, created_at, gender FROM sessions WHERE uuid = $1",
-		session.Uuid,
-	).Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.Gender)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return false, nil // 会话不存在不算错误
-		}
-		return false, fmt.Errorf("database query failed: %w", err)
-	}
-
-	if session.Id == 0 {
-		return false, nil
-	}
-
-	expiryTime := session.CreatedAt.Add(sessionDuration)
-	if time.Now().Before(expiryTime) {
-		return true, nil
-	}
-
-	// 会话过期
-	if err := session.Delete(); err != nil {
-		util.Debug("failed to delete expired session: %v", err)
-	}
-	return false, nil
-}
-
-// 检查登录口令是否正确
-func CheckWatchword(watchword string) (valid bool, err error) {
-	watchword_db := Watchword{}
-	err = db.QueryRow("SELECT id, word FROM watchwords WHERE word = $1 ", watchword).Scan(&watchword_db.Id, &watchword_db.Word)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			valid = false
-			return valid, err
-		} else {
-			valid = false
-			return
-		}
-
-	}
-	if watchword_db.Word == watchword {
-		valid = true
-		return
-	} else {
-		valid = false
-		return
-	}
-
-}
-
-// Delete session from database
-func (session *Session) Delete() (err error) {
-	statement := "delete from sessions where uuid = $1"
-	stmt, err := db.Prepare(statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(session.Uuid)
-	return
-}
-
-// Get the user from the session
-func (session *Session) User() (user User, err error) {
-	//user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", session.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
-	return
-}
-
-// get the number of threads  by a user
-func (user *User) NumThreads() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM threads where user_id = $1", user.Id)
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		if err = rows.Scan(&count); err != nil {
-			return
-		}
-	}
-	rows.Close()
-	return
+	1:  "objective",
+	2:  "project",
+	3:  "thread",
+	4:  "post",
+	5:  "team",
+	6:  "goods",
+	7:  "magic",
+	8:  "skill",
+	9:  "family",
+	10: "user",
+	//...
 }
 
 // Create a new user, save user info into the database
@@ -303,7 +163,7 @@ func (user *User) Create() (err error) {
 	// information from postgres.
 
 	statement := "INSERT INTO users (uuid, name, email, password, created_at, biography, role, gender, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -317,7 +177,7 @@ func (user *User) Create() (err error) {
 // UpdateUserNameAndBiography user information in the database
 func UpdateUserNameAndBiography(user_id int, user_name string, user_biography string) (err error) {
 	statement := "UPDATE users SET name = $2, biography = $3, updated_at = $4 where id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -330,7 +190,7 @@ func UpdateUserNameAndBiography(user_id int, user_name string, user_biography st
 // 修改数据库中用户身份（角色）
 func (user *User) UpdateRole() (err error) {
 	statement := "UPDATE users SET role = $2, updated_at = $3 where id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -343,7 +203,7 @@ func (user *User) UpdateRole() (err error) {
 // Update user avatar in the database
 func (user *User) UpdateAvatar() (err error) {
 	statement := "UPDATE users SET avatar = $2, updated_at = $3 where id = $1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -358,7 +218,7 @@ func GetUserByEmail(email string, ctx context.Context) (user User, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	user = User{}
-	err = db.QueryRowContext(ctx, "SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", email).
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", email).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
@@ -370,7 +230,7 @@ func UserExistByEmail(email string) (exist bool, err error) {
 	var count int
 
 	// 执行查询并捕获错误
-	err = db.QueryRow(query, email).Scan(&count)
+	err = DB.QueryRow(query, email).Scan(&count)
 	if err != nil {
 		// 包装原始错误，添加更多上下文信息
 		return false, fmt.Errorf("查询邮箱存在性失败: %v, 查询: %q, 参数: %s", err, query, email)
@@ -379,63 +239,67 @@ func UserExistByEmail(email string) (exist bool, err error) {
 	return count > 0, nil
 }
 
-// Get a single user given the ID
-func UserById(id int) (user User, err error) {
+// Get a single user given the UUID or id
+func GetUserByID(uuid string) (user User, err error) {
+	if uuid == "" {
+		return user, fmt.Errorf("uuid is empty")
+	}
+	// 先以uuid查询，如果不存在，再以id查询
 	user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", id).
+	err = DB.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE uuid = $1", uuid).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
-	return
-}
-
-// Get a single user given the UUID
-func GetUserByUUID(uuid string) (user User, err error) {
-	user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE uuid = $1", uuid).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = DB.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", uuid).
+				Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+		} else {
+			return user, fmt.Errorf("查询用户失败:参数: %s, %v", uuid, err)
+		}
+	}
 	return
 }
 
 // 根据管理员的UserId查询其user对象
 func (administrator *Administrator) User() (user User, err error) {
 	user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", administrator.UserId).
+	err = DB.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", administrator.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 
 	return
 }
 
 // Get the user who created the objective
-// 获取创建茶话会的用户，即围主代表
-func (o *Objective) User() (user User, err error) {
+// 获取创建茶话会的用户，茶围作者（撰写人），目标主理人
+func (o *Objective) Admin() (user User, err error) {
 	user = User{}
-	db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", o.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
-	return
-}
-
-// Get the user who created the thread
-func (t *Thread) User() (user User, err error) {
-	user = User{}
-	db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", t.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
-	return
-}
-
-// Get the user who wrote the post
-func (post *Post) User() (user User, err error) {
-	user = User{}
-	db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", post.UserId).
+	DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", o.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
 
 // get the user who created this project
-// 获取创建该茶台（项目）的用户，即台主代表
-func (project *Project) User() (user User, err error) {
+// 获取创建该茶台（项目）的用户（撰写人），即项目主理人
+func (project *Project) Master() (user User, err error) {
 	user = User{}
-	db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", project.UserId).
+	DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", project.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 
+	return
+}
+
+// Get the user who created the thread
+func (t *Thread) Author() (user User, err error) {
+	user = User{}
+	DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", t.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	return
+}
+
+// Get the user who wrote the post
+func (post *Post) Author() (user User, err error) {
+	user = User{}
+	DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", post.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
 
@@ -443,29 +307,14 @@ func (project *Project) User() (user User, err error) {
 // AWS CodeWhisperer assist in writing
 func (team *Team) Founder() (user User, err error) {
 	user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
 
 // UserCount（）获取注册用户数
 func UserCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM users")
-	if err != nil {
-		return
-	}
-	for rows.Next() {
-		if err = rows.Scan(&count); err != nil {
-			return
-		}
-	}
-	rows.Close()
-	return
-}
-
-// SessionCount() 获取session数
-func SessionCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM sessions")
+	rows, err := DB.Query("SELECT count(*) FROM users")
 	if err != nil {
 		return
 	}
@@ -484,7 +333,7 @@ func Get2GenderRandomSUserIdExceptId(id int) (user_ids []int, err error) {
 
 	// 先随机获取一个在线女士id
 	statement := "SELECT user_id FROM sessions WHERE id != $1 AND gender = 0 ORDER BY RANDOM()"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -497,7 +346,7 @@ func Get2GenderRandomSUserIdExceptId(id int) (user_ids []int, err error) {
 
 	// 再随机获取一个在线男士id
 	statement = "SELECT user_id FROM sessions WHERE id != $1 AND gender = 1 ORDER BY RANDOM()"
-	stmt, err = db.Prepare(statement)
+	stmt, err = DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -517,7 +366,7 @@ func Get2GenderRandomUserIdExceptId(id int) (user_ids []int, err error) {
 
 	// 先随机获取一个女士id
 	statement := "SELECT id FROM users WHERE id != $1 AND gender = 0 ORDER BY RANDOM()"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -530,7 +379,7 @@ func Get2GenderRandomUserIdExceptId(id int) (user_ids []int, err error) {
 
 	// 再随机获取一个男士id
 	statement = "SELECT user_id FROM users WHERE id != $1 AND gender = 1 ORDER BY RANDOM()"
-	stmt, err = db.Prepare(statement)
+	stmt, err = DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -548,7 +397,7 @@ func Get2GenderRandomUserIdExceptId(id int) (user_ids []int, err error) {
 func Get2RandomSUserIdExceptId(id int) (user_ids []int, err error) {
 	user_ids = []int{}
 	statement := "SELECT user_id FROM sessions WHERE id != $1 ORDER BY RANDOM() LIMIT 2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -571,7 +420,7 @@ func Get2RandomSUserIdExceptId(id int) (user_ids []int, err error) {
 func Get2RandomUserExceptId(id int) (users []User, err error) {
 	users = []User{}
 	statement := "SELECT user_id FROM users WHERE id != $1 ORDER BY RANDOM() LIMIT 2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -600,7 +449,7 @@ func Get2RandomUserExceptId(id int) (users []User, err error) {
 func Get2RandomUserId() (user_ids []int, err error) {
 	user_ids = []int{}
 	statement := "SELECT id FROM users ORDER BY RANDOM() LIMIT 2"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -622,7 +471,7 @@ func Get2RandomUserId() (user_ids []int, err error) {
 // GetUser() Get a single user given the id
 func GetUser(id int) (user User, err error) {
 	user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", id).
+	err = DB.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", id).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
@@ -631,7 +480,7 @@ func GetUser(id int) (user User, err error) {
 // 根据邀请函的邮箱获取受邀请人资料
 func (invitation *Invitation) ToUser() (user User, err error) {
 	user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", invitation.InviteEmail).
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", invitation.InviteEmail).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
@@ -640,7 +489,7 @@ func (invitation *Invitation) ToUser() (user User, err error) {
 // AWS CodeWhisperer assist in writing
 func (team_member *TeamMember) User() (user User, err error) {
 	user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team_member.UserId).
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team_member.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
@@ -652,15 +501,15 @@ func (invitation *Invitation) TeamFounder() (user User, err error) {
 	if err != nil {
 		return
 	}
-	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
 
 // 获取撰写邀请函的茶团时任CEO（原撰写人），可能不是现任CEO
-func (invitation *Invitation) AuthorCEO() (user User, err error) {
+func (invitation *Invitation) Author() (user User, err error) {
 	user = User{}
-	err = db.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", invitation.AuthorUserId).
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", invitation.AuthorUserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
 }
@@ -668,7 +517,7 @@ func (invitation *Invitation) AuthorCEO() (user User, err error) {
 // 根据invite_email查询一个User收到的全部邀请函数量
 // AWS CodeWhisperer assist in writing
 func (user *User) InvitationsCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM invitations WHERE invite_email = $1", user.Email)
+	rows, err := DB.Query("SELECT count(*) FROM invitations WHERE invite_email = $1", user.Email)
 	if err != nil {
 		return
 	}
@@ -681,10 +530,10 @@ func (user *User) InvitationsCount() (count int) {
 	return
 }
 
-// ��据invite_email查询一个User收到的未查看class=0请函数量
+// 据invite_email查询一个User收到的未查看class=0请函数量
 // AWS CodeWhisperer assist in writing
 func (user *User) InvitationUnviewedCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 0", user.Email)
+	rows, err := DB.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 0", user.Email)
 	if err != nil {
 		return
 	}
@@ -700,7 +549,7 @@ func (user *User) InvitationUnviewedCount() (count int) {
 // 根据invite_email查询一个User收到的已查看class=1邀请函数量
 // AWS CodeWhisperer assist in writing
 func (user *User) InvitationViewedCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 1", user.Email)
+	rows, err := DB.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 1", user.Email)
 	if err != nil {
 		return
 	}
@@ -716,7 +565,7 @@ func (user *User) InvitationViewedCount() (count int) {
 // 根据invite_email查询一个User收到的已接受邀请class=2邀请函数量
 // AWS CodeWhisperer assist in writing
 func (user *User) InvitationAcceptedCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 2", user.Email)
+	rows, err := DB.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 2", user.Email)
 	if err != nil {
 		return
 	}
@@ -729,10 +578,10 @@ func (user *User) InvitationAcceptedCount() (count int) {
 	return
 }
 
-// ��据invite_email查询一个User收到的已拒绝邀请class=3邀请函数量
+// 据invite_email查询一个User收到的已拒绝邀请class=3邀请函数量
 // AWS CodeWhisperer assist in writing
 func (user *User) InvitationRejectedCount() (count int) {
-	rows, err := db.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 3", user.Email)
+	rows, err := DB.Query("SELECT count(*) FROM invitations WHERE invite_email = $1 AND status = 3", user.Email)
 	if err != nil {
 		return
 	}

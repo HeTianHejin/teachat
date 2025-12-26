@@ -1,4 +1,6 @@
 {
-    "window.density.editorTabHeight": "default",
-    "Codegeex.RepoIndex": true
+    "go.lintTool": "staticcheck",
+    "gopls": {
+        "ui.diagnostic.staticcheck": false,
+    }
 }

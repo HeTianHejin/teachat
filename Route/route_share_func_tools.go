@@ -12,14 +12,14 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 	"text/template"
 	"unicode/utf8"
 )
 
 // 处理器把页面模版和需求数据揉合后，由这个方法，将填写好的页面“制作“成HTML格式，调用http响应方法，发送给浏览器端客户
-func renderHTML(w http.ResponseWriter, template_data any, filenames ...string) {
+func generateHTML(w http.ResponseWriter, template_data any, filenames ...string) {
 	var files []string
 	for _, file := range filenames {
 		files = append(files, fmt.Sprintf("templates/%s.go.html", file))
@@ -27,7 +27,7 @@ func renderHTML(w http.ResponseWriter, template_data any, filenames ...string) {
 
 	// 创建模板并添加自定义函数
 	tmpl := template.New("layout").Funcs(template.FuncMap{
-		"GetEnvironmentLevelDescription": data.GetEnvironmentLevelDescription,
+		"GetEnvironmentLevelDescription": dao.GetEnvironmentLevelDescription,
 		"GetStarIcons": func(level int) string {
 			if level < 1 || level > 5 {
 				return ""
@@ -38,12 +38,45 @@ func renderHTML(w http.ResponseWriter, template_data any, filenames ...string) {
 			}
 			return stars
 		},
-		"RiskSeverityLevelString": data.RiskSeverityLevelString,
+		"RiskSeverityLevelString": dao.RiskSeverityLevelString,
+		"AvailabilityString":      dao.GoodsAvailabilityString,
 		"mul": func(a, b int) int {
 			return a * b
 		},
-		"sub": func(a, b int) int {
+		"sub": func(a, b float64) float64 {
 			return a - b
+		},
+		"subtract": func(a, b int) int {
+			return a - b
+		},
+		"add": func(a, b int) int {
+			return a + b
+		},
+		"max": func(a, b int) int {
+			if a > b {
+				return a
+			}
+			return b
+		},
+		"min": func(a, b int) int {
+			if a < b {
+				return a
+			}
+			return b
+		},
+		"seq": func(start, end int) []int {
+			var items []int
+			for i := start; i <= end; i++ {
+				items = append(items, i)
+			}
+			return items
+		},
+		"iterate": func(count int) []int {
+			var items []int
+			for i := 0; i < count; i++ {
+				items = append(items, i)
+			}
+			return items
 		},
 		"split": func(s, sep string) []string {
 			return strings.Split(s, sep)
@@ -51,6 +84,7 @@ func renderHTML(w http.ResponseWriter, template_data any, filenames ...string) {
 		"trim": func(s string) string {
 			return strings.TrimSpace(s)
 		},
+		"FormatFloat": util.FormatFloat,
 	})
 
 	// 手动解析模板并处理错误
@@ -82,15 +116,12 @@ func isEmail(email string) bool {
 	return reg.MatchString(email)
 }
 
-// // 验证提交的string是否 1 正整数？
-// func verifyPositiveIntegerFormat(str string) bool {
-// 	if str == "" {
-// 		return false
-// 	}
-// 	pattern := `^[1-9]\d*$`
-// 	reg := regexp.MustCompile(pattern)
-// 	return reg.MatchString(str)
-// }
+// 验证用户名，只允许字母、数字、下划线或中文字符，正确返回true，错误返回false。
+func isValidUserName(name string) bool {
+	pattern := `^[a-zA-Z0-9_\p{Han}]+$`
+	reg := regexp.MustCompile(pattern)
+	return reg.MatchString(name)
+}
 
 // 验证id_slice，必需是非零正整数而且不重复的逗号分隔的"2,19,87..."字符串格式，是否正确，正确返回true，错误返回false。
 // 预编译正则表达式提高性能（deepSeek.com）
@@ -180,20 +211,6 @@ func progressRound(numerator, denominator int) int {
 		return 100
 	}
 	ratio := float64(numerator) / float64(denominator) * 100
-
-	// if numerator > denominator {
-	// 	// 分子大于分母时，表示统计数据输入错误，返回一个中间值
-	// 	return 50
-	// } else if ratio < 0 {
-	// 	// 分子小于分母且比例为负数，表示统计数据输入错误，返回一个中间值
-	// 	return 50
-	// } else if ratio < 1 {
-	// 	// 比例小于1时，返回最低限度值1
-	// 	return 1
-	// }
-
-	// 其他情况，使用math.Floor确保向下取整，然后四舍五入
-	//return int(math.Floor(ratio + 0.5))
 	return int(math.Round(ratio))
 }
 
@@ -223,61 +240,10 @@ func getWidthHeightForJpeg(imgBytes []byte) (int, int, error) {
 	return width, height, nil
 }
 
-// randomInt() 生成count个随机且不重复的整数，范围在[start, end)之间，按升序排列
-// func randomInt(start, end, count int) []int {
-// 	// 检查参数有效性
-// 	if count <= 0 || start >= end {
-// 		return nil
-// 	}
-
-// 	// 初始化包含所有可能随机数的切片
-// 	nums := make([]int, end-start)
-// 	for i := range nums {
-// 		nums[i] = start + i
-// 	}
-
-// 	// 使用Fisher-Yates洗牌算法打乱切片顺序
-// 	r := mrand.New(mrand.NewSource(time.Now().UnixNano()))
-// 	for i := len(nums) - 1; i > 0; i-- {
-// 		j := r.Intn(i + 1)
-// 		nums[i], nums[j] = nums[j], nums[i]
-// 	}
-
-// 	// 切片只需要前count个元素
-// 	nums = nums[:count]
-
-// 	// 对切片进行排序
-// 	sort.Ints(nums)
-
-// 	return nums
-// }
-
-// // 生成“火星文”替换下标队列
-// func staRepIntSlice(str_len, ratio int) (numSlice []int, err error) {
-
-// 	half := str_len / 2
-// 	substandard := str_len * ratio / 100
-// 	// 存放结果的slice
-// 	numSlice = make([]int, str_len)
-
-// 	// 随机生成替换下标
-// 	switch {
-// 	case ratio < 50:
-// 		numSlice = []int{}
-// 		return numSlice, errors.New("ratio must be not less than 50")
-// 	case ratio == 50:
-// 		numSlice = randomInt(0, str_len, half)
-// 	case ratio > 50:
-// 		numSlice = randomInt(0, str_len, substandard)
-// 	}
-
-// 	return
-// }
-
 // 1. 校验茶议已有内容是否不超限,false == 超限
-func submitAdditionalContent(w http.ResponseWriter, r *http.Request, body, additional string) bool {
+func submitAdditionalContent(w http.ResponseWriter, s_u dao.User, body, additional string) bool {
 	if cnStrLen(body) >= int(util.Config.ThreadMaxWord) {
-		report(w, r, "已有内容已超过最大字数限制，无法补充。")
+		report(w, s_u, "已有内容已超过最大字数限制，无法补充。")
 		return false
 	}
 
@@ -291,7 +257,7 @@ func submitAdditionalContent(w http.ResponseWriter, r *http.Request, body, addit
 			"茶博士提示：补充内容需满足：%d ≤ 字数 ≤ %d（当前：%d）。",
 			min, max, current,
 		)
-		report(w, r, errMsg)
+		report(w, s_u, errMsg)
 		return false
 	}
 	// 3. 校验补充内容是否包含敏感词
@@ -303,28 +269,6 @@ func submitAdditionalContent(w http.ResponseWriter, r *http.Request, body, addit
 func cnStrLen(str string) int {
 	return utf8.RuneCountInString(str)
 }
-
-// // 对未经蒙评的草稿进行“火星文”遮盖隐秘处理，即用星号替换50%或者指定更高比例文字
-// func marsString(str string, ratio int) string {
-// 	len := cnStrLen(str)
-// 	// 获取替换字符的下标队列
-// 	nslice, err := staRepIntSlice(len, ratio)
-// 	if err != nil {
-// 		return str
-// 	}
-// 	// 把字符串转换为[]rune
-// 	rstr := []rune(str)
-// 	// 遍历替换字符的下标队列
-
-// 	for _, n := range nslice {
-// 		// 替换下标指定的字符为星号
-// 		rstr[n] = '*'
-// 	}
-
-// 	// 将[]rune转换为字符串
-
-// 	return string(rstr)
-// }
 
 // 入参string，截取前面一段指定长度文字，返回string，作为预览文字
 // CodeBuddy修改
@@ -348,29 +292,6 @@ func subStr(s string, length int) string {
 	return s[:end+size]
 }
 
-// 截取一段指定开始和结束位置的文字，用range迭代方法。入参string，返回string“...”
-// 注意，输入负数=最大值
-// func subStr2(str string, start, end int) string {
-
-// 	//str += "." //这是根据range的特性加的，如果不加，截取不到最后一个字（end+1=意外，因为1中文=3字节！）
-
-// 	var cnt, s, e int
-// 	for s = range str {
-// 		if cnt == start {
-// 			break
-// 		}
-// 		cnt++
-// 	}
-// 	cnt = 0
-// 	for e = range str {
-// 		if cnt == end {
-// 			break
-// 		}
-// 		cnt++
-// 	}
-// 	return str[s:e]
-// }
-
 // sanitizeRedirectPath 只允许站内路径（如 /v1/home），禁止外部域名
 // --- DeeSeek
 func sanitizeRedirectPath(inputPath string) string {
@@ -393,24 +314,24 @@ func sanitizeRedirectPath(inputPath string) string {
 }
 
 // Helper function for validating string length
-func validateCnStrLen(value string, min int, max int, fieldName string, w http.ResponseWriter, r *http.Request) bool {
+func validateCnStrLen(value string, min int, max int, fieldName string, w http.ResponseWriter, s_u dao.User) bool {
 	if cnStrLen(value) < min {
-		report(w, r, fmt.Sprintf("你好，茶博士竟然说该茶议%s为空或太短，请确认后再试一次。", fieldName))
+		report(w, s_u, fmt.Sprintf("你好，茶博士竟然说该茶议%s为空或太短，请确认后再试一次。", fieldName))
 		return false
 	}
 	if cnStrLen(value) > max {
-		report(w, r, fmt.Sprintf("你好，茶博士竟然说该茶议%s过长，请确认后再试一次。", fieldName))
+		report(w, s_u, fmt.Sprintf("你好，茶博士竟然说该茶议%s过长，请确认后再试一次。", fieldName))
 		return false
 	}
 	return true
 }
 
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
-func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) error {
+func processUploadAvatar(w http.ResponseWriter, r *http.Request, s_u dao.User, uuid string) error {
 	// 从请求中解包出单个上传文件
 	file, fileHeader, err := r.FormFile("avatar")
 	if err != nil {
-		report(w, r, "获取头像文件失败，请稍后再试。")
+		report(w, s_u, "获取头像文件失败，请稍后再试。")
 		return err
 	}
 	// 确保文件在函数执行完毕后关闭
@@ -419,17 +340,17 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	// 获取文件大小，注意：客户端提供的文件大小可能不准确
 	size := fileHeader.Size
 	if size > 30*1024 {
-		report(w, r, "文件大小超过30kb,茶博士接不住。")
+		report(w, s_u, "文件大小超过30kb,茶博士接不住。")
 		return errors.New("the file size over 30kb")
 	}
 	// 实际读取文件大小进行校验，以防止客户端伪造
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		report(w, r, "读取头像文件失败，请稍后再试。")
+		report(w, s_u, "读取头像文件失败，请稍后再试。")
 		return err
 	}
 	if len(fileBytes) > 30*1024 {
-		report(w, r, "文件大小超过30kb,茶博士接不住。")
+		report(w, s_u, "文件大小超过30kb,茶博士接不住。")
 		return errors.New("the file size over 30kb")
 	}
 
@@ -437,25 +358,25 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	filename := fileHeader.Filename
 	ext := strings.ToLower(path.Ext(filename))
 	if ext != ".jpeg" && ext != ".jpg" {
-		report(w, r, "注意头像图片文件类型, 目前仅限jpeg格式图片上传。")
+		report(w, s_u, "注意头像图片文件类型, 目前仅限jpeg格式图片上传。")
 		return errors.New("the file type is not jpeg")
 	}
 
 	// 获取文件类型，注意：客户端提供的文件类型可能不准确
 	fileType := http.DetectContentType(fileBytes)
 	if fileType != "image/jpeg" {
-		report(w, r, "注意图片文件类型,目前仅限jpeg格式。")
+		report(w, s_u, "注意图片文件类型,目前仅限jpeg格式。")
 		return errors.New("the file type is not jpeg")
 	}
 
 	// 检测图片尺寸宽高和图像格式,判断是否合适
 	width, height, err := getWidthHeightForJpeg(fileBytes)
 	if err != nil {
-		report(w, r, "注意图片文件格式, 目前仅限jpeg格式。")
+		report(w, s_u, "注意图片文件格式, 目前仅限jpeg格式。")
 		return err
 	}
 	if width < 32 || width > 64 || height < 32 || height > 64 {
-		report(w, r, "注意图片尺寸, 宽高需要在32-64像素之间。")
+		report(w, s_u, "注意图片尺寸, 宽高需要在32-64像素之间。")
 		return errors.New("the image size is not between 32 and 64")
 	}
 
@@ -464,7 +385,7 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	newFile, err := os.Create(newFilePath)
 	if err != nil {
 		util.Debug("创建头像文件名失败", err)
-		report(w, r, "创建头像文件失败，请稍后再试。")
+		report(w, s_u, "创建头像文件失败，请稍后再试。")
 		return err
 	}
 	// 确保文件在函数执行完毕后关闭
@@ -474,24 +395,25 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, uuid string) er
 	buff := bufio.NewWriter(newFile)
 	if _, err = buff.Write(fileBytes); err != nil {
 		util.Debug("fail to write avatar image", err)
-		report(w, r, "你好，茶博士居然说没有墨水了， 未能写完头像文件，请稍后再试。")
+		report(w, s_u, "你好，茶博士居然说没有墨水了， 未能写完头像文件，请稍后再试。")
 		return err
 	}
 	if err = buff.Flush(); err != nil {
 		util.Debug("fail to write avatar image", err)
-		report(w, r, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
+		report(w, s_u, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
 		return err
 	}
 
 	return nil
 }
 
-// 茶博士——古时专指陆羽。陆羽著《茶经》，唐德宗李适曾当面称陆羽为“茶博士”。
-// 茶博士-teaOffice，是古代中华传统文化对茶馆工作人员的昵称，如：富家宴会，犹有专供茶事之人，谓之茶博士。——唐代《西湖志馀》
-// 现在多指精通茶艺的师傅，尤其是四川的长嘴壶茶艺，茶博士个个都是身怀绝技的“高手”。
-// 茶博士向茶客报告信息的方法，包括但不限于意外事件和通知、感谢等等提示。
-func report(w http.ResponseWriter, r *http.Request, msg ...any) {
-	var userBPD data.UserBean
+// 茶博士向茶客回话的方法，包括但不限于意外事件和通知、感谢等等提示。
+func report(w http.ResponseWriter, s_u dao.User, msg ...any) {
+	type uM struct {
+		SessUser dao.User
+		Message  string
+	}
+	m := uM{}
 	var b strings.Builder
 	for i, arg := range msg {
 		if i > 0 {
@@ -499,77 +421,39 @@ func report(w http.ResponseWriter, r *http.Request, msg ...any) {
 		}
 		fmt.Fprint(&b, arg)
 	}
-	userBPD.Message = b.String()
+	m.Message = b.String()
 
-	s, err := session(r)
-	if err != nil {
-		userBPD.SessUser = data.User{
-			Id:   data.UserId_None,
-			Name: "游客",
-		}
-		renderHTML(w, &userBPD, "layout", "navbar.public", "feedback")
-		return
+	if s_u.Id > 0 {
+		m.SessUser = s_u
+	} else {
+		m.SessUser = dao.UserUnknown
 	}
-	s_u, err := s.User()
-	if err != nil {
-		util.Debug("Cannot get user from session", s.Email, err)
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	userBPD.SessUser = s_u
 
-	renderHTML(w, &userBPD, "layout", "navbar.private", "feedback")
+	generateHTML(w, &m, "layout", "navbar.private", "feedback")
 }
 
 // Checks if the user is logged in and has a session, if not err is not nil
-func session(r *http.Request) (data.Session, error) {
+func session(r *http.Request) (dao.Session, error) {
 	cookie, err := r.Cookie("_cookie")
 	if err != nil {
-		return data.Session{}, fmt.Errorf("cookie not found: %w", err)
+		return dao.Session{}, fmt.Errorf("cookie not found: %w", err)
 	}
 
-	sess := data.Session{Uuid: cookie.Value}
+	sess := dao.Session{Uuid: cookie.Value}
 	ok, checkErr := sess.Check()
 	if checkErr != nil {
-		return data.Session{}, fmt.Errorf("session check failed: %w", checkErr)
+		return dao.Session{}, fmt.Errorf("session check failed: %w", checkErr)
 	}
 	if !ok {
-		return data.Session{}, errors.New("invalid or expired session")
+		return dao.Session{}, errors.New("invalid or expired session")
 	}
 
 	return sess, nil
 }
 
-// parse HTML templates
-// pass in a slice of file names, and get a template
-// func parseTemplateFiles(filenames ...string) *template.Template {
-// 	var files []string
-// 	t := template.New("layout")
-// 	for _, file := range filenames {
-// 		// 使用 filepath.Join 安全拼接路径,unix+windows
-// 		filePath := filepath.Join(util.Config.TemplateExt, file+util.Config.TemplateExt)
-// 		files = append(files, filePath)
-// 	}
-// 	t = template.Must(t.ParseFiles(files...))
-// 	return t
-// }
-
-// 记录用户最后的查询路径和参数
-// func recordLastQueryPath(sess_user_id int, path, raw_query string) (err error) {
-// 	lq := data.LastQuery{
-// 		UserId: sess_user_id,
-// 		Path:   path,
-// 		Query:  raw_query,
-// 	}
-// 	if err = lq.Create(); err != nil {
-// 		return err
-// 	}
-// 	return
-// }
-
-func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]data.TeamBean, error) {
-	newSlice := make([]data.TeamBean, 0, len(teamSlice))
-	var defaultTeam *data.TeamBean
+func moveDefaultTeamToFront(teamSlice []dao.TeamBean, defaultTeamID int) ([]dao.TeamBean, error) {
+	newSlice := make([]dao.TeamBean, 0, len(teamSlice))
+	var defaultTeam *dao.TeamBean
 
 	// 分离默认团队和其他团队
 	for _, tb := range teamSlice {
@@ -585,26 +469,26 @@ func moveDefaultTeamToFront(teamSlice []data.TeamBean, defaultTeamID int) ([]dat
 	}
 
 	// 合并结果（默认团队在前）
-	return append([]data.TeamBean{*defaultTeam}, newSlice...), nil
+	return append([]dao.TeamBean{*defaultTeam}, newSlice...), nil
 }
 
 // validateTeamAndFamilyParams 验证团队和家庭ID参数的合法性
 // 返回: (是否有效, 错误) ---deepseek协助优化
-func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, currentUserID int, w http.ResponseWriter, r *http.Request) (bool, error) {
+func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, s_u dao.User, w http.ResponseWriter) (bool, error) {
 
 	// 基本参数检查（这些检查不涉及数据库操作）
 	//非法id组合
-	if family_id == data.FamilyIdUnknown && team_id == data.TeamIdNone {
-		report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+	if family_id == dao.FamilyIdUnknown && team_id == dao.TeamIdNone {
+		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return false, nil
 	}
-	if team_id == data.TeamIdNone || team_id == data.TeamIdSpaceshipCrew {
-		report(w, r, "指定的团队编号是保留编号，不能使用。")
+	if team_id == dao.TeamIdNone || team_id == dao.TeamIdSpaceshipCrew {
+		report(w, s_u, "指定的团队编号是保留编号，不能使用。")
 		return false, nil
 	}
 
 	if team_id < 0 || family_id < 0 {
-		report(w, r, "团队ID不合法。")
+		report(w, s_u, "团队ID不合法。")
 		return false, nil
 	}
 
@@ -612,57 +496,57 @@ func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, cu
 	//所以可以同时指定两者,符合任何人必然有某个家庭，但不一定有事业团队背景的实际情况
 	if is_private {
 		// 管理权属于家庭
-		if family_id == data.FamilyIdUnknown {
-			report(w, r, "你好，四海为家者今天不能发布新茶语，请明天再试。")
+		if family_id == dao.FamilyIdUnknown {
+			report(w, s_u, "你好，四海为家者今天不能发布新茶语，请明天再试。")
 			return false, fmt.Errorf("unknown family #%d cannot do this", family_id)
 		}
-		family := data.Family{Id: family_id}
+		family := dao.Family{Id: family_id}
 		// if err := family.Get(); err != nil {
 		// 	return false, err // 数据库错误，返回error
 		// }
 		isOnlyOne, err := family.IsOnlyOneMember()
 		if err != nil {
 			util.Debug("Cannot count family member given id", family.Id, err)
-			report(w, r, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+			report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 			return false, err
 		}
 		if isOnlyOne {
-			report(w, r, "根据“慎独”约定，单独成员家庭目前暂时不能品茶噢，请向船长抗议。")
+			report(w, s_u, "根据“慎独”约定，单独成员家庭目前暂时不能品茶噢，请向船长抗议。")
 			return false, fmt.Errorf("onlyone member family #%d cannot do this", family_id)
 		}
 
-		is_member, err := family.IsMember(currentUserID)
+		is_member, err := family.IsMember(s_u.Id)
 		if err != nil {
 			return false, err // 数据库错误，返回error
 		}
 		if !is_member {
-			report(w, r, "你好，家庭成员资格检查失败，请确认后再试。")
+			report(w, s_u, "你好，家庭成员资格检查失败，请确认后再试。")
 			return false, fmt.Errorf(" team %d id_member check failed", team_id)
 		}
 	} else {
 		// 管理权属于团队
-		if team_id == data.TeamIdNone || team_id == data.TeamIdSpaceshipCrew {
-			report(w, r, "你好，特殊团队今天还不能创建茶话会，请稍后再试。")
+		if team_id == dao.TeamIdNone || team_id == dao.TeamIdSpaceshipCrew {
+			report(w, s_u, "你好，特殊团队今天还不能创建茶话会，请稍后再试。")
 			return false, fmt.Errorf("special team #%d cannot do this", team_id)
 		}
 		//声明是四海为家【与家庭背景（责任）无关】
-		if team_id == data.TeamIdFreelancer {
+		if team_id == dao.TeamIdFreelancer {
 			//既隐藏家庭背景，也不声明团队的“独狼”
 			// 违背了“慎独”原则
-			report(w, r, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜发表茶话。")
+			report(w, s_u, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜发表茶话。")
 			return false, nil
 		}
 
-		team := data.Team{Id: team_id}
+		team := dao.Team{Id: team_id}
 		// if err := team.Get(); err != nil {
 		// 	return false, err // 数据库错误，返回error
 		// }
-		is_member, err := team.IsMember(currentUserID)
+		is_member, err := team.IsMember(s_u.Id)
 		if err != nil {
 			return false, err // 数据库错误，返回error
 		}
 		if !is_member {
-			report(w, r, "你好，眼前无路想回头，您是什么团成员？什么茶话会？请稍后再试。")
+			report(w, s_u, "你好，眼前无路想回头，您是什么团成员？什么茶话会？请稍后再试。")
 			return false, nil
 		}
 

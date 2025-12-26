@@ -1,0 +1,184 @@
+{{ define "content" }}
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/project/detail?uuid={{ .Project.Uuid }}">{{ .Project.Title }} #{{ .Project.Id }} 茶台</a></li>
+    <li class="active">添加项目物资</li>
+</ol>
+
+<style>
+    .required-field::after {
+        content: " *";
+        color: red;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        display: none;
+    }
+
+    .was-validated .form-control:invalid~.invalid-feedback {
+        display: block;
+    }
+
+    .was-validated .form-control:invalid {
+        border-color: #dc3545;
+    }
+</style>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">为项目 "{{ .Project.Title }}" 添加物资【*必填】</h3>
+    </div>
+    <div class="panel-body">
+        <form role="form" action="/v1/goods/project_new" method="post" id="projectGoodsForm" novalidate>
+
+            <input type="hidden" name="project_id" value="{{ .Project.Id }}">
+
+            <!-- 选择物资 -->
+            <div class="form-group">
+                <label class="required-field">选择物资：</label>
+                <!-- 出茶方物资 -->
+                {{ if .GoodsSlicePayer }}
+                <div class="panel panel-success" style="margin-bottom: 10px;">
+                    <div class="panel-heading" style="padding: 5px 10px;">
+                        <h4 class="panel-title" style="font-size: 14px;">出茶方可用物资</h4>
+                    </div>
+                    <div class="panel-body" style="padding: 10px;">
+                        {{ range .GoodsSlicePayer }}
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="goods_id" value="{{ .Id }}" data-provider-type="1" required>
+                                {{ .Name }} ({{ .Nickname }}) - {{ .Describe }}
+                            </label>
+                        </div>
+                        {{ end }}
+                    </div>
+                </div>
+                {{ end }}
+                <!-- 收茶方物资 -->
+                {{ if .GoodsSlicePayee }}
+                <div class="panel panel-info" style="margin-bottom: 10px;">
+                    <div class="panel-heading" style="padding: 5px 10px;">
+                        <h4 class="panel-title" style="font-size: 14px;">收茶方可用物资</h4>
+                    </div>
+                    <div class="panel-body" style="padding: 10px;">
+                        {{ range .GoodsSlicePayee }}
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="goods_id" value="{{ .Id }}" data-provider-type="2" required>
+                                {{ .Name }} ({{ .Nickname }}) - {{ .Describe }}
+                            </label>
+                        </div>
+                        {{ end }}
+                    </div>
+                </div>
+                {{ end }}
+
+                <input type="hidden" name="provider_type" id="provider_type" value="">
+                <small class="text-muted">请从收茶方或出茶方的可用物资中选择一项</small>
+                <div class="invalid-feedback">请选择一个物资</div>
+            </div>
+
+    <!-- 数量 -->
+    <div class="form-group">
+        <label for="quantity" class="required-field">数量：</label>
+        <input type="number" class="form-control" name="quantity" id="quantity" min="1" max="999999" required>
+        <small class="text-muted">请输入正整数</small>
+        <div class="invalid-feedback">请输入有效的数量（1-999999）</div>
+    </div>
+
+    <!-- 物资类别 -->
+    <div class="form-group">
+        <label class="required-field">物资类别：</label>
+        <div class="radio">
+            <label>
+                <input type="radio" name="category" value="2"  required>
+                投入物资（消耗型）
+            </label>
+        </div>
+        <div class="radio">
+            <label>
+                <input type="radio" name="category" value="1" required>
+                工具物资（重复使用型）
+            </label>
+        </div>
+        <div class="invalid-feedback">请选择物资类别</div>
+    </div>
+
+    <!-- 责任人ID -->
+    <div class="form-group">
+        <label for="responsible_user_id" class="required-field">责任人ID：</label>
+        <input type="number" class="form-control" name="responsible_user_id" id="responsible_user_id" min="1" required>
+        <small class="text-muted">请输入负责此物资的用户ID</small>
+        <div class="invalid-feedback">请输入有效的责任人ID</div>
+    </div>
+
+    <!-- 预期用途 -->
+    <div class="form-group">
+        <label for="expected_usage">预期用途：</label>
+        <textarea class="form-control" name="expected_usage" id="expected_usage" rows="3" maxlength="456"
+            placeholder="描述此物资在项目中的预期用途..."></textarea>
+        <small class="text-muted">最多456字</small>
+    </div>
+
+    <!-- 备注 -->
+    <div class="form-group">
+        <label for="notes">备注：</label>
+        <textarea class="form-control" name="notes" id="notes" rows="2" maxlength="456"
+            placeholder="其他备注信息...（例如：出茶叶方提供）"></textarea>
+        <small class="text-muted">最多456字</small>
+    </div>
+
+    <!-- 提交按钮 -->
+    <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">添加物资</button>
+        <a href="/v1/project/detail?id={{ .Project.Uuid }}" class="btn btn-default">取消</a>
+    </div>
+    </form>
+</div>
+</div>
+
+<!-- 表单验证脚本 -->
+<script>
+    // 处理物资选择和提供方类型
+    document.querySelectorAll('input[name="goods_id"]').forEach(function(radio) {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                var providerType = this.getAttribute('data-provider-type');
+                document.getElementById('provider_type').value = providerType;
+            }
+        });
+    });
+
+    document.getElementById('projectGoodsForm').addEventListener('submit', function(event) {
+        var form = this;
+        var providerTypeField = document.getElementById('provider_type');
+        
+        // 检查是否选择了物资和提供方类型
+        if (!providerTypeField.value) {
+            event.preventDefault();
+            alert('请选择一个物资');
+            return;
+        }
+        
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            var invalidFields = form.querySelectorAll(':invalid');
+            if (invalidFields.length > 0) {
+                invalidFields[0].focus();
+                invalidFields[0].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+            form.classList.add('was-validated');
+        }
+    }, false);
+</script>
+
+{{ end }}

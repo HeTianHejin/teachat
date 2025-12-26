@@ -2,11 +2,11 @@ package route
 
 import (
 	"net/http"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
-// GET /user/biography?id=
+// GET /v1/user/biography?uuid=
 // 展示用户个人主页
 func Biography(w http.ResponseWriter, r *http.Request) {
 	//检查是否已经登录
@@ -20,27 +20,29 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" 根据会话未能读取用户信息", err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
-	var uB data.UserBean
+	var uB dao.UserDefaultDataBean
 
 	vals := r.URL.Query()
-	uuid := vals.Get("id")
-	//没有id参数，读取自己的资料
+	uuid := vals.Get("uuid")
+	//没有id参数，报告uuid没有提及
 	if uuid == "" {
-		uuid = s_u.Uuid
-	}
-	//有id参数，读取指定用户资料
-	user, err := data.GetUserByUUID(uuid)
-	if err != nil {
-		report(w, r, "报告，大王，未能找到茶友的资料！")
+		report(w, s_u, "你好，请提供茶友的识别码。")
 		return
 	}
-	uB, err = fetchUserBean(user)
+	//有uuid参数，读取指定用户资料
+	user, err := dao.GetUserByID(uuid)
 	if err != nil {
-		util.Debug("Cannot get user Bean given id", user.Id, err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息.")
+		util.Debug("Cannot get user given uuid", uuid, err)
+		report(w, s_u, "报告，大王，未能找到茶友的资料！")
+		return
+	}
+	uB, err = fetchUserDefaultDataBeanForBiography(user)
+	if err != nil {
+		util.Debug("Cannot get user Bean given uuid", user.Uuid, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
 
@@ -51,12 +53,11 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	if user.Id == s_u.Id {
 		//是本人,则打开编辑页
 		uB.IsAuthor = true
-		renderHTML(w, &uB, "layout", "navbar.private", "biography.private")
+		generateHTML(w, &uB, "layout", "navbar.private", "user.biography.private")
 		return
 	} else {
 		//不是简介主人,打开公开介绍页
-		uB.IsAuthor = false
-		renderHTML(w, &uB, "layout", "navbar.private", "biography.public")
+		generateHTML(w, &uB, "layout", "navbar.private", "user.biography.public")
 	}
 
 }
@@ -78,27 +79,31 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 		name := r.PostFormValue("name")
 		len_biog := cnStrLen(name)
 		if len_biog < 2 || len_biog > 16 {
-			report(w, r, "茶博士彬彬有礼的说：过高人易妒，过洁世同嫌。名字也是噢。")
+			report(w, s_u, "茶博士彬彬有礼的说：名字太短不够帅，太长了墨水都不够用噢。")
 			return
 		}
-		s_u.Name = name
+		if isValidUserName(name) {
+			report(w, s_u, "你好，请勿使用特殊字符作为名称呢，将来登机称帝，都不知道如何高呼陛下万岁。")
+			return
+		}
+		newName := name
 
 		biog := r.PostFormValue("biography")
 		len_biog = cnStrLen(biog)
 		if len_biog < 2 || len_biog > int(util.Config.ThreadMaxWord) {
-			report(w, r, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
+			report(w, s_u, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
 			return
 		}
-		s_u.Biography = biog
+		newBiography := biog
 
-		err = data.UpdateUserNameAndBiography(s_u.Id, s_u.Name, s_u.Biography)
+		err = dao.UpdateUserNameAndBiography(s_u.Id, newName, newBiography)
 		if err != nil {
 			util.Debug(" 更新用户信息错误！", err)
-			report(w, r, "茶博士失魂鱼，花名或者简介修改失败！")
+			report(w, s_u, "茶博士失魂鱼，请问你刚刚说的花名或者简介是什么来着？")
 			return
 		}
 
-		http.Redirect(w, r, "/v1/user/biography?id="+s_u.Uuid, http.StatusFound)
+		http.Redirect(w, r, "/v1/user/biography?uuid="+s_u.Uuid, http.StatusFound)
 		//Report(w, r, "你好，茶博士低声说，花名或者简介更新成功啦。")
 
 	}
@@ -126,14 +131,14 @@ func SaveAvatar(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" 获取用户信息错误！", err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息！")
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
 	// 处理上传到图片
-	if ok := processUploadAvatar(w, r, s_u.Uuid); ok == nil {
+	if ok := processUploadAvatar(w, r, s_u, s_u.Uuid); ok == nil {
 		s_u.Avatar = s_u.Uuid
 		s_u.UpdateAvatar()
-		report(w, r, "茶博士微笑说头像修改成功。")
+		report(w, s_u, "茶博士微笑说头像修改成功。")
 	}
 
 }
@@ -149,53 +154,28 @@ func UploadAvatar(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" 获取用户信息错误！", err)
-		report(w, r, "你好，茶博士失魂鱼，未能读取用户信息！")
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
-	var lB data.LetterboxPageData
+	var lB dao.LetterboxPageData
 	lB.SessUser = s_u
 
-	renderHTML(w, &lB, "layout", "navbar.private", "avatar.upload")
+	generateHTML(w, &lB, "layout", "navbar.private", "avatar.upload")
 }
 
 // GET
 // update Password /Forgot Password?
 func Forgot(w http.ResponseWriter, r *http.Request) {
-	report(w, r, "尚未提供修改密码服务！")
+	report(w, dao.UserUnknown, "尚未提供修改密码服务！")
 }
 
 // GET
 // Reset Password?
 func Reset(w http.ResponseWriter, r *http.Request) {
-	report(w, r, "尚未提供重置密码服务！")
+	panic("not implemented")
 }
 
 // GET /v1/users/connection_follow
 func Follow(w http.ResponseWriter, r *http.Request) {
-	renderHTML(w, nil, "layout", "navbar.private", "connection.follow")
-}
-
-// GET /v1/users/connection_fans
-func Fans(w http.ResponseWriter, r *http.Request) {
-	renderHTML(w, nil, "layout", "navbar.private", "connection.fans")
-}
-
-// GET /v1/users/connection_friend
-func Friend(w http.ResponseWriter, r *http.Request) {
-	s, err := session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	// 根据会话读取当前用户信息
-	s_u, err := s.User()
-	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	var cFPData data.ConnectionFriendPageData
-	cFPData.SessUser = s_u
-
-	renderHTML(w, &cFPData, "layout", "navbar.private", "connection.friend")
+	generateHTML(w, nil, "layout", "navbar.private", "connection.follow")
 }

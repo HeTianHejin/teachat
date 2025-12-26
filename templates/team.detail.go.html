@@ -1,51 +1,71 @@
 {{ define "content"}}
 
-{{/* 这是指定茶团详情展示页面-面包屑导航栏  */}}
+{{/* 这是指定团队详情展示页面-面包屑导航栏  */}}
 
 {{ with .TeamBean }}{{/* 检测Teambean非空 --开始  */}}
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li>$事业茶团详情</li>
-  <li class="=active"><a href="#">{{ .Team.Name }}</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li>{{ .Team.Name }}</li>
+  <li class="=active">$事业茶团详情</li>
 </ol>
 
 {{ if $.IsCoreMember }}
 
-{{ if $.IsCEO }}{{/* 检查是否团队管理员开始  */}}
-<a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
+{{ if $.IsCEO }}{{/* 检查是否团队最高管理员开始  */}}
+<a class="btn btn-default" href="/v1/team/manage?uuid={{ .Team.Uuid }}" role="button">管理团队</a>
 {{ else if $.IsFounder }}
-<a class="btn btn-default" href="/v1/team/manage?id={{ .Team.Uuid }}" role="button">管理团队</a>
-{{ end }} {{/* 检查是否团队管理员结束  */}}
+<a class="btn btn-default" href="/v1/team/manage?uuid={{ .Team.Uuid }}" role="button">管理团队</a>
+{{ end }} {{/* 检查是否团队最高管理员结束  */}}
+
+{{ if or $.IsCEO $.IsFounder }}
+{{ if $.GroupBean }}
+<a class="btn btn-info" href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}" role="button">
+  <span class="glyphicon glyphicon-th-large" aria-hidden="true"></span> 查看所属集团
+</a>
+{{ else }}
+<a class="btn btn-success" href="/v1/group/new?team_id={{ .Team.Uuid }}" role="button">
+  <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 创建集团
+</a>
+{{ end }}
+{{ end }}
+
 
 {{ if $.HasApplication }}
-
 <div class="alert alert-info" role="alert" style="margin-top: 1rem;">你好，有待处理的加盟申请书！
   <i class="bi bi-envelope"></i>
-  <a href="/v1/team_member/application/check?uuid={{ .Team.Uuid }}">查看 >></a>
+  <a href="/v1/team/new_applications/check?uuid={{ .Team.Uuid }}">查看 >></a>
 </div>
-
 {{ end }}{{/* 检查是否有新的加盟申请书结束  */}}
+
+{{ if $.HasResignation }}
+<div class="alert alert-warning" role="alert" style="margin-top: 1rem;">你好，有待处理的退出声明！
+  <i class="bi bi-box-arrow-right"></i>
+  <a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">查看 >></a>
+</div>
+{{ end }}{{/* 检查是否有待处理的退出声明结束  */}}
 {{ end }}{{/* 检查是否团队管理员结束  */}}
 
 <hr />
-{{ if .Open }}
-{{ if $.IsMember }}
-{{ if $.IsCoreMember }}
-<div class="text-center">
-  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
-  茶博士提示： 邀请茶友加入团队的方法：先 <strong><a href="/v1/search">查找</a></strong> 该茶友，然后在其个人页面点击“邀请加盟”按钮。
-</div>
-{{ end }}{{/* 检查是否核心管理成员结束  */}}
-{{ else }}{{/* 不是茶团成员  */}}
-<div class="text-right">
-  <a href="/v1/team_member/application/new?id={{ .Team.Uuid }}">申请加盟</a>
-</div>
-{{ end }}{{/* 检查是否团队成员结束  */}}
+{{ if .Team.IsOpen }}
+  {{ if $.IsMember }}
+
+  {{ else }}{{/* 不是茶团成员  */}}
+     <div class="text-right">
+      <a href="/v1/team_member/application/new?uuid={{ .Team.Uuid }}">申请加盟</a>
+      {{ if .Team.IsOpen }}
+      <span style="margin: 0 10px;">|</span>
+      <a href="/v1/message/announcement/send?team_uuid={{ .Team.Uuid }}" style="color: #28a745;">
+        <i class="bi bi-megaphone"></i> 发送布告
+      </a>
+      {{ end }}
+    </div>
+  {{ end }}{{/* 检查是否团队成员结束  */}}
 
 {{ else }}{{/* 是封闭式茶团  */}}
 <p class="text-center">
   <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
-  茶博士提示：封闭式茶团不接受加盟申请
+  茶博士提示：封闭式茶团不接受发送布告消息
 </p>
 {{ end }}
 <hr />
@@ -70,7 +90,10 @@
           </div>
 
           <div class="col-xs-4 text-center">
-            {{ if .Open }}
+            {{ if .Team.IsPrivate }}
+            <span class="label label-danger">私密</span>
+            {{ end }}
+            {{ if .Team.IsOpen }}
             <i class="bi-people" style="font-size: 2rem;"></i>
 
             <span class="label label-success">{{ .Team.TeamProperty }}
@@ -91,10 +114,20 @@
         <div class="text-center" style="font-size: large;">
           {{ .Team.Name }}
           @<span style="font-style: italic;">
-           {{/* <a href="/v1/group/detail?id={{ .Team.Group.Uuid }}">{{ .Team.Group.Abbreviation }}</a> */}}
-            <a href="#">喝茶集团</a>
+            {{ if $.GroupBean }}
+            <a href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}">{{ $.GroupBean.Group.Abbreviation }}</a>
+            {{ else }}喝茶集团{{ end }}
           </span>
         </div>
+
+        {{ if .Team.Tags }}
+        <div style="margin-top: 10px;">
+          <i class="glyphicon glyphicon-tags"></i>
+          {{ range .Team.GetTags }}
+          <span class="label label-info" style="margin-right: 5px;">{{ . }}</span>
+          {{ end }}
+        </div>
+        {{ end }}
 
         <span style="white-space: pre-wrap;">
           {{ .Team.Mission }}
@@ -109,20 +142,45 @@
 
         <span style="margin-inline-end: 20px;" title="成员数">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-          {{ .MemberCount }}
+          {{ .MembersCount }}
         </span>
+
+        {{ if $.IsMember }}
+        <span style="margin-inline-end: 20px;" title="团队消息盒">
+          {{ if $.MessageBox }}
+          <a href="/v1/message_box/detail?uuid={{ $.MessageBox.Uuid }}" style="text-decoration: none; color: inherit;">
+            <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+            {{ if gt $.MessageCount 0 }}<span class="badge" style="background-color: #d9534f;">{{ $.MessageCount }}</span>{{ end }}
+          </a>
+          {{ else }}
+          <a href="/v1/message_box/detail?team_uuid={{ .Team.Uuid }}" style="text-decoration: none; color: inherit;">
+            <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
+          </a>
+          {{ end }}
+        </span>
+        {{ end }}
 
       </div>
     </div>
 
     <div class="my-4">
-      <!-- 使用margin-y: 4单位 -->
-      <ol class="nav nav-tabs nav-justified">
+      <!-- 团队功能导航 -->
+      <ul class="nav nav-tabs nav-justified">
         <li class="active"><a href="#">在座成员</a></li>
-        <li><a href="/v1/team_member/role_changed?id={{ .Team.Uuid }}">角色变动</a></li>
-        <li><a href="/v1/team_member/resigned?id={{ .Team.Uuid }}">离开成员</a></li>
-        <li><a href="/v1/goods/team?id={{ .Team.Uuid }}">装备物资</a></li>
-      </ol>
+        <li ><a href="#">作业成就</a></li>
+        <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">茶叶账户</a></li>
+        <li><a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}">技能</a></li>
+        <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">法力</a></li>
+        <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
+
+        {{ if $.IsCoreMember }}
+        <li><a href="/v1/team/applications?uuid={{ .Team.Uuid }}">查看申请{{ if $.HasApplication }}<span class="badge">!</span>{{ end }}</a></li>
+        <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">查看邀请</a></li>
+        <li><a href="/v1/team/resignations?uuid={{ .Team.Uuid }}">查看退团{{ if $.HasResignation }}<span class="badge">!</span>{{ end }}</a></li>
+        {{ end }}
+        <li><a href="/v1/team_member/role_changed?uuid={{ .Team.Uuid }}">角色变动</a></li>
+        <li><a href="/v1/team/members/left?uuid={{ .Team.Uuid }}">离开成员</a></li>
+      </ul>
     </div>
 
     {{ end }}{{/* 检测Teambean非空 --结束  */}}
@@ -142,12 +200,29 @@
         </span>
 
         
-        <p>团队角色： <span style="font-size:  large;">{{ .TeamMember.Role }}</span></p>
+        <p>团队角色： <span class="label label-primary">{{ .TeamMember.Role }}</span></p>
+        
+        <p>成员状态： 
+          <span class="label {{ if eq .TeamMember.Status 0 }}label-danger{{ else if eq .TeamMember.Status 1 }}label-success{{ else if eq .TeamMember.Status 2 }}label-warning{{ else if eq .TeamMember.Status 3 }}label-default{{ else }}label-info{{ end }}">
+            {{ .TeamMember.GetStatus }}
+          </span>
+        </p>
         
         <p>茶友号：{{ .Member.Id }}</p>
         <p style="font-style: italic;">{{ .Member.Email }}</p>
         
         <p>加盟时间：{{ .CreatedAtDate }}</p>
+
+        {{ if $.IsMember }}
+        <div class="btn-group" role="group" style="margin-top: 10px;">
+          <a href="/v1/message/send?team_uuid={{ $.TeamBean.Team.Uuid }}&receiver_id={{ .Member.Id }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-envelope"></i> 发送纸条
+          </a>
+          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}" class="btn btn-sm btn-success">
+            <i class="bi bi-book"></i> 工作簿
+          </a>
+        </div>
+        {{ end }}
 
       </div>
     </div>
@@ -169,12 +244,29 @@
         </span>
 
         
-        <p>团队角色： <span style="font-size:  large;">{{ .TeamMember.Role }}</span></p>
+        <p>团队角色： <span class="label label-primary">{{ .TeamMember.Role }}</span></p>
+        
+        <p>成员状态： 
+          <span class="label {{ if eq .TeamMember.Status 0 }}label-danger{{ else if eq .TeamMember.Status 1 }}label-success{{ else if eq .TeamMember.Status 2 }}label-warning{{ else if eq .TeamMember.Status 3 }}label-default{{ else }}label-info{{ end }}">
+            {{ .TeamMember.GetStatus }}
+          </span>
+        </p>
         
         <p>茶友号：{{ .Member.Id }}</p>
         <p style="font-style: italic;">{{ .Member.Email }}</p>
         
         <p>加盟时间：{{ .CreatedAtDate }}</p>
+
+        {{ if $.IsMember }}
+        <div class="btn-group" role="group" style="margin-top: 10px;">
+          <a href="/v1/message/send?team_uuid={{ $.TeamBean.Team.Uuid }}&receiver_id={{ .Member.Id }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-envelope"></i> 发送纸条
+          </a>
+          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}" class="btn btn-sm btn-success">
+            <i class="bi bi-book"></i> 工作簿
+          </a>
+        </div>
+        {{ end }}
 
       </div>
     </div>

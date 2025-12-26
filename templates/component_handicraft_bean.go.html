@@ -1,0 +1,73 @@
+{{ define "component_handicraft_bean" }}
+
+{{/* 组件：手艺展示 */}}
+
+<div class="panel panel-default">
+  <div class="panel-body">
+    <div class="media">
+      <div class="media-left">
+        <a href="/v1/handicraft/detail?uuid={{ .Handicraft.Uuid }}">
+          <img class="media-object" src="/v1/static/bootstrap-icons/tools.svg" alt="手艺图标" width=40 height=40>
+        </a>
+      </div>
+
+      <div class="media-body">
+        <p>
+          <span class="label label-{{ if eq .Handicraft.Status 3 }}success{{ else if eq .Handicraft.Status 1 }}info{{ else }}default{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ .Handicraft.StatusString }}
+          </span>
+
+          <span class="label label-default" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ .Handicraft.Type.TypeString }}
+          </span>
+
+          <span class="label label-{{ if eq .Handicraft.Category 0 }}info{{ else }}warning{{ end }}" style="margin-inline-end: 30px;font-size: smaller;">
+            {{ if eq .Handicraft.Category 0 }}公开{{ else }}私密{{ end }}
+          </span>
+
+          <span style="font-size: smaller;">
+            {{ .Handicraft.CreatedDateTime }}
+          </span>
+        </p>
+
+        <h4>
+          <a href="/v1/handicraft/detail?uuid={{ .Handicraft.Uuid }}">
+            {{ .Handicraft.Name }}
+          </a>
+          {{ if .Handicraft.IsHighDifficulty }}
+          <span class="label label-warning">高难度</span>
+          {{ end }}
+        </h4>
+
+        <p>{{ .Handicraft.Description }}</p>
+
+        <p>
+          <div style="text-align: center; margin-top: 10px;">
+            <span style="margin-right: 15px;">
+              <i class="bi-gear" style="font-size: 1.2rem; color: {{ if ge .Handicraft.SkillDifficulty 4 }}red{{ else }}gray{{ end }};"></i>
+              <span style="font-size: smaller;">技能: {{ .Handicraft.SkillDifficulty }}/5</span>
+            </span>
+            <span style="margin-right: 15px;">
+              <i class="bi-lightbulb" style="font-size: 1.2rem; color: {{ if ge .Handicraft.MagicDifficulty 4 }}orange{{ else }}gray{{ end }};"></i>
+              <span style="font-size: smaller;">创意: {{ .Handicraft.MagicDifficulty }}/5</span>
+            </span>
+            <span style="margin-right: 15px;">
+              <i class="bi-diagram-3" style="font-size: 1.2rem; color: blue;"></i>
+              <span style="font-size: smaller;">综合: {{ .Handicraft.GetOverallDifficulty }}/5</span>
+            </span>
+            {{ if .Project.Title }}
+            <span>
+              <i class="bi-folder" style="font-size: 1.2rem; color: green;"></i>
+              <span style="font-size: smaller;"><a href="/v1/project/detail?uuid={{ .Project.Uuid }}">{{ .Project.Title }}</a></span>
+            </span>
+            {{ end }}
+          </div>
+        </p>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{{ end }}

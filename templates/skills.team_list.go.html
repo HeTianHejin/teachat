@@ -1,0 +1,84 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+  <li class="active">团队技能列表</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-cog"></span> {{ .Team.Name }} - 技能列表
+      <a href="/v1/skill/new?return_url=/v1/skills/team_list?uuid={{ .Team.Uuid }}" class="btn btn-primary btn-sm pull-right">
+        <span class="glyphicon glyphicon-plus"></span> 添加技能
+      </a>
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    {{ if .SkillTeamBean.Skills }}
+      <!-- 分页选项卡 -->
+      <ul class="nav nav-tabs" role="tablist">
+        <li role="presentation" class="active">
+          <a href="#hard-skills" aria-controls="hard-skills" role="tab" data-toggle="tab">
+            <span class="glyphicon glyphicon-wrench"></span> 通用硬技能
+            <span class="badge">{{ .HardSkillCount }}</span>
+          </a>
+        </li>
+        <li role="presentation">
+          <a href="#soft-skills" aria-controls="soft-skills" role="tab" data-toggle="tab">
+            <span class="glyphicon glyphicon-heart"></span> 通用软技能
+            <span class="badge">{{ .SoftSkillCount }}</span>
+          </a>
+        </li>
+      </ul>
+
+      <!-- 选项卡内容 -->
+      <div class="tab-content" style="margin-top: 15px;">
+        <!-- 硬技能选项卡 -->
+        <div role="tabpanel" class="tab-pane active" id="hard-skills">
+          {{ if .HardSkills }}
+            {{ range .HardSkills }}
+              {{ template "component_team_skill_bean" . }}
+            {{ end }}
+          {{ else }}
+            <div class="alert alert-info text-center">
+              <h4>暂无硬技能记录</h4>
+              <p>硬技能包括可以设立试卷考试的智商类技能。</p>
+            </div>
+          {{ end }}
+        </div>
+
+        <!-- 软技能选项卡 -->
+        <div role="tabpanel" class="tab-pane" id="soft-skills">
+          {{ if .SoftSkills }}
+            {{ range .SoftSkills }}
+              {{ template "component_team_skill_bean" . }}
+            {{ end }}
+          {{ else }}
+            <div class="alert alert-info text-center">
+              <h4>暂无软技能记录</h4>
+              <p>软技能包括沟通、情绪管理等情商类技能。</p>
+            </div>
+          {{ end }}
+        </div>
+      </div>
+    {{ else }}
+      <div class="alert alert-info text-center">
+        <h4>暂无技能记录</h4>
+        <p>点击上方"添加技能"按钮开始记录团队技能。</p>
+        <a href="/v1/skill/new?return_url=/v1/skills/team_list?uuid={{ .Team.Uuid }}" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span> 添加第一个技能
+        </a>
+      </div>
+    {{ end }}
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：团队技能是团队能力的重要体现，记录和管理技能有助于团队发展规划。
+  </div>
+</div>
+
+{{ end }}

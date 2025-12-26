@@ -33,21 +33,13 @@
             <label for="title" control-label>声明标题：</label>
             <input type="text" class="form-control" id="title" value="关于增加家庭茶团新成员的声明" readonly required />
         </div>
-
+         <input type="hidden" name="family_uuid" value="{{ .Family.Uuid }}" />
         <div class="form-group">
-            <label for="family_uuid" control-label> 选择&家庭茶团：</label>
-            <div>
-                <select name="family_uuid" class="form-control" id="family_uuid" required>
-                    <option value="{{ .SessUserDefaultFamily.Uuid }}">{{ .SessUserDefaultFamily.Name }}
-                    </option>
-                    {{ range .SessUserAllFamilies }}
-                    <option value="{{ .Uuid }}">{{ .Name }}</option>
-                    {{ end }}
-                </select>
-            </div>
+            <label for="family_name" control-label> &家庭茶团：</label>
+            <input type="text" class="form-control" id="family_name" value="{{ .Family.Name }}" readonly />
         </div>
 
-        {{ with .FamilyMemberUser }}{{/* 检查声明资料夹非空，填写声明对象 - 开始 */}}
+        {{ with .NewMemberUser }}{{/* 检查声明资料夹非空，填写声明对象 - 开始 */}}
 
         <div class="form-group">
             {{/* 这是声明新成员的茶友名称 */}}
@@ -118,18 +110,7 @@
             </fieldset>
         </div>
 
-        <div class="form-group">
-            <label for="place_uuid" control-label> 选择品茶老地方：</label>
-            <div>
-                <select name="place_uuid" class="form-control" id="place_uuid" required>
-                    <option value="{{ .SessUserDefaultPlace.Uuid }}">{{ .SessUserDefaultPlace.Name }}
-                    </option>
-                    {{ range .SessUserBindPlaces }}
-                    <option value="{{ .Uuid }}">{{ .Name }}</option>
-                    {{ end }}
-                </select>
-            </div>
-        </div>
+        
 
         <div class="form-group">
             <div class="col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">

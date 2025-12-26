@@ -1,0 +1,37 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">手艺列表</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-wrench"></span> 手艺列表
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    {{ if .HandicraftBeans }}
+      {{ range .HandicraftBeans }}
+        {{ template "component_handicraft_bean" . }}
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info text-center">
+        <h4>暂无手艺记录</h4>
+        <p>手艺需要在具体项目中创建。</p>
+        <a href="/v1/" class="btn btn-primary">
+          <span class="glyphicon glyphicon-home"></span> 返回大堂
+        </a>
+      </div>
+    {{ end }}
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：手艺是项目实施的重要组成部分，记录和管理手艺有助于项目成功。
+  </div>
+</div>
+
+{{ end }}

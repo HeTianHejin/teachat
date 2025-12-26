@@ -1,10 +1,10 @@
-package data
+package dao
 
 // Appointment
 type AppointmentTemplateData struct {
 	SessUser   User
 	IsVerifier bool
-	IsAdmin    bool
+	IsAdmin    bool // 是否为茶围目标管理员
 	IsMaster   bool
 	IsInvited  bool
 
@@ -158,16 +158,15 @@ type BrainFireBean struct {
 	Environment Environment //场所环境
 	Project     Project
 }
+
 // 新建"建议"页面
 // 展示"建议"详情页面数据
 type SuggestionDetailTemplateData struct {
-	SessUser       User
-	IsVerifier     bool
-	IsAdmin        bool
-	IsMaster       bool
-	IsInvited      bool
-	SessUserFamily Family
-	SessUserTeam   Team
+	SessUser   User
+	IsVerifier bool
+	IsAdmin    bool
+	IsMaster   bool
+	IsInvited  bool
 
 	SuggestionBean     SuggestionBean
 	ProjectBean        ProjectBean
@@ -178,4 +177,78 @@ type SuggestionBean struct {
 	Suggestion Suggestion
 	IsOpen     bool
 	Project    Project
+}
+
+type SkillDetailTemplateData struct {
+	SessUser User
+
+	Skill Skill
+}
+type MagicDetailTemplateData struct {
+	SessUser User
+	// IsVerifier bool
+	// IsAdmin    bool
+	// IsMaster   bool
+	// IsInvited  bool
+
+	Magics Magic
+}
+
+type HandicraftDetailTemplateData struct {
+	SessUser   User
+	IsVerifier bool
+	IsAdmin    bool
+	IsMaster   bool
+	IsInvited  bool
+
+	HandicraftBean     HandicraftBean
+	ProjectBean        ProjectBean
+	QuoteObjectiveBean ObjectiveBean
+
+	Skills []Skill
+	Magics []Magic
+
+	EvidenceHandicraftBean []EvidenceHandicraftBean
+}
+type HandicraftBean struct {
+	Handicraft Handicraft
+	IsOpen     bool
+	Project    Project
+
+	Contributors   []HandicraftContributor
+	Inauguration   *Inauguration
+	ProcessRecords []ProcessRecord
+	Ending         *Ending
+}
+
+type SkillUserBean struct {
+	User       User
+	Skills     []Skill
+	SkillUsers []SkillUser
+}
+
+// 法力用户Bean
+type MagicUserBean struct {
+	User       User
+	MagicUsers []MagicUser
+	Magics     []Magic
+}
+type SkillTeamBean struct {
+	Team       Team
+	Skills     []Skill
+	SkillTeams []SkillTeam
+}
+
+type MagicTeamBean struct {
+	Team       Team
+	Magics     []Magic
+	MagicTeams []MagicTeam
+}
+type EvidenceSeeSeekBean struct {
+	Evidences []Evidence
+	SeeSeek   SeeSeek
+}
+type EvidenceHandicraftBean struct {
+	Evidences  []Evidence
+	Handicraft Handicraft
 }

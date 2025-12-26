@@ -1,0 +1,169 @@
+{{ define "content" }}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-cog"></span> 添加技能
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/skill/new" class="form-horizontal">
+      <!-- 基本信息 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">基本信息</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label class="col-sm-2 control-label">登记人</label>
+            <div class="col-sm-10">
+              <p class="form-control-static">
+                <strong>{{ .SessUser.Name }}</strong> 
+                <small class="text-muted">(ID: {{ .SessUser.Id }})</small>
+              </p>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="name" class="col-sm-2 control-label">技能名称 *</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="name" id="name" 
+                     placeholder="如：驾驶车辆、书法、编程智商类或者艺术疗愈等情商类" required maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="nickname" class="col-sm-2 control-label">技能别名</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="nickname" id="nickname" 
+                     placeholder="行业术语或简称" maxlength="255">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="description" class="col-sm-2 control-label">详细描述 *</label>
+            <div class="col-sm-10">
+              <textarea class="form-control" name="description" id="description" rows="4" 
+                        placeholder="详细描述技能内容、应用场景、操作要点等" required></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 技能分级 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">技能分级</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label for="category" class="col-sm-2 control-label">技能类型 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="category" id="category" required>
+                <option value="1">通用软技能 --指情商类技能</option>
+                <option value="2" selected>通用硬技能 --指有公开考试智商类型</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="strength_level" class="col-sm-2 control-label">体力要求 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="strength_level" id="strength_level" required>
+                <option value="1">极低</option>
+                <option value="2">较低</option>
+                <option value="3" selected>中等</option>
+                <option value="4">较高</option>
+                <option value="5">极高</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="difficulty_level" class="col-sm-2 control-label">掌握难度 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="difficulty_level" id="difficulty_level" required>
+                <option value="1">极易</option>
+                <option value="2">较易</option>
+                <option value="3" selected>中等</option>
+                <option value="4">较难</option>
+                <option value="5">极难</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="level" class="col-sm-2 control-label">技能等级 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="level" id="level" required>
+                <option value="1" selected>1级 - 入门</option>
+                <option value="2">2级 - 初级</option>
+                <option value="3">3级 - 中级</option>
+                <option value="4">4级 - 高级</option>
+                <option value="5">5级 - 专家</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 技能绑定选项 -->
+      <div class="panel panel-default">
+        <div class="panel-heading">技能绑定选项</div>
+        <div class="panel-body">
+          <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="add_to_my_skills" value="1" checked>
+                  <strong>添加到我的技能</strong>
+                  <small class="text-muted">- 勾选表示将此技能注册为自己掌握的技能</small>
+                </label>
+              </div>
+            </div>
+          </div>
+          {{ if .UserTeams }}
+          <div class="form-group">
+            <label class="col-sm-2 control-label">团队技能</label>
+            <div class="col-sm-10">
+              {{ range .UserTeams }}
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="add_to_team_skills" value="{{ .Id }}">
+                  <strong>添加到 {{ .Name }}</strong>
+                  <small class="text-muted">- 将此技能注册为团队掌握的技能</small>
+                </label>
+              </div>
+              {{ end }}
+            </div>
+          </div>
+          {{ end }}
+          <div class="help-block">
+            <small class="text-info">
+              <span class="glyphicon glyphicon-info-sign"></span>
+              不勾选任何选项时仅登记共享技能，不会添加到个人或团队技能列表
+            </small>
+          </div>
+        </div>
+      </div>
+
+      {{ if .ReturnURL }}
+      <input type="hidden" name="return_url" value="{{ .ReturnURL }}">
+      {{ end }}
+
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <button type="submit" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span> 添加技能
+          </button>
+          {{ if .ReturnURL }}
+          <a href="{{ .ReturnURL }}" class="btn btn-default">取消</a>
+          {{ else }}
+          <a href="/v1/" class="btn btn-default">取消</a>
+          {{ end }}
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：掌握技能是个人成长的重要组成部分，记录技能有助于自我认知和发展规划。
+  </div>
+</div>
+{{ end }}

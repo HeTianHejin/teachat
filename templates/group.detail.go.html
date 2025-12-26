@@ -44,7 +44,7 @@
             {{ else }}
             <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
             {{ end }}
-              <a href="/v1/user/biography?id={{ .GroupBean.Founder.Uuid }}">{{ .GroupBean.Founder.Name }}</a>
+              <a href="/v1/user/biography?uuid={{ .GroupBean.Founder.Uuid }}">{{ .GroupBean.Founder.Name }}</a>
               @<span style="font-style: italic;"><a href="/v1/group/detail?id={{ .GroupBean.FounderTeam.Uuid }}">{{ .GroupBean.FounderTeam.Abbreviation }}</a></span>
 
               {{ .GroupBean.CreatedAtDate }}
@@ -68,113 +68,38 @@
           {{ .GroupBean.TeamsCount }}
         </span>
 
+        {{ if .GroupBean.Group.Tags }}
+        <div style="margin-top: 10px;">
+          <i class="glyphicon glyphicon-tags"></i>
+          {{ range .GroupBean.Group.GetTags }}
+          <span class="label label-info" style="margin-right: 5px;">{{ . }}</span>
+          {{ end }}
+        </div>
+        {{ end }}
+
       </div>
     </div>
 
 
-  
-
-
-    {{/*  这是本集团第一茶团展示页面  */}}
-    {{ with .FirstTeamBean }}
-
-<div class="media">
-  <div class="media-left">
-    <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
-      <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="茶团旗帜">
-    </a>
-  </div>
-  <div class="media-body">
-    <div class="panel panel-default">
-
-      <div class="panel-heading">
-        <div class="row">
+    {{ if .CanManage }}
+      <a class="btn btn-default" href="/v1/group/manage?id={{ .GroupBean.Group.Uuid }}" role="button">管理集团</a>
+    {{ end }}
     
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            @<a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a>
-          </div>
-          
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <span style="display: block; text-align: center;">
-              <span class="label label-success">{{ .Team.TeamProperty }}
-              </span>
-              
-            </span>
-          </div>
-          
-          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <div class="pull-right" style="font-size: small;">
-              {{if .Founder.Gender }}
-            <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-            {{ else }}
-            <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
-            {{ end }}
-              {{ .Author.Name }}
-              <a href="/v1/user/biography?id={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
-              @<span style="font-size: small;"><a href="/v1/team/detail?uuid={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
-        
-              {{ .CreatedAtDate }}
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="panel-body">
-       
-
-        {{ .Team.Mission }} ...
-      </div>
     
-      <div class="panel-footer">
-          <span style="margin-inline-end: 20px;" title="团号">
-          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
-           {{ .Team.Id }}
-          </span>
-         
-          <span style="margin-inline-end: 20px;">
-          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-             {{ .Count }}
-            </span>
-        <div class="pull-right">
-          <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
-          <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
-          </a>
-        </div>
-      </div>
-    
-    </div>
-  </div>
-</div>
-
-
-
-{{ else }}
-
-<div class="panel panel-default">
-  <div class="panel-heading">
-      <span class="lead">茶博士</span>
-  </div>
-
-  <div class="panel-body">
-      你好，没有找到相关的茶团。
-  </div>
-
-</div>
-
-{{ end }}
-    
-
-<div style="margin: 20px;">
-  <ol class="nav nav-tabs">
-    <li class="active"><a href="#">在座成员</a></li>
-    <li><a href="/v1/group/team_resigned">已退成员</a></li>
+    <div style="margin: 20px;">
+      <ol class="nav nav-tabs">
+        <li class="active"><a href="#">在座成员</a></li>
+    <li><a href="/v1/group/member_resigned?uuid={{ .GroupBean.Group.Uuid }}">已退成员</a></li>
   </ol>
 </div>
 
-    {{/*  这是下属普通茶团展示页面  */}}
-    
-    {{ template "teams_public" .TeamBeanSlice }}
-    
 
+    {{/*  这是本集团茶团展示页面  */}}
+    {{ range .TeamBeanSlice }}
+
+    {{ template "component_team" . }}
+    
+    {{ end }}
 
   </div>
 </div>

@@ -1,0 +1,40 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">法力列表</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <span class="glyphicon glyphicon-flash"></span> 法力列表
+      <a href="/v1/magic/new" class="btn btn-primary btn-sm pull-right">
+        <span class="glyphicon glyphicon-plus"></span> 添加法力
+      </a>
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    {{ if .Magics }}
+      {{ range .Magics }}
+        {{ template "component_magic_bean" . }}
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info text-center">
+        <h4>暂无法力记录</h4>
+        <p>点击上方"添加法力"按钮开始记录您的法力。</p>
+        <a href="/v1/magic/new" class="btn btn-primary">
+          <span class="glyphicon glyphicon-plus"></span> 添加第一个法力
+        </a>
+      </div>
+    {{ end }}
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：法力是智慧的体现，记录和管理法力有助于认识自己的思维能力。
+  </div>
+</div>
+
+{{ end }}

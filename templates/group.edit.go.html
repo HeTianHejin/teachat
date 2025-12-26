@@ -1,0 +1,39 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li><a href="/v1/group/manage?id={{ .Group.Uuid }}">管理</a></li>
+  <li class="active">修改资料</li>
+</ol>
+
+<h3>修改集团资料</h3>
+
+<form action="/v1/group/edit" method="post">
+  <input type="hidden" name="group_id" value="{{ .Group.Id }}">
+  
+  <div class="form-group">
+    <label for="name">集团名称</label>
+    <input type="text" class="form-control" id="name" name="name" value="{{ .Group.Name }}" required>
+    <p class="help-block">4-24个中文字符</p>
+  </div>
+
+  <div class="form-group">
+    <label for="abbreviation">集团简称</label>
+    <input type="text" class="form-control" id="abbreviation" name="abbreviation" value="{{ .Group.Abbreviation }}" required>
+    <p class="help-block">2-8个中文字符</p>
+  </div>
+
+  <div class="form-group">
+    <label for="mission">集团使命</label>
+    <textarea class="form-control" id="mission" name="mission" rows="5" required>{{ .Group.Mission }}</textarea>
+    <p class="help-block">请描述集团的使命和目标</p>
+  </div>
+
+  <div class="form-group">
+    <button type="submit" class="btn btn-primary">保存修改</button>
+    <a href="/v1/group/manage?id={{ .Group.Uuid }}" class="btn btn-default">取消</a>
+  </div>
+</form>
+
+{{ end }}

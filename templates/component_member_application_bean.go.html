@@ -1,0 +1,73 @@
+{{ define "component_member_application_bean" }}
+
+<div class="panel panel-default" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+  <div class="panel-body" style="padding: 20px;">
+    
+    <!-- 意向茶团 -->
+    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+      <i class="glyphicon glyphicon-flag" style="margin-right: 8px;"></i>
+      <strong>意向茶团：</strong>
+      <a href="/v1/team/detail?uuid={{ .Team.Uuid }}" style="color: #fff; text-decoration: underline; font-weight: bold;">{{ .Team.Abbreviation }}</a>
+    </div>
+
+    <!-- 申请人信息 -->
+    <div class="media" style="margin-bottom: 20px;">
+      <div class="media-left">
+        <a href="/v1/user/biography?uuid={{ .Author.Uuid }}">
+          <img class="img-circle" src="/v1/static/image/{{ .Author.Avatar }}.jpeg" alt="个人头像" 
+               style="width: 80px; height: 80px; border: 3px solid #f0f0f0; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+        </a>
+      </div>
+
+      <div class="media-body" style="padding-left: 15px;">
+        <h4 class="media-heading" style="margin-top: 5px; margin-bottom: 10px; color: #333;">
+          <i class="glyphicon glyphicon-user" style="color: #667eea; margin-right: 6px;"></i>
+          <strong>{{ .Author.Name }}</strong>
+          <span style="margin-left: 8px;">
+            {{if .Author.Gender }}
+            <i class="bi-gender-male" style="font-size: 1.5rem; color: cornflowerblue; vertical-align: middle;"></i>
+            {{ else }}
+            <i class="bi-gender-female" style="font-size: 1.5rem; color: hotpink; vertical-align: middle;"></i>
+            {{ end }}
+          </span>
+        </h4>
+        
+        <p style="margin-bottom: 8px; color: #666;">
+          <i class="glyphicon glyphicon-briefcase" style="color: #764ba2; margin-right: 6px;"></i>
+          <span style="font-style: italic;">当前团队：</span>
+          <a href="/v1/team/detail?uuid={{ .AuthorTeam.Uuid }}" style="color: #667eea; font-weight: 500;">{{ .AuthorTeam.Abbreviation }}</a>
+        </p>
+        
+        <p style="margin-bottom: 8px; color: #666;">
+          <i class="glyphicon glyphicon-envelope" style="color: #764ba2; margin-right: 6px;"></i>
+          <span style="font-style: italic;">{{ .Author.Email }}</span>
+        </p>
+        
+        <p style="margin-bottom: 0; color: #999; font-size: 13px;">
+          <i class="glyphicon glyphicon-time" style="margin-right: 6px;"></i>
+          申请时间：{{ .CreatedAtDate }}
+        </p>
+      </div>
+    </div>
+
+    <!-- 状态和操作 -->
+    <div style="border-top: 1px solid #e8e8e8; padding-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <span style="background: #f0f0f0; padding: 6px 12px; border-radius: 4px; font-weight: 500; color: #555;">
+          <i class="glyphicon glyphicon-info-sign" style="margin-right: 6px;"></i>
+          状态：<strong>{{ .Status }}</strong>
+        </span>
+      </div>
+      <div>
+        <a href="/v1/team_member/application/review?uuid={{ .MemberApplication.Uuid }}" 
+           class="btn btn-primary btn-sm" 
+           style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; padding: 6px 16px; border-radius: 4px;">
+          <i class="glyphicon glyphicon-list-alt" style="margin-right: 6px;"></i>查看详情
+        </a>
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+{{ end }}

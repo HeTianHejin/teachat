@@ -1,0 +1,193 @@
+{{ define "content" }}
+{{/* 团队管理员视角，查看退出声明详情页面 */}}
+
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+    <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">全部退出声明</a></li>
+    <li class="active">退出声明详情</li>
+</ol>
+
+<div class="media">
+    <div class="media-left">
+        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">
+            <img class="media-object" src="/v1/static/image/{{ .Team.Logo }}.jpeg" alt="团队团标">
+        </a>
+    </div>
+
+    <div class="media-body">
+        <div class="panel panel-warning">
+
+            <div class="panel-heading">
+                <div class="row">
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; font-size: smaller;text-align: center;">
+                            {{ .Team.CreatedAtDate }}
+                        </span>
+                    </div>
+
+                    <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+                        <span style="display: block; text-align: right;">
+                            <span class="label label-success">{{ .Team.TeamProperty }}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <h4 class="text-center">{{ .Resignation.Title }}</h4>
+                
+                <!-- 声明状态 -->
+                <div style="margin-bottom: 15px; padding: 10px; background-color: #f5f5f5; border-radius: 4px;">
+                    <strong><i class="glyphicon glyphicon-info-sign"></i> 声明状态：</strong>
+                    <span class="label {{ if eq .Resignation.Status 0 }}label-warning{{ else if eq .Resignation.Status 1 }}label-info{{ else if eq .Resignation.Status 2 }}label-primary{{ else if eq .Resignation.Status 3 }}label-success{{ else if eq .Resignation.Status 4 }}label-danger{{ else }}label-default{{ end }}">
+                        {{ .Resignation.GetStatus }}
+                    </span>
+                </div>
+
+                <!-- 声明人信息 -->
+                <div style="margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                    <strong><i class="glyphicon glyphicon-user"></i> 声明人：</strong>
+                    <a href="/v1/user/biography?uuid={{ .Member.Uuid }}">{{ .Member.Name }}</a>
+                    {{if .Member.Gender }}
+                    <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
+                    {{ else }}
+                    <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+                    {{ end }}
+                </div>
+
+                <!-- 时任角色 -->
+                <div style="margin-bottom: 15px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+                    <strong><i class="glyphicon glyphicon-briefcase"></i> 时任角色：</strong>
+                    <span class="label label-primary">{{ .Resignation.MemberCurrentRole }}</span>
+                </div>
+                
+                <p style="white-space: pre-wrap; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    {{ .Resignation.Content }}
+                </p>
+                
+                <p class="text-right" style="color: #666;">
+                    声明时间：{{ .Resignation.CreatedAtDate }}
+                </p>
+                
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{{ if lt .Resignation.Status 3 }}
+{{/* 未批准的声明，显示处理表单 */}}
+<div class="panel panel-default" style="margin-top: 20px;">
+    <div class="panel-heading">
+        <h4><i class="glyphicon glyphicon-edit"></i> 处理退出声明</h4>
+    </div>
+    <div class="panel-body">
+        <form method="post" action="/v1/team_member/resignation/detail">
+            <input type="hidden" name="resignation_uuid" value="{{ .Resignation.Uuid }}">
+            
+            {{ if .NeedDoubleApproval }}
+            {{/* 需要双重审批 */}}
+            <div class="alert alert-warning">
+                <strong><i class="glyphicon glyphicon-info-sign"></i> 双重审批机制：</strong>
+                该茶团有完善的组织形式（成员≥3人，有CEO和其他核心成员），需要核心成员先同意，然后CEO批准。
+            </div>
+            
+            {{ if eq .Resignation.Status 0 }}
+            {{/* 未阅读状态 */}}
+            {{ if .IsCoreMember }}
+            <div class="form-group text-center">
+                <button type="submit" name="action" value="core_agree" class="btn btn-primary btn-lg" style="margin-right: 20px;">
+                    <i class="glyphicon glyphicon-ok-sign"></i> 核心成员同意
+                </button>
+                <button type="submit" name="action" value="retain" class="btn btn-warning btn-lg">
+                    <i class="glyphicon glyphicon-heart"></i> 挡留成员
+                </button>
+            </div>
+            {{ else if .IsCEO }}
+            <div class="alert alert-info">
+                请等待核心成员先同意后，CEO才能批准。
+            </div>
+            {{ end }}
+            
+            {{ else if eq .Resignation.Status 1 }}
+            {{/* 已阅读状态 */}}
+            {{ if .IsCoreMember }}
+            <div class="form-group text-center">
+                <button type="submit" name="action" value="core_agree" class="btn btn-primary btn-lg" style="margin-right: 20px;">
+                    <i class="glyphicon glyphicon-ok-sign"></i> 核心成员同意
+                </button>
+                <button type="submit" name="action" value="retain" class="btn btn-warning btn-lg">
+                    <i class="glyphicon glyphicon-heart"></i> 挡留成员
+                </button>
+            </div>
+            {{ else if .IsCEO }}
+            <div class="alert alert-info">
+                请等待核心成员先同意后，CEO才能批准。
+            </div>
+            {{ end }}
+            
+            {{ else if eq .Resignation.Status 2 }}
+            {{/* 核心成员已同意 */}}
+            {{ if .IsCEO }}
+            <div class="form-group text-center">
+                <button type="submit" name="action" value="ceo_approve" class="btn btn-success btn-lg" style="margin-right: 20px;">
+                    <i class="glyphicon glyphicon-ok"></i> CEO批准退出
+                </button>
+                <button type="submit" name="action" value="retain" class="btn btn-warning btn-lg">
+                    <i class="glyphicon glyphicon-heart"></i> 挡留成员
+                </button>
+            </div>
+            {{ else }}
+            <div class="alert alert-success">
+                核心成员已同意，等待CEO批准。
+            </div>
+            {{ end }}
+            {{ end }}
+            
+            {{ else }}
+            {{/* 不需要双重审批 */}}
+            <div class="alert alert-info">
+                <strong><i class="glyphicon glyphicon-info-sign"></i> 提示：</strong>
+                该茶团成员较少或组织形式简单，管理员可直接处理。
+            </div>
+            
+            <div class="form-group text-center">
+                <button type="submit" name="action" value="approve" class="btn btn-success btn-lg" style="margin-right: 20px;">
+                    <i class="glyphicon glyphicon-ok"></i> 批准退出
+                </button>
+                <button type="submit" name="action" value="retain" class="btn btn-warning btn-lg">
+                    <i class="glyphicon glyphicon-heart"></i> 挡留成员
+                </button>
+            </div>
+            {{ end }}
+            
+            <div class="alert alert-info" style="margin-top: 15px;">
+                <strong><i class="glyphicon glyphicon-info-sign"></i> 操作说明：</strong>
+                <ul style="margin-bottom: 0;">
+                    {{ if .NeedDoubleApproval }}
+                    <li><strong>核心成员同意：</strong>核心成员（非CEO）同意成员退出，等待CEO批准</li>
+                    <li><strong>CEO批准：</strong>CEO批准后，成员正式离开茶团</li>
+                    {{ else }}
+                    <li><strong>批准退出：</strong>成员将被移出茶团，状态标记为已退出</li>
+                    {{ end }}
+                    <li><strong>挡留成员：</strong>标记为挡留中，请与成员沟通后再决定</li>
+                </ul>
+            </div>
+        </form>
+    </div>
+</div>
+{{ end }}
+
+<div style="margin-top: 20px; text-align: center;">
+    <a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}" class="btn btn-default">
+        <i class="glyphicon glyphicon-arrow-left"></i> 返回退出声明列表
+    </a>
+</div>
+
+{{ end }}

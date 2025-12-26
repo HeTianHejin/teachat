@@ -1,4 +1,4 @@
-package data
+package dao
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func (s *Suggestion) Create(ctx context.Context) (err error) {
 		(uuid, user_id, project_id, resolution, body, category, status) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -64,7 +64,7 @@ func (s *Suggestion) Update(ctx context.Context) error {
 
 	statement := `UPDATE suggestions SET resolution = $2, body = $3, category = $4, 
 		status = $5, updated_at = $6 WHERE id = $1`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (s *Suggestion) GetByIdOrUUID(ctx context.Context) (err error) {
 	statement := `SELECT id, uuid, user_id, project_id, resolution, body, category, status,
 		created_at, updated_at
 		FROM suggestions WHERE id=$1 OR uuid=$2`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
@@ -101,7 +101,7 @@ func GetSuggestionByProjectId(projectId int, ctx context.Context) (Suggestion, e
 	statement := `SELECT id, uuid, user_id, project_id, resolution, body, category, status,
 		created_at, updated_at
 		FROM suggestions WHERE project_id=$1 ORDER BY created_at DESC LIMIT 1`
-	stmt, err := db.PrepareContext(ctx, statement)
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return s, err
 	}

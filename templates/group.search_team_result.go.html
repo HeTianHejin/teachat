@@ -1,0 +1,49 @@
+
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li><a href="/v1/group/member_add?uuid={{ .Group.Uuid }}">增加成员</a></li>
+  <li class="active">搜索结果</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>为 {{ .Group.Name }} 集团搜索团队结果</strong>
+  </div>
+
+  <div class="panel-body">
+    {{ if .IsEmpty }}
+    <div class="alert alert-warning" role="alert">
+      <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+      未找到匹配的团队，请尝试其他关键词。
+    </div>
+    {{ else }}
+    <p>找到 {{ len .TeamBeanSlice }} 个团队：</p>
+    <hr />
+
+    {{ range .TeamBeanSlice }}
+    {{ template "component_team" . }}
+    
+    <div style="margin: 1rem 0;">
+      <a class="btn btn-success" href="/v1/group/member_invite?uuid={{ $.Group.Uuid }}&team_uuid={{ .Team.Uuid }}" role="button">
+        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 邀请加入集团
+      </a>
+    </div>
+    <hr />
+    {{ end }}
+    {{ end }}
+  </div>
+
+  <div class="panel-footer">
+    <a href="/v1/group/member_add?uuid={{ .Group.Uuid }}" class="btn btn-default">
+      <span class="glyphicon glyphicon-search" aria-hidden="true"></span> 重新搜索
+    </a>
+    <a href="/v1/group/detail?id={{ .Group.Uuid }}" class="btn btn-default">
+      <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span> 返回集团详情
+    </a>
+  </div>
+</div>
+
+{{ end }}

@@ -1,0 +1,310 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">项目物资详情</li>
+  <li>
+    {{ template "component_sess_capacity" . }}
+  </li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">
+      <i class="bi-box" style="font-size: 1.5rem; color: #5cb85c;"></i>
+      项目物资清单
+      <span class="label label-info pull-right">
+        {{ len .GoodsProjectList }}项物资
+      </span>
+    </h3>
+  </div>
+
+  <div class="panel-body">
+    <!-- 项目基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>项目信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>项目名称</strong></td>
+            <td>{{ .ProjectBean.Project.Title }}</td>
+          </tr>
+          <tr>
+            <td><strong>项目状态</strong></td>
+            <td>
+              <span class="label label-{{ if eq .ProjectBean.Project.Status 0 }}warning{{ else if eq .ProjectBean.Project.Status 1 }}success{{ else if eq .ProjectBean.Project.Status 2 }}info{{ else }}default{{ end }}">
+                {{ .ProjectBean.Project.StatusString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .ProjectBean.Project.CreatedAtDate }}</td>
+          </tr>
+          <tr>
+            <td><strong>物资总数</strong></td>
+            <td><span class="badge">{{ len .GoodsProjectList }}</span></td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>操作面板</h4>
+        <div class="panel panel-{{ if .IsVerifier }}success{{ else }}default{{ end }}">
+          <div class="panel-body text-center">
+            {{ if .IsVerifier }}
+            <i class="glyphicon glyphicon-plus-sign" style="font-size: 3rem; color: #5cb85c;"></i>
+            <h5><strong>管理权限</strong></h5>
+            <a href="/v1/goods/project_new?project_id={{ .ProjectBean.Project.Id }}" class="btn btn-primary">
+              <span class="glyphicon glyphicon-plus"></span> 添加物资
+            </a>
+            {{ else }}
+            <i class="glyphicon glyphicon-eye-open" style="font-size: 3rem; color: #777;"></i>
+            <h5><strong>查看权限</strong></h5>
+            <p class="text-muted">仅可查看物资信息</p>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 物资列表 -->
+    {{ if .GoodsProjectList }}
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-list"></span> 物资清单</h4>
+        <div class="table-responsive">
+          <table class="table table-striped table-hover">
+            <thead>
+              <tr>
+                <th>物资名称</th>
+                <th>数量</th>
+                <th>类别</th>
+                <th>提供方</th>
+                <th>状态</th>
+                <th>预期用途</th>
+                <th>备注</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{ range $index, $gp := .GoodsProjectList }}
+              {{ $goods := index $.GoodsList $index }}
+              <tr>
+                <td>
+                  <strong>
+                    <a href="/v1/goods/detail?uuid={{ $goods.Uuid }}">
+                        {{ $goods.Name }}</strong></a>
+                  {{ if $goods.Nickname }}
+                  <br><small class="text-muted">{{ $goods.Nickname }}</small>
+                  {{ end }}
+                  {{ if $goods.BrandName }}
+                  <br><small class="text-info">{{ $goods.BrandName }}</small>
+                  {{ end }}
+                </td>
+                <td><span class="badge">{{ $gp.Quantity }}</span></td>
+                <td>
+                  <span class="label {{ if eq $gp.Category 1 }}label-primary{{ else }}label-warning{{ end }}">
+                    {{ $gp.CategoryString }}
+                  </span>
+                </td>
+                <td>
+                  <span class="label {{ if eq $gp.ProviderType 1 }}label-success{{ else }}label-info{{ end }}">
+                    {{ $gp.ProviderTypeString }}
+                  </span>
+                </td>
+                <td>
+                  <span class="label {{ if eq $gp.Status 0 }}label-success{{ else if eq $gp.Status 1 }}label-warning{{ else }}label-default{{ end }}">
+                    {{ AvailabilityString $gp.Status }}
+                  </span>
+                </td>
+                <td>
+                  {{ if $gp.ExpectedUsage }}
+                  <small>{{ $gp.ExpectedUsage }}</small>
+                  {{ else }}
+                  <span class="text-muted">-</span>
+                  {{ end }}
+                </td>
+                <td>
+                  {{ if $gp.Notes }}
+                  <small>{{ $gp.Notes }}</small>
+                  {{ else }}
+                  <span class="text-muted">-</span>
+                  {{ end }}
+                </td>
+              </tr>
+              {{ end }}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    {{ else }}
+    <!-- 空状态 -->
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-default">
+          <div class="panel-body text-center" style="padding: 40px;">
+            <i class="glyphicon glyphicon-inbox" style="font-size: 4rem; color: #ccc;"></i>
+            <h4 class="text-muted">暂无物资记录</h4>
+            <p class="text-muted">该项目还没有添加任何物资</p>
+            {{ if .IsAdmin }}
+            <a href="/v1/goods/project_new?project_id={{ .ProjectBean.Project.Id }}" class="btn btn-primary">
+              <span class="glyphicon glyphicon-plus"></span> 添加第一个物资
+            </a>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+    </div>
+    {{ end }}
+
+    <!-- 物资准备状态 -->
+    {{ if .HasReadinessRecord }}
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-check"></span> 物资准备状态</h4>
+        <div class="panel panel-{{ if .GoodsProjectReadiness.IsReady }}success{{ else }}warning{{ end }}">
+          <div class="panel-body">
+            <div class="row">
+              <div class="col-md-3 text-center">
+                <h5>准备状态</h5>
+                {{ if .GoodsProjectReadiness.IsReady }}
+                <i class="glyphicon glyphicon-ok-circle" style="font-size: 3rem; color: #5cb85c;"></i>
+                <p><strong>已备齐</strong></p>
+                {{ else }}
+                <i class="glyphicon glyphicon-time" style="font-size: 3rem; color: #f0ad4e;"></i>
+                <p><strong>准备中</strong></p>
+                {{ end }}
+              </div>
+              <div class="col-md-6">
+                <h5>备注说明</h5>
+                <p>{{ if .GoodsProjectReadiness.Notes }}{{ .GoodsProjectReadiness.Notes }}{{ else }}<span class="text-muted">无备注</span>{{ end }}</p>
+              </div>
+              <div class="col-md-3">
+                <h5>确认时间</h5>
+                <p>{{ .GoodsProjectReadiness.CreatedAt.Format "2006-01-02 15:04" }}</p>
+                {{ if .IsVerifier }}
+                <button class="btn btn-{{ if .GoodsProjectReadiness.IsReady }}warning{{ else }}success{{ end }} btn-sm" onclick="toggleReadiness()">
+                  {{ if .GoodsProjectReadiness.IsReady }}标记未备齐{{ else }}标记已备齐{{ end }}
+                </button>
+                {{ end }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{ else if .IsVerifier }}
+    <!-- 初始状态设置 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4><span class="glyphicon glyphicon-check"></span> 物资准备状态</h4>
+        <div class="panel panel-default">
+          <div class="panel-body text-center">
+            <p class="text-muted">尚未设置物资准备状态</p>
+            <button class="btn btn-primary" onclick="setInitialReadiness()">
+              <span class="glyphicon glyphicon-plus"></span> 设置准备状态
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {{ end }}
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回项目
+      </a>
+     
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-circle" style="font-size: 2rem; color: blue;"></i>
+    茶博士：项目物资清单展示了该项目所需的全部物资信息，包括数量、类别、提供方和使用状态等详细信息。
+  </div>
+</div>
+
+<!-- 物资准备状态操作模态框 -->
+<div class="modal fade" id="readinessModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title">设置物资准备状态</h4>
+      </div>
+      <div class="modal-body">
+        <form id="readinessForm">
+          <div class="form-group">
+            <label>准备状态</label>
+            <select class="form-control" id="isReady" name="is_ready">
+              <option value="false">准备中</option>
+              <option value="true">已备齐</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>备注说明</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="请输入备注说明..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary" onclick="submitReadiness()">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function setInitialReadiness() {
+  $('#isReady').val('false');
+  $('#notes').val('');
+  $('#readinessModal').modal('show');
+}
+
+function toggleReadiness() {
+  {{ if .HasReadinessRecord }}
+  $('#isReady').val('{{ if .GoodsProjectReadiness.IsReady }}false{{ else }}true{{ end }}');
+  $('#notes').val('{{ .GoodsProjectReadiness.Notes }}');
+  {{ end }}
+  $('#readinessModal').modal('show');
+}
+
+function submitReadiness() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const projectUuid = urlParams.get('uuid');
+  
+  if (!projectUuid) {
+    alert('项目信息缺失，请刷新页面重试');
+    return;
+  }
+  
+  const params = new URLSearchParams();
+  params.append('project_uuid', projectUuid);
+  params.append('is_ready', $('#isReady').val());
+  params.append('notes', $('#notes').val());
+  
+  fetch('/v1/goods/project_readiness', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: params,
+    credentials: 'same-origin'
+  }).then(response => {
+    if (response.ok) {
+      $('#readinessModal').modal('hide');
+      location.reload();
+    } else {
+      alert('操作失败，请重试');
+    }
+  }).catch(error => {
+    alert('操作失败，请重试');
+  });
+}
+</script>
+
+{{ end }}

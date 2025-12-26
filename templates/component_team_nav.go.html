@@ -1,0 +1,45 @@
+{{/* 团队功能导航组件 - 重构后的清晰导航结构 */}}
+{{define "team_nav"}}
+
+{{/* 第一层导航：公开/私密分类 + 新建按钮 */}}
+<div style="margin: 20px;">
+  <ul class="nav nav-tabs nav-justified">
+    <li role="presentation" {{if eq .CurrentFilter "public"}}class="active"{{end}}>
+      <a href="?filter=public">公开团队</a>
+    </li>
+    <li role="presentation" {{if eq .CurrentFilter "private"}}class="active"{{end}}>
+      <a href="?filter=private">私密团队</a>
+    </li>
+    <li role="presentation">
+      <a href="/v1/team/new" style="color: #5cb85c; font-weight: bold;">
+        <span class="glyphicon glyphicon-plus-sign"></span> 新建
+      </a>
+    </li>
+  </ul>
+</div>
+
+{{/* 第二层导航：团队列表分类 */}}
+<div style="margin: 20px;">
+  <ul class="nav nav-pills">
+    <li role="presentation" {{if eq .PageType "hold"}}class="active"{{end}}>
+      <a href="/v1/teams/hold?filter={{.CurrentFilter}}">我建的团</a>
+    </li>
+    <li role="presentation" {{if eq .PageType "joined"}}class="active"{{end}}>
+      <a href="/v1/teams/joined?filter={{.CurrentFilter}}">已加入</a>
+    </li>
+    <li role="presentation" {{if eq .PageType "employed"}}class="active"{{end}}>
+      <a href="/v1/teams/employed?filter={{.CurrentFilter}}">核心管理</a>
+    </li>
+  </ul>
+</div>
+
+{{/* 过滤提示 */}}
+<div class="alert alert-info" role="alert" style="margin: 20px;">
+  <span class="glyphicon glyphicon-filter"></span>
+  <strong>{{if eq .CurrentFilter "public"}}公开团队{{else}}私密团队{{end}}</strong>
+  {{if eq .PageType "hold"}}/ 我建的团
+  {{else if eq .PageType "joined"}}/ 已加入
+  {{else if eq .PageType "employed"}}/ 核心管理{{end}}
+</div>
+
+{{end}}

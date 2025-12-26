@@ -1,6 +1,6 @@
 {{ define "content" }}
 
-{{/* 这是 查看茶团已发出的全部邀请函 页面 */}}
+{{/* 这是团队管理员视角，查看本茶团已发出的全部邀请函，页面 */}}
 
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
@@ -11,13 +11,13 @@
 
 <div style="margin: 2rem;">
   <ol class="nav nav-tabs">
-      <li><a href="/v1/team_member/role?id={{ .Team.Uuid }}">调整角色</a></li>
-      <li><a href="/v1/team/edit?id={{ .Team.Uuid }}">修改资料</a></li>
-      <li><a href="/v1/search">邀请新人</a></li>
-      <li class="active"><a href="/v1/team/invitations?id={{ .Team.Uuid }}">查看邀请</a></li>
-      <li><a href="/v1/team_member/application/check?uuid={{ .Team.Uuid }}">加盟申请</a></li>
-      <li><a href="/v1/team_member/fire?id={{ .Team.Uuid }}">移除成员</a></li>
-      <li><a href="#">冰封团队</a></li>
+      <li><a href="/v1/team/manage?uuid={{ .Team.Uuid }}">调整角色</a></li>
+      <li><a href="/v1/team/edit?uuid={{ .Team.Uuid }}">修改资料</a></li>
+      <li><a href="/v1/team/member_add?uuid={{ .Team.Uuid }}">邀请新人</a></li>
+      <li class="active"><a href="#">邀请函</a></li>
+      <li><a href="/v1/team/new_applications/check?uuid={{ .Team.Uuid }}">待处理申请</a></li>
+      <li><a href="/v1/team/applications?uuid={{ .Team.Uuid }}">全部申请</a></li>
+      <li><a href="#">注销团队</a></li>
   </ol>
 </div>
 
@@ -29,23 +29,20 @@
 
 <ul class="media-list">
   <li class="media">
-   
     <div class="media-body">
-      <h4 class="media-heading">诚邀加盟-邀请函</h4>
-
-      <p>
-        <span class="label label-success">{{ .GetStatus }}</span>
+      <h4 class="media-heading">
+        邀请 <strong>{{ .InviteEmail }}</strong> 加盟
+        <span class="label {{ if eq .Status 0 }}label-warning{{ else if eq .Status 1 }}label-info{{ else if eq .Status 2 }}label-success{{ else if eq .Status 3 }}label-danger{{ else }}label-default{{ end }}" style="margin-left: 10px;">
+          {{ .GetStatus }}
+        </span>
+      </h4>
+      <p style="color: #666;">
+        <i class="glyphicon glyphicon-briefcase"></i> 拟任角色：<span class="label label-primary">{{ .Role }}</span>
+        <span style="margin-left: 15px;"><i class="glyphicon glyphicon-time"></i> {{ .CreatedAtDate }}</span>
       </p>
-
-      <p style="font-style: italic;">
-        受邀人邮箱：{{ .InviteEmail }}
-      </p>
       <p>
-        <a href="/v1/team/invitation?id={{ .Uuid }}">
-          <span class="glyphicon glyphicon-sunglasses" aria-hidden="true"></span>
-          <span style="font-size: smaller;">
-            详情
-          </span>
+        <a href="/v1/team_member/invitation/detail?uuid={{ .Uuid }}" class="btn btn-sm btn-info">
+          <i class="glyphicon glyphicon-eye-open"></i> 查看详情
         </a>
       </p>
     </div>
@@ -57,13 +54,48 @@
 {{ else }}
 
 <hr />
-没有发出的加盟邀请函记录。
+没有已发出的邀请函记录。
 <hr />
 
 {{ end }}
 
+{{/* 分页导航 */}}
+{{ if gt .TotalPages 1 }}
+<nav aria-label="邀请函分页导航" style="text-align: center;">
+  <ul class="pagination">
+    {{ if .HasPrev }}
+    <li>
+      <a href="/v1/team/invitations?uuid={{ .Team.Uuid }}&page={{ sub .CurrentPage 1 }}" aria-label="上一页">
+        <span aria-hidden="true">&laquo;</span>
+      </a>
+    </li>
+    {{ else }}
+    <li class="disabled">
+      <span aria-hidden="true">&laquo;</span>
+    </li>
+    {{ end }}
 
+    {{ range $i := iterate .TotalPages }}
+    {{ if eq (add $i 1) $.CurrentPage }}
+    <li class="active"><span>{{ add $i 1 }}</span></li>
+    {{ else }}
+    <li><a href="/v1/team/invitations?uuid={{ $.Team.Uuid }}&page={{ add $i 1 }}">{{ add $i 1 }}</a></li>
+    {{ end }}
+    {{ end }}
 
-
+    {{ if .HasNext }}
+    <li>
+      <a href="/v1/team/invitations?uuid={{ .Team.Uuid }}&page={{ add .CurrentPage 1 }}" aria-label="下一页">
+        <span aria-hidden="true">&raquo;</span>
+      </a>
+    </li>
+    {{ else }}
+    <li class="disabled">
+      <span aria-hidden="true">&raquo;</span>
+    </li>
+    {{ end }}
+  </ul>
+</nav>
+{{ end }}
 
 {{ end }}

@@ -1,0 +1,55 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+  <li class="active">添加成员</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <strong>查找茶友并添加为家庭成员</strong>
+  </div>
+
+  <div class="panel-body">
+    <div class="well">
+      <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+      茶博士：如果知道对应的茶友号，查询速度会更快。可以用邮箱代替花名查找茶友。
+    </div>
+
+    <form role="form" action="/v1/family/search_user" method="post">
+      <input type="hidden" name="family_uuid" value="{{ .Family.Uuid }}" />
+
+      <div class="form-group">
+        <label>选择查询方式：</label>
+        <div>
+          <label class="radio-inline">
+            <input type="radio" name="search_type" value="user_id" required /> 茶友号
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="search_type" value="user_email" required /> 邮箱
+          </label>
+          <label class="radio-inline">
+            <input type="radio" name="search_type" value="user_name" required checked /> 花名
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="keyword">关键词：</label>
+        <input type="text" class="form-control" name="keyword" id="keyword" 
+               minlength="1" maxlength="32" required autofocus 
+               placeholder="请输入茶友号、邮箱或花名">
+      </div>
+
+      <div class="form-group">
+        <button class="btn btn-primary" type="submit">
+          <span class="glyphicon glyphicon-search"></span> 查找茶友
+        </button>
+        <a href="/v1/family/detail?id={{ .Family.Uuid }}" class="btn btn-default">返回</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+{{ end }}

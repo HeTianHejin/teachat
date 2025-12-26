@@ -5,24 +5,43 @@
 {{ with .TeamBean }}{{/*  检测Teambean非空 --开始  */}}
 <ol class="breadcrumb">
     <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/team/office">茶团管理</a></li>
-    <li class="active">{{ .Team.Abbreviation }}</li>
+    <li><a href="/v1/teams/joined">团队事项</a></li>
+    <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+    <li class="active">管理$事业茶团</li>
   </ol>
 
+  {{ end }}{{/*  检测Teambean非空 --结束  */}}
 
+  {{/* 检查团队是否属于某个集团 */}}
+  {{ if .GroupBean }}
+  <div class="alert alert-info" style="margin: 1rem 2rem;">
+    <i class="bi-building"></i> 当前团队已加入集团：<strong>{{ .GroupBean.Group.Name }}</strong>
+  </div>
+  {{ end }}
+
+  {{ with .TeamBean }}
   <div style="margin: 2rem;">
     <ol class="nav nav-tabs">
         <li class="active"><a href="#top">调整角色</a></li>
-        <li><a href="/v1/team/edit?id={{ .Team.Uuid }}">修改资料</a></li>
-        <li><a href="/v1/search">邀请新人</a></li>
-        <li><a href="/v1/team/invitations?id={{ .Team.Uuid }}">看邀请函</a></li>
-        <li><a href="/v1/team/applications?id={{ .Team.Uuid }}">看申请书</a></li>
-        <li><a href="/v1/team_member/resigned?={{ .Team.Uuid }}">离队成员</a></li>
-        <li><a href="#">冰封团队</a></li>
+        <li><a href="/v1/team/edit?uuid={{ .Team.Uuid }}">编辑</a></li>
+        {{ if $.GroupBean }}
+        <li><a href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}">查看集团</a></li>
+        {{ else }}
+          {{ if or $.IsFounder $.IsCEO }}
+          <li><a href="/v1/group/new?team_id={{ .Team.Uuid }}">创建集团</a></li>
+          {{ else }}
+          <li><a href="#" title="只有团队创建人或CEO才能创建集团" style="color: #ccc; cursor: not-allowed;">创建集团</a></li>
+          {{ end }}
+        {{ end }}
+        <li><a href="/v1/team/member_add?uuid={{ .Team.Uuid }}">邀请新人</a></li>
+        <li><a href="/v1/team/invitations?uuid={{ .Team.Uuid }}">看邀请函</a></li>
+        <li><a href="/v1/team/applications?uuid={{ .Team.Uuid }}">看申请书</a></li>
+        <li><a href="/v1/team_member/resigned?uuid={{ .Team.Uuid }}">退出声明</a></li>
+        <li><a href="#">注销团队</a></li>
     </ol>
   </div>
 
-  {{ end }}{{/*  检测Teambean非空 --结束  */}}
+  {{ end }}
 
 
   <div class="well">
@@ -34,7 +53,7 @@
   {{ range .CoreMemberBeanSlice }}{{/*  这是可管理的茶团核心成员展示  */}}
   <div class="media">
     <div class="media-left">
-      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <a href="/v1/user/biography?uuid={{ .Member.Uuid }}">
         <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
       </a>
     </div>
@@ -77,7 +96,7 @@
 
   <div class="media">
     <div class="media-left">
-      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <a href="/v1/user/biography?uuid={{ .Member.Uuid }}">
         <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
       </a>
     </div>
@@ -125,7 +144,7 @@
 
   <div class="media">
     <div class="media-left">
-      <a href="/v1/user/biography?id={{ .Member.Uuid }}">
+      <a href="/v1/user/biography?uuid={{ .Member.Uuid }}">
         <img class="img-circle" src="/v1/static/image/{{ .Member.Avatar }}.jpeg" alt="个人头像">
       </a>
     </div>

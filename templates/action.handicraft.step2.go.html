@@ -1,0 +1,77 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}@茶台</a></li>
+  <li class="active">手工艺 - 步骤2</li>
+  <li>{{ template "component_sess_capacity" . }}</li>
+</ol>
+
+{{ template "component_project_simple_detail" . }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title">手工艺记录 - 难度评估</h3>
+  </div>
+
+  <div class="panel-body">
+    <div class="progress">
+      <div class="progress-bar" role="progressbar" style="width: 40%">
+        步骤 2/5
+      </div>
+    </div>
+    
+    <ol class="breadcrumb">
+      <li class="text-success">基本信息</li>
+      <li class="active">难度评估</li>
+      <li>开工仪式</li>
+      <li>过程记录</li>
+      <li>结束仪式</li>
+    </ol>
+  </div>
+
+  <div class="panel-body">
+    <form method="post" action="/v1/handicraft/step2">
+      <input type="hidden" name="handicraft_uuid" value="{{ .Handicraft.Uuid }}">
+
+      <div class="form-group">
+        <label for="skill_difficulty">技能操作难度（1-5）</label>
+        <select class="form-control" name="skill_difficulty" id="skill_difficulty" required>
+          <option value="1" {{ if eq .Handicraft.SkillDifficulty 1 }}selected{{ end }}>1 - 非常简单</option>
+          <option value="2" {{ if eq .Handicraft.SkillDifficulty 2 }}selected{{ end }}>2 - 简单</option>
+          <option value="3" {{ if eq .Handicraft.SkillDifficulty 3 }}selected{{ end }}>3 - 中等</option>
+          <option value="4" {{ if eq .Handicraft.SkillDifficulty 4 }}selected{{ end }}>4 - 困难</option>
+          <option value="5" {{ if eq .Handicraft.SkillDifficulty 5 }}selected{{ end }}>5 - 非常困难</option>
+        </select>
+        <small class="help-block">评估完成此手工艺所需的技能操作难度</small>
+      </div>
+
+      <div class="form-group">
+        <label for="magic_difficulty">创意思维难度（1-5）</label>
+        <select class="form-control" name="magic_difficulty" id="magic_difficulty" required>
+          <option value="1" {{ if eq .Handicraft.MagicDifficulty 1 }}selected{{ end }}>1 - 非常简单</option>
+          <option value="2" {{ if eq .Handicraft.MagicDifficulty 2 }}selected{{ end }}>2 - 简单</option>
+          <option value="3" {{ if eq .Handicraft.MagicDifficulty 3 }}selected{{ end }}>3 - 中等</option>
+          <option value="4" {{ if eq .Handicraft.MagicDifficulty 4 }}selected{{ end }}>4 - 困难</option>
+          <option value="5" {{ if eq .Handicraft.MagicDifficulty 5 }}selected{{ end }}>5 - 非常困难</option>
+        </select>
+        <small class="help-block">评估完成此手工艺所需的创意思维难度</small>
+      </div>
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">
+          <span class="glyphicon glyphicon-arrow-right"></span> 下一步
+        </button>
+        <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：难度评估有助于合理安排资源和时间。
+  </div>
+</div>
+
+{{ end }}

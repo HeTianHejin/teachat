@@ -1,0 +1,295 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+   <li>{{ .SessUser.Name }} 的茶叶罐</li>
+  <li><a href="/v1/tea/user/account/page">管理个人茶叶账户</a></li>
+  <li class="active">待确认转账</li>
+</ol>
+
+<div class="container">
+
+    <div class="row">
+        <!-- 个人茶叶账户概览 -->
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        茶叶罐
+                        <span class="pull-right">
+                            状态: <span class="label {{ if eq .TeaAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ .StatusDisplay }}</span>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>总余额: <strong>{{ .BalanceDisplay }}</strong></h4>
+                            <p class="text-muted">您的茶叶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>锁定余额: <strong>{{ .LockedBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>可用余额: <strong>{{ .AvailableBalanceDisplay }}</strong></h4>
+                            <p class="text-muted">可以立即使用的茶叶</p>
+                        </div>
+                      
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- 操作按钮 -->
+    <div class="row" style="margin-bottom: 2rem ;">
+        <div class="col-md-12">
+           
+            <div class="btn-group">
+                <a href="/v1/tea/user/account/page" class="btn btn-default">
+                    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                    返回茶叶罐
+                </a>
+                <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning">
+                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                    待确认转账
+                </a>
+            </div>
+           
+        </div>
+    </div>
+    <div class="row">
+        <!-- 待确认转账列表 -->
+        <div class="col-md-12">
+            <div class="panel panel-warning">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
+                        待确认转账
+                        {{ if .Transfers }}
+                        <span class="badge">{{ len .Transfers }}</span>
+                        {{ end }}
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ if .Transfers }}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>发送方</th>
+                                    <th>转账金额</th>
+                                    <th>转账说明</th>
+                                    <th>剩余时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .Transfers }}
+                                <tr class="{{ if .IsExpired }}danger{{ end }}">
+                                    <td>
+                                        <a href="/v1/user/biography?uuid={{ .FromUserId }}" class="btn-link">
+                                            <strong>{{ .FromUserName }}</strong>
+                                        </a>
+                                        <br>
+                                        <small class="text-muted">用户ID: {{ .FromUserId }}</small>
+                                    </td>
+                                    <td>
+                                        <strong class="text-success">{{ .AmountDisplay }}</strong>
+                                    </td>
+                                    <td>
+                                        {{ if .Notes }}
+                                        <span>{{ .Notes }}</span>
+                                        {{ else }}
+                                        <span class="text-muted">无备注</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if .IsExpired }}
+                                        <span class="text-danger">
+                                            <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                                            已过期
+                                        </span>
+                                        {{ else }}
+                                        <span class="text-warning">
+                                            <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                            {{ .TimeRemaining }}
+                                        </span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if .CanAccept }}
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-success btn-sm" onclick="acceptTransfer('{{ .Uuid }}')">
+                                                <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                                接受
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="rejectTransfer('{{ .Uuid }}')">
+                                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                                                拒绝
+                                            </button>
+                                        </div>
+                                        {{ else }}
+                                        <span class="text-muted">
+                                            <span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span>
+                                            无法操作
+                                        </span>
+                                        {{ end }}
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                    {{ else }}
+                    <div class="text-center" style="padding: 40px;">
+                        <span class="glyphicon glyphicon-bell" style="font-size: 48px; color: #ccc;" aria-hidden="true"></span>
+                        <h3 class="text-muted">暂无待确认转账</h3>
+                        <p class="text-muted">当有其他茶友向您转账时，将显示在这里</p>
+                       
+                    </div>
+                    {{ end }}
+                </div>
+                {{ if .Transfers }}
+                <div class="panel-footer">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="text-muted">
+                                <small>
+                                    <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                                    待确认转账会在过期后自动失效，请及时处理
+                                </small>
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-right">
+                            <button type="button" class="btn btn-primary" onclick="refreshPage()">
+                                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                                刷新列表
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {{ end }}
+            </div>
+        </div>
+    </div>
+
+    <!-- 使用说明 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <span class="glyphicon glyphicon-question-sign" aria-hidden="true"></span>
+                        使用说明
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> 接受转账</h5>
+                            <p>点击"接受"按钮，转账金额将直接计入您的茶叶账户余额中。</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span> 拒绝转账</h5>
+                            <p>点击"拒绝"按钮，转账将被拒绝，茶叶将退回给发送方。</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5><span class="glyphicon glyphicon-time" aria-hidden="true"></span> 有效期限</h5>
+                            <p>每个转账都有有效期限制，过期后无法接受或拒绝。</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5><span class="glyphicon glyphicon-bell" aria-hidden="true"></span> 及时处理</h5>
+                            <p>建议及时处理待确认转账，避免因过期而失效。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+// 接受转账
+function acceptTransfer(transferUuid) {
+    if (!confirm('确定要接受这笔转账吗？茶叶将计入您的账户余额。')) {
+        return;
+    }
+    
+    fetch('/v1/tea/user/transfer/confirm/user_to_user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            transfer_uuid: transferUuid
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('转账接受成功！茶叶已计入您的账户。');
+            location.reload(); // 刷新页面
+        } else {
+            alert('接受失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('接受请求失败，请重试');
+    });
+}
+
+// 拒绝转账
+function rejectTransfer(transferUuid) {
+    var reason = prompt('请输入拒绝理由（可选）:', '');
+    if (reason === null) {
+        return; // 用户点击了取消
+    }
+    
+    fetch('/v1/tea/user/transfer/reject/user_to_user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            transfer_uuid: transferUuid,
+            reason: reason || ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('转账已拒绝，茶叶将退回给发送方。');
+            location.reload(); // 刷新页面
+        } else {
+            alert('拒绝失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('拒绝请求失败，请重试');
+    });
+}
+
+// 刷新页面
+function refreshPage() {
+    location.reload();
+}
+
+// 页面加载完成后自动刷新（每5分钟）
+$(document).ready(function() {
+    // 如果有待确认转账，每5分钟自动刷新一次
+    {{ if .Transfers }}
+    setInterval(function() {
+        location.reload();
+    }, 5 * 60 * 1000); // 5分钟
+    {{ end }}
+});
+</script>
+
+{{ end }}

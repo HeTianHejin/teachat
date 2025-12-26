@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	data "teachat/DAO"
+	dao "teachat/DAO"
 	util "teachat/Util"
 )
 
@@ -37,21 +37,21 @@ func HazardNewGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	var hazardData struct {
-		SessUser  data.User
+		SessUser  dao.User
 		ReturnURL string
 	}
-	hazardData.SessUser = user
+	hazardData.SessUser = s_u
 	hazardData.ReturnURL = r.URL.Query().Get("return_url")
 
-	renderHTML(w, &hazardData, "layout", "navbar.private", "hazard.new")
+	generateHTML(w, &hazardData, "layout", "navbar.private", "hazard.new")
 }
 
 // POST /v1/hazard/new
@@ -61,10 +61,10 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
@@ -73,11 +73,11 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 	description := strings.TrimSpace(r.PostFormValue("description"))
 
 	if name == "" {
-		report(w, r, "隐患名称不能为空。")
+		report(w, s_u, "隐患名称不能为空。")
 		return
 	}
 	if description == "" {
-		report(w, r, "隐患描述不能为空。")
+		report(w, s_u, "隐患描述不能为空。")
 		return
 	}
 
@@ -92,8 +92,8 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 		category = 6 // 默认其他
 	}
 
-	hazard := data.Hazard{
-		UserId:      user.Id,
+	hazard := dao.Hazard{
+		UserId:      s_u.Id,
 		Name:        name,
 		Nickname:    strings.TrimSpace(r.PostFormValue("nickname")),
 		Keywords:    strings.TrimSpace(r.PostFormValue("keywords")),
@@ -105,7 +105,7 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 
 	if err := hazard.Create(); err != nil {
 		util.Debug("Cannot create hazard", err)
-		report(w, r, "创建隐患记录失败，请重试。")
+		report(w, s_u, "创建隐患记录失败，请重试。")
 		return
 	}
 
@@ -136,48 +136,48 @@ func HazardDetailGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	user, err := sess.User()
+	s_u, err := sess.User()
 	if err != nil {
 		util.Debug("Cannot get user from session", err)
-		report(w, r, "你好，茶博士失魂鱼，有眼不识泰山。")
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	idStr := r.URL.Query().Get("id")
 	if idStr == "" {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id <= 0 {
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
-	hazard := data.Hazard{Id: id}
+	hazard := dao.Hazard{Id: id}
 	if err := hazard.GetByIdOrUUID(); err != nil {
 		util.Debug("Cannot get hazard by id", id, err)
-		report(w, r, "你好，假作真时真亦假，无为有处有还无？")
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	// 获取记录者信息
-	recorder, err := data.GetUser(hazard.UserId)
+	recorder, err := dao.GetUser(hazard.UserId)
 	if err != nil {
 		util.Debug("Cannot get recorder user", hazard.UserId, err)
 		// 如果获取记录者失败，使用默认值
-		recorder = data.User{Id: 0, Name: "未知用户"}
+		recorder = dao.User{Id: 0, Name: "未知用户"}
 	}
 
 	var hazardData struct {
-		SessUser data.User
-		Hazard   data.Hazard
-		Recorder data.User
+		SessUser dao.User
+		Hazard   dao.Hazard
+		Recorder dao.User
 	}
-	hazardData.SessUser = user
+	hazardData.SessUser = s_u
 	hazardData.Hazard = hazard
 	hazardData.Recorder = recorder
 
-	renderHTML(w, &hazardData, "layout", "navbar.private", "hazard.detail")
+	generateHTML(w, &hazardData, "layout", "navbar.private", "hazard.detail")
 }

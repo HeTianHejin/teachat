@@ -1,0 +1,53 @@
+{{ define "component_team_magic_bean" }}
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div class="row">
+      <div class="col-xs-8">
+        <strong>{{ .Magic.Name }}</strong>
+        {{ if .Magic.Nickname }}
+          <small class="text-muted">({{ .Magic.Nickname }})</small>
+        {{ end }}
+      </div>
+      <div class="col-xs-4 text-right">
+        <span class="label label-{{ if eq .Magic.Category 2 }}warning{{ else if eq .Magic.Category 1 }}info{{ else }}default{{ end }}">
+          {{ .Magic.CategoryString }}
+        </span>
+      </div>
+    </div>
+  </div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-8">
+        <p>{{ .Magic.Description }}</p>
+        <p><strong>智力等级：</strong>{{ .Magic.IntelligenceLevelString }}</p>
+        <p><strong>难度等级：</strong>{{ .Magic.DifficultyLevelString }}</p>
+      </div>
+      <div class="col-md-4">
+        <div class="well well-sm text-center">
+          <h4>团队掌握情况</h4>
+          <p><strong>段位：</strong>
+            <span class="label label-{{ if ge .MagicTeam.Level 7 }}success{{ else if ge .MagicTeam.Level 4 }}info{{ else }}default{{ end }}">
+              {{ .MagicTeam.Level }}段
+            </span>
+          </p>
+          <p><strong>状态：</strong>
+            <span class="label label-{{ if eq .MagicTeam.Status 3 }}success{{ else if eq .MagicTeam.Status 2 }}info{{ else if eq .MagicTeam.Status 1 }}warning{{ else }}default{{ end }}">
+              {{ .MagicTeam.StatusString }}
+            </span>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <a href="/v1/magic/detail?id={{ .Magic.Id }}" class="btn btn-sm btn-default">
+      <span class="glyphicon glyphicon-eye-open"></span> 查看详情
+    </a>
+    <a href="/v1/magic_team/edit?id={{ .MagicTeam.Id }}" class="btn btn-sm btn-primary">
+      <span class="glyphicon glyphicon-edit"></span> 编辑
+    </a>
+  </div>
+</div>
+
+{{ end }}

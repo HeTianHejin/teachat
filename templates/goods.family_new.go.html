@@ -1,0 +1,330 @@
+{{ define "content" }}
+<ol class="breadcrumb">
+    <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/family/detail?uuid={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+    <li class="active">登记家庭新物资</li>
+</ol>
+
+<style>
+    .required-field::after {
+        content: " *";
+        color: red;
+    }
+
+    .is-invalid {
+        border-color: #dc3545;
+    }
+
+    .invalid-feedback {
+        color: #dc3545;
+        display: none;
+    }
+
+    .was-validated .form-control:invalid~.invalid-feedback,
+    .was-validated .form-control:invalid~.text-muted {
+        display: block;
+    }
+
+    .was-validated .form-control:invalid {
+        border-color: #dc3545;
+    }
+</style>
+
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <h3 class="panel-title">{{ .Family.Abbreviation }} 登记家庭新物资【*必填】</h3>
+    </div>
+    <div class="panel-body">
+        <form role="form" action="/v1/goods/family_new" method="post" id="goodsForm" novalidate>
+
+            <!-- 申报登记新物资的家庭id信息 -->
+            <div class="form-group">
+                <label for="family_id" class="required-field">家庭编号：</label>
+                <input type="number" class="form-control" name="family_id" id="family_id" value="{{ .Family.Id }}" readonly
+                    required />
+                <small class="text-muted">注意核对当前$家庭的编号</small>
+                <div class="invalid-feedback">请提供家庭编号</div>
+            </div>
+
+            <!-- 物资基础信息 -->
+            <div class="form-group">
+                <label for="goods_name" class="required-field">物资名称：</label>
+                <input type="text" class="form-control" name="goods_name" id="goods_name" minlength="2" maxlength="24"
+                    pattern="^[\u4e00-\u9fa5a-zA-Z0-9\s（）]+$" placeholder="例如：（猪八戒）上宝沁金钯" required />
+                <small class="text-muted">请输入2-24位字符，支持中英文、数字和括号</small>
+                <div class="invalid-feedback">请输入有效的物资名称（2-24位字符）</div>
+            </div>
+
+            <div class="form-group">
+                <label for="nickname">昵称：</label>
+                <input type="text" class="form-control" name="nickname" id="nickname" minlength="2" maxlength="24"
+                    pattern="^[\u4e00-\u9fa5a-zA-Z0-9\s（）]+$" placeholder="例如：（猪八戒）九齿钉耙" />
+                <small class="text-muted">请输入2-24位字符，支持中英文、数字和括号</small>
+                <div class="invalid-feedback">请输入有效的昵称（2-24位字符）</div>
+            </div>
+
+            <!-- 分类信息 -->
+            <div class="form-group">
+                <label class="required-field">物资类型：</label>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="category" value="1" checked required>
+                        实体物资（有重力）
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="category" value="0" required>
+                        虚拟物资（无重力）
+                    </label>
+                </div>
+                <div class="invalid-feedback">请选择物资类型</div>
+            </div>
+
+            <div class="form-group">
+                <label class="required-field">物资属性：</label>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="features" value="0" checked required>
+                        可以买卖
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="features" value="1" required>
+                        不可交易
+                    </label>
+                </div>
+                <div class="invalid-feedback">请选择物资属性</div>
+            </div>
+            <!-- 品牌和型号 -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="brandname">品牌：</label>
+                        <input type="text" class="form-control" name="brandname" id="brandname" minlength="1"
+                            maxlength="50" placeholder="例如：上宝" />
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="model">型号：</label>
+                        <input type="text" class="form-control" name="model" id="model" minlength="1" maxlength="50"
+                            placeholder="例如：随身变化可心怀" />
+                    </div>
+                </div>
+            </div>
+            <!-- 设计信息 -->
+            <div class="form-group">
+                <label for="designer">设计者：</label>
+                <input type="text" class="form-control" name="designer" id="designer" minlength="2" maxlength="50"
+                    pattern="^[\u4e00-\u9fa5a-zA-Z\s·]+$" placeholder="例如：太上老君" />
+                <small class="text-muted">请输入2-50位中英文姓名，支持中间点(·)，不支持数字或特殊符号</small>
+                <div class="invalid-feedback">请输入有效的设计者姓名</div>
+            </div>
+
+            <div class="form-group">
+                <label for="describe" class="required-field">详细描述：</label>
+                <textarea class="form-control" name="describe" id="describe" rows="6" minlength="1" maxlength="1000"
+                    required placeholder="例如：（猪八戒）此是锻炼神镔铁，磨琢成工光皎洁。老君自己动钤锤，荧惑亲身添炭屑。"></textarea>
+                <small class="text-muted">请输入2-1000字的描述</small>
+                <div class="invalid-feedback">请输入物资描述</div>
+            </div>
+            <!-- 规格信息 -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="weight">重量（kg）：</label>
+                        <input type="number" class="form-control" name="weight" id="weight" min="0" step="0.01"
+                            placeholder="例如：2524" />
+                        <small class="text-muted">一藏之数，连柄五千零四十八斤</small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="dimensions">尺寸（长X宽X高）：</label>
+                        <input type="text" class="form-control" name="dimensions" id="dimensions" minlength="1"
+                            maxlength="50" placeholder="例如：0.04X0.04X2(m)" />
+                        <small class="text-muted">短长上下定乾坤</small>
+                    </div>
+                </div>
+            </div>
+            <!-- 价格信息 -->
+            <div class="form-group">
+                <label for="price">价格（元）：</label>
+                <div class="input-group">
+                    <span class="input-group-addon">¥</span>
+                    <input type="number" class="form-control" name="price" id="price" min="0" step="0.01"
+                        max="100000000" placeholder="请输入正数，如19.99" />
+                </div>
+                <small class="text-muted">支持两位小数，最高100,000,000元</small>
+                <div class="invalid-feedback">请输入有效的价格</div>
+            </div>
+
+            <!-- 生产信息 -->
+            <div class="form-group">
+                <label for="material">材质：</label>
+                <input type="text" class="form-control" name="material" id="material" minlength="1" maxlength="50"
+                    placeholder="例如：此是锻炼神镔铁" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="manufacturer" class="required-field">生产商：</label>
+                        <input type="text" class="form-control" name="manufacturer" id="manufacturer" minlength="2"
+                            maxlength="50" placeholder="例如：太上老君御品工坊" required />
+                        <div class="invalid-feedback">请输入生产商名称</div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="origin">产地：</label>
+                        <input type="text" class="form-control" name="origin" id="origin" minlength="2" maxlength="50"
+                            placeholder="例如：离恨天兜率宫" />
+                        <div class="invalid-feedback">请输入有效的产地</div>
+                    </div>
+                </div>
+            </div>
+            <!-- 其他属性 -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="color">颜色/款式：</label>
+                        <input type="text" class="form-control" name="color" id="color" minlength="1" maxlength="20"
+                            placeholder="例如：双环金坠叶" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="specification">规格：</label>
+                        <input type="text" class="form-control" name="specification" id="specification" minlength="1"
+                            maxlength="20" placeholder="例如：九齿" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="size">码数：</label>
+                        <input type="text" class="form-control" name="size" id="size" minlength="1" maxlength="20"
+                            placeholder="例如：XXXL" />
+                    </div>
+                </div>
+            </div>
+            <!-- 其他信息 -->
+            <div class="form-group">
+                <label for="applicability" class="required-field">主要用途：</label>
+                <input type="text" class="form-control" name="applicability" id="applicability" minlength="1"
+                    maxlength="100" placeholder="例如：上镇天庭，下摄地府，中筑妖魔。" required />
+                <div class="invalid-feedback">请输入主要用途</div>
+            </div>
+
+            <div class="form-group">
+                <label for="connection_type">联网方式：</label>
+                <select class="form-control" name="connection_type" id="connection_type">
+                    <option value="">-- 请选择 --</option>
+                    <option value="wifi">Wi-Fi</option>
+                    <option value="bluetooth">蓝牙</option>
+                    <option value="cellular">蜂窝网络</option>
+                    <option value="cable">有线电缆</option>
+                    <option value="other">其他网络</option>
+                    <option value="none">无需联网</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="serial_number">序列号：</label>
+                <input type="text" class="form-control" name="serial_number" id="serial_number" minlength="1"
+                    maxlength="50" placeholder="例如：101X010" />
+            </div>
+
+            <!-- 物资状态信息 -->
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="physical_state">物理状态：</label>
+                        <select class="form-control" name="physical_state" id="physical_state">
+                            <option value="0" selected>全新</option>
+                            <option value="1">已使用</option>
+                            <option value="2">磨损</option>
+                            <option value="3">损坏</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="operational_state">功能状态：</label>
+                        <select class="form-control" name="operational_state" id="operational_state">
+                            <option value="0" selected>正常</option>
+                            <option value="1">故障</option>
+                            <option value="2">维修中</option>
+                            <option value="3">已过期</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="availability">可用性：</label>
+                        <select class="form-control" name="availability" id="availability">
+                            <option value="0" selected>可用</option>
+                            <option value="1">使用中</option>
+                            <option value="2">闲置</option>
+                            <option value="3">已报废</option>
+                            <option value="4">已遗失</option>
+                            <option value="5">已转让</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="engine_type">动力类型：</label>
+                <input type="text" class="form-control" name="engine_type" id="engine_type" minlength="1"
+                    maxlength="100" placeholder="例如：锂电池" />
+            </div>
+
+            <!-- 链接信息 -->
+            <div class="form-group">
+                <label for="official_website">官方网站：</label>
+                <input type="text" class="form-control" name="official_website" id="official_website"
+                    placeholder="例如：http://www.dousuaigong.com" />
+            </div>
+
+            <div class="form-group">
+                <label for="purchase_url">购买链接：</label>
+                <input type="text" class="form-control" name="purchase_url" id="purchase_url"
+                    placeholder="例如：http://dousuaigong.crazybuy.com" />
+            </div>
+
+            <!-- 提交按钮 -->
+            <div class="form-group text-center">
+                <button type="submit" class="btn btn-primary btn-lg">提交登记</button>
+                <button type="reset" class="btn btn-default btn-lg">重置表单</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 表单验证脚本 -->
+<script>
+    document.getElementById('goodsForm').addEventListener('submit', function(event) {
+        var form = this;
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+            // 找到第一个无效字段并聚焦
+            var invalidFields = form.querySelectorAll(':invalid');
+            if (invalidFields.length > 0) {
+                invalidFields[0].focus();
+                // 滚动到错误位置
+                invalidFields[0].scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+            }
+            // 显示错误提示
+            form.classList.add('was-validated');
+        }
+    }, false);
+</script>
+
+{{ end }}

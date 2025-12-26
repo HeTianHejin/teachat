@@ -1,0 +1,119 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li>大堂</li>
+  <li><a href="/v1/family/home">家庭事项</a></li>
+  <li class="active">私密&家庭茶团</li>
+</ol>
+
+<div style="margin: 20px;">
+  <ul class="nav nav-tabs">
+    <li role="presentation"><a href="/v1/family/home">公开</a></li>
+    <li role="presentation" class="active"><a href="/v1/family/home/private">私密</a></li>
+    <li role="presentation" style="margin-left: auto;"><a href="/v1/family/new"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span> 新建</a></li>
+  </ul>
+</div>
+
+<div style="margin: 20px;">
+  <ul class="nav nav-pills">
+    <li role="presentation"><a href="/v1/family/home/private">家庭首页</a></li>
+    <li role="presentation" class="active"><a href="/v1/families/parent/private">本家家族</a></li>
+    <li role="presentation"><a href="/v1/families/in-laws/private">外家姻亲</a></li>
+    <li role="presentation"><a href="/v1/families/gone/private">随风飘逝</a></li>
+  </ul>
+</div>
+
+{{ if .IsEmpty }}
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="lead">茶博士</span>
+  </div>
+  <div class="panel-body">
+    尚未登记私密本家家族茶团。
+  </div>
+</div>
+{{ else }}
+
+{{ range .OtherFamilyBeanSlice }}
+<div class="media">
+  <div class="media-left">
+    <a href="/v1/family/detail?id={{ .Family.Uuid }}">
+      {{ if .Family.Status }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door.svg" alt="已婚家庭" height="32" width="32">
+      {{ else }}
+      <img class="media-object" src="/v1/static/bootstrap-icons/house-door-fill.svg" alt="单身贵族" height="32" width="32">
+      {{ end }}
+    </a>
+  </div>
+  <div class="media-body">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <div class="row">
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }} 家庭茶团</a>
+            <span class="label label-warning" style="font-size: xx-small;">私密</span>
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <span style="display: block; text-align: center;">
+              <span class="label label-default">{{ .Family.GetStatus }}</span>
+            </span>
+          </div>
+          <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
+            <div class="pull-right" style="font-size: small;">
+              <a href="/v1/user/biography?uuid={{ .Founder.Uuid }}">{{ .Founder.Name }}</a>
+              {{if .Founder.Gender }}
+              <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
+              {{ else }}
+              <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+              {{ end }}
+              <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .FounderTeam.Uuid }}">{{ .FounderTeam.Abbreviation }}</a></span>
+              {{ .Family.CreatedAtDate }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="panel-body">
+        {{ .Family.Introduction }} ...
+      </div>
+      <div class="panel-footer">
+        <span style="margin-inline-end: 20px;" title="家庭号">
+          <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
+          {{ .Family.Id }}
+        </span>
+        {{ if .Family.HasChild }}
+        <span style="margin-inline-end: 20px;" title="有子女">
+          <i class="bi-check-circle" style="font-size: 1rem; color: #5cb85c;"></i>
+        </span>
+        {{ end }}
+        <span style="margin-inline-end: 20px;">
+          <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+          {{ .MemberCount }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="margin: 1rem;">
+  <a class="btn btn-default" href="/v1/family/tree?id={{ .Family.Uuid }}" role="button">
+    <i class="bi-diagram-3" style="font-size: 1.5rem; color: brown;"></i>
+    家族树</a>
+  <span style="margin-inline-start: 2rem;">
+    <a class="btn btn-default" href="/v1/family/edit?id={{ .Family.Uuid }}" role="button">
+      <i class="bi-pencil-square" style="font-size: 1.5rem; color: green;"></i>
+      编辑</a>
+  </span>
+  <span style="margin-inline-start: 2rem;">
+    <a class="btn btn-default" href="/v1/family_member/resign?id={{ .Family.Uuid }}" role="button">
+      <i class="bi-escape" style="font-size: 1.5rem; color: red;"></i>
+      退出</a>
+  </span>
+</div>
+
+<hr />
+
+{{ end }}
+
+{{ end }}
+
+{{ end }}

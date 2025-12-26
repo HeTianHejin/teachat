@@ -1,4 +1,4 @@
-package data
+package dao
 
 import "time"
 
@@ -40,7 +40,7 @@ func (s *SeeSeekExaminationReport) Create() (err error) {
 		 report_date, attachment, tags) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) 
 		RETURNING id, uuid`
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -53,7 +53,7 @@ func (s *SeeSeekExaminationReport) Create() (err error) {
 }
 func (s *SeeSeekExaminationReport) Update() (err error) {
 	statement := "UPDATE see_seek_examination_reports SET see_seek_id=$2, classify=$3, status=$4, name=$5, nickname=$6, description=$7, sample_type=$8, sample_order=$9, instrument_goods_id=$10, report_title=$11, report_content=$12, updated_at=$13, master_user_id=$14, reviewer_user_id=$15, report_date=$16, attachment=$17, tags=$18 WHERE id=$1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -68,7 +68,7 @@ func (s *SeeSeekExaminationReport) Update() (err error) {
 // SeeSeekExaminationReport.Get() // 读取一个 SeeSeekExaminationReport
 func (s *SeeSeekExaminationReport) Get() (err error) {
 	statement := "SELECT id, uuid, see_seek_id, classify, status, name, nickname, description, sample_type, sample_order, instrument_goods_id, report_title, report_content, created_at, updated_at, master_user_id, reviewer_user_id, report_date, attachment, tags FROM see_seek_examination_reports WHERE id=$1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -81,7 +81,7 @@ func (s *SeeSeekExaminationReport) Get() (err error) {
 }
 func (s *SeeSeekExaminationReport) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, see_seek_id, classify, status, name, nickname, description, sample_type, sample_order, instrument_goods_id, report_title, report_content, created_at, updated_at, master_user_id, reviewer_user_id, report_date, attachment, tags FROM see_seek_examination_reports WHERE uuid=$1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -121,7 +121,7 @@ type SeeSeekExaminationItem struct {
 // SeeSeekExaminationItem.Create() // 创建一个 SeeSeekExaminationItem
 func (s *SeeSeekExaminationItem) Create() (err error) {
 	statement := "INSERT INTO see_seek_examination_items (uuid, classify, see_seek_examination_report_id, item_code, item_name, result, result_unit, reference_min, reference_max, remark, abnormal_flag, method, operator, status, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id, uuid"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -134,7 +134,7 @@ func (s *SeeSeekExaminationItem) Create() (err error) {
 }
 func (s *SeeSeekExaminationItem) Update() (err error) {
 	statement := "UPDATE see_seek_examination_items SET classify=$2, see_seek_examination_report_id=$3, item_code=$4, item_name=$5, result=$6, result_unit=$7, reference_min=$8, reference_max=$9, remark=$10, abnormal_flag=$11, method=$12, operator=$13, status=$14, updated_at=$15 WHERE id=$1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -147,7 +147,7 @@ func (s *SeeSeekExaminationItem) Update() (err error) {
 }
 func (s *SeeSeekExaminationItem) Get() (err error) {
 	statement := "SELECT id, uuid, classify, see_seek_examination_report_id, item_code, item_name, result, result_unit, reference_min, reference_max, remark, abnormal_flag, method, operator, status, created_at, updated_at FROM see_seek_examination_items WHERE id=$1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
@@ -160,7 +160,7 @@ func (s *SeeSeekExaminationItem) Get() (err error) {
 }
 func (s *SeeSeekExaminationItem) GetByUuid() (err error) {
 	statement := "SELECT id, uuid, classify, see_seek_examination_report_id, item_code, item_name, result, result_unit, reference_min, reference_max, remark, abnormal_flag, method, operator, status, created_at, updated_at FROM see_seek_examination_items WHERE uuid=$1"
-	stmt, err := db.Prepare(statement)
+	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}

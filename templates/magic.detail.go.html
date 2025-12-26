@@ -1,0 +1,182 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li class="active">法力详情</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <span class="glyphicon glyphicon-flash"></span>
+    法力 #{{ .MagicBean.Magic.Id }} - {{ .MagicBean.Magic.Name }}
+    <span class="label label-{{ if .MagicBean.Magic.IsHighLevel }}success{{ else }}default{{ end }} pull-right">
+      {{ .MagicBean.Magic.Level }}级
+    </span>
+  </div>
+  <div class="panel-body">
+    
+    <!-- 基本信息 -->
+    <div class="row">
+      <div class="col-md-6">
+        <h4>基本信息</h4>
+        <table class="table table-bordered">
+          <tr>
+            <td><strong>ID</strong></td>
+            <td>{{ .MagicBean.Magic.Id }}</td>
+          </tr>
+          <tr>
+            <td><strong>法力名称</strong></td>
+            <td>{{ .MagicBean.Magic.Name }}</td>
+          </tr>
+          {{ if .MagicBean.Magic.Nickname }}
+          <tr>
+            <td><strong>法力别名</strong></td>
+            <td>{{ .MagicBean.Magic.Nickname }}</td>
+          </tr>
+          {{ end }}
+          <tr>
+            <td><strong>法力类型</strong></td>
+            <td>
+              <span class="label label-default">{{ .MagicBean.Magic.CategoryString }}</span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>法力等级</strong></td>
+            <td>
+              <span class="label label-{{ if .MagicBean.Magic.IsHighLevel }}success{{ else }}default{{ end }}">
+                {{ .MagicBean.Magic.Level }}级
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>智力要求</strong></td>
+            <td>
+              <span class="label label-{{ if .MagicBean.Magic.IsHighIntelligence }}warning{{ else }}info{{ end }}">
+                {{ .MagicBean.Magic.IntelligenceLevel.LevelString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>掌握难度</strong></td>
+            <td>
+              <span class="label label-{{ if .MagicBean.Magic.IsHighDifficulty }}danger{{ else }}info{{ end }}">
+                {{ .MagicBean.Magic.DifficultyLevelString }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>创建时间</strong></td>
+            <td>{{ .MagicBean.Magic.CreatedDateTime }}</td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="col-md-6">
+        <h4>详细描述</h4>
+        <div class="well">
+          <p>{{ .MagicBean.Magic.Description }}</p>
+        </div>
+        
+        <h5>法力特征</h5>
+        <div class="row">
+          <div class="col-sm-4">
+            <div class="text-center">
+              <h6>智力要求</h6>
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ if .MagicBean.Magic.IsHighIntelligence }}warning{{ else }}info{{ end }}" 
+                     style="width: {{ .MagicBean.Magic.IntelligenceLevel }}0%">
+                  {{ .MagicBean.Magic.IntelligenceLevel.LevelString }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-center">
+              <h6>掌握难度</h6>
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ if .MagicBean.Magic.IsHighDifficulty }}danger{{ else }}info{{ end }}" 
+                     style="width: {{ .MagicBean.Magic.DifficultyLevel }}0%">
+                  {{ .MagicBean.Magic.DifficultyLevelString }}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-center">
+              <h6>法力等级</h6>
+              <div class="progress">
+                <div class="progress-bar progress-bar-{{ if .MagicBean.Magic.IsHighLevel }}success{{ else }}default{{ end }}" 
+                     style="width: {{ .MagicBean.Magic.Level }}0%">
+                  {{ .MagicBean.Magic.Level }}级
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h5>智力等级说明</h5>
+        <div class="alert alert-info">
+          <small>{{ .MagicBean.Magic.IntelligenceLevel.Description }}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- 法力等级说明 -->
+    <div class="row">
+      <div class="col-md-12">
+        <h4>法力等级说明</h4>
+        <div class="alert alert-{{ if .MagicBean.Magic.IsHighLevel }}success{{ else }}info{{ end }}">
+          <strong>{{ .MagicBean.Magic.Level }}级法力：</strong>
+          {{ if eq .MagicBean.Magic.Level 5 }}
+            专家级别，具备深厚的理论基础和丰富的实践经验，能够指导他人并解决复杂问题。
+          {{ else if eq .MagicBean.Magic.Level 4 }}
+            高级水平，能够独立完成复杂任务，具备较强的问题解决能力。
+          {{ else if eq .MagicBean.Magic.Level 3 }}
+            中级水平，能够熟练完成常规任务，具备一定的独立工作能力。
+          {{ else if eq .MagicBean.Magic.Level 2 }}
+            初级水平，掌握基本操作，能够在指导下完成任务。
+          {{ else }}
+            入门级别，刚开始学习，需要持续练习和指导。
+          {{ end }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="text-center" style="margin-top: 20px;">
+      <a href="javascript:history.back()" class="btn btn-default">
+        <span class="glyphicon glyphicon-arrow-left"></span> 返回
+      </a>
+      <button type="button" class="btn btn-info" onclick="copyMagicId()">
+        <span class="glyphicon glyphicon-copy"></span> 复制ID
+      </button>
+    </div>
+  </div>
+  
+  <div class="panel-footer">
+    <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
+    茶博士：法力是智慧的体现，持续思考和实践是提升法力的关键。法力ID：{{ .MagicBean.Magic.Id }}
+  </div>
+</div>
+
+<script>
+  function copyMagicId() {
+    var magicId = "{{ .MagicBean.Magic.Id }}";
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(magicId).then(function() {
+        alert('法力ID已复制到剪贴板：' + magicId);
+      });
+    } else {
+      // 兼容旧浏览器
+      var textArea = document.createElement("textarea");
+      textArea.value = magicId;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('法力ID已复制到剪贴板：' + magicId);
+    }
+  }
+</script>
+
+{{ end }}
