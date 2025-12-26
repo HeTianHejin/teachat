@@ -73,8 +73,8 @@ templates文件夹存放*.go.html模版文件;
 DAO文件夹（package dao）存放数据库连接属性；定义所需的原始数据结构type * struct，分类属性定义声明const，相关的CURD方法，模版填充需要包装数据结构（TemplateData/bean）声明在template_struct_*； 
 Route文件夹（package route）存放路由处理函数，输出最终正式页面generateHTML方法，route_share_func_*存放共享的从数据库获取包装数据方法（fetch*Bean）/辅助函数；  
 sql文件夹存放建表语句schema.sql，预填充数据seed_data.sql文件。  
-util（package util）文件夹存放一般的工具函数；
-文件、变量及函数命名模式： 【模块】【分类】【具体内容】.go 例如：route_tea_user_account.go，DAO/tea_account.go等。  
+util（package util）文件夹存放一般的工具函数；  
+文件、变量及函数命名模式：【模块】【分类】【具体内容】.go 例如：route_tea_user_account.go，DAO/tea_account.go等。  
 ## 本地运行需要做的 
 
 提示：建议按自己的pc系统搜索对应Golang编程环境搭建教程作业，以下是大致步骤。  
@@ -107,10 +107,6 @@ util（package util）文件夹存放一般的工具函数；
 6、按故事需要增加功能，数据模型、路由处理方法，以及相应模版。  
 7、其他...  
 
-## 运行时界面截图
-在帮助文件夹里查看预填充数据模拟的测试运行页面截图。  
-
-![茶话会集合](public/help/image/teachat-square.jpeg)
 
 ### 附加说明 
 >1、本文前面提到的“慎独”一词意思是指什么？慎独的“独”可以是独立思考，也可以是独断专行，这里是指需要谨慎对待个人的独处行为，特别是个人在无监护的状态下活动时。“慎独”一词最早出自《礼记·大学》：“君子慎独，何谓也？君子于其所不知，盖阙如也。”意思是说，君子在独处时也要谨慎行事，即使没有外人在场监督，也要保持道德操守和行为规范。后来，明代哲学家王阳明在其著作《传习录》中对“慎独”进行了进一步的阐述，强调了内心的自我约束和道德修养。他认为，真正的“慎独”不仅仅是外在行为的规范，更重要的是内心的诚实和自律。王阳明指出：“吾日三省吾身，为人谋而不忠乎？与朋友交而不信乎？传不习乎？”这表明，君子在独处时应当反省自己的行为，确保自己在任何情况下都能坚持道德原则。总的来说，“慎独”强调了个人在独处时的自我约束和道德修养，是中华传统文化中重要的伦理观念之一。*注意：本文提到的“慎独”，是相对语境，一方面指个人独处时的自我约束，另一方面也提示用户必须警惕处于“独”状态下的他人，避免冒犯他人，也不被他人冒犯。  
@@ -119,7 +115,7 @@ util（package util）文件夹存放一般的工具函数；
 
 
 # 感谢:
-!    <a href="https://go.dev/dl/">go</a>
+     <a href="https://go.dev/dl/">go</a>
      <a href="https://www.postgresql.org/">PostgreSQL</a>
      <a href="https://code.visualstudio.com/">VSCode</a>
      <a href="https://aws.amazon.com/q/">Amazon-Q</a>
