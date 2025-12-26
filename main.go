@@ -10,8 +10,7 @@ import (
 	route "teachat/Route"
 	util "teachat/Util"
 	"time"
-
-	"github.com/NYTimes/gziphandler" // 压缩
+	//"github.com/NYTimes/gziphandler" // 压缩
 )
 
 func main() {
@@ -41,11 +40,8 @@ func main() {
 
 	files := cacheControl(http.FileServer(http.Dir(util.Config.Static)))
 
-	// 添加Gzip压缩
-	handler := gziphandler.GzipHandler(files)
-
 	// 注册静态资源处理器
-	mux.Handle(staticPrefix, http.StripPrefix(staticPrefix, handler))
+	mux.Handle(staticPrefix, http.StripPrefix(staticPrefix, files))
 
 	//	mux.HandleFunc("/", route.Index)
 	// index
