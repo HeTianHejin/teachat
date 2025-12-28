@@ -125,7 +125,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 自动创建用户茶叶账户
-	if err := dao.EnsureTeaAccountExists(newU.Id); err != nil {
+	if err := dao.EnsureTeaUserAccountExists(newU.Id); err != nil {
 		util.Debug(" Cannot create tea account for user", err)
 		report(w, newU, "你好，茶博士因找不到茶叶账户登记本，导致注册失败，请确认情况后重试。")
 		return

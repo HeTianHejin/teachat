@@ -306,22 +306,22 @@ func main() {
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
 
 	// 用户茶叶账户系统路由
-	mux.HandleFunc("/v1/tea/user/account/page", route.HandleTeaUserAccount)                                             //用户茶叶账户入口页面
-	mux.HandleFunc("/v1/tea/user/account", route.GetTeaUserAccountAPI)                                                  // 用户茶叶账户信息API
-	mux.HandleFunc("/v1/tea/user/account/freeze", route.FreezeTeaUserAccountAPI)                                        // 用户茶叶账户冻结API
-	mux.HandleFunc("/v1/tea/user/account/unfreeze", route.UnfreezeTeaUserAccountAPI)                                    // 用户茶叶账户解冻API
-	mux.HandleFunc("/v1/tea/user/transfer/user_to_user", route.CreateTeaUserToUserTransferAPI)                          // 用户对用户创建转账API
-	mux.HandleFunc("/v1/tea/user/transfer/user_to_team", route.CreateTeaUserToTeamTransferAPI)                          // 用户对团队创建转账API
-	mux.HandleFunc("/v1/tea/user/transfers/outs/user_to_user", route.GetTeaUserToUserTransferOutsAPI)                   // 用户对用户转出记录API
-	mux.HandleFunc("/v1/tea/user/transfers/outs/user_to_user/page", route.GetTeaUserToTeamTransferOutsAPI)              // 用户对团队转出记录API
-	mux.HandleFunc("/v1/tea/user/transfers/pending/user_to_user", route.GetTeaUserPendingUserToUserTransfersAPI)        // 用户待确认用户对用户转账API
-	mux.HandleFunc("/v1/tea/user/transfers/pending/user_to_team", route.GetTeaUserPendingUserToTeamTransfersAPI)        // 用户待确认用户对团队转账API
-	mux.HandleFunc("/v1/tea/user/transfers/pending/user_to_user/page", route.HandleTeaUserPendingUserToUserTransfers)   // 用户待确认用户对用户转账页面路由
-	mux.HandleFunc("/v1/tea/user/transfers/pending/user_to_team/page", route.HandleTeaUserPendingUserToTeamTransfers)   // 用户待确认用户对团队转账页面路由
-	mux.HandleFunc("/v1/tea/user/transfers/history/user_to_user", route.GetTeaUserToUserTransferHistoryAPI)             // 用户对用户转账历史API
-	mux.HandleFunc("/v1/tea/user/transfers/history/user_to_team", route.GetTeaUserToTeamTransferHistoryAPI)             // 用户对团队转账历史API
-	mux.HandleFunc("/v1/tea/user/transfers/history/user_to_user/page", route.HandleTeaUserTransferHistory)              // 用户对用户转账历史页面路由
-	mux.HandleFunc("/v1/tea/user/transfers/history/user_to_team/page", route.HandleTeaTeamTransferHistory)              // 用户对团队转账历史页面路由
+	mux.HandleFunc("/v1/tea/user/account/page", route.HandleTeaUserAccount)          //用户茶叶账户入口页面
+	mux.HandleFunc("/v1/tea/user/account", route.GetTeaUserAccountAPI)               // 用户茶叶账户信息API
+	mux.HandleFunc("/v1/tea/user/account/freeze", route.FreezeTeaUserAccountAPI)     // 用户茶叶账户冻结API
+	mux.HandleFunc("/v1/tea/user/account/unfreeze", route.UnfreezeTeaUserAccountAPI) // 用户茶叶账户解冻API
+
+	mux.HandleFunc("/v1/tea/user/transfer/user_to_user", route.CreateTeaUserToUserTransferOutAPI) // 用户对用户创建转账API
+	mux.HandleFunc("/v1/tea/user/transfer/user_to_team", route.CreateTeaUserToTeamTransferOutAPI) // 用户对团队创建转账API
+
+	mux.HandleFunc("/v1/tea/user/transfers/outs/user_to_user", route.GetTeaUserToUserTransferOutsAPI) // 用户对用户转出记录API
+	mux.HandleFunc("/v1/tea/user/transfers/outs/user_to_team", route.GetTeaUserToTeamTransferOutsAPI) // 用户对团队转出记录API
+
+	mux.HandleFunc("/v1/tea/user/transfers/pending/user_to_user", route.GetTeaUserPendingUserToUserTransfersAPI)      // 用户待确认，用户对用户转账列表API
+	mux.HandleFunc("/v1/tea/user/transfers/pending/user_to_team", route.GetTeaUserPendingUserToTeamTransfersAPI)      // 用户待确认，用户对团队转账API
+	mux.HandleFunc("/v1/tea/user/transfers/pending/user_to_user/page", route.HandleTeaUserPendingUserToUserTransfers) // 用户待确认，用户对用户转账页面路由
+	mux.HandleFunc("/v1/tea/user/transfers/pending/user_to_team/page", route.HandleTeaUserPendingUserToTeamTransfers) // 用户待确认，用户对团队转账页面路由 --ok251228
+
 	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user", route.GetTeaUserFromUserTransferInsAPI)                 // 用户接收用户转入记录API - 接收历史（所有状态）
 	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_user/completed", route.GetTeaUserCompletedTransferInsAPI)      // 用户接收用户转入记录API - 收入记录（仅已完成）
 	mux.HandleFunc("/v1/tea/user/transfers/ins/user_from_team", route.GetTeaUserFromTeamTransferInsAPI)                 // 用户接收团队转入记录API
