@@ -1318,9 +1318,18 @@ CREATE TABLE messages (
 );
 
 -- 消息盒子相关索引
+-- 普通索引（用于查询优化）
 CREATE INDEX idx_message_boxes_type_object ON message_boxes(type, object_id);
 CREATE INDEX idx_message_boxes_deleted_at ON message_boxes(deleted_at);
 CREATE INDEX idx_message_boxes_uuid ON message_boxes(uuid);
+
+-- 唯一约束索引（防止重复记录）
+-- 注意：部分唯一索引仅对未删除的记录生效（WHERE deleted_at IS NULL）
+-- 这确保同一(type, object_id)组合只能有一条活跃记录
+-- 在执行此约束前，需要先运行 fix_duplicate_message_boxes.sql 清理现有重复数据
+CREATE UNIQUE INDEX IF NOT EXISTS unique_message_box_type_object
+ON message_boxes (type, object_id)
+WHERE deleted_at IS NULL;
 
 -- 消息相关索引
 CREATE INDEX idx_messages_message_box_id ON messages(message_box_id);
