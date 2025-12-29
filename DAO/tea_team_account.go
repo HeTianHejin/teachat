@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// --注意：用户茶叶账户相关定义（TeaUserToUserTransferOut、TeaUserFromTeamTransferIn……）已迁移至tea_account.go文件，保留此注释以提示开发者--
 /*
 团队茶叶账户转账流程：
 1、发起方法：团队转出额度茶叶，无论接收方是团队还是用户（个人），都要求由1成员填写转账表单，第一步创建待审核转账表单，
