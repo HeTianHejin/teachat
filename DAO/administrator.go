@@ -20,9 +20,9 @@ type Administrator struct {
 }
 
 var AdminRole = map[string]string{
-	"waiter":  "服务员",
-	"pilot":   "飞行员",
-	"captain": "船长",
+	"cabin crew": "客舱机组人员",
+	"pilot":      "飞行员",
+	"captain":    "船长",
 }
 
 var Status = map[bool]string{
@@ -46,7 +46,7 @@ func GetAdministrators() (administrators []Administrator, err error) {
 	return
 }
 
-// 添加一个普通管理员（Pilot）
+// 添加一个普通管理员（carbin crew）
 func (administrator *Administrator) Create() (err error) {
 	statement := "INSERT INTO administrators (uuid, user_id, role, password, created_at, valid) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id, uuid"
 	stmt, err := DB.Prepare(statement)

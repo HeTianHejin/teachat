@@ -1,7 +1,10 @@
 -- TeaChat 数据库架构定义
--- 创建数据库
-DROP DATABASE IF EXISTS teachat;
-CREATE DATABASE teachat;
+
+-- 创建数据库(如果需要)
+--DROP DATABASE IF EXISTS teachat;
+--CREATE USER robin WITH PASSWORD 'robin';
+--ALTER USER robin SUPERUSER;
+--CREATE DATABASE teachat OWNER robin;
 -- 连接到新数据库
 \c teachat
 
@@ -1590,7 +1593,7 @@ CREATE INDEX idx_teams_abbreviation ON teams(abbreviation);
 -- 团队成员表索引
 CREATE INDEX idx_team_members_team_id ON team_members(team_id);
 CREATE INDEX idx_team_members_user_id ON team_members(user_id);
-CREATE INDEX idx_team_members_status ON team_members(class);
+CREATE INDEX idx_team_members_status ON team_members(status);
 CREATE INDEX idx_team_members_role ON team_members(role);
 
 -- 集团表索引
