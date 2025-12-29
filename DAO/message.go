@@ -13,7 +13,7 @@ type MessageBox struct {
 	Uuid      string
 	Type      int  // 类型： 1：家庭，2:团队,
 	ObjectId  int  // 绑定对象id（家庭id，团队id)
-	IsEmpty   bool // 是否为空, default = true
+	Count    int  // 存量消息数量，默认为0
 	MaxCount  int  // 存活最大消息数量，默认为199
 	CreatedAt time.Time
 	UpdatedAt *time.Time
@@ -192,13 +192,13 @@ func (mb *MessageBox) CreateWithContext(ctx context.Context) (err error) {
 		return errors.New("database connection is nil")
 	}
 
-	statement := "INSERT INTO message_boxes (uuid, type, object_id, is_empty, max_count, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
+	statement := "INSERT INTO message_boxes (uuid, type, object_id, count, max_count, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, time.Now()).Scan(&mb.Id)
+	err = stmt.QueryRowContext(ctx, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.Count, &mb.MaxCount, time.Now()).Scan(&mb.Id)
 	return
 }
 
@@ -232,7 +232,7 @@ func (mb *MessageBox) GetOrCreateMessageBoxWithContext(msg_type, object_id int, 
 		mb.Uuid = Random_UUID()
 		mb.Type = msg_type
 		mb.ObjectId = object_id
-		mb.IsEmpty = true
+		mb.Count = 0
 		mb.MaxCount = 199
 
 		// 尝试创建，如果因为并发导致重复，则重新获取
@@ -274,7 +274,7 @@ func (mb *MessageBox) GetMessageBoxByIdWithContext(id int, ctx context.Context) 
 		return errors.New("database connection is nil")
 	}
 
-	err = DB.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, is_empty, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE id = $1 AND deleted_at IS NULL", id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, count, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE id = $1 AND deleted_at IS NULL", id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.Count, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
 	return
 }
 
@@ -295,7 +295,7 @@ func (mb *MessageBox) GetMessageBoxByTypeAndObjectIdWithContext(msg_type, object
 		return errors.New("database connection is nil")
 	}
 
-	err = DB.QueryRowContext(ctx, "SELECT * FROM message_boxes WHERE type = $1 AND object_id = $2 AND deleted_at IS NULL", msg_type, object_id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT * FROM message_boxes WHERE type = $1 AND object_id = $2 AND deleted_at IS NULL", msg_type, object_id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.Count, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 记录不存在时返回特定的错误，让调用者能够区分
@@ -490,7 +490,7 @@ func (u *User) MessageBoxesWithContext(ctx context.Context) (messageBoxes []Mess
 
 	// 获取用户所属的家庭和团队的消息盒子
 	query := `
-		SELECT DISTINCT mb.id, mb.uuid, mb.type, mb.object_id, mb.is_empty, mb.max_count, mb.created_at, mb.updated_at, mb.deleted_at FROM message_boxes mb 
+		SELECT DISTINCT mb.id, mb.uuid, mb.type, mb.object_id, mb.count, mb.max_count, mb.created_at, mb.updated_at, mb.deleted_at FROM message_boxes mb 
 		LEFT JOIN family_members fm ON (mb.type = $1 AND mb.object_id = fm.family_id AND fm.user_id = $2)
 		LEFT JOIN team_members tm ON (mb.type = $3 AND mb.object_id = tm.team_id AND tm.user_id = $2)
 		WHERE mb.deleted_at IS NULL AND (fm.user_id = $2 OR tm.user_id = $2)
@@ -503,7 +503,7 @@ func (u *User) MessageBoxesWithContext(ctx context.Context) (messageBoxes []Mess
 
 	for rows.Next() {
 		var mb MessageBox
-		if err = rows.Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt); err != nil {
+		if err = rows.Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.Count, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt); err != nil {
 			return
 		}
 		messageBoxes = append(messageBoxes, mb)
@@ -609,13 +609,13 @@ func (mb *MessageBox) UpdateWithContext(ctx context.Context) (err error) {
 		return errors.New("database connection is nil")
 	}
 
-	statement := "UPDATE message_boxes SET is_empty = $2, updated_at = $3 WHERE id = $1"
+	statement := "UPDATE message_boxes SET count = $2, updated_at = $3 WHERE id = $1"
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, mb.Id, mb.IsEmpty, time.Now())
+	_, err = stmt.ExecContext(ctx, mb.Id, mb.Count, time.Now())
 	return
 }
 
@@ -636,7 +636,7 @@ func (mb *MessageBox) GetMessageBoxByUUIDWithContext(uuid string, ctx context.Co
 		return errors.New("database connection is nil")
 	}
 
-	err = DB.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, is_empty, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE uuid = $1 AND deleted_at IS NULL", uuid).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.IsEmpty, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, count, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE uuid = $1 AND deleted_at IS NULL", uuid).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.Count, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
 	return
 }
 

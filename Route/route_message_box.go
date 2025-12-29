@@ -474,7 +474,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 		messageBox.Uuid = dao.Random_UUID()
 		messageBox.Type = dao.MessageBoxTypeTeam
 		messageBox.ObjectId = team.Id
-		messageBox.IsEmpty = true
+		messageBox.Count = 0
 		messageBox.MaxCount = 199
 		err = messageBox.Create()
 		if err != nil {
@@ -784,13 +784,11 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 更新消息盒子状态（如果不为空）
-	if messageBox.IsEmpty {
-		messageBox.IsEmpty = false
-		err = messageBox.Update()
-		if err != nil {
-			util.Debug(" Cannot update message box", err)
-		}
+	// 更新消息盒子计数
+	messageBox.Count++
+	err = messageBox.Update()
+	if err != nil {
+		util.Debug(" Cannot update message box", err)
 	}
 
 	// 显示成功消息并重定向
