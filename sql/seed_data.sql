@@ -10,6 +10,16 @@ INSERT INTO users (id, uuid, name, email, password, biography, role, gender, ava
 (2, '070a7e98-d5ab-4506-4e59-093a053bc32b', '稻香老农', 'teachat-verifier@storetravels.com', 'df2983700ffecb52e6649f0cb3981b66537083a4', '我是见证团队，欢迎来到星际茶会！', 'verifier', 0, 'teaSet');
 
 -- ============================================
+-- 预设团队成员数据
+-- ============================================
+
+INSERT INTO team_members (id, uuid, team_id, user_id, role, class) VALUES
+(1, 'member-001-captain-team1', 1, 1, 'captain', 1),  -- 太空船长加入茶棚服务团队
+(2, 'member-002-captain-team2', 2, 1, 'member', 1),   -- 太空船长加入自由人团队
+(3, 'member-003-verifier-team2', 2, 2, 'member', 1); -- 稻香老农加入自由人团队
+(4, 'member-004-verifier-team3', 3, 2, 'verifier', 1); -- 稻香老农加入自由人团队
+
+-- ============================================
 -- 预设团队数据
 -- ============================================
 
@@ -89,3 +99,4 @@ SELECT setval('risks_id_seq', (SELECT MAX(id) FROM risks));
 SELECT setval('skills_id_seq', (SELECT MAX(id) FROM skills));
 SELECT setval('magics_id_seq', (SELECT MAX(id) FROM magics));
 SELECT setval('environments_id_seq', (SELECT MAX(id) FROM environments));
+SELECT setval('team_members_id_seq', (SELECT MAX(id) FROM team_members));
