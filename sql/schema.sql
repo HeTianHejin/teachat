@@ -253,7 +253,7 @@ CREATE TABLE team_members (
     team_id               INTEGER REFERENCES teams(id),
     user_id               INTEGER REFERENCES users(id),
     role                  VARCHAR(255),
-    class                 INTEGER DEFAULT 1,
+    status                INTEGER DEFAULT 1,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP
 );

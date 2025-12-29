@@ -529,7 +529,7 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err 
 }
 
 // SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团,
-// team.class = 0、1 or 2, team_members.status = 1
+// team.class = 0、1 or 2（团队类型：0-系统团队，1-开放式，2-封闭式）, team_members.status = 1（成员状态：1-正常（活跃成员））
 func (user *User) SurvivalTeams() ([]Team, error) {
 	count, err := user.SurvivalTeamsCount()
 	if err != nil {

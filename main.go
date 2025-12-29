@@ -387,7 +387,7 @@ func main() {
 	}
 	// 启动定时处理过期转账的任务
 	go func() {
-		ticker := time.NewTicker(5 * time.Minute) // 每5分钟检查一次
+		ticker := time.NewTicker(30 * time.Minute) // 每30分钟检查一次
 		defer ticker.Stop()
 
 		for range ticker.C {
