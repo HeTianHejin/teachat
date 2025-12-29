@@ -13,10 +13,10 @@ INSERT INTO users (id, uuid, name, email, password, biography, role, gender, ava
 -- 预设团队数据
 -- ============================================
 
-INSERT INTO teams (id, uuid, name, mission, founder_id, class, abbreviation, logo, superior_team_id, subordinate_team_id) VALUES
-(1, 'dcbe3046-b192-44b6-7afb-bc55817c13a9', '茶棚服务团队', '飞船机组乘员茶棚服务团队，系统保留。', 1, 0, '飞船茶棚', 'teamLogo', 0, 0),
-(2, '72c06442-2b60-418a-6493-a91bd03ae4k8', '自由人', '星际旅行特立独行的自由人，不属于任何$事业茶团。', 1, 0, '自由人', 'teamLogo', 0, 0),
-(3, '38be3046-b192-44b6-7afb-bc55817c13c4', '见证者茶团', '见证者团队，为茶会技能作业担当见证人，系统预设。', 1, 0, '见证者', 'teamLogo', 0, 0);
+INSERT INTO teams (id, uuid, name, mission, founder_id, class, abbreviation, logo, tags) VALUES
+(1, 'dcbe3046-b192-44b6-7afb-bc55817c13a9', '茶棚服务团队', '飞船机组乘员茶棚服务团队，系统保留。', 1, 0, '飞船茶棚', 'teamLogo', '系统团队,服务'),
+(2, '72c06442-2b60-418a-6493-a91bd03ae4k8', '自由人', '星际旅行特立独行的自由人，不属于任何$事业茶团。', 1, 0, '自由人', 'teamLogo', '自由,独立'),
+(3, '38be3046-b192-44b6-7afb-bc55817c13c4', '见证者茶团', '见证者团队，为茶会技能作业担当见证人，系统预设。', 1, 0, '见证者', 'teamLogo', '见证者,系统');
 
 -- ============================================
 -- 环境数据

@@ -2,6 +2,8 @@
 -- 创建数据库
 DROP DATABASE IF EXISTS teachat;
 CREATE DATABASE teachat;
+-- 连接到新数据库
+\c teachat
 
 -- ============================================
 -- 核心用户与组织表
