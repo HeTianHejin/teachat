@@ -238,12 +238,11 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 	var oSpD dao.ObjectiveSquare
 	s_u := dao.UserUnknown
-	// 如何排序茶话会，是个问题！按照圆桌会议平等约定，应该是轮流出现在茶话会广场才合适，
-	// 而且，应该是按人头出现计数，而不是按热度或者建的茶话会数量。
+
 	// 每次展示2打=24个茶话会
 	// 用（随机选中）选取24个用户的24茶话会的模式
 
-	// test获取所有茶话会
+	// test获取24茶话会
 	objective_slice, err := dao.GetPublicObjectives(24)
 	if err != nil {
 		util.Debug(" Cannot get objectives", err)
@@ -251,16 +250,15 @@ func ObjectiveSquare(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	len := len(objective_slice)
-	if len == 0 {
-		report(w, s_u, "你好，山穷水尽疑无路，为何没有任何茶话会资料？请稍后再试。")
-		return
-	}
-
-	oSpD.ObjectiveBeanSlice, err = FetchObjectiveBeanSlice(objective_slice)
-	if err != nil {
-		util.Debug(" Cannot read objective-bean slice", err)
-		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
-		return
+	if len > 0 {
+		oSpD.ObjectiveBeanSlice, err = FetchObjectiveBeanSlice(objective_slice)
+		if err != nil {
+			util.Debug(" Cannot read objective-bean slice", err)
+			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。茶博士为你时刻忙碌奋斗着。")
+			return
+		}
+	} else {
+		oSpD.ObjectiveBeanSlice = []dao.ObjectiveBean{}
 	}
 
 	//检查用户是否已经登录
