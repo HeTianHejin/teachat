@@ -11,10 +11,10 @@ import (
 type MessageBox struct {
 	Id        int
 	Uuid      string
-	Type      int  // 类型： 1：家庭，2:团队,
-	ObjectId  int  // 绑定对象id（家庭id，团队id)
-	Count    int  // 存量消息数量，默认为0
-	MaxCount  int  // 存活最大消息数量，默认为199
+	Type      int // 类型： 1：家庭，2:团队,
+	ObjectId  int // 绑定对象id（家庭id，团队id)
+	Count     int // 存量消息数量，默认为0
+	MaxCount  int // 存活最大消息数量，默认为199
 	CreatedAt time.Time
 	UpdatedAt *time.Time
 	DeletedAt *time.Time // 软删除，当软删除后，该字段不为null
@@ -200,11 +200,6 @@ func (mb *MessageBox) CreateWithContext(ctx context.Context) (err error) {
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.Count, &mb.MaxCount, time.Now()).Scan(&mb.Id)
 	return
-}
-
-// GetOrCreateMessageBox 安全地获取或创建消息盒子（防止并发创建重复记录）
-func (mb *MessageBox) GetOrCreateMessageBox(msg_type, object_id int) (err error) {
-	return mb.GetOrCreateMessageBoxWithContext(msg_type, object_id, context.Background())
 }
 
 // GetOrCreateMessageBoxWithContext 安全地获取或创建消息盒子（带context版本）

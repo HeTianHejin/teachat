@@ -1294,7 +1294,7 @@ CREATE TABLE message_boxes (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     type                  INTEGER NOT NULL, -- 1:家庭, 2:团队
     object_id             INTEGER NOT NULL, -- 家庭id或团队id
-    count                 INTEGER DEFAULT 0;
+    count                 INTEGER DEFAULT 0,
     max_count             INTEGER DEFAULT 199,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP,

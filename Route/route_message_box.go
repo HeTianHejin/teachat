@@ -63,7 +63,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 获取或创建团队消息盒子（使用安全方法防止并发重复）
-		err = messageBox.GetOrCreateMessageBox(dao.MessageBoxTypeTeam, team.Id)
+		err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 		if err != nil {
 			util.Debug(" Cannot get or create message box", err)
 			report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
@@ -468,20 +468,11 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 
 	// 获取或创建团队消息盒子
 	var messageBox dao.MessageBox
-	err = messageBox.GetMessageBoxByTypeAndObjectId(dao.MessageBoxTypeTeam, team.Id)
+	err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 	if err != nil {
-		// 如果消息盒子不存在，创建一个新的
-		messageBox.Uuid = dao.Random_UUID()
-		messageBox.Type = dao.MessageBoxTypeTeam
-		messageBox.ObjectId = team.Id
-		messageBox.Count = 0
-		messageBox.MaxCount = 199
-		err = messageBox.Create()
-		if err != nil {
-			util.Debug(" Cannot create message box", err)
-			report(w, s_u, "你好，茶博士未能创建消息盒子，请稍后再试。")
-			return
-		}
+		util.Debug(" Cannot get or create message box", err)
+		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
+		return
 	}
 
 	// 准备页面数据
@@ -559,7 +550,7 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 
 	// 获取或创建团队消息盒子
 	var messageBox dao.MessageBox
-	err = messageBox.GetOrCreateMessageBox(dao.MessageBoxTypeTeam, team.Id)
+	err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get or create message box", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
@@ -658,7 +649,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 
 	// 获取或创建团队消息盒子
 	var messageBox dao.MessageBox
-	err = messageBox.GetOrCreateMessageBox(dao.MessageBoxTypeTeam, team.Id)
+	err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get or create message box", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
@@ -751,7 +742,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 
 	// 获取或创建团队消息盒子
 	var messageBox dao.MessageBox
-	err = messageBox.GetOrCreateMessageBox(dao.MessageBoxTypeTeam, team.Id)
+	err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get or create message box", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
