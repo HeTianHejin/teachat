@@ -66,7 +66,6 @@ const (
 	// 用户角色
 	User_Role_Captain      = "captain"      //太空船长
 	User_Role_TeaOffice    = "teaoffice"    //茶博士
-	User_Role_Verifier     = "verifier"     //见证者
 	User_Role_Traveller    = "traveller"    //太空普通旅客
 	User_Role_Hijacker     = "hijacker"     //劫机者
 	User_Role_Zebra        = "zebra"        //莽撞者
@@ -256,15 +255,6 @@ func GetUserByID(uuid string) (user User, err error) {
 			return user, fmt.Errorf("查询用户失败:参数: %s, %v", uuid, err)
 		}
 	}
-	return
-}
-
-// 根据管理员的UserId查询其user对象
-func (administrator *Administrator) User() (user User, err error) {
-	user = User{}
-	err = DB.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", administrator.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
-
 	return
 }
 

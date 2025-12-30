@@ -85,6 +85,13 @@ func (session *Session) Check() (bool, error) {
 	return false, nil
 }
 
+type Watchword struct {
+	Id              int
+	Word            string
+	AdministratorId int
+	CreatedAt       time.Time
+}
+
 // 检查登录口令是否正确
 func CheckWatchword(watchword string) (valid bool, err error) {
 	watchword_db := Watchword{}
