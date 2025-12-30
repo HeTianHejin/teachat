@@ -13,41 +13,6 @@ func ActivateDraftThread(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/user/invite?id=xxx
-// 打开选择邀请茶友成为管理员页面
-func Invite(w http.ResponseWriter, r *http.Request) {
-	//读取会话资料
-	s, err := session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	//读取当前用户的相关资料
-	s_u, err := s.User()
-	if err != nil {
-		util.Debug(" Cannot fetch user related data", err)
-		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
-		return
-	}
-	//读取被邀请用户的相关资料
-	user_uuid := r.FormValue("id")
-	invi_user, err := dao.GetUserByID(user_uuid)
-	if err != nil {
-		util.Debug(" Cannot get user by uuid", err)
-		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
-		return
-	}
-	var iD dao.InvitationDetail
-	// 填写页面资料
-	iD.SessUser = s_u
-
-	iD.InvitationBean.Author = s_u
-	iD.InvitationBean.InviteUser = invi_user
-
-	generateHTML(w, &iD, "layout", "navbar.private", "pilot.invite")
-
-}
-
 // 向2个非当前用户发送蒙评审核通知
 func TwoAcceptNotificationsSendExceptUserId(u_id int, mess dao.AcceptNotification, ctx context.Context) error {
 	var user_ids []int
@@ -103,7 +68,7 @@ func TwoAcceptNotificationsSendExceptUserId(u_id int, mess dao.AcceptNotificatio
 }
 
 // 向当前用户发送友邻蒙评结果通知通知
-func PilotAcceptNotificationSend(u_id int, mess dao.AcceptNotification, ctx context.Context) error {
+func AcceptNotificationSend(u_id int, mess dao.AcceptNotification, ctx context.Context) error {
 
 	// 发送友评邻蒙结果通知通知
 	if err := mess.SendWithContext([]int{u_id}, ctx); err != nil {

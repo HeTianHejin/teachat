@@ -31,7 +31,7 @@ type User struct {
 const (
 	UserId_None              = 0 //
 	UserId_Captain_Spaceship = 1 // 太空船长
-	UserId_Verifier          = 2 // 见证团队代表人id
+	UserId_Verifier          = 2 // 见证集团第一团队CEO id
 )
 
 // 系统预设“游客”用户
@@ -141,19 +141,19 @@ type UserStar struct {
 // 根据UserStar.Type int反射object对象名称string,
 // 茶议=3或者茶话会=1,茶台=2,茶团=5，品味post=4， 好东西=6，魔法=7，宝物=8，
 // 未知=9=？
-var ObjectName = map[int]string{
-	1:  "objective",
-	2:  "project",
-	3:  "thread",
-	4:  "post",
-	5:  "team",
-	6:  "goods",
-	7:  "magic",
-	8:  "skill",
-	9:  "family",
-	10: "user",
-	//...
-}
+// var ObjectName = map[int]string{
+// 	1:  "objective",
+// 	2:  "project",
+// 	3:  "thread",
+// 	4:  "post",
+// 	5:  "team",
+// 	6:  "goods",
+// 	7:  "magic",
+// 	8:  "skill",
+// 	9:  "family",
+// 	10: "user",
+// 	//...
+// }
 
 // Create a new user, save user info into the database
 func (user *User) Create() (err error) {
