@@ -20,10 +20,10 @@ const (
 )
 const (
 	TeamIdNone          = 0 // 0
-	TeamIdSpaceshipCrew = 1 // 1   飞船茶棚团队，系统保留
-	TeamIdFreelancer    = 2 // 2  系统预设“自由人”$事业茶团团队，系统保留，这是所有注册用户的默认$事业茶团，没有茶叶资产
+	TeamIdFreelancer    = 1 // 1  系统预设“自由人”$事业茶团团队，系统预设，这是所有注册用户的默认$事业茶团，没有茶叶资产
+	TeamIdSpaceshipCrew = 2 // 2   飞船茶棚团队，系统预设
 
-	TeamIdVerifier = 3 // 3 见证者团队，系统保留
+	TeamIdVerifier = 3 // 3 见证者团队，系统预设
 
 )
 

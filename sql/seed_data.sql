@@ -7,15 +7,15 @@
 
 INSERT INTO users (id, uuid, name, email, password, biography, role, gender, avatar) VALUES
 (1, '396d7fac-2f29-44a7-7f77-63cbaf423438', '太空船长', 'teachat-captain@spacetravels.com', 'df2983700ffecb52e6649f0cb3981b66537083a4', '我是太空船长，欢迎来到星际茶会！', 'captain', 1, 'captain'),
-(2, '070a7e98-d5ab-4506-4e59-093a053bc32b', '稻香老农', 'teachat-verifier@storetravels.com', 'df2983700ffecb52e6649f0cb3981b66537083a4', '我是见证团队，欢迎来到星际茶会！', 'verifier', 0, 'teaSet');
+(2, '2a78267d-c333-4dc1-40e5-9935c5a0ed69', '稻香老农', 'teachat-verifier@storetravels.com', 'df2983700ffecb52e6649f0cb3981b66537083a4', '我是见证团队，欢迎来到星际茶会！', 'traveller', 0, 'teaSet');
 
 -- ============================================
 -- 预设团队数据
 -- ============================================
 
 INSERT INTO teams (id, uuid, name, mission, founder_id, class, abbreviation, logo, tags) VALUES
-(1, 'dcbe3046-b192-44b6-7afb-bc55817c13a9', '茶棚服务团队', '飞船机组乘员茶棚服务团队，系统保留。', 1, 0, '飞船茶棚', 'teamLogo', '系统团队,服务'),
-(2, '72c06442-2b60-418a-6493-a91bd03ae4k8', '自由人', '星际旅行特立独行的自由人，不属于任何$事业茶团。', 1, 0, '自由人', 'teamLogo', '自由,独立'),
+(1, '72c06442-2b60-418a-6493-a91bd03ae4k8', '自由人', '星际旅行特立独行的自由人，不属于任何$事业茶团。', 1, 0, '自由人', 'teamLogo', '自由,独立'),
+(2, 'dcbe3046-b192-44b6-7afb-bc55817c13a9', '茶棚服务团队', '飞船机组乘员茶棚服务团队，系统预设。', 1, 0, '飞船茶棚', 'teamLogo', '系统团队,服务'),
 (3, '38be3046-b192-44b6-7afb-bc55817c13c4', '见证者茶团', '见证者团队，为茶会技能作业担当见证人，系统预设。', 2, 0, '见证者', 'teamLogo', '见证者,系统');
 
 -- ============================================
@@ -23,9 +23,9 @@ INSERT INTO teams (id, uuid, name, mission, founder_id, class, abbreviation, log
 -- ============================================
 
 INSERT INTO team_members (id, uuid, team_id, user_id, role, status) VALUES
-(1, 'member-001-captain-team1', 1, 1, 'CEO', 1),  -- 太空船长加入茶棚服务团队
-(2, 'member-002-captain-team2', 2, 1, 'CEO', 1),   -- 太空船长加入自由人团队
-(3, 'member-003-verifier-team2', 2, 2, 'taster', 1), -- 稻香老农加入自由人团队
+(1, 'member-001-captain-team1', 1, 1, 'CEO', 1),   -- 太空船长加入自由人团队
+(2, 'member-001-captain-team2', 2, 1, 'CEO', 1),  -- 太空船长加入茶棚服务团队
+(3, 'member-003-verifier-team2', 1, 2, 'CMO', 1), -- 稻香老农加入自由人团队
 (4, 'member-004-verifier-team3', 3, 2, 'CEO', 1); -- 稻香老农加入见证者团队
 
 -- ============================================
