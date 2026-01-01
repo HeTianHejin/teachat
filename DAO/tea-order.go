@@ -1,6 +1,10 @@
 package dao
 
-import "time"
+import (
+	"context"
+	"errors"
+	"time"
+)
 
 /*
 在一个茶围objective目标里，某个项目project被选中“入围”之后，系统将询问围主是否需要启动线下作业服务以解决问题。
@@ -34,3 +38,73 @@ const (
 	TeaOrderStatusCompleted = "completed"
 	TeaOrderStatusCancelled = "cancelled"
 )
+
+// Create 创建新的茶订单记录
+func (t *TeaOrder) Create(ctx context.Context) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `INSERT INTO tea_orders 
+		(uuid, objective_id, project_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, score) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+		RETURNING id, uuid`
+	stmt, err := DB.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRowContext(ctx, Random_UUID(), t.ObjectiveId, t.ProjectId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId, t.Score).Scan(&t.Id, &t.Uuid)
+	return err
+}
+
+// GetByIdOrUUID 根据ID或UUID获取茶订单记录
+func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if t.Id <= 0 && t.Uuid == "" {
+		return errors.New("invalid TeaOrder ID or UUID")
+	}
+	statement := `SELECT id, uuid, objective_id, project_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, score, created_at, updated_at, deleted_at
+		FROM tea_orders WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
+	stmt, err := DB.PrepareContext(ctx, statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRowContext(ctx, t.Id, t.Uuid).Scan(&t.Id, &t.Uuid, &t.ObjectiveId, &t.ProjectId, &t.Status, &t.VerifyTeamId, &t.PayerTeamId, &t.PayeeTeamId, &t.CareTeamId, &t.Score, &t.CreatedAt, &t.UpdatedAt, &t.DeletedAt)
+	return err
+}
+
+// Update 更新茶订单记录
+func (t *TeaOrder) Update() error {
+	statement := `UPDATE tea_orders SET status = $2, score = $3, updated_at = $4 
+		WHERE id = $1 AND deleted_at IS NULL`
+	stmt, err := DB.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(t.Id, t.Status, t.Score, time.Now())
+	return err
+}
+
+// Delete 软删除茶订单记录
+func (t *TeaOrder) Delete() error {
+	statement := `UPDATE tea_orders SET deleted_at = $2 WHERE id = $1`
+	stmt, err := DB.Prepare(statement)
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+	now := time.Now()
+	_, err = stmt.Exec(t.Id, now)
+	if err == nil {
+		t.DeletedAt = &now
+	}
+	return err
+}
+
+// CreatedDateTime 格式化创建时间
+func (t *TeaOrder) CreatedDateTime() string {
+	return t.CreatedAt.Format(FMT_DATE_TIME_CN)
+}
