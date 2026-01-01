@@ -883,10 +883,29 @@ CREATE TABLE magic_teams (
 -- 手工艺表
 -- ============================================
 
+-- 茶订单表
+CREATE TABLE tea_orders (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    objective_id          INTEGER NOT NULL REFERENCES objectives(id),
+    project_id            INTEGER NOT NULL REFERENCES projects(id),
+    status                VARCHAR(64) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'completed', 'cancelled')),
+    verify_team_id        INTEGER REFERENCES teams(id),
+    payer_team_id         INTEGER REFERENCES teams(id),
+    payee_team_id         INTEGER REFERENCES teams(id),
+    care_team_id          INTEGER REFERENCES teams(id),
+    score                 INTEGER DEFAULT 0,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMP,
+    deleted_at            TIMESTAMP
+);
+
+
 -- 手工艺表
 CREATE TABLE handicrafts (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    tea_order_id          INTEGER REFERENCES tea_orders(id),
     recorder_user_id      INTEGER REFERENCES users(id),
     name                  VARCHAR(255) NOT NULL,
     nickname              VARCHAR(255),

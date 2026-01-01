@@ -12,6 +12,7 @@ import (
 type Handicraft struct {
 	Id             int
 	Uuid           string
+	TeaOrderId     int // 所属tea-order ID
 	RecorderUserId int //记录人id
 
 	Name        string
@@ -240,16 +241,16 @@ func (h *Handicraft) Create(ctx context.Context) (err error) {
 	defer cancel()
 
 	statement := `INSERT INTO handicrafts 
-		(uuid, recorder_user_id, name, nickname, description, project_id, initiator_id, owner_id, 
+		(uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, initiator_id, owner_id, 
 		 type, category, status, skill_difficulty, magic_difficulty, contributor_count) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
 		RETURNING id, uuid`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, Random_UUID(), h.RecorderUserId, h.Name, h.Nickname, h.Description,
+	err = stmt.QueryRowContext(ctx, Random_UUID(), h.TeaOrderId, h.RecorderUserId, h.Name, h.Nickname, h.Description,
 		h.ProjectId, h.InitiatorId, h.OwnerId, h.Type, h.Category, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount).Scan(&h.Id, &h.Uuid)
 	return err
 }
@@ -261,7 +262,7 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 	if h.Id <= 0 && h.Uuid == "" {
 		return errors.New("invalid Handicraft ID or UUID")
 	}
-	statement := `SELECT id, uuid, recorder_user_id, name, nickname, description, project_id, 
+	statement := `SELECT id, uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, 
 		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
 		contributor_count, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
@@ -270,7 +271,7 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, h.Id, h.Uuid).Scan(&h.Id, &h.Uuid, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
+	err = stmt.QueryRowContext(ctx, h.Id, h.Uuid).Scan(&h.Id, &h.Uuid, &h.TeaOrderId, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
 		&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
 		&h.ContributorCount, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
 	return err
@@ -377,7 +378,7 @@ func (h HandicraftType) Description() string {
 func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, recorder_user_id, name, nickname, description, project_id, 
+	statement := `SELECT id, uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, 
 		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
 		contributor_count, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
@@ -390,7 +391,7 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 	var handicrafts []Handicraft
 	for rows.Next() {
 		var h Handicraft
-		err := rows.Scan(&h.Id, &h.Uuid, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
+		err := rows.Scan(&h.Id, &h.Uuid, &h.TeaOrderId, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
 			&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
 			&h.ContributorCount, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
 		if err != nil {
