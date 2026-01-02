@@ -542,7 +542,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 			if !tD.IsAdmin && !tD.IsMaster {
 				// 检测当前会话茶友是否见证者
-				is_member := isVerifier(s_u.Id)
+				is_member := dao.IsVerifier(s_u.Id)
 				if is_member {
 					tD.IsVerifier = true
 				}
@@ -758,7 +758,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//核对用户身份，是否具有完善操作权限
-	ok := isVerifier(s_u.Id)
+	ok := dao.IsVerifier(s_u.Id)
 	if !ok {
 		report(w, s_u, "茶博士惊讶，陛下你没有权限补充该茶议，请确认后再试。")
 		return

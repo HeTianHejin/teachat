@@ -36,7 +36,7 @@ func SeeSeekNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检测当前会话茶友是否见证者
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -199,7 +199,7 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检测当前会话茶友是否见证者
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -382,7 +382,7 @@ func SeeSeekDetailGet(w http.ResponseWriter, r *http.Request) {
 	// 准备页面数据
 	templateData := dao.SeeSeekDetailTemplateData{
 		SessUser:           s_u,
-		IsVerifier:         isVerifier(s_u.Id),
+		IsVerifier:         dao.IsVerifier(s_u.Id),
 		SeeSeekBean:        seeSeekBean,
 		ProjectBean:        projectBean,
 		QuoteObjectiveBean: objectiveBean,

@@ -95,7 +95,7 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你没有权限创建证据记录")
 		return
 	}
@@ -242,7 +242,7 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 	}{
 		SessUser:   s_u,
 		Evidence:   evidence,
-		IsVerifier: isVerifier(s_u.Id),
+		IsVerifier: dao.IsVerifier(s_u.Id),
 	}
 
 	generateHTML(w, &templateData, "layout", "navbar.private", "evidence.detail")

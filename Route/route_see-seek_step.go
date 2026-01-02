@@ -40,7 +40,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检测当前会话茶友是否见证者
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current s_u is not a verifier", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -156,7 +156,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -304,7 +304,7 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current s_u is not a verifier", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -422,7 +422,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -545,7 +545,7 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current s_u is not a verifier", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -653,7 +653,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -865,7 +865,7 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current s_u is not a verifier", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -973,7 +973,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}

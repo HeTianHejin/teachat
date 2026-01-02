@@ -88,7 +88,7 @@
         <p>
           {{/* 先检查是否茶围管理员，如果是，继续检查是否为未入围，否则显示入围按钮图标 */}}
           {{ if and .IsAdmin (not .IsApproved) }}
-          <form class="form-inline" action="/v1/project/approve" method="post">
+          <form class="form-inline" action="/v1/project/approve/step1" method="post">
             <input type="hidden" name="uuid" value="{{ .ProjectBean.Project.Uuid }}" />
             <button type="submit" class="btn btn-default btn-sm">入围（启动线下茶会）</button>
           </form>

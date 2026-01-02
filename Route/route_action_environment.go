@@ -69,7 +69,7 @@ func EnvironmentNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 验证当前用户身份是否见证者茶团成员
-	if !(isVerifier(s_u.Id)) {
+	if !(dao.IsVerifier(s_u.Id)) {
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}

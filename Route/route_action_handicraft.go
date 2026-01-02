@@ -34,7 +34,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你没有权限执行此操作")
 		return
 	}
@@ -186,7 +186,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	}{
 		SessUser:               s_u,
 		IsMaster:               is_master,
-		IsVerifier:             isVerifier(s_u.Id),
+		IsVerifier:             dao.IsVerifier(s_u.Id),
 		ProjectBean:            projBean,
 		QuoteObjectiveBean:     objeBean,
 		Skills:                 skills,
@@ -212,7 +212,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你没有权限执行此操作")
 		return
 	}
@@ -440,7 +440,7 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	is_invited := false
 	if handicraft.Category == dao.HandicraftCategorySecret {
 		if !is_master && !is_admin && !is_invited {

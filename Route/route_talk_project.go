@@ -42,7 +42,7 @@ func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查会话用户身份是否见证者
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -126,7 +126,7 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查会话用户身份是否见证者
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -179,9 +179,9 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pD, "layout", "navbar.private", "project.place_update", "component_sess_capacity", "component_project_bean")
 }
 
-// POST /v1/project/approve
+// POST /v1/project/approve/step1
 // 茶话会(茶围)管理员选择某个茶台入围（入选/邀约），
-func ProjectApprove(w http.ResponseWriter, r *http.Request) {
+func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -261,6 +261,9 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	// 3、包括创建TeaOrder等操作
 
 	//分步骤完成茶台入围操作
+	//step2: -如果用户确认自己监护页面，填写其为监护方团队，则跳转到项目入围确认页面，
+	//       -如果用户选择茶棚分配监护方团队，则需要一个方法选定一个有相同类似解题技能团队作为监护团队，完成入围操作，跳转茶台详情页面，
+
 	/*
 		// 准备记录入围的茶台
 		new_project_approved := dao.ProjectApproved{
@@ -882,7 +885,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	if !pD.IsAdmin && !pD.IsMaster {
 
-		pD.IsVerifier = isVerifier(s_u.Id)
+		pD.IsVerifier = dao.IsVerifier(s_u.Id)
 
 	}
 

@@ -1210,3 +1210,154 @@ func GetResignedMembersByTeamId(teamId int) ([]TeamMember, error) {
 	}
 	return members, rows.Err()
 }
+
+// IsVerifier 检查用户是否为见证者
+func IsVerifier(userId int) bool {
+	isTeamMember, err := IsTeamActiveMember(userId, TeamIdVerifier)
+	if err != nil {
+		util.Debug(" Cannot check team member", err)
+		return false
+	}
+	return isTeamMember
+}
+
+// ConvertFamilyToObCareTeam 以家庭成员为基础，创建某个茶围的监护团队
+// 返回新团队的ID
+func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, error) {
+	// 1. 参数验证
+	if familyId == FamilyIdUnknown || ceoUser.Id == 0 || ob.Id == 0 {
+		return 0, fmt.Errorf("invalid familyId or ceoUserId or obId")
+	}
+
+	// 2. 检查在这个茶围，家庭监护团队是否已被创建
+	teamExist := Team{Abbreviation: fmt.Sprintf("%d茶围监护", ob.Id)}
+	err := teamExist.GetByAbbreviation()
+	if err == nil && teamExist.Id != 0 {
+		return teamExist.Id, nil // 团队已存在，直接返回ID
+	} else if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return 0, fmt.Errorf("failed to check existing team: %v", err)
+	}
+
+	// 3. 读取家庭信息
+	family, err := GetFamily(familyId)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get family info: %v", err)
+	}
+
+	// 4. 准备团队信息
+	team := &Team{
+		Name:         fmt.Sprintf("%s监护%d号茶围团队", family.Name, ob.Id),
+		Mission:      fmt.Sprintf("由【%s】家庭成员和亲友组成的监护团队，负责【%d】号茶围监护事宜。", family.Name, ob.Id),
+		FounderId:    ceoUser.Id,
+		Class:        TeamClassOpen,
+		Abbreviation: fmt.Sprintf("%d茶围监护", ob.Id),
+		Logo:         family.Logo,
+		IsPrivate:    false,
+		Tags:         "家庭,监护,茶围",
+	}
+
+	// 5. 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return 0, fmt.Errorf("failed to begin transaction: %v", err)
+	}
+
+	// 使用局部变量跟踪事务错误
+	var txErr error
+	defer func() {
+		if txErr != nil {
+			tx.Rollback()
+		} else {
+			txErr = tx.Commit()
+		}
+	}()
+
+	// 6. 创建团队记录
+	if txErr = team.CreateWithTx(tx); txErr != nil {
+		return 0, fmt.Errorf("failed to create team: %v", txErr)
+	}
+
+	// 7. 添加CEO成员
+	ceoMember := &TeamMember{
+		TeamId: team.Id,
+		UserId: ceoUser.Id,
+		Role:   RoleCEO,
+		Status: TeamMemberStatusActive,
+	}
+	if txErr = ceoMember.CreateWithTx(tx); txErr != nil {
+		return 0, fmt.Errorf("failed to create CEO team member: %v", txErr)
+	}
+
+	// 8. 添加配偶作为CFO（如果存在）
+	if txErr = addSpouseAsCFO(tx, family, ceoUser, team.Id); txErr != nil {
+		return 0, txErr
+	}
+
+	// 10. 返回团队ID
+	return team.Id, nil
+}
+
+// addSpouseAsCFO 添加配偶作为CFO成员
+func addSpouseAsCFO(tx *sql.Tx, family Family, ceoUser User, teamId int) error {
+	// 检查是否为单人家庭
+	isOnlyOneMember, err := family.IsOnlyOneMember()
+	if err != nil {
+		return fmt.Errorf("failed to check family members: %v", err)
+	}
+
+	if isOnlyOneMember {
+		return nil // 单人家庭，不需要添加配偶
+	}
+
+	// 查找配偶
+	spouse, err := findSpouse(family.Id, ceoUser.Gender)
+	if err != nil {
+		return fmt.Errorf("failed to find spouse: %v", err)
+	}
+
+	// 如果找到配偶且不是CEO本人，则添加为CFO
+	if spouse.UserId != 0 && spouse.UserId != ceoUser.Id {
+		cfoMember := &TeamMember{
+			TeamId: teamId,
+			UserId: spouse.UserId,
+			Role:   RoleCFO,
+			Status: TeamMemberStatusActive,
+		}
+		if err := cfoMember.CreateWithTx(tx); err != nil {
+			return fmt.Errorf("failed to create CFO team member: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// findSpouse 查找配偶
+func findSpouse(familyId, ceoGender int) (FamilyMember, error) {
+	var spouse FamilyMember
+
+	// 根据CEO性别确定查找顺序
+	var firstRole, secondRole int
+	if ceoGender == User_Gender_Male {
+		firstRole = FamilyMemberRoleWife
+		secondRole = FamilyMemberRoleHusband
+	} else {
+		firstRole = FamilyMemberRoleHusband
+		secondRole = FamilyMemberRoleWife
+	}
+
+	// 尝试第一种角色
+	spouse = FamilyMember{FamilyId: familyId, Role: firstRole}
+	if err := spouse.GetByRoleFamilyId(); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return FamilyMember{}, err
+	}
+
+	// 如果没找到，尝试第二种角色（处理同性配偶情况）
+	if spouse.UserId == 0 {
+		spouse = FamilyMember{FamilyId: familyId, Role: secondRole}
+		if err := spouse.GetByRoleFamilyId(); err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return FamilyMember{}, err
+		}
+	}
+
+	return spouse, nil
+}

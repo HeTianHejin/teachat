@@ -35,7 +35,7 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查提交者身份是否见证者
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "只有见证者才可以创建建议记录")
 		return
 	}
@@ -112,7 +112,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查提交者身份是否见证者
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "只有见证者才可以创建建议记录")
 		return
 	}
@@ -322,7 +322,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !is_admin && !templateData.IsMaster {
-		is_verifier := isVerifier(s_u.Id)
+		is_verifier := dao.IsVerifier(s_u.Id)
 		templateData.IsVerifier = is_verifier
 	}
 

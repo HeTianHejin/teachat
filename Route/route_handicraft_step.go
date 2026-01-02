@@ -35,7 +35,7 @@ func HandicraftStep2Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你没有权限执行此操作")
 		return
 	}
@@ -102,7 +102,7 @@ func HandicraftStep2Get(w http.ResponseWriter, r *http.Request) {
 	}{
 		SessUser:           s_u,
 		IsMaster:           is_master,
-		IsVerifier:         isVerifier(s_u.Id),
+		IsVerifier:         dao.IsVerifier(s_u.Id),
 		Handicraft:         handicraft,
 		ProjectBean:        projectBean,
 		QuoteObjectiveBean: objectiveBean,
@@ -125,7 +125,7 @@ func HandicraftStep2Post(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你没有权限执行此操作")
 		return
 	}
@@ -243,7 +243,7 @@ func HandicraftStep3Get(w http.ResponseWriter, r *http.Request) {
 	}{
 		SessUser:           s_u,
 		IsMaster:           is_master,
-		IsVerifier:         isVerifier(s_u.Id),
+		IsVerifier:         dao.IsVerifier(s_u.Id),
 		Handicraft:         handicraft,
 		ProjectBean:        projectBean,
 		QuoteObjectiveBean: objectiveBean,
@@ -384,7 +384,7 @@ func HandicraftStep4Get(w http.ResponseWriter, r *http.Request) {
 	}{
 		SessUser:           s_u,
 		IsMaster:           is_master,
-		IsVerifier:         isVerifier(s_u.Id),
+		IsVerifier:         dao.IsVerifier(s_u.Id),
 		Handicraft:         handicraft,
 		ProjectBean:        projectBean,
 		QuoteObjectiveBean: objectiveBean,
@@ -518,7 +518,7 @@ func HandicraftStep5Get(w http.ResponseWriter, r *http.Request) {
 	}{
 		SessUser:           s_u,
 		IsMaster:           is_master,
-		IsVerifier:         isVerifier(s_u.Id),
+		IsVerifier:         dao.IsVerifier(s_u.Id),
 		Handicraft:         handicraft,
 		ProjectBean:        projectBean,
 		QuoteObjectiveBean: objectiveBean,

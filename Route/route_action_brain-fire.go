@@ -52,7 +52,7 @@ func BrainFireNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检测当前会话茶友是否见证者
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -155,7 +155,7 @@ func BrainFireNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检测当前会话茶友是否见证者
-	is_verifier := isVerifier(s_u.Id)
+	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
 		util.Debug(" Current user is not a verifier", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
@@ -395,7 +395,7 @@ func BrainFireDetailGet(w http.ResponseWriter, r *http.Request) {
 		templateData.IsMaster = is_master
 	}
 	if !is_admin && !templateData.IsMaster {
-		is_verifier := isVerifier(s_u.Id)
+		is_verifier := dao.IsVerifier(s_u.Id)
 		templateData.IsVerifier = is_verifier
 	}
 	if ob.Class == dao.ObClassClose {

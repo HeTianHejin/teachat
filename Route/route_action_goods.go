@@ -22,7 +22,7 @@ func HandleGoodsProjectNew(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "只有见证员才可以添加项目物资，请联系管理员。")
 		return
 	}
@@ -372,7 +372,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	}
 
 	if !is_admin && !templateData.IsMaster {
-		is_verifier := isVerifier(s_u.Id)
+		is_verifier := dao.IsVerifier(s_u.Id)
 		templateData.IsVerifier = is_verifier
 	}
 
@@ -396,7 +396,7 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		util.Debug("User is not a verifier:", err)
 		report(w, s_u, "只有见证员才可以设置物资准备状态。")
 		return

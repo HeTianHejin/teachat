@@ -245,6 +245,9 @@ func fetchTeamBean(team dao.Team) (TeamBean dao.TeamBean, err error) {
 
 // 根据给出的茶团队列，查询，获取对应的茶团资料夹
 func fetchTeamBeanSlice(team_slice []dao.Team) (TeamBeanSlice []dao.TeamBean, err error) {
+	if len(team_slice) == 0 {
+		return TeamBeanSlice, errors.New("team_slice is empty")
+	}
 	for _, tea := range team_slice {
 		teamBean, err := fetchTeamBean(tea)
 		if err != nil {
@@ -621,15 +624,4 @@ func setUserDefaultTeam(s_u dao.User, newTeamID int, w http.ResponseWriter) bool
 		}
 	}
 	return true
-}
-
-// isVerifier 检查用户是否为见证者
-func isVerifier(userId int) bool {
-	verifier_team := dao.Team{Id: dao.TeamIdVerifier}
-	is_member, err := verifier_team.IsMember(userId)
-	if err != nil {
-		util.Debug(" Cannot check team member", err)
-		return false
-	}
-	return is_member
 }

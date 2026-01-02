@@ -408,7 +408,7 @@ func ObjectiveDetail(w http.ResponseWriter, r *http.Request) {
 
 	if !oD.IsAdmin {
 
-		oD.IsVerifier = isVerifier(s_u.Id)
+		oD.IsVerifier = dao.IsVerifier(s_u.Id)
 
 	}
 
@@ -470,7 +470,7 @@ func objectiveSupplementGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	obSupp.IsAdmin = is_admin
-	obSupp.IsVerifier = isVerifier(s_u.Id)
+	obSupp.IsVerifier = dao.IsVerifier(s_u.Id)
 
 	// 读取茶围目标资料荚
 	obSupp.ObjectiveBean, err = fetchObjectiveBean(ob)

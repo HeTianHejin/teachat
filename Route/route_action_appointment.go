@@ -47,7 +47,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 如果当前用户不是验证者，则返回错误信息
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -179,7 +179,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 	}
 	// 如果当前用户不是验证者，则返回错误信息
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -403,7 +403,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 
 	aPD := dao.AppointmentTemplateData{
 		SessUser:           s_u,
-		IsVerifier:         isVerifier(s_u.Id),
+		IsVerifier:         dao.IsVerifier(s_u.Id),
 		AppointmentBean:    p_a_bean,
 		ProjectBean:        pr_bean,
 		QuoteObjectiveBean: ob_bean,
@@ -456,7 +456,7 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 	// 	return
 	// }
 	// 检查权限 - 只有见证人可以确认
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，茶博士说只有见证人才能确认约茶。")
 		return
 	}
@@ -532,7 +532,7 @@ func AppointmentReject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查权限 - 只有见证人可以拒绝
-	if !isVerifier(s_u.Id) {
+	if !dao.IsVerifier(s_u.Id) {
 		report(w, s_u, "你好，茶博士说只有见证人才能拒绝约茶。")
 		return
 	}
