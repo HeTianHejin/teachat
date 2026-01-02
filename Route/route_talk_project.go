@@ -180,7 +180,7 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/project/approve
-// 茶话会(茶围)管理员选择某个茶台入围（入选/中标），
+// 茶话会(茶围)管理员选择某个茶台入围（入选/邀约），
 func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -255,32 +255,52 @@ func ProjectApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 准备记录入围的茶台
-	new_project_approved := dao.ProjectApproved{
-		ObjectiveId: ob.Id,
-		ProjectId:   pr.Id,
-		UserId:      s_u.Id,
-	}
-	// 检查是否已经入围过了
-	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
-		report(w, s_u, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
-		return
-	}
-	if err = new_project_approved.Create(); err != nil {
-		util.Debug(" Cannot create project approved", err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
-		return
-	}
+	// TODO: 1、完成茶台入围前查重逻辑，需要返回给用户一个询问页面，是自己发起团队担任监护方，还是由茶棚选择其他茶团担任监护方；
+	// 如果用户选择自己监护，家庭需要转为团队身份，发起人是CEO，配偶是CFO，可以邀请亲友为成员；
+	// 2、见证团队由茶棚自动分配主理人，
+	// 3、包括创建TeaOrder等操作
 
-	// 预填充约茶、看看、脑火、建议 4部曲
-	if err = dao.CreateRequiredThreads(&ob, &pr, dao.UserId_Verifier, dao.Templates4step, r.Context()); err != nil {
-		util.Debug(" Cannot create required 4-threads", err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
-		return
-	}
+	//分步骤完成茶台入围操作
+	/*
+		// 准备记录入围的茶台
+		new_project_approved := dao.ProjectApproved{
+			ObjectiveId: ob.Id,
+			ProjectId:   pr.Id,
+			UserId:      s_u.Id,
+		}
+		// 检查是否已经入围过了
+		if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
+			report(w, s_u, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
+			return
+		}
+		if err = new_project_approved.Create(); err != nil {
+			util.Debug(" Cannot create project approved", err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
+			return
+		}
 
-	//跳转入围的茶台详情页面
-	http.Redirect(w, r, "/v1/project/detail?uuid="+uuid, http.StatusFound)
+		// 启动茶订单tea-order流程
+		new_tea_order := dao.TeaOrder{
+			ObjectiveId:  ob.Id,
+			ProjectId:    pr.Id,
+			Status:       dao.TeaOrderStatusPending,
+			VerifyTeamId: dao.TeamIdVerifier,
+			PayerTeamId:  ob.TeamId,
+			PayeeTeamId:  pr.TeamId,
+			//CareTeamId:   0, //默认无监护方
+		}
+
+
+		// 预填充约茶、看看、脑火、建议 4部曲
+		if err = dao.CreateRequiredThreads(&ob, &pr, dao.UserId_Verifier, dao.Templates4step, r.Context()); err != nil {
+			util.Debug(" Cannot create required 4-threads", err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
+			return
+		}
+
+		//跳转入围的茶台详情页面
+		http.Redirect(w, r, "/v1/project/detail?uuid="+uuid, http.StatusFound)
+	*/
 }
 
 // 处理新建茶台的操作处理器

@@ -90,7 +90,7 @@
           {{ if and .IsAdmin (not .IsApproved) }}
           <form class="form-inline" action="/v1/project/approve" method="post">
             <input type="hidden" name="uuid" value="{{ .ProjectBean.Project.Uuid }}" />
-            <button type="submit" class="btn btn-default btn-sm">入围</button>
+            <button type="submit" class="btn btn-default btn-sm">入围（启动线下茶会）</button>
           </form>
           {{ end }}
         </p>
