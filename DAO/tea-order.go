@@ -23,7 +23,7 @@ type TeaOrder struct {
 	ProjectId    int    // 项目ID
 	Status       string // tea-order状态：pending/active/completed/cancelled
 	VerifyTeamId int    // 见证方团队ID
-	PayerTeamId  int    // 需求方团队ID
+	PayerTeamId  int    // 需求方（出题方）团队ID
 	PayeeTeamId  int    // 解题方团队ID
 	CareTeamId   int    // 监护方团队ID
 	Score        int    // 解题评分

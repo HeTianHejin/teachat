@@ -1,0 +1,84 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .Objetctive.Uuid }}">{{ .Objetctive.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .Project.Uuid }}">{{ .Project.Title }}@茶台</a></li>
+  <li class="active">入围确认</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4><i class="bi-bookmark-check" style="font-size: 1.5rem; color: red;"></i> 茶台入围确认</h4>
+  </div>
+  
+  <div class="panel-body">
+    <div class="alert alert-info">
+      <strong>茶博士提示：</strong>您正在为茶台"{{ .Project.Title }}"选择监护方式，请仔细选择。
+    </div>
+
+    <div class="media" style="margin-bottom: 20px;">
+      <div class="media-left">
+        {{ template "component_avatar_name_gender" .SessUser }}
+      </div>
+      <div class="media-body">
+        <h5>茶围信息</h5>
+        <p><strong>当前茶围：</strong>{{ .Objetctive.Title }}</p>
+       {{ if .Objetctive.IsPrivate }}
+        <p><strong>举办方：</strong>{{ .AdminFamily.Name }}</p>
+        {{ else }}
+        <p><strong>举办方：</strong>{{ .AdminTeam.Name }}</p>
+        {{ end }}
+        <h5>茶台信息</h5>
+        <p><strong>名称：</strong>{{ .Project.Title }}</p>
+        <p><strong>描述：</strong>{{ .Project.Body }}</p>
+      </div>
+    </div>
+
+    <form action="/v1/project/approve/step2" method="post">
+      <input type="hidden" name="uuid" value="{{ .Project.Uuid }}" />
+      
+      <div class="form-group">
+        <label><strong>请选择监护方式：</strong></label>
+        
+        <div class="radio">
+          <label>
+            <input type="radio" name="guardian_type" value="self" checked>
+            <strong>自己监护</strong> - 由当前茶围所属的团队（家庭转为团队），担任监护方
+          </label>
+          <div style="margin-left: 20px; color: #666; font-size: 0.9em;">
+            {{ if .Objetctive.IsPrivate }}
+            监护方：{{ .AdminFamily.Name }}（家庭监护团队）
+            {{ else }}
+            监护方：{{ .AdminTeam.Name }}（团队）
+            {{ end }}
+          </div>
+        </div>
+        
+        <div class="radio">
+          <label>
+            <input type="radio" name="guardian_type" value="system">
+            <strong>茶棚推荐</strong> - 由茶博士推荐有相似解题技能的团队作为监护方
+          </label>
+          <div style="margin-left: 20px; color: #666; font-size: 0.9em;">
+            茶博士将找出合适的3个团队，由您选择1个作为监护团队。
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-primary">确认入围</button>
+        <a href="/v1/project/detail?uuid={{ .Project.Uuid }}" class="btn btn-default">取消</a>
+      </div>
+    </form>
+  </div>
+  
+  <div class="panel-footer">
+    <small class="text-muted">
+      <i class="bi-info-circle"></i> 
+      入围后的茶台将开始线下茶会流程，请谨慎选择监护方式。
+    </small>
+  </div>
+</div>
+
+{{ end }}

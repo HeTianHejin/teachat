@@ -189,6 +189,8 @@ type ThreadBean struct {
 	StatsSet StatsSet //涉及人事统计数值集合
 
 }
+
+// 加水。追加，补充茶议
 type ThreadSupplement struct {
 	SessUser   User // 当前会话用户
 	IsAdmin    bool // 是否为茶围管理员

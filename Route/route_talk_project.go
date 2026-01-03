@@ -180,7 +180,7 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/project/approve/step1
-// 茶话会(茶围)管理员选择某个茶台入围（入选/邀约），
+// 茶话会(茶围)管理员选择某个茶台入围（入选/邀约），第一步，返回页面待确认监护方选择
 func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -205,6 +205,118 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//获取目标茶台
+	pr := dao.Project{Uuid: uuid}
+	if err = pr.GetByUuid(); err != nil {
+		util.Debug(" Cannot get project", uuid, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
+		return
+	}
+	//读取目标茶围
+	ob, err := pr.Objective()
+	if err != nil {
+		util.Debug(" Cannot get objective", ob.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+		return
+	}
+	type pageData struct {
+		SessUser    dao.User      `json:"sessUser"`
+		Objetctive  dao.Objective `json:"objective"`
+		Project     dao.Project   `json:"project"`
+		AdminFamily dao.Family    `json:"admin_family"`
+		AdminTeam   dao.Team      `json:"admin_team"`
+	}
+	pD := pageData{
+		SessUser:   s_u,
+		Objetctive: ob,
+		Project:    pr,
+	}
+	//检查用户是否有权限处理这个请求
+	is_admin := false
+	if ob.IsPrivate {
+		admin_family, err := dao.GetFamily(ob.FamilyId)
+		if err != nil {
+			util.Debug(" Cannot get family", ob.FamilyId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会举办方，请确认后再试。")
+			return
+		}
+		is_admin, err = admin_family.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot get family member", ob.FamilyId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会管理成员，请确认后再试。")
+			return
+		}
+		pD.AdminFamily = admin_family
+	} else {
+		admin_team, err := dao.GetTeam(ob.TeamId)
+		if err != nil {
+			util.Debug(" Cannot get team", ob.TeamId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+			return
+		}
+		is_admin, err = admin_team.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot get team", ob.TeamId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+			return
+		}
+		pD.AdminTeam = admin_team
+	}
+
+	if !is_admin {
+		//不是茶围管理员，无权处理
+		report(w, s_u, "你好，茶博士面无表情，说没有权限处理这个入围操作，请确认。")
+		return
+	}
+	// 准备记录入围的茶台
+	new_project_approved := dao.ProjectApproved{
+		ObjectiveId: ob.Id,
+		ProjectId:   pr.Id,
+		UserId:      s_u.Id,
+	}
+	// 检查是否已经入围过了
+	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
+		report(w, s_u, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
+		return
+	}
+
+	// 返回入围所需要确认的监护方选择页面：project.approve_step1
+	// 渲染选择页面，提供两个选项：
+	// -自己监护：由当前用户所在家庭转为团队，担任监护方。
+	// -茶棚分配：由系统自动匹配有相似解题技能的团队作为监护方。
+
+	generateHTML(w, &pD, "layout", "navbar.private", "project.approve_step1", "component_avatar_name_gender")
+}
+
+// POST /v1/project/approve/step2
+func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
+		return
+	}
+	uuid := r.PostFormValue("uuid")
+	if uuid == "" {
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
+		return
+	}
+	guardian_type := r.PostFormValue("guardian_type")
+	if guardian_type == "" {
+		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台监护方，请确认后再试。")
+		return
+	}
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
@@ -248,62 +360,63 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
 	if !is_admin {
 		//不是茶围管理员，无权处理
 		report(w, s_u, "你好，茶博士面无表情，说没有权限处理这个入围操作，请确认。")
 		return
 	}
-
-	// TODO: 1、完成茶台入围前查重逻辑，需要返回给用户一个询问页面，是自己发起团队担任监护方，还是由茶棚选择其他茶团担任监护方；
-	// 如果用户选择自己监护，家庭需要转为团队身份，发起人是CEO，配偶是CFO，可以邀请亲友为成员；
-	// 2、见证团队由茶棚自动分配主理人，
-	// 3、包括创建TeaOrder等操作
-
-	//分步骤完成茶台入围操作
-	//step2: -如果用户确认自己监护页面，填写其为监护方团队，则跳转到项目入围确认页面，
-	//       -如果用户选择茶棚分配监护方团队，则需要一个方法选定一个有相同类似解题技能团队作为监护团队，完成入围操作，跳转茶台详情页面，
-
-	/*
-		// 准备记录入围的茶台
-		new_project_approved := dao.ProjectApproved{
-			ObjectiveId: ob.Id,
-			ProjectId:   pr.Id,
-			UserId:      s_u.Id,
+	// 准备记录入围的茶台
+	new_project_approved := dao.ProjectApproved{
+		ObjectiveId: ob.Id,
+		ProjectId:   pr.Id,
+		UserId:      s_u.Id,
+	}
+	// 检查是否已经入围过了
+	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
+		report(w, s_u, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
+		return
+	}
+	// 根据监护方选择，处理入围茶台
+	tea_order := dao.TeaOrder{}
+	family_care_team_id := 0
+	tea_order.ObjectiveId = ob.Id
+	tea_order.ProjectId = pr.Id
+	tea_order.Status = dao.TeaOrderStatusPending
+	tea_order.VerifyTeamId = dao.TeamIdVerifier
+	tea_order.PayeeTeamId = pr.TeamId
+	// 以家庭父母成员担任CEO/CFO，创建监护团队，担任监护方团队。
+	family_care_team_id, err = dao.ConvertFamilyToObCareTeam(ob.FamilyId, s_u, ob)
+	if err != nil {
+		util.Debug(" Cannot convert family to ob care team", ob.FamilyId, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会管理成员，请确认后再试。")
+		return
+	}
+	tea_order.PayerTeamId = family_care_team_id
+	switch strings.ToLower(guardian_type) {
+	case "self":
+		if ob.IsPrivate {
+			// -如果归属管理的是家庭，
+			tea_order.CareTeamId = family_care_team_id
+		} else {
+			// 直接登记为监护方团队
+			tea_order.CareTeamId = ob.TeamId
 		}
-		// 检查是否已经入围过了
-		if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
-			report(w, s_u, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
-			return
-		}
-		if err = new_project_approved.Create(); err != nil {
-			util.Debug(" Cannot create project approved", err)
-			report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
-			return
-		}
+	case "system":
+		tea_order.CareTeamId = dao.TeamIdNone //待后续选定
+	default:
+		// 提交了不能识别的参数
+		report(w, s_u, "你好，茶博士看不懂你的书法，未能记录入围茶台监护方，请确认后再试。")
+		return
+	}
 
-		// 启动茶订单tea-order流程
-		new_tea_order := dao.TeaOrder{
-			ObjectiveId:  ob.Id,
-			ProjectId:    pr.Id,
-			Status:       dao.TeaOrderStatusPending,
-			VerifyTeamId: dao.TeamIdVerifier,
-			PayerTeamId:  ob.TeamId,
-			PayeeTeamId:  pr.TeamId,
-			//CareTeamId:   0, //默认无监护方
-		}
-
-
-		// 预填充约茶、看看、脑火、建议 4部曲
-		if err = dao.CreateRequiredThreads(&ob, &pr, dao.UserId_Verifier, dao.Templates4step, r.Context()); err != nil {
-			util.Debug(" Cannot create required 4-threads", err)
-			report(w, s_u, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
-			return
-		}
-
-		//跳转入围的茶台详情页面
-		http.Redirect(w, r, "/v1/project/detail?uuid="+uuid, http.StatusFound)
-	*/
+	// 记录tea_order
+	if err = tea_order.Create(r.Context()); err != nil {
+		util.Debug(" Cannot create tea order", ob.FamilyId, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能创建茶订单记录，请确认后再试。")
+		return
+	}
+	// TODO：发送到见证者团队，等待见证者审查同意（明确线下活动主题，道德合规。。。）
+	// TODO：由系统自动匹配有相似解题技能的团队3个（如果有的话），让茶围归属管理方（出题方）选择1个作为监护方。
 }
 
 // 处理新建茶台的操作处理器

@@ -174,6 +174,7 @@ func main() {
 	mux.HandleFunc("/v1/project/new", route.HandleNewProject)
 	mux.HandleFunc("/v1/project/detail", route.ProjectDetail)
 	mux.HandleFunc("/v1/project/approve/step1", route.ProjectApproveStep1)
+	mux.HandleFunc("/v1/project/approve/step2", route.ProjectApproveStep2)
 	mux.HandleFunc("/v1/project/place_update", route.HandleProjectPlace)
 
 	// defined in route_talk_thread.go
