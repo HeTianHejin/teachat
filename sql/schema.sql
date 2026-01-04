@@ -894,7 +894,7 @@ CREATE TABLE tea_orders (
     payer_team_id         INTEGER REFERENCES teams(id),
     payee_team_id         INTEGER REFERENCES teams(id),
     care_team_id          INTEGER REFERENCES teams(id),
-    score                 INTEGER DEFAULT 0,
+    score                 INTEGER,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP,
     deleted_at            TIMESTAMP

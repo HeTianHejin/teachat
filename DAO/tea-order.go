@@ -2,6 +2,7 @@ package dao
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 )
@@ -19,14 +20,14 @@ import (
 type TeaOrder struct {
 	Id           int
 	Uuid         string
-	ObjectiveId  int    // 茶围目标ID
-	ProjectId    int    // 项目ID
-	Status       string // tea-order状态：pending/active/completed/cancelled
-	VerifyTeamId int    // 见证方团队ID
-	PayerTeamId  int    // 需求方（出题方）团队ID
-	PayeeTeamId  int    // 解题方团队ID
-	CareTeamId   int    // 监护方团队ID
-	Score        int    // 解题评分
+	ObjectiveId  int           // 茶围目标ID
+	ProjectId    int           // 项目ID
+	Status       string        // tea-order状态：pending/active/completed/cancelled
+	VerifyTeamId int           // 见证方团队ID
+	PayerTeamId  int           // 需求方（出题方）团队ID
+	PayeeTeamId  int           // 解题方团队ID
+	CareTeamId   int           // 监护方团队ID
+	Score        sql.NullInt64 // 解题评分，NULL代表未评分，0代表得0分。
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	DeletedAt    *time.Time //软删除时间（未完成的tea-order可以被取消删除，已完成的tea-order不可删除）
