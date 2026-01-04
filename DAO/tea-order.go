@@ -20,17 +20,25 @@ import (
 type TeaOrder struct {
 	Id           int
 	Uuid         string
-	ObjectiveId  int           // 茶围目标ID
-	ProjectId    int           // 项目ID
-	Status       string        // tea-order状态：pending/active/completed/cancelled
-	VerifyTeamId int           // 见证方团队ID
-	PayerTeamId  int           // 需求方（出题方）团队ID
-	PayeeTeamId  int           // 解题方团队ID
-	CareTeamId   int           // 监护方团队ID
-	Score        sql.NullInt64 // 解题评分，NULL代表未评分，0代表得0分。
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	DeletedAt    *time.Time //软删除时间（未完成的tea-order可以被取消删除，已完成的tea-order不可删除）
+	ObjectiveId  int    // 茶围目标ID
+	ProjectId    int    // 项目ID
+	Status       string // tea-order状态：pending/active/completed/cancelled
+	VerifyTeamId int    // 见证方团队ID
+	PayerTeamId  int    // 需求方（出题方）团队ID
+	PayeeTeamId  int    // 解题方团队ID
+	CareTeamId   int    // 监护方团队ID
+
+	// 审批人填写，必填
+	TeaTopic                string     // 茶会主题，默认值'-'。审批时即使不批准也应当根据茶围出题内容提炼，例如：热水器维修，宠物狗口腔护理,
+	IsApproved              bool       // 是否批准，审批人填写（必填）,默认false
+	ApproverUserId          int        // 审批人ID，必须是见证者团队成员,如果是0代表待审批，
+	ApprovalRejectionReason string     // 审批意见，如果拒绝，填写原因,默认值:'-'
+	ApprovedAt              *time.Time // 审批时间
+
+	Score     sql.NullInt64 // 解题评分，NULL代表未评分，0代表得0分。
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	DeletedAt *time.Time //软删除时间（未完成的tea-order可以被取消删除，已完成的tea-order不可删除）
 }
 
 const (
@@ -45,16 +53,14 @@ func (t *TeaOrder) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `INSERT INTO tea_orders 
-		(uuid, objective_id, project_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, score) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-		RETURNING id, uuid`
-	stmt, err := DB.Prepare(statement)
+	statement := `INSERT INTO tea_orders (objective_id, project_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`
+	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, Random_UUID(), t.ObjectiveId, t.ProjectId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId, t.Score).Scan(&t.Id, &t.Uuid)
+	_, err = stmt.ExecContext(ctx, t.ObjectiveId, t.ProjectId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId, t.TeaTopic, t.IsApproved, t.ApproverUserId, t.ApprovalRejectionReason)
 	return err
 }
 
@@ -65,14 +71,13 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 	if t.Id <= 0 && t.Uuid == "" {
 		return errors.New("invalid TeaOrder ID or UUID")
 	}
-	statement := `SELECT id, uuid, objective_id, project_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, score, created_at, updated_at, deleted_at
-		FROM tea_orders WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
+	statement := `SELECT id, uuid, objective_id, project_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, score, created_at, updated_at, deleted_at FROM tea_orders WHERE id = $1 OR uuid = $2`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, t.Id, t.Uuid).Scan(&t.Id, &t.Uuid, &t.ObjectiveId, &t.ProjectId, &t.Status, &t.VerifyTeamId, &t.PayerTeamId, &t.PayeeTeamId, &t.CareTeamId, &t.Score, &t.CreatedAt, &t.UpdatedAt, &t.DeletedAt)
+	err = stmt.QueryRowContext(ctx, t.Id, t.Uuid).Scan(&t.Id, &t.Uuid, &t.ObjectiveId, &t.ProjectId, &t.Status, &t.VerifyTeamId, &t.PayerTeamId, &t.PayeeTeamId, &t.CareTeamId, &t.TeaTopic, &t.IsApproved, &t.ApproverUserId, &t.ApprovalRejectionReason, &t.ApprovedAt, &t.Score, &t.CreatedAt, &t.UpdatedAt, &t.DeletedAt)
 	return err
 }
 

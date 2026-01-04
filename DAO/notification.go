@@ -21,13 +21,13 @@ type AcceptNotification struct {
 }
 
 const (
-	AcceptNotificationClassUnread = 0
-	AcceptNotificationClassRead   = 1
+	NotificationStatusUnread = 0
+	NotificationStatusRead   = 1
 )
 
 var AcceptNotificationStatus = map[int]string{
-	AcceptNotificationClassUnread: "未读",
-	AcceptNotificationClassRead:   "已读",
+	NotificationStatusUnread: "未读",
+	NotificationStatusRead:   "已读",
 }
 
 // 获取AcceptNotification状态
@@ -113,7 +113,7 @@ func (u *User) AcceptNotifications() (acceptNotifications []AcceptNotification, 
 
 // 根据ToUserId,获取用户全部未读的class=0的acceptNotification
 func (u *User) UnreadAcceptNotifications() (acceptNotifications []AcceptNotification, err error) {
-	rows, err := DB.Query("SELECT * FROM accept_notifications where to_user_id = $1 and class = $2", u.Id, AcceptNotificationClassUnread)
+	rows, err := DB.Query("SELECT * FROM accept_notifications where to_user_id = $1 and class = $2", u.Id, NotificationStatusUnread)
 	if err != nil {
 		return
 	}
@@ -130,12 +130,12 @@ func (u *User) UnreadAcceptNotifications() (acceptNotifications []AcceptNotifica
 
 // 根据UserId,获取全部未读的class=0的acceptNotification的统计数量
 func (u *User) UnreadAcceptNotificationsCount() (count int) {
-	return u.getAcceptNotificationCountWithContext("class = "+strconv.Itoa(AcceptNotificationClassUnread), context.Background())
+	return u.getAcceptNotificationCountWithContext("class = "+strconv.Itoa(NotificationStatusUnread), context.Background())
 }
 
 // 根据ToUserId,获取全部已读的class=1的acceptNotification的统计数量
 func (u *User) ReadAcceptNotificationsCount() (count int) {
-	return u.getAcceptNotificationCountWithContext("class = "+strconv.Itoa(AcceptNotificationClassRead), context.Background())
+	return u.getAcceptNotificationCountWithContext("class = "+strconv.Itoa(NotificationStatusRead), context.Background())
 }
 
 // 根据ToUserId，统计全部acceptNotification的数量
@@ -145,7 +145,7 @@ func (u *User) AllAcceptNotificationCount() (count int) {
 
 // 根据ToUserId,获取全部已读的class=1的acceptNotification
 func (u *User) ReadAcceptNotifications() (acceptNotifications []AcceptNotification, err error) {
-	rows, err := DB.Query("SELECT * FROM accept_notifications where to_user_id = $1 and class = $2", u.Id, AcceptNotificationClassRead)
+	rows, err := DB.Query("SELECT * FROM accept_notifications where to_user_id = $1 and class = $2", u.Id, NotificationStatusRead)
 	if err != nil {
 		return
 	}
@@ -183,7 +183,7 @@ func (a *AcceptNotification) UpdateWithContext(to_user_id, accept_object_id int,
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, to_user_id, accept_object_id, time.Now(), AcceptNotificationClassRead)
+	_, err = stmt.ExecContext(ctx, to_user_id, accept_object_id, time.Now(), NotificationStatusRead)
 	return
 }
 
@@ -242,7 +242,7 @@ func (user *User) CheckHasAcceptNotificationWithContext(accept_object_id int, ct
 	}
 
 	query := "SELECT COUNT(*) > 0 FROM accept_notifications WHERE to_user_id = $1 AND accept_object_id = $2 AND class = $3"
-	row := DB.QueryRowContext(ctx, query, user.Id, accept_object_id, AcceptNotificationClassUnread)
+	row := DB.QueryRowContext(ctx, query, user.Id, accept_object_id, NotificationStatusUnread)
 	var exists bool
 	if err := row.Scan(&exists); err != nil {
 		return false, err
@@ -263,7 +263,7 @@ func (user *User) CheckHasReadAcceptNotification(accept_object_id int, ctx conte
 	}
 
 	query := "SELECT COUNT(*) > 0 FROM accept_notifications WHERE to_user_id = $1 AND accept_object_id = $2 AND class = $3"
-	row := DB.QueryRowContext(ctx, query, user.Id, accept_object_id, AcceptNotificationClassRead)
+	row := DB.QueryRowContext(ctx, query, user.Id, accept_object_id, NotificationStatusRead)
 	var exists bool
 	if err := row.Scan(&exists); err != nil {
 		return false, err

@@ -40,6 +40,16 @@ type Handicraft struct {
 
 }
 
+// 评分记录结构体
+type HandicraftRating struct {
+	Id           int
+	HandicraftId int
+	RaterUserId  int
+	RawScore     int
+	Comment      string
+	CreatedAt    time.Time
+}
+
 // 协助者/助攻人ID列表
 type HandicraftContributor struct {
 	Id               int

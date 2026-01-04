@@ -894,6 +894,11 @@ CREATE TABLE tea_orders (
     payer_team_id         INTEGER REFERENCES teams(id),
     payee_team_id         INTEGER REFERENCES teams(id),
     care_team_id          INTEGER REFERENCES teams(id),
+    tea_topic             VARCHAR(64) NOT NULL DEFAULT '-',
+    is_approved           BOOLEAN NOT NULL DEFAULT FALSE,
+    approver_user_id      INTEGER REFERENCES users(id),
+    approval_rejection_reason TEXT NOT NULL DEFAULT '-',
+    approved_at            TIMESTAMP,
     score                 INTEGER,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP,
@@ -924,7 +929,16 @@ CREATE TABLE handicrafts (
     updated_at            TIMESTAMP,
     deleted_at            TIMESTAMP
 );
-
+-- 手工艺评分表
+CREATE TABLE handicraft_ratings (
+    id              SERIAL PRIMARY KEY,
+    handicraft_id   INTEGER NOT NULL REFERENCES handicrafts(id),
+    rater_user_id   INTEGER NOT NULL REFERENCES users(id),  -- 评分员ID
+    raw_score       INTEGER NOT NULL CHECK (raw_score >= 0 AND raw_score <= 100),
+    comment         TEXT,      -- 评分备注（可选）
+    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(handicraft_id, rater_user_id)  -- 防止同一人重复评分
+);
 -- 手工艺协助者表
 CREATE TABLE handicraft_contributors (
     id                    SERIAL PRIMARY KEY,

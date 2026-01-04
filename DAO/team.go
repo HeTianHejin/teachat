@@ -24,7 +24,6 @@ const (
 	TeamIdSpaceshipCrew = 2 // 2   飞船茶棚团队，系统预设
 
 	TeamIdVerifier = 3 // 3 见证者团队，系统预设
-
 )
 
 var (
@@ -92,7 +91,6 @@ func GetTeamsByIds(teamIDs []int) ([]Team, error) {
 
 // Team $事业茶团=同事团队
 // 拥有共同目标，或者兴趣爱好/信仰/利益的成员间非血缘关系团队
-// 预算上来说team的人数上限是12人，1 dozen
 // 层级关系通过Group结构管理
 type Team struct {
 	Id           int

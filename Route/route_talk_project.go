@@ -410,12 +410,13 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 记录tea_order
+	// TODO：待审批tea_order作为通知，等待见证者团队，见证者审查同意（明确线下活动主题，道德合规。。。）
 	if err = tea_order.Create(r.Context()); err != nil {
 		util.Debug(" Cannot create tea order", ob.FamilyId, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建茶订单记录，请确认后再试。")
 		return
 	}
-	// TODO：发送到见证者团队，等待见证者审查同意（明确线下活动主题，道德合规。。。）
+
 	// TODO：由系统自动匹配有相似解题技能的团队3个（如果有的话），让茶围归属管理方（出题方）选择1个作为监护方。
 }
 
