@@ -30,12 +30,14 @@ type Handicraft struct {
 	SkillDifficulty int              // 技能操作难度(1-5)，引用 skill.DifficultyLevel
 	MagicDifficulty int              // 创意思维难度(1-5)，引用 magic.DifficultyLevel
 
+	// 统计字段
+	ContributorCount int           // 协助者/助攻人计数
+	FinalScore       sql.NullInt64 // 最终得分。NULL代表还没有评分；0代表已评分但是得了0分
+
 	CreatedAt time.Time
 	UpdatedAt *time.Time
 	DeletedAt *time.Time //软删除
 
-	// 统计字段
-	ContributorCount int // 协助者/助攻人计数
 }
 
 // 协助者/助攻人ID列表
@@ -235,15 +237,15 @@ func (h *Handicraft) IsHighDifficulty() bool {
 
 // CRUD 操作方法
 
-// Create 创建新的手工艺记录
+// Create() 创建新的手工艺记录
 func (h *Handicraft) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	statement := `INSERT INTO handicrafts 
 		(uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, initiator_id, owner_id, 
-		 type, category, status, skill_difficulty, magic_difficulty, contributor_count) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) 
+		 type, category, status, skill_difficulty, magic_difficulty, contributor_count, final_score) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
 		RETURNING id, uuid`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
@@ -251,11 +253,11 @@ func (h *Handicraft) Create(ctx context.Context) (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, Random_UUID(), h.TeaOrderId, h.RecorderUserId, h.Name, h.Nickname, h.Description,
-		h.ProjectId, h.InitiatorId, h.OwnerId, h.Type, h.Category, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount).Scan(&h.Id, &h.Uuid)
+		h.ProjectId, h.InitiatorId, h.OwnerId, h.Type, h.Category, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount, h.FinalScore).Scan(&h.Id, &h.Uuid)
 	return err
 }
 
-// GetByIdOrUUID 根据ID或UUID获取手工艺记录
+// GetByIdOrUUID() 根据ID或UUID获取手工艺记录
 func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -264,7 +266,7 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 	}
 	statement := `SELECT id, uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, 
 		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
-		contributor_count, created_at, updated_at, deleted_at
+		contributor_count, final_score, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
@@ -273,25 +275,25 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, h.Id, h.Uuid).Scan(&h.Id, &h.Uuid, &h.TeaOrderId, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
 		&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
-		&h.ContributorCount, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
+		&h.ContributorCount, &h.FinalScore, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
 	return err
 }
 
-// Update 更新手工艺记录
+// Update() 更新手工艺记录
 func (h *Handicraft) Update() error {
 	statement := `UPDATE handicrafts SET name = $2, nickname = $3, description = $4, 
-		status = $5, skill_difficulty = $6, magic_difficulty = $7, contributor_count = $8, updated_at = $9  
+		status = $5, skill_difficulty = $6, magic_difficulty = $7, contributor_count = $8, final_score = $9, updated_at = $10  
 		WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(h.Id, h.Name, h.Nickname, h.Description, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount, time.Now())
+	_, err = stmt.Exec(h.Id, h.Name, h.Nickname, h.Description, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount, h.FinalScore, time.Now())
 	return err
 }
 
-// Delete 软删除手工艺记录
+// Delete() 软删除手工艺记录
 func (h *Handicraft) Delete() error {
 	statement := `UPDATE handicrafts SET deleted_at = $2 WHERE id = $1`
 	stmt, err := DB.Prepare(statement)
@@ -374,13 +376,13 @@ func (h HandicraftType) Description() string {
 	}
 }
 
-// 根据项目ID获取手工艺记录
+// GetHandicraftsByProjectId() 根据项目ID获取手工艺记录
 func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `SELECT id, uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, 
 		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
-		contributor_count, created_at, updated_at, deleted_at
+		contributor_count, final_score, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
 	rows, err := DB.QueryContext(ctx, statement, projectId)
 	if err != nil {
@@ -393,7 +395,7 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 		var h Handicraft
 		err := rows.Scan(&h.Id, &h.Uuid, &h.TeaOrderId, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
 			&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
-			&h.ContributorCount, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
+			&h.ContributorCount, &h.FinalScore, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -402,7 +404,7 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 	return handicrafts, nil
 }
 
-// IsAllHandicraftsCompleted 判断项目的全部手工艺作业是否已完成
+// IsAllHandicraftsCompleted() 判断项目的全部手工艺作业是否已完成
 func IsAllHandicraftsCompleted(projectId int, ctx context.Context) (bool, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()

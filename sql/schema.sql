@@ -919,6 +919,7 @@ CREATE TABLE handicrafts (
     skill_difficulty      INTEGER NOT NULL DEFAULT 3,
     magic_difficulty      INTEGER NOT NULL DEFAULT 3,
     contributor_count     INTEGER DEFAULT 0,
+    final_score            INTEGER,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP,
     deleted_at            TIMESTAMP
