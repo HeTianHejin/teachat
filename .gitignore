@@ -12,7 +12,7 @@
 *.test
 test_build
 
-# 日志文件
+# log file
 *.log
 teachatWeb.log
 
@@ -26,29 +26,27 @@ teachatWeb.log
 go.work
 go.work.sum
 
-# 鹤田河津- debug 调试临时文件
+# Robin- debug tmp file
 __debug_*
 __debug_bin*
-*.jpeg
-*.jpg
-*.png
-*.gif
-*.webp
-*.zip
-*.tar
-*.tar.gz
-*.tgz
+public/image/*.{jpeg,jpg,png,webp}
+!public/image/teaSet.jpeg
+!public/image/captain.jpeg
+!public/image/teamLogo.jpeg
+!public/image/default-ob-cover.jpeg
+!public/image/default-pr-cover.jpeg
+!public/image/groupLogo.jpeg
 
 # env file
 .env
 
 
-# 鹤田河津- MacOS的环境文件
+# Robin- MacOS file
 .DS_Store
 */.DS_Store
-# 鹤田河津- MacOS的临时文件
+# Robin- MacOS tmp file
 *.tmp
-# 鹤田河津-Vscode的设置文件
+# Robin-Vscode config file
 .vscode/
 
 # AI
