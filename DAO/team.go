@@ -529,25 +529,18 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err 
 // SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团,
 // team.class = 0、1 or 2（团队类型：0-系统团队，1-开放式，2-封闭式）, team_members.status = 1（成员状态：1-正常（活跃成员））
 func (user *User) SurvivalTeams() ([]Team, error) {
-	count, err := user.SurvivalTeamsCount()
-	if err != nil {
-		return nil, err
-	}
-	if count == 0 {
-		return []Team{}, nil
-	}
 
 	query := `
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags
         FROM teams
         JOIN team_members ON teams.id = team_members.team_id
-        WHERE teams.class IN ($1, $2, $3) AND team_members.user_id = $4 AND team_members.status = $5 AND teams.deleted_at IS NULL`
+        WHERE team_members.user_id = $1 AND team_members.status = $2 AND teams.deleted_at IS NULL`
 
 	estimatedCapacity := util.Config.MaxSurvivalTeams //设定用户最大允许活跃$事业茶团数值
 	teams := make([]Team, 0, estimatedCapacity)
 
-	query += ` LIMIT $6` // 限制最大团队数
-	rows, err := DB.Query(query, TeamClassSpaceship, TeamClassOpen, TeamClassClose, user.Id, TeamMemberStatusActive, estimatedCapacity)
+	query += ` LIMIT $3` // 限制最大团队数
+	rows, err := DB.Query(query, user.Id, TeamMemberStatusActive, estimatedCapacity)
 	if err != nil {
 		return nil, err
 	}
@@ -568,15 +561,15 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 	return teams, nil
 }
 
-// SurvivalTeamsCount() 获取用户当前所在的状态正常的全部$事业茶团计数(不包括系统预留的“自由人”$事业茶团)
+// SurvivalTeamsCount() 获取用户当前所在的状态正常的全部$事业茶团计数(包括系统预留的“自由人”$事业茶团)
 func (user *User) SurvivalTeamsCount() (count int, err error) {
 	query := `
         SELECT COUNT(DISTINCT teams.id)
         FROM teams
         JOIN team_members ON teams.id = team_members.team_id
-        WHERE teams.class IN ($1, $2) AND team_members.user_id = $3 AND team_members.status = $4 AND teams.deleted_at IS NULL`
+        WHERE team_members.user_id = $1 AND team_members.status = $2 AND teams.deleted_at IS NULL`
 
-	err = DB.QueryRow(query, TeamClassOpen, TeamClassClose, user.Id, TeamMemberStatusActive).Scan(&count)
+	err = DB.QueryRow(query, user.Id, TeamMemberStatusActive).Scan(&count)
 
 	return
 }
