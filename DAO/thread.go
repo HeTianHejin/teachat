@@ -295,6 +295,7 @@ func (t *Thread) Create() (err error) {
 // 批准，采纳，赞成某个茶议的主张/方案/观点
 type ThreadApproved struct {
 	Id        int
+	Uuid      string
 	ProjectId int       //项目茶台id
 	ThreadId  int       //茶议id
 	UserId    int       //采纳(批准)者id
@@ -315,7 +316,7 @@ func (threadApproved *ThreadApproved) Create() (err error) {
 
 // thread_approved.GetByThreadId()
 func (threadApproved *ThreadApproved) GetByThreadId() (err error) {
-	err = DB.QueryRow("SELECT id, project_id, thread_id, user_id, created_at FROM thread_approved WHERE thread_id = $1", threadApproved.ThreadId).Scan(&threadApproved.Id, &threadApproved.ProjectId, &threadApproved.ThreadId, &threadApproved.UserId, &threadApproved.CreatedAt)
+	err = DB.QueryRow("SELECT id, uuid, project_id, thread_id, user_id, created_at FROM thread_approved WHERE thread_id = $1", threadApproved.ThreadId).Scan(&threadApproved.Id, &threadApproved.Uuid, &threadApproved.ProjectId, &threadApproved.ThreadId, &threadApproved.UserId, &threadApproved.CreatedAt)
 	return
 }
 

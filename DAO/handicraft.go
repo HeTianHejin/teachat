@@ -53,6 +53,7 @@ type HandicraftRating struct {
 // 协助者/助攻人ID列表
 type HandicraftContributor struct {
 	Id               int
+	Uuid             string
 	HandicraftId     int
 	UserId           int // 助攻人ID
 	ContributionRate int // 贡献值(1-100)

@@ -131,6 +131,7 @@ type LocationHistory struct {
 // 某个用户设置的“默认地方”
 type UserDefaultPlace struct {
 	Id        int
+	Uuid      string
 	UserId    int
 	PlaceId   int
 	CreatedAt time.Time
@@ -139,6 +140,7 @@ type UserDefaultPlace struct {
 // userPlace 用户绑定的地方
 type UserPlace struct {
 	Id        int
+	Uuid      string
 	UserId    int
 	PlaceId   int
 	CreatedAt time.Time
@@ -146,7 +148,7 @@ type UserPlace struct {
 
 // UserPlace.Create() 创建用户绑定的地方,返回id
 func (up *UserPlace) Create() (err error) {
-	statement := "INSERT INTO user_place (user_id, place_id, created_at) VALUES ($1, $2, $3) RETURNING id"
+	statement := "INSERT INTO user_place (user_id, place_id) VALUES ($1, $2, $3) RETURNING id"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
@@ -158,13 +160,13 @@ func (up *UserPlace) Create() (err error) {
 
 // UserPlace.GetByUserId() 根据用户ID获取某个用户绑定的全部地方
 func (up *UserPlace) GetByUserId() (userPlaces []UserPlace, err error) {
-	rows, err := DB.Query("SELECT id, user_id, place_id, created_at FROM user_place WHERE user_id = $1", up.UserId)
+	rows, err := DB.Query("SELECT id, uuid, user_id, place_id, created_at FROM user_place WHERE user_id = $1", up.UserId)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		var userPlace UserPlace
-		err = rows.Scan(&userPlace.Id, &userPlace.UserId, &userPlace.PlaceId, &userPlace.CreatedAt)
+		err = rows.Scan(&userPlace.Id, &userPlace.Uuid, &userPlace.UserId, &userPlace.PlaceId, &userPlace.CreatedAt)
 		if err != nil {
 			return
 		}
@@ -225,8 +227,8 @@ func (udp *UserDefaultPlace) Create() (err error) {
 // User.GetLastDefaultPlace() 根据user_id，从user_default_place表中获取最后一条记录，再根据.place_id，return (place Place, err error)
 func (u *User) GetLastDefaultPlace() (place Place, err error) {
 	udp := UserDefaultPlace{}
-	statement := "SELECT id, user_id, place_id, created_at FROM user_default_place WHERE user_id = $1 ORDER BY created_at DESC"
-	err = DB.QueryRow(statement, u.Id).Scan(&udp.Id, &udp.UserId, &udp.PlaceId, &udp.CreatedAt)
+	statement := "SELECT id, uuid, user_id, place_id, created_at FROM user_default_place WHERE user_id = $1 ORDER BY created_at DESC"
+	err = DB.QueryRow(statement, u.Id).Scan(&udp.Id, &udp.Uuid, &udp.UserId, &udp.PlaceId, &udp.CreatedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			//这是用户还没有设置默认品茶地方，统一返回“星际茶棚”
@@ -272,6 +274,7 @@ func (project *Project) Place() (place Place, err error) {
 // 用户关联地址
 type UserAddress struct {
 	Id        int
+	Uuid      string
 	UserId    int
 	AddressId int
 	CreatedAt time.Time
@@ -279,13 +282,13 @@ type UserAddress struct {
 
 // UserAddress.GetByUserId() 根据用户ID获取全部用户地址
 func (ua *UserAddress) GetByUserId() (userAddresses []UserAddress, err error) {
-	rows, err := DB.Query("SELECT id, user_id, address_id, created_at FROM user_address WHERE user_id = $1", ua.UserId)
+	rows, err := DB.Query("SELECT id,uuid, user_id, address_id, created_at FROM user_address WHERE user_id = $1", ua.UserId)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		var userAddress UserAddress
-		err = rows.Scan(&userAddress.Id, &userAddress.UserId, &userAddress.AddressId, &userAddress.CreatedAt)
+		err = rows.Scan(&userAddress.Id, &userAddress.Uuid, &userAddress.UserId, &userAddress.AddressId, &userAddress.CreatedAt)
 		if err != nil {
 			return
 		}
@@ -339,7 +342,7 @@ func (ua *UserAddress) Create() (err error) {
 
 // UserAddress.Get() 获取1用户地址
 func (ua *UserAddress) Get() (err error) {
-	err = DB.QueryRow("SELECT id, user_id, address_id, created_at FROM user_address WHERE id = $1", ua.Id).Scan(&ua.Id, &ua.UserId, &ua.AddressId, &ua.CreatedAt)
+	err = DB.QueryRow("SELECT id,uuid, user_id, address_id, created_at FROM user_address WHERE id = $1", ua.Id).Scan(&ua.Id, &ua.Uuid, &ua.UserId, &ua.AddressId, &ua.CreatedAt)
 	return
 }
 
@@ -358,6 +361,7 @@ func (ua *UserAddress) Delete() (err error) {
 // 用户默认地址
 type UserDefaultAddress struct {
 	Id        int
+	Uuid      string
 	UserId    int
 	AddressId int
 	CreatedAt time.Time
@@ -377,7 +381,7 @@ func (uda *UserDefaultAddress) Create() (err error) {
 
 // UserDefaultAddress.Get() 获取1用户默认地址
 func (uda *UserDefaultAddress) Get() (err error) {
-	err = DB.QueryRow("SELECT id, user_id, address_id, created_at FROM user_default_address WHERE id = $1", uda.Id).Scan(&uda.Id, &uda.UserId, &uda.AddressId, &uda.CreatedAt)
+	err = DB.QueryRow("SELECT id,uuid, user_id, address_id, created_at FROM user_default_address WHERE id = $1", uda.Id).Scan(&uda.Id, &uda.Uuid, &uda.UserId, &uda.AddressId, &uda.CreatedAt)
 	return
 }
 

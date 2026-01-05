@@ -78,6 +78,7 @@ const (
 // GoodsFamily 家庭物资关系
 type GoodsFamily struct {
 	Id           int
+	Uuid         string
 	FamilyId     int
 	GoodsId      int
 	Availability GoodsAvailability // 在该家庭中的使用状态
@@ -88,6 +89,7 @@ type GoodsFamily struct {
 // GoodsTeam 团队物资关系
 type GoodsTeam struct {
 	Id           int
+	Uuid         string
 	TeamId       int
 	GoodsId      int
 	Availability GoodsAvailability // 在该团队中的使用状态
@@ -368,10 +370,10 @@ func GetGoodsFamilyByIds(familyId, goodsId int, ctx context.Context) (*GoodsFami
 	defer cancel()
 
 	gf := &GoodsFamily{}
-	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
+	statement := `SELECT id,uuid, family_id, goods_id, availability, created_at, updated_at 
 		FROM goods_families WHERE family_id = $1 AND goods_id = $2`
 	err := DB.QueryRowContext(ctx, statement, familyId, goodsId).Scan(
-		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
+		&gf.Id, &gf.Uuid, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -387,10 +389,10 @@ func GetGoodsTeamByIds(teamId, goodsId int, ctx context.Context) (*GoodsTeam, er
 	defer cancel()
 
 	gt := &GoodsTeam{}
-	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
+	statement := `SELECT id, uuid, team_id, goods_id, availability, created_at, updated_at 
 		FROM goods_teams WHERE team_id = $1 AND goods_id = $2`
 	err := DB.QueryRowContext(ctx, statement, teamId, goodsId).Scan(
-		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
+		&gt.Id, &gt.Uuid, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -596,10 +598,10 @@ func (gf *GoodsFamily) Get(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
+	statement := `SELECT id, uuid, family_id, goods_id, availability, created_at, updated_at 
 		FROM goods_families WHERE id = $1`
 	err := DB.QueryRowContext(ctx, statement, gf.Id).Scan(
-		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
+		&gf.Id, &gf.Uuid, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
 	return err
 }
 
@@ -608,10 +610,10 @@ func (gf *GoodsFamily) GetByFamilyIdAndGoodsId(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, family_id, goods_id, availability, created_at, updated_at 
+	statement := `SELECT id, uuid, family_id, goods_id, availability, created_at, updated_at 
 		FROM goods_families WHERE family_id = $1 AND goods_id = $2`
 	err := DB.QueryRowContext(ctx, statement, gf.FamilyId, gf.GoodsId).Scan(
-		&gf.Id, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
+		&gf.Id, &gf.Uuid, &gf.FamilyId, &gf.GoodsId, &gf.Availability, &gf.CreatedAt, &gf.UpdatedAt)
 	return err
 }
 
@@ -652,10 +654,10 @@ func (gt *GoodsTeam) Get(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
+	statement := `SELECT id, uuid, team_id, goods_id, availability, created_at, updated_at 
 		FROM goods_teams WHERE id = $1`
 	err := DB.QueryRowContext(ctx, statement, gt.Id).Scan(
-		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
+		&gt.Id, &gt.Uuid, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
 	return err
 }
 
@@ -664,10 +666,10 @@ func (gt *GoodsTeam) GetByTeamIdAndGoodsId(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, team_id, goods_id, availability, created_at, updated_at 
+	statement := `SELECT id,uuid, team_id, goods_id, availability, created_at, updated_at 
 		FROM goods_teams WHERE team_id = $1 AND goods_id = $2`
 	err := DB.QueryRowContext(ctx, statement, gt.TeamId, gt.GoodsId).Scan(
-		&gt.Id, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
+		&gt.Id, &gt.Uuid, &gt.TeamId, &gt.GoodsId, &gt.Availability, &gt.CreatedAt, &gt.UpdatedAt)
 	return err
 }
 
@@ -706,6 +708,7 @@ func (gt *GoodsTeam) Delete(ctx context.Context) error {
 // 用户看上（收藏/标记）的物质
 type GoodsUser struct {
 	Id        int
+	Uuid      string
 	UserId    int
 	GoodsId   int
 	CreatedAt time.Time
@@ -725,15 +728,15 @@ func (ug *GoodsUser) Create() (err error) {
 
 // GoodsUser.Get() 获取1用户收集的物资记录
 func (ug *GoodsUser) Get() (err error) {
-	err = DB.QueryRow("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE id = $1", ug.Id).
-		Scan(&ug.Id, &ug.UserId, &ug.GoodsId, &ug.CreatedAt)
+	err = DB.QueryRow("SELECT id, uuid, user_id, goods_id, created_at FROM goods_users WHERE id = $1", ug.Id).
+		Scan(&ug.Id, &ug.Uuid, &ug.UserId, &ug.GoodsId, &ug.CreatedAt)
 	return
 }
 
 // GoodsUser.GetByUserIdAndGoodsId() 获取1用户收集的物资记录
 func (ug *GoodsUser) GetByUserIdAndGoodsId() (err error) {
-	err = DB.QueryRow("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1 AND goods_id = $2", ug.UserId, ug.GoodsId).
-		Scan(&ug.Id, &ug.UserId, &ug.GoodsId, &ug.CreatedAt)
+	err = DB.QueryRow("SELECT id,uuid, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1 AND goods_id = $2", ug.UserId, ug.GoodsId).
+		Scan(&ug.Id, &ug.Uuid, &ug.UserId, &ug.GoodsId, &ug.CreatedAt)
 	return
 }
 
@@ -751,14 +754,14 @@ func (ug *GoodsUser) Delete() (err error) {
 
 // GoodsUser.GetAllByUserId()  获取用户收集的所有物资记录
 func (ug *GoodsUser) GetAllByUserId() (goodsUserSlice []GoodsUser, err error) {
-	rows, err := DB.Query("SELECT id, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1", ug.UserId)
+	rows, err := DB.Query("SELECT id, uuid, user_id, goods_id, created_at FROM goods_users WHERE user_id = $1", ug.UserId)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		var goodsUser GoodsUser
-		err = rows.Scan(&goodsUser.Id, &goodsUser.UserId, &goodsUser.GoodsId, &goodsUser.CreatedAt)
+		err = rows.Scan(&goodsUser.Id, &goodsUser.Uuid, &goodsUser.UserId, &goodsUser.GoodsId, &goodsUser.CreatedAt)
 		if err != nil {
 			return
 		}
@@ -855,6 +858,7 @@ func SearchGoodsByName(keyword string, limit int, ctx context.Context) ([]Goods,
 // 项目物资
 type GoodsProject struct {
 	Id                int
+	Uuid              string
 	ProjectId         int
 	ResponsibleUserId int               // 物资在项目中的责任人
 	GoodsId           int               // 物资id
@@ -990,7 +994,7 @@ func GetGoodsProjectByProjectId(projectId int, ctx context.Context) ([]GoodsProj
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, project_id, responsible_user_id, goods_id, provider_type, expected_usage, 
+	statement := `SELECT id, uuid, project_id, responsible_user_id, goods_id, provider_type, expected_usage, 
 		quantity, category, status, notes, created_at, updated_at, deleted_at 
 		FROM goods_projects WHERE project_id = $1 AND deleted_at IS NULL 
 		ORDER BY created_at DESC`
@@ -1004,7 +1008,7 @@ func GetGoodsProjectByProjectId(projectId int, ctx context.Context) ([]GoodsProj
 	var projectGoods []GoodsProject
 	for rows.Next() {
 		var gp GoodsProject
-		err = rows.Scan(&gp.Id, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ProviderType,
+		err = rows.Scan(&gp.Id, &gp.Uuid, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ProviderType,
 			&gp.ExpectedUsage, &gp.Quantity, &gp.Category, &gp.Status, &gp.Notes,
 			&gp.CreatedAt, &gp.UpdatedAt, &gp.DeletedAt)
 		if err != nil {
@@ -1025,11 +1029,11 @@ func (gp *GoodsProject) GetByProjectIdAndGoodsId(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, project_id, responsible_user_id, goods_id, provider_type, expected_usage, 
+	statement := `SELECT id, uuid, project_id, responsible_user_id, goods_id, provider_type, expected_usage, 
 		quantity, category, status, notes, created_at, updated_at, deleted_at 
 		FROM goods_projects WHERE project_id = $1 AND goods_id = $2 AND deleted_at IS NULL`
 	err := DB.QueryRowContext(ctx, statement, gp.ProjectId, gp.GoodsId).Scan(
-		&gp.Id, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ProviderType, &gp.ExpectedUsage,
+		&gp.Id, &gp.Uuid, &gp.ProjectId, &gp.ResponsibleUserId, &gp.GoodsId, &gp.ProviderType, &gp.ExpectedUsage,
 		&gp.Quantity, &gp.Category, &gp.Status, &gp.Notes, &gp.CreatedAt, &gp.UpdatedAt, &gp.DeletedAt)
 	return err
 }
@@ -1037,6 +1041,7 @@ func (gp *GoodsProject) GetByProjectIdAndGoodsId(ctx context.Context) error {
 // 项目物资准备状态
 type GoodsProjectReadiness struct {
 	Id        int
+	Uuid      string
 	ProjectId int
 	IsReady   bool   // 是否全部物资已备齐
 	UserId    int    // 确认人ID
@@ -1094,10 +1099,10 @@ func GetGoodsProjectReadinessByProjectId(projectId int, ctx context.Context) (Go
 	defer cancel()
 
 	gpr := GoodsProjectReadiness{}
-	statement := `SELECT id, project_id, is_ready, user_id, notes, created_at, updated_at 
+	statement := `SELECT id, uuid, project_id, is_ready, user_id, notes, created_at, updated_at 
 		FROM goods_project_readiness WHERE project_id = $1`
 	err := DB.QueryRowContext(ctx, statement, projectId).Scan(
-		&gpr.Id, &gpr.ProjectId, &gpr.IsReady, &gpr.UserId, &gpr.Notes, &gpr.CreatedAt, &gpr.UpdatedAt)
+		&gpr.Id, &gpr.Uuid, &gpr.ProjectId, &gpr.IsReady, &gpr.UserId, &gpr.Notes, &gpr.CreatedAt, &gpr.UpdatedAt)
 	if err != nil {
 		return gpr, err
 	}

@@ -85,36 +85,36 @@ func (session *Session) Check() (bool, error) {
 	return false, nil
 }
 
-type Watchword struct {
-	Id              int
-	Word            string
-	AdministratorId int
-	CreatedAt       time.Time
-}
+// type Watchword struct {
+// 	Id              int
+// 	Word            string
+// 	AdministratorId int
+// 	CreatedAt       time.Time
+// }
 
 // 检查登录口令是否正确
-func CheckWatchword(watchword string) (valid bool, err error) {
-	watchword_db := Watchword{}
-	err = DB.QueryRow("SELECT id, word FROM watchwords WHERE word = $1 ", watchword).Scan(&watchword_db.Id, &watchword_db.Word)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			valid = false
-			return valid, err
-		} else {
-			valid = false
-			return
-		}
+// func CheckWatchword(watchword string) (valid bool, err error) {
+// 	watchword_db := Watchword{}
+// 	err = DB.QueryRow("SELECT id, word FROM watchwords WHERE word = $1 ", watchword).Scan(&watchword_db.Id, &watchword_db.Word)
+// 	if err != nil {
+// 		if errors.Is(err, sql.ErrNoRows) {
+// 			valid = false
+// 			return valid, err
+// 		} else {
+// 			valid = false
+// 			return
+// 		}
 
-	}
-	if watchword_db.Word == watchword {
-		valid = true
-		return
-	} else {
-		valid = false
-		return
-	}
+// 	}
+// 	if watchword_db.Word == watchword {
+// 		valid = true
+// 		return
+// 	} else {
+// 		valid = false
+// 		return
+// 	}
 
-}
+// }
 
 // Delete session from database
 func (session *Session) Delete() (err error) {

@@ -48,6 +48,7 @@ func (lq *LastQuery) Get() (err error) {
 // AcceptObject 友邻蒙评对象
 type AcceptObject struct {
 	Id         int
+	Uuid       string
 	ObjectType int // 1:茶话会，2:茶台， 3:茶议，4: 品味， 5:茶团， 6:集团
 	ObjectId   int
 }
@@ -64,6 +65,7 @@ const (
 // 用户新通知统计
 type NewNotificationCount struct {
 	Id     int
+	Uuid   string
 	UserId int
 	Count  int
 }
@@ -72,6 +74,7 @@ type NewNotificationCount struct {
 // 慎独，茶议正式发布之前需要邻桌蒙评是否符合社区文明之约？
 type Acceptance struct {
 	Id             int
+	Uuid           string
 	AcceptObjectId int
 	XAccept        bool
 	XUserId        int
@@ -112,7 +115,7 @@ func (a *Acceptance) Update() (err error) {
 
 // Get() 获取一条友友邻蒙评记录
 func (a *Acceptance) Get() (err error) {
-	err = DB.QueryRow(`SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at FROM acceptances WHERE id = $1`, a.Id).Scan(&a.Id, &a.AcceptObjectId, &a.XAccept, &a.XUserId, &a.XAcceptedAt, &a.YAccept, &a.YUserId, &a.YAcceptedAt)
+	err = DB.QueryRow(`SELECT id, uuid, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at FROM acceptances WHERE id = $1`, a.Id).Scan(&a.Id, &a.Uuid, &a.AcceptObjectId, &a.XAccept, &a.XUserId, &a.XAcceptedAt, &a.YAccept, &a.YUserId, &a.YAcceptedAt)
 	if err != nil {
 		return err
 	}
@@ -124,13 +127,13 @@ func (a *Acceptance) GetByAcceptObjectId() (Acceptance, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	query := `SELECT id, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at 
+	query := `SELECT id, uuid, accept_object_id, x_accept, x_user_id, x_accepted_at, y_accept, y_user_id, y_accepted_at 
               FROM acceptances 
               WHERE accept_object_id = $1`
 
 	row := DB.QueryRowContext(ctx, query, a.AcceptObjectId)
 	var acceptance Acceptance
-	err := row.Scan(&acceptance.Id, &acceptance.AcceptObjectId, &acceptance.XAccept, &acceptance.XUserId, &acceptance.XAcceptedAt, &acceptance.YAccept, &acceptance.YUserId, &acceptance.YAcceptedAt)
+	err := row.Scan(&acceptance.Id, &acceptance.Uuid, &acceptance.AcceptObjectId, &acceptance.XAccept, &acceptance.XUserId, &acceptance.XAcceptedAt, &acceptance.YAccept, &acceptance.YUserId, &acceptance.YAcceptedAt)
 	if err != nil {
 		return Acceptance{}, err
 	}
@@ -154,7 +157,7 @@ func (a *AcceptObject) Create() (err error) {
 
 // Get() 据id获取友邻蒙评对象
 func (a *AcceptObject) Get() (err error) {
-	err = DB.QueryRow(`SELECT id, object_type, object_id FROM accept_objects WHERE id = $1`, a.Id).Scan(&a.Id, &a.ObjectType, &a.ObjectId)
+	err = DB.QueryRow(`SELECT id, uuid,object_type, object_id FROM accept_objects WHERE id = $1`, a.Id).Scan(&a.Id, &a.Uuid, &a.ObjectType, &a.ObjectId)
 	if err != nil {
 		return err
 	}
@@ -239,7 +242,7 @@ func (m *NewNotificationCount) Update() error {
 
 // 根据.UserId获取用户新通知的通知计数
 func (m *NewNotificationCount) GetByUserId() error {
-	err := DB.QueryRow(`SELECT id, count FROM new_notification_counts WHERE user_id = $1`, m.UserId).Scan(&m.Id, &m.Count)
+	err := DB.QueryRow(`SELECT id, uuid, user_id,count FROM new_notification_counts WHERE user_id = $1`, m.UserId).Scan(&m.Id, &m.Uuid, &m.UserId, &m.Count)
 	if err != nil {
 		return err
 	}

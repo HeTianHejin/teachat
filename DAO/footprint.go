@@ -5,6 +5,7 @@ import "time"
 // 茶团加盟申请书查看足迹记录
 type Footprint struct {
 	Id        int
+	Uuid      string
 	UserId    int
 	TeamId    int
 	TeamName  string
@@ -44,6 +45,7 @@ func (footprint *Footprint) GetByUserIdAndTeamId() (err error) {
 	defer stmt.Close()
 	err = stmt.QueryRow(footprint.UserId, footprint.TeamId).Scan(
 		&footprint.Id,
+		&footprint.Uuid,
 		&footprint.UserId,
 		&footprint.TeamId,
 		&footprint.TeamName,

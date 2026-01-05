@@ -411,7 +411,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 
 	// 记录tea_order
 	// TODO：在见证团队页面，设置“待审批新茶定单”(tea_order.status=TeaOrderStatusPending)作为徽章通知-功能入口，
-	// 等待见证者团队成员查看->审查（明确线下活动主题，道德合规。。。）
+	// 等待见证者团队成员查看pending_tea_orders列表->审查（明确线下活动主题，道德合规。。。）
 	if err = tea_order.Create(r.Context()); err != nil {
 		util.Debug(" Cannot create tea order", ob.FamilyId, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建茶订单记录，请确认后再试。")

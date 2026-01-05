@@ -59,6 +59,7 @@ const (
 // 用户【技能记录】
 type SkillUser struct {
 	Id      int
+	Uuid    string
 	SkillId int // 技能ID
 	UserId  int // 用户ID
 	Level   int // 用户掌握该技能的等级，1-9
@@ -85,6 +86,7 @@ const (
 // 团队【技能记录】
 type SkillTeam struct {
 	Id      int
+	Uuid    string
 	SkillId int // 技能ID
 	TeamId  int // 团队ID
 	Level   int // 团队掌握该技能的等级，1-9
@@ -384,14 +386,14 @@ func (su *SkillUser) Create(ctx context.Context) error {
 func (su *SkillUser) GetByUserAndSkill(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, skill_id, user_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id, uuid, skill_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_users WHERE user_id = $1 AND skill_id = $2 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, su.UserId, su.SkillId).Scan(&su.Id, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
+	return stmt.QueryRowContext(ctx, su.UserId, su.SkillId).Scan(&su.Id, &su.Uuid, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
 }
 
 // SkillUser.Update 更新用户【技能记录】
@@ -442,7 +444,7 @@ func (su *SkillUser) StatusString() string {
 func GetUserSkills(userId int, ctx context.Context) ([]SkillUser, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, skill_id, user_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id, uuid, skill_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_users WHERE user_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
 	rows, err := DB.QueryContext(ctx, statement, userId)
 	if err != nil {
@@ -453,7 +455,7 @@ func GetUserSkills(userId int, ctx context.Context) ([]SkillUser, error) {
 	var userSkills []SkillUser
 	for rows.Next() {
 		var su SkillUser
-		err := rows.Scan(&su.Id, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
+		err := rows.Scan(&su.Id, &su.Uuid, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -617,14 +619,14 @@ func EnsureDefaultSkills(userId int, ctx context.Context) error {
 func (su *SkillUser) GetById(id int, ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, skill_id, user_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id, uuid, skill_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_users WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, id).Scan(&su.Id, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
+	return stmt.QueryRowContext(ctx, id).Scan(&su.Id, &su.Uuid, &su.SkillId, &su.UserId, &su.Level, &su.Status, &su.CreatedAt, &su.UpdatedAt, &su.DeletedAt)
 }
 
 // SkillTeam CRUD 方法
@@ -646,14 +648,14 @@ func (st *SkillTeam) Create(ctx context.Context) error {
 func (st *SkillTeam) GetByTeamAndSkill(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id, uuid, skill_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_teams WHERE team_id = $1 AND skill_id = $2 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, st.TeamId, st.SkillId).Scan(&st.Id, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
+	return stmt.QueryRowContext(ctx, st.TeamId, st.SkillId).Scan(&st.Id, &st.Uuid, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
 }
 
 // SkillTeam.Update 更新团队【团队技能记录】
@@ -704,7 +706,7 @@ func (st *SkillTeam) StatusString() string {
 func GetTeamSkills(teamId int, ctx context.Context) ([]SkillTeam, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id, uuid, skill_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_teams WHERE team_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
 	rows, err := DB.QueryContext(ctx, statement, teamId)
 	if err != nil {
@@ -715,7 +717,7 @@ func GetTeamSkills(teamId int, ctx context.Context) ([]SkillTeam, error) {
 	var teamSkills []SkillTeam
 	for rows.Next() {
 		var st SkillTeam
-		err := rows.Scan(&st.Id, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
+		err := rows.Scan(&st.Id, &st.Uuid, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -741,14 +743,14 @@ func CountTeamSkills(teamId int, ctx context.Context) (int, error) {
 func (st *SkillTeam) GetById(id int, ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, skill_id, team_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id,uuid, skill_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM skill_teams WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, id).Scan(&st.Id, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
+	return stmt.QueryRowContext(ctx, id).Scan(&st.Id, &st.Uuid, &st.SkillId, &st.TeamId, &st.Level, &st.Status, &st.CreatedAt, &st.UpdatedAt, &st.DeletedAt)
 }
 
 // SearchSkillByName 按名称搜索技能

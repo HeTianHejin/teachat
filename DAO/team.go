@@ -356,6 +356,7 @@ func GetResignationsByUserId(user_id int) (resignations []TeamMemberResignation,
 // 用户的“默认$事业茶团”设置记录
 type UserDefaultTeam struct {
 	Id        int
+	Uuid      string
 	UserId    int
 	TeamId    int
 	CreatedAt time.Time

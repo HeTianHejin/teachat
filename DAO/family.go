@@ -390,6 +390,7 @@ func (fms *FamilyMemberSignIn) GetStatus() string {
 // 将自动对外展示，所以选中的家庭必须是开放属性（family.IsOpen==true）
 type UserDefaultFamily struct {
 	Id        int
+	Uuid      string
 	UserId    int
 	FamilyId  int
 	CreatedAt time.Time

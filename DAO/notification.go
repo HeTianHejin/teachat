@@ -10,6 +10,7 @@ import (
 // 友邻蒙评通知
 type AcceptNotification struct {
 	Id             int
+	Uuid           string
 	FromUserId     int // 发送者
 	ToUserId       int // 受邀请的用户id
 	Title          string
@@ -90,7 +91,7 @@ func (a *AcceptNotification) GetAccNotiByUIdAndAOIdWithContext(user_id, accept_o
 		return errors.New("database connection is nil")
 	}
 
-	err = DB.QueryRowContext(ctx, "SELECT * FROM accept_notifications WHERE to_user_id = $1 AND accept_object_id = $2", user_id, accept_object_id).Scan(&a.Id, &a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, &a.CreatedAt, &a.UpdatedAt)
+	err = DB.QueryRowContext(ctx, "SELECT * FROM accept_notifications WHERE to_user_id = $1 AND accept_object_id = $2", user_id, accept_object_id).Scan(&a.Id, &a.Uuid, &a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, &a.CreatedAt, &a.UpdatedAt)
 	return
 }
 

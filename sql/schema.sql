@@ -30,7 +30,7 @@ CREATE TABLE users (
 -- 家庭表
 CREATE TABLE families (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(255) DEFAULT gen_random_uuid(),
+    uuid                  VARCHAR(255) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     author_id             INTEGER,
     name                  VARCHAR(255),
     introduction          TEXT,
@@ -230,7 +230,7 @@ CREATE TABLE places (
 -- 家庭成员表
 CREATE TABLE family_members (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(255) DEFAULT gen_random_uuid(),
+    uuid                  VARCHAR(255) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     family_id             INTEGER REFERENCES families(id),
     user_id               INTEGER REFERENCES users(id),
     role                  INTEGER DEFAULT 0,
@@ -264,6 +264,7 @@ CREATE TABLE team_members (
 -- 用户默认家庭表
 CREATE TABLE user_default_families (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     family_id             INTEGER,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -272,6 +273,7 @@ CREATE TABLE user_default_families (
 -- 用户默认团队表
 CREATE TABLE user_default_teams (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER REFERENCES users(id),
     team_id               INTEGER REFERENCES teams(id),
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -281,6 +283,7 @@ CREATE TABLE user_default_teams (
 -- 用户场所关联表
 CREATE TABLE user_place (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     place_id              INTEGER,
     created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -289,6 +292,7 @@ CREATE TABLE user_place (
 -- 用户默认场所表
 CREATE TABLE user_default_place (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     place_id              INTEGER,
     created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -297,6 +301,7 @@ CREATE TABLE user_default_place (
 -- 用户地址关联表
 CREATE TABLE user_address (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER REFERENCES users(id),
     address_id            INTEGER REFERENCES addresses(id),
     created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -305,6 +310,7 @@ CREATE TABLE user_address (
 -- 用户默认地址表
 CREATE TABLE user_default_address (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER REFERENCES users(id),
     address_id            INTEGER REFERENCES addresses(id),
     created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -334,6 +340,7 @@ CREATE TABLE sessions (
 -- 最近查询表
 CREATE TABLE last_queries (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER REFERENCES users(id),
     path                  VARCHAR(255),
     query                 VARCHAR(255),
@@ -381,6 +388,7 @@ CREATE TABLE projects (
 -- 项目批准表
 CREATE TABLE project_approved (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER NOT NULL,
     project_id            INTEGER NOT NULL,
     objective_id          INTEGER NOT NULL,
@@ -390,6 +398,7 @@ CREATE TABLE project_approved (
 -- 项目邀请团队表
 CREATE TABLE project_invited_teams (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     project_id            INTEGER REFERENCES projects(id),
     team_id               INTEGER REFERENCES teams(id),
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -399,6 +408,7 @@ CREATE TABLE project_invited_teams (
 -- 目标邀请团队表
 CREATE TABLE objective_invited_teams (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     objective_id          INTEGER REFERENCES objectives(id),
     team_id               INTEGER REFERENCES teams(id),
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -408,6 +418,7 @@ CREATE TABLE objective_invited_teams (
 -- 项目场所关联表
 CREATE TABLE project_place (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     project_id            INTEGER,
     place_id              INTEGER,
     user_id               INTEGER,
@@ -520,6 +531,7 @@ CREATE TABLE reads (
 -- 主题批准表
 CREATE TABLE thread_approved (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     project_id            INTEGER NOT NULL REFERENCES projects(id),
     thread_id             INTEGER NOT NULL REFERENCES threads(id),
     user_id               INTEGER NOT NULL REFERENCES users(id),
@@ -556,13 +568,16 @@ CREATE TABLE invitation_replies (
 -- 接受对象表
 CREATE TABLE accept_objects (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     object_type           INTEGER DEFAULT 0,
-    object_id             INTEGER
+    object_id             INTEGER,
+    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 接受通知表
 CREATE TABLE accept_notifications (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     from_user_id          INTEGER REFERENCES users(id),
     to_user_id            INTEGER REFERENCES users(id),
     title                 VARCHAR(64),
@@ -576,6 +591,7 @@ CREATE TABLE accept_notifications (
 -- 接受记录表
 CREATE TABLE acceptances (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     accept_object_id      INTEGER,
     x_accept              BOOLEAN DEFAULT false,
     x_user_id             INTEGER,
@@ -588,6 +604,7 @@ CREATE TABLE acceptances (
 -- 新通知计数表
 CREATE TABLE new_notification_counts (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     count                 INTEGER DEFAULT 0
 );
@@ -599,7 +616,7 @@ CREATE TABLE new_notification_counts (
 -- 家庭成员签到表
 CREATE TABLE family_member_sign_ins (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(255) DEFAULT gen_random_uuid(),
+    uuid                  VARCHAR(255) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     family_id             INTEGER,
     user_id               INTEGER,
     role                  INTEGER DEFAULT 0,
@@ -616,7 +633,7 @@ CREATE TABLE family_member_sign_ins (
 -- 家庭成员签到回复表
 CREATE TABLE family_member_sign_in_replies (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(255) DEFAULT gen_random_uuid(),
+    uuid                  VARCHAR(255) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     sign_in_id            INTEGER,
     user_id               INTEGER,
     is_confirm            BOOLEAN DEFAULT false,
@@ -626,7 +643,7 @@ CREATE TABLE family_member_sign_in_replies (
 -- 家庭成员签出表
 CREATE TABLE family_member_sign_outs (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(255) DEFAULT gen_random_uuid(),
+    uuid                  VARCHAR(255) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     family_id             INTEGER,
     user_id               INTEGER,
     role                  INTEGER DEFAULT 0,
@@ -660,7 +677,7 @@ CREATE TABLE team_member_role_notices (
 -- 团队成员辞职表
 CREATE TABLE team_member_resignations (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(36) DEFAULT gen_random_uuid(),
+    uuid                  VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     team_id               INTEGER,
     ceo_user_id           INTEGER,
     core_member_user_id   INTEGER,
@@ -677,7 +694,7 @@ CREATE TABLE team_member_resignations (
 -- 成员申请表
 CREATE TABLE member_applications (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(36) DEFAULT gen_random_uuid(),
+    uuid                  VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     team_id               INTEGER,
     user_id               INTEGER,
     content               TEXT,
@@ -689,7 +706,7 @@ CREATE TABLE member_applications (
 -- 成员申请回复表
 CREATE TABLE member_application_replies (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(36) DEFAULT gen_random_uuid(),
+    uuid                  VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     member_application_id INTEGER,
     team_id               INTEGER,
     user_id               INTEGER,
@@ -740,6 +757,7 @@ CREATE TABLE goods (
 -- 团队物资表
 CREATE TABLE goods_teams (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     team_id               INTEGER,
     goods_id              INTEGER,
     availability          INTEGER DEFAULT 0,
@@ -750,6 +768,7 @@ CREATE TABLE goods_teams (
 -- 用户物资表
 CREATE TABLE goods_users (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     goods_id              INTEGER,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -758,6 +777,7 @@ CREATE TABLE goods_users (
 -- 家庭物资表
 CREATE TABLE goods_families (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     family_id             INTEGER,
     goods_id              INTEGER,
     availability          INTEGER DEFAULT 0,
@@ -768,6 +788,7 @@ CREATE TABLE goods_families (
 -- 项目物资表
 CREATE TABLE goods_projects (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     project_id            INTEGER NOT NULL REFERENCES projects(id),
     responsible_user_id   INTEGER NOT NULL REFERENCES users(id),
     goods_id              INTEGER NOT NULL REFERENCES goods(id),
@@ -785,6 +806,7 @@ CREATE TABLE goods_projects (
 -- 项目物资准备状态表
 CREATE TABLE goods_project_readiness (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     project_id            INTEGER NOT NULL,
     is_ready              BOOLEAN NOT NULL DEFAULT FALSE,
     user_id               INTEGER NOT NULL,
@@ -817,6 +839,7 @@ CREATE TABLE skills (
 -- 用户技能记录表
 CREATE TABLE skill_users (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     skill_id              INTEGER REFERENCES skills(id),
     user_id               INTEGER REFERENCES users(id),
     level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
@@ -829,6 +852,7 @@ CREATE TABLE skill_users (
 -- 团队技能记录表
 CREATE TABLE skill_teams (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     skill_id              INTEGER REFERENCES skills(id),
     team_id               INTEGER REFERENCES teams(id),
     level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
@@ -858,6 +882,7 @@ CREATE TABLE magics (
 -- 用户法力记录表
 CREATE TABLE magic_users (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     magic_id              INTEGER REFERENCES magics(id),
     user_id               INTEGER REFERENCES users(id),
     level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
@@ -870,6 +895,7 @@ CREATE TABLE magic_users (
 -- 团队法力记录表
 CREATE TABLE magic_teams (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     magic_id              INTEGER REFERENCES magics(id),
     team_id               INTEGER REFERENCES teams(id),
     level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
@@ -932,6 +958,7 @@ CREATE TABLE handicrafts (
 -- 手工艺评分表
 CREATE TABLE handicraft_ratings (
     id              SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     handicraft_id   INTEGER NOT NULL REFERENCES handicrafts(id),
     rater_user_id   INTEGER NOT NULL REFERENCES users(id),  -- 评分员ID
     raw_score       INTEGER NOT NULL CHECK (raw_score >= 0 AND raw_score <= 100),
@@ -942,6 +969,7 @@ CREATE TABLE handicraft_ratings (
 -- 手工艺协助者表
 CREATE TABLE handicraft_contributors (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     handicraft_id         INTEGER REFERENCES handicrafts(id),
     user_id               INTEGER REFERENCES users(id),
     contribution_rate     INTEGER DEFAULT 50,
@@ -1021,7 +1049,7 @@ CREATE TABLE endings (
 -- 凭据主表
 CREATE TABLE evidences (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(36) NOT NULL UNIQUE,
+    uuid                  VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     description           TEXT,
     recorder_user_id      INTEGER NOT NULL REFERENCES users(id),
     note                  TEXT,
@@ -1044,7 +1072,7 @@ CREATE TABLE evidences (
 -- 手工艺凭据关联表
 CREATE TABLE handicraft_evidences (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(36) NOT NULL UNIQUE,
+    uuid                  VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     handicraft_id         INTEGER NOT NULL REFERENCES handicrafts(id),
     evidence_id           INTEGER NOT NULL REFERENCES evidences(id),
     note                  TEXT,
@@ -1314,7 +1342,7 @@ CREATE TABLE see_seek_examination_items (
 -- 看看凭据关联表
 CREATE TABLE see_seek_look_evidences (
     id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(36) NOT NULL UNIQUE,
+    uuid                  VARCHAR(36) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     see_seek_id           INTEGER NOT NULL REFERENCES see_seeks(id),
     evidence_id           INTEGER NOT NULL REFERENCES evidences(id),
     note                  TEXT,
@@ -1428,6 +1456,7 @@ CREATE TABLE suggestions (
 -- 足迹表
 CREATE TABLE footprints (
     id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     team_id               INTEGER,
     team_name             VARCHAR(255),
@@ -1438,12 +1467,7 @@ CREATE TABLE footprints (
 );
 
 -- 警示词表
-CREATE TABLE watchwords (
-    id                    SERIAL PRIMARY KEY,
-    word                  VARCHAR(255) NOT NULL,
-    administrator_id      INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+
 
 -- ============================================
 -- 索引创建

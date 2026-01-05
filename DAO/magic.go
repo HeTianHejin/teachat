@@ -37,6 +37,7 @@ const (
 
 type MagicUser struct {
 	Id      int
+	Uuid    string
 	UserId  int // 用户ID
 	MagicId int // 法力ID
 	Level   int // 掌握法力的段位(1-9)，
@@ -63,6 +64,7 @@ const (
 // 团队【法力记录】
 type MagicTeam struct {
 	Id      int
+	Uuid    string
 	MagicId int // 法力ID
 	TeamId  int // 团队ID
 	Level   int // 团队掌握该法力的段位(1-9)
@@ -402,14 +404,14 @@ func (mu *MagicUser) Create(ctx context.Context) error {
 func (mu *MagicUser) GetByUserAndMagic(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, magic_id, user_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id,uuid, magic_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_users WHERE user_id = $1 AND magic_id = $2 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, mu.UserId, mu.MagicId).Scan(&mu.Id, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
+	return stmt.QueryRowContext(ctx, mu.UserId, mu.MagicId).Scan(&mu.Id, &mu.Uuid, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
 }
 
 // MagicUser.Update 更新用户法力记录
@@ -460,7 +462,7 @@ func (mu *MagicUser) StatusString() string {
 func GetUserMagics(userId int, ctx context.Context) ([]MagicUser, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, magic_id, user_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id,uuid, magic_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_users WHERE user_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
 	rows, err := DB.QueryContext(ctx, statement, userId)
 	if err != nil {
@@ -471,7 +473,7 @@ func GetUserMagics(userId int, ctx context.Context) ([]MagicUser, error) {
 	var userMagics []MagicUser
 	for rows.Next() {
 		var mu MagicUser
-		err := rows.Scan(&mu.Id, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
+		err := rows.Scan(&mu.Id, &mu.Uuid, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -484,14 +486,14 @@ func GetUserMagics(userId int, ctx context.Context) ([]MagicUser, error) {
 func (mu *MagicUser) GetById(id int, ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, magic_id, user_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id,uuid, magic_id, user_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_users WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, id).Scan(&mu.Id, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
+	return stmt.QueryRowContext(ctx, id).Scan(&mu.Id, &mu.Uuid, &mu.MagicId, &mu.UserId, &mu.Level, &mu.Status, &mu.CreatedAt, &mu.UpdatedAt, &mu.DeletedAt)
 }
 
 // MagicTeam CRUD 方法
@@ -513,14 +515,14 @@ func (mt *MagicTeam) Create(ctx context.Context) error {
 func (mt *MagicTeam) GetByTeamAndMagic(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id, uuid, magic_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_teams WHERE team_id = $1 AND magic_id = $2 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, mt.TeamId, mt.MagicId).Scan(&mt.Id, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
+	return stmt.QueryRowContext(ctx, mt.TeamId, mt.MagicId).Scan(&mt.Id, &mt.Uuid, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
 }
 
 // MagicTeam.Update 更新团队【法力记录】
@@ -571,7 +573,7 @@ func (mt *MagicTeam) StatusString() string {
 func GetTeamMagics(teamId int, ctx context.Context) ([]MagicTeam, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id, uuid, magic_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_teams WHERE team_id = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
 	rows, err := DB.QueryContext(ctx, statement, teamId)
 	if err != nil {
@@ -582,7 +584,7 @@ func GetTeamMagics(teamId int, ctx context.Context) ([]MagicTeam, error) {
 	var teamMagics []MagicTeam
 	for rows.Next() {
 		var mt MagicTeam
-		err := rows.Scan(&mt.Id, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
+		err := rows.Scan(&mt.Id, &mt.Uuid, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -608,14 +610,14 @@ func CountTeamMagics(teamId int, ctx context.Context) (int, error) {
 func (mt *MagicTeam) GetById(id int, ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, magic_id, team_id, level, status, created_at, updated_at, deleted_at
+	statement := `SELECT id, uuid, magic_id, team_id, level, status, created_at, updated_at, deleted_at
 		FROM magic_teams WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, id).Scan(&mt.Id, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
+	return stmt.QueryRowContext(ctx, id).Scan(&mt.Id, &mt.Uuid, &mt.MagicId, &mt.TeamId, &mt.Level, &mt.Status, &mt.CreatedAt, &mt.UpdatedAt, &mt.DeletedAt)
 }
 
 // SearchMagicByName 按名称搜索法力
