@@ -221,12 +221,14 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 		} else {
 			// 密码不匹配
 			util.Debug(s_u.Email, "密码和用户名不匹配。")
+			s_u = dao.UserUnknown
 			report(w, s_u, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 			return
 		}
 
 	} else {
 		// 输入了错误的口令
+		s_u = dao.UserUnknown
 		report(w, s_u, "你好，这是星际茶棚，想喝茶需要闻香识味噢，请确认再试。")
 		return
 	}

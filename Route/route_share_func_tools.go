@@ -425,11 +425,12 @@ func report(w http.ResponseWriter, s_u dao.User, msg ...any) {
 
 	if s_u.Id > 0 {
 		m.SessUser = s_u
+		generateHTML(w, &m, "layout", "navbar.private", "feedback")
 	} else {
 		m.SessUser = dao.UserUnknown
+		generateHTML(w, &m, "layout", "navbar.public", "feedback")
 	}
 
-	generateHTML(w, &m, "layout", "navbar.private", "feedback")
 }
 
 // Checks if the user is logged in and has a session, if not err is not nil

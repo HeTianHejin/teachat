@@ -8,7 +8,7 @@ import (
 )
 
 // GET /office/draftThread
-// 激活新茶语草稿进入邻桌蒙评流程
+// 重新激活茶语草稿进入邻桌蒙评流程
 func ActivateDraftThread(w http.ResponseWriter, r *http.Request) {
 
 }
