@@ -967,19 +967,50 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	uuid := r.FormValue("team_uuid")
+	if uuid == "" {
+		report(w, s_u, "请提供有效的uuid")
+	}
 	team, err := dao.GetTeamByUUID(uuid)
 	if err != nil {
+		util.Debug("fail to get team by uuid", err)
 		report(w, s_u, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
 		return
 	}
 
-	// 检查team的创建者
+	// 检查team的创建者或者核心成员
+	ok := false
 	if s_u.Id == team.FounderId {
 		//如果是创建者，那么就可以上传图标
-		//读取上传的图标
-		processUploadAvatar(w, r, s_u, team.Uuid)
+		ok = true
+	} else {
+		memberCore, err := team.IsCoreMember(s_u.Id)
+		if err != nil {
+			report(w, s_u, "你好，茶博士摸摸头，居然说找不到这个茶团相关资料。")
+			return
+		}
+		if memberCore {
+			//如果是核心成员，那么就可以上传图标
+			ok = true
+		}
 	}
-	report(w, s_u, "你好，上传茶团图标出现未知问题。")
+
+	if ok {
+		// 处理上传的图片
+		errAvatar := processUploadAvatar(r, team.Uuid, "team")
+		if errAvatar == nil {
+			team.Logo = team.Uuid
+			if err = team.UpdateLogo(); err != nil {
+				util.Debug("fail to update user avatar", err)
+				report(w, s_u, "您好，请问你刚刚说的喜欢什么类型的音乐，这就为你播放？")
+				return
+			}
+			report(w, s_u, "茶博士微笑说，团队图标修改成功。")
+		} else {
+			report(w, s_u, "图片上传处理遇到错误：%s", errAvatar)
+		}
+
+	}
+	report(w, s_u, "你好，上传茶团图标出现权限不足的问题。")
 
 }
 

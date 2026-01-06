@@ -327,12 +327,12 @@ func validateCnStrLen(value string, min int, max int, fieldName string, w http.R
 }
 
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
-func processUploadAvatar(w http.ResponseWriter, r *http.Request, s_u dao.User, uuid string) error {
+func processUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	// 从请求中解包出单个上传文件
 	file, fileHeader, err := r.FormFile("avatar")
 	if err != nil {
-		report(w, s_u, "获取头像文件失败，请稍后再试。")
-		return err
+		util.Debug("avatar upload formFile error: %v", err)
+		return errors.New("获取头像文件失败，请稍后再试。")
 	}
 	// 确保文件在函数执行完毕后关闭
 	defer file.Close()
@@ -340,53 +340,62 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, s_u dao.User, u
 	// 获取文件大小，注意：客户端提供的文件大小可能不准确
 	size := fileHeader.Size
 	if size > 30*1024 {
-		report(w, s_u, "文件大小超过30kb,茶博士接不住。")
-		return errors.New("the file size over 30kb")
+		util.Debug("avatar upload file size over 30kb,error: %v", err)
+		return errors.New("文件大小超过30kb,茶博士接不住。")
 	}
 	// 实际读取文件大小进行校验，以防止客户端伪造
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		report(w, s_u, "读取头像文件失败，请稍后再试。")
-		return err
+		util.Debug("avatar upload read file error: %v", err)
+		return errors.New("读取头像文件失败，请稍后再试。")
 	}
 	if len(fileBytes) > 30*1024 {
-		report(w, s_u, "文件大小超过30kb,茶博士接不住。")
-		return errors.New("the file size over 30kb")
+		util.Debug("avatar upload file size over 30kb,error: %v", err)
+		return errors.New("文件大小超过30kb,茶博士接不住。")
 	}
 
 	// 获取文件名和检查文件后缀
 	filename := fileHeader.Filename
 	ext := strings.ToLower(path.Ext(filename))
 	if ext != ".jpeg" && ext != ".jpg" {
-		report(w, s_u, "注意头像图片文件类型, 目前仅限jpeg格式图片上传。")
-		return errors.New("the file type is not jpeg")
+		util.Debug("avatar upload file ext error: %v", err)
+		return errors.New("注意头像图片文件类型, 目前仅限jpeg格式图片上传。")
 	}
 
 	// 获取文件类型，注意：客户端提供的文件类型可能不准确
 	fileType := http.DetectContentType(fileBytes)
 	if fileType != "image/jpeg" {
-		report(w, s_u, "注意图片文件类型,目前仅限jpeg格式。")
-		return errors.New("the file type is not jpeg")
+		util.Debug("avatar upload file type error: %v", err)
+		return errors.New("注意图片文件类型,目前仅限jpeg格式。")
 	}
 
 	// 检测图片尺寸宽高和图像格式,判断是否合适
 	width, height, err := getWidthHeightForJpeg(fileBytes)
 	if err != nil {
-		report(w, s_u, "注意图片文件格式, 目前仅限jpeg格式。")
-		return err
+		util.Debug("avatar upload file type error: %v", err)
+		return errors.New("注意图片文件类型,目前仅限jpeg格式。")
 	}
 	if width < 32 || width > 64 || height < 32 || height > 64 {
-		report(w, s_u, "注意图片尺寸, 宽高需要在32-64像素之间。")
-		return errors.New("the image size is not between 32 and 64")
+		util.Debug("avatar upload file size is not between 32 and 64 error: %v", err)
+		return errors.New("注意图片尺寸, 宽高需要在32-64像素之间。")
 	}
 
+	// 根据头像类型选择不同的保存目录
+	var saveDir string
+	switch avatarType {
+	case "user":
+		saveDir = util.Config.UserImageDir
+	case "team":
+		saveDir = util.Config.TeamImageDir
+	default:
+		saveDir = util.Config.ImageDir
+	}
 	// 创建新文件，无需切换目录，直接使用完整路径，减少安全风险
-	newFilePath := util.Config.ImageDir + uuid + util.Config.ImageExt
+	newFilePath := saveDir + uuid + util.Config.ImageExt
 	newFile, err := os.Create(newFilePath)
 	if err != nil {
-		util.Debug("创建头像文件名失败", err)
-		report(w, s_u, "创建头像文件失败，请稍后再试。")
-		return err
+		util.Debug("fail to create avatar image", err)
+		return errors.New("创建头像文件失败，请稍后再试。")
 	}
 	// 确保文件在函数执行完毕后关闭
 	defer newFile.Close()
@@ -395,13 +404,11 @@ func processUploadAvatar(w http.ResponseWriter, r *http.Request, s_u dao.User, u
 	buff := bufio.NewWriter(newFile)
 	if _, err = buff.Write(fileBytes); err != nil {
 		util.Debug("fail to write avatar image", err)
-		report(w, s_u, "你好，茶博士居然说没有墨水了， 未能写完头像文件，请稍后再试。")
-		return err
+		return errors.New("创建头像文件失败，请稍后再试。")
 	}
 	if err = buff.Flush(); err != nil {
 		util.Debug("fail to write avatar image", err)
-		report(w, s_u, "你好，茶博士居然说没有墨水了，写入头像文件不成功，请稍后再试。")
-		return err
+		return errors.New("创建头像文件失败，请稍后再试。")
 	}
 
 	return nil

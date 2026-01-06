@@ -29,6 +29,8 @@ type Configuration struct {
 	WriteTimeout           int64
 	Static                 string
 	ImageDir               string
+	UserImageDir           string
+	TeamImageDir           string
 	ImageExt               string
 	TemplatesDir           string
 	TemplateExt            string
@@ -66,6 +68,8 @@ func LoadConfig() error {
 
 	// 路径标准化处理
 	Config.ImageDir = filepath.Clean(Config.ImageDir) + string(filepath.Separator)
+	Config.UserImageDir = filepath.Clean(Config.UserImageDir) + string(filepath.Separator)
+	Config.TeamImageDir = filepath.Clean(Config.TeamImageDir) + string(filepath.Separator)
 	Config.TemplatesDir = filepath.Clean(Config.TemplatesDir) + string(filepath.Separator)
 
 	return nil
@@ -77,6 +81,12 @@ func (c *Configuration) Validate() error {
 	}
 	if c.ImageDir == "" {
 		return errors.New("图片目录不能为空")
+	}
+	if c.UserImageDir == "" {
+		return errors.New("用户头像图片目录不能为空")
+	}
+	if c.TeamImageDir == "" {
+		return errors.New("团队头像图片目录不能为空")
 	}
 	if c.TemplatesDir == "" {
 		return errors.New("模板目录不能为空")

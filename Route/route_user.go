@@ -135,10 +135,17 @@ func SaveAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 处理上传到图片
-	if ok := processUploadAvatar(w, r, s_u, s_u.Uuid); ok == nil {
+	errAvatar := processUploadAvatar(r, s_u.Uuid, "user")
+	if errAvatar == nil {
 		s_u.Avatar = s_u.Uuid
-		s_u.UpdateAvatar()
-		report(w, s_u, "茶博士微笑说头像修改成功。")
+		if err = s_u.UpdateAvatar(); err != nil {
+			util.Debug("fail to update user avatar", err)
+			report(w, s_u, "您好，请问你刚刚说的喜欢什么类型的音乐，就为你播放？")
+			return
+		}
+		report(w, s_u, "茶博士微笑说，头像修改成功。")
+	} else {
+		report(w, s_u, "图片上传失败：%s", errAvatar)
 	}
 
 }
