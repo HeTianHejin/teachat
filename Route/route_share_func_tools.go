@@ -2,19 +2,23 @@ package route
 
 import (
 	"bufio"
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"io"
 	"math"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
 	dao "teachat/DAO"
 	util "teachat/Util"
 	"text/template"
+	"time"
 	"unicode/utf8"
 )
 
@@ -327,7 +331,7 @@ func validateCnStrLen(value string, min int, max int, fieldName string, w http.R
 }
 
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
-func processUploadAvatar(r *http.Request, uuid, avatarType string) error {
+func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	// 从请求中解包出单个上传文件
 	file, fileHeader, err := r.FormFile("avatar")
 	if err != nil {
@@ -412,6 +416,38 @@ func processUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	}
 
 	return nil
+}
+
+// saveUploadedFile 保存上传的可视凭证文件
+func saveUploadedFile(file multipart.File, header *multipart.FileHeader, userId int) (string, int64, error) {
+	// 创建上传目录
+	uploadDir := filepath.Join("public", "uploads", "evidence", time.Now().Format("2006-01"))
+	if err := os.MkdirAll(uploadDir, 0755); err != nil {
+		return "", 0, err
+	}
+
+	// 生成唯一文件名
+	ext := filepath.Ext(header.Filename)
+	hash := md5.New()
+	io.WriteString(hash, fmt.Sprintf("%d_%d_%s", userId, time.Now().UnixNano(), header.Filename))
+	fileName := fmt.Sprintf("%x%s", hash.Sum(nil), ext)
+	filePath := filepath.Join(uploadDir, fileName)
+	// 返回相对于 static 目录的路径（去掉 public/ 前缀）
+	relativePath := filepath.Join("uploads", "evidence", time.Now().Format("2006-01"), fileName)
+
+	// 保存文件
+	dst, err := os.Create(filePath)
+	if err != nil {
+		return "", 0, err
+	}
+	defer dst.Close()
+
+	fileSize, err := io.Copy(dst, file)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return relativePath, fileSize, nil
 }
 
 // 茶博士向茶客回话的方法，包括但不限于意外事件和通知、感谢等等提示。

@@ -115,19 +115,20 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// AvatarUploadUser() v1/user/avatar
 // 处理用户头像相片
-func UserAvatar(w http.ResponseWriter, r *http.Request) {
+func AvatarUploadUser(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		UploadAvatar(w, r)
+		avatarUploadUserGet(w, r)
 	case http.MethodPost:
-		SaveAvatar(w, r)
+		avatarUploadUserPost(w, r)
 	}
 }
 
 // POST v1/user/avatar
 // 处理用户头像相片
-func SaveAvatar(w http.ResponseWriter, r *http.Request) {
+func avatarUploadUserPost(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -140,7 +141,7 @@ func SaveAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 处理上传到图片
-	errAvatar := processUploadAvatar(r, s_u.Uuid, "user")
+	errAvatar := saveUploadAvatar(r, s_u.Uuid, "user")
 	if errAvatar == nil {
 		s_u.Avatar = s_u.Uuid
 		if err = s_u.UpdateAvatar(); err != nil {
@@ -157,7 +158,7 @@ func SaveAvatar(w http.ResponseWriter, r *http.Request) {
 
 // Get v1/user/avatar
 // 编辑用户头像
-func UploadAvatar(w http.ResponseWriter, r *http.Request) {
+func avatarUploadUserGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)

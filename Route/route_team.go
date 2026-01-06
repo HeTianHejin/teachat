@@ -943,18 +943,18 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// TeamAvatar() 处理茶团图标
-func TeamAvatar(w http.ResponseWriter, r *http.Request) {
+// AvatarUploadTeam() 处理茶团图标
+func AvatarUploadTeam(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		TeamAvatarGet(w, r)
+		avatarUploadTeamGet(w, r)
 	case http.MethodPost:
-		TeamAvatarPost(w, r)
+		avatarUploadTeamPost(w, r)
 	}
 }
 
 // POST /v1/team/avatar
-func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
+func avatarUploadTeamPost(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -996,7 +996,7 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 
 	if ok {
 		// 处理上传的图片
-		errAvatar := processUploadAvatar(r, team.Uuid, "team")
+		errAvatar := saveUploadAvatar(r, team.Uuid, "team")
 		if errAvatar == nil {
 			team.Logo = team.Uuid
 			if err = team.UpdateLogo(); err != nil {
@@ -1015,7 +1015,7 @@ func TeamAvatarPost(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/team/avatar?uuid=
-func TeamAvatarGet(w http.ResponseWriter, r *http.Request) {
+func avatarUploadTeamGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)

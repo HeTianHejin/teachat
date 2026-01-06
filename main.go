@@ -56,7 +56,7 @@ func main() {
 	mux.HandleFunc("/v1/user/edit", route.EditIntroAndName)
 	mux.HandleFunc("/v1/user/forgot", route.Forgot)
 	mux.HandleFunc("/v1/user/reset", route.Reset)
-	mux.HandleFunc("/v1/user/avatar", route.UserAvatar)
+	mux.HandleFunc("/v1/user/avatar", route.AvatarUploadUser)
 
 	mux.HandleFunc("/v1/users/connection_follow", route.Follow)
 
@@ -72,7 +72,7 @@ func main() {
 	mux.HandleFunc("/v1/team/new", route.NewTeamGet)
 	mux.HandleFunc("/v1/team/create", route.CreateTeamPost)
 	mux.HandleFunc("/v1/team/detail", route.TeamDetail)
-	mux.HandleFunc("/v1/team/avatar", route.TeamAvatar)
+	mux.HandleFunc("/v1/team/avatar", route.AvatarUploadTeam)
 	mux.HandleFunc("/v1/team/invitations", route.TeamInvitations)
 	mux.HandleFunc("/v1/team/applications", route.TeamApplications)
 	mux.HandleFunc("/v1/team/members/left", route.TeamMembersLeft)

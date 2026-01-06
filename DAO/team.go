@@ -34,6 +34,14 @@ var (
 
 // 从数据库查询获取团队
 func GetTeam(teamID int) (Team, error) {
+	if teamID == TeamIdNone {
+		return Team{}, fmt.Errorf("team not found with id: %d", teamID)
+	}
+
+	//5秒超时
+	// ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	// defer cancel()
+
 	const query = `SELECT id, uuid, name, mission, founder_id, 
                   created_at, class, abbreviation, logo, is_private, updated_at, deleted_at, tags 
                   FROM teams WHERE id = $1`
