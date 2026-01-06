@@ -174,15 +174,15 @@ func (user *User) Create() (err error) {
 }
 
 // UpdateUserNameAndBiography user information in the database
-func UpdateUserNameAndBiography(user_id int, user_name string, user_biography string) (err error) {
-	statement := "UPDATE users SET name = $2, biography = $3, updated_at = $4 where id = $1"
+func UserUpdateBiography(user_id int, user_biography string) (err error) {
+	statement := "UPDATE users SET  biography = $2, updated_at = $3 where id = $1"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(user_id, user_name, user_biography, time.Now())
+	_, err = stmt.Exec(user_id, user_biography, time.Now())
 	return
 }
 

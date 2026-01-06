@@ -69,44 +69,49 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
-	} else {
-		err = r.ParseForm()
-		if err != nil {
-			util.Debug("解析表单错误！", err)
-		}
-		s_u, _ := s.User()
-
-		name := r.PostFormValue("name")
-		len_biog := cnStrLen(name)
-		if len_biog < 2 || len_biog > 16 {
-			report(w, s_u, "茶博士彬彬有礼的说：名字太短不够帅，太长了墨水都不够用噢。")
-			return
-		}
-		if isValidUserName(name) {
-			report(w, s_u, "你好，请勿使用特殊字符作为名称呢，将来登机称帝，都不知道如何高呼陛下万岁。")
-			return
-		}
-		newName := name
-
-		biog := r.PostFormValue("biography")
-		len_biog = cnStrLen(biog)
-		if len_biog < 2 || len_biog > int(util.Config.ThreadMaxWord) {
-			report(w, s_u, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
-			return
-		}
-		newBiography := biog
-
-		err = dao.UpdateUserNameAndBiography(s_u.Id, newName, newBiography)
-		if err != nil {
-			util.Debug(" 更新用户信息错误！", err)
-			report(w, s_u, "茶博士失魂鱼，请问你刚刚说的花名或者简介是什么来着？")
-			return
-		}
-
-		http.Redirect(w, r, "/v1/user/biography?uuid="+s_u.Uuid, http.StatusFound)
-		//Report(w, r, "你好，茶博士低声说，花名或者简介更新成功啦。")
-
 	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("fail to fetch user by session", err)
+		report(w, s_u, "读取用户资料出现意外故事，请稍后再试。")
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug("fail parse form", err)
+		report(w, s_u, "茶博士失魂鱼，读取表单出现意外故事。")
+	}
+
+	//测试时期暂时不允许改名字
+	// name := r.PostFormValue("name")
+	// len_name := cnStrLen(name)
+	// if len_name < 2 || len_name > 16 {
+	// 	report(w, s_u, "茶博士彬彬有礼的说：名字太短不够帅，太长了墨水都不够用噢。")
+	// 	return
+	// }
+	// if isValidUserName(name) {
+	// 	report(w, s_u, "你好，请勿使用特殊字符作为名称呢，将来登机称帝，都不知道如何高呼陛下万岁。")
+	// 	return
+	// }
+	// newName := name
+
+	biog := r.PostFormValue("biography")
+	len_biog := cnStrLen(biog)
+	if len_biog < 2 || len_biog > int(util.Config.ThreadMaxWord) {
+		report(w, s_u, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
+		return
+	}
+	newBiography := biog
+
+	err = dao.UserUpdateBiography(s_u.Id, newBiography)
+	if err != nil {
+		util.Debug(" 更新用户信息错误！", err)
+		report(w, s_u, "茶博士失魂鱼，请问你刚刚说的花名或者简介是什么来着？")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/user/biography?uuid="+s_u.Uuid, http.StatusFound)
+	//Report(w, r, "你好，茶博士低声说，花名或者简介更新成功啦。")
 
 }
 
