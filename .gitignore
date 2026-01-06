@@ -29,11 +29,13 @@ go.work.sum
 # Robin- debug tmp file
 __debug_*
 __debug_bin*
+public/uploads/evidence/
 public/image/*.{jpeg,jpg,png,webp}
 public/image/user/*.*
 public/image/team/*.*
 !public/image/teaSet.jpeg
 !public/image/captain.jpeg
+!public/image/familyLogo.jpeg
 !public/image/teamLogo.jpeg
 !public/image/default-ob-cover.jpeg
 !public/image/default-pr-cover.jpeg
