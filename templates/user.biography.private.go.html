@@ -14,7 +14,7 @@
       
       <div class="media-left">
             <a href="/v1/user/avatar">
-              <img class="img-circle" src="/v1/static/image/{{ .SessUser.Avatar }}.jpeg" alt="个人头像">
+              <img class="img-circle" src="/v1/static/image/user/{{ .SessUser.Avatar }}.jpeg" alt="个人头像">
             </a>
       </div>
 
@@ -48,15 +48,15 @@
 
 <form role="form" action="/v1/user/edit" method="post">
 
-    <label for="name">请输入新的花名:</label>
-    <input id="name" type="text" name="name" class="form-control" value="{{ .SessUser.Name }}" required>
+    <label for="name">您的花名:</label>
+    <input id="name" type="text"  class="form-control" value="{{ .SessUser.Name }}" readonly />
     <br />
 
-    <label for="biography">请输入新的简介，需要友邻蒙评通过:</label>
+    <label for="biography">请输入您的新简介:</label>
     <textarea name="biography" id="biography"  type="text" class="form-control" rows="3" cols="33" minlength="2" maxlength="567" autofocus>{{ .SessUser.Biography }}</textarea>
     
     <br />
-    <button class="btn btn-primary" type="submit">提交</button>
+    <button class="btn btn-primary" type="submit">提交更新</button>
     <br />
 </form>
 <br />

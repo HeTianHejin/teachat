@@ -30,8 +30,8 @@ go.work.sum
 __debug_*
 __debug_bin*
 public/image/*.{jpeg,jpg,png,webp}
-public/image/user/
-public/image/team/
+public/image/user/*.*
+public/image/team/*.*
 !public/image/teaSet.jpeg
 !public/image/captain.jpeg
 !public/image/teamLogo.jpeg
