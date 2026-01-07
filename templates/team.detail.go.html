@@ -218,12 +218,16 @@
         {{ if $.IsMember }}
         <div class="btn-group" role="group" style="margin-top: 10px;">
           <a href="/v1/message/send?team_uuid={{ $.TeamBean.Team.Uuid }}&receiver_id={{ .Member.Id }}"
-            class="btn btn-sm btn-primary">
+            class="btn btn-sm btn-info">
             <i class="bi bi-envelope"></i> 发送纸条
           </a>
           <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-success">
             <i class="bi bi-book"></i> 工作簿
+          </a>
+          <a href="/v1/office-desk?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
+            class="btn btn-sm btn-primary">
+            <i class="bi bi-table"></i> 办公桌
           </a>
         </div>
         {{ end }}
