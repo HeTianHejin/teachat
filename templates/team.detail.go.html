@@ -223,11 +223,11 @@
           </a>
           <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-success">
-            <i class="bi bi-book"></i> 工作簿
+            <i class="bi bi-Journal-text"></i> 工作簿
           </a>
           <a href="/v1/office-desk?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-primary">
-            <i class="bi bi-table"></i> 办公桌
+            <i class="bi bi-pc-display-horizontal"></i> 办公桌
           </a>
         </div>
         {{ end }}
@@ -274,7 +274,11 @@
           </a>
           <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-success">
-            <i class="bi bi-book"></i> 工作簿
+            <i class="bi bi-Journal-text"></i> 工作簿
+          </a>
+          <a href="/v1/office-desk?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
+            class="btn btn-sm btn-primary">
+            <i class="bi bi-pc-display-horizontal"></i> 办公桌
           </a>
         </div>
         {{ end }}

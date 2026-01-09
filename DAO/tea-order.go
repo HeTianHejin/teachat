@@ -28,14 +28,17 @@ type TeaOrder struct {
 	PayeeTeamId  int    // 解题方团队ID
 	CareTeamId   int    // 监护方团队ID
 
-	// 审批人填写，必填
+	// 审批人（见证者）填写，必填
+	// 审批人角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判“违规”情形，将阻止贾宝玉作西厢记类那种“男女礼教脱轨诗”或者禁止薛蟠那种酒色情诗；
+	// 又或者是老师组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核，所以说“见证”记录事件发生的真实性、合规性。
+	// 见证人也是活动进程主持人，类似教堂神父主持婚礼活动，发现不道德的欺瞒情况，例如新郎或者新娘竟然是重婚者之类不符合道德规范的活动将取消或者宣布无效。
 	TeaTopic                string     // 茶会主题，默认值'-'。审批时即使不批准也应当根据茶围出题内容提炼，例如：热水器维修，宠物狗口腔护理,
 	IsApproved              bool       // 是否批准，审批人填写（必填）,默认false
 	ApproverUserId          int        // 审批人ID，必须是见证者团队成员,如果是0代表待审批，
 	ApprovalRejectionReason string     // 审批意见，如果拒绝，填写原因,默认值:'-'
 	ApprovedAt              *time.Time // 审批时间
 
-	Score     sql.NullInt64 // 解题评分，NULL代表未评分，0代表得0分。
+	Score     sql.NullInt64 // 根据另外的打分表计算后得到的最终的解题评分，NULL代表未评分，0代表得0分。
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time //软删除时间（未完成的tea-order可以被取消删除，已完成的tea-order不可删除）
