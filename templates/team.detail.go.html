@@ -125,7 +125,7 @@
           <i class="glyphicon glyphicon-cog"></i> 管理团队
         </a>
         {{ end }}
-        
+
         {{ if or $.IsCEO $.IsFounder }}
         {{ if $.GroupBean }}
         <a href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}" class="btn btn-info">
@@ -137,7 +137,7 @@
         </a>
         {{ end }}
         {{ end }}
-        
+
         <a href="/v1/team/applications?uuid={{ .Team.Uuid }}" class="btn btn-default">
           <i class="glyphicon glyphicon-inbox"></i> 查看申请{{ if $.HasApplication }}<span class="badge">!</span>{{ end }}
         </a>
@@ -149,28 +149,28 @@
         </a>
       </div>
       {{ end }}
-{{ if .Team.IsOpen }}
-{{ if $.IsMember }}
+      {{ if .Team.IsOpen }}
+      {{ if $.IsMember }}
 
-{{ else }}{{/* 不是茶团成员 */}}
-<div class="text-right">
-  <a href="/v1/team_member/application/new?uuid={{ .Team.Uuid }}">申请加盟</a>
-  {{ if .Team.IsOpen }}
-  <span style="margin: 0 10px;">|</span>
-  <a href="/v1/message/announcement/send?team_uuid={{ .Team.Uuid }}" style="color: #28a745;">
-    <i class="bi bi-megaphone"></i> 发送布告
-  </a>
-  {{ end }}
-</div>
-{{ end }}{{/* 检查是否团队成员结束 */}}
+      {{ else }}{{/* 不是茶团成员 */}}
+      <div class="text-right">
+        <a href="/v1/team_member/application/new?uuid={{ .Team.Uuid }}">申请加盟</a>
+        {{ if .Team.IsOpen }}
+        <span style="margin: 0 10px;">|</span>
+        <a href="/v1/message/announcement/send?team_uuid={{ .Team.Uuid }}" style="color: #28a745;">
+          <i class="bi bi-megaphone"></i> 发送布告
+        </a>
+        {{ end }}
+      </div>
+      {{ end }}{{/* 检查是否团队成员结束 */}}
 
-{{ else }}{{/* 是封闭式茶团 */}}
-<p class="text-center">
-  <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
-  茶博士提示：封闭式茶团不接受发送布告消息
-</p>
-{{ end }}
-<hr />
+      {{ else }}{{/* 是封闭式茶团 */}}
+      <p class="text-center">
+        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"> </span>
+        茶博士提示：封闭式茶团不接受发送布告消息
+      </p>
+      {{ end }}
+      <hr />
       <!-- 团队功能导航 -->
       <ul class="nav nav-tabs nav-justified">
         <li class="active"><a href="#">在座成员</a></li>
@@ -225,10 +225,19 @@
             class="btn btn-sm btn-success">
             <i class="bi bi-Journal-text"></i> 工作簿
           </a>
+          {{ if $.IsVerifierTeamMember }}
+          <a href="/v1/verifier/desk?team_uuid={{ .Team.Uuid }}" class="btn btn-sm btn-warning">
+            <i class="bi bi-clipboard-check"></i> 见证工作台
+            {{ if gt $.PendingOrderCount 0 }}
+            <span class="badge">{{ $.PendingOrderCount }}</span>
+            {{ end }}
+          </a>
+          {{ else }}
           <a href="/v1/office-desk?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-primary">
             <i class="bi bi-pc-display-horizontal"></i> 办公桌
           </a>
+          {{ end }}
         </div>
         {{ end }}
 
@@ -276,10 +285,19 @@
             class="btn btn-sm btn-success">
             <i class="bi bi-Journal-text"></i> 工作簿
           </a>
+          {{ if $.IsVerifierTeamMember }}
+          <a href="/v1/verifier/desk?team_uuid={{ .Team.Uuid }}" class="btn btn-sm btn-warning">
+            <i class="bi bi-clipboard-check"></i> 见证工作台
+            {{ if gt $.PendingOrderCount 0 }}
+            <span class="badge">{{ $.PendingOrderCount }}</span>
+            {{ end }}
+          </a>
+          {{ else }}
           <a href="/v1/office-desk?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-primary">
             <i class="bi bi-pc-display-horizontal"></i> 办公桌
           </a>
+          {{ end }}
         </div>
         {{ end }}
 

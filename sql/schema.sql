@@ -915,7 +915,7 @@ CREATE TABLE tea_orders (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     objective_id          INTEGER NOT NULL REFERENCES objectives(id),
     project_id            INTEGER NOT NULL REFERENCES projects(id),
-    status                VARCHAR(64) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'completed', 'cancelled')),
+    status                VARCHAR(64) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'pause', 'completed', 'cancelled')),
     verify_team_id        INTEGER REFERENCES teams(id),
     payer_team_id         INTEGER REFERENCES teams(id),
     payee_team_id         INTEGER REFERENCES teams(id),
@@ -925,7 +925,7 @@ CREATE TABLE tea_orders (
     approver_user_id      INTEGER REFERENCES users(id),
     approval_rejection_reason TEXT NOT NULL DEFAULT '-',
     approved_at            TIMESTAMP,
-    score                 INTEGER,
+    final_score             INTEGER,
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP,
     deleted_at            TIMESTAMP
