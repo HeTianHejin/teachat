@@ -706,6 +706,17 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//获取待审批的茶订单数量
+	tD.PendingOrderCount, err = dao.GetPendingTeaOrderCount(r.Context())
+	if err != nil {
+		util.Debug("Cannot get pending tea order count", err)
+		report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+		return
+	}
+	// 检查用户是否见证者团队成员
+	isVerifier := dao.IsVerifier(s_u.Id)
+	tD.IsVerifierTeamMember = isVerifier
+
 	generateHTML(w, &tD, "layout", "navbar.private", "team.detail", "component_avatar_name_gender")
 
 }

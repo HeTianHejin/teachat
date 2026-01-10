@@ -172,6 +172,9 @@ type TeamDetail struct {
 	IsCoreMember bool //是否核心成员
 	IsMember     bool //是否成员
 
+	IsVerifierTeamMember bool //是否为见证者团队审核员
+	PendingOrderCount    int  //待审批处理线下活动茶订单数量
+
 	TeamBean TeamBean //$事业茶团资料夹
 
 	//IsAuthor              bool
@@ -181,8 +184,8 @@ type TeamDetail struct {
 	HasApplication bool //是否有新的加盟申请书
 	HasResignation bool //是否有待处理的退出声明
 
-	MessageBox  *MessageBox //团队消息盒子
-	MessageCount int          //用户可见的消息总数
+	MessageBox   *MessageBox //团队消息盒子
+	MessageCount int         //用户可见的消息总数
 
 	GroupBean *GroupBean //所属集团资料夹（如果有）
 }
