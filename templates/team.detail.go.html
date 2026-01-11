@@ -226,8 +226,8 @@
             <i class="bi bi-Journal-text"></i> 工作簿
           </a>
           {{ if $.IsVerifierTeamMember }}
-          <a href="/v1/verifier/desk?team_uuid={{ $.TeamBean.Team.Uuid }}" class="btn btn-sm btn-warning">
-            <i class="bi bi-clipboard-check"></i> 见证工作台
+          <a href="/v1/verifier/workspace?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}" class="btn btn-sm btn-warning">
+            <i class="bi bi-clipboard-check"></i> 见证工作间
             {{ if gt $.PendingOrderCount 0 }}
             <span class="badge">{{ $.PendingOrderCount }}</span>
             {{ end }}
@@ -286,8 +286,8 @@
             <i class="bi bi-Journal-text"></i> 工作簿
           </a>
           {{ if $.IsVerifierTeamMember }}
-          <a href="/v1/verifier/desk?team_uuid={{ $.TeamBean.Team.Uuid }}" class="btn btn-sm btn-warning">
-            <i class="bi bi-clipboard-check"></i> 见证工作台
+          <a href="/v1/verifier/workspace?team_uuid={{ $.TeamBean.Team.Uuid }}" class="btn btn-sm btn-warning">
+            <i class="bi bi-clipboard-check"></i> 见证工作间
             {{ if gt $.PendingOrderCount 0 }}
             <span class="badge">{{ $.PendingOrderCount }}</span>
             {{ end }}
