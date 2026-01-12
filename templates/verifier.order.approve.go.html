@@ -1,0 +1,90 @@
+{{ define "content" }}
+
+{{/* 审批茶订单表单页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/verifier/workspace">见证工作间</a></li>
+  <li class="active">审批茶订单</li>
+</ol>
+
+<div class="page-header">
+  <h1><i class="bi-check-circle"></i> 审批茶订单</h1>
+  <p class="lead">请填写茶会主题，审批通过后订单将进入活动状态。</p>
+</div>
+
+{{ template "component_tea_order_bean" .TeaOrderBean }}
+
+<div class="panel panel-success">
+  <div class="panel-heading">
+    <h3 class="panel-title"><i class="bi-pencil-square"></i> 填写审批信息</h3>
+  </div>
+  <div class="panel-body">
+    <form method="POST" action="/v1/verifier/order/approve">
+      <input type="hidden" name="uuid" value="{{ .TeaOrderBean.TeaOrder.Uuid }}">
+
+      <div class="form-group">
+        <label for="tea_topic">茶会主题 <span class="text-danger">*</span></label>
+        <p class="help-block">请根据茶围出题内容提炼茶会主题，例如：热水器维修、宠物狗口腔护理等。</p>
+        <input type="text" class="form-control" id="tea_topic" name="tea_topic" 
+               placeholder="请输入茶会主题（2-456字）" required 
+               minlength="2" maxlength="456" 
+               value="{{ .TeaOrderBean.TeaOrder.TeaTopic }}">
+      </div>
+
+      <div class="form-group">
+        <label for="tea_topic_example">主题示例：</label>
+        <ul class="list-group">
+          <li class="list-group-item"><strong>热水器维修</strong> - 家用热水器故障排查与维修服务</li>
+          <li class="list-group-item"><strong>宠物狗口腔护理</strong> - 犬类口腔清洁与保健服务</li>
+          <li class="list-group-item"><strong>空调清洗保养</strong> - 家用空调深度清洗与定期保养</li>
+          <li class="list-group-item"><strong>儿童英语辅导</strong> - 6-12岁儿童英语学习辅导</li>
+        </ul>
+      </div>
+
+      <div class="form-group">
+        <label>审批确认信息：</label>
+        <div class="well">
+          <dl class="dl-horizontal">
+            <dt>审批人：</dt>
+            <dd>{{ .SessUser.Name }}</dd>
+            <dt>审批时间：</dt>
+            <dd>提交后自动记录</dd>
+            <dt>订单状态变更：</dt>
+            <dd><strong>待审批</strong> &rarr; <strong class="text-success">活动中</strong></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="confirmApprove" required>
+            我确认已审核该订单的茶围目标、茶台方案、参与方信息，并确认该活动符合道德规范和平台规则。
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-success btn-lg">
+        <i class="bi-check-circle"></i> 确认审批通过
+      </button>
+      <a href="/v1/verifier/workspace" class="btn btn-default btn-lg">
+        <i class="bi-arrow-left"></i> 返回工作间
+      </a>
+    </form>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  $('form').on('submit', function() {
+    if (!$('#confirmApprove').prop('checked')) {
+      alert('请确认您已审核该订单并同意审批！');
+      return false;
+    }
+    return true;
+  });
+});
+</script>
+
+{{ end }}

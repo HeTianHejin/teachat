@@ -1,0 +1,98 @@
+{{ define "content" }}
+
+{{/* 暂停茶订单表单页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/verifier/workspace">见证工作间</a></li>
+  <li class="active">暂停茶订单</li>
+</ol>
+
+<div class="page-header">
+  <h1><i class="bi-pause-circle"></i> 暂停茶订单</h1>
+  <p class="lead">订单将暂时停止活动，可以在后续恢复。</p>
+</div>
+
+{{ template "component_tea_order_bean" .TeaOrderBean }}
+
+<div class="panel panel-warning">
+  <div class="panel-heading">
+    <h3 class="panel-title"><i class="bi-exclamation-triangle"></i> 填写暂停原因</h3>
+  </div>
+  <div class="panel-body">
+    <form method="POST" action="/v1/verifier/order/pause">
+      <input type="hidden" name="uuid" value="{{ .TeaOrderBean.TeaOrder.Uuid }}">
+
+      <div class="form-group">
+        <label for="reason">暂停原因（可选）</label>
+        <p class="help-block">请说明暂停该订单的原因，如未填写则使用默认原因。</p>
+        <textarea class="form-control" id="reason" name="reason" rows="4" 
+                  placeholder="请输入暂停原因（可选，最多456字）" 
+                  maxlength="456"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>常用暂停原因：</label>
+        <select class="form-control" id="reason_template" onchange="fillReason()">
+          <option value="">-- 选择暂停原因 --</option>
+          <option value="临时遇到技术问题，需要暂停处理。">临时遇到技术问题</option>
+          <option value="参与方提出延期申请，经评估同意暂停。">参与方提出延期申请</option>
+          <option value="环境条件不适合继续开展活动。">环境条件不适合</option>
+          <option value="需要等待外部资源或审批。">等待外部资源或审批</option>
+          <option value="其他不可抗力因素。">其他不可抗力因素</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>暂停确认信息：</label>
+        <div class="well">
+          <dl class="dl-horizontal">
+            <dt>审批人：</dt>
+            <dd>{{ .SessUser.Name }}</dd>
+            <dt>暂停时间：</dt>
+            <dd>提交后自动记录</dd>
+            <dt>订单状态变更：</dt>
+            <dd><strong>活动中</strong> &rarr; <strong class="text-warning">暂停</strong></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="confirmPause" required>
+            我确认需要暂停该订单，并了解可以在后续恢复。
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-warning btn-lg">
+        <i class="bi-pause-circle"></i> 确认暂停
+      </button>
+      <a href="/v1/verifier/workspace" class="btn btn-default btn-lg">
+        <i class="bi-arrow-left"></i> 返回工作间
+      </a>
+    </form>
+  </div>
+</div>
+
+<script>
+function fillReason() {
+  var template = document.getElementById('reason_template').value;
+  if (template) {
+    document.getElementById('reason').value = template;
+  }
+}
+
+$(document).ready(function() {
+  $('form').on('submit', function() {
+    if (!$('#confirmPause').prop('checked')) {
+      alert('请确认您需要暂停该订单！');
+      return false;
+    }
+    return true;
+  });
+});
+</script>
+
+{{ end }}

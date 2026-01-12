@@ -1,0 +1,117 @@
+{{ define "content" }}
+
+{{/* 终止茶订单表单页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/verifier/workspace">见证工作间</a></li>
+  <li class="active">终止茶订单</li>
+</ol>
+
+<div class="page-header">
+  <h1><i class="bi-x-circle"></i> 终止茶订单</h1>
+  <p class="lead">订单将被永久终止，此操作不可撤销。</p>
+</div>
+
+{{ template "component_tea_order_bean" .TeaOrderBean }}
+
+<div class="alert alert-danger">
+  <strong><i class="bi-exclamation-triangle"></i> 警告：</strong>
+  终止操作将导致订单被永久取消，所有相关活动将停止。此操作不可撤销，请谨慎操作！
+</div>
+
+<div class="panel panel-danger">
+  <div class="panel-heading">
+    <h3 class="panel-title"><i class="bi-exclamation-triangle"></i> 填写终止原因</h3>
+  </div>
+  <div class="panel-body">
+    <form method="POST" action="/v1/verifier/order/cancel">
+      <input type="hidden" name="uuid" value="{{ .TeaOrderBean.TeaOrder.Uuid }}">
+
+      <div class="form-group">
+        <label for="reason">终止原因（可选）</label>
+        <p class="help-block">请详细说明终止该订单的原因，如未填写则使用默认原因。</p>
+        <textarea class="form-control" id="reason" name="reason" rows="6" 
+                  placeholder="请输入终止原因（可选，最多456字）" 
+                  maxlength="456"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>常用终止原因：</label>
+        <select class="form-control" id="reason_template" onchange="fillReason()">
+          <option value="">-- 选择终止原因 --</option>
+          <option value="参与方无法继续履行订单义务。">参与方无法继续履行</option>
+          <option value="发现严重违规行为，必须立即终止。">发现严重违规行为</option>
+          <option value="需求方主动取消订单。">需求方主动取消</option>
+          <option value="客观环境发生重大变化，无法继续。">客观环境重大变化</option>
+          <option value="安全风险无法有效控制。">安全风险无法控制</option>
+          <option value="其他不可抗力因素导致无法继续。">其他不可抗力因素</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>终止确认信息：</label>
+        <div class="well">
+          <dl class="dl-horizontal">
+            <dt>审批人：</dt>
+            <dd>{{ .SessUser.Name }}</dd>
+            <dt>终止时间：</dt>
+            <dd>提交后自动记录</dd>
+            <dt>订单状态变更：</dt>
+            <dd><strong>{{ .TeaOrderBean.TeaOrder.Status }}</strong> &rarr; <strong class="text-danger">已取消</strong></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="confirmCancel" required>
+            我确认需要终止该订单，并了解此操作不可撤销。
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="understandImpact" required>
+            我了解终止订单将对参与各方造成影响，并将记录在见证日志中。
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-danger btn-lg">
+        <i class="bi-x-circle"></i> 确认终止
+      </button>
+      <a href="/v1/verifier/workspace" class="btn btn-default btn-lg">
+        <i class="bi-arrow-left"></i> 返回工作间
+      </a>
+    </form>
+  </div>
+</div>
+
+<script>
+function fillReason() {
+  var template = document.getElementById('reason_template').value;
+  if (template) {
+    document.getElementById('reason').value = template;
+  }
+}
+
+$(document).ready(function() {
+  $('form').on('submit', function() {
+    if (!$('#confirmCancel').prop('checked')) {
+      alert('请确认您需要终止该订单！');
+      return false;
+    }
+    if (!$('#understandImpact').prop('checked')) {
+      alert('请确认您了解终止订单的影响！');
+      return false;
+    }
+    return true;
+  });
+});
+</script>
+
+{{ end }}

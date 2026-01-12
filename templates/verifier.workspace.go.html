@@ -1,0 +1,167 @@
+{{ define "content"}}
+
+{{/* 见证工作间页面，供见证者团队（teamIdVerifier=3）成员查看和管理茶订单 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li class="active">见证工作间</li>
+</ol>
+
+<div class="page-header">
+  <h1><i class="bi-clipboard-check"></i> 见证工作间</h1>
+  <p class="lead">作为见证者团队成员，您可以审批、监督和管理茶订单活动。</p>
+</div>
+
+<!-- 快速操作区 -->
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h3 class="panel-title"><i class="bi-lightning-charge"></i> 快速操作</h3>
+  </div>
+  <div class="panel-body">
+    <div class="btn-group" role="group">
+      <a href="#" class="btn btn-primary" data-toggle="modal" data-target="#approveModal">
+        <i class="bi-check-circle"></i> 审批订单
+      </a>
+      <a href="#" class="btn btn-info">
+        <i class="bi-eye"></i> 查看见证日志
+      </a>
+      <a href="#" class="btn btn-warning">
+        <i class="bi-pause-circle"></i> 暂停订单
+      </a>
+      <a href="#" class="btn btn-danger">
+        <i class="bi-x-circle"></i> 终止订单
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- 导航标签页 -->
+<ul class="nav nav-tabs" id="orderTabs">
+  <li class="active">
+    <a href="#pending" data-toggle="tab">
+      待审批
+      {{ if gt .PendingOrderCount 0 }}
+      <span class="badge">{{ .PendingOrderCount }}</span>
+      {{ end }}
+    </a>
+  </li>
+  <li>
+    <a href="#active" data-toggle="tab">
+      进行中
+      {{ if gt .ActiveOrderCount 0 }}
+      <span class="badge">{{ .ActiveOrderCount }}</span>
+      {{ end }}
+    </a>
+  </li>
+  <li>
+    <a href="#cancelled" data-toggle="tab">
+      异常处理
+      {{ if gt .CancelledOrderCount 0 }}
+      <span class="badge">{{ .CancelledOrderCount }}</span>
+      {{ end }}
+    </a>
+  </li>
+  <li>
+    <a href="#completed" data-toggle="tab">
+      已完成
+      {{ if gt .CompletedOrderCount 0 }}
+      <span class="badge">{{ .CompletedOrderCount }}</span>
+      {{ end }}
+    </a>
+  </li>
+</ul>
+
+<!-- 标签页内容 -->
+<div class="tab-content">
+  <!-- 待审批订单 -->
+  <div class="tab-pane active" id="pending">
+    {{ if .PendingOrders }}
+      {{ range .PendingOrders }}
+        {{ template "component_tea_order_bean" . }}
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info">
+        <i class="bi-info-circle"></i> 暂无待审批的茶订单。
+      </div>
+    {{ end }}
+  </div>
+
+  <!-- 进行中订单 -->
+  <div class="tab-pane" id="active">
+    {{ if .ActiveOrders }}
+      {{ range .ActiveOrders }}
+        {{ template "component_tea_order_bean" . }}
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info">
+        <i class="bi-info-circle"></i> 暂无进行中的茶订单。
+      </div>
+    {{ end }}
+  </div>
+
+  <!-- 异常处理订单 -->
+  <div class="tab-pane" id="cancelled">
+    {{ if .CancelledOrders }}
+      {{ range .CancelledOrders }}
+        {{ template "component_tea_order_bean" . }}
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info">
+        <i class="bi-info-circle"></i> 暂无异常处理的茶订单。
+      </div>
+    {{ end }}
+  </div>
+
+  <!-- 已完成订单 -->
+  <div class="tab-pane" id="completed">
+    {{ if .CompletedOrders }}
+      {{ range .CompletedOrders }}
+        {{ template "component_tea_order_bean" . }}
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info">
+        <i class="bi-info-circle"></i> 暂无已完成的茶订单。
+      </div>
+    {{ end }}
+  </div>
+</div>
+
+
+
+<!-- 审批模态框（示例） -->
+<div class="modal fade" id="approveModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h4 class="modal-title"><i class="bi-check-circle"></i> 审批茶订单</h4>
+      </div>
+      <div class="modal-body">
+        <p>请选择要审批的订单...</p>
+        <!-- 实际内容应由JavaScript动态加载 -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+        <button type="button" class="btn btn-primary">提交审批</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function() {
+  // 根据URL hash激活对应的标签页
+  var hash = window.location.hash;
+  if (hash) {
+    $('#orderTabs a[href="' + hash + '"]').tab('show');
+  }
+  
+  // 标签页切换时更新URL hash
+  $('#orderTabs a').on('shown.bs.tab', function(e) {
+    window.location.hash = $(e.target).attr('href');
+  });
+});
+</script>
+
+{{ end }}

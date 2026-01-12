@@ -204,14 +204,16 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 
 // Update 更新茶订单记录
 func (t *TeaOrder) Update() error {
-	statement := `UPDATE tea_orders SET status = $2, final_score = $3, updated_at = $4 
+	statement := `UPDATE tea_orders SET status = $2, tea_topic = $3, is_approved = $4, approver_user_id = $5,
+		approval_rejection_reason = $6, approved_at = $7, final_score = $8, updated_at = $9
 		WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(t.Id, t.Status, t.FinalScore, time.Now())
+	_, err = stmt.Exec(t.Id, t.Status, t.TeaTopic, t.IsApproved, t.ApproverUserId,
+		t.ApprovalRejectionReason, t.ApprovedAt, t.FinalScore, time.Now())
 	return err
 }
 

@@ -1,0 +1,99 @@
+{{ define "content" }}
+
+{{/* 拒绝茶订单表单页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/verifier/workspace">见证工作间</a></li>
+  <li class="active">拒绝茶订单</li>
+</ol>
+
+<div class="page-header">
+  <h1><i class="bi-x-circle"></i> 拒绝茶订单</h1>
+  <p class="lead">请填写拒绝原因，订单将被取消。</p>
+</div>
+
+{{ template "component_tea_order_bean" .TeaOrderBean }}
+
+<div class="panel panel-danger">
+  <div class="panel-heading">
+    <h3 class="panel-title"><i class="bi-exclamation-triangle"></i> 填写拒绝原因</h3>
+  </div>
+  <div class="panel-body">
+    <form method="POST" action="/v1/verifier/order/reject">
+      <input type="hidden" name="uuid" value="{{ .TeaOrderBean.TeaOrder.Uuid }}">
+
+      <div class="form-group">
+        <label for="reason">拒绝原因 <span class="text-danger">*</span></label>
+        <p class="help-block">请详细说明拒绝该订单的原因，这将记录在见证日志中供后续参考。</p>
+        <textarea class="form-control" id="reason" name="reason" rows="6" 
+                  placeholder="请输入拒绝原因（17-456字）" required 
+                  minlength="17" maxlength="456"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="reason_template">常用原因模板：</label>
+        <select class="form-control" id="reason_template" onchange="fillReason()">
+          <option value="">-- 选择原因模板 --</option>
+          <option value="茶围目标描述不清晰，需要明确具体需求。">茶围目标描述不清晰</option>
+          <option value="茶台方案不符合平台道德规范，内容涉及违规信息。">茶台方案不符合道德规范</option>
+          <option value="参与方团队资质不足，无法保证任务完成质量。">参与方团队资质不足</option>
+          <option value="监护方未指定或不符合要求。">监护方未指定或不符合要求</option>
+          <option value="订单信息不完整，缺少关键要素。">订单信息不完整</option>
+          <option value="活动地点存在安全隐患，不适合开展线下作业。">活动地点存在安全隐患</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>拒绝确认信息：</label>
+        <div class="well">
+          <dl class="dl-horizontal">
+            <dt>审批人：</dt>
+            <dd>{{ .SessUser.Name }}</dd>
+            <dt>拒绝时间：</dt>
+            <dd>提交后自动记录</dd>
+            <dt>订单状态变更：</dt>
+            <dd><strong>待审批</strong> &rarr; <strong class="text-danger">已取消</strong></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="confirmReject" required>
+            我确认已审核该订单，拒绝原因是真实准确的，并了解该操作不可撤销。
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-danger btn-lg">
+        <i class="bi-x-circle"></i> 确认拒绝
+      </button>
+      <a href="/v1/verifier/workspace" class="btn btn-default btn-lg">
+        <i class="bi-arrow-left"></i> 返回工作间
+      </a>
+    </form>
+  </div>
+</div>
+
+<script>
+function fillReason() {
+  var template = document.getElementById('reason_template').value;
+  if (template) {
+    document.getElementById('reason').value = template;
+  }
+}
+
+$(document).ready(function() {
+  $('form').on('submit', function() {
+    if (!$('#confirmReject').prop('checked')) {
+      alert('请确认您已审核该订单并确认拒绝！');
+      return false;
+    }
+    return true;
+  });
+});
+</script>
+
+{{ end }}
