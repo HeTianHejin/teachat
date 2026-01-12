@@ -1,4 +1,11 @@
 {{ define "content" }}
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+    <li><a href="/v1/user/biography?uuid={{ .SessUser.Uuid }}">用户中心</a></li>
+  <li class="active"><span style="font-style: italic;">更换个人头像</span></li>
+</ol>
+
+<h3>更新个人头像</h3>
 
 <form action="/v1/user/avatar" method="post" class="form-horizontal" role="form" enctype="multipart/form-data">
     <div class="form-group">

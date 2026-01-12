@@ -173,7 +173,7 @@ func avatarUploadUserGet(w http.ResponseWriter, r *http.Request) {
 	var lB dao.LetterboxPageData
 	lB.SessUser = s_u
 
-	generateHTML(w, &lB, "layout", "navbar.private", "avatar.upload")
+	generateHTML(w, &lB, "layout", "navbar.private", "user.avatar_upload")
 }
 
 // GET

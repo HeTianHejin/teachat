@@ -1,7 +1,6 @@
 package route
 
 import (
-	"bufio"
 	"crypto/md5"
 	"errors"
 	"fmt"
@@ -331,6 +330,7 @@ func validateCnStrLen(value string, min int, max int, fieldName string, w http.R
 }
 
 // 处理头像图片上传方法，图片要求为jpeg格式，size<30kb,宽高尺寸是64，32像素之间
+// avatarType("user","team") 决定保存目录
 func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	// 从请求中解包出单个上传文件
 	file, fileHeader, err := r.FormFile("avatar")
@@ -394,6 +394,11 @@ func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	default:
 		saveDir = util.Config.ImageDir
 	}
+	// 确保目录存在
+	if err := os.MkdirAll(saveDir, 0755); err != nil {
+		util.Debug("fail to create avatar directory", err)
+		return errors.New("创建头像目录失败，请稍后再试。")
+	}
 	// 创建新文件，无需切换目录，直接使用完整路径，减少安全风险
 	newFilePath := saveDir + uuid + util.Config.ImageExt
 	newFile, err := os.Create(newFilePath)
@@ -404,13 +409,8 @@ func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	// 确保文件在函数执行完毕后关闭
 	defer newFile.Close()
 
-	// 通过缓存方法写入硬盘
-	buff := bufio.NewWriter(newFile)
-	if _, err = buff.Write(fileBytes); err != nil {
-		util.Debug("fail to write avatar image", err)
-		return errors.New("创建头像文件失败，请稍后再试。")
-	}
-	if err = buff.Flush(); err != nil {
+	// 直接写入文件，参考 saveUploadedFile 的简洁实现
+	if _, err = newFile.Write(fileBytes); err != nil {
 		util.Debug("fail to write avatar image", err)
 		return errors.New("创建头像文件失败，请稍后再试。")
 	}

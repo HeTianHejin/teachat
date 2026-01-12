@@ -954,18 +954,19 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// AvatarUploadTeam() 处理茶团图标
-func AvatarUploadTeam(w http.ResponseWriter, r *http.Request) {
+// TeamLogoUpload() /v1/team/logo
+// 处理茶团图标
+func TeamLogoUpload(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
-		avatarUploadTeamGet(w, r)
+		teamLogoUploadGet(w, r)
 	case http.MethodPost:
-		avatarUploadTeamPost(w, r)
+		teamLogoUploadPost(w, r)
 	}
 }
 
-// POST /v1/team/avatar
-func avatarUploadTeamPost(w http.ResponseWriter, r *http.Request) {
+// POST /v1/team/logo
+func teamLogoUploadPost(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1025,8 +1026,8 @@ func avatarUploadTeamPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
-// GET /v1/team/avatar?uuid=
-func avatarUploadTeamGet(w http.ResponseWriter, r *http.Request) {
+// GET /v1/team/logo?uuid=
+func teamLogoUploadGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1045,11 +1046,11 @@ func avatarUploadTeamGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查team的创建者
-	if s_u.Id == team.FounderId {
+	// 检查是否team的管理员
+	if canManageTeam(&team, s_u, w) {
 		//如果是创建者，那么就可以上传图标
 
-		generateHTML(w, &uuid, "layout", "navbar.private", "team_team.avatar_upload")
+		generateHTML(w, &uuid, "layout", "navbar.private", "team_/v1/team/logo")
 		return
 	}
 	report(w, s_u, "你好，茶博士摸摸头，居然说只有团建人可以修改这个茶团相关资料。")

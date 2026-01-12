@@ -72,7 +72,7 @@ func main() {
 	mux.HandleFunc("/v1/team/new", route.NewTeamGet)
 	mux.HandleFunc("/v1/team/create", route.CreateTeamPost)
 	mux.HandleFunc("/v1/team/detail", route.TeamDetail)
-	mux.HandleFunc("/v1/team/avatar", route.AvatarUploadTeam)
+	mux.HandleFunc("/v1/team/logo", route.TeamLogoUpload)
 	mux.HandleFunc("/v1/team/invitations", route.TeamInvitations)
 	mux.HandleFunc("/v1/team/applications", route.TeamApplications)
 	mux.HandleFunc("/v1/team/members/left", route.TeamMembersLeft)
@@ -298,6 +298,14 @@ func main() {
 
 	//定义在 Route_balance.go
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
+
+	// 见证者工作间路由
+	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace)        // 见证者工作间页面
+	mux.HandleFunc("/v1/verifier/order/approve", route.HandleVerifierOrderApprove) // 审批茶订单
+	mux.HandleFunc("/v1/verifier/order/reject", route.HandleVerifierOrderReject)   // 拒绝茶订单
+	mux.HandleFunc("/v1/verifier/order/pause", route.HandleVerifierOrderPause)     // 暂停茶订单
+	mux.HandleFunc("/v1/verifier/order/cancel", route.HandleVerifierOrderCancel)   // 终止茶订单
+	mux.HandleFunc("/v1/verifier/order/detail", route.HandleVerifierOrderDetail)   // 茶订单详情
 
 	// 用户茶叶账户系统路由
 	mux.HandleFunc("/v1/tea/user/account/page", route.HandleTeaUserAccount)          //用户茶叶账户入口页面
