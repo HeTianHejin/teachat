@@ -87,6 +87,7 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 		"trim": func(s string) string {
 			return strings.TrimSpace(s)
 		},
+		"RoleName":    dao.TeamMemberRoleName,
 		"FormatFloat": util.FormatFloat,
 	})
 

@@ -105,7 +105,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	team_member := dao.TeamMember{
 		TeamId: dao.TeamIdFreelancer,
 		UserId: newU.Id,
-		Role:   "taster",
+		Role:   dao.RoleTaster,
 		Status: dao.TeamMemberStatusActive,
 	}
 	if err = team_member.Create(); err != nil {

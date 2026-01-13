@@ -10,14 +10,6 @@ import (
 /*
    存放各个路由文件共享的一些方法,常量
 */
-// $事业茶团角色
-const (
-	RoleCEO    = "CEO"
-	RoleCTO    = "CTO"
-	RoleCMO    = "CMO"
-	RoleCFO    = "CFO"
-	RoleTaster = "taster"
-)
 
 // 检查茶围目标管理权限，即用户是否属于茶围归属团队有效成员
 func checkObjectiveAdminPermission(ob *dao.Objective, userID int) (bool, error) {

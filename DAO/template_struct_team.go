@@ -1,5 +1,13 @@
 package dao
 
+// TeamMemberRoleName 将团队成员角色ID转换为角色名称
+func TeamMemberRoleName(role int) string {
+	if name, ok := RoleNameMap[role]; ok {
+		return name
+	}
+	return "未知"
+}
+
 // 集团邀请团队加盟邀请函
 type GroupInvitationBean struct {
 	Invitation GroupInvitation

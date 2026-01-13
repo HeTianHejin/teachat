@@ -8,7 +8,7 @@ type Invitation struct {
 	Uuid         string
 	TeamId       int
 	InviteEmail  string //邀请对象的邮箱
-	Role         string //拟邀请担任角色
+	Role         int    //拟邀请担任角色 1:CEO, 2:CTO, 3:CFO, 4:CMO, 5:taster
 	InviteWord   string //邀请涵内容
 	CreatedAt    time.Time
 	Status       int //0: "待处理",1: "已查看",2: "已接受",3: "已拒绝",4: "已过期",

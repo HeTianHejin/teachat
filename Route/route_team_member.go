@@ -126,9 +126,9 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// 检查是否为核心成员（非CEO），如果是则先降级为普通成员
-	if t_member.Role != dao.RoleCEO && t_member.Role != "taster" {
+	if t_member.Role != dao.RoleCEO && t_member.Role != dao.RoleTaster {
 		// 是核心成员（CTO/CFO/CMO），先降级为普通成员
-		t_member.Role = "taster"
+		t_member.Role = dao.RoleTaster
 		if err := t_member.UpdateRoleStatus(); err != nil {
 			util.Debug("Cannot update member role to taster", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -157,7 +157,7 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//返回成功保存声明的报告
-	if t_member.Role == "taster" && tmqD.MemberCurrentRole != "taster" {
+	if t_member.Role == dao.RoleTaster && tmqD.MemberCurrentRole != dao.RoleTaster {
 		report(w, s_u, "你好，作为核心成员，你的角色已自动调整为普通成员，退出声明已提交，请等待管理员审批。")
 	} else {
 		report(w, s_u, "你好，茶博士已经保存了你的退出声明，请等待管理员答复。")
@@ -460,12 +460,20 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//提交的成员新角色参数
-	new_role := r.PostFormValue("role")
-	//提交的成员新角色参数是否正常
-	switch new_role {
+	new_role_str := r.PostFormValue("role")
+	var new_role int
+	switch new_role_str {
 	case "taster":
+		new_role = dao.RoleTaster
 		break
-	case RoleCEO, "CTO", RoleCFO, RoleCMO:
+	case "CEO":
+		new_role = dao.RoleCEO
+	case "CTO":
+		new_role = dao.RoleCTO
+	case "CMO":
+		new_role = dao.RoleCMO
+	case "CFO":
+		new_role = dao.RoleCFO
 		//需要检查目标角色是否空缺
 		_, err = t_team.GetTeamMemberByRole(new_role)
 		if err != nil {
@@ -548,7 +556,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if m_ceo.UserId == s_u.Id && new_role != RoleCEO {
+	if m_ceo.UserId == s_u.Id && new_role != dao.RoleCEO {
 		//会话用户是CEO，可以调整非CEO成员角色
 		//创建一个新的团队成员角色变动公告
 		team_member_role_notice := dao.TeamMemberRoleNotice{
@@ -605,7 +613,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//报告调整角色成功消息
-	report(w, s_u, "你好，茶博士摸摸头说，已经调整了 "+t_member.Name+" 的角色为 "+new_role+" 。")
+	report(w, s_u, "你好，茶博士摸摸头说，已经调整了 "+t_member.Name+" 的角色为 "+dao.TeamMemberRoleName(new_role)+" 。")
 }
 
 // /v1/team_member/invite
@@ -854,7 +862,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		team_member := dao.TeamMember{
 			TeamId: team.Id,
 			UserId: applicant.Id,
-			Role:   "taster",
+			Role:   dao.RoleTaster,
 			Status: 1,
 		}
 		//将新的茶团成员写入数据库
@@ -1321,7 +1329,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		//   - taster: 无限制
 		//   - 其他角色: 拒绝
 		switch invitation.Role {
-		case RoleCTO, RoleCMO, RoleCFO:
+		case dao.RoleCTO, dao.RoleCMO, dao.RoleCFO:
 			//检查teamMember.Role是否已经存在
 			member, err := team.CheckTeamMemberByRole(invitation.Role)
 			if err != nil {
@@ -1337,7 +1345,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 				report(w, s_u, "你好，该团队已经存在所选择的核心角色，请确认所选择的角色是否恰当。")
 				return
 			}
-		case RoleCEO:
+		case dao.RoleCEO:
 			//检查teamMember.Role中是否已经存在"CEO"
 			member_existingCEO, err := team.MemberCEO()
 			if err != nil {
@@ -1356,7 +1364,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，该团队已经存在所选择的核心角色，请确认所选择的角色是否恰当。")
 			return
 
-		case "taster":
+		case dao.RoleTaster:
 			// No additional validation needed for the "taster" role
 			break
 		default:
@@ -1390,7 +1398,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 如果team_member.Role == "CEO",采取更换CEO方法
-		if team_member.Role == RoleCEO {
+		if team_member.Role == dao.RoleCEO {
 			if err = team_member.UpdateFirstCEO(reply_user.Id); err != nil {
 				util.Debug(s_u.Email, " Cannot update team_member CEO", err)
 				report(w, s_u, "你好，幽情欲向嫦娥诉，无奈虚廊夜色昏。请稍后再试。")
@@ -1495,10 +1503,28 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，邀请的话太长了或者太短，只有外星人才接受呀，请确认再试。")
 		return
 	}
-	role := r.PostFormValue("role")
+	roleStr := r.PostFormValue("role")
 	team_uuid := r.PostFormValue("team_uuid")
-	if role == "" || team_uuid == "" {
+	if roleStr == "" || team_uuid == "" {
 		report(w, s_u, "你好，请选择团队角色和团队资料信息。")
+		return
+	}
+
+	// 将角色字符串转换为 int
+	var role int
+	switch roleStr {
+	case "CEO":
+		role = dao.RoleCEO
+	case "CTO":
+		role = dao.RoleCTO
+	case "CMO":
+		role = dao.RoleCMO
+	case "CFO":
+		role = dao.RoleCFO
+	case "taster":
+		role = dao.RoleTaster
+	default:
+		report(w, s_u, "你好，请选择正确的团队角色。")
 		return
 	}
 	author_uuid := r.PostFormValue("author_uuid")
@@ -1564,7 +1590,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 
 	//检查受邀请的茶友团队核心角色是否已经被占用
 	switch role {
-	case RoleCTO, RoleCMO, RoleCFO:
+	case dao.RoleCTO, dao.RoleCMO, dao.RoleCFO:
 		//检查teamMember.Role中是否已经存在
 		_, err = team.GetTeamMemberByRole(role)
 		if err == nil {
@@ -1576,7 +1602,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case RoleCEO:
+	case dao.RoleCEO:
 		if ceo_user.Id == founder.Id {
 			//CEO是默认创建人担任首个CEO，这意味着首次更换CEO，ok。
 			//例如,西天取经团队发起人观音菩萨（默认首个ceo），指定第一个成员唐僧取代自己为取经团队CEO
@@ -1586,7 +1612,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-	case "taster":
+	case dao.RoleTaster:
 		// No additional validation needed for the "taster" role
 		break
 	default:

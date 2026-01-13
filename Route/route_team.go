@@ -921,8 +921,16 @@ func CoreManage(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "茶博士失魂鱼，未能读取新泡茶议资料，请稍后再试。")
 		return
 	}
-	role := r.FormValue("role")
-	if role != "CTO" && role != RoleCMO && role != RoleCFO {
+	roleStr := r.FormValue("role")
+	var role int
+	switch roleStr {
+	case "CTO":
+		role = dao.RoleCTO
+	case "CMO":
+		role = dao.RoleCMO
+	case "CFO":
+		role = dao.RoleCFO
+	default:
 		report(w, s_u, "你好，请选择正确的角色。")
 		return
 	}

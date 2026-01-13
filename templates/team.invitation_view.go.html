@@ -58,7 +58,7 @@
                     {{ .Invitation.InviteWord }}
                 </p>
 
-                <p>拟邀任角色: {{ .Invitation.Role }}</p>
+                <p>拟邀任角色: {{ RoleName .Invitation.Role }}</p>
 
                 <p class="text-right">邀请人：
                     <strong>{{ .Author.Name }}</strong> 此致</p>

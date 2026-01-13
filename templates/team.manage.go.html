@@ -71,7 +71,7 @@
       <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
 
      
-      <h4>{{ .TeamMember.Role }}</h4>
+      <h4>{{ RoleName .TeamMember.Role }}</h4>
 
       <p>加盟时间：{{ .CreatedAtDate }}</p>
 
@@ -114,7 +114,7 @@
       <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
 
      
-      <h4>{{ .TeamMember.Role }}</h4>
+      <h4>{{ RoleName .TeamMember.Role }}</h4>
 
       <p>加盟时间：{{ .CreatedAtDate }}</p>
 
@@ -160,7 +160,7 @@
 
       <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a></span>
  
-      <h5>{{ .TeamMember.Role }}</h5>
+      <h5>{{ RoleName .TeamMember.Role }}</h5>
 
       <p>加盟时间：{{ .CreatedAtDate }}</p>
 

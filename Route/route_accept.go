@@ -316,11 +316,11 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// 将设立team的Founder作为默认的CEO角色成员，teamMember.Role=RoleCEO
+			// 将设立team的Founder作为默认的CEO角色成员，teamMember.Role=dao.RoleCEO
 			teamMember := dao.TeamMember{
 				TeamId: team.Id,
 				UserId: team.FounderId,
-				Role:   RoleCEO,
+				Role:   dao.RoleCEO,
 				Status: dao.TeamMemberStatusActive,
 			}
 			if err = teamMember.Create(); err != nil {

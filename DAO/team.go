@@ -12,12 +12,24 @@ import (
 
 // $事业茶团角色
 const (
-	RoleCEO    = "CEO"
-	RoleCTO    = "CTO"
-	RoleCMO    = "CMO"
-	RoleCFO    = "CFO"
-	RoleTaster = "taster"
+	RoleUnknown = 0 // 未知
+	RoleCEO     = 1 // CEO
+	RoleCTO     = 2 // CTO
+	RoleCMO     = 3 // CMO
+	RoleCFO     = 4 // CFO
+	RoleTaster  = 5 // 品茶师
 )
+
+// 角色名称映射
+var RoleNameMap = map[int]string{
+	RoleUnknown: "未知",
+	RoleCEO:     "CEO",
+	RoleCTO:     "CTO",
+	RoleCMO:     "CMO",
+	RoleCFO:     "CFO",
+	RoleTaster:  "品茶师",
+}
+
 const (
 	TeamIdNone          = 0 // 0
 	TeamIdFreelancer    = 1 // 1  系统预设"自由人"$事业茶团团队，系统预设，这是所有注册用户的默认$事业茶团，没有茶叶资产
@@ -146,11 +158,26 @@ type TeamMember struct {
 	Uuid      string
 	TeamId    int
 	UserId    int
-	Role      string           // 角色，职务：CEO，CTO，CMO，CFO，taster
+	Role      int              // 角色，职务：0-未知，1-CEO，2-CTO，3-CMO，4-CFO，5-品茶师
 	Status    TeamMemberStatus // 成员状态
 	CreatedAt time.Time
 	UpdatedAt *time.Time
 	DeletedAt *time.Time // 软删除时间戳，NULL表示未删除
+}
+
+// GetRoleName 返回角色名称
+func (member *TeamMember) GetRoleName() string {
+	return RoleNameMap[member.Role]
+}
+
+// IsCoreMember 检查是否为核心成员（CEO/CTO/CMO/CFO）
+func (member *TeamMember) IsCoreMember() bool {
+	return member.Role >= RoleCEO && member.Role <= RoleCFO
+}
+
+// IsCEO 检查是否为 CEO
+func (member *TeamMember) IsCEO() bool {
+	return member.Role == RoleCEO
 }
 
 // GetStatus 返回团队成员状态的中文描述
@@ -221,9 +248,9 @@ type TeamMemberResignation struct {
 	CeoUserId        int //时任$事业茶团CEO茶友id，
 	CoreMemberUserId int //时任核心成员茶友id，要求双确认，如果有核心成员，也要同意退出
 
-	MemberId          int    //声明退出$事业茶团的成员id(team_member.id)
-	MemberUserId      int    //声明退出$事业茶团的茶友id
-	MemberCurrentRole string //时任角色
+	MemberId          int //声明退出$事业茶团的成员id(team_member.id)
+	MemberUserId      int //声明退出$事业茶团的茶友id
+	MemberCurrentRole int //时任角色
 
 	Title     string //标题
 	Content   string //内容
@@ -380,8 +407,8 @@ type TeamMemberRoleNotice struct {
 	TeamId            int    //声明$事业茶团
 	CeoId             int    //时任$事业茶团CEO茶友id
 	MemberId          int    //成员id(team_member.id)
-	MemberCurrentRole string //当前角色
-	NewRole           string //新角色
+	MemberCurrentRole int    //当前角色
+	NewRole           int    //新角色
 	Title             string //标题
 	Content           string //内容
 	Status            int    //声明状态 0:未读,1:已读,2:已处理
@@ -533,7 +560,7 @@ func (user *User) GetLastDefaultTeam() (team Team, err error) {
 }
 
 // GetTeamMemberRoleByTeamId() 获取用户在给定$事业茶团中担任的角色
-func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role string, err error) {
+func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role int, err error) {
 	err = DB.QueryRow("SELECT role FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).Scan(&role)
 	return
 }
@@ -604,10 +631,10 @@ func (user *User) HoldTeams() (teams []Team, err error) {
 	return
 }
 
-// 用户担任CEO的$事业茶团，team_member.role = "CEO"
+// 用户担任CEO的$事业茶团，team_member.role = 1
 // AWS CodeWhisperer assist in writing
 func (user *User) CeoTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'CEO' AND teams.deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = $2 AND teams.deleted_at IS NULL", user.Id, RoleCEO)
 	if err != nil {
 		return
 	}
@@ -640,10 +667,10 @@ func (usre *User) FounderTeams() (teams []Team, err error) {
 
 }
 
-// 用户担任核心高管成员的全部$事业茶团，team_member.role = "CEO", "CTO", "CMO", "CFO"
+// 用户担任核心高管成员的全部$事业茶团，team_member.role in (1,2,3,4)
 // AWS CodeWhisperer assist in writing
 func (user *User) CoreExecTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND (team_members.role = 'CEO' or team_members.role = 'CTO' or team_members.role = 'CMO' or team_members.role = 'CFO') AND teams.deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role IN ($2, $3, $4, $5) AND teams.deleted_at IS NULL", user.Id, RoleCEO, RoleCTO, RoleCMO, RoleCFO)
 	if err != nil {
 		return
 	}
@@ -658,10 +685,10 @@ func (user *User) CoreExecTeams() (teams []Team, err error) {
 	return
 }
 
-// 用户作为普通成员的全部$事业茶团，team_member.role = "taster"
+// 用户作为普通成员的全部$事业茶团，team_member.role = 5
 // AWS CodeWhisperer assist in writing
 func (user *User) NormalExecTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = 'taster' AND teams.deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = $2 AND teams.deleted_at IS NULL", user.Id, RoleTaster)
 	if err != nil {
 		return
 	}
@@ -783,7 +810,7 @@ func (team *Team) Get() (err error) {
 	return
 }
 
-// 获取$事业茶团，查询普通成员，role="品茶师"（taster）,status = TeMemberStatusActive的方法
+// 获取$事业茶团，查询普通成员，role=5,status = TeMemberStatusActive的方法
 func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 
 	if team.Id == TeamIdNone {
@@ -792,7 +819,7 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
-	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2 AND status = $3", team.Id, "taster", TeamMemberStatusActive)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2 AND status = $3", team.Id, RoleTaster, TeamMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -807,7 +834,7 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	return
 }
 
-// coreMember() 返回$事业茶团核心成员,teamMember.Role = "CEO" and "CTO" and "CMO" and "CFO",status = TeMemberStatusActive
+// coreMember() 返回$事业茶团核心成员,teamMember.Role in (1,2,3,4),status = TeMemberStatusActive
 // 排序：CEO > CTO > CMO > CFO
 func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdNone {
@@ -817,15 +844,10 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
 	rows, err := DB.Query(`
-		SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at 
-		FROM team_members 
-		WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5) AND status = $6 
-		ORDER BY CASE role 
-			WHEN 'CEO' THEN 1 
-			WHEN 'CTO' THEN 2 
-			WHEN 'CMO' THEN 3 
-			WHEN 'CFO' THEN 4 
-		END`, team.Id, RoleCEO, RoleCTO, RoleCMO, RoleCFO, TeamMemberStatusActive)
+		SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at
+		FROM team_members
+		WHERE team_id = $1 AND role IN ($2, $3, $4, $5) AND status = $6
+		ORDER BY role ASC`, team.Id, RoleCEO, RoleCTO, RoleCMO, RoleCFO, TeamMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -848,7 +870,7 @@ func GetAllMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
 	if team_id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team_id)
 	}
-	rows, err := DB.Query("SELECT user_id FROM team_members WHERE team_id = $1 AND status = 1", team_id)
+	rows, err := DB.Query("SELECT user_id FROM team_members WHERE team_id = $1 AND status = $2", team_id, TeamMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -914,10 +936,10 @@ func (team *Team) IsCoreMember(user_id int) (bool, error) {
 		return false, err
 	}
 	// 检查是否为核心成员角色
-	return team_member.Role == RoleCEO || team_member.Role == "CTO" || team_member.Role == RoleCMO || team_member.Role == RoleCFO, nil
+	return team_member.Role == RoleCEO || team_member.Role == RoleCTO || team_member.Role == RoleCMO || team_member.Role == RoleCFO, nil
 }
 
-// 查询一个$事业茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = "CEO"，返回 (team_member TeamMember,err error)
+// 查询一个$事业茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = 1，返回 (team_member TeamMember,err error)
 // AWS CodeWhisperer assist in writing
 func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 	team_member = TeamMember{}
@@ -927,7 +949,7 @@ func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 }
 
 // GetTeamMemberByRole() 根据角色查找$事业茶团成员资料。用于检查$事业茶团拟邀请的新成员角色是否已经被占用
-func (team *Team) GetTeamMemberByRole(role string) (team_member TeamMember, err error) {
+func (team *Team) GetTeamMemberByRole(role int) (team_member TeamMember, err error) {
 	team_member = TeamMember{}
 	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
@@ -936,18 +958,18 @@ func (team *Team) GetTeamMemberByRole(role string) (team_member TeamMember, err 
 
 // CheckTeamMemberByRole 根据角色查找团队成员
 // 参数:
-//   - role: 要查询的角色名称
+//   - role: 要查询的角色ID
 //
 // 返回:
 //   - *TeamMember: 如果找到返回成员指针，否则返回nil
 //   - error: 如果查询出错返回错误，未找到不视为错误
-func (team *Team) CheckTeamMemberByRole(role string) (*TeamMember, error) {
+func (team *Team) CheckTeamMemberByRole(role int) (*TeamMember, error) {
 	if team == nil || team.Id == TeamIdNone || team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("invalid team id %d", team.Id)
 	}
 
-	if role == "" {
-		return nil, errors.New("team role cannot be empty")
+	if role < RoleUnknown || role > RoleTaster {
+		return nil, errors.New("team role must be between 0 and 5")
 	}
 
 	teamMember := &TeamMember{}
@@ -1008,7 +1030,7 @@ func (teamMember *TeamMember) UpdateRoleStatus() (err error) {
 	return
 }
 
-// 更换$事业茶团默认CEO的方法，Update team_members记录中role=CEO的行 user_id 为当前user_id
+// 更换$事业茶团默认CEO的方法，Update team_members记录中role=1的行 user_id 为当前user_id
 func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
 	statement := `UPDATE team_members SET user_id = $1, updated_at = $2 WHERE team_id = $3 AND role = $4`
 	stmt, err := DB.Prepare(statement)
