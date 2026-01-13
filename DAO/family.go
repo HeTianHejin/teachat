@@ -938,7 +938,7 @@ func CountFamilyParentAndChildMembers(familyId int, ctx context.Context) (count 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	err = DB.QueryRow("SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND role IN ($2, $3, $4, $5)", familyId, FamilyMemberRoleHusband, FamilyMemberRoleWife, FamilyMemberRoleDaughter, FamilyMemberRoleSon).Scan(&count)
+	err = DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND role IN ($2, $3, $4, $5)", familyId, FamilyMemberRoleHusband, FamilyMemberRoleWife, FamilyMemberRoleDaughter, FamilyMemberRoleSon).Scan(&count)
 	if err != nil {
 		return
 	}
@@ -1008,6 +1008,8 @@ func (f *Family) IsDeleted() bool {
 
 // GetDeletedFamiliesByAuthorId 获取用户已删除的家庭列表
 func GetDeletedFamiliesByAuthorId(authorId int, ctx context.Context) ([]Family, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 
 	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 

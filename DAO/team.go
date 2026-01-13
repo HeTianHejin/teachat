@@ -20,11 +20,11 @@ const (
 )
 const (
 	TeamIdNone          = 0 // 0
-	TeamIdFreelancer    = 1 // 1  系统预设“自由人”$事业茶团团队，系统预设，这是所有注册用户的默认$事业茶团，没有茶叶资产
+	TeamIdFreelancer    = 1 // 1  系统预设"自由人"$事业茶团团队，系统预设，这是所有注册用户的默认$事业茶团，没有茶叶资产
 	TeamIdSpaceshipCrew = 2 // 2   飞船茶棚团队，系统预设
 
-	// 见证者角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判“违规”情形，将阻止贾宝玉作西厢记类那种“男女礼教脱轨诗”或者禁止薛蟠那种酒色情诗；
-	// 又或者是社团组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核和评分，所以说“见证”记录事件发生的真实性、合规性。
+	// 见证者角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判"违规"情形，将阻止贾宝玉作西厢记类那种"男女礼教脱轨诗"或者禁止薛蟠那种酒色情诗；
+	// 又或者是社团组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核和评分，所以说"见证"记录事件发生的真实性、合规性。
 	// 见证人也是活动进程主持人，类似教堂神父主持婚礼活动，发现不道德的欺瞒情况，例如新郎或者新娘竟然是重婚者之类不符合道德规范的活动将取消或者宣布无效。
 	TeamIdVerifier = 3 // 3 见证者团队，系统预设
 )
@@ -213,11 +213,11 @@ func (team *Team) IsActive() bool {
 	return !team.IsDeleted() && (team.Class == TeamClassOpen || team.Class == TeamClassClose)
 }
 
-// 成员“退出$事业茶团声明书”（相当于辞职信？）
+// 成员"退出$事业茶团声明书"（相当于辞职信？）
 type TeamMemberResignation struct {
 	Id               int
 	Uuid             string
-	TeamId           int //“声明退出$事业茶团”所指向的$事业茶团id
+	TeamId           int //"声明退出$事业茶团"所指向的$事业茶团id
 	CeoUserId        int //时任$事业茶团CEO茶友id，
 	CoreMemberUserId int //时任核心成员茶友id，要求双确认，如果有核心成员，也要同意退出
 
@@ -313,7 +313,7 @@ func (resignation *TeamMemberResignation) UpdateCeoUserIdCoreMemberUserIdStatus(
 	return
 }
 
-// TeamMemberResignations.GetByUserIdAndTeamId()  获取某个用户在某个$事业茶团的全部“退出$事业茶团声明书”
+// TeamMemberResignations.GetByUserIdAndTeamId()  获取某个用户在某个$事业茶团的全部"退出$事业茶团声明书"
 func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []TeamMemberResignation, err error) {
 	rows, err := DB.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 AND team_id = $2", user_id, team_id)
 	if err != nil {
@@ -330,7 +330,7 @@ func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []Team
 	return
 }
 
-// TeamMemberResignations.GetByTeamId() 获取某个$事业茶团的全部“退出$事业茶团声明书”
+// TeamMemberResignations.GetByTeamId() 获取某个$事业茶团的全部"退出$事业茶团声明书"
 func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation, err error) {
 	rows, err := DB.Query("SELECT * FROM team_member_resignations WHERE team_id = $1 ORDER BY created_at DESC", team_id)
 	if err != nil {
@@ -364,7 +364,7 @@ func GetResignationsByUserId(user_id int) (resignations []TeamMemberResignation,
 	return
 }
 
-// 用户的“默认$事业茶团”设置记录
+// 用户的"默认$事业茶团"设置记录
 type UserDefaultTeam struct {
 	Id        int
 	Uuid      string
@@ -516,7 +516,7 @@ func (udteam *UserDefaultTeam) Create() (err error) {
 
 // GetLastDefaultTeam() 根据user.Id从user_default_teams表和teams表，获取用户最后记录的1个team
 func (user *User) GetLastDefaultTeam() (team Team, err error) {
-	// 如果用户没有设置默认$事业茶团，则返回系统预设的“自由人”$事业茶团
+	// 如果用户没有设置默认$事业茶团，则返回系统预设的"自由人"$事业茶团
 	count, err := user.SurvivalTeamsCount()
 	if err != nil {
 		return Team{}, err
@@ -573,7 +573,7 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 	return teams, nil
 }
 
-// SurvivalTeamsCount() 获取用户当前所在的状态正常的全部$事业茶团计数(包括系统预留的“自由人”$事业茶团)
+// SurvivalTeamsCount() 获取用户当前所在的状态正常的全部$事业茶团计数(包括系统预留的"自由人"$事业茶团)
 func (user *User) SurvivalTeamsCount() (count int, err error) {
 	query := `
         SELECT COUNT(DISTINCT teams.id)
@@ -783,7 +783,7 @@ func (team *Team) Get() (err error) {
 	return
 }
 
-// 获取$事业茶团，查询普通成员，role=“品茶师”（taster）,status = TeMemberStatusActive的方法
+// 获取$事业茶团，查询普通成员，role="品茶师"（taster）,status = TeMemberStatusActive的方法
 func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 
 	if team.Id == TeamIdNone {
@@ -807,7 +807,8 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 	return
 }
 
-// coreMember() 返回$事业茶团核心成员,teamMember.Role = “CEO” and “CTO” and “CMO” and “CFO”,status = TeMemberStatusActive
+// coreMember() 返回$事业茶团核心成员,teamMember.Role = "CEO" and "CTO" and "CMO" and "CFO",status = TeMemberStatusActive
+// 排序：CEO > CTO > CMO > CFO
 func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdNone {
 		return nil, fmt.Errorf("team not found with id: %d", team.Id)
@@ -815,7 +816,16 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	if team.Id == TeamIdFreelancer {
 		return nil, fmt.Errorf("team member cannot find with id: %d", team.Id)
 	}
-	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5) AND status = $6", team.Id, RoleCEO, "CTO", RoleCMO, RoleCFO, TeamMemberStatusActive)
+	rows, err := DB.Query(`
+		SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at 
+		FROM team_members 
+		WHERE team_id = $1 AND (role = $2 OR role = $3 OR role = $4 OR role = $5) AND status = $6 
+		ORDER BY CASE role 
+			WHEN 'CEO' THEN 1 
+			WHEN 'CTO' THEN 2 
+			WHEN 'CMO' THEN 3 
+			WHEN 'CFO' THEN 4 
+		END`, team.Id, RoleCEO, RoleCTO, RoleCMO, RoleCFO, TeamMemberStatusActive)
 	if err != nil {
 		return
 	}
@@ -907,7 +917,7 @@ func (team *Team) IsCoreMember(user_id int) (bool, error) {
 	return team_member.Role == RoleCEO || team_member.Role == "CTO" || team_member.Role == RoleCMO || team_member.Role == RoleCFO, nil
 }
 
-// 查询一个$事业茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = “CEO”，返回 (team_member TeamMember,err error)
+// 查询一个$事业茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = "CEO"，返回 (team_member TeamMember,err error)
 // AWS CodeWhisperer assist in writing
 func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 	team_member = TeamMember{}
