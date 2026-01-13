@@ -131,6 +131,12 @@ func GroupMemberInvitePost(w http.ResponseWriter, r *http.Request) {
 		level = 2 // 默认为次级
 	}
 
+	// 转换角色字符串为整数
+	roleInt := dao.GroupRoleMember // 默认为成员团队
+	if roleStr == "最高管理团队" {
+		roleInt = dao.GroupRoleTopManagement
+	}
+
 	// 获取集团并检查权限
 	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
@@ -161,7 +167,7 @@ func GroupMemberInvitePost(w http.ResponseWriter, r *http.Request) {
 		GroupId:      groupId,
 		TeamId:       teamId,
 		InviteWord:   inviteWord,
-		Role:         roleStr,
+		Role:         roleInt,
 		Level:        level,
 		Status:       0,
 		AuthorUserId: s_u.Id,

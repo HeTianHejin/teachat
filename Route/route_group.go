@@ -383,15 +383,19 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 		level = 2 // 默认为次级
 	}
 
-	if role == "" {
-		role = "成员团队"
+	// 转换角色字符串为整数
+	roleInt := dao.GroupRoleMember // 默认为成员团队
+	if role == "最高管理团队" {
+		roleInt = dao.GroupRoleTopManagement
+	} else if role == "" {
+		role = "成员团队" // 保持原始字符串用于显示或其他用途
 	}
 
 	member := dao.GroupMember{
 		GroupId: groupId,
 		TeamId:  teamId,
 		Level:   level,
-		Role:    role,
+		Role:    roleInt,
 		Status:  dao.GroupMemberStatusActive,
 		UserId:  s_u.Id,
 	}
@@ -867,7 +871,7 @@ func createGroupWithFirstMember(group *dao.Group, firstTeamId int, userId int) e
 		GroupId: group.Id,
 		TeamId:  firstTeamId,
 		Level:   1,
-		Role:    "最高管理团队",
+		Role:    dao.GroupRoleTopManagement,
 		Status:  dao.GroupMemberStatusActive,
 		UserId:  userId,
 	}

@@ -8,6 +8,14 @@ func TeamMemberRoleName(role int) string {
 	return "未知"
 }
 
+// GroupRoleName 将集团成员角色ID转换为角色名称
+func GroupRoleName(role int) string {
+	if name, ok := GroupRoleNameMap[role]; ok {
+		return name
+	}
+	return "未知"
+}
+
 // 集团邀请团队加盟邀请函
 type GroupInvitationBean struct {
 	Invitation GroupInvitation

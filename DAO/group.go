@@ -44,6 +44,20 @@ const (
 	GroupMemberStatusPending                              // 待审核（申请中）
 )
 
+// 集团成员角色
+const (
+	GroupRoleUnknown        = 0 // 未知
+	GroupRoleTopManagement  = 1 // 最高管理团队
+	GroupRoleMember         = 2 // 成员团队
+)
+
+// 集团成员角色名称映射
+var GroupRoleNameMap = map[int]string{
+	GroupRoleUnknown:       "未知",
+	GroupRoleTopManagement: "最高管理团队",
+	GroupRoleMember:        "成员团队",
+}
+
 // GroupMember 集团成员，1 team = 1 member
 // 代表一个团队在集团中的成员资格
 type GroupMember struct {
@@ -52,7 +66,7 @@ type GroupMember struct {
 	GroupId   int               // 所属集团ID
 	TeamId    int               // 团队ID
 	Level     int               // 等级：1-最高级，2-次级，3-次次级...
-	Role      string            // 角色描述
+	Role      int               // 角色：0-未知，1-最高管理团队，2-成员团队
 	Status    GroupMemberStatus // 成员状态
 	UserId    int               // 登记操作的用户ID
 	CreatedAt time.Time
@@ -106,6 +120,14 @@ func (gm *GroupMember) GetStatus() string {
 	default:
 		return "未知"
 	}
+}
+
+// GetRoleName 返回集团成员角色名称
+func (gm *GroupMember) GetRoleName() string {
+	if name, ok := GroupRoleNameMap[gm.Role]; ok {
+		return name
+	}
+	return "未知"
 }
 
 // CreatedAtDate 返回集团成员创建时间的格式化字符串
@@ -458,7 +480,7 @@ type GroupInvitation struct {
 	GroupId      int
 	TeamId       int
 	InviteWord   string
-	Role         string
+	Role         int // 集团成员角色：0-未知，1-最高管理团队，2-成员团队
 	Level        int
 	Status       int // 0: 待处理, 1: 已查看, 2: 已接受, 3: 已拒绝, 4: 已过期
 	AuthorUserId int
@@ -486,6 +508,14 @@ var GroupInvitationStatus = map[int]string{
 // GetStatus 返回邀请函状态的中文描述
 func (gi *GroupInvitation) GetStatus() string {
 	return GroupInvitationStatus[gi.Status]
+}
+
+// GetRoleName 返回集团邀请函角色名称
+func (gi *GroupInvitation) GetRoleName() string {
+	if name, ok := GroupRoleNameMap[gi.Role]; ok {
+		return name
+	}
+	return "未知"
 }
 
 // CreatedAtDate 返回邀请函创建时间的格式化字符串
@@ -624,9 +654,9 @@ func GetGroupInvitationsByUserId(userId int) ([]GroupInvitation, error) {
 	          gi.role, gi.level, gi.status, gi.author_user_id, gi.created_at 
 	          FROM group_invitations gi 
 	          INNER JOIN team_members tm ON gi.team_id = tm.team_id 
-	          WHERE tm.user_id = $1 AND tm.role = 'CEO' 
+	          WHERE tm.user_id = $1 AND tm.role = $2 
 	          ORDER BY gi.created_at DESC`
-	rows, err := DB.Query(query, userId)
+	rows, err := DB.Query(query, userId, RoleCEO)
 	if err != nil {
 		return nil, err
 	}
