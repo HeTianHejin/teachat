@@ -96,17 +96,20 @@ func fetchSessionUserRelatedData(sess dao.Session) (s_u dao.User, family dao.Fam
 	// 读取已登陆用户资料
 	s_u, err = sess.User()
 	if err != nil {
-		return
+		if err.Error() == "session user_id is 0, invalid user id" {
+			return s_u, family, families, team, teams, place, places, fmt.Errorf("invalid session: user_id is 0 for email %s", sess.Email)
+		}
+		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get user from session for email %s: %w", sess.Email, err)
 	}
 
 	member_default_family, err := getLastDefaultFamilyByUserId(s_u.Id)
 	if err != nil {
-		return
+		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get default family for user %s: %w", s_u.Email, err)
 	}
 
 	member_all_families, err := dao.GetAllFamilies(s_u.Id)
 	if err != nil {
-		return
+		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get all families for user %s: %w", s_u.Email, err)
 	}
 	//remove member_default_family from member_all_families
 	for i, family := range member_all_families {
@@ -119,12 +122,12 @@ func fetchSessionUserRelatedData(sess dao.Session) (s_u dao.User, family dao.Fam
 	member_all_families = append(member_all_families, dao.FamilyUnknown)
 	defaultTeam, err := s_u.GetLastDefaultTeam()
 	if err != nil {
-		return
+		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get default team for user %s: %w", s_u.Email, err)
 	}
 
 	survivalTeams, err := s_u.SurvivalTeams()
 	if err != nil {
-		return
+		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get survival teams for user %s: %w", s_u.Email, err)
 	}
 	for i, team := range survivalTeams {
 		if team.Id == defaultTeam.Id {
@@ -132,22 +135,15 @@ func fetchSessionUserRelatedData(sess dao.Session) (s_u dao.User, family dao.Fam
 			break
 		}
 	}
-	// 把系统默认团队资料加入teams
-	teamFreelancer, err := dao.GetTeam(dao.TeamIdFreelancer)
-	if err != nil {
-		util.Debug("cannot fetch team by id", dao.TeamIdFreelancer, err)
-		return
-	}
-	survivalTeams = append(survivalTeams, teamFreelancer)
 
 	default_place, err := s_u.GetLastDefaultPlace()
-	if err != nil && errors.Is(err, sql.ErrNoRows) {
-		return
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get default place for user %s: %w", s_u.Email, err)
 	}
 
 	places, err = s_u.GetAllBindPlaces()
 	if err != nil {
-		return
+		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get all bind places for user %s: %w", s_u.Email, err)
 	}
 	if len(places) > 0 {
 		//移除默认地方

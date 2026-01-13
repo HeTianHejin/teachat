@@ -131,6 +131,10 @@ func (session *Session) Delete() (err error) {
 
 // Get the user from the session
 func (session *Session) User() (user User, err error) {
+	// Check if session.UserId is valid (not 0)
+	if session.UserId == 0 {
+		return user, fmt.Errorf("session user_id is 0, invalid user id")
+	}
 	//user = User{}
 	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", session.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
