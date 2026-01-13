@@ -445,44 +445,37 @@ func (user *User) GetLastDefaultFamily() (Family, error) {
 }
 
 // ParentMemberFamilies 用户担任父母角色的全部家庭
-func ParentMemberFamilies(user_id int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func ParentMemberFamilies(user_id int, ctx context.Context) ([]Family, error) {
+
 	return queryFamiliesByUserRole(ctx, user_id, []int{FamilyMemberRoleHusband, FamilyMemberRoleWife})
 }
 
 // ParentMemberOpenFamilies 用户担任父母角色的公开家庭
-func ParentMemberOpenFamilies(user_id int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func ParentMemberOpenFamilies(user_id int, ctx context.Context) ([]Family, error) {
+
 	return queryFamiliesByUserRoleAndOpen(ctx, user_id, []int{FamilyMemberRoleHusband, FamilyMemberRoleWife}, true)
 }
 
 // ParentMemberPrivateFamilies 用户担任父母角色的私密家庭
-func ParentMemberPrivateFamilies(user_id int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func ParentMemberPrivateFamilies(user_id int, ctx context.Context) ([]Family, error) {
+
 	return queryFamiliesByUserRoleAndOpen(ctx, user_id, []int{FamilyMemberRoleHusband, FamilyMemberRoleWife}, false)
 }
 
 // ChildMemberFamilies 用户担任子女角色的全部家庭
-func ChildMemberFamilies(user_id int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func ChildMemberFamilies(user_id int, ctx context.Context) ([]Family, error) {
+
 	return queryFamiliesByUserRole(ctx, user_id, []int{FamilyMemberRoleDaughter, FamilyMemberRoleSon})
 }
 
 // OtherMemberFamilies 用户担任其他角色的全部家庭
-func OtherMemberFamilies(user_id int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func OtherMemberFamilies(user_id int, ctx context.Context) ([]Family, error) {
+
 	return queryFamiliesByUserRole(ctx, user_id, []int{FamilyMemberRolePet})
 }
 
 // ResignMemberFamilies 用户声明离开的家庭
-func ResignMemberFamilies(user_id int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func ResignMemberFamilies(user_id int, ctx context.Context) ([]Family, error) {
 
 	query := `SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, 
 		f.husband_from_family_id, f.wife_from_family_id, f.status, f.created_at, f.updated_at, f.logo, f.is_open, f.deleted_at, f.perspective_user_id 
@@ -497,9 +490,7 @@ func ResignMemberFamilies(user_id int) ([]Family, error) {
 }
 
 // GetAllAuthorFamilies 获取用户登记的全部家庭
-func GetAllAuthorFamilies(user_id int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func GetAllAuthorFamilies(user_id int, ctx context.Context) ([]Family, error) {
 
 	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
@@ -514,29 +505,29 @@ func GetAllAuthorFamilies(user_id int) ([]Family, error) {
 
 // CountAllAuthorFamilies 统计用户登记的全部家庭数量
 func CountAllAuthorFamilies(user_id int) (int, error) {
-	ctx, cancel := getContext()
-	defer cancel()
 
 	var count int
-	err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM families WHERE author_id = $1 AND deleted_at IS NULL", user_id).Scan(&count)
+	err := DB.QueryRow("SELECT COUNT(*) FROM families WHERE author_id = $1 AND deleted_at IS NULL", user_id).Scan(&count)
 	return count, wrapError("CountAllAuthorFamilies", err)
 }
 
 // CountAllfamilies 统计用户所属家庭数量
 func CountAllfamilies(user_id int) (int, error) {
-	ctx, cancel := getContext()
-	defer cancel()
 
 	var count int
-	err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE user_id = $1", user_id).Scan(&count)
+	err := DB.QueryRow("SELECT COUNT(*) FROM family_members WHERE user_id = $1", user_id).Scan(&count)
 	return count, wrapError("CountAllfamilies", err)
 }
 
 // 获取用户视角
 
 // GetAllFamilies 获取用户所属的全部家庭
-func GetAllFamilies(user_id int) ([]Family, error) {
-	ctx, cancel := getContext()
+func GetAllFamilies(user_id int, ctx context.Context) ([]Family, error) {
+	if user_id == 0 {
+		return nil, errors.New("user_id is required")
+	}
+	// 5秒超时
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	query := `SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, f.has_child, 
@@ -607,8 +598,6 @@ func (f *Family) Create() error {
 	if err := f.Validate(); err != nil {
 		return err
 	}
-	ctx, cancel := getContext()
-	defer cancel()
 
 	// PerspectiveUserId默认等于AuthorId
 	if f.PerspectiveUserId == 0 {
@@ -619,7 +608,7 @@ func (f *Family) Create() error {
 		husband_from_family_id, wife_from_family_id, status, created_at, logo, is_open, perspective_user_id) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid`
 
-	err := DB.QueryRowContext(ctx, query, Random_UUID(), f.AuthorId, f.Name, f.Introduction,
+	err := DB.QueryRow(query, Random_UUID(), f.AuthorId, f.Name, f.Introduction,
 		f.IsMarried, f.HasChild, f.HusbandFromFamilyId, f.WifeFromFamilyId, f.Status,
 		time.Now(), f.Logo, f.IsOpen, f.PerspectiveUserId).Scan(&f.Id, &f.Uuid)
 
@@ -682,9 +671,7 @@ func GetFamily(family_id int) (family Family, err error) {
 }
 
 // GetFamiliesByAuthorId 根据作者ID获取家庭列表
-func GetFamiliesByAuthorId(authorId int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func GetFamiliesByAuthorId(authorId int, ctx context.Context) ([]Family, error) {
 
 	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
@@ -804,14 +791,12 @@ func (fm *FamilyMember) Create() error {
 	if err := fm.Validate(); err != nil {
 		return err
 	}
-	ctx, cancel := getContext()
-	defer cancel()
 
 	query := `INSERT INTO family_members (uuid, family_id, user_id, role, is_adult, nick_name, 
 		is_adopted, birthday, death_date, order_of_seniority, created_at) 
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid`
 
-	err := DB.QueryRowContext(ctx, query, Random_UUID(), fm.FamilyId, fm.UserId, fm.Role,
+	err := DB.QueryRow(query, Random_UUID(), fm.FamilyId, fm.UserId, fm.Role,
 		fm.IsAdult, fm.NickName, fm.IsAdopted, fm.Birthday, fm.DeathDate, fm.OrderOfSeniority, time.Now()).Scan(&fm.Id, &fm.Uuid)
 
 	return wrapError("FamilyMember.Create", err)
@@ -942,11 +927,9 @@ func ParseDate(dateStr string) (time.Time, error) {
 
 // CountFamilyMembers 统计家庭总成员数
 func CountFamilyMembers(familyId int) (int, error) {
-	ctx, cancel := getContext()
-	defer cancel()
 
 	var count int
-	err := DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE family_id=$1", familyId).Scan(&count)
+	err := DB.QueryRow("SELECT COUNT(*) FROM family_members WHERE family_id=$1", familyId).Scan(&count)
 	return count, wrapError("CountFamilyMembers", err)
 }
 
@@ -955,7 +938,7 @@ func CountFamilyParentAndChildMembers(familyId int, ctx context.Context) (count 
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	err = DB.QueryRowContext(ctx, "SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND role IN ($2, $3, $4, $5)", familyId, FamilyMemberRoleHusband, FamilyMemberRoleWife, FamilyMemberRoleDaughter, FamilyMemberRoleSon).Scan(&count)
+	err = DB.QueryRow("SELECT COUNT(*) FROM family_members WHERE family_id=$1 AND role IN ($2, $3, $4, $5)", familyId, FamilyMemberRoleHusband, FamilyMemberRoleWife, FamilyMemberRoleDaughter, FamilyMemberRoleSon).Scan(&count)
 	if err != nil {
 		return
 	}
@@ -972,9 +955,7 @@ func (f *Family) IsOnlyOneMember() (isOnlyOne bool, err error) {
 }
 
 // SoftDelete 软删除家庭
-func (f *Family) SoftDelete() error {
-	ctx, cancel := getContext()
-	defer cancel()
+func (f *Family) SoftDelete(ctx context.Context) error {
 
 	now := time.Now()
 	f.DeletedAt = &now
@@ -997,9 +978,7 @@ func (f *Family) SoftDelete() error {
 }
 
 // Restore 恢复软删除的家庭
-func (f *Family) Restore() error {
-	ctx, cancel := getContext()
-	defer cancel()
+func (f *Family) Restore(ctx context.Context) error {
 
 	f.DeletedAt = nil
 	now := time.Now()
@@ -1028,9 +1007,7 @@ func (f *Family) IsDeleted() bool {
 }
 
 // GetDeletedFamiliesByAuthorId 获取用户已删除的家庭列表
-func GetDeletedFamiliesByAuthorId(authorId int) ([]Family, error) {
-	ctx, cancel := getContext()
-	defer cancel()
+func GetDeletedFamiliesByAuthorId(authorId int, ctx context.Context) ([]Family, error) {
 
 	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
@@ -1049,11 +1026,8 @@ func GetFamilyIncludingDeleted(family_id int) (family Family, err error) {
 		return FamilyUnknown, nil
 	}
 
-	ctx, cancel := getContext()
-	defer cancel()
-
 	query := "SELECT id, uuid, author_id, name, introduction, is_married, has_child, husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id FROM families WHERE id=$1"
-	err = DB.QueryRowContext(ctx, query, family_id).Scan(
+	err = DB.QueryRow(query, family_id).Scan(
 		&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction,
 		&family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId,
 		&family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen, &family.DeletedAt, &family.PerspectiveUserId)

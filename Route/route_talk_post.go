@@ -122,7 +122,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	pD.SessUser = s_u
 	// 从会话查获当前浏览陛下资料荚
-	s_u, s_default_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s)
+	s_u, s_default_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get user-related data from session", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")

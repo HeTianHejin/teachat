@@ -106,7 +106,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 2. get user's family - 默认显示公开家庭
-	family_slice, err := dao.ParentMemberOpenFamilies(s_u.Id)
+	family_slice, err := dao.ParentMemberOpenFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's family given id", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
@@ -234,7 +234,7 @@ func ParentFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	family_slice, err := dao.ChildMemberFamilies(s_u.Id)
+	family_slice, err := dao.ChildMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's parent families", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有父代家庭茶团。", s_u.Email))
@@ -276,7 +276,7 @@ func ChildFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 查找用户作为父母的家庭，然后查找这些家庭的子女成员，再查找子女的家庭
-	parent_families, err := dao.ParentMemberFamilies(s_u.Id)
+	parent_families, err := dao.ParentMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's families", err)
 		report(w, s_u, s_u, "你好，茶博士摸摸头，未能查看子代家庭茶团列表。")
@@ -288,7 +288,7 @@ func ChildFamilies(w http.ResponseWriter, r *http.Request) {
 		children, _ := pf.ChildMembers()
 		for _, child := range children {
 			if child.IsAdult {
-				child_fams, _ := dao.ParentMemberFamilies(child.UserId)
+				child_fams, _ := dao.ParentMemberFamilies(child.UserId, r.Context())
 				child_families = append(child_families, child_fams...)
 			}
 		}
@@ -329,7 +329,7 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 查找用户作为父母的家庭
-	my_families, err := dao.ParentMemberFamilies(s_u.Id)
+	my_families, err := dao.ParentMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's families", err)
 		report(w, s_u, s_u, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
@@ -344,16 +344,16 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 			// 找到配偶（不是自己的父母成员）
 			if parent.UserId != s_u.Id {
 				// 获取配偶作为子女的家庭（配偶父代）
-				spouse_parent_fams, _ := dao.ChildMemberFamilies(parent.UserId)
+				spouse_parent_fams, _ := dao.ChildMemberFamilies(parent.UserId, r.Context())
 				inlaw_families = append(inlaw_families, spouse_parent_fams...)
 
 				// 获取配偶子女的家庭（配偶子代）
-				spouse_child_fams, _ := dao.ParentMemberFamilies(parent.UserId)
+				spouse_child_fams, _ := dao.ParentMemberFamilies(parent.UserId, r.Context())
 				for _, scf := range spouse_child_fams {
 					children, _ := scf.ChildMembers()
 					for _, child := range children {
 						if child.IsAdult {
-							child_fams, _ := dao.ParentMemberFamilies(child.UserId)
+							child_fams, _ := dao.ParentMemberFamilies(child.UserId, r.Context())
 							inlaw_families = append(inlaw_families, child_fams...)
 						}
 					}
@@ -397,7 +397,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户声明离开的家庭
-	resign_families, err := dao.ResignMemberFamilies(s_u.Id)
+	resign_families, err := dao.ResignMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's resign families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
@@ -405,7 +405,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户已删除的家庭
-	deleted_families, err := dao.GetDeletedFamiliesByAuthorId(s_u.Id)
+	deleted_families, err := dao.GetDeletedFamiliesByAuthorId(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's deleted families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
@@ -448,7 +448,7 @@ func HomePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	family_slice, err := dao.ParentMemberPrivateFamilies(s_u.Id)
+	family_slice, err := dao.ParentMemberPrivateFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's private family", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
@@ -489,7 +489,7 @@ func ParentPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	family_slice, err := dao.ChildMemberFamilies(s_u.Id)
+	family_slice, err := dao.ChildMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's parent families", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有父代家庭茶团。", s_u.Email))
@@ -537,7 +537,7 @@ func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	my_families, err := dao.ParentMemberFamilies(s_u.Id)
+	my_families, err := dao.ParentMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
@@ -549,20 +549,20 @@ func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		parents, _ := my_fam.ParentMembers()
 		for _, parent := range parents {
 			if parent.UserId != s_u.Id {
-				spouse_parent_fams, _ := dao.ChildMemberFamilies(parent.UserId)
+				spouse_parent_fams, _ := dao.ChildMemberFamilies(parent.UserId, r.Context())
 				for _, spf := range spouse_parent_fams {
 					if !spf.IsOpen {
 						inlaw_families = append(inlaw_families, spf)
 					}
 				}
 
-				spouse_child_fams, _ := dao.ParentMemberFamilies(parent.UserId)
+				spouse_child_fams, _ := dao.ParentMemberFamilies(parent.UserId, r.Context())
 				for _, scf := range spouse_child_fams {
 					if !scf.IsOpen {
 						children, _ := scf.ChildMembers()
 						for _, child := range children {
 							if child.IsAdult {
-								child_fams, _ := dao.ParentMemberFamilies(child.UserId)
+								child_fams, _ := dao.ParentMemberFamilies(child.UserId, r.Context())
 								for _, cf := range child_fams {
 									if !cf.IsOpen {
 										inlaw_families = append(inlaw_families, cf)
@@ -610,14 +610,14 @@ func GonePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resign_families, err := dao.ResignMemberFamilies(s_u.Id)
+	resign_families, err := dao.ResignMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's resign families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
 
-	deleted_families, err := dao.GetDeletedFamiliesByAuthorId(s_u.Id)
+	deleted_families, err := dao.GetDeletedFamiliesByAuthorId(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(s_u.Id, "Cannot get user's deleted families", err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
@@ -1040,7 +1040,7 @@ func EditFamilyGet(w http.ResponseWriter, r *http.Request) {
 	parentMembers, _ := family.ParentMembers()
 	var parentFamilies []dao.Family
 	for _, pm := range parentMembers {
-		childFamilies, _ := dao.ChildMemberFamilies(pm.UserId)
+		childFamilies, _ := dao.ChildMemberFamilies(pm.UserId, r.Context())
 		parentFamilies = append(parentFamilies, childFamilies...)
 	}
 

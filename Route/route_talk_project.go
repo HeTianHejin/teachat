@@ -723,7 +723,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 4. 获取用户相关数据
-	sessUserData, err := prepareUserPageData(&sess)
+	sessUserData, err := prepareUserPageData(&sess, r.Context())
 	if err != nil {
 		util.Debug("准备用户数据失败", "error", err)
 		report(w, s_u, "你好，三人行，必有大佬焉，请稍后再试。")
@@ -933,7 +933,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 已登陆用户
 
 	//从会话查获当前浏览用户资料荚
-	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s)
+	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get user-related data from session", s.Email, err)
 		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")

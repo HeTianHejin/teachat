@@ -46,6 +46,16 @@ func scanFamilies(rows *sql.Rows) ([]Family, error) {
 
 // queryFamiliesByUserRole 通用查询函数：根据用户ID和角色查询家庭
 func queryFamiliesByUserRole(ctx context.Context, userID int, roles []int) ([]Family, error) {
+	if len(roles) == 0 {
+		return nil, fmt.Errorf("no roles specified")
+	}
+	if userID <= 0 {
+		return nil, fmt.Errorf("invalid userID: %d", userID)
+	}
+	// 5秒超时
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
 	query := `SELECT f.id, f.uuid, f.author_id, f.name, f.introduction, f.is_married, 
 		f.has_child, f.husband_from_family_id, f.wife_from_family_id, f.status, 
 		f.created_at, f.updated_at, f.logo, f.is_open, f.deleted_at, f.perspective_user_id 

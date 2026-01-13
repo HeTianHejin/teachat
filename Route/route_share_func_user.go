@@ -1,6 +1,7 @@
 package route
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -92,7 +93,7 @@ func fetchUserDefaultDataBeanSlice(user_slice []dao.User) (userbean_slice []dao.
 }
 
 // Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队
-func fetchSessionUserRelatedData(sess dao.Session) (s_u dao.User, family dao.Family, families []dao.Family, team dao.Team, teams []dao.Team, place dao.Place, places []dao.Place, err error) {
+func fetchSessionUserRelatedData(sess dao.Session, ctx context.Context) (s_u dao.User, family dao.Family, families []dao.Family, team dao.Team, teams []dao.Team, place dao.Place, places []dao.Place, err error) {
 	// 读取已登陆用户资料
 	s_u, err = sess.User()
 	if err != nil {
@@ -107,7 +108,7 @@ func fetchSessionUserRelatedData(sess dao.Session) (s_u dao.User, family dao.Fam
 		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get default family for user %s: %w", s_u.Email, err)
 	}
 
-	member_all_families, err := dao.GetAllFamilies(s_u.Id)
+	member_all_families, err := dao.GetAllFamilies(s_u.Id, ctx)
 	if err != nil {
 		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get all families for user %s: %w", s_u.Email, err)
 	}
@@ -159,8 +160,8 @@ func fetchSessionUserRelatedData(sess dao.Session) (s_u dao.User, family dao.Fam
 }
 
 // 准备用户相关数据
-func prepareUserPageData(sess *dao.Session) (*dao.UserPageData, error) {
-	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := fetchSessionUserRelatedData(*sess)
+func prepareUserPageData(sess *dao.Session, ctx context.Context) (*dao.UserPageData, error) {
+	user, defaultFamily, survivalFamilies, defaultTeam, survivalTeams, defaultPlace, places, err := fetchSessionUserRelatedData(*sess, ctx)
 	if err != nil {
 		return nil, err
 	}

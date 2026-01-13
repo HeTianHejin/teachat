@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"time"
 )
 
@@ -157,12 +158,9 @@ func GetRelatedFamilies(familyId int) ([]Family, error) {
 
 // GetThreeGenerationUsers 获取三代以内的所有用户（用于利益回避）
 // 包括：父母辈、本人辈、子女辈
-func GetThreeGenerationUsers(userId int) ([]int, error) {
-	ctx, cancel := getContext()
-	defer cancel()
-
+func GetThreeGenerationUsers(userId int, ctx context.Context) ([]int, error) {
 	// 1. 获取用户所在的所有家庭
-	userFamilies, err := GetAllFamilies(userId)
+	userFamilies, err := GetAllFamilies(userId, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -234,13 +232,13 @@ func GetThreeGenerationUsers(userId int) ([]int, error) {
 }
 
 // ShouldAvoidConflict 判断两个用户是否需要利益回避
-func ShouldAvoidConflict(userId1, userId2 int) (bool, error) {
+func ShouldAvoidConflict(userId1, userId2 int, ctx context.Context) (bool, error) {
 	if userId1 == userId2 {
 		return true, nil
 	}
 
 	// 获取userId1的三代以内亲属
-	relatives, err := GetThreeGenerationUsers(userId1)
+	relatives, err := GetThreeGenerationUsers(userId1, ctx)
 	if err != nil {
 		return false, err
 	}

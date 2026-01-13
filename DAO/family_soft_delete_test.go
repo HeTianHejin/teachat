@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func TestFamilySoftDelete(t *testing.T) {
 	}
 
 	// 测试软删除
-	err = family.SoftDelete()
+	err = family.SoftDelete(context.Background())
 	if err != nil {
 		t.Fatalf("软删除家庭失败: %v", err)
 	}
@@ -48,7 +49,7 @@ func TestFamilySoftDelete(t *testing.T) {
 	}
 
 	// 测试恢复
-	err = family.Restore()
+	err = family.Restore(context.Background())
 	if err != nil {
 		t.Fatalf("恢复家庭失败: %v", err)
 	}
@@ -96,7 +97,7 @@ func TestFamilyQueryWithSoftDelete(t *testing.T) {
 	}
 
 	// 软删除家庭
-	err = family.SoftDelete()
+	err = family.SoftDelete(context.Background())
 	if err != nil {
 		t.Fatalf("软删除家庭失败: %v", err)
 	}

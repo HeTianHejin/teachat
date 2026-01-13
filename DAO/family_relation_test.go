@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"testing"
 )
 
@@ -90,8 +91,7 @@ func TestFamilyRelationAvoidance(t *testing.T) {
 	}
 
 	// 测试利益回避
-	// 1. 张三和李四应该回避（夫妻）
-	shouldAvoid, err := ShouldAvoidConflict(1, 2)
+	shouldAvoid, err := ShouldAvoidConflict(1, 2, context.Background())
 	if err != nil {
 		t.Fatalf("检查回避关系失败: %v", err)
 	}
@@ -100,7 +100,7 @@ func TestFamilyRelationAvoidance(t *testing.T) {
 	}
 
 	// 2. 张三和王五应该回避（父子）
-	shouldAvoid, err = ShouldAvoidConflict(1, 10)
+	shouldAvoid, err = ShouldAvoidConflict(1, 10, context.Background())
 	if err != nil {
 		t.Fatalf("检查回避关系失败: %v", err)
 	}
@@ -109,7 +109,7 @@ func TestFamilyRelationAvoidance(t *testing.T) {
 	}
 
 	// 3. 李四和王五应该回避（婆媳）
-	shouldAvoid, err = ShouldAvoidConflict(2, 10)
+	shouldAvoid, err = ShouldAvoidConflict(2, 10, context.Background())
 	if err != nil {
 		t.Fatalf("检查回避关系失败: %v", err)
 	}
@@ -118,7 +118,7 @@ func TestFamilyRelationAvoidance(t *testing.T) {
 	}
 
 	// 4. 张三和陌生人不应该回避
-	shouldAvoid, err = ShouldAvoidConflict(1, 999)
+	shouldAvoid, err = ShouldAvoidConflict(1, 999, context.Background())
 	if err != nil {
 		t.Fatalf("检查回避关系失败: %v", err)
 	}
@@ -149,9 +149,9 @@ func TestSameGenderFamily(t *testing.T) {
 
 	// 添加成员
 	members := []FamilyMember{
-		{FamilyId: aliceBobFamily.Id, UserId: 20, Role: FamilyMemberRoleWife, IsAdult: true},   // Alice
-		{FamilyId: aliceBobFamily.Id, UserId: 21, Role: FamilyMemberRoleWife, IsAdult: true},   // Bob
-		{FamilyId: aliceBobFamily.Id, UserId: 22, Role: FamilyMemberRoleSon, IsAdult: false},   // Charlie
+		{FamilyId: aliceBobFamily.Id, UserId: 20, Role: FamilyMemberRoleWife, IsAdult: true}, // Alice
+		{FamilyId: aliceBobFamily.Id, UserId: 21, Role: FamilyMemberRoleWife, IsAdult: true}, // Bob
+		{FamilyId: aliceBobFamily.Id, UserId: 22, Role: FamilyMemberRoleSon, IsAdult: false}, // Charlie
 	}
 
 	for _, member := range members {
@@ -161,7 +161,7 @@ func TestSameGenderFamily(t *testing.T) {
 	}
 
 	// 测试回避
-	shouldAvoid, err := ShouldAvoidConflict(20, 21) // Alice和Bob
+	shouldAvoid, err := ShouldAvoidConflict(20, 21, context.Background()) // Alice和Bob
 	if err != nil {
 		t.Fatalf("检查回避关系失败: %v", err)
 	}
@@ -169,7 +169,7 @@ func TestSameGenderFamily(t *testing.T) {
 		t.Error("Alice和Bob应该回避")
 	}
 
-	shouldAvoid, err = ShouldAvoidConflict(20, 22) // Alice和Charlie
+	shouldAvoid, err = ShouldAvoidConflict(20, 22, context.Background()) // Alice和Charlie
 	if err != nil {
 		t.Fatalf("检查回避关系失败: %v", err)
 	}

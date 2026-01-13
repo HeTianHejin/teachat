@@ -507,7 +507,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 		if tD.ThreadBean.Thread.Class == dao.ThreadClassOpen || tD.ThreadBean.Thread.Class == dao.ThreadClassClosed {
 			//从会话查获当前浏览用户资料荚
-			s_u, s_d_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s)
+			s_u, s_d_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s, r.Context())
 			if err != nil {
 				util.Debug(" Cannot get user-related data from session", s_u.Id)
 				report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")

@@ -1,6 +1,8 @@
 package dao
 
 import (
+	"context"
+	"net/http"
 	"time"
 )
 
@@ -14,9 +16,9 @@ type FamilyTreeNode struct {
 
 // GetUserPerspectiveFamilyTree 获取用户视角的家族树
 // 返回以用户为中心的三代家族树
-func GetUserPerspectiveFamilyTree(userId int) (*FamilyTreeNode, error) {
+func GetUserPerspectiveFamilyTree(userId int, ctx context.Context) (*FamilyTreeNode, error) {
 	// 获取用户所在的所有家庭
-	userFamilies, err := GetAllFamilies(userId)
+	userFamilies, err := GetAllFamilies(userId, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -221,9 +223,9 @@ func GetUserFamilyMessagePreferences(userId int) ([]FamilyMessagePreference, err
 }
 
 // ShouldReceiveMessageFrom 判断用户是否应该接收来自某家庭成员的消息
-func ShouldReceiveMessageFrom(userId int, senderUserId int) (bool, error) {
+func ShouldReceiveMessageFrom(userId int, senderUserId int, r *http.Request) (bool, error) {
 	// 1. 获取发送者所在的家庭
-	senderFamilies, err := GetAllFamilies(senderUserId)
+	senderFamilies, err := GetAllFamilies(senderUserId, r.Context())
 	if err != nil {
 		return false, err
 	}
