@@ -72,14 +72,12 @@ func main() {
 	mux.HandleFunc("/v1/team/new", route.NewTeamGet)
 	mux.HandleFunc("/v1/team/create", route.CreateTeamPost)
 	mux.HandleFunc("/v1/team/detail", route.TeamDetail)
-	mux.HandleFunc("/v1/team/logo", route.TeamLogoUpload)
 	mux.HandleFunc("/v1/team/invitations", route.TeamInvitations)
 	mux.HandleFunc("/v1/team/applications", route.TeamApplications)
 	mux.HandleFunc("/v1/team/members/left", route.TeamMembersLeft)
 
 	mux.HandleFunc("/v1/team/manage", route.HandleManageTeam)
 	mux.HandleFunc("/v1/team/notification/invitation", route.TeamNotificationInvitations)
-	mux.HandleFunc("/v1/team/edit", route.HandleEditTeam)
 	mux.HandleFunc("/v1/team/member_add", route.TeamMemberAddGet)
 	mux.HandleFunc("/v1/team/search_user", route.HandleTeamSearchUser)
 	mux.HandleFunc("/v1/team/core_manage", route.CoreManage)
@@ -88,7 +86,9 @@ func main() {
 	mux.HandleFunc("/v1/team_member/role", route.HandleMemberRole)
 	mux.HandleFunc("/v1/team_member/role_changed", route.MemberRoleChanged)
 	mux.HandleFunc("/v1/team_members/fired", route.MemberFired)
-
+	// 资料更新
+	mux.HandleFunc("/v1/team/edit", route.HandleEditTeam)
+	mux.HandleFunc("/v1/team/logo", route.TeamLogoUpload)
 	// 茶友个人与团队关系
 	mux.HandleFunc("/v1/team/default", route.SetDefaultTeam)
 	mux.HandleFunc("/v1/teams/hold", route.HoldTeams)

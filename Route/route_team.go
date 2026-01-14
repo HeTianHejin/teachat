@@ -1025,12 +1025,16 @@ func teamLogoUploadPost(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			report(w, s_u, "茶博士微笑说，团队图标修改成功。")
+			return
 		} else {
+			util.Debug("fail to save upload team logo image", errAvatar)
 			report(w, s_u, "图片上传处理遇到错误：%s", errAvatar)
+			return
 		}
 
+	} else {
+		report(w, s_u, "你好，上传茶团图标出现权限不足的问题。")
 	}
-	report(w, s_u, "你好，上传茶团图标出现权限不足的问题。")
 
 }
 
@@ -1057,8 +1061,14 @@ func teamLogoUploadGet(w http.ResponseWriter, r *http.Request) {
 	// 检查是否team的管理员
 	if canManageTeam(&team, s_u, w) {
 		//如果是创建者，那么就可以上传图标
-
-		generateHTML(w, &uuid, "layout", "navbar.private", "team_/v1/team/logo")
+		pageData := struct {
+			SessUser *dao.User
+			Team     *dao.Team
+		}{
+			SessUser: &s_u,
+			Team:     &team,
+		}
+		generateHTML(w, &pageData, "layout", "navbar.private", "team.logo_upload")
 		return
 	}
 	report(w, s_u, "你好，茶博士摸摸头，居然说只有团建人可以修改这个茶团相关资料。")

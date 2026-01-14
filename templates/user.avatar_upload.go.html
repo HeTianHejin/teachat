@@ -1,29 +1,458 @@
 {{ define "content" }}
+
+<style>
+.preview-container {
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    padding: 30px;
+    text-align: center;
+    background-color: #f9f9f9;
+    margin: 20px 0;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.preview-container:hover {
+    border-color: #5bc0de;
+    background-color: #f0f8ff;
+}
+
+.preview-container.drag-over {
+    border-color: #5bc0de;
+    background-color: #e3f2fd;
+    transform: scale(1.02);
+}
+
+.preview-image {
+    max-width: 128px;
+    max-height: 128px;
+    margin: 10px auto;
+    display: block;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.upload-hint {
+    color: #777;
+    font-size: 14px;
+    margin-top: 10px;
+}
+
+.requirements {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px 20px;
+    margin: 20px 0;
+    border-radius: 4px;
+}
+
+.requirements h5 {
+    margin: 0 0 8px 0;
+    color: #856404;
+}
+
+.requirements ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #856404;
+}
+
+.requirements li {
+    margin: 4px 0;
+}
+
+.error-message {
+    color: #d9534f;
+    font-size: 14px;
+    margin-top: 10px;
+    display: none;
+    padding: 10px;
+    background-color: #f2dede;
+    border-left: 4px solid #d9534f;
+    border-radius: 4px;
+}
+
+.success-message {
+    color: #5cb85c;
+    font-size: 14px;
+    margin-top: 10px;
+    display: none;
+    padding: 10px;
+    background-color: #dff0d8;
+    border-left: 4px solid #5cb85c;
+    border-radius: 4px;
+}
+
+.processing-indicator {
+    display: none;
+    margin-top: 10px;
+    color: #5bc0de;
+    font-size: 14px;
+}
+
+.size-info {
+    background-color: #d9edf7;
+    border-left: 4px solid #5bc0de;
+    padding: 10px 15px;
+    margin: 15px 0;
+    border-radius: 4px;
+    font-size: 13px;
+    color: #31708f;
+}
+
+.size-info strong {
+    color: #0d6aad;
+}
+
+.comparison-preview {
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    margin: 20px 0;
+    padding: 20px;
+    background-color: #fafafa;
+    border-radius: 8px;
+}
+
+.preview-box {
+    text-align: center;
+    padding: 15px;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.preview-box h6 {
+    color: #777;
+    margin-bottom: 10px;
+    font-size: 12px;
+    text-transform: uppercase;
+}
+</style>
+
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-    <li><a href="/v1/user/biography?uuid={{ .SessUser.Uuid }}">用户中心</a></li>
-  <li class="active"><span style="font-style: italic;">更换个人头像</span></li>
+  <li><a href="/v1/user/biography?uuid={{ .SessUser.Uuid }}">用户中心</a></li>
+  <li class="active">更换个人头像</li>
 </ol>
 
-<h3>更新个人头像</h3>
+<div class="container">
+    <div class="row">
+        <div class="col-md-10 col-md-offset-1">
+            <h3 class="text-center" style="margin-bottom: 30px;">
+                <i class="glyphicon glyphicon-user"></i> 更新个人头像
+            </h3>
 
-<form action="/v1/user/avatar" method="post" class="form-horizontal" role="form" enctype="multipart/form-data">
-    <div class="form-group">
-        <legend>上传头像相片</legend>
-    </div>
-    <div class="form-group">
-        <div class="col-sm-10 col-sm-offset-1">
+            <form action="/v1/user/avatar" method="post" enctype="multipart/form-data" id="uploadForm">
+                <!-- 当前头像展示 -->
+                <div class="form-group">
+                    <label class="control-label">当前头像：</label>
+                    <div class="text-center">
+                        {{ if .SessUser.Avatar }}
+                        <img src="/v1/static/image/user/{{ .SessUser.Avatar }}.jpeg" alt="当前头像" class="img-circle" style="max-width: 128px; max-height: 128px;">
+                        {{ else }}
+                        <div class="text-muted" style="padding: 20px; background-color: #f9f9f9; border-radius: 4px;">暂无头像</div>
+                        {{ end }}
+                    </div>
+                </div>
 
-            <label for=" upload">请选择一张不大于64*64像素，小于30k的jpeg相片</label>
-            <input type="file" name="avatar" id="upload" class="form-control" required />
+                <!-- 图片上传区域 -->
+                <div class="form-group">
+                    <label class="control-label">上传新头像：</label>
+                    <div class="preview-container" id="dropZone">
+                        <div id="uploadHint">
+                            <i class="glyphicon glyphicon-cloud-upload" style="font-size: 48px; color: #5bc0de;"></i>
+                            <p class="upload-hint">点击选择或拖拽图片到此处</p>
+                            <p class="upload-hint" style="font-size: 12px;">支持 JPG、JPEG、PNG、GIF 等常见格式</p>
+                        </div>
+                        <input type="file" name="avatar" id="upload" accept="image/*" style="display: none;" />
+                        <canvas id="processCanvas" style="display: none;"></canvas>
+                    </div>
+                    <p class="error-message" id="errorMessage"></p>
+                    <p class="success-message" id="successMessage"></p>
+                    <div class="processing-indicator" id="processingIndicator">
+                        <i class="glyphicon glyphicon-refresh spinning"></i> 正在处理图片，请稍候...
+                    </div>
+                </div>
+
+                <!-- 图片尺寸信息 -->
+                <div id="sizeInfo" class="size-info" style="display: none;">
+                    <i class="glyphicon glyphicon-info-sign"></i> 
+                    原图尺寸：<strong id="originalSize"></strong>，已自动调整为 <strong>64×64</strong> 像素
+                </div>
+
+                <!-- 预览对比 -->
+                <div id="comparisonPreview" class="comparison-preview" style="display: none;">
+                    <div class="preview-box">
+                        <h6>原图预览</h6>
+                        <img id="originalPreview" class="preview-image" alt="原图">
+                    </div>
+                    <div class="preview-box">
+                        <h6>处理后 (64×64)</h6>
+                        <img id="processedPreview" class="preview-image" alt="处理后">
+                    </div>
+                </div>
+
+                <!-- 上传要求说明 -->
+                <div class="requirements">
+                    <h5><i class="glyphicon glyphicon-info-sign"></i> 智能处理说明：</h5>
+                    <ul>
+                        <li><strong>支持格式：</strong>JPG、JPEG、PNG、GIF 等所有常见图片格式</li>
+                        <li><strong>自动调整：</strong>系统会自动将图片裁剪/缩放到 64×64 像素</li>
+                        <li><strong>智能裁剪：</strong>保持图片比例，居中裁剪</li>
+                        <li><strong>文件大小：</strong>处理后通常小于 10KB</li>
+                        <li><strong>提示：</strong>建议使用正方形图片，效果更佳</li>
+                    </ul>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="form-group text-center" style="margin-top: 30px;">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                        <i class="glyphicon glyphicon-upload"></i> 上传头像
+                    </button>
+                    <a href="/v1/user/biography?uuid={{ .SessUser.Uuid }}" class="btn btn-default btn-lg">
+                        <i class="glyphicon glyphicon-remove"></i> 取消
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
-    <div class="form-group">
-        <div class="col-sm-10 col-sm-offset-2">
-            <button type="submit" class="btn btn-default">提交</button>
-        </div>
-    </div>
-</form>
+<style>
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+.spinning {
+    animation: spin 1s linear infinite;
+    display: inline-block;
+}
+</style>
+
+<script>
+(function() {
+    const dropZone = document.getElementById('dropZone');
+    const upload = document.getElementById('upload');
+    const uploadHint = document.getElementById('uploadHint');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const processingIndicator = document.getElementById('processingIndicator');
+    const sizeInfo = document.getElementById('sizeInfo');
+    const originalSize = document.getElementById('originalSize');
+    const originalPreview = document.getElementById('originalPreview');
+    const processedPreview = document.getElementById('processedPreview');
+    const comparisonPreview = document.getElementById('comparisonPreview');
+    const processCanvas = document.getElementById('processCanvas');
+
+    // 存储处理后的图片数据
+    let processedImageData = null;
+    let originalFileName = '';
+
+    // 点击上传区域触发文件选择
+    dropZone.addEventListener('click', function() {
+        upload.click();
+    });
+
+    // 拖拽文件处理
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    dropZone.addEventListener('dragenter', function(e) {
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragover', function(e) {
+        dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', function(e) {
+        dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', function(e) {
+        dropZone.classList.remove('drag-over');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    });
+
+    // 文件选择处理
+    upload.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            handleFile(this.files[0]);
+        }
+    });
+
+    // 处理文件
+    function handleFile(file) {
+        // 重置界面
+        resetUI();
+
+        // 检查文件类型
+        if (!file.type.startsWith('image/')) {
+            showError('请选择图片文件');
+            return;
+        }
+
+        originalFileName = file.name;
+
+        // 读取图片
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const img = new Image();
+            img.onload = function() {
+                // 显示原图预览
+                originalPreview.src = e.target.result;
+                
+                // 处理图片
+                processImage(img, file);
+            };
+            img.onerror = function() {
+                showError('图片读取失败，请选择有效的图片文件');
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 处理图片到64×64
+    function processImage(img, originalFile) {
+        showProcessing(true);
+
+        // 延迟执行以允许UI更新
+        setTimeout(function() {
+            try {
+                // 设置canvas尺寸
+                const targetSize = 64;
+                processCanvas.width = targetSize;
+                processCanvas.height = targetSize;
+                const ctx = processCanvas.getContext('2d');
+
+                // 智能裁剪：居中裁剪保持比例
+                let sourceX = 0, sourceY = 0, sourceWidth = img.width, sourceHeight = img.height;
+
+                if (img.width !== img.height) {
+                    // 如果不是正方形，计算居中裁剪区域
+                    const minSize = Math.min(img.width, img.height);
+                    sourceX = (img.width - minSize) / 2;
+                    sourceY = (img.height - minSize) / 2;
+                    sourceWidth = minSize;
+                    sourceHeight = minSize;
+                }
+
+                // 在canvas上绘制（自动缩放到64×64）
+                ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetSize, targetSize);
+
+                // 转换为JPEG格式
+                processCanvas.toBlob(function(blob) {
+                    showProcessing(false);
+
+                    // 检查处理后的文件大小
+                    if (blob.size > 30 * 1024) {
+                        showError('处理后文件仍然过大');
+                        return;
+                    }
+
+                    // 创建新的File对象
+                    const extension = originalFileName.split('.').pop();
+                    const baseName = originalFileName.replace('.' + extension, '');
+                    const newFile = new File([blob], baseName + '_processed.jpg', {
+                        type: 'image/jpeg',
+                        lastModified: new Date().getTime()
+                    });
+
+                    // 替换上传的文件
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(newFile);
+                    upload.files = dataTransfer.files;
+
+                    // 显示处理后的预览
+                    const processedDataUrl = processCanvas.toDataURL('image/jpeg', 0.92);
+                    processedPreview.src = processedDataUrl;
+
+                    // 更新界面信息
+                    originalSize.textContent = img.width + '×' + img.height + ' 像素';
+                    sizeInfo.style.display = 'block';
+                    comparisonPreview.style.display = 'flex';
+                    uploadHint.style.display = 'none';
+
+                    // 启用提交按钮
+                    showSuccess('图片处理完成！已自动调整为64×64像素');
+                    submitBtn.disabled = false;
+
+                    // 存储处理后的数据
+                    processedImageData = processedDataUrl;
+
+                }, 'image/jpeg', 0.92); // 0.92质量参数
+
+            } catch (error) {
+                showProcessing(false);
+                showError('图片处理失败：' + error.message);
+            }
+        }, 50);
+    }
+
+    // 显示处理中状态
+    function showProcessing(show) {
+        processingIndicator.style.display = show ? 'block' : 'none';
+        submitBtn.disabled = true;
+    }
+
+    // 重置UI
+    function resetUI() {
+        errorMessage.style.display = 'none';
+        errorMessage.textContent = '';
+        successMessage.style.display = 'none';
+        successMessage.textContent = '';
+        sizeInfo.style.display = 'none';
+        comparisonPreview.style.display = 'none';
+        uploadHint.style.display = 'block';
+        submitBtn.disabled = true;
+        originalPreview.src = '';
+        processedPreview.src = '';
+        processedImageData = null;
+    }
+
+    // 显示错误消息
+    function showError(message) {
+        errorMessage.textContent = '<i class="glyphicon glyphicon-exclamation-sign"></i> ' + message;
+        errorMessage.style.display = 'block';
+        successMessage.style.display = 'none';
+        submitBtn.disabled = true;
+    }
+
+    // 显示成功消息
+    function showSuccess(message) {
+        successMessage.textContent = '<i class="glyphicon glyphicon-ok-sign"></i> ' + message;
+        successMessage.style.display = 'block';
+        errorMessage.style.display = 'none';
+    }
+
+    // 表单提交前验证
+    uploadForm.addEventListener('submit', function(e) {
+        if (upload.files.length === 0) {
+            e.preventDefault();
+            showError('请先选择要上传的图片');
+            return false;
+        }
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            showError('请等待图片处理完成后再提交');
+            return false;
+        }
+    });
+})();
+</script>
 
 {{ end }}

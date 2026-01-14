@@ -465,7 +465,6 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	switch new_role_str {
 	case "taster":
 		new_role = dao.RoleTaster
-		break
 	case "CEO":
 		new_role = dao.RoleCEO
 	case "CTO":

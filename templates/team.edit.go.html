@@ -7,8 +7,21 @@
   <li class="active">更新资料</li>
 </ol>
 
-<h3>编辑茶团资料</h3>
+<h3>编辑团队资料</h3>
 
+<div class="form-group">
+  <label>团队标识</label>
+  <div>
+    {{ if .Team.Logo }}
+    <img src="/v1/static/image/team/{{ .Team.Logo }}.jpeg" alt="团队标识" style="max-width: 64px; max-height: 64px; margin-right: 10px;">
+    {{ end }}
+    <a href="/v1/team/logo?uuid={{ .Team.Uuid }}" class="btn btn-default">更新团队标识</a>
+    <p class="help-block">点击按钮上传新的团队标识图片（JPEG格式，建议64x64像素，小于30KB）</p>
+  </div>
+</div>
+
+
+<!--编辑团队资料-->
 <form action="/v1/team/edit" method="post">
   <input type="hidden" name="team_id" value="{{ .Team.Id }}">
   
