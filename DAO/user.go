@@ -76,12 +76,12 @@ const (
 	User_Gender_Male   = 1 // 男
 )
 
-// SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users.name模糊查询用户，WHERE column LIKE 'keyword%',返回[]User,err
+// SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users.name模糊查询用户，WHERE column ILIKE '%keyword%',返回[]User,err
 // limit int 表示查询结果数量，5秒超时取消
 func SearchUserByNameKeyword(keyword string, limit int, ctx context.Context) ([]User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := DB.QueryContext(ctx, "SELECT * FROM users WHERE name LIKE $1 Limit $2", "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE name ILIKE $1 LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}

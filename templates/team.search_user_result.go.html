@@ -2,6 +2,7 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">茶团事项</a></li>
   <li><a href="/v1/team/manage?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
   <li><a href="/v1/team/member_add?uuid={{ .Team.Uuid }}">邀请新人</a></li>
   <li class="active">搜索结果</li>
@@ -35,8 +36,8 @@
         </h4>
         <p>
           <span style="font-style: italic;">
-            （<a href="/v1/family/detail?id={{ .DefaultFamilyBean.Family.Uuid }}">{{ .DefaultFamilyBean.Family.Name }}</a>，
-            <a href="/v1/team/detail?uuid={{ .DefaultTeamBean.Team.Uuid }}">{{ .DefaultTeamBean.Team.Abbreviation }}</a>）
+            （<a href="/v1/family/detail?id={{ .DefaultFamily.Uuid }}">{{ .DefaultFamily.Name }}</a>，
+            <a href="/v1/team/detail?uuid={{ .DefaultTeam.Uuid }}">{{ .DefaultTeam.Abbreviation }}</a>）
           </span>
         </p>
         <p>茶友号：{{ .User.Id }}</p>
