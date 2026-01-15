@@ -1248,6 +1248,12 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
+	//检查一下提交的茶友和会话茶友Id是否一致
+	if user_id != s_u.Id {
+		util.Debug("Inconsistency between submitted user id and session id", err)
+		report(w, s_u, "你好，请勿冒充八戒骗孙悟空的芭蕉扇哦，稍后再试。")
+		return
+	}
 	//检查是否存在该茶友注册资料
 	reply_user, err := dao.GetUser(user_id)
 	if err != nil {
@@ -1256,12 +1262,6 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//检查一下提交的茶友和会话茶友Id是否一致
-	if reply_user.Id != s_u.Id {
-		util.Debug("Inconsistency between submitted user id and session id", err)
-		report(w, s_u, "你好，请勿冒充八戒骗孙悟空的芭蕉扇哦，稍后再试。")
-		return
-	}
 	//根据茶友提交的invitation_id，检查是否存在该邀请函
 	invitation, err := dao.GetInvitationById(invitation_id)
 	if err != nil {
@@ -1413,14 +1413,14 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		//检查茶友加入茶团计数，如果是0，从默认的自由人，改设当前茶团为默认茶团
-		count, err := reply_user.SurvivalTeamsCount()
+		//检查默认团队是否自由人，是就更换为当前茶团
+		defaultTeam, err := reply_user.GetLastDefaultTeam()
 		if err != nil {
-			util.Debug(reply_user.Email, " Cannot get survival teams count", err)
+			util.Debug(reply_user.Email, " Cannot get default team", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
-		if count == 0 {
+		if defaultTeam.Id == dao.TeamIdFreelancer {
 			user_default_team := dao.UserDefaultTeam{
 				UserId: reply_user.Id,
 				TeamId: invitation.TeamId,
