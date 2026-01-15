@@ -372,7 +372,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 				filtered_teams = append(filtered_teams, team)
 			}
 		}
-	} else if len(survival_team_slice) == 1 {
+	} else {
 		//仅自由人默认团队
 		filtered_teams = survival_team_slice
 	}
