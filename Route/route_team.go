@@ -326,7 +326,8 @@ func HoldTeams(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/teams/joined
-// 显示用户已经加入的全部茶团的表单页面
+// 显示用户已经加入的全部茶团的表单页面,
+// 过滤条件为公开团队或私密团队(Claude sonnet4.5协助实现)
 func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -355,44 +356,49 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 		return
 	}
-
-	// 根据过滤条件筛选团队
+	if len(survival_team_slice) == 0 {
+		//发生错误，至少有一个自由人团队
+		util.Debug(" something wrong, at least one freelancer team should be in joined teams")
+		report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+		return
+	}
 	var filtered_teams []dao.Team
-	for _, team := range survival_team_slice {
-		if filter == "public" && !team.IsPrivate {
-			filtered_teams = append(filtered_teams, team)
-		} else if filter == "private" && team.IsPrivate {
-			filtered_teams = append(filtered_teams, team)
+	if len(survival_team_slice) > 1 {
+		// 根据过滤条件筛选团队
+		for _, team := range survival_team_slice {
+			if filter == "public" && !team.IsPrivate {
+				filtered_teams = append(filtered_teams, team)
+			} else if filter == "private" && team.IsPrivate {
+				filtered_teams = append(filtered_teams, team)
+			}
 		}
+	} else if len(survival_team_slice) == 1 {
+		//仅自由人默认团队
+		filtered_teams = survival_team_slice
 	}
 
-	if len(filtered_teams) == 0 {
-		tS.IsEmpty = true
-	} else {
-		tS.IsEmpty = false
-		teamBeanSlice, err := fetchTeamBeanSlice(filtered_teams)
+	teamBeanSlice, err := fetchTeamBeanSlice(filtered_teams)
+	if err != nil {
+		util.Debug(" Cannot get team bean slice", err)
+		report(w, s_u, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+		return
+	}
+	if len(teamBeanSlice) > 1 {
+		//置顶默认团队
+		last_default_team, err := s_u.GetLastDefaultTeam()
 		if err != nil {
-			util.Debug(" Cannot get team bean slice", err)
-			report(w, s_u, "你好，酒未敌腥还用菊，性防积冷定须姜。请稍后再试。")
+			util.Debug(" Cannot get last default team", err)
+			report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
 			return
 		}
-		if len(teamBeanSlice) > 1 {
-			//置顶默认团队
-			last_default_team, err := s_u.GetLastDefaultTeam()
-			if err != nil {
-				util.Debug(" Cannot get last default team", err)
-				report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
-				return
-			}
-			teamBeanSlice, err = moveDefaultTeamToFront(teamBeanSlice, last_default_team.Id)
-			if err != nil {
-				util.Debug(" Cannot move default team to front", err)
-				report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
-				return
-			}
+		teamBeanSlice, err = moveDefaultTeamToFront(teamBeanSlice, last_default_team.Id)
+		if err != nil {
+			util.Debug(" Cannot move default team to front", err)
+			report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
+			return
 		}
-		tS.TeamBeanSlice = teamBeanSlice
 	}
+	tS.TeamBeanSlice = teamBeanSlice
 
 	// 添加过滤标志到模板数据
 	type PageData struct {
