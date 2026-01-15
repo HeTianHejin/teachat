@@ -1016,7 +1016,7 @@ func teamLogoUploadPost(w http.ResponseWriter, r *http.Request) {
 
 	if ok {
 		// 处理上传的图片
-		errAvatar := saveUploadAvatar(r, team.Uuid, "team")
+		errAvatar := saveUploadAvatar(r, dao.Random_UUID(), "team")
 		if errAvatar == nil {
 			team.Logo = team.Uuid
 			if err = team.UpdateLogo(); err != nil {
@@ -1024,7 +1024,8 @@ func teamLogoUploadPost(w http.ResponseWriter, r *http.Request) {
 				report(w, s_u, "您好，请问你刚刚说的喜欢什么类型的音乐，这就为你播放？")
 				return
 			}
-			report(w, s_u, "茶博士微笑说，团队图标修改成功。")
+			//report(w, s_u, "茶博士微笑说，团队图标修改成功。")
+			http.Redirect(w, r, fmt.Sprintf("/v1/team/detail?uuid=%s", team.Uuid), http.StatusFound)
 			return
 		} else {
 			util.Debug("fail to save upload team logo image", errAvatar)

@@ -141,7 +141,7 @@ func avatarUploadUserPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 处理上传到图片
-	errAvatar := saveUploadAvatar(r, s_u.Uuid, "user")
+	errAvatar := saveUploadAvatar(r, dao.Random_UUID(), "user")
 	if errAvatar == nil {
 		s_u.Avatar = s_u.Uuid
 		if err = s_u.UpdateAvatar(); err != nil {
@@ -149,7 +149,9 @@ func avatarUploadUserPost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "您好，请问你刚刚说的喜欢什么类型的音乐，就为你播放？")
 			return
 		}
-		report(w, s_u, "茶博士微笑说，头像修改成功。")
+		//report(w, s_u, "茶博士微笑说，头像修改成功。")
+		//default redirect to user biography
+		http.Redirect(w, r, "/v1/user/biography?uuid="+s_u.Uuid, http.StatusFound)
 	} else {
 		report(w, s_u, "图片上传失败：%s", errAvatar)
 	}
