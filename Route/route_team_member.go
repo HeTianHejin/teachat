@@ -870,14 +870,14 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
-		//检查茶友加入茶团计数，如果是1，从默认的自由人，改设当前茶团为默认茶团
-		count, err := applicant.SurvivalTeamsCount()
+		//检查茶友加入茶团计数，如果是1，默认的自由人，改设当前团队为默认团队
+		count, err := dao.GetUserSurvivalTeamsCount(applicant.Id)
 		if err != nil {
 			util.Debug(applicant.Email, " Cannot get survival teams count", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
-		if count == 0 {
+		if count == 1 {
 			user_default_team := dao.UserDefaultTeam{
 				UserId: applicant.Id,
 				TeamId: team.Id,

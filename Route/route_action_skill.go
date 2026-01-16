@@ -75,7 +75,7 @@ func HandleSkillsUserList(w http.ResponseWriter, r *http.Request) {
 // GET /v1/skill/new
 func SkillNewGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取用户所在的团队
-	userTeams, err := s_u.SurvivalTeams()
+	userTeams, err := dao.GetUserSurvivalTeams(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug("cannot get s_u teams", err)
 		userTeams = []dao.Team{} // 如果获取失败，使用空列表
@@ -153,7 +153,7 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 		skillUser := dao.SkillUser{
 			SkillId: skill.Id,
 			UserId:  s_u.Id,
-			Level:   1,                          // 默认等级1
+			Level:   1,                         // 默认等级1
 			Status:  dao.NormalSkillUserStatus, // 默认中能状态
 		}
 		if err := skillUser.Create(r.Context()); err != nil {
@@ -182,7 +182,7 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 		skillTeam := dao.SkillTeam{
 			SkillId: skill.Id,
 			TeamId:  teamId,
-			Level:   1,                          // 默认等级1
+			Level:   1,                         // 默认等级1
 			Status:  dao.NormalSkillTeamStatus, // 默认正常状态
 		}
 		if err := skillTeam.Create(r.Context()); err != nil {

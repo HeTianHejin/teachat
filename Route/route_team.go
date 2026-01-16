@@ -350,7 +350,7 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 		filter = "public" // 默认显示公开团队
 	}
 
-	survival_team_slice, err := s_u.SurvivalTeams()
+	survival_team_slice, err := dao.GetUserSurvivalTeams(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get joined teams", err)
 		report(w, s_u, "你好，茶博士未能帮忙查看茶团，请稍后再试。")
@@ -373,8 +373,13 @@ func JoinedTeams(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		//仅自由人默认团队
-		filtered_teams = survival_team_slice
+		if filter == "public" {
+			//仅自由人默认团队
+			filtered_teams = survival_team_slice
+		} else {
+			//没有私密团队
+			filtered_teams = []dao.Team{}
+		}
 	}
 
 	teamBeanSlice, err := fetchTeamBeanSlice(filtered_teams)

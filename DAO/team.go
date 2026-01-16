@@ -5,9 +5,17 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"sync"
 
 	util "teachat/Util"
 	"time"
+)
+
+// 自由人团队缓存相关变量
+var (
+	freelancerTeam     Team
+	freelancerTeamOnce sync.Once
+	freelancerTeamErr  error
 )
 
 // $事业茶团角色
@@ -543,19 +551,8 @@ func (udteam *UserDefaultTeam) Create() (err error) {
 
 // GetLastDefaultTeam() 根据user.Id从user_default_teams表和teams表，获取用户最后记录的1个team
 func (user *User) GetLastDefaultTeam() (team Team, err error) {
-	// 如果用户没有设置默认$事业茶团，则返回系统预设的"自由人"$事业茶团
-	count, err := user.SurvivalTeamsCount()
-	if err != nil {
-		return Team{}, err
-	}
-	if count == 0 {
-		return GetTeam(TeamIdFreelancer)
-	}
 	team = Team{}
 	err = DB.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 AND teams.deleted_at IS NULL ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
-	if errors.Is(err, sql.ErrNoRows) {
-		return GetTeam(TeamIdFreelancer)
-	}
 	return
 }
 
@@ -567,7 +564,20 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role int, err err
 
 // SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团
 // team.class = 0、1 or 2（团队类型：0-系统团队，1-开放式，2-封闭式）, team_members.status = 1（成员状态：1-正常（活跃成员））
-func (user *User) SurvivalTeams() ([]Team, error) {
+func GetUserSurvivalTeams(user_id int, ctx context.Context) ([]Team, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	count, err := GetUserSurvivalTeamsCount(user_id)
+	if err != nil || count == 0 {
+		return []Team{}, err
+	}
+	if count == 1 {
+		team, err := GetFreelancerTeam(ctx)
+		if err != nil {
+			return []Team{}, err
+		}
+		return []Team{team}, nil
+	}
 
 	query := `
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags
@@ -579,7 +589,7 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 	teams := make([]Team, 0, estimatedCapacity)
 
 	query += ` LIMIT $3` // 限制最大团队数
-	rows, err := DB.Query(query, user.Id, TeamMemberStatusActive, estimatedCapacity)
+	rows, err := DB.Query(query, user_id, TeamMemberStatusActive, estimatedCapacity)
 	if err != nil {
 		return nil, err
 	}
@@ -601,14 +611,14 @@ func (user *User) SurvivalTeams() ([]Team, error) {
 }
 
 // SurvivalTeamsCount() 获取用户当前所在的状态正常的全部$事业茶团计数(包括系统预留的"自由人"$事业茶团)
-func (user *User) SurvivalTeamsCount() (count int, err error) {
+func GetUserSurvivalTeamsCount(user_id int) (count int, err error) {
 	query := `
         SELECT COUNT(DISTINCT teams.id)
         FROM teams
         JOIN team_members ON teams.id = team_members.team_id
         WHERE team_members.user_id = $1 AND team_members.status = $2 AND teams.deleted_at IS NULL`
 
-	err = DB.QueryRow(query, user.Id, TeamMemberStatusActive).Scan(&count)
+	err = DB.QueryRow(query, user_id, TeamMemberStatusActive).Scan(&count)
 
 	return
 }
@@ -1395,4 +1405,37 @@ func findSpouse(familyId, ceoGender int) (FamilyMember, error) {
 	}
 
 	return spouse, nil
+}
+
+// fetchFreelancerTeam 从数据库获取自由人团队（无缓存）
+func fetchFreelancerTeam(ctx context.Context) (Team, error) {
+
+	const query = `SELECT id, uuid, name, mission, founder_id, created_at, class, 
+	               abbreviation, logo, is_private, updated_at, tags 
+	               FROM teams WHERE id = $1`
+
+	var team Team
+	err := DB.QueryRowContext(ctx, query, TeamIdFreelancer).Scan(
+		&team.Id, &team.Uuid, &team.Name, &team.Mission,
+		&team.FounderId, &team.CreatedAt, &team.Class,
+		&team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Team{}, fmt.Errorf("freelancer team not found")
+		}
+		return Team{}, fmt.Errorf("failed to query freelancer team: %w", err)
+	}
+
+	return team, nil
+}
+
+// GetFreelancerTeam 获取缓存的自由人团队（线程安全）
+func GetFreelancerTeam(ctx context.Context) (Team, error) {
+	freelancerTeamOnce.Do(func() {
+		util.Debug("Initializing freelancer team cache")
+		freelancerTeam, freelancerTeamErr = fetchFreelancerTeam(ctx)
+	})
+	return freelancerTeam, freelancerTeamErr
 }

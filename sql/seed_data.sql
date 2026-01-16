@@ -27,6 +27,9 @@ INSERT INTO team_members (id, uuid, team_id, user_id, role, status) VALUES
 (2, 'member-001-captain-team2', 2, 1, 1, 1),  -- 太空船长加入茶棚服务团队
 (3, 'member-003-verifier-team2', 1, 2, 5, 1), -- 稻香老农加入自由人团队
 (4, 'member-004-verifier-team3', 3, 2, 1, 1); -- 稻香老农加入见证者团队
+INSERT INTO user_default_teams (user_id, team_id) VALUES
+(1, 2), -- 太空船长默认团队为茶棚服务团队
+(2, 3); -- 稻香老农默认团队为见证者茶团
 
 -- ============================================
 -- 环境数据

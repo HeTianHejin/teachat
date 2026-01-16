@@ -50,7 +50,7 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户的团队列表，用于选择最高管理团队
-	teams, err := s_u.SurvivalTeams()
+	teams, err := dao.GetUserSurvivalTeams(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug("Cannot get user teams", err)
 	}

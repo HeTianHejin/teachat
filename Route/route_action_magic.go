@@ -54,7 +54,7 @@ func MagicNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户所在的团队
-	userTeams, err := s_u.SurvivalTeams()
+	userTeams, err := dao.GetUserSurvivalTeams(s_u.Id, r.Context())
 	if err != nil {
 		util.Debug("cannot get user teams", err)
 		userTeams = []dao.Team{} // 如果获取失败，使用空列表
@@ -143,7 +143,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 		magicUser := dao.MagicUser{
 			MagicId: magic.Id,
 			UserId:  s_u.Id,
-			Level:   1,          // 默认等级1
+			Level:   1,         // 默认等级1
 			Status:  dao.Clear, // 默认清醒状态
 		}
 		if err := magicUser.Create(r.Context()); err != nil {
@@ -172,7 +172,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 		magicTeam := dao.MagicTeam{
 			MagicId: magic.Id,
 			TeamId:  teamId,
-			Level:   1,                         // 默认等级1
+			Level:   1,                        // 默认等级1
 			Status:  dao.ClearMagicTeamStatus, // 默认清晰状态
 		}
 		if err := magicTeam.Create(r.Context()); err != nil {

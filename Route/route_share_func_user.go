@@ -119,14 +119,14 @@ func fetchSessionUserRelatedData(sess dao.Session, ctx context.Context) (s_u dao
 			break
 		}
 	}
-	// 把系统默认的“自由人”家庭资料加入families
+	// 把系统默认的“未知”家庭资料加入families
 	member_all_families = append(member_all_families, dao.FamilyUnknown)
 	defaultTeam, err := s_u.GetLastDefaultTeam()
 	if err != nil {
 		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get default team for user %s: %w", s_u.Email, err)
 	}
 
-	survivalTeams, err := s_u.SurvivalTeams()
+	survivalTeams, err := dao.GetUserSurvivalTeams(s_u.Id, ctx)
 	if err != nil {
 		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get survival teams for user %s: %w", s_u.Email, err)
 	}
