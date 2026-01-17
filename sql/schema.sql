@@ -931,6 +931,18 @@ CREATE TABLE tea_orders (
     deleted_at            TIMESTAMP
 );
 
+-- 见证日志表
+CREATE TABLE witness_logs (
+    id            SERIAL PRIMARY KEY,
+    uuid          VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    tea_order_id  INTEGER NOT NULL REFERENCES tea_orders(id),
+    action        VARCHAR(16) NOT NULL CHECK (action IN ('审批', '暂停', '恢复', '终止')),
+    reason        TEXT NOT NULL,
+    witness_id    INTEGER NOT NULL REFERENCES users(id),
+    evidence_id   INTEGER DEFAULT 0,
+    witness_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 
 -- 手工艺表
 CREATE TABLE handicrafts (
@@ -1594,6 +1606,12 @@ CREATE INDEX idx_brain_fires_start_time ON brain_fires(start_time);
 CREATE INDEX idx_suggestions_project_id ON suggestions(project_id);
 CREATE INDEX idx_suggestions_user_id ON suggestions(user_id);
 CREATE INDEX idx_suggestions_status ON suggestions(status);
+
+-- 见证日志索引
+CREATE INDEX idx_witness_logs_tea_order_id ON witness_logs(tea_order_id);
+CREATE INDEX idx_witness_logs_witness_id ON witness_logs(witness_id);
+CREATE INDEX idx_witness_logs_action ON witness_logs(action);
+CREATE INDEX idx_witness_logs_witness_at ON witness_logs(witness_at DESC);
 
 -- ============================================
 -- 表注释

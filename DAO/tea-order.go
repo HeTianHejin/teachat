@@ -59,7 +59,8 @@ type WitnessLog struct {
 	TeaOrderId int
 	Action     string // "审批"/"暂停"/"恢复"/"终止"
 	Reason     string
-	EvidenceId int // 证据材料 ->Evidence{}
+	WitnessId  int    // 见证人用户ID
+	EvidenceId int    // 证据材料 ->Evidence{}
 	WitnessAt  time.Time
 }
 
@@ -74,14 +75,14 @@ const (
 func (w *WitnessLog) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `INSERT INTO witness_logs (tea_order_id, action, reason, evidence_id, witness_at)
-		VALUES ($1, $2, $3, $4, $5)`
+	statement := `INSERT INTO witness_logs (tea_order_id, action, reason, witness_id, evidence_id, witness_at)
+		VALUES ($1, $2, $3, $4, $5, $6)`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, w.TeaOrderId, w.Action, w.Reason, w.EvidenceId, w.WitnessAt)
+	_, err = stmt.ExecContext(ctx, w.TeaOrderId, w.Action, w.Reason, w.WitnessId, w.EvidenceId, w.WitnessAt)
 	return err
 }
 
@@ -89,7 +90,7 @@ func (w *WitnessLog) Create(ctx context.Context) (err error) {
 func (w *WitnessLog) GetByTeaOrderId(ctx context.Context) ([]*WitnessLog, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, tea_order_id, action, reason, evidence_id, witness_at FROM witness_logs WHERE tea_order_id = $1 ORDER BY witness_at DESC`
+	statement := `SELECT id, uuid, tea_order_id, action, reason, witness_id, evidence_id, witness_at FROM witness_logs WHERE tea_order_id = $1 ORDER BY witness_at DESC`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return nil, err
@@ -103,7 +104,7 @@ func (w *WitnessLog) GetByTeaOrderId(ctx context.Context) ([]*WitnessLog, error)
 	witnessLogs := make([]*WitnessLog, 0)
 	for rows.Next() {
 		witnessLog := &WitnessLog{}
-		err := rows.Scan(&witnessLog.Id, &witnessLog.Uuid, &witnessLog.TeaOrderId, &witnessLog.Action, &witnessLog.Reason, &witnessLog.EvidenceId, &witnessLog.WitnessAt)
+		err := rows.Scan(&witnessLog.Id, &witnessLog.Uuid, &witnessLog.TeaOrderId, &witnessLog.Action, &witnessLog.Reason, &witnessLog.WitnessId, &witnessLog.EvidenceId, &witnessLog.WitnessAt)
 		if err != nil {
 			return nil, err
 		}

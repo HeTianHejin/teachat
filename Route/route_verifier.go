@@ -4,9 +4,9 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
-	"time"
 	dao "teachat/DAO"
 	util "teachat/Util"
+	"time"
 )
 
 // HandleVerifierWorkspace 处理见证者工作间路由
@@ -217,8 +217,8 @@ func VerifierOrderApproveGet(w http.ResponseWriter, r *http.Request) {
 
 	// 准备页面数据
 	type ApprovePageData struct {
-		SessUser        dao.User
-		TeaOrderBean    *dao.TeaOrderBean
+		SessUser     dao.User
+		TeaOrderBean *dao.TeaOrderBean
 	}
 	pageData := ApprovePageData{
 		SessUser:     s_u,
@@ -304,6 +304,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 		TeaOrderId: teaOrder.Id,
 		Action:     dao.WitnessActionApprove,
 		Reason:     "茶订单已审批通过",
+		WitnessId:  s_u.Id,
 		EvidenceId: 0,
 		WitnessAt:  approvalTime,
 	}
@@ -380,8 +381,8 @@ func VerifierOrderRejectGet(w http.ResponseWriter, r *http.Request) {
 
 	// 准备页面数据
 	type RejectPageData struct {
-		SessUser        dao.User
-		TeaOrderBean    *dao.TeaOrderBean
+		SessUser     dao.User
+		TeaOrderBean *dao.TeaOrderBean
 	}
 	pageData := RejectPageData{
 		SessUser:     s_u,
@@ -464,6 +465,7 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 		TeaOrderId: teaOrder.Id,
 		Action:     dao.WitnessActionCancel,
 		Reason:     fmt.Sprintf("拒绝原因：%s", reason),
+		WitnessId:  s_u.Id,
 		EvidenceId: 0,
 		WitnessAt:  time.Now(),
 	}
@@ -540,8 +542,8 @@ func VerifierOrderPauseGet(w http.ResponseWriter, r *http.Request) {
 
 	// 准备页面数据
 	type PausePageData struct {
-		SessUser        dao.User
-		TeaOrderBean    *dao.TeaOrderBean
+		SessUser     dao.User
+		TeaOrderBean *dao.TeaOrderBean
 	}
 	pageData := PausePageData{
 		SessUser:     s_u,
@@ -620,6 +622,7 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 		TeaOrderId: teaOrder.Id,
 		Action:     dao.WitnessActionPause,
 		Reason:     reason,
+		WitnessId:  s_u.Id,
 		EvidenceId: 0,
 		WitnessAt:  time.Now(),
 	}
@@ -696,8 +699,8 @@ func VerifierOrderCancelGet(w http.ResponseWriter, r *http.Request) {
 
 	// 准备页面数据
 	type CancelPageData struct {
-		SessUser        dao.User
-		TeaOrderBean    *dao.TeaOrderBean
+		SessUser     dao.User
+		TeaOrderBean *dao.TeaOrderBean
 	}
 	pageData := CancelPageData{
 		SessUser:     s_u,
@@ -776,6 +779,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 		TeaOrderId: teaOrder.Id,
 		Action:     dao.WitnessActionCancel,
 		Reason:     reason,
+		WitnessId:  s_u.Id,
 		EvidenceId: 0,
 		WitnessAt:  time.Now(),
 	}
@@ -842,9 +846,9 @@ func HandleVerifierOrderDetail(w http.ResponseWriter, r *http.Request) {
 
 	// 准备页面数据
 	type DetailPageData struct {
-		SessUser        dao.User
-		TeaOrderBean    *dao.TeaOrderBean
-		WitnessLogs     []*dao.WitnessLog
+		SessUser     dao.User
+		TeaOrderBean *dao.TeaOrderBean
+		WitnessLogs  []*dao.WitnessLog
 	}
 	pageData := DetailPageData{
 		SessUser:     s_u,
@@ -859,8 +863,8 @@ func HandleVerifierOrderDetail(w http.ResponseWriter, r *http.Request) {
 // fetchTeaOrderBean 根据茶订单获取对应的Bean数据
 func fetchTeaOrderBean(teaOrder dao.TeaOrder) (*dao.TeaOrderBean, error) {
 	bean := &dao.TeaOrderBean{
-		TeaOrder:        &teaOrder,
-		CreatedDateTime: teaOrder.CreatedDateTime(),
+		TeaOrder:         &teaOrder,
+		CreatedDateTime:  teaOrder.CreatedDateTime(),
 		StatusLabelClass: getStatusLabelClass(teaOrder.Status),
 	}
 
