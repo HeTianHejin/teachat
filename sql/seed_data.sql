@@ -17,6 +17,7 @@ INSERT INTO teams (id, uuid, name, mission, founder_id, class, abbreviation, log
 (1, '72c06442-2b60-418a-6493-a91bd03ae4k8', '自由人', '星际旅行特立独行的自由人，不属于任何$事业茶团。', 1, 0, '自由人', 'teamLogo', '自由,独立'),
 (2, 'dcbe3046-b192-44b6-7afb-bc55817c13a9', '茶棚服务团队', '飞船机组乘员茶棚服务团队，系统预设。', 1, 0, '飞船茶棚', 'teamLogo', '系统团队,服务'),
 (3, '38be3046-b192-44b6-7afb-bc55817c13c4', '见证者茶团', '见证者团队，为线下茶会活动作业担当主持见证人，系统预设。', 2, 0, '见证者', 'teamLogo', '见证者,系统');
+(4, 'center-escrow-team-uuid', '茶庄服务中心', '处理茶庄事务，茶庄为线下茶会活动提供托管茶叶服务，系统预设。', 1, 4, '茶庄服务', 'teamLogo', '茶庄中心,系统');
 
 -- ============================================
 -- 预设团队成员数据
@@ -26,7 +27,8 @@ INSERT INTO team_members (id, uuid, team_id, user_id, role, status) VALUES
 (1, 'member-001-captain-team1', 1, 1, 1, 1),   -- 太空船长加入自由人团队
 (2, 'member-001-captain-team2', 2, 1, 1, 1),  -- 太空船长加入茶棚服务团队
 (3, 'member-003-verifier-team2', 1, 2, 5, 1), -- 稻香老农加入自由人团队
-(4, 'member-004-verifier-team3', 3, 2, 1, 1); -- 稻香老农加入见证者团队
+(4, 'member-004-verifier-team3', 3, 2, 1, 1), -- 稻香老农加入见证者团队
+(5, 'member-005-escrow-team4', 4, 1, 1, 1); -- 太空船长加入茶庄服务中心
 INSERT INTO user_default_teams (user_id, team_id) VALUES
 (1, 2), -- 太空船长默认团队为茶棚服务团队
 (2, 3); -- 稻香老农默认团队为见证者茶团
