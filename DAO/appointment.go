@@ -19,13 +19,13 @@ type ProjectAppointment struct {
 
 	PlaceId int // 约茶地方ID
 	// 相关团队和家庭信息
-	PayerUserId   int //出茶叶代表人Id
-	PayerTeamId   int //出茶叶团队Id
-	PayerFamilyId int //出茶叶家庭Id
+	PayerUserId   int //出星茶代表人Id
+	PayerTeamId   int //出星茶团队Id
+	PayerFamilyId int //出星茶家庭Id
 
-	PayeeUserId   int //收茶叶代表人Id
-	PayeeTeamId   int //收茶叶团队Id
-	PayeeFamilyId int //收茶叶家庭Id
+	PayeeUserId   int //收星茶代表人Id
+	PayeeTeamId   int //收星茶团队Id
+	PayeeFamilyId int //收星茶家庭Id
 
 	VerifierUserId   int
 	VerifierFamilyId int

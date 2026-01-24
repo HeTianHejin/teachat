@@ -10,18 +10,18 @@ import (
 	"time"
 )
 
-// 团队茶叶账户相关响应结构体
+// 团队星茶账户相关响应结构体
 type TeamTeaAccountResponse struct {
-	Uuid         string  `json:"uuid"`
-	TeamId       int     `json:"team_id"`
-	TeamName     string  `json:"team_name,omitempty"`
-	BalanceGrams float64 `json:"balance_grams"`
-	Status       string  `json:"status"`
-	FrozenReason *string `json:"frozen_reason,omitempty"`
-	CreatedAt    string  `json:"created_at"`
+	Uuid              string  `json:"uuid"`
+	TeamId            int     `json:"team_id"`
+	TeamName          string  `json:"team_name,omitempty"`
+	BalanceMilligrams int64   `json:"balance_grams"`
+	Status            string  `json:"status"`
+	FrozenReason      *string `json:"frozen_reason,omitempty"`
+	CreatedAt         string  `json:"created_at"`
 }
 
-// 团队茶叶账户解冻请求结构体
+// 团队星茶账户解冻请求结构体
 type UnfreezeTeamAccountRequest struct {
 	TeamId int `json:"team_id"`
 }
@@ -29,7 +29,7 @@ type UnfreezeTeamAccountRequest struct {
 // TeamAccountWithAvailable 用于模板渲染，包含可用余额
 type TeamAccountWithAvailable struct {
 	dao.TeaTeamAccount
-	AvailableBalanceGrams float64
+	AvailableBalanceMilligrams int64
 }
 
 // PageData 用于模板渲染
@@ -43,7 +43,7 @@ type PageData struct {
 	PendingApprovalCount int
 }
 
-// GetTeaTeamAccountAPI 获取团队茶叶账户信息
+// GetTeaTeamAccountAPI 获取团队星茶账户信息
 func GetTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -78,21 +78,21 @@ func GetTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查用户是否是团队成员
 	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看茶叶账户")
+		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看星茶账户")
 		return
 	}
 
-	// 确保团队有茶叶账户
+	// 确保团队有星茶账户
 	err = dao.EnsureTeaTeamAccountExists(teamId)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取团队茶叶账户失败")
+		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
 		return
 	}
 
-	// 获取团队茶叶账户
+	// 获取团队星茶账户
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		respondWithError(w, http.StatusNotFound, "团队茶叶账户不存在")
+		respondWithError(w, http.StatusNotFound, "团队星茶账户不存在")
 		return
 	}
 
@@ -103,16 +103,16 @@ func GetTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := TeamTeaAccountResponse{
-		Uuid:         account.Uuid,
-		TeamId:       account.TeamId,
-		TeamName:     teamName,
-		BalanceGrams: account.BalanceGrams,
-		Status:       account.Status,
-		FrozenReason: account.FrozenReason,
-		CreatedAt:    account.CreatedAt.Format("2006-01-02 15:04:05"),
+		Uuid:              account.Uuid,
+		TeamId:            account.TeamId,
+		TeamName:          teamName,
+		BalanceMilligrams: account.BalanceMilligrams,
+		Status:            account.Status,
+		FrozenReason:      account.FrozenReason,
+		CreatedAt:         account.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 
-	respondWithSuccess(w, "获取团队茶叶账户成功", response)
+	respondWithSuccess(w, "获取团队星茶账户成功", response)
 }
 
 // GetTeaTeamTransactionHistoryAPI 获取团队交易历史（从转出表中查询）
@@ -181,7 +181,7 @@ func GetTeaTeamTransactionHistoryAPI(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "获取团队交易历史成功", transactions)
 }
 
-// FreezeTeaTeamAccountAPI 冻结团队茶叶账户
+// FreezeTeaTeamAccountAPI 冻结团队星茶账户
 func FreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -244,7 +244,7 @@ func FreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "团队账户冻结成功", nil)
 }
 
-// UnfreezeTeaTeamAccountAPI 解冻团队茶叶账户
+// UnfreezeTeaTeamAccountAPI 解冻团队星茶账户
 func UnfreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -297,7 +297,7 @@ func UnfreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "团队账户解冻成功", nil)
 }
 
-// HandleTeaTeamTeaAccount 处理团队茶叶账户页面请求
+// HandleTeaTeamTeaAccount 处理团队星茶账户页面请求
 func HandleTeaTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -306,7 +306,7 @@ func HandleTeaTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
 	TeamTeaAccountGet(w, r)
 }
 
-// TeamTeaAccountGet 获取团队茶叶账户页面
+// TeamTeaAccountGet 获取团队星茶账户页面
 func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
@@ -327,7 +327,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 显示指定团队的茶叶账户
+	// 显示指定团队的星茶账户
 	teamId, err := strconv.Atoi(teamIdStr)
 	if err != nil {
 		report(w, s_u, "团队ID无效。")
@@ -345,32 +345,32 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	// 检查用户是否是团队成员
 	isMember, err := dao.IsTeamActiveMember(s_u.Id, teamId)
 	if err != nil || !isMember {
-		report(w, s_u, "您不是该团队成员，无法查看茶叶账户。")
+		report(w, s_u, "您不是该团队成员，无法查看星茶账户。")
 		return
 	}
 
 	singleTeam := &team
 
-	// 确保团队有茶叶账户
+	// 确保团队有星茶账户
 	err = dao.EnsureTeaTeamAccountExists(team.Id)
 	if err != nil {
 		util.Debug("cannot ensure team tea account exists", err)
-		report(w, s_u, "获取团队茶叶账户失败。")
+		report(w, s_u, "获取团队星茶账户失败。")
 		return
 	}
 
-	// 获取团队茶叶账户
+	// 获取团队星茶账户
 	teamAccount, err := dao.GetTeaTeamAccountByTeamId(team.Id)
 	if err != nil {
 		util.Debug("cannot get team tea account", err)
-		report(w, s_u, "获取团队茶叶账户失败。")
+		report(w, s_u, "获取团队星茶账户失败。")
 		return
 	}
 
 	// 计算可用余额
 	teamAccountWithAvailable := TeamAccountWithAvailable{
-		TeaTeamAccount:        teamAccount,
-		AvailableBalanceGrams: teamAccount.BalanceGrams - teamAccount.LockedBalanceGrams,
+		TeaTeamAccount:             teamAccount,
+		AvailableBalanceMilligrams: teamAccount.BalanceMilligrams - teamAccount.LockedBalanceMilligrams,
 	}
 
 	// 获取待确认接收操作数量
@@ -476,7 +476,7 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	// 	transactions = []map[string]any{}
 	// }
 
-	// 获取团队茶叶账户信息
+	// 获取团队星茶账户信息
 	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
 		util.Debug("cannot get team tea account", err)
@@ -515,10 +515,10 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	pageData.FilterType = filterType
 
 	// 格式化余额显示
-	if teamAccount.BalanceGrams >= 1 {
-		pageData.BalanceDisplay = fmt.Sprintf("%.2f 克", teamAccount.BalanceGrams)
+	if teamAccount.BalanceMilligrams >= 1 {
+		pageData.BalanceDisplay = fmt.Sprintf("%.2f 克", teamAccount.BalanceMilligrams)
 	} else {
-		pageData.BalanceDisplay = fmt.Sprintf("%.0f 毫克", teamAccount.BalanceGrams*1000)
+		pageData.BalanceDisplay = fmt.Sprintf("%.0f 毫克", teamAccount.BalanceMilligrams*1000)
 	}
 
 	// 状态显示
@@ -609,7 +609,7 @@ func HandleTeaTeamOperationsHistory(w http.ResponseWriter, r *http.Request) {
 		operations = []map[string]any{}
 	}
 
-	// 获取团队茶叶账户信息
+	// 获取团队星茶账户信息
 	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
 		util.Debug("cannot get team tea account", err)
@@ -638,10 +638,10 @@ func HandleTeaTeamOperationsHistory(w http.ResponseWriter, r *http.Request) {
 	pageData.Limit = limit
 
 	// 格式化余额显示
-	if teamAccount.BalanceGrams >= 1 {
-		pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%.2f 克", teamAccount.BalanceGrams)
+	if teamAccount.BalanceMilligrams >= 1 {
+		pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%.2f 克", teamAccount.BalanceMilligrams)
 	} else {
-		pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%.0f 毫克", teamAccount.BalanceGrams*1000)
+		pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%.0f 毫克", teamAccount.BalanceMilligrams*1000)
 	}
 
 	// 状态显示
@@ -663,7 +663,7 @@ func HandleTeaTeamOperationsHistory(w http.ResponseWriter, r *http.Request) {
 // 团队转账API路由处理函数（对应用户版功能）
 // ============================================
 
-// CreateTeaTeamToUserTransferAPI 发起团队对用户茶叶转账
+// CreateTeaTeamToUserTransferAPI 发起团队对用户星茶转账
 func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -677,11 +677,11 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		FromTeamId  int     `json:"from_team_id"`
-		ToUserId    int     `json:"to_user_id"`
-		AmountGrams float64 `json:"amount_grams"`
-		Notes       string  `json:"notes"`
-		ExpireHours int     `json:"expire_hours"`
+		FromTeamId       int    `json:"from_team_id"`
+		ToUserId         int    `json:"to_user_id"`
+		AmountMilligrams int64  `json:"amount_grams"`
+		Notes            string `json:"notes"`
+		ExpireHours      int    `json:"expire_hours"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
@@ -696,7 +696,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "必须指定接收用户ID")
 		return
 	}
-	if req.AmountGrams <= 0 {
+	if req.AmountMilligrams <= 0 {
 		respondWithError(w, http.StatusBadRequest, "转账金额必须大于0")
 		return
 	}
@@ -712,7 +712,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建团队对用户转账
-	transfer, err := dao.CreateTeaTransferTeamToUser(req.FromTeamId, user.Id, req.ToUserId, req.AmountGrams, req.Notes, req.ExpireHours)
+	transfer, err := dao.CreateTeaTransferTeamToUser(req.FromTeamId, user.Id, req.ToUserId, req.AmountMilligrams, req.Notes, req.ExpireHours)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -721,7 +721,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "团队对用户转账发起成功", transfer)
 }
 
-// CreateTeaTeamToTeamTransferAPI 发起团队对团队茶叶转账
+// CreateTeaTeamToTeamTransferAPI 发起团队对团队星茶转账
 func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -735,11 +735,11 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		FromTeamId  int     `json:"from_team_id"`
-		ToTeamId    int     `json:"to_team_id"`
-		AmountGrams float64 `json:"amount_grams"`
-		Notes       string  `json:"notes"`
-		ExpireHours int     `json:"expire_hours"`
+		FromTeamId       int    `json:"from_team_id"`
+		ToTeamId         int    `json:"to_team_id"`
+		AmountMilligrams int64  `json:"amount_grams"`
+		Notes            string `json:"notes"`
+		ExpireHours      int    `json:"expire_hours"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
@@ -754,7 +754,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "必须指定接收团队ID")
 		return
 	}
-	if req.AmountGrams <= 0 {
+	if req.AmountMilligrams <= 0 {
 		respondWithError(w, http.StatusBadRequest, "转账金额必须大于0")
 		return
 	}
@@ -770,7 +770,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建团队对团队转账
-	transfer, err := dao.CreateTeaTransferTeamToTeam(req.FromTeamId, user.Id, req.ToTeamId, req.AmountGrams, req.Notes, req.ExpireHours)
+	transfer, err := dao.CreateTeaTransferTeamToTeam(req.FromTeamId, user.Id, req.ToTeamId, req.AmountMilligrams, req.Notes, req.ExpireHours)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1516,11 +1516,11 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 获取团队茶叶账户
+	// 获取团队星茶账户
 	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
 		util.Debug("cannot get team tea account", err)
-		report(w, s_u, "获取团队茶叶账户失败。")
+		report(w, s_u, "获取团队星茶账户失败。")
 		return
 	}
 
@@ -1573,11 +1573,11 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 格式化金额显示
-		amountGrams := safeFloat64(transfer["amount_grams"])
-		if amountGrams >= 1 {
-			enhanced.AmountDisplay = fmt.Sprintf("%.3f 克", amountGrams)
+		amountMilligrams := safeFloat64(transfer["amount_grams"])
+		if amountMilligrams >= 1 {
+			enhanced.AmountDisplay = fmt.Sprintf("%.3f 克", amountMilligrams)
 		} else {
-			enhanced.AmountDisplay = fmt.Sprintf("%.0f 毫克", amountGrams*1000)
+			enhanced.AmountDisplay = fmt.Sprintf("%.0f 毫克", amountMilligrams*1000)
 		}
 
 		// 格式化时间显示和检查过期状态
@@ -1681,7 +1681,7 @@ func safeString(val any) string {
 	return fmt.Sprintf("%v", val)
 }
 
-// 辅助函数：安全获取float64值
+// 辅助函数：安全获取flost64值
 func safeFloat64(val any) float64 {
 	if val == nil {
 		return 0

@@ -22,13 +22,13 @@ type BrainFire struct {
 	Diagnose  string //诊断、验证
 	Judgement string //断言、最终解决方案
 
-	PayerUserId   int //付茶叶代表人Id
-	PayerTeamId   int //付茶叶团队Id
-	PayerFamilyId int //付茶叶家庭Id
+	PayerUserId   int //付星茶代表人Id
+	PayerTeamId   int //付星茶团队Id
+	PayerFamilyId int //付星茶家庭Id
 
-	PayeeUserId   int //收茶叶代表人Id
-	PayeeTeamId   int //收茶叶团队Id
-	PayeeFamilyId int //收茶叶家庭Id
+	PayeeUserId   int //收星茶代表人Id
+	PayeeTeamId   int //收星茶团队Id
+	PayeeFamilyId int //收星茶家庭Id
 
 	VerifierUserId   int
 	VerifierFamilyId int

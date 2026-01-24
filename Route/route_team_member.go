@@ -359,7 +359,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
-	//读取目标茶团创建人的资料，Founder也可以调整成员角色！包括CEO！太疯狂了？（参考自观音菩萨可以决定西天取经团队的任何角色人选）
+	//读取目标茶团创建人的资料，Founder也可以调整成员角色！包括CEO！太疯狂了？
 	t_founder, err := t_team.Founder()
 	if err != nil {
 		util.Debug(t_team.Id, "Cannot get team founder given team id", err)
@@ -1547,7 +1547,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查茶友是否自己邀请自己？
-	//也许是可以的?例如观音菩萨也可以加入自己创建的西天取经茶团喝茶？？
+	//也许是可以的?创始人当然可以批准加入自己创建的茶团喝茶？？
 	// if s_u.Email == email {
 	// 	report(w, s_u, "你好，请不要邀请自己加入茶团哈。")
 	// 	return
@@ -1604,7 +1604,6 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 	case dao.RoleCEO:
 		if ceo_user.Id == founder.Id {
 			//CEO是默认创建人担任首个CEO，这意味着首次更换CEO，ok。
-			//例如,西天取经团队发起人观音菩萨（默认首个ceo），指定第一个成员唐僧取代自己为取经团队CEO
 			break
 		} else {
 			report(w, s_u, "你好，请先邀请茶友加盟为普通茶友，然后再调整角色，请确认后再试。")

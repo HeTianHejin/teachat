@@ -60,7 +60,7 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
-	// 读取“约茶”资料以查询出茶叶方和收茶叶方
+	// 读取“约茶”资料以查询出星茶方和收星茶方
 	p_a, err := dao.GetAppointmentByProjectId(project_id, r.Context())
 	if err != nil {
 		util.Debug("cannot get project appointment from database given pr_id", project_id, err)

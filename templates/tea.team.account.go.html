@@ -1,12 +1,12 @@
 {{ define "content" }}
 
-{{/* 这是指定团队茶叶账户  */}}
+{{/* 这是指定团队星茶账户  */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/teams/joined">团队事项</a></li>
   <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
-  <li class="active">管理 #{{ .Team.Id }} 团队茶叶账户</li>
+  <li class="active">管理 #{{ .Team.Id }} 团队星茶账户</li>
 </ol>
 
 <div class="container">
@@ -68,13 +68,13 @@
     {{ end }}
 
     <div class="row">
-        <!-- 团队茶叶账户概览 -->
+        <!-- 团队星茶账户概览 -->
         <div class="col-md-12">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
-                        {{ .Team.Name }} 茶叶罐
+                        {{ .Team.Name }} 星茶罐
                         <span class="pull-right">
                             状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">
                                 {{ if eq .TeamAccount.Status "frozen" }}已冻结{{ else }}正常{{ end }}
@@ -85,16 +85,16 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <h4>总余额: <strong>{{ printf "%.3f" .TeamAccount.BalanceGrams }} 克</strong></h4>
-                            <p class="text-muted">团队茶叶资产总量</p>
+                            <h4>总余额: <strong>{{ printf "%.3f" .TeamAccount.BalanceMilligrams }} 克</strong></h4>
+                            <p class="text-muted">团队星茶资产总量</p>
                         </div>
                         <div class="col-md-4">
-                            <h4>锁定余额: <strong>{{ printf "%.3f" .TeamAccount.LockedBalanceGrams }} 克</strong></h4>
-                            <p class="text-muted">待确认操作中锁定的茶叶</p>
+                            <h4>锁定余额: <strong>{{ printf "%.3f" .TeamAccount.LockedBalanceMilligrams }} 克</strong></h4>
+                            <p class="text-muted">待确认操作中锁定的星茶</p>
                         </div>
                         <div class="col-md-4">
-                            <h4>可用余额: <strong>{{ printf "%.3f" .TeamAccount.AvailableBalanceGrams }} 克</strong></h4>
-                            <p class="text-muted"><strong>可以立即使用的茶叶</strong></p>
+                            <h4>可用余额: <strong>{{ printf "%.3f" .TeamAccount.AvailableBalanceMilligrams }} 克</strong></h4>
+                            <p class="text-muted"><strong>可以立即使用的星茶</strong></p>
                         </div>
                     </div>
                 </div>
@@ -129,7 +129,7 @@
                                 {{ if gt .PendingIncomingCount 0 }}
                                 <strong>您有 {{ .PendingIncomingCount }} 笔待确认接收操作，请及时处理！</strong>
                                 {{ else }}
-                                确认接受其他用户或团队转入的茶叶
+                                确认接受其他用户或团队转入的星茶
                                 {{ end }}
                             </p>
                         </a>
@@ -138,14 +138,14 @@
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 收入记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转入茶叶的记录（仅已成功到账）</p>
+                            <p class="list-group-item-text">查看所有转入星茶的记录（仅已成功到账）</p>
                         </a>
                         <a href="/v1/tea/team/transfers/ins/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 接收历史
                             </h4>
-                            <p class="list-group-item-text">查看所有接收茶叶操作的记录（包括成功、拒绝、超时）</p>
+                            <p class="list-group-item-text">查看所有接收星茶操作的记录（包括成功、拒绝、超时）</p>
                         </a>
                     </div>
                 </div>
@@ -168,7 +168,7 @@
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 发起转账
                             </h4>
-                            <p class="list-group-item-text">向其他团队或用户转账茶叶</p>
+                            <p class="list-group-item-text">向其他团队或用户转账星茶</p>
                         </a>
                         {{ else }}
                         <div class="list-group-item">
@@ -184,14 +184,14 @@
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 支出记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转出茶叶的记录（仅已成功到账）</p>
+                            <p class="list-group-item-text">查看所有转出星茶的记录（仅已成功到账）</p>
                         </a>
                         <a href="/v1/tea/team/transfers/out/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 支出历史
                             </h4>
-                            <p class="list-group-item-text">查看所有转出茶叶操作的记录（包含成功、拒绝、超时）</p>
+                            <p class="list-group-item-text">查看所有转出星茶操作的记录（包含成功、拒绝、超时）</p>
                         </a>
                     </div>
                 </div>
@@ -223,14 +223,14 @@
                                 <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
                                 收支明细
                             </h4>
-                            <p class="list-group-item-text">查看团队茶叶账户的所有交易记录</p>
+                            <p class="list-group-item-text">查看团队星茶账户的所有交易记录</p>
                         </a>
                         <a href="/v1/tea/team/operations/history/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
                                 操作记录
                             </h4>
-                            <p class="list-group-item-text">查看团队茶叶账户的所有操作历史</p>
+                            <p class="list-group-item-text">查看团队星茶账户的所有操作历史</p>
                         </a>
                         {{ if .UserIsCoreMember }}
                         <a href="/v1/tea/team/operations/pending/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item {{ if gt .PendingApprovalCount 0 }}list-group-item-danger{{ end }}">
@@ -245,7 +245,7 @@
                                 {{ if gt .PendingApprovalCount 0 }}
                                 <strong>您有 {{ .PendingApprovalCount }} 笔待审批操作，请及时处理！</strong>
                                 {{ else }}
-                                审批团队茶叶账户的待处理操作
+                                审批团队星茶账户的待处理操作
                                 {{ end }}
                             </p>
                         </a>
@@ -267,7 +267,7 @@
                 </button>
                 <h4 class="modal-title" id="transferModalLabel">
                     <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
-                    发起团队茶叶转账
+                    发起团队星茶转账
                 </h4>
             </div>
             <div class="modal-body">
@@ -290,9 +290,9 @@
                         <small class="help-block">请输入要转账的用户ID</small>
                     </div>
                     <div class="form-group">
-                        <label for="amountGrams">转账数量(克):</label>
-                        <input type="number" class="form-control" id="amountGrams" name="amount_grams" required min="0.001" step="0.001">
-                        <small class="help-block">当前余额: {{ printf "%.3f" .TeamAccount.BalanceGrams }} 克，可输入小数，最小单位0.001克(1毫克)</small>
+                        <label for="amountMilligrams">转账数量(克):</label>
+                        <input type="number" class="form-control" id="amountMilligrams" name="amount_grams" required min="0.001" step="0.001">
+                        <small class="help-block">当前余额: {{ printf "%.3f" .TeamAccount.BalanceMilligrams }} 克，可输入小数，最小单位0.001克(1毫克)</small>
                     </div>
                     <div class="form-group">
                         <label for="notes">备注说明:</label>
@@ -381,7 +381,7 @@ function submitTransfer() {
         }
         // 检查是否向自由人团队转账（自由人团队ID为2）
         if (transferData.target_team_id === 2) {
-            alert('不能向自由人团队转账，自由人团队不支持茶叶资产');
+            alert('不能向自由人团队转账，自由人团队不支持星茶资产');
             return;
         }
     } else {

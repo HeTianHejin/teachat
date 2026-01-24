@@ -307,11 +307,11 @@ func main() {
 	mux.HandleFunc("/v1/verifier/order/cancel", route.HandleVerifierOrderCancel)   // 终止茶订单
 	mux.HandleFunc("/v1/verifier/order/detail", route.HandleVerifierOrderDetail)   // 茶订单详情
 
-	// 用户茶叶账户系统路由
-	mux.HandleFunc("/v1/tea/user/account/page", route.HandleTeaUserAccount)          //用户茶叶账户入口页面
-	mux.HandleFunc("/v1/tea/user/account", route.GetTeaUserAccountAPI)               // 用户茶叶账户信息API
-	mux.HandleFunc("/v1/tea/user/account/freeze", route.FreezeTeaUserAccountAPI)     // 用户茶叶账户冻结API
-	mux.HandleFunc("/v1/tea/user/account/unfreeze", route.UnfreezeTeaUserAccountAPI) // 用户茶叶账户解冻API
+	// 用户星茶账户系统路由
+	mux.HandleFunc("/v1/tea/user/account/page", route.HandleTeaUserAccount)          //用户星茶账户入口页面
+	mux.HandleFunc("/v1/tea/user/account", route.GetTeaUserAccountAPI)               // 用户星茶账户信息API
+	mux.HandleFunc("/v1/tea/user/account/freeze", route.FreezeTeaUserAccountAPI)     // 用户星茶账户冻结API
+	mux.HandleFunc("/v1/tea/user/account/unfreeze", route.UnfreezeTeaUserAccountAPI) // 用户星茶账户解冻API
 
 	mux.HandleFunc("/v1/tea/user/transfer/user_to_user", route.CreateTeaUserToUserTransferOutAPI) // 用户对用户创建转账API
 	mux.HandleFunc("/v1/tea/user/transfer/user_to_team", route.CreateTeaUserToTeamTransferOutAPI) // 用户对团队创建转账API
@@ -336,12 +336,12 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/transfer/confirm/user_to_team", route.ConfirmTeaUserToTeamTransferAPI) // 确认接收用户对团队转账API
 	mux.HandleFunc("/v1/tea/user/transfer/reject/user_to_team", route.RejectTeaUserToTeamTransferAPI)   // 拒绝接收用户对团队转账API
 
-	// 团队茶叶账户系统路由（对应用户版功能）
-	mux.HandleFunc("/v1/tea/team/account", route.HandleTeaTeamTeaAccount)                                             // 团队茶叶账户页面路由
-	mux.HandleFunc("/v1/tea/team/account/api", route.GetTeaTeamAccountAPI)                                            // 团队茶叶账户API
+	// 团队星茶账户系统路由（对应用户版功能）
+	mux.HandleFunc("/v1/tea/team/account", route.HandleTeaTeamTeaAccount)                                             // 团队星茶账户页面路由
+	mux.HandleFunc("/v1/tea/team/account/api", route.GetTeaTeamAccountAPI)                                            // 团队星茶账户API
 	mux.HandleFunc("/v1/tea/team/transactions/api", route.GetTeaTeamTransactionHistoryAPI)                            // 团队交易历史API
-	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeaTeamAccountAPI)                                      // 团队茶叶账户冻结API
-	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeaTeamAccountAPI)                                  // 团队茶叶账户解冻API
+	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeaTeamAccountAPI)                                      // 团队星茶账户冻结API
+	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeaTeamAccountAPI)                                  // 团队星茶账户解冻API
 	mux.HandleFunc("/v1/tea/team/transfer/team_to_user", route.CreateTeaTeamToUserTransferAPI)                        // 团队对用户创建转账API
 	mux.HandleFunc("/v1/tea/team/transfer/team_to_team", route.CreateTeaTeamToTeamTransferAPI)                        // 团队对团队创建转账API
 	mux.HandleFunc("/v1/tea/team/transfers/outs/team_to_user", route.GetTeaTeamToUserTransferOutsAPI)                 // 团队对用户转出记录API

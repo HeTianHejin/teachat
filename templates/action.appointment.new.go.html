@@ -33,9 +33,9 @@
       <div class="panel panel-default">
         <div class="panel-heading">出席双方信息</div>
         <div class="panel-body">
-          <!-- 出茶叶方选择 -->
+          <!-- 出星茶方选择 -->
           <div class="form-group">
-            <label>请确定出茶叶方</label>
+            <label>请确定出星茶方</label>
             <div class="radio">
               <label>
                 <input type="radio" name="tea_payer" value="original" checked>
@@ -49,9 +49,9 @@
               </label>
             </div>
           </div>
-          <!-- 出茶叶方 -->
+          <!-- 出星茶方 -->
           <div class="form-group">
-            <label>出茶叶方</label>
+            <label>出星茶方</label>
             <div class="row">
               <div class="col-sm-6">
                 <label for="payer_team_id">团队ID</label>
@@ -92,9 +92,9 @@
               </div>
             </div>
 
-            <!-- 收茶叶方 -->
+            <!-- 收星茶方 -->
             <div class="form-group">
-              <label>收茶叶方</label>
+              <label>收星茶方</label>
               <div class="row">
                 <div class="col-sm-6">
                   <label for="payee_team_id">团队ID</label>
@@ -369,21 +369,21 @@
     if (payerTeamId === payeeTeamId ||
       payerFamilyId === payeeFamilyId ||
       payerUserId === payeeUserId) {
-      alert('出茶叶方和收茶叶方不能相同');
+      alert('出星茶方和收星茶方不能相同');
       e.preventDefault();
       return false;
     }
     if (payerTeamId === verifierTeamId ||
       payerFamilyId === verifierFamilyId ||
       payerUserId === verifierUserId) {
-      alert('出茶叶方和见证方不能相同');
+      alert('出星茶方和见证方不能相同');
       e.preventDefault();
       return false;
     }
     if (payeeTeamId === verifierTeamId ||
       payeeFamilyId === verifierFamilyId ||
       payeeUserId === verifierUserId) {
-      alert('收茶叶方和见证方不能相同');
+      alert('收星茶方和见证方不能相同');
       e.preventDefault();
       return false;
     }

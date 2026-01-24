@@ -1,8 +1,12 @@
 -- ============================================
--- 全新茶叶支付系统数据库架构定义（基于重构的结构体）
--- 为TeaChat添加茶叶账户和转账功能
+-- 全新星茶支付系统数据库架构定义（基于重构的结构体）
+-- 为TeaChat添加星茶账户和转账功能
 -- 所有表统一在tea schema中，与Go结构体完全匹配
--- 
+
+-- 星茶是一种特殊虚拟现实资源/物品，（毫克）作为重量单位
+-- 用户获得星茶来自向茶庄团队购买（1元/克）
+-- 如果需要兑现，就向茶庄出售星茶（1克/元）
+
 -- 删除脚本（重建前执行）：
 -- DROP SCHEMA IF EXISTS tea CASCADE;
 -- ============================================
@@ -17,13 +21,13 @@ CREATE SCHEMA tea;
 -- 第一部分：用户相关表结构
 -- ============================================
 
--- 用户茶叶账户表（完全匹配TeaUserAccount结构体）
+-- 用户星茶账户表（完全匹配TeaUserAccount结构体）
 CREATE TABLE tea.user_accounts (
     id                    SERIAL PRIMARY KEY,
     uuid                  UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
     user_id               INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    balance_grams         DECIMAL(15,3) NOT NULL DEFAULT 0.000, -- 茶叶数量(克)
-    locked_balance_grams  DECIMAL(15,3) NOT NULL DEFAULT 0.000, -- 交易有效期被锁定的茶叶数量(克)
+    balance_milligrams    INTEGER NOT NULL DEFAULT 0, -- 星茶数量(毫克)，整数重量
+    locked_balance_milligrams INTEGER NOT NULL DEFAULT 0, -- 交易有效期被锁定的星茶数量(毫克)
     status                VARCHAR(20) NOT NULL DEFAULT 'normal', -- normal, frozen
     frozen_reason         TEXT, -- 冻结原因
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -35,9 +39,9 @@ CREATE UNIQUE INDEX idx_tea_user_accounts_user_id ON tea.user_accounts(user_id);
 CREATE INDEX idx_tea_user_accounts_status ON tea.user_accounts(status);
 
 -- 添加表注释
-COMMENT ON TABLE tea.user_accounts IS '用户茶叶账户表（匹配TeaUserAccount结构体）';
-COMMENT ON COLUMN tea.user_accounts.balance_grams IS '茶叶数量(克)，精确到3位小数(毫克)';
-COMMENT ON COLUMN tea.user_accounts.locked_balance_grams IS '交易有效期被锁定的茶叶数量(克)';
+COMMENT ON TABLE tea.user_accounts IS '用户星茶账户表（匹配TeaUserAccount结构体）';
+COMMENT ON COLUMN tea.user_accounts.balance_milligrams IS '星茶数量(毫克)，精确到3位小数';
+COMMENT ON COLUMN tea.user_accounts.locked_balance_milligrams IS '交易有效期被锁定的星茶数量(毫克)';
 COMMENT ON COLUMN tea.user_accounts.status IS '账户状态: normal-正常, frozen-冻结';
 
 -- 用户对用户转账记录表（完全匹配TeaUserToUserTransferOut结构体）
@@ -48,10 +52,10 @@ CREATE TABLE tea.user_to_user_transfer_out (
     from_user_name        VARCHAR(255) NOT NULL, -- 转出方用户名称
     to_user_id            INTEGER NOT NULL REFERENCES users(id), -- 接收方用户ID
     to_user_name          VARCHAR(255) NOT NULL, -- 接收方用户名称
-    amount_grams          DECIMAL(15,3) NOT NULL, -- 转账额度（克）
+    amount_milligrams     INTEGER NOT NULL, -- 转账额度（毫克），整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_receipt', -- 转账状态
-    balance_after_transfer DECIMAL(15,3), -- 转出后账户余额（克）
+    balance_after_transfer INTEGER, -- 转出后账户余额（毫克），整数重量
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     payment_time          TIMESTAMP, -- 实际支付时间
@@ -76,10 +80,10 @@ CREATE TABLE tea.user_to_team_transfer_out (
     from_user_name        VARCHAR(255) NOT NULL, -- 转出方用户名称
     to_team_id            INTEGER NOT NULL REFERENCES teams(id), -- 接收方团队ID
     to_team_name          VARCHAR(255) NOT NULL, -- 接收方团队名称
-    amount_grams          DECIMAL(15,3) NOT NULL, -- 转账额度（克）
+    amount_milligrams     INTEGER NOT NULL, -- 转账额度（毫克），整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_receipt', -- 转账状态
-    balance_after_transfer DECIMAL(15,3), -- 转出后账户余额（克）
+    balance_after_transfer INTEGER, -- 转出后账户余额（毫克），整数重量
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     payment_time          TIMESTAMP, -- 实际支付时间
@@ -105,9 +109,9 @@ CREATE TABLE tea.user_from_user_transfer_in (
     to_user_name          VARCHAR(255) NOT NULL, -- 接收用户名称
     from_user_id          INTEGER NOT NULL REFERENCES users(id), -- 转出用户id
     from_user_name        VARCHAR(255) NOT NULL, -- 转出用户名称
-    amount_grams          DECIMAL(15,3) NOT NULL, -- 接收转账额度（克）
+    amount_milligrams     INTEGER NOT NULL, -- 接收转账额度（毫克），整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转出方备注（从转出表复制过来）
-    balance_after_receipt DECIMAL(15,3), -- 接收后账户余额
+    balance_after_receipt INTEGER, -- 接收后账户余额（毫克），整数重量
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
@@ -134,9 +138,9 @@ CREATE TABLE tea.user_from_team_transfer_in (
     to_user_name          VARCHAR(255) NOT NULL, -- 接收用户名称
     from_team_id          INTEGER NOT NULL REFERENCES teams(id), -- 转出团队id
     from_team_name        VARCHAR(255) NOT NULL, -- 转出团队名称
-    amount_grams          DECIMAL(15,3) NOT NULL, -- 接收转账额度（克）
+    amount_milligrams     INTEGER NOT NULL, -- 接收转账额度（毫克），整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转出方备注（从转出表复制过来）
-    balance_after_receipt DECIMAL(15,3), -- 接收后账户余额
+    balance_after_receipt INTEGER, -- 接收后账户余额（毫克），整数重量
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
@@ -157,13 +161,13 @@ COMMENT ON COLUMN tea.user_from_team_transfer_in.status IS '转入状态: comple
 -- 第二部分：团队相关表结构
 -- ============================================
 
--- 团队茶叶账户表（完全匹配TeaTeamAccount结构体）
+-- 团队星茶账户表（完全匹配TeaTeamAccount结构体）
 CREATE TABLE tea.team_accounts (
     id                    SERIAL PRIMARY KEY,
     uuid                  UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
     team_id               INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
-    balance_grams         DECIMAL(15,3) NOT NULL DEFAULT 0.000, -- 茶叶数量(克)
-    locked_balance_grams  DECIMAL(15,3) NOT NULL DEFAULT 0.000, -- 被锁定的茶叶数量(克)
+    balance_milligrams    INTEGER NOT NULL DEFAULT 0, -- 星茶数量(毫克)，整数重量
+    locked_balance_milligrams INTEGER NOT NULL DEFAULT 0, -- 被锁定的星茶数量(毫克)
     status                VARCHAR(20) NOT NULL DEFAULT 'normal', -- normal, frozen
     frozen_reason         TEXT, -- 冻结原因
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -175,7 +179,7 @@ CREATE UNIQUE INDEX idx_tea_team_accounts_team_id ON tea.team_accounts(team_id);
 CREATE INDEX idx_tea_team_accounts_status ON tea.team_accounts(status);
 
 -- 添加表注释
-COMMENT ON TABLE tea.team_accounts IS '团队茶叶账户表（匹配TeaTeamAccount结构体）';
+COMMENT ON TABLE tea.team_accounts IS '团队星茶账户表（匹配TeaTeamAccount结构体）';
 
 -- 团队对用户转账记录表（完全匹配TeaTeamToUserTransferOut结构体）
 CREATE TABLE tea.team_to_user_transfer_out (
@@ -186,7 +190,7 @@ CREATE TABLE tea.team_to_user_transfer_out (
     to_user_id            INTEGER NOT NULL REFERENCES users(id), -- 接收用户ID
     to_user_name          VARCHAR(255) NOT NULL, -- 接收用户名称
     initiator_user_id     INTEGER NOT NULL REFERENCES users(id), -- 发起转账的用户id
-    amount_grams          DECIMAL(15,3) NOT NULL, -- 转账茶叶数量(克)
+    amount_milligrams     INTEGER NOT NULL, -- 转账星茶数量(毫克)，整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
@@ -194,7 +198,7 @@ CREATE TABLE tea.team_to_user_transfer_out (
     approval_rejection_reason TEXT  NOT NULL DEFAULT '-', -- 审批拒绝原因
     rejected_by           INTEGER REFERENCES users(id), -- 拒绝人ID
     rejected_at           TIMESTAMP, -- 拒绝时间
-    balance_after_transfer DECIMAL(15,3), -- 转账后余额(克)
+    balance_after_transfer INTEGER, -- 转账后余额(毫克)，整数重量
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at            TIMESTAMP NOT NULL, -- 转账请求过期时间
     payment_time          TIMESTAMP, -- 实际支付时间
@@ -220,7 +224,7 @@ CREATE TABLE tea.team_to_team_transfer_out (
     to_team_id            INTEGER NOT NULL REFERENCES teams(id), -- 接收团队ID
     to_team_name          VARCHAR(255) NOT NULL, -- 接收团队名称
     initiator_user_id     INTEGER NOT NULL REFERENCES users(id), -- 发起转账的用户id
-    amount_grams          DECIMAL(15,3) NOT NULL, -- 转账茶叶数量(克)
+    amount_milligrams     INTEGER NOT NULL, -- 转账星茶数量(毫克)，整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
@@ -228,7 +232,7 @@ CREATE TABLE tea.team_to_team_transfer_out (
     approval_rejection_reason TEXT  NOT NULL DEFAULT '-', -- 审批拒绝原因
     rejected_by           INTEGER REFERENCES users(id), -- 拒绝人ID
     rejected_at           TIMESTAMP, -- 拒绝时间
-    balance_after_transfer DECIMAL(15,3), -- 转账后余额(克)
+    balance_after_transfer INTEGER, -- 转账后余额(毫克)，整数重量
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at            TIMESTAMP NOT NULL, -- 转账请求过期时间
     payment_time          TIMESTAMP, -- 实际支付时间
@@ -254,7 +258,7 @@ CREATE TABLE tea.team_from_user_transfer_in (
     to_team_name          VARCHAR(255) NOT NULL, -- 接收团队名称
     from_user_id          INTEGER NOT NULL REFERENCES users(id), -- 转出用户ID
     from_user_name        VARCHAR(255) NOT NULL, -- 转出用户名称
-    amount_grams          DECIMAL(15,3) NOT NULL, -- 转账茶叶数量(克)
+    amount_milligrams     INTEGER NOT NULL, -- 转账星茶数量(毫克)，整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
@@ -281,7 +285,7 @@ CREATE TABLE tea.team_from_team_transfer_in (
     to_team_name          VARCHAR(255) NOT NULL, -- 接收团队名称
     from_team_id          INTEGER NOT NULL REFERENCES teams(id), -- 转出团队ID
     from_team_name        VARCHAR(255) NOT NULL, -- 转出团队名称
-    amount_grams          DECIMAL(15,3) NOT NULL, -- 转账茶叶数量(克)
+    amount_milligrams     INTEGER NOT NULL, -- 转账星茶数量(毫克)，整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
@@ -345,23 +349,23 @@ ALTER TABLE tea.team_from_team_transfer_in ADD CONSTRAINT check_tea_team_from_te
 
 -- 金额不能为负数约束
 ALTER TABLE tea.user_accounts ADD CONSTRAINT check_tea_user_account_balance_positive 
-    CHECK (balance_grams >= 0);
+    CHECK (balance_milligrams >= 0);
 
 ALTER TABLE tea.team_accounts ADD CONSTRAINT check_tea_team_account_balance_positive 
-    CHECK (balance_grams >= 0);
+    CHECK (balance_milligrams >= 0);
 
 -- 转账金额必须大于0
 ALTER TABLE tea.user_to_user_transfer_out ADD CONSTRAINT check_tea_user_to_user_amount_positive 
-    CHECK (amount_grams > 0);
+    CHECK (amount_milligrams > 0);
 
 ALTER TABLE tea.user_to_team_transfer_out ADD CONSTRAINT check_tea_user_to_team_amount_positive 
-    CHECK (amount_grams > 0);
+    CHECK (amount_milligrams > 0);
 
 ALTER TABLE tea.team_to_user_transfer_out ADD CONSTRAINT check_tea_team_to_user_amount_positive 
-    CHECK (amount_grams > 0);
+    CHECK (amount_milligrams > 0);
 
 ALTER TABLE tea.team_to_team_transfer_out ADD CONSTRAINT check_tea_team_to_team_amount_positive 
-    CHECK (amount_grams > 0);
+    CHECK (amount_milligrams > 0);
 
 -- 不能给自己转账（用户对用户）
 ALTER TABLE tea.user_to_user_transfer_out ADD CONSTRAINT check_tea_user_to_user_not_self 
@@ -416,9 +420,9 @@ SELECT
     u.uuid as user_uuid,
     u.name as user_name,
     u.email,
-    COALESCE(tua.balance_grams, 0) as tea_balance,
-    COALESCE(tua.locked_balance_grams, 0) as locked_balance,
-    (COALESCE(tua.balance_grams, 0) - COALESCE(tua.locked_balance_grams, 0)) as available_balance,
+    COALESCE(tua.balance_milligrams, 0) as tea_balance,
+    COALESCE(tua.locked_balance_milligrams, 0) as locked_balance,
+    (COALESCE(tua.balance_milligrams, 0) - COALESCE(tua.locked_balance_milligrams, 0)) as available_balance,
     COALESCE(tua.status, 'no_account') as account_status,
     COALESCE(tua.frozen_reason, '') as frozen_reason,
     -- 待接收转账数量（用户对用户 + 用户对团队）
@@ -436,7 +440,7 @@ SELECT
 FROM users u
 LEFT JOIN tea.user_accounts tua ON u.id = tua.user_id;
 
-COMMENT ON VIEW tea.user_account_summary IS '用户茶叶账户汇总信息视图（基于新表结构）';
+COMMENT ON VIEW tea.user_account_summary IS '用户星茶账户汇总信息视图（基于新表结构）';
 
 -- 团队账户汇总视图（基于新表结构）
 CREATE VIEW tea.team_account_summary AS
@@ -445,9 +449,9 @@ SELECT
     t.uuid as team_uuid,
     t.name as team_name,
     t.abbreviation,
-    COALESCE(tta.balance_grams, 0) as tea_balance,
-    COALESCE(tta.locked_balance_grams, 0) as locked_balance,
-    (COALESCE(tta.balance_grams, 0) - COALESCE(tta.locked_balance_grams, 0)) as available_balance,
+    COALESCE(tta.balance_milligrams, 0) as tea_balance,
+    COALESCE(tta.locked_balance_milligrams, 0) as locked_balance,
+    (COALESCE(tta.balance_milligrams, 0) - COALESCE(tta.locked_balance_milligrams, 0)) as available_balance,
     COALESCE(tta.status, 'no_account') as account_status,
     COALESCE(tta.frozen_reason, '') as frozen_reason,
     -- 待接收转账数量（用户对团队 + 团队对团队）
@@ -461,7 +465,7 @@ SELECT
 FROM teams t
 LEFT JOIN tea.team_accounts tta ON t.id = tta.team_id;
 
-COMMENT ON VIEW tea.team_account_summary IS '团队茶叶账户汇总信息视图（基于新表结构）';
+COMMENT ON VIEW tea.team_account_summary IS '团队星茶账户汇总信息视图（基于新表结构）';
 
 -- ============================================
 -- 第五部分：一致性检查和维护函数
@@ -483,19 +487,19 @@ BEGIN
         SELECT 
             'user_accounts' as account_type,
             COUNT(*) as total_accounts,
-            COUNT(CASE WHEN tua.locked_balance_grams < 0 THEN 1 END) as negative_locked_balance,
-            COUNT(CASE WHEN (tua.balance_grams - tua.locked_balance_grams) < 0 THEN 1 END) as negative_available_balance,
-            COUNT(CASE WHEN ABS(tua.locked_balance_grams - COALESCE(upa.total_pending_amount, 0)) > 0.001 THEN 1 END) as balance_mismatch
+            COUNT(CASE WHEN tua.locked_balance_milligrams < 0 THEN 1 END) as negative_locked_balance,
+            COUNT(CASE WHEN (tua.balance_milligrams - tua.locked_balance_milligrams) < 0 THEN 1 END) as negative_available_balance,
+            COUNT(CASE WHEN ABS(tua.locked_balance_milligrams - COALESCE(upa.total_pending_amount, 0)) > 0.001 THEN 1 END) as balance_mismatch
         FROM tea.user_accounts tua
         LEFT JOIN (
             SELECT 
                 from_user_id,
-                COALESCE(SUM(amount_grams), 0) as total_pending_amount
+                COALESCE(SUM(amount_milligrams), 0) as total_pending_amount
             FROM (
-                SELECT from_user_id, amount_grams FROM tea.user_to_user_transfer_out 
+                SELECT from_user_id, amount_milligrams FROM tea.user_to_user_transfer_out 
                 WHERE status = 'pending_receipt' AND expires_at > NOW()
                 UNION ALL
-                SELECT from_user_id, amount_grams FROM tea.user_to_team_transfer_out 
+                SELECT from_user_id, amount_milligrams FROM tea.user_to_team_transfer_out 
                 WHERE status = 'pending_receipt' AND expires_at > NOW()
             ) all_pending
             GROUP BY from_user_id
@@ -507,9 +511,9 @@ BEGIN
         SELECT 
             'team_accounts' as account_type,
             COUNT(*) as total_accounts,
-            COUNT(CASE WHEN tta.locked_balance_grams < 0 THEN 1 END) as negative_locked_balance,
-            COUNT(CASE WHEN (tta.balance_grams - tta.locked_balance_grams) < 0 THEN 1 END) as negative_available_balance,
-            COUNT(CASE WHEN tta.locked_balance_grams > 0 THEN 1 END) as balance_mismatch
+            COUNT(CASE WHEN tta.locked_balance_milligrams < 0 THEN 1 END) as negative_locked_balance,
+            COUNT(CASE WHEN (tta.balance_milligrams - tta.locked_balance_milligrams) < 0 THEN 1 END) as negative_available_balance,
+            COUNT(CASE WHEN tta.locked_balance_milligrams > 0 THEN 1 END) as balance_mismatch
         FROM tea.team_accounts tta
     ) t;
 END;
@@ -526,28 +530,28 @@ BEGIN
     WITH user_pending_amounts AS (
         SELECT 
             from_user_id,
-            COALESCE(SUM(amount_grams), 0) as total_pending_amount
+            COALESCE(SUM(amount_milligrams), 0) as total_pending_amount
         FROM (
-            SELECT from_user_id, amount_grams FROM tea.user_to_user_transfer_out 
+            SELECT from_user_id, amount_milligrams FROM tea.user_to_user_transfer_out 
             WHERE status = 'pending_receipt' AND expires_at > NOW()
             UNION ALL
-            SELECT from_user_id, amount_grams FROM tea.user_to_team_transfer_out 
+            SELECT from_user_id, amount_milligrams FROM tea.user_to_team_transfer_out 
             WHERE status = 'pending_receipt' AND expires_at > NOW()
         ) all_pending
         GROUP BY from_user_id
     )
     UPDATE tea.user_accounts 
-    SET locked_balance_grams = COALESCE(upa.total_pending_amount, 0)
+    SET locked_balance_milligrams = COALESCE(upa.total_pending_amount, 0)
     FROM user_pending_amounts upa
     WHERE tea.user_accounts.user_id = upa.from_user_id
-    AND ABS(tea.user_accounts.locked_balance_grams - COALESCE(upa.total_pending_amount, 0)) > 0.001;
+    AND ABS(tea.user_accounts.locked_balance_milligrams - COALESCE(upa.total_pending_amount, 0)) > 0.001;
     
     GET DIAGNOSTICS affected_rows = ROW_COUNT;
     RETURN QUERY SELECT 'user_accounts_updated' as action_type, affected_rows as affected_rows;
     
     -- 修复没有待确认转账的用户账户锁定余额
     UPDATE tea.user_accounts 
-    SET locked_balance_grams = 0
+    SET locked_balance_milligrams = 0
     WHERE user_id NOT IN (
         SELECT DISTINCT from_user_id 
         FROM (
@@ -557,15 +561,15 @@ BEGIN
             SELECT from_user_id FROM tea.user_to_team_transfer_out 
             WHERE status = 'pending_receipt' AND expires_at > NOW()
         ) all_pending
-    ) AND locked_balance_grams != 0;
+    ) AND locked_balance_milligrams != 0;
     
     GET DIAGNOSTICS affected_rows = ROW_COUNT;
     RETURN QUERY SELECT 'user_accounts_reset' as action_type, affected_rows as affected_rows;
     
     -- 团队账户目前没有锁定余额机制，将其重置为0
     UPDATE tea.team_accounts 
-    SET locked_balance_grams = 0
-    WHERE locked_balance_grams != 0;
+    SET locked_balance_milligrams = 0
+    WHERE locked_balance_milligrams != 0;
     
     GET DIAGNOSTICS affected_rows = ROW_COUNT;
     RETURN QUERY SELECT 'team_accounts_reset' as action_type, affected_rows as affected_rows;
@@ -576,8 +580,8 @@ $$ LANGUAGE plpgsql;
 -- 第六部分：初始化数据
 -- ============================================
 
--- 为现有用户创建茶叶账户（如果还没有的话）
-INSERT INTO tea.user_accounts (user_id, balance_grams, locked_balance_grams, status)
+-- 为现有用户创建星茶账户（如果还没有的话）
+INSERT INTO tea.user_accounts (user_id, balance_milligrams, locked_balance_milligrams, status)
 SELECT id, 0.000, 0.000, 'normal'
 FROM users u
 WHERE NOT EXISTS (
@@ -585,8 +589,8 @@ WHERE NOT EXISTS (
     WHERE tua.user_id = u.id
 );
 
--- 为现有团队创建茶叶账户（如果还没有的话）
-INSERT INTO tea.team_accounts (team_id, balance_grams, locked_balance_grams, status)
+-- 为现有团队创建星茶账户（如果还没有的话）
+INSERT INTO tea.team_accounts (team_id, balance_milligrams, locked_balance_milligrams, status)
 SELECT id, 0.000, 0.000, 'normal'
 FROM teams t
 WHERE NOT EXISTS (
@@ -599,7 +603,7 @@ WHERE NOT EXISTS (
 -- ============================================
 
 /*
--- 查看用户茶叶账户信息
+-- 查看用户星茶账户信息
 SELECT * FROM tea.user_accounts WHERE user_id = ?;
 
 -- 查看用户对用户转账记录

@@ -65,8 +65,8 @@
       <div class="panel panel-default">
         <div class="panel-heading">出席三方</div>
         <div class="panel-body">
-          <!-- 付茶叶方 -->
-          <label>付茶叶方</label>
+          <!-- 付星茶方 -->
+          <label>付星茶方</label>
           <div class="form-group">
             <input type="text" class="form-control" value="{{ .Payer.Name }}" disabled />
             <input type="hidden" name="payer_user_id" value="{{ .Payer.Id }}" />
@@ -74,8 +74,8 @@
             <input type="hidden" name="payer_team_id" value="{{ .PayerTeam.Id }}" />
           </div>
 
-          <!-- 收茶叶方 -->
-          <label>收茶叶方</label>
+          <!-- 收星茶方 -->
+          <label>收星茶方</label>
           <div class="form-group">
             <input type="text" class="form-control" value="{{ .Payee.Name }}" disabled />
             <input type="hidden" name="payee_user_id" value="{{ .Payee.Id }}" />

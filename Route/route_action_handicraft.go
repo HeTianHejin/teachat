@@ -81,8 +81,8 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 获取收茶叶方登记的技能和法力
-	// 读取茶围的约茶记录，确定收茶叶方团队
+	// 获取收星茶方登记的技能和法力
+	// 读取茶围的约茶记录，确定收星茶方团队
 	project_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
 	if err != nil {
 		util.Debug("Cannot get project appointment by project id", t_proj.Id, err)
@@ -123,13 +123,13 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	team := dao.Team{Id: teamId}
 	if err := team.Get(); err != nil {
 		util.Debug("Cannot get team", teamId, err)
-		report(w, s_u, "获取收茶叶方团队信息失败")
+		report(w, s_u, "获取收星茶方团队信息失败")
 		return
 	}
 	teamCEO, err := team.MemberCEO()
 	if err != nil || teamCEO.UserId <= 0 {
 		util.Debug("Cannot get team CEO", teamId, err)
-		report(w, s_u, "获取收茶叶方团队CEO失败，无法确定策动人")
+		report(w, s_u, "获取收星茶方团队CEO失败，无法确定策动人")
 		return
 	}
 	defaultInitiatorId := teamCEO.UserId

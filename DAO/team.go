@@ -40,7 +40,7 @@ var RoleNameMap = map[int]string{
 
 const (
 	TeamIdNone          = 0 // 0
-	TeamIdFreelancer    = 1 // 1  系统预设"自由人"$事业茶团团队，系统预设，这是所有注册用户的默认$事业茶团，没有茶叶资产
+	TeamIdFreelancer    = 1 // 1  系统预设"自由人"$事业茶团团队，系统预设，这是所有注册用户的默认$事业茶团，没有星茶资产
 	TeamIdSpaceshipCrew = 2 // 2   飞船茶棚团队，系统预设
 
 	// 见证者角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判"违规"情形，将阻止贾宝玉作西厢记类那种"男女礼教脱轨诗"或者禁止薛蟠那种酒色情诗；
@@ -1438,4 +1438,19 @@ func GetFreelancerTeam(ctx context.Context) (Team, error) {
 		freelancerTeam, freelancerTeamErr = fetchFreelancerTeam(ctx)
 	})
 	return freelancerTeam, freelancerTeamErr
+}
+
+// IsTeamActiveMember 检查用户是否是团队成员正常状态TeamMemberStatusActive(1)
+func IsTeamActiveMember(userId, teamId int) (bool, error) {
+	var count int
+	err := DB.QueryRow(`
+		SELECT COUNT(*) FROM team_members 
+		WHERE team_id = $1 AND user_id = $2 AND status = $3
+	`, teamId, userId, TeamMemberStatusActive).Scan(&count)
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
