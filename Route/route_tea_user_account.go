@@ -15,7 +15,7 @@ import (
 type TeaUsrAccountResponse struct {
 	Uuid              string  `json:"uuid"`
 	UserId            int     `json:"user_id"`
-	BalanceMilligrams float64 `json:"balance_grams"`
+	BalanceMilligrams float64 `json:"balance_milligrams"`
 	Status            string  `json:"status"`
 	FrozenReason      *string `json:"frozen_reason,omitempty"`
 	CreatedAt         string  `json:"created_at"`
@@ -28,7 +28,7 @@ type UserToUserTransferOutResponse struct {
 	FromUserName     string  `json:"from_user_name,omitempty"`
 	ToUserId         int     `json:"to_user_id"`
 	ToUserName       string  `json:"to_user_name,omitempty"`
-	AmountMilligrams float64 `json:"amount_grams"`
+	AmountMilligrams float64 `json:"amount_milligrams"`
 	Status           string  `json:"status"`
 	PaymentTime      *string `json:"payment_time,omitempty"`
 	Notes            string  `json:"notes"`
@@ -44,7 +44,7 @@ type UserToTeamTransferResponse struct {
 	FromUserName     string  `json:"from_user_name,omitempty"`
 	ToTeamId         int     `json:"to_team_id"`
 	ToTeamName       string  `json:"to_team_name,omitempty"`
-	AmountMilligrams float64 `json:"amount_grams"`
+	AmountMilligrams float64 `json:"amount_milligrams"`
 	Status           string  `json:"status"`
 	PaymentTime      *string `json:"payment_time,omitempty"`
 	Notes            string  `json:"notes"`
@@ -61,7 +61,7 @@ type UserFromUserTransferResponse struct {
 	FromUserName            string  `json:"from_user_name"`
 	ToUserId                int     `json:"to_user_id"`
 	ToUserName              string  `json:"to_user_name"`
-	AmountMilligrams        float64 `json:"amount_grams"`
+	AmountMilligrams        float64 `json:"amount_milligrams"`
 	BalanceAfterReceipt     float64 `json:"balance_after_receipt"`
 	Status                  string  `json:"status"`
 	IsConfirmed             bool    `json:"is_confirmed"`
@@ -79,7 +79,7 @@ type UserFromTeamTransferResponse struct {
 	FromTeamName            string  `json:"from_team_name"`
 	ToUserId                int     `json:"to_user_id"`
 	ToUserName              string  `json:"to_user_name"`
-	AmountMilligrams        float64 `json:"amount_grams"`
+	AmountMilligrams        float64 `json:"amount_milligrams"`
 	BalanceAfterReceipt     float64 `json:"balance_after_receipt"`
 	Status                  string  `json:"status"`
 	IsConfirmed             bool    `json:"is_confirmed"`
@@ -267,7 +267,7 @@ func CreateTeaUserToUserTransferOutAPI(w http.ResponseWriter, r *http.Request) {
 	// 解析请求体
 	var req struct {
 		ToUserId         int     `json:"to_user_id"`
-		AmountMilligrams float64 `json:"amount_grams"`
+		AmountMilligrams float64 `json:"amount_milligrams"`
 		Notes            string  `json:"notes"`
 		ExpireHours      int     `json:"expire_hours"`
 	}
@@ -341,7 +341,7 @@ func CreateTeaUserToTeamTransferOutAPI(w http.ResponseWriter, r *http.Request) {
 	// 解析请求体
 	var req struct {
 		ToTeamId         int     `json:"to_team_id"`
-		AmountMilligrams float64 `json:"amount_grams"`
+		AmountMilligrams float64 `json:"amount_milligrams"`
 		Notes            string  `json:"notes"`
 		ExpireHours      int     `json:"expire_hours"`
 	}

@@ -220,7 +220,7 @@
                     </div>
                     <div class="form-group">
                         <label for="amountMilligrams">转账数量(克):</label>
-                        <input type="number" class="form-control" id="amountMilligrams" name="amount_grams" required min="0.001" step="0.001">
+                        <input type="number" class="form-control" id="amountMilligrams" name="amount_milligrams" required min="0.001" step="0.001">
                         <small class="help-block">可输入小数，最小单位0.001克(1毫克)</small>
                     </div>
                     <div class="form-group">
@@ -286,7 +286,7 @@ function submitTransfer() {
     
     var transferType = document.getElementById('transferType').value;
     var transferData = {
-        amount_grams: parseFloat(formData.get('amount_grams')),
+        amount_milligrams: parseFloat(formData.get('amount_milligrams')),
         notes: formData.get('notes') || '',
         expire_hours: parseInt(formData.get('expire_hours'))
     };
@@ -317,7 +317,7 @@ function submitTransfer() {
         }
     }
     
-    if (!transferData.amount_grams || transferData.amount_grams <= 0) {
+    if (!transferData.amount_milligrams || transferData.amount_milligrams <= 0) {
         alert('请输入有效的转账数量');
         return;
     }

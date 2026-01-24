@@ -15,7 +15,7 @@ type TeamTeaAccountResponse struct {
 	Uuid              string  `json:"uuid"`
 	TeamId            int     `json:"team_id"`
 	TeamName          string  `json:"team_name,omitempty"`
-	BalanceMilligrams int64   `json:"balance_grams"`
+	BalanceMilligrams int64   `json:"balance_milligrams"`
 	Status            string  `json:"status"`
 	FrozenReason      *string `json:"frozen_reason,omitempty"`
 	CreatedAt         string  `json:"created_at"`
@@ -679,7 +679,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		FromTeamId       int    `json:"from_team_id"`
 		ToUserId         int    `json:"to_user_id"`
-		AmountMilligrams int64  `json:"amount_grams"`
+		AmountMilligrams int64  `json:"amount_milligrams"`
 		Notes            string `json:"notes"`
 		ExpireHours      int    `json:"expire_hours"`
 	}
@@ -737,7 +737,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		FromTeamId       int    `json:"from_team_id"`
 		ToTeamId         int    `json:"to_team_id"`
-		AmountMilligrams int64  `json:"amount_grams"`
+		AmountMilligrams int64  `json:"amount_milligrams"`
 		Notes            string `json:"notes"`
 		ExpireHours      int    `json:"expire_hours"`
 	}
@@ -1573,7 +1573,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 格式化金额显示
-		amountMilligrams := safeFloat64(transfer["amount_grams"])
+		amountMilligrams := safeFloat64(transfer["amount_milligrams"])
 		if amountMilligrams >= 1 {
 			enhanced.AmountDisplay = fmt.Sprintf("%.3f 克", amountMilligrams)
 		} else {

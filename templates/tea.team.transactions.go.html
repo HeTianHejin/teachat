@@ -109,12 +109,12 @@
                                             {{ else }}转出{{ end }}
                                         </span>
                                     </td>
-                                    <td>{{ printf "%.3f" .amount_grams }}克</td>
+                                    <td>{{ printf "%.3f" .amount_milligrams }}克</td>
                                     <td class="{{ if eq .transaction_type "incoming" }}text-success{{ else }}text-danger{{ end }}">
                                         {{ if eq .transaction_type "incoming" }}
-                                        +{{ printf "%.3f" .amount_grams }}
+                                        +{{ printf "%.3f" .amount_milligrams }}
                                         {{ else }}
-                                        -{{ printf "%.3f" .amount_grams }}
+                                        -{{ printf "%.3f" .amount_milligrams }}
                                         {{ end }}克
                                     </td>
                                     <td><small class="text-muted">{{ .notes }}</small></td>
