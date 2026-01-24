@@ -2,20 +2,20 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的茶叶罐</a></li>
+  <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的星茶罐</a></li>
   <li class="active">接收历史</li>
 </ol>
 
 <div class="container">
 
     <div class="row">
-        <!-- 个人茶叶账户概览 -->
+        <!-- 个人星茶账户概览 -->
         <div class="col-md-12">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
-                        个人茶叶账户
+                        个人星茶账户
                         <span class="pull-right">
                             状态: <span class="label {{ if eq .TeaAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ .StatusDisplay }}</span>
                         </span>
@@ -25,15 +25,15 @@
                     <div class="row">
                         <div class="col-md-4">
                             <h4>总余额: <strong>{{ .BalanceDisplay }}</strong></h4>
-                            <p class="text-muted">您的茶叶资产总量</p>
+                            <p class="text-muted">您的星茶资产总量</p>
                         </div>
                         <div class="col-md-4">
                             <h4>锁定余额: <strong>{{ .LockedBalanceDisplay }}</strong></h4>
-                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                            <p class="text-muted">待确认转账中锁定的星茶</p>
                         </div>
                         <div class="col-md-4">
                             <h4>可用余额: <strong>{{ .AvailableBalanceDisplay }}</strong></h4>
-                            <p class="text-muted">可以立即使用的茶叶</p>
+                            <p class="text-muted">可以立即使用的星茶</p>
                         </div>
                     </div>
                 </div>
@@ -194,7 +194,7 @@
                     {{ else }}
                     <div class="alert alert-info">
                         <h4><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> 暂无转入记录</h4>
-                        <p>您还没有收到过其他茶友的茶叶转账。</p>
+                        <p>您还没有收到过其他茶友的星茶转账。</p>
                         <p>当其他茶友向您转账时，记录将显示在这里。</p>
                     </div>
                     {{ end }}
@@ -209,7 +209,7 @@
             <div class="btn-group">
                 <a href="/v1/tea/user/account/page" class="btn btn-default">
                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-                    返回茶叶罐
+                    返回星茶罐
                 </a>
                 <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning">
                     <span class="glyphicon glyphicon-time" aria-hidden="true"></span>

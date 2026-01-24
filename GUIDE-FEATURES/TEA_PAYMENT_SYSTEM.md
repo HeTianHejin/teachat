@@ -1,26 +1,26 @@
-# 茶叶支付系统实现文档
+# 星茶支付系统实现文档
 
 ## 概述
 
-茶叶支付系统为星际茶棚提供了完整的虚拟货币转账功能，以茶叶为基本单位（1克），支持用户间的安全转账交易。
+星茶支付系统为星际茶棚提供了完整的特殊虚拟现实物资星茶转账功能，以星茶为基本单位（1毫克），支持用户间的安全转账交易。
 
 ## 已完成功能
 
 ### 1. 数据库设计
 
 #### 核心表结构
-- **tea_accounts**: 用户茶叶账户表
-  - 存储用户茶叶余额（精确到毫克）
+- **tea_accounts**: 用户星茶账户表
+  - 存储用户星茶余额（精确到毫克）
   - 账户状态管理（正常/冻结）
   - 冻结原因记录
 
-- **tea_transfers**: 茶叶转账记录表
+- **tea_transfers**: 星茶转账记录表
   - 转账发起和确认的双阶段机制
   - 支持备注和拒绝原因
   - 自动过期机制
 
 - **tea_transactions**: 交易流水表
-  - 详细记录所有资金变动
+  - 详细记录所有星茶变动
   - 支持多种交易类型
   - 完整的余额变动追踪
 
@@ -88,7 +88,7 @@
 #### 转账流程
 1. **发起转账**: 验证余额，创建待确认记录
 2. **确认接收**: 扣除转出方余额，增加接收方余额
-3. **拒绝转账**: 更新转账状态，资金不变动
+3. **拒绝转账**: 更新转账状态，星茶不变动
 4. **过期处理**: 超时自动失效
 
 #### 余额管理
@@ -108,7 +108,7 @@ GET /v1/tea/user/account
   "data": {
     "uuid": "xxx",
     "user_id": 1,
-    "balance_grams": 100.500,
+    "balance_milligrams": 100,
     "status": "normal",
     "created_at": "2024-01-01 12:00:00"
   }
@@ -121,8 +121,8 @@ POST /v1/tea/user/transfer/new
 请求:
 {
   "to_user_id": 2,
-  "amount_grams": 10.5,
-  "notes": "茶叶转账测试",
+  "amount_milligrams": 10,
+  "notes": "星茶转账测试",
   "expire_hours": 24
 }
 响应:
@@ -133,7 +133,7 @@ POST /v1/tea/user/transfer/new
     "uuid": "xxx",
     "from_user_id": 1,
     "to_user_id": 2,
-    "amount_grams": 10.5,
+    "amount_milligrams": 10,
     "status": "pending",
     "expires_at": "2024-01-02 12:00:00"
   }
@@ -160,7 +160,7 @@ POST /v1/tea/user/transfer/reject
 请求:
 {
   "transfer_uuid": "xxx",
-  "reason": "不需要这笔茶叶"
+  "reason": "不需要这笔星茶"
 }
 响应:
 {
@@ -173,7 +173,7 @@ POST /v1/tea/user/transfer/reject
 
 ### 数据库更新
 ```sql
--- 执行茶叶支付系统表创建
+-- 执行星茶支付系统表创建
 psql -h localhost -U postgres -d teachat -f sql/tea_payment_system.sql
 ```
 
@@ -186,7 +186,7 @@ psql -h localhost -U postgres -d teachat -f sql/tea_payment_system.sql
 - 转账模板
 
 ### 2. 集成场景
-- 茶叶商城
+- 星茶商城
 - 打赏功能
 - 服务购买
 - 活动奖励
@@ -205,10 +205,10 @@ psql -h localhost -U postgres -d teachat -f sql/tea_payment_system.sql
 
 ## 技术特点
 
-1. **高精度**: 使用DECIMAL(15,3)确保金额精确到毫克
+1. **高精度**: 使用INTEGER精确到毫克
 2. **高并发**: 使用数据库锁和事务处理并发转账
 3. **可扩展**: 模块化设计，易于添加新功能
 4. **安全性**: 完整的权限控制和状态管理
 5. **可维护**: 详细的日志记录和错误处理
 
-茶叶支付系统已完成基础功能实现，可以支持星际茶棚的用户间茶叶转账需求。
+星茶支付系统已完成基础功能实现，可以支持星际茶棚的用户间星茶转账需求。

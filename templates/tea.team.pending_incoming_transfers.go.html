@@ -4,20 +4,20 @@
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/teams/joined">团队事项</a></li>
   <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
-  <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">团队茶叶账户</a></li>
+  <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">团队星茶账户</a></li>
   <li class="active">待确认接收的转入</li>
 </ol>
 
 <div class="container">
 
     <div class="row">
-        <!-- 团队茶叶账户概览 -->
+        <!-- 团队星茶账户概览 -->
         <div class="col-md-12">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
-                        {{ .Team.Name }} 团队茶叶罐
+                        {{ .Team.Name }} 团队星茶罐
                         <span class="pull-right">
                             状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ if eq .TeamAccount.Status "frozen" }}已冻结{{ else }}正常{{ end }}</span>
                         </span>
@@ -26,16 +26,16 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <h4>总余额: <strong>{{ printf "%.3f" .TeamAccount.BalanceGrams }} 克</strong></h4>
-                            <p class="text-muted">团队的茶叶资产总量</p>
+                            <h4>总余额: <strong>{{ printf "%.3f" .TeamAccount.BalanceMilligrams }} 克</strong></h4>
+                            <p class="text-muted">团队的星茶资产总量</p>
                         </div>
                         <div class="col-md-4">
-                            <h4>锁定余额: <strong>{{ printf "%.3f" .TeamAccount.LockedBalanceGrams }} 克</strong></h4>
-                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                            <h4>锁定余额: <strong>{{ printf "%.3f" .TeamAccount.LockedBalanceMilligrams }} 克</strong></h4>
+                            <p class="text-muted">待确认转账中锁定的星茶</p>
                         </div>
                         <div class="col-md-4">
-                            <h4>可用余额: <strong>{{ printf "%.3f" (sub .TeamAccount.BalanceGrams .TeamAccount.LockedBalanceGrams) }} 克</strong></h4>
-                            <p class="text-muted">可以立即使用的茶叶</p>
+                            <h4>可用余额: <strong>{{ printf "%.3f" (sub .TeamAccount.BalanceMilligrams .TeamAccount.LockedBalanceMilligrams) }} 克</strong></h4>
+                            <p class="text-muted">可以立即使用的星茶</p>
                         </div>
                         <div class="col-md-6">
                             <div class="btn-group-vertical" role="group" style="width: 100%;">
@@ -173,7 +173,7 @@
                     <div class="alert alert-info" role="alert">
                         <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                         <strong>暂无待确认转入</strong>
-                        <br>当前没有需要确认接收的茶叶转账。
+                        <br>当前没有需要确认接收的星茶转账。
                     </div>
                     {{ end }}
                 </div>
@@ -191,18 +191,18 @@
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 <h4 class="modal-title">
                     <span class="glyphicon glyphicon-ok-circle text-success"></span>
-                    确认接收茶叶转账
+                    确认接收星茶转账
                 </h4>
             </div>
             <div class="modal-body">
-                <p>您确定要确认接收以下茶叶转账吗？</p>
+                <p>您确定要确认接收以下星茶转账吗？</p>
                 <ul class="list-unstyled">
                     <li><strong>发送方：</strong><span id="confirmFromUser"></span></li>
                     <li><strong>金额：</strong><span id="confirmAmount"></span></li>
                 </ul>
                 <div class="alert alert-success">
                     <span class="glyphicon glyphicon-info-sign"></span>
-                    确认接收后，茶叶将立即转入团队账户。
+                    确认接收后，星茶将立即转入团队账户。
                 </div>
             </div>
             <div class="modal-footer">
@@ -224,11 +224,11 @@
                 <button type="button" class="close" data-dismiss="modal"><span>&times;</span></button>
                 <h4 class="modal-title">
                     <span class="glyphicon glyphicon-remove-circle text-danger"></span>
-                    拒绝接收茶叶转账
+                    拒绝接收星茶转账
                 </h4>
             </div>
             <div class="modal-body">
-                <p>您确定要拒绝接收以下茶叶转账吗？</p>
+                <p>您确定要拒绝接收以下星茶转账吗？</p>
                 <ul class="list-unstyled">
                     <li><strong>发送方：</strong><span id="rejectFromUser"></span></li>
                     <li><strong>金额：</strong><span id="rejectAmount"></span></li>
@@ -239,7 +239,7 @@
                 </div>
                 <div class="alert alert-warning">
                     <span class="glyphicon glyphicon-info-sign"></span>
-                    拒绝接收后，转账将被取消，发送方的茶叶将解除锁定。
+                    拒绝接收后，转账将被取消，发送方的星茶将解除锁定。
                 </div>
             </div>
             <div class="modal-footer">

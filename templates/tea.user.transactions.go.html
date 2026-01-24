@@ -2,20 +2,20 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的茶叶罐</a></li>
+  <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的星茶罐</a></li>
   <li class="active">收支明细</li>
 </ol>
 
 <div class="container">
 
     <div class="row">
-        <!-- 个人茶叶账户概览 -->
+        <!-- 个人星茶账户概览 -->
         <div class="col-md-12">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
-                        个人茶叶账户
+                        个人星茶账户
                         <span class="pull-right">
                             状态: <span class="label {{ if eq .TeaAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ .StatusDisplay }}</span>
                         </span>
@@ -25,13 +25,13 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h4>当前余额: <strong>{{ .BalanceDisplay }}</strong></h4>
-                            <p class="text-muted">您的茶叶资产总量</p>
+                            <p class="text-muted">您的星茶资产总量</p>
                         </div>
                         <div class="col-md-6">
                             <div class="btn-group-vertical" role="group" style="width: 100%;">
                                 <a href="/v1/tea/user/account/page" class="btn btn-default">
                                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-                                    返回茶叶罐
+                                    返回星茶罐
                                 </a>
                                 <a href="/v1/tea/user/transfers/history/page" class="btn btn-default">
                                     <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
@@ -118,13 +118,13 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <strong>{{ FormatFloat .AmountGrams 3 }} 克</strong>
+                                        <strong>{{ FormatFloat .AmountMilligrams 3 }} 克</strong>
                                     </td>
                                     <td>
                                         {{ if .IsIncome }}
-                                        <span class="text-success">+{{ FormatFloat .AmountGrams 3 }} 克</span>
+                                        <span class="text-success">+{{ FormatFloat .AmountMilligrams 3 }} 克</span>
                                         {{ else }}
-                                        <span class="text-danger">-{{ FormatFloat .AmountGrams 3 }} 克</span>
+                                        <span class="text-danger">-{{ FormatFloat .AmountMilligrams 3 }} 克</span>
                                         {{ end }}
                                     </td>
                                     <td>{{ FormatFloat .BalanceBefore 3 }} 克</td>
@@ -193,7 +193,7 @@
                         <p>
                             <a href="/v1/tea/user/account/page" class="btn btn-primary">
                                 <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-                                返回茶叶罐
+                                返回星茶罐
                             </a>
                         </p>
                     </div>

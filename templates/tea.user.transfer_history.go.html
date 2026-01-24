@@ -2,20 +2,20 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的茶叶罐</a></li>
+  <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的星茶罐</a></li>
   <li class="active">转账记录</li>
 </ol>
 
 <div class="container">
 
     <div class="row">
-        <!-- 个人茶叶账户概览 -->
+        <!-- 个人星茶账户概览 -->
         <div class="col-md-12">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
-                        个人茶叶账户
+                        个人星茶账户
                         <span class="pull-right">
                             状态: <span class="label {{ if eq .TeaAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ .StatusDisplay }}</span>
                         </span>
@@ -25,21 +25,21 @@
                     <div class="row">
                         <div class="col-md-4">
                             <h4>总余额: <strong>{{ .BalanceDisplay }}</strong></h4>
-                            <p class="text-muted">您的茶叶资产总量</p>
+                            <p class="text-muted">您的星茶资产总量</p>
                         </div>
                         <div class="col-md-4">
                             <h4>锁定余额: <strong>{{ .LockedBalanceDisplay }}</strong></h4>
-                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                            <p class="text-muted">待确认转账中锁定的星茶</p>
                         </div>
                         <div class="col-md-4">
                             <h4>可用余额: <strong>{{ .AvailableBalanceDisplay }}</strong></h4>
-                            <p class="text-muted">可以立即使用的茶叶</p>
+                            <p class="text-muted">可以立即使用的星茶</p>
                         </div>
                         <div class="col-md-6">
                             <div class="btn-group-vertical" role="group" style="width: 100%;">
                                 <a href="/v1/tea/user/account/page" class="btn btn-default">
                                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-                                    返回茶叶罐
+                                    返回星茶罐
                                 </a>
                                 <a href="/v1/tea/user/transactions/page" class="btn btn-info">
                                     <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
@@ -170,7 +170,7 @@
                         <p>
                             <a href="/v1/tea/user/account/page" class="btn btn-primary">
                                 <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-                                返回茶叶罐
+                                返回星茶罐
                             </a>
                             <a href="#" onclick="showTransferModal()" class="btn btn-success">
                                 <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
@@ -196,7 +196,7 @@
                 </button>
                 <h4 class="modal-title" id="transferModalLabel">
                     <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
-                    发起茶叶转账
+                    发起星茶转账
                 </h4>
             </div>
             <div class="modal-body">
@@ -219,8 +219,8 @@
                         <small class="help-block">请输入要转账的团队ID</small>
                     </div>
                     <div class="form-group">
-                        <label for="amountGrams">转账数量(克):</label>
-                        <input type="number" class="form-control" id="amountGrams" name="amount_grams" required min="0.001" step="0.001">
+                        <label for="amountMilligrams">转账数量(克):</label>
+                        <input type="number" class="form-control" id="amountMilligrams" name="amount_grams" required min="0.001" step="0.001">
                         <small class="help-block">可输入小数，最小单位0.001克(1毫克)</small>
                     </div>
                     <div class="form-group">
@@ -312,7 +312,7 @@ function submitTransfer() {
         }
         // 检查是否向自由人团队转账（自由人团队ID为2）
         if (transferData.to_team_id === 2) {
-            alert('不能向自由人团队转账，自由人团队不支持茶叶资产');
+            alert('不能向自由人团队转账，自由人团队不支持星茶资产');
             return;
         }
     }

@@ -2,8 +2,8 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-   <li>{{ .SessUser.Name }} 的茶叶罐</li>
-  <li class="active">管理 #{{ .SessUser.Id }} 个人茶叶账户</li>
+   <li>{{ .SessUser.Name }} 的星茶罐</li>
+  <li class="active">管理 #{{ .SessUser.Id }} 个人星茶账户</li>
 </ol>
 
 <div class="container">
@@ -31,13 +31,13 @@
     {{ end }}
 
     <div class="row">
-        <!-- 个人茶叶账户概览 -->
+        <!-- 个人星茶账户概览 -->
         <div class="col-md-12">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
-                        茶叶罐
+                        星茶罐
                         <span class="pull-right">
                             状态: <span class="label {{ if .AccountInfo.IsFrozen }}label-danger{{ else }}label-success{{ end }}">{{ .AccountInfo.StatusDisplay }}</span>
                         </span>
@@ -47,15 +47,15 @@
                     <div class="row">
                         <div class="col-md-4">
                             <h4>总余额: <strong>{{ .AccountInfo.BalanceDisplay }}</strong></h4>
-                            <p class="text-muted">您的茶叶资产总量</p>
+                            <p class="text-muted">您的星茶资产总量</p>
                         </div>
                         <div class="col-md-4">
                             <h4>锁定余额: <strong>{{ .AccountInfo.LockedBalanceDisplay }}</strong></h4>
-                            <p class="text-muted">待确认操作中锁定的茶叶</p>
+                            <p class="text-muted">待确认操作中锁定的星茶</p>
                         </div>
                         <div class="col-md-4">
                             <h4>可用余额: <strong>{{ .AccountInfo.AvailableBalanceDisplay }}</strong></h4>
-                            <p class="text-muted"><strong>可以立即使用的茶叶</strong></p>
+                            <p class="text-muted"><strong>可以立即使用的星茶</strong></p>
                         </div>
                       
                     </div>
@@ -88,7 +88,7 @@
                                 {{ if gt .PendingTransferCount 0 }}
                                 <strong>您有 {{ .PendingTransferCount }} 笔待确认转账，请及时处理！</strong>
                                 {{ else }}
-                                确认其他茶友向您转账的茶叶
+                                确认其他茶友向您转账的星茶
                                 {{ end }}
                             </p>
                         </a>
@@ -97,14 +97,14 @@
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 收入记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转入茶叶的记录（仅成功到账）</p>
+                            <p class="list-group-item-text">查看所有转入星茶的记录（仅成功到账）</p>
                         </a>
                         <a href="/v1/tea/user/transfers/ins/user_from_user/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                                 接收历史
                             </h4>
-                            <p class="list-group-item-text">查看所有接收茶叶操作的记录（包括成功、拒绝、超时）</p>
+                            <p class="list-group-item-text">查看所有接收星茶操作的记录（包括成功、拒绝、超时）</p>
                         </a>
                     </div>
                 </div>
@@ -126,14 +126,14 @@
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 发起转账
                             </h4>
-                            <p class="list-group-item-text">向其他茶友或团队转账茶叶</p>
+                            <p class="list-group-item-text">向其他茶友或团队转账星茶</p>
                         </a>
                         <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 支出记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转出茶叶的记录（仅成功到账）</p>
+                            <p class="list-group-item-text">查看所有转出星茶的记录（仅成功到账）</p>
                         </a>
                         <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
@@ -163,7 +163,7 @@
                 </button>
                 <h4 class="modal-title" id="transferModalLabel">
                     <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
-                    发起茶叶转账
+                    发起星茶转账
                 </h4>
             </div>
             <div class="modal-body">
@@ -186,8 +186,8 @@
                         <small class="help-block">请输入要转账的团队ID</small>
                     </div>
                     <div class="form-group">
-                        <label for="amountGrams">转账数量(克):</label>
-                        <input type="number" class="form-control" id="amountGrams" name="amount_grams" required min="0.001" step="0.001">
+                        <label for="amountMilligrams">转账数量(克):</label>
+                        <input type="number" class="form-control" id="amountMilligrams" name="amount_grams" required min="0.001" step="0.001">
                         <small class="help-block">可输入小数，最小单位0.001克(1毫克)。当前可用余额: <strong>{{ .AccountInfo.AvailableBalanceDisplay }}</strong></small>
                     </div>
                     <div class="form-group">

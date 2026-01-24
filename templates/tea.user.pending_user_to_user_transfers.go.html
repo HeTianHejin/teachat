@@ -2,21 +2,21 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-   <li>{{ .SessUser.Name }} 的茶叶罐</li>
-  <li><a href="/v1/tea/user/account/page">管理个人茶叶账户</a></li>
+   <li>{{ .SessUser.Name }} 的星茶罐</li>
+  <li><a href="/v1/tea/user/account/page">管理个人星茶账户</a></li>
   <li class="active">待确认转账</li>
 </ol>
 
 <div class="container">
 
     <div class="row">
-        <!-- 个人茶叶账户概览 -->
+        <!-- 个人星茶账户概览 -->
         <div class="col-md-12">
             <div class="panel panel-primary">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
-                        茶叶罐
+                        星茶罐
                         <span class="pull-right">
                             状态: <span class="label {{ if eq .TeaAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">{{ .StatusDisplay }}</span>
                         </span>
@@ -26,15 +26,15 @@
                     <div class="row">
                         <div class="col-md-4">
                             <h4>总余额: <strong>{{ .BalanceDisplay }}</strong></h4>
-                            <p class="text-muted">您的茶叶资产总量</p>
+                            <p class="text-muted">您的星茶资产总量</p>
                         </div>
                         <div class="col-md-4">
                             <h4>锁定余额: <strong>{{ .LockedBalanceDisplay }}</strong></h4>
-                            <p class="text-muted">待确认转账中锁定的茶叶</p>
+                            <p class="text-muted">待确认转账中锁定的星茶</p>
                         </div>
                         <div class="col-md-4">
                             <h4>可用余额: <strong>{{ .AvailableBalanceDisplay }}</strong></h4>
-                            <p class="text-muted">可以立即使用的茶叶</p>
+                            <p class="text-muted">可以立即使用的星茶</p>
                         </div>
                       
                     </div>
@@ -49,7 +49,7 @@
             <div class="btn-group">
                 <a href="/v1/tea/user/account/page" class="btn btn-default">
                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
-                    返回茶叶罐
+                    返回星茶罐
                 </a>
                 <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning">
                     <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
@@ -189,11 +189,11 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h5><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> 接受转账</h5>
-                            <p>点击"接受"按钮，转账金额将直接计入您的茶叶账户余额中。</p>
+                            <p>点击"接受"按钮，转账金额将直接计入您的星茶账户余额中。</p>
                         </div>
                         <div class="col-md-6">
                             <h5><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span> 拒绝转账</h5>
-                            <p>点击"拒绝"按钮，转账将被拒绝，茶叶将退回给发送方。</p>
+                            <p>点击"拒绝"按钮，转账将被拒绝，星茶将退回给发送方。</p>
                         </div>
                     </div>
                     <div class="row">
@@ -216,7 +216,7 @@
 <script>
 // 接受转账
 function acceptTransfer(transferUuid) {
-    if (!confirm('确定要接受这笔转账吗？茶叶将计入您的账户余额。')) {
+    if (!confirm('确定要接受这笔转账吗？星茶将计入您的账户余额。')) {
         return;
     }
     
@@ -232,7 +232,7 @@ function acceptTransfer(transferUuid) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('转账接受成功！茶叶已计入您的账户。');
+            alert('转账接受成功！星茶已计入您的账户。');
             location.reload(); // 刷新页面
         } else {
             alert('接受失败: ' + data.message);
@@ -264,7 +264,7 @@ function rejectTransfer(transferUuid) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert('转账已拒绝，茶叶将退回给发送方。');
+            alert('转账已拒绝，星茶将退回给发送方。');
             location.reload(); // 刷新页面
         } else {
             alert('拒绝失败: ' + data.message);
