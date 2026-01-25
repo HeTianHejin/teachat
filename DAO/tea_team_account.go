@@ -40,7 +40,7 @@ type TeaTeamAccount struct {
 	BalanceMilligrams       int64  // 星茶数量(毫克）
 	LockedBalanceMilligrams int64  // 被锁定的星茶数量(毫克）
 	Status                  string // normal, frozen
-	FrozenReason            *string
+	FrozenReason            string // 冻结原因,默认值:'-'
 	CreatedAt               time.Time
 	UpdatedAt               *time.Time
 }
@@ -172,7 +172,7 @@ func GetTeaTeamAccountByTeamId(teamId int) (TeaTeamAccount, error) {
 			TeamId:            TeamIdFreelancer,
 			BalanceMilligrams: 0,
 			Status:            TeaTeamAccountStatus_Frozen,
-			FrozenReason:      &reason,
+			FrozenReason:      reason,
 		}
 		return account, nil
 	}
@@ -205,7 +205,7 @@ func (account *TeaTeamAccount) Create() error {
 	return nil
 }
 
-// UpdateStatus 更新账户状态
+// UpdateStatus 更新团队星茶账户状态
 func (account *TeaTeamAccount) UpdateStatus(status, reason string) error {
 	statement := "UPDATE tea.team_accounts SET status = $2, frozen_reason = $3, updated_at = $4 WHERE id = $1"
 	stmt, err := DB.Prepare(statement)
@@ -221,9 +221,7 @@ func (account *TeaTeamAccount) UpdateStatus(status, reason string) error {
 
 	account.Status = status
 	if reason != "" {
-		account.FrozenReason = &reason
-	} else {
-		account.FrozenReason = nil
+		account.FrozenReason = reason
 	}
 	return nil
 }
@@ -273,4 +271,166 @@ func CheckTeamAccountFrozen(teamId int) (bool, string, error) {
 	}
 
 	return false, "", nil
+}
+
+// ProcessTeamToUserExpiredTransfers 处理过期的团队对用户转账，解锁相应的锁定金额
+func ProcessTeamToUserExpiredTransfers() error {
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 查找所有过期且仍为pending_receipt状态的团队对用户转账
+	rows, err := tx.Query(`
+		SELECT id, from_team_id, amount_milligrams 
+		FROM tea.team_to_user_transfer_out 
+		WHERE status = $1 AND expires_at < $2`,
+		TeaTransferStatusPendingReceipt, time.Now())
+	if err != nil {
+		return fmt.Errorf("查询过期转账失败: %v", err)
+	}
+	defer rows.Close()
+
+	var expiredTransfers []struct {
+		Id         int
+		FromTeamId int
+		Amount     int64
+	}
+
+	for rows.Next() {
+		var et struct {
+			Id         int
+			FromTeamId int
+			Amount     int64
+		}
+		if err := rows.Scan(&et.Id, &et.FromTeamId, &et.Amount); err != nil {
+			return fmt.Errorf("扫描过期转账失败: %v", err)
+		}
+		expiredTransfers = append(expiredTransfers, et)
+	}
+
+	if len(expiredTransfers) == 0 {
+		return nil // 没有过期转账需要处理
+	}
+
+	// 处理每个过期转账：更新状态并解锁金额
+	for _, et := range expiredTransfers {
+		// 获取当前锁定余额
+		var currentLockedBalance int64
+		err = tx.QueryRow("SELECT locked_balance_milligrams FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", et.FromTeamId).Scan(&currentLockedBalance)
+		if err != nil {
+			return fmt.Errorf("查询锁定余额失败: %v", err)
+		}
+
+		// 检查锁定余额是否足够
+		if currentLockedBalance < et.Amount {
+			// 锁定余额不足，记录警告并跳过
+			continue
+		}
+
+		// 更新转账状态为过期
+		_, err = tx.Exec("UPDATE tea.team_to_user_transfer_out SET status = $1, updated_at = $2 WHERE id = $3",
+			TeaTransferStatusExpired, time.Now(), et.Id)
+		if err != nil {
+			return fmt.Errorf("更新过期转账状态失败: %v", err)
+		}
+
+		// 解锁相应的锁定金额
+		newLockedBalance := currentLockedBalance - et.Amount
+		_, err = tx.Exec("UPDATE tea.team_accounts SET locked_balance_milligrams = $1, updated_at = $2 WHERE team_id = $3",
+			newLockedBalance, time.Now(), et.FromTeamId)
+		if err != nil {
+			return fmt.Errorf("解锁过期转账金额失败: %v", err)
+		}
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	return nil
+}
+
+// ProcessTeamToTeamExpiredTransfers 处理过期的团队对团队转账，解锁相应的锁定金额
+func ProcessTeamToTeamExpiredTransfers() error {
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 查找所有过期且仍为pending_receipt状态的团队对团队转账
+	rows, err := tx.Query(`
+		SELECT id, from_team_id, amount_milligrams 
+		FROM tea.team_to_team_transfer_out 
+		WHERE status = $1 AND expires_at < $2`,
+		TeaTransferStatusPendingReceipt, time.Now())
+	if err != nil {
+		return fmt.Errorf("查询过期转账失败: %v", err)
+	}
+	defer rows.Close()
+
+	var expiredTransfers []struct {
+		Id         int
+		FromTeamId int
+		Amount     int64
+	}
+
+	for rows.Next() {
+		var et struct {
+			Id         int
+			FromTeamId int
+			Amount     int64
+		}
+		if err := rows.Scan(&et.Id, &et.FromTeamId, &et.Amount); err != nil {
+			return fmt.Errorf("扫描过期转账失败: %v", err)
+		}
+		expiredTransfers = append(expiredTransfers, et)
+	}
+
+	if len(expiredTransfers) == 0 {
+		return nil // 没有过期转账需要处理
+	}
+
+	// 处理每个过期转账：更新状态并解锁金额
+	for _, et := range expiredTransfers {
+		// 获取当前锁定余额
+		var currentLockedBalance int64
+		err = tx.QueryRow("SELECT locked_balance_milligrams FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", et.FromTeamId).Scan(&currentLockedBalance)
+		if err != nil {
+			return fmt.Errorf("查询锁定余额失败: %v", err)
+		}
+
+		// 检查锁定余额是否足够
+		if currentLockedBalance < et.Amount {
+			// 锁定余额不足，记录警告并跳过
+			continue
+		}
+
+		// 更新转账状态为过期
+		_, err = tx.Exec("UPDATE tea.team_to_team_transfer_out SET status = $1, updated_at = $2 WHERE id = $3",
+			TeaTransferStatusExpired, time.Now(), et.Id)
+		if err != nil {
+			return fmt.Errorf("更新过期转账状态失败: %v", err)
+		}
+
+		// 解锁相应的锁定金额
+		newLockedBalance := currentLockedBalance - et.Amount
+		_, err = tx.Exec("UPDATE tea.team_accounts SET locked_balance_milligrams = $1, updated_at = $2 WHERE team_id = $3",
+			newLockedBalance, time.Now(), et.FromTeamId)
+		if err != nil {
+			return fmt.Errorf("解锁过期转账金额失败: %v", err)
+		}
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	return nil
 }

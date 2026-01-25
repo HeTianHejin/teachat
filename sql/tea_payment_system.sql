@@ -29,7 +29,7 @@ CREATE TABLE tea.user_accounts (
     balance_milligrams    INTEGER NOT NULL DEFAULT 0, -- 星茶数量(毫克)，整数重量
     locked_balance_milligrams INTEGER NOT NULL DEFAULT 0, -- 交易有效期被锁定的星茶数量(毫克)
     status                VARCHAR(20) NOT NULL DEFAULT 'normal', -- normal, frozen
-    frozen_reason         TEXT, -- 冻结原因
+    frozen_reason         TEXT DEFAULT '-', -- 冻结原因
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -169,7 +169,7 @@ CREATE TABLE tea.team_accounts (
     balance_milligrams    INTEGER NOT NULL DEFAULT 0, -- 星茶数量(毫克)，整数重量
     locked_balance_milligrams INTEGER NOT NULL DEFAULT 0, -- 被锁定的星茶数量(毫克)
     status                VARCHAR(20) NOT NULL DEFAULT 'normal', -- normal, frozen
-    frozen_reason         TEXT, -- 冻结原因
+    frozen_reason         TEXT DEFAULT '-', -- 冻结原因
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -424,7 +424,7 @@ SELECT
     COALESCE(tua.locked_balance_milligrams, 0) as locked_balance,
     (COALESCE(tua.balance_milligrams, 0) - COALESCE(tua.locked_balance_milligrams, 0)) as available_balance,
     COALESCE(tua.status, 'no_account') as account_status,
-    COALESCE(tua.frozen_reason, '') as frozen_reason,
+    COALESCE(tua.frozen_reason, '-') as frozen_reason,
     -- 待接收转账数量（用户对用户 + 用户对团队）
     (SELECT COUNT(*) FROM tea.user_to_user_transfer_out 
      WHERE to_user_id = u.id AND status = 'pending_receipt' AND expires_at > NOW()) as pending_user_received_count,
@@ -453,7 +453,7 @@ SELECT
     COALESCE(tta.locked_balance_milligrams, 0) as locked_balance,
     (COALESCE(tta.balance_milligrams, 0) - COALESCE(tta.locked_balance_milligrams, 0)) as available_balance,
     COALESCE(tta.status, 'no_account') as account_status,
-    COALESCE(tta.frozen_reason, '') as frozen_reason,
+    COALESCE(tta.frozen_reason, '-') as frozen_reason,
     -- 待接收转账数量（用户对团队 + 团队对团队）
     (SELECT COUNT(*) FROM tea.user_to_team_transfer_out 
      WHERE to_team_id = t.id AND status = 'pending_receipt' AND expires_at > NOW()) as pending_user_transfer_count,

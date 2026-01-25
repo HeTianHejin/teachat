@@ -17,7 +17,7 @@ type TeamTeaAccountResponse struct {
 	TeamName          string  `json:"team_name,omitempty"`
 	BalanceMilligrams int64   `json:"balance_milligrams"`
 	Status            string  `json:"status"`
-	FrozenReason      *string `json:"frozen_reason,omitempty"`
+	FrozenReason      string `json:"frozen_reason,omitempty"`
 	CreatedAt         string  `json:"created_at"`
 }
 
