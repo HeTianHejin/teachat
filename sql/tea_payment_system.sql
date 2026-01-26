@@ -115,7 +115,7 @@ CREATE TABLE tea.user_from_user_transfer_in (
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
-    reception_rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
+    rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -144,7 +144,7 @@ CREATE TABLE tea.user_from_team_transfer_in (
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
-    reception_rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
+    rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -263,7 +263,7 @@ CREATE TABLE tea.team_from_user_transfer_in (
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
-    reception_rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
+    rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -290,7 +290,7 @@ CREATE TABLE tea.team_from_team_transfer_in (
     status                VARCHAR(20) NOT NULL, -- 转入状态
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
-    reception_rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
+    rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
     expires_at            TIMESTAMP NOT NULL, -- 过期时间
     created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

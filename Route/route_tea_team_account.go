@@ -12,13 +12,13 @@ import (
 
 // 团队星茶账户相关响应结构体
 type TeamTeaAccountResponse struct {
-	Uuid              string  `json:"uuid"`
-	TeamId            int     `json:"team_id"`
-	TeamName          string  `json:"team_name,omitempty"`
-	BalanceMilligrams int64   `json:"balance_milligrams"`
-	Status            string  `json:"status"`
+	Uuid              string `json:"uuid"`
+	TeamId            int    `json:"team_id"`
+	TeamName          string `json:"team_name,omitempty"`
+	BalanceMilligrams int64  `json:"balance_milligrams"`
+	Status            string `json:"status"`
 	FrozenReason      string `json:"frozen_reason,omitempty"`
-	CreatedAt         string  `json:"created_at"`
+	CreatedAt         string `json:"created_at"`
 }
 
 // 团队星茶账户解冻请求结构体
@@ -115,8 +115,8 @@ func GetTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "获取团队星茶账户成功", response)
 }
 
-// GetTeaTeamTransactionHistoryAPI 获取团队交易历史（从转出表中查询）
-func GetTeaTeamTransactionHistoryAPI(w http.ResponseWriter, r *http.Request) {
+// GetTeaTeamToTeamCompletedTransferOutsAPI 获取团队对团队转账已完成状态记录
+func GetTeaTeamToTeamCompletedTransferOutsAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -149,7 +149,7 @@ func GetTeaTeamTransactionHistoryAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查用户是否是团队成员
 	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看交易历史")
+		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看团队对团队已完成状态转账纪录")
 		return
 	}
 
@@ -171,14 +171,14 @@ func GetTeaTeamTransactionHistoryAPI(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 获取团队交易历史
-	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
+	// 获取团队对团队已经完成状态交易记录
+	transactions, err := dao.GetTeaTeamToTeamCompletedTransferOuts(teamId, page, limit)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取交易历史失败")
+		respondWithError(w, http.StatusInternalServerError, "获取团队对团队已完成状态转账纪录失败")
 		return
 	}
 
-	respondWithSuccess(w, "获取团队交易历史成功", transactions)
+	respondWithSuccess(w, "获取团队对团队已完成状态转账纪录成功", transactions)
 }
 
 // FreezeTeaTeamAccountAPI 冻结团队星茶账户
@@ -222,9 +222,9 @@ func FreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户权限
-	canManage, err := dao.CanUserManageTeamAccount(user.Id, req.TeamId)
-	if err != nil || !canManage {
-		respondWithError(w, http.StatusForbidden, "您没有权限管理该团队账户")
+	canFreeze, err := dao.IsTeamActiveMember(user.Id, dao.TeamIdSpaceshipCrew)
+	if err != nil || !canFreeze {
+		respondWithError(w, http.StatusForbidden, "您没有权限冻结团队账户")
 		return
 	}
 
@@ -275,9 +275,9 @@ func UnfreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户权限
-	canManage, err := dao.CanUserManageTeamAccount(user.Id, req.TeamId)
-	if err != nil || !canManage {
-		respondWithError(w, http.StatusForbidden, "您没有权限管理该团队账户")
+	canFreeze, err := dao.IsTeamActiveMember(user.Id, dao.TeamIdSpaceshipCrew)
+	if err != nil || !canFreeze {
+		respondWithError(w, http.StatusForbidden, "您没有权限冻结团队账户")
 		return
 	}
 
@@ -373,14 +373,15 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		AvailableBalanceMilligrams: teamAccount.BalanceMilligrams - teamAccount.LockedBalanceMilligrams,
 	}
 
-	// 获取待确认接收操作数量
+	// 获取待确认接收来自团队转账操作数量
 	pendingIncomingCount, err := dao.CountPendingTeamReceipts(team.Id)
 	if err != nil {
 		util.Debug("cannot get pending incoming transfers count", err)
 		pendingIncomingCount = 0
 	}
+	//TODO： 获取待确认接收来自用户转账操作数量
 
-	// 获取待审批操作数量
+	// 获取帐户转出，待审批操作数量
 	pendingApprovalCount, err := dao.CountPendingTeamApprovals(team.Id)
 	if err != nil {
 		util.Debug("cannot get pending approval operations count", err)
@@ -964,7 +965,7 @@ func GetTeaTeamToUserTransferHistoryAPI(w http.ResponseWriter, r *http.Request) 
 	respondWithPagination(w, "获取团队对用户转账历史成功", transactions, page, limit, 0)
 }
 
-// GetTeaTeamToTeamTransferHistoryAPI 获取团队对团队转账历史API
+// GetTeaTeamToTeamTransferHistoryAPI 获取团队对团队转账已完成状态记录API
 func GetTeaTeamToTeamTransferHistoryAPI(w http.ResponseWriter, r *http.Request) {
 	user, err := getCurrentUserFromSession(r)
 	if err != nil {

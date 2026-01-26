@@ -143,8 +143,8 @@
                                         {{ end }}
                                     </td>
                                     <td>
-                                        {{ if and (eq .StatusDisplay "已拒绝") .ReceptionRejectionReason.Valid }}
-                                        <small class="text-danger">{{ .ReceptionRejectionReason.String }}</small>
+                                        {{ if and (eq .StatusDisplay "已拒绝") .RejectionReason.Valid }}
+                                        <small class="text-danger">{{ .RejectionReason.String }}</small>
                                         {{ else }}
                                         <small class="text-muted">-</small>
                                         {{ end }}
