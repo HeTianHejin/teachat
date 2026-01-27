@@ -605,8 +605,8 @@ func CreateTeaUserToTeamTransferOut(user_id int, to_team_id int, amount_milligra
 	return transfer, nil
 }
 
-// GetTeaUserToUserPendingTransferOutsCount 获取用户星茶账户发起的，用户对用户,待处理状态的转账数量
-func GetTeaUserToUserPendingTransferOutsCount(userId int) (int, error) {
+// GetTeaUserToUserPendingTransferInsCount 获取用户星茶账户发起的，用户对用户,待处理状态的转账数量
+func GetTeaUserToUserPendingTransferInsCount(userId int) (int, error) {
 	var count int
 	err := DB.QueryRow(`
 		SELECT COUNT(*) 
@@ -647,6 +647,19 @@ func GetTeaUserFromTeamPendingTransferIns(to_user_id int, page, limit int) ([]Te
 		transfers = append(transfers, transfer)
 	}
 	return transfers, nil
+}
+
+// GetTeaUserFromTeamPendingTransferInsCount 获取用户星茶账户待处理状态用户对团队转账数量
+func GetTeaUserFromTeamPendingTransferInsCount(to_user_id int) (int, error) {
+	var count int
+	err := DB.QueryRow(`
+		SELECT COUNT(*) 
+		FROM tea.user_from_team_transfer_in 
+		WHERE to_user_id = $1 AND status = $2`, to_user_id, TeaTransferStatusPendingReceipt).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("查询用户待确认状态用户对团队转账数量失败: %v", err)
+	}
+	return count, nil
 }
 
 // GetTeaUserToTeamPendingTransferOutsCount 获取用户星茶账户发起的，用户对团队,待处理状态的转账数量
@@ -1045,6 +1058,7 @@ func GetTeaUserToTeamExpiredTransfers(user_id, page, limit int) ([]TeaUserToTeam
 	}
 	return transfers, nil
 }
+
 // GetTeaUserToUserCompletedTransferOuts 获取用户对用户转出已完成记录（仅已完成状态）
 func GetTeaUserToUserCompletedTransferOuts(from_user_id int, page, limit int) ([]TeaUserToUserTransferOut, error) {
 	rows, err := DB.Query(`

@@ -54,7 +54,7 @@ var (
 	TeamUUIDSpaceshipCrew = "dcbe3046-b192-44b6-7afb-bc55817c13a9"
 	TeamUUIDFreelancer    = "72c06442-2b60-418a-6493-a91bd03ae4k8"
 	TeamUUIDVerifier      = "38be3046-b192-44b6-7afb-bc55817c13c4"
-	TeamUUIDEscrow        = "center-escrow-team-uuid" // 托管团队UUID，预留
+	TeamUUIDEscrow        = "center-escrow-team-uuid" // 托管“星茶”团队UUID，预留
 )
 
 // 从数据库查询获取团队

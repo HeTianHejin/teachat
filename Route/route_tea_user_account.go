@@ -158,6 +158,13 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
 		return
 	}
+	// 获取用户待确认来自团队转账数量
+	pendingFromTeamCount, err := dao.GetTeaUserFromTeamPendingTransferInsCount(s_u.Id)
+	if err != nil {
+		util.Debug("cannot get pending team transfers count", err)
+		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
+		return
+	}
 
 	// 创建星茶罐数据结构
 	var deskData struct {
@@ -170,12 +177,14 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 			StatusDisplay           string
 			IsFrozen                bool
 		}
-		PendingTransferCount int
+		PendingTransferFromUserCount int
+		PendingTransferFromTeamCount int
 	}
 
 	deskData.SessUser = s_u
 	deskData.TeaAccount = accountInfo
-	deskData.PendingTransferCount = pendingFromUserCount
+	deskData.PendingTransferFromUserCount = pendingFromUserCount
+	deskData.PendingTransferFromTeamCount = pendingFromTeamCount
 
 	// 状态显示
 	if accountInfo.Status == dao.TeaAccountStatus_Frozen {
@@ -1819,15 +1828,16 @@ func UserFromTeamCompletedTransferInsGet(w http.ResponseWriter, r *http.Request)
 }
 
 // 辅助函数：安全获取time.Time值，处理nil和any类型
-func safeTime(val any) time.Time {
-	if val == nil {
-		return time.Time{}
-	}
-	if t, ok := val.(time.Time); ok {
-		return t
-	}
-	return time.Time{}
-}
+// func safeTime(val any) time.Time {
+// 	if val == nil {
+// 		return time.Time{}
+// 	}
+// 	if t, ok := val.(time.Time); ok {
+// 		return t
+// 	}
+// 	return time.Time{}
+// }
+
 // GetTeaUserToUserCompletedTransfersAPI 获取用户对用户转出已完成记录列表API(仅已完成状态)
 func GetTeaUserToUserCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
@@ -1990,6 +2000,7 @@ func UserToUserCompletedTransfersGet(w http.ResponseWriter, r *http.Request) {
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.completed_transfer_outs")
 }
+
 // GetTeaUserToTeamCompletedTransfersAPI 获取用户对团队转出已完成记录列表API(仅已完成状态)
 func GetTeaUserToTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
@@ -2152,6 +2163,7 @@ func UserToTeamCompletedTransfersGet(w http.ResponseWriter, r *http.Request) {
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.completed_transfer_outs_to_team")
 }
+
 // GetTeaUserToUserExpiredTransfers 获取用户对用户转出已超时记录列表页面(仅已超时状态)
 func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -2385,6 +2397,7 @@ func UserToTeamExpiredTransfersGet(w http.ResponseWriter, r *http.Request) {
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.expired_transfer_outs_to_team")
 }
+
 // GetTeaUserFromUserPendingTransfers 等待用户确认接收用户转入记录列表页面 - 待确认状态
 func GetTeaUserFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -2566,6 +2579,7 @@ func GetTeaUserFromTeamPendingTransfersAPI(w http.ResponseWriter, r *http.Reques
 
 	respondWithPagination(w, "获取用户来自团队待确认转入记录成功", responses, page, limit, 0)
 }
+
 // ConfirmTeaUserFromTeamTransferInAPI 用户确认接收来自团队转账API
 func ConfirmTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
@@ -2621,6 +2635,7 @@ func ConfirmTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request)
 
 	respondWithSuccess(w, "用户对团队转账确认接收成功", nil)
 }
+
 // HandleTeaUserFromTeamCompletedTransfersAPI 用户已经确认接收团队转入记录API - 收入记录（仅已完成）
 func HandleTeaUserFromTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
@@ -2664,6 +2679,7 @@ func HandleTeaUserFromTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.R
 
 	respondWithPagination(w, "获取用户来自团队已完成转入记录成功", responses, page, limit, 0)
 }
+
 // HandleTeaUserFromUserPendingTransfers 等待用户确认接收来自团队转入记录页面 - 待确认状态
 func HandleTeaUserFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
