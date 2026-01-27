@@ -47,12 +47,14 @@ const (
 	// 又或者是社团组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核和评分，所以说"见证"记录事件发生的真实性、合规性。
 	// 见证人也是活动进程主持人，类似教堂神父主持婚礼活动，发现不道德的欺瞒情况，例如新郎或者新娘竟然是重婚者之类不符合道德规范的活动将取消或者宣布无效。
 	TeamIdVerifier = 3 // 3 见证者团队，系统预设
+	TeamIdEscrow   = 4 // 4 托管团队，系统预设，预留
 )
 
 var (
 	TeamUUIDSpaceshipCrew = "dcbe3046-b192-44b6-7afb-bc55817c13a9"
 	TeamUUIDFreelancer    = "72c06442-2b60-418a-6493-a91bd03ae4k8"
 	TeamUUIDVerifier      = "38be3046-b192-44b6-7afb-bc55817c13c4"
+	TeamUUIDEscrow        = "center-escrow-team-uuid" // 托管团队UUID，预留
 )
 
 // 从数据库查询获取团队
