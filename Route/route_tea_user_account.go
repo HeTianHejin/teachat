@@ -195,6 +195,12 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 		deskData.AccountInfo.IsFrozen = false
 	}
 
+	// 余额显示
+	deskData.AccountInfo.BalanceDisplay = fmt.Sprintf("%d 毫克", accountInfo.BalanceMilligrams)
+	deskData.AccountInfo.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", accountInfo.LockedBalanceMilligrams)
+	availableBalance := accountInfo.BalanceMilligrams - accountInfo.LockedBalanceMilligrams
+	deskData.AccountInfo.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+
 	generateHTML(w, &deskData, "layout", "navbar.private", "tea.user.account")
 }
 
