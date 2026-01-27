@@ -34,13 +34,14 @@ type TeamAccountWithAvailable struct {
 
 // PageData 用于模板渲染
 type PageData struct {
-	SessUser             dao.User
-	Team                 *dao.Team
-	TeamAccount          TeamAccountWithAvailable
-	TransactionHistory   []map[string]any
-	UserIsCoreMember     bool
-	PendingIncomingCount int
-	PendingApprovalCount int
+	SessUser                 dao.User
+	Team                     *dao.Team
+	TeamAccount              TeamAccountWithAvailable
+	TransactionHistory       []map[string]any
+	UserIsCoreMember         bool
+	PendingIncomingTeamCount int
+	PendingIncomingUserCount int
+	PendingApprovalCount     int
 }
 
 // GetTeaTeamAccountAPI 获取团队星茶账户信息
@@ -380,6 +381,11 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 		pendingIncomingCount = 0
 	}
 	//TODO： 获取待确认接收来自用户转账操作数量
+	pendingIncomingUserCount, err := dao.CountPendingUserReceipts(team.Id)
+	if err != nil {
+		util.Debug("cannot get pending incoming user transfers count", err)
+		pendingIncomingUserCount = 0
+	}
 
 	// 获取帐户转出，待审批操作数量
 	pendingApprovalCount, err := dao.CountPendingTeamApprovals(team.Id)
@@ -392,13 +398,13 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	// 判断是否核心成员
 	isCoreMember, _ := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
 	pageData := PageData{
-		SessUser:             s_u,
-		Team:                 singleTeam,
-		TeamAccount:          teamAccountWithAvailable,
-		TransactionHistory:   []map[string]any{}, // 空数组，不再显示最近交易记录
-		UserIsCoreMember:     isCoreMember,
-		PendingIncomingCount: pendingIncomingCount,
-		PendingApprovalCount: pendingApprovalCount,
+		SessUser:                 s_u,
+		Team:                     singleTeam,
+		TeamAccount:              teamAccountWithAvailable,
+		UserIsCoreMember:         isCoreMember,
+		PendingIncomingTeamCount: pendingIncomingCount,
+		PendingIncomingUserCount: pendingIncomingUserCount,
+		PendingApprovalCount:     pendingApprovalCount,
 	}
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")
@@ -516,16 +522,12 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 	pageData.FilterType = filterType
 
 	// 格式化余额显示
-	if teamAccount.BalanceMilligrams >= 1 {
-		pageData.BalanceDisplay = fmt.Sprintf("%.2f 克", teamAccount.BalanceMilligrams)
-	} else {
-		pageData.BalanceDisplay = fmt.Sprintf("%.0f 毫克", teamAccount.BalanceMilligrams*1000)
-	}
+	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", teamAccount.BalanceMilligrams)
 
 	// 状态显示
 	if teamAccount.Status == "frozen" {
-		if teamAccount.FrozenReason != nil {
-			pageData.StatusDisplay = "已冻结 (" + *teamAccount.FrozenReason + ")"
+		if teamAccount.FrozenReason != "" {
+			pageData.StatusDisplay = "已冻结 (" + teamAccount.FrozenReason + ")"
 		} else {
 			pageData.StatusDisplay = "已冻结"
 		}
@@ -639,16 +641,12 @@ func HandleTeaTeamOperationsHistory(w http.ResponseWriter, r *http.Request) {
 	pageData.Limit = limit
 
 	// 格式化余额显示
-	if teamAccount.BalanceMilligrams >= 1 {
-		pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%.2f 克", teamAccount.BalanceMilligrams)
-	} else {
-		pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%.0f 毫克", teamAccount.BalanceMilligrams*1000)
-	}
+	pageData.TeamAccount.BalanceDisplay = fmt.Sprintf("%d 毫克", teamAccount.BalanceMilligrams)
 
 	// 状态显示
 	if teamAccount.Status == "frozen" {
-		if teamAccount.FrozenReason != nil {
-			pageData.TeamAccount.StatusDisplay = "已冻结 (" + *teamAccount.FrozenReason + ")"
+		if teamAccount.FrozenReason != "" {
+			pageData.TeamAccount.StatusDisplay = "已冻结 (" + teamAccount.FrozenReason + ")"
 		} else {
 			pageData.TeamAccount.StatusDisplay = "已冻结"
 		}
@@ -1080,8 +1078,8 @@ func GetTeaTeamFromTeamTransferInsAPI(w http.ResponseWriter, r *http.Request) {
 // 团队转账确认/拒绝API路由处理函数
 // ============================================
 
-// ConfirmTeaTeamToUserTransferAPI 确认接收团队对用户转账API
-func ConfirmTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
+// ConfirmTeaTeamFromUserTransferAPI 团队确认接收来自用户转账API
+func ConfirmTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
 		return
@@ -1106,17 +1104,17 @@ func ConfirmTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.ConfirmTeamToUserTransfer(req.TransferUuid, user.Id)
+	err = dao.ConfirmTeaTeamFromUserTransfer(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	respondWithSuccess(w, "团队对用户转账确认接收成功", nil)
+	respondWithSuccess(w, "团队确认接收来自用户转账成功", nil)
 }
 
-// RejectTeaTeamToUserTransferAPI 拒绝接收团队对用户转账API
-func RejectTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
+// RejectTeaTeamFromUserTransferAPI 团队拒绝接收来自用户转账API
+func RejectTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
 		return
@@ -1142,17 +1140,17 @@ func RejectTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.RejectTeamToUserTransferReceipt(req.TransferUuid, user.Id, req.Reason)
+	err = dao.RejectTeaTeamFromUserTransfer(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	respondWithSuccess(w, "团队对用户转账拒绝成功", nil)
+	respondWithSuccess(w, "团队拒绝接收来自用户转账成功", nil)
 }
 
-// ConfirmTeaTeamToTeamTransferAPI 确认接收团队对团队转账API
-func ConfirmTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
+// ConfirmTeaTeamFromTeamTransferAPI 团队确认接收来自团队转账API
+func ConfirmTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
 		return
@@ -1194,17 +1192,17 @@ func ConfirmTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.ConfirmTeamToTeamTransfer(req.TransferUuid, user.Id)
+	err = dao.ConfirmTeaTeamFromTeamTransfer(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	respondWithSuccess(w, "团队对团队转账确认接收成功", nil)
+	respondWithSuccess(w, "团队确认接收来自团队转账成功", nil)
 }
 
-// RejectTeaTeamToTeamTransferAPI 拒绝接收团队对团队转账API
-func RejectTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
+// RejectTeaTeamFromTeamTransferAPI 团队拒绝接收来自团队转账API
+func RejectTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
 		return
@@ -1247,13 +1245,13 @@ func RejectTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.RejectTeamToTeamTransferReceipt(req.TransferUuid, user.Id, req.Reason)
+	err = dao.RejectTeaTeamFromTeamTransfer(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	respondWithSuccess(w, "团队对团队转账拒绝成功", nil)
+	respondWithSuccess(w, "团队拒绝接收来自团队转账成功", nil)
 }
 
 // ============================================
@@ -1286,7 +1284,7 @@ func ApproveTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.ApproveTeamToUserTransfer(req.TransferUuid, user.Id)
+	err = dao.ApproveTeaTeamToUserTransfer(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1321,7 +1319,7 @@ func ApproveTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.ApproveTeamToTeamTransfer(req.TransferUuid, user.Id)
+	err = dao.ApproveTeaTeamToTeamTransfer(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1357,7 +1355,7 @@ func RejectTeaTeamToUserTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = dao.RejectTeamToUserTransfer(req.TransferUuid, user.Id, req.Reason)
+	err = dao.RejectTeaTeamToUserTransfer(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1393,7 +1391,7 @@ func RejectTeaTeamToTeamTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = dao.RejectTeamToTeamTransfer(req.TransferUuid, user.Id, req.Reason)
+	err = dao.RejectTeaTeamToTeamTransfer(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1574,12 +1572,8 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 格式化金额显示
-		amountMilligrams := safeFloat64(transfer["amount_milligrams"])
-		if amountMilligrams >= 1 {
-			enhanced.AmountDisplay = fmt.Sprintf("%.3f 克", amountMilligrams)
-		} else {
-			enhanced.AmountDisplay = fmt.Sprintf("%.0f 毫克", amountMilligrams*1000)
-		}
+		amountMilligrams := safeInt64(transfer["amount_milligrams"])
+		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", amountMilligrams)
 
 		// 格式化时间显示和检查过期状态
 		if createdAt, ok := transfer["created_at"].(time.Time); ok {
@@ -1682,23 +1676,134 @@ func safeString(val any) string {
 	return fmt.Sprintf("%v", val)
 }
 
-// 辅助函数：安全获取flost64值
-func safeFloat64(val any) float64 {
-	if val == nil {
-		return 0
+// HandleTeaTeamToTeamCompletedTransferOuts 处理团队对团队已完成状态转账记录页面请求
+func HandleTeaTeamToTeamCompletedTransferOuts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
 	}
-	switch v := val.(type) {
-	case float64:
-		return v
-	case float32:
-		return float64(v)
-	case int:
-		return float64(v)
-	case int64:
-		return float64(v)
-	default:
-		return 0
+
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
 	}
+
+	user, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, user, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 必须指定团队ID
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		report(w, user, "必须指定团队ID。")
+		return
+	}
+
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		report(w, user, "团队ID无效。")
+		return
+	}
+
+	// 获取团队信息
+	team, err := dao.GetTeam(teamId)
+	if err != nil {
+		util.Debug("cannot get team by id", teamId, err)
+		report(w, user, "团队不存在。")
+		return
+	}
+
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
+	if err != nil || !isMember {
+		report(w, user, "您不是该团队成员，无法查看已完成转账记录。")
+		return
+	}
+
+	// 获取分页参数
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	page := 1
+	limit := 20
+
+	if pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+
+	// 获取团队对团队已完成状态转账记录
+	transferOuts, err := dao.GetTeaTeamToTeamCompletedTransferOuts(teamId, page, limit)
+	if err != nil {
+		util.Debug("cannot get team-to-team completed transfers", err)
+		transferOuts = []dao.TeaTeamToTeamTransferOut{}
+	}
+
+	// 转换为模板需要的map格式
+	transactionMaps := make([]map[string]any, len(transferOuts))
+	for i, t := range transferOuts {
+		transactionMaps[i] = map[string]any{
+			"created_at":        t.CreatedAt,
+			"amount_milligrams": t.AmountMilligrams,
+			"notes":             t.Notes,
+			"to_team_name":      t.ToTeamName,
+			"to_team_id":        t.ToTeamId,
+			"status":            t.Status,
+		}
+	}
+
+	// 获取团队星茶账户信息
+	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
+	if err != nil {
+		util.Debug("cannot get team tea account", err)
+		teamAccount = dao.TeaTeamAccount{}
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser       dao.User
+		Team           *dao.Team
+		TeamAccount    dao.TeaTeamAccount
+		Transactions   []map[string]any
+		CurrentPage    int
+		Limit          int
+		BalanceDisplay string
+		StatusDisplay  string
+	}
+
+	pageData.SessUser = user
+	pageData.Team = &team
+	pageData.TeamAccount = teamAccount
+	pageData.Transactions = transactionMaps
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	// 格式化余额显示
+	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", teamAccount.BalanceMilligrams)
+
+	// 状态显示
+	if teamAccount.Status == "frozen" {
+		if teamAccount.FrozenReason != "" {
+			pageData.StatusDisplay = "已冻结 (" + teamAccount.FrozenReason + ")"
+		} else {
+			pageData.StatusDisplay = "已冻结"
+		}
+	} else {
+		pageData.StatusDisplay = "正常"
+	}
+
+	// 生成页面
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.completed_team_to_team_transfers")
 }
 
 // 辅助函数：安全获取int64值

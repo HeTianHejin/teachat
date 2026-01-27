@@ -1,0 +1,145 @@
+{{ define "content" }}
+
+{{/* 团队对团队已完成转账记录页面 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
+  <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">#{{ .Team.Id }} 团队星茶账户</a></li>
+  <li class="active">团队对团队已完成转账记录</li>
+</ol>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="page-header">
+                <h3>{{ .Team.Name }}
+                    <small>团队对团队已完成转账记录</small>
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- 团队星茶账户概览 -->
+        <div class="col-md-12">
+            <div class="panel panel-primary">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
+                        星茶罐
+                        <span class="pull-right">
+                            状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">
+                                {{ .StatusDisplay }}
+                            </span>
+                            <a href="/v1/tea/team/account?team_id={{ .Team.Id }}" class="btn btn-xs btn-default">
+                                <span class="glyphicon glyphicon-arrow-left"></span> 返回账户
+                            </a>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h4>当前余额: <strong>{{ .BalanceDisplay }}</strong></h4>
+                            <p class="text-muted">团队星茶资产总量</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>显示记录: <strong>{{ len .Transactions }}</strong></h4>
+                            <p class="text-muted">当前页面已完成转账记录数</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 转账记录列表 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
+                        团队对团队已完成转账记录
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    {{ if .Transactions }}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>时间</th>
+                                    <th>类型</th>
+                                    <th>金额</th>
+                                    <th>目标团队</th>
+                                    <th>说明</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .Transactions }}
+                                <tr class="success">
+                                    <td>{{ if .created_at }}{{ .created_at.Format "2006-01-02 15:04:05" }}{{ else }}-{{ end }}</td>
+                                    <td>
+                                        <span class="label label-success">
+                                            团队对团队转账
+                                        </span>
+                                    </td>
+                                    <td>{{ printf "%.3f" .amount_milligrams }}克</td>
+                                    <td>
+                                        {{ if .to_team_name }}
+                                            {{ .to_team_name }} (ID: {{ .to_team_id }})
+                                        {{ else }}
+                                            未知团队
+                                        {{ end }}
+                                    </td>
+                                    <td><small class="text-muted">{{ .notes }}</small></td>
+                                    <td>
+                                        <span class="label label-success">已完成</span>
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页导航 -->
+                    <nav>
+                        <ul class="pagination">
+                            {{ if gt .CurrentPage 0 }}
+                            <li>
+                                <a href="?team_id={{ .Team.Id }}&page={{ sub .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="上一页">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            {{ end }}
+                            
+                            <li class="active">
+                                <span>第 {{ add .CurrentPage 1 }} 页</span>
+                            </li>
+                            
+                            <li>
+                                <a href="?team_id={{ .Team.Id }}&page={{ add .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="下一页">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {{ else }}
+                    <div class="text-center">
+                        <p class="text-muted">暂无已完成转账记录</p>
+                        <a href="/v1/tea/team/account?team_id={{ .Team.Id }}" class="btn btn-primary">
+                            <span class="glyphicon glyphicon-arrow-left"></span> 返回团队账户
+                        </a>
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ end }}
