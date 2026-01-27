@@ -1045,3 +1045,60 @@ func GetTeaUserToTeamExpiredTransfers(user_id, page, limit int) ([]TeaUserToTeam
 	}
 	return transfers, nil
 }
+// GetTeaUserToUserCompletedTransferOuts 获取用户对用户转出已完成记录（仅已完成状态）
+func GetTeaUserToUserCompletedTransferOuts(from_user_id int, page, limit int) ([]TeaUserToUserTransferOut, error) {
+	rows, err := DB.Query(`
+		SELECT id, uuid, from_user_id, from_user_name, to_user_id, to_user_name, 
+		       amount_milligrams, notes, status, balance_after_transfer, 
+		       expires_at, created_at, payment_time, updated_at
+		FROM tea.user_to_user_transfer_out
+		WHERE from_user_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, from_user_id, TeaTransferStatusCompleted, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询用户对用户转出已完成记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaUserToUserTransferOut{}
+	for rows.Next() {
+		var transfer TeaUserToUserTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.FromUserName,
+			&transfer.ToUserId, &transfer.ToUserName, &transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.Status, &transfer.BalanceAfterTransfer, &transfer.ExpiresAt, &transfer.CreatedAt,
+			&transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("扫描用户对用户转出已完成记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	return transfers, nil
+}
+
+// GetTeaUserToTeamCompletedTransferOuts 获取用户对团队转出已完成记录（仅已完成状态）
+func GetTeaUserToTeamCompletedTransferOuts(from_user_id int, page, limit int) ([]TeaUserToTeamTransferOut, error) {
+	rows, err := DB.Query(`
+		SELECT id, uuid, from_user_id, from_user_name, to_team_id, to_team_name,
+		       amount_milligrams, notes, status, balance_after_transfer,
+		       expires_at, created_at, payment_time, updated_at
+		FROM tea.user_to_team_transfer_out
+		WHERE from_user_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, from_user_id, TeaTransferStatusCompleted, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询用户对团队转出已完成记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaUserToTeamTransferOut{}
+	for rows.Next() {
+		var transfer TeaUserToTeamTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.FromUserName,
+			&transfer.ToTeamId, &transfer.ToTeamName, &transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.Status, &transfer.BalanceAfterTransfer, &transfer.ExpiresAt, &transfer.CreatedAt,
+			&transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("扫描用户对团队转出已完成记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	return transfers, nil
+}
