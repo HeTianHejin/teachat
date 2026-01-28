@@ -88,6 +88,22 @@ util（package util）文件夹存放一般的工具函数；
 2、尝试查看相关书籍；  
 3、尝试问可用的编程AI助手或者网络寻求解答；  
 
+### 网络连接和防火墙问题  
+如果调试时本机可以访问，但局域网内其他设备无法访问，可能是macOS应用程序防火墙阻止了连接。
+
+1. **对于macOS 12.x及更早版本**：
+   - 应用程序防火墙默认会阻止未签名的应用程序接受外部网络连接。
+   - **解决方案**：在系统偏好设置 → 安全性与隐私 → 防火墙 → 防火墙选项中，添加`Visual Studio Code`到允许列表。
+
+2. **对于macOS 13.x及更高版本**：
+   - Apple更改了防火墙模式，系统会自动弹出提示询问是否允许网络连接。
+   - **解决方案**：当弹出"是否允许Visual Studio Code接受传入网络连接？"时，点击"允许"即可。
+
+3. **通用检查步骤**：
+   - 确保服务绑定到`0.0.0.0:8000`（在`config.json`中设置`"Address": "0.0.0.0:8000"`）
+   - 检查IP地址是否匹配：`ipconfig getifaddr en0` 显示的本机IP与访问地址一致
+   - 确认防火墙状态：`sudo pfctl -s info | grep Status`
+
 ## 关于这应用的源头  
 《Go Web Programming》Sau Sheong Chang 著 黄健宏 译 一书的教学作品之一chitchat休闲聊<https://github.com/sausheong/chitchat>。由于众所周知的原因，实际获取源代码地址是<https://gitee.com/tickCoder-mirrors/sausheong-gwp/>  
 以此应用为起始基础，修修剪剪……  
