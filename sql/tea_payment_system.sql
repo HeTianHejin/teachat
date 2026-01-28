@@ -40,7 +40,7 @@ CREATE INDEX idx_tea_user_accounts_status ON tea.user_accounts(status);
 
 -- 添加表注释
 COMMENT ON TABLE tea.user_accounts IS '用户星茶账户表（匹配TeaUserAccount结构体）';
-COMMENT ON COLUMN tea.user_accounts.balance_milligrams IS '星茶数量(毫克)，精确到3位小数';
+COMMENT ON COLUMN tea.user_accounts.balance_milligrams IS '星茶整数重量，单位(毫克)';
 COMMENT ON COLUMN tea.user_accounts.locked_balance_milligrams IS '交易有效期被锁定的星茶数量(毫克)';
 COMMENT ON COLUMN tea.user_accounts.status IS '账户状态: normal-正常, frozen-冻结';
 
