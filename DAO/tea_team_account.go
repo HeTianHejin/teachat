@@ -266,8 +266,8 @@ func EnsureTeaTeamAccountExists(teamId int) error {
 	return nil
 }
 
-// CheckTeamAccountFrozen 检查团队账户是否被冻结
-func CheckTeamAccountFrozen(teamId int) (bool, string, error) {
+// CheckTeaTeamAccountFrozen 检查团队账户是否被冻结
+func CheckTeaTeamAccountFrozen(teamId int) (bool, string, error) {
 	// 自由人团队没有星茶资产，视为冻结状态
 	if teamId == TeamIdFreelancer {
 		return true, "自由人团队不支持星茶资产", nil
@@ -651,14 +651,14 @@ func GetPendingTeamIncomingTransfers(teamId, page, limit int) ([]map[string]any,
 		}
 
 		transfer := map[string]any{
-			"transfer_type":      transferType,
-			"uuid":               uuid,
-			"from_id":            fromId,
-			"from_name":          fromName,
-			"amount_milligrams":  amount,
-			"notes":              notes,
-			"created_at":         createdAt,
-			"expires_at":         expiresAt,
+			"transfer_type":     transferType,
+			"uuid":              uuid,
+			"from_id":           fromId,
+			"from_name":         fromName,
+			"amount_milligrams": amount,
+			"notes":             notes,
+			"created_at":        createdAt,
+			"expires_at":        expiresAt,
 		}
 		transfers = append(transfers, transfer)
 	}
@@ -749,85 +749,85 @@ func GetPendingTeamToTeamOperations(teamId, page, limit int) ([]map[string]any, 
 // CreateTeaTransferTeamToUser 创建团队对用户转账
 func CreateTeaTransferTeamToUser(fromTeamId, initiatorUserId, toUserId int, amountMilligrams int64, notes string, expireHours int) (TeaTeamToUserTransferOut, error) {
 	var transfer TeaTeamToUserTransferOut
-	
+
 	if fromTeamId == TeamIdFreelancer {
 		return transfer, fmt.Errorf("自由人团队不支持星茶转账")
 	}
-	
+
 	if amountMilligrams <= 0 {
 		return transfer, fmt.Errorf("转账金额必须大于0")
 	}
-	
+
 	// 检查团队账户余额
 	account, err := GetTeaTeamAccountByTeamId(fromTeamId)
 	if err != nil {
 		return transfer, fmt.Errorf("获取团队账户失败: %v", err)
 	}
-	
+
 	if account.Status == TeaTeamAccountStatus_Frozen {
 		return transfer, fmt.Errorf("团队账户已冻结")
 	}
-	
+
 	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
 	if availableBalance < amountMilligrams {
 		return transfer, fmt.Errorf("团队可用余额不足")
 	}
-	
+
 	// 创建转账记录
 	err = DB.QueryRow(`
 		INSERT INTO tea.team_to_user_transfer_out 
 		(from_team_id, to_user_id, initiator_user_id, amount_milligrams, notes, status, expires_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, uuid, created_at`,
-		fromTeamId, toUserId, initiatorUserId, amountMilligrams, notes, 
+		fromTeamId, toUserId, initiatorUserId, amountMilligrams, notes,
 		TeaTransferStatusPendingApproval, time.Now().Add(time.Duration(expireHours)*time.Hour)).
 		Scan(&transfer.Id, &transfer.Uuid, &transfer.CreatedAt)
-	
+
 	if err != nil {
 		return transfer, fmt.Errorf("创建团队对用户转账失败: %v", err)
 	}
-	
+
 	transfer.FromTeamId = fromTeamId
 	transfer.ToUserId = toUserId
 	transfer.InitiatorUserId = initiatorUserId
 	transfer.AmountMilligrams = amountMilligrams
 	transfer.Notes = notes
 	transfer.Status = TeaTransferStatusPendingApproval
-	
+
 	return transfer, nil
 }
 
 // CreateTeaTransferTeamToTeam 创建团队对团队转账
 func CreateTeaTransferTeamToTeam(fromTeamId, initiatorUserId, toTeamId int, amountMilligrams int64, notes string, expireHours int) (TeaTeamToTeamTransferOut, error) {
 	var transfer TeaTeamToTeamTransferOut
-	
+
 	if fromTeamId == TeamIdFreelancer || toTeamId == TeamIdFreelancer {
 		return transfer, fmt.Errorf("自由人团队不支持星茶转账")
 	}
-	
+
 	if amountMilligrams <= 0 {
 		return transfer, fmt.Errorf("转账金额必须大于0")
 	}
-	
+
 	if fromTeamId == toTeamId {
 		return transfer, fmt.Errorf("不能向自己的团队转账")
 	}
-	
+
 	// 检查团队账户余额
 	account, err := GetTeaTeamAccountByTeamId(fromTeamId)
 	if err != nil {
 		return transfer, fmt.Errorf("获取团队账户失败: %v", err)
 	}
-	
+
 	if account.Status == TeaTeamAccountStatus_Frozen {
 		return transfer, fmt.Errorf("团队账户已冻结")
 	}
-	
+
 	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
 	if availableBalance < amountMilligrams {
 		return transfer, fmt.Errorf("团队可用余额不足")
 	}
-	
+
 	// 创建转账记录
 	err = DB.QueryRow(`
 		INSERT INTO tea.team_to_team_transfer_out 
@@ -837,20 +837,21 @@ func CreateTeaTransferTeamToTeam(fromTeamId, initiatorUserId, toTeamId int, amou
 		fromTeamId, toTeamId, initiatorUserId, amountMilligrams, notes,
 		TeaTransferStatusPendingApproval, time.Now().Add(time.Duration(expireHours)*time.Hour)).
 		Scan(&transfer.Id, &transfer.Uuid, &transfer.CreatedAt)
-	
+
 	if err != nil {
 		return transfer, fmt.Errorf("创建团队对团队转账失败: %v", err)
 	}
-	
+
 	transfer.FromTeamId = fromTeamId
 	transfer.ToTeamId = toTeamId
 	transfer.InitiatorUserId = initiatorUserId
 	transfer.AmountMilligrams = amountMilligrams
 	transfer.Notes = notes
 	transfer.Status = TeaTransferStatusPendingApproval
-	
+
 	return transfer, nil
 }
+
 // ConfirmTeaTeamFromUserTransfer 团队确认接收来自用户转账
 func ConfirmTeaTeamFromUserTransfer(transferUuid string, operatorUserId int) error {
 	tx, err := DB.Begin()
@@ -918,6 +919,7 @@ func RejectTeaTeamFromTeamTransfer(transferUuid string, operatorUserId int, reas
 	}
 	return nil
 }
+
 // ApproveTeaTeamToUserTransfer 审批通过团队对用户转账
 func ApproveTeaTeamToUserTransfer(transferUuid string, approverUserId int) error {
 	tx, err := DB.Begin()

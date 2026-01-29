@@ -577,28 +577,28 @@ func CheckTeaUserAccountFrozen(userId int) (bool, string, error) {
 	return frozen, reason, nil
 }
 
-func CreateTeaUserToUserTransferOut(fromUserId int, toUserId int, amount_milligrams int64, notes string, expireHours int) (TeaUserToUserTransferOut, error) {
+func CreateTeaUserToUserTransferOut(fromUserId int, from_user_name string, toUserId int, to_user_name string, amount_milligrams int64, notes string, expireHours int) (TeaUserToUserTransferOut, error) {
 	transfer := TeaUserToUserTransferOut{}
 	err := DB.QueryRow(`
-		INSERT INTO tea.user_to_user_transfer_out (from_user_id, to_user_id, amount_milligrams, notes, status, expires_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, uuid, from_user_id, to_user_id, amount_milligrams, notes, status, expires_at, created_at, updated_at`,
-		fromUserId, toUserId, amount_milligrams, notes, TeaTransferStatusPendingReceipt, time.Now().Add(time.Duration(expireHours)*time.Hour)).
-		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.ToUserId, &transfer.AmountMilligrams, &transfer.Notes, &transfer.Status, &transfer.ExpiresAt, &transfer.CreatedAt, &transfer.UpdatedAt)
+		INSERT INTO tea.user_to_user_transfer_out (from_user_id, to_user_id, from_user_name, to_user_name, amount_milligrams, notes, status, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, uuid, from_user_id,from_user_name, to_user_id, to_user_name , amount_milligrams, notes, status, expires_at, created_at, updated_at`,
+		fromUserId, toUserId, from_user_name, to_user_name, amount_milligrams, notes, TeaTransferStatusPendingReceipt, time.Now().Add(time.Duration(expireHours)*time.Hour)).
+		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.FromUserName, &transfer.ToUserId, &transfer.ToUserName, &transfer.AmountMilligrams, &transfer.Notes, &transfer.Status, &transfer.ExpiresAt, &transfer.CreatedAt, &transfer.UpdatedAt)
 	if err != nil {
 		return transfer, fmt.Errorf("创建用户间转账失败: %v", err)
 	}
 	return transfer, nil
 }
 
-func CreateTeaUserToTeamTransferOut(user_id int, to_team_id int, amount_milligrams int64, notes string, expire_hours int) (TeaUserToTeamTransferOut, error) {
+func CreateTeaUserToTeamTransferOut(from_user_id int, from_user_name string, to_team_id int, to_team_name string, amount_milligrams int64, notes string, expire_hours int) (TeaUserToTeamTransferOut, error) {
 	transfer := TeaUserToTeamTransferOut{}
 	err := DB.QueryRow(`
-		INSERT INTO tea.user_to_team_transfer_out (from_user_id, to_team_id, amount_milligrams, notes, status, expires_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, uuid, from_user_id, to_team_id, amount_milligrams, notes, status, expires_at, created_at, updated_at`,
-		user_id, to_team_id, amount_milligrams, notes, TeaTransferStatusPendingReceipt, time.Now().Add(time.Duration(expire_hours)*time.Hour)).
-		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.ToTeamId, &transfer.AmountMilligrams, &transfer.Notes, &transfer.Status, &transfer.ExpiresAt, &transfer.CreatedAt, &transfer.UpdatedAt)
+		INSERT INTO tea.user_to_team_transfer_out (from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, status, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id, uuid, from_user_id, from_user_name,to_team_id,to_team_name , amount_milligrams, notes, status, expires_at, created_at, updated_at`,
+		from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, TeaTransferStatusPendingReceipt, time.Now().Add(time.Duration(expire_hours)*time.Hour)).
+		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.FromUserName, &transfer.ToTeamId, &transfer.ToTeamName, &transfer.AmountMilligrams, &transfer.Notes, &transfer.Status, &transfer.ExpiresAt, &transfer.CreatedAt, &transfer.UpdatedAt)
 	if err != nil {
 		return transfer, fmt.Errorf("创建用户组间转账失败: %v", err)
 	}

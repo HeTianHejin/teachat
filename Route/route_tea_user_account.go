@@ -288,6 +288,7 @@ func CreateTeaUserToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查账户是否被冻结
 	frozen, reason, err := dao.CheckTeaUserAccountFrozen(user.Id)
 	if err != nil {
+		util.Debug("CheckTeaUserAccountFrozen error:", err)
 		respondWithError(w, http.StatusInternalServerError, "检查账户状态失败")
 		return
 	}
@@ -295,10 +296,32 @@ func CreateTeaUserToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusForbidden, fmt.Sprintf("账户已被冻结: %s", reason))
 		return
 	}
+	toUser, err := dao.GetUser(req.ToUserId)
+	if err != nil {
+		util.Debug("GetUser error:", err)
+		respondWithError(w, http.StatusBadRequest, "接收方用户不存在")
+		return
+	}
+	if toUser.Id == user.Id {
+		respondWithError(w, http.StatusBadRequest, "不能向自己转账")
+		return
+	}
+	// 检查接收方用户账户是否被冻结
+	frozen, reason, err = dao.CheckTeaUserAccountFrozen(toUser.Id)
+	if err != nil {
+		util.Debug("CheckTeaUserAccountFrozen error:", err)
+		respondWithError(w, http.StatusInternalServerError, "检查接收方账户状态失败")
+		return
+	}
+	if frozen {
+		respondWithError(w, http.StatusForbidden, fmt.Sprintf("接收方账户已被冻结: %s", reason))
+		return
+	}
 
 	// 创建转出方用户对用户转账OUT记录
-	transfer, err := dao.CreateTeaUserToUserTransferOut(user.Id, req.ToUserId, req.AmountMilligrams, req.Notes, req.ExpireHours)
+	transfer, err := dao.CreateTeaUserToUserTransferOut(user.Id, user.Name, toUser.Id, toUser.Name, req.AmountMilligrams, req.Notes, req.ExpireHours)
 	if err != nil {
+		util.Debug("CreateTeaUserToUserTransferOut error:", err)
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -368,6 +391,7 @@ func CreateTeaUserToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查账户是否被冻结
 	frozen, reason, err := dao.CheckTeaUserAccountFrozen(user.Id)
 	if err != nil {
+		util.Debug("CheckTeaUserAccountFrozen error:", err)
 		respondWithError(w, http.StatusInternalServerError, "检查账户状态失败")
 		return
 	}
@@ -375,9 +399,26 @@ func CreateTeaUserToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusForbidden, fmt.Sprintf("账户已被冻结: %s", reason))
 		return
 	}
+	toTeam, err := dao.GetTeam(req.ToTeamId)
+	if err != nil {
+		util.Debug("GetTeam error:", err)
+		respondWithError(w, http.StatusBadRequest, "接收方团队不存在")
+		return
+	}
+	// 检查接收方团队账户是否被冻结
+	frozen, reason, err = dao.CheckTeaTeamAccountFrozen(toTeam.Id)
+	if err != nil {
+		util.Debug("CheckTeaTeamAccountFrozen error:", err)
+		respondWithError(w, http.StatusInternalServerError, "检查接收方团队账户状态失败")
+		return
+	}
+	if frozen {
+		respondWithError(w, http.StatusForbidden, fmt.Sprintf("接收方团队账户已被冻结: %s", reason))
+		return
+	}
 
 	// 创建用户对团队转账
-	transfer, err := dao.CreateTeaUserToTeamTransferOut(user.Id, req.ToTeamId, req.AmountMilligrams, req.Notes, req.ExpireHours)
+	transfer, err := dao.CreateTeaUserToTeamTransferOut(user.Id, user.Name, toTeam.Id, toTeam.Name, req.AmountMilligrams, req.Notes, req.ExpireHours)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
