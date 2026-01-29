@@ -133,19 +133,33 @@
                                 {{ end }}
                             </p>
                         </a>
-                        <a href="/v1/tea/user/transfers/ins/user_from_user/completed/page" class="list-group-item">
+                        <a href="/v1/tea/user/transfers/in/user_from_user/completed/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
-                                收入记录
+                                从茶友收入记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转入星茶的记录（仅成功到账）</p>
+                            <p class="list-group-item-text">查看收到茶友星茶的记录（仅成功到账）</p>
                         </a>
-                        <a href="/v1/tea/user/transfers/ins/user_from_user/page" class="list-group-item">
+                        <a href="/v1/tea/user/transfers/in/user_from_team/completed/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
-                                接收历史
+                                从团队收入记录
                             </h4>
-                            <p class="list-group-item-text">查看所有接收星茶操作的记录（包括成功、拒绝、超时）</p>
+                            <p class="list-group-item-text">查看收到团队星茶的记录（仅成功到账）</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/in/user_from_user/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                接收茶友星茶超时历史
+                            </h4>
+                            <p class="list-group-item-text">查看未接收来自茶友星茶记录（仅限超时）</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/in/user_from_team/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                接收团队星茶超时历史
+                            </h4>
+                            <p class="list-group-item-text">查看未接收来自团队星茶记录（仅限超时）</p>
                         </a>
                     </div>
                 </div>
@@ -169,20 +183,48 @@
                             </h4>
                             <p class="list-group-item-text">向其他茶友或团队转账星茶</p>
                         </a>
-                        <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
+                        <a href="/v1/tea/user/transfers/out/user_to_user/pending/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 支出记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转出星茶的记录（仅成功到账）</p>
+                            <p class="list-group-item-text">等待对方茶友接收（待确认状态）</p>
                         </a>
-                        <a href="/v1/tea/user/transfers/out/page" class="list-group-item">
+                        <a href="/v1/tea/user/transfers/out/user_to_team/pending/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
-                                支出历史
+                                支出记录
                             </h4>
-                            <p class="list-group-item-text">查看所有转出操作的记录（包含成功、拒绝、超时）</p>
+                            <p class="list-group-item-text">等待对方团队接收（待确认状态）</p>
                         </a>
+                        <a href="/v1/tea/user/transfers/out/user_to_user/completed/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                支出记录
+                            </h4>
+                            <p class="list-group-item-text">转出星茶给茶友的记录（仅成功到账）</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/out/user_to_team/completed/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                支出记录
+                            </h4>
+                            <p class="list-group-item-text">转出星茶给团队的记录（仅成功到账）</p>
+                        </a>
+                        <a href="/v1/tea/user/transfers/out/user_to_user/expired/page" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                超时记录
+                            </h4>
+                            <p class="list-group-item-text">查看转出给茶友过期的记录（已经撤销）</p>
+                        </a>
+                            <a href="/v1/tea/user/transfers/out/user_to_team/expired/page" class="list-group-item">
+                                <h4 class="list-group-item-heading">
+                                    <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                    超时记录
+                                </h4>
+                                <p class="list-group-item-text">查看转出给团队过期的记录（已经撤销）</p>
+                            </a>
                     </div>
                 </div>
             </div>
