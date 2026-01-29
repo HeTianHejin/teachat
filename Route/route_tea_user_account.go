@@ -152,14 +152,14 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户待确认来自用户转账数量
-	pendingFromUserCount, err := dao.GetTeaUserFromUserPendingTransferInsCount(s_u.Id)
+	pendingFromUserCount, err := dao.GetTeaUserToUserPendingTransferOutsCount(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get pending transfers count", err)
 		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
 		return
 	}
 	// 获取用户待确认来自团队转账数量
-	pendingFromTeamCount, err := dao.GetTeaUserFromTeamPendingTransferInsCount(s_u.Id)
+	pendingFromTeamCount, err := dao.GetTeaTeamToUserPendingTransferOutsCount(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get pending team transfers count", err)
 		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
@@ -338,6 +338,13 @@ func CreateTeaUserToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
 		CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
+	// 用户对用户转账无需审核，需要等待对方接收后，创建用户对用户转入IN记录
+	// _, err = dao.CreateTeaUserFromUserTransferIn(transfer.Id, toUser.Id, toUser.Name, transfer.FromUserId, transfer.FromUserName, transfer.AmountMilligrams, transfer.Notes, transfer.ExpiresAt)
+	// if err != nil {
+	// 	util.Debug("CreateTeaUserFromUserTransferIn error:", err)
+	// 	respondWithError(w, http.StatusInternalServerError, "创建接收方转账记录失败")
+	// 	return
+	// }
 
 	respondWithSuccess(w, "用户对用户转账发起成功", response)
 }
@@ -453,7 +460,7 @@ func GetTeaUserPendingUserToUserTransfersAPI(w http.ResponseWriter, r *http.Requ
 	page, limit := getPaginationParams(r)
 
 	// 获取待确认用户对用户转账
-	transfers, err := dao.GetTeaUserFromUserPendingTransferIns(user.Id, page, limit)
+	transfers, err := dao.GetTeaUserToUserPendingTransferOuts(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取待确认转账失败")
 		return
