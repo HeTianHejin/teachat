@@ -351,7 +351,7 @@
 
         if (transferType === 'user') {
             transferData.to_user_id = parseInt(formData.get('to_user_id'));
-            apiUrl = '/v1/tea/user/transfer/user_to_user';
+            apiUrl = '/v1/tea/user/transfer/new/user_to_user';
             recipientType = '用户';
 
             // 验证用户ID
@@ -361,7 +361,7 @@
             }
         } else {
             transferData.to_team_id = parseInt(formData.get('to_team_id'));
-            apiUrl = '/v1/tea/user/transfer/user_to_team';
+            apiUrl = '/v1/tea/user/transfer/new/user_to_team';
             recipientType = '团队';
 
             // 验证团队ID
