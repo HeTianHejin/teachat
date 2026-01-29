@@ -200,14 +200,14 @@
                         <a href="/v1/tea/user/transfers/out/user_to_user/completed/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
-                                支出记录
+                                向茶友支出记录
                             </h4>
                             <p class="list-group-item-text">转出星茶给茶友的记录（仅成功到账）</p>
                         </a>
                         <a href="/v1/tea/user/transfers/out/user_to_team/completed/page" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
-                                支出记录
+                                向团队支出记录
                             </h4>
                             <p class="list-group-item-text">转出星茶给团队的记录（仅成功到账）</p>
                         </a>
@@ -224,6 +224,13 @@
                                     超时记录
                                 </h4>
                                 <p class="list-group-item-text">查看转出给团队过期的记录（已经撤销）</p>
+                            </a>
+                            <a href="/v1/tea/user/transfers/out/user_to_user/rejected/page" class="list-group-item">
+                                <h4 class="list-group-item-heading">
+                                    <i class="glyphicon glyphicon-time-fill">
+                                    被茶友拒绝接收记录
+                                </h4>
+                                <p class="list-group-item-text">查看转出给茶友被拒绝的记录（已退回）</p>
                             </a>
                     </div>
                 </div>
@@ -270,10 +277,10 @@
                         <small class="help-block">请输入要转账的团队ID</small>
                     </div>
                     <div class="form-group">
-                        <label for="amountMilligrams">转账数量(克):</label>
+                        <label for="amountMilligrams">转账数量(毫克):</label>
                         <input type="number" class="form-control" id="amountMilligrams" name="amount_milligrams"
-                            required min="0.001" step="0.001">
-                        <small class="help-block">可输入小数，最小单位0.001克(1毫克)。当前可用余额: <strong>{{
+                            required min="1" step="1">
+                        <small class="help-block">请输入整数毫克，最小单位1毫克。当前可用余额: <strong>{{
                                 .AccountInfo.AvailableBalanceDisplay }}</strong></small>
                     </div>
                     <div class="form-group">
@@ -334,7 +341,7 @@
         var transferType = formData.get('transfer_type');
 
         var transferData = {
-            amount_milligrams: parseFloat(formData.get('amount_milligrams')),
+            amount_milligrams: parseInt(formData.get('amount_milligrams')),
             notes: formData.get('notes') || '',
             expire_hours: parseInt(formData.get('expire_hours'))
         };
@@ -365,8 +372,8 @@
         }
 
         // 验证转账数量
-        if (!transferData.amount_milligrams || transferData.amount_milligrams <= 0) {
-            alert('请输入有效的转账数量');
+        if (!transferData.amount_milligrams || transferData.amount_milligrams <= 0 || !Number.isInteger(transferData.amount_milligrams)) {
+            alert('请输入有效的转账数量（正整数毫克）');
             return;
         }
 
