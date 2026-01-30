@@ -74,7 +74,7 @@ type TeaTeamToUserTransferOut struct {
 	ApprovalRejectionReason string // 审批意见，如果拒绝，填写原因,默认值:'-'
 	ApprovedAt              time.Time // 审批时间
 
-	// 注意流程：审批通过后，才会创建待接收记录（TeaUserFromTeamTransferIn）
+	// 注意流程：审批通过而且对方确认接受之后，才会创建待接收记录（TeaUserFromTeamTransferIn）
 	Status               string  // 包含审批状态，待审批，已批准，已拒绝，待接收，已完成，已拒收，已过期等状态
 	BalanceAfterTransfer int64 // 转账后余额(毫克)
 	CreatedAt            time.Time
