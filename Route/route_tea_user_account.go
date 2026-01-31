@@ -489,51 +489,6 @@ func GetTeaUserPendingUserToUserTransfersAPI(w http.ResponseWriter, r *http.Requ
 	respondWithPagination(w, "获取待确认用户对用户转账成功", responses, page, limit, 0) // TODO: 实现总数统计
 }
 
-// GetTeaUserFromUserPendingTransfersAPI 获取指定用户,用户对用户转入待确认记录
-func GetTeaUserFromUserPendingTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户对用户转入记录（待确认状态）
-	transfers, err := dao.GetTeaUserFromUserPendingTransferIns(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取指定用户待确认转入记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserFromUserTransferInResponse
-	for _, transfer := range transfers {
-		response := UserFromUserTransferInResponse{
-			Uuid:                    transfer.Uuid,
-			UserToUserTransferOutId: transfer.UserToUserTransferOutId,
-			ToUserId:                transfer.ToUserId,
-			ToUserName:              transfer.ToUserName,
-			FromUserId:              transfer.FromUserId,
-			FromUserName:            transfer.FromUserName,
-			AmountMilligrams:        transfer.AmountMilligrams,
-			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
-			Status:                  transfer.Status,
-			Notes:                   transfer.Notes,
-			IsConfirmed:             transfer.IsConfirmed,
-			OperationalUserId:       transfer.OperationalUserId,
-			RejectionReason:         transfer.RejectionReason,
-			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户待确认转入记录成功", responses, page, limit, 0)
-}
-
 // GetTeaUserFromUserCompletedTransfersAPI 获取用户来自用户已完成的转入记录（从接收方视角）- 收入记录（仅已完成）
 func GetTeaUserFromUserCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {
 	// 验证用户登录
@@ -722,7 +677,7 @@ func GetTeaUserPendingTeamToUserTransferOutsAPI(w http.ResponseWriter, r *http.R
 	page, limit := getPaginationParams(r)
 
 	// 获取待用户确认，团队对用户转账记录
-	transfers, err := dao.GetTeaUserPendingUserFromTeamTransferIns(user.Id, page, limit)
+	transfers, err := dao.GetTeaUserPendingTeamToUserTransferOuts(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取待确认转账失败")
 		return
@@ -1212,7 +1167,7 @@ func ConfirmTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 确认接收转账
-	err = dao.TeaConfirmTransfer(req.TransferUuid, user.Id)
+	err = dao.TeaConfirmTeamToUserTransferOut(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1308,7 +1263,7 @@ func ConfirmTeaUserFromTeamTransferAInPI(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 确认接收用户对团队转账
-	err = dao.TeaConfirmTransfer(req.TransferUuid, user.Id)
+	err = dao.TeaConfirmTeamToUserTransferOut(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -2495,9 +2450,9 @@ func UserFromUserPendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自用户待确认转入记录
-	transfers, err := dao.GetTeaUserFromUserPendingTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.GetTeaUserToUserPendingTransferOuts(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get pending transfer ins from user", err)
+		util.Debug("cannot get pending transfer outs from user", err)
 		report(w, s_u, "获取用户来自用户待确认转入记录失败。")
 		return
 	}
@@ -2603,7 +2558,7 @@ func GetTeaUserFromTeamPendingTransfersAPI(w http.ResponseWriter, r *http.Reques
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自团队待确认转入记录
-	transfers, err := dao.GetTeaUserFromTeamPendingTransferIns(user.Id, page, limit)
+	transfers, err := dao.TeaUserInFromTeamPendingTransfers(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户来自团队待确认转入记录失败")
 		return
@@ -2680,8 +2635,8 @@ func ConfirmTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 确认接收用户对团队转账
-	err = dao.TeaConfirmTransfer(req.TransferUuid, user.Id)
+	// 团队(某个成员)确认接收用户对团队转账
+	err = dao.TeaConfirmTeamToUserTransferOut(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -2777,7 +2732,7 @@ func UserFromTeamPendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自团队待确认转入记录
-	transfers, err := dao.GetTeaUserFromTeamPendingTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserInFromTeamPendingTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get pending transfer ins from team", err)
 		report(w, s_u, "获取用户来自团队待确认转入记录失败。")

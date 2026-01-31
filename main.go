@@ -329,14 +329,14 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_team/expired", route.GetTeaUserToTeamExpiredTransfersAPI)   // 用户对团队转出已超时记录列表API(仅已超时状态)
 	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_team/expired/page", route.GetTeaUserToTeamExpiredTransfers) // 用户对团队转出已超时记录列表页面(仅已超时状态)
 	// in
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/pending", route.GetTeaUserFromUserPendingTransfersAPI)          // 等待用户确认接收用户转入记录API - 待确认状态
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/pending/page", route.GetTeaUserFromUserPendingTransfers)        // 等待用户确认接收用户转入记录列表页面 - 待确认状态
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/pending", route.GetTeaUserToUserPendingTransfersAPI)            // 等待用户确认接收来自用户转入记录API - 待确认状态
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/pending/page", route.GetTeaUserFromUserPendingTransfers)        // 等待用户确认接收来自用户转入记录列表页面 - 待确认状态
 	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/pending", route.GetTeaUserFromTeamPendingTransfersAPI)          // 等待用户确认接收来自团队转入记录API - 待确认状态
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/pending/page", route.HandleTeaUserFromUserPendingTransfers)     // 等待用户确认接收来自团队转入记录页面 - 待确认状态
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/completed", route.GetTeaUserFromUserCompletedTransfersAPI)      // 用户已经确认接收用户转入记录API - 收入记录（仅已完成）
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/completed/page", route.HandleTeaUserCompletedTransfers)         // 用户已经确认接收用户转入记录页面 - 收入记录（仅已完成）
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/completed", route.HandleTeaUserFromTeamCompletedTransfersAPI)   // 用户已经确认接收团队转入记录API - 收入记录（仅已完成）
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/completed/page", route.HandleTeaUserFromTeamCompletedTransfers) // 用户已经确认接收团队转入记录页面路由 - 收入记录（仅已完成）
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/pending/page", route.HandleTeaUserFromTeamPendingTransfers)     // 等待用户确认接收来自团队转入记录页面 - 待确认状态
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/completed", route.GetTeaUserFromUserCompletedTransfersAPI)      // 用户已经确认接收来自用户转入记录API - 收入记录（仅已完成）
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/completed/page", route.HandleTeaUserCompletedTransfers)         // 用户已经确认接收来自用户转入记录页面 - 收入记录（仅已完成）
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/completed", route.HandleTeaUserFromTeamCompletedTransfersAPI)   // 用户已经确认接收来自团队转入记录API - 收入记录（仅已完成）
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/completed/page", route.HandleTeaUserFromTeamCompletedTransfers) // 用户已经确认接收来自团队转入记录页面路由 - 收入记录（仅已完成）
 	// 区分用户对用户和用户对团队转账的(确认/拒绝)API
 	mux.HandleFunc("/v1/tea/user/transfer/confirm/user_from_user", route.ConfirmTeaUserFromUserTransferInAPI) // 用户确认接收来自用户的转账API
 	mux.HandleFunc("/v1/tea/user/transfer/reject/user_from_user", route.RejectTeaUserFromUserTransferInAPI)   // 用户拒绝接收来自用户转账API

@@ -1104,7 +1104,7 @@ func ConfirmTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.ConfirmTeaTeamFromUserTransfer(req.TransferUuid, user.Id)
+	err = dao.TeaConfirmUserToTeamTransferOut(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1140,7 +1140,7 @@ func RejectTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.RejectTeaTeamFromUserTransfer(req.TransferUuid, user.Id, req.Reason)
+	err = dao.TeaRejectUserToTeamTransfer(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1245,7 +1245,7 @@ func RejectTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.RejectTeaTeamFromTeamTransfer(req.TransferUuid, user.Id, req.Reason)
+	err = dao.TeaRejectTeamToTeamTransfer(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
