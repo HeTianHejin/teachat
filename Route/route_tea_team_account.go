@@ -1140,7 +1140,7 @@ func RejectTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.TeaRejectUserToTeamTransfer(req.TransferUuid, user.Id, req.Reason)
+	err = dao.TeaTeamRejectFromUserTransferIn(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1245,7 +1245,7 @@ func RejectTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.TeaRejectTeamToTeamTransfer(req.TransferUuid, user.Id, req.Reason)
+	err = dao.TeaTeamRejectFromTeamTransferIn(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1284,7 +1284,7 @@ func ApproveTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.ApproveTeaTeamToUserTransfer(req.TransferUuid, user.Id)
+	err = dao.TeaTeamApproveToUserTransferOut(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1319,7 +1319,7 @@ func ApproveTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.ApproveTeaTeamToTeamTransfer(req.TransferUuid, user.Id)
+	err = dao.TeaTeamApproveToTeamTransferOut(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1355,7 +1355,7 @@ func RejectTeaTeamToUserTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = dao.RejectTeaTeamToUserTransfer(req.TransferUuid, user.Id, req.Reason)
+	err = dao.TeaTeamRejectToUserTransferOut(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1391,7 +1391,7 @@ func RejectTeaTeamToTeamTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	err = dao.RejectTeaTeamToTeamTransfer(req.TransferUuid, user.Id, req.Reason)
+	err = dao.TeaTeamRejectToTeamTransferOut(req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return

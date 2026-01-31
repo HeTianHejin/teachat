@@ -125,7 +125,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 自动创建用户星茶账户
-	if err := dao.EnsureTeaUserAccountExists(newU.Id); err != nil {
+	if err := dao.TeaUserEnsureAccountExists(newU.Id); err != nil {
 		util.Debug(" Cannot create tea account for user", err)
 		report(w, newU, "你好，茶博士因找不到星茶账户登记本，导致注册失败，请确认情况后重试。")
 		return

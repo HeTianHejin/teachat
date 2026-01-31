@@ -131,7 +131,7 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		// 不阻止流程，即使账户创建失败也显示页面
@@ -159,7 +159,7 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取用户待确认来自团队转账数量
-	pendingFromTeamCount, err := dao.GetTeaTeamToUserPendingTransferOutsCount(s_u.Id)
+	pendingFromTeamCount, err := dao.TeaUserInFromTeamPendingTransferOutsCount(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get pending team transfers count", err)
 		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
@@ -220,7 +220,7 @@ func GetTeaUserAccountAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(user.Id)
+	err = dao.TeaUserEnsureAccountExists(user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取账户信息失败")
 		return
@@ -502,7 +502,7 @@ func GetTeaUserFromUserCompletedTransfersAPI(w http.ResponseWriter, r *http.Requ
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自用户已完成的转入记录（仅已完成状态）
-	transfers, err := dao.GetTeaUserFromUserCompletedTransferIns(user.Id, page, limit)
+	transfers, err := dao.TeaUserFromUserCompletedTransferIns(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户已完成来自用户收入记录失败")
 		return
@@ -545,7 +545,7 @@ func GetTeaUserToUserExpiredTransfersAPI(w http.ResponseWriter, r *http.Request)
 	// 获取分页参数
 	page, limit := getPaginationParams(r)
 	// 获取用户对用户转出已经过期记录
-	transfers, err := dao.GetTeaUserToUserExpiredTransfers(user.Id, page, limit)
+	transfers, err := dao.TeaUserToUserExpiredTransferOuts(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户对用户转出已过期记录失败")
 		return
@@ -590,7 +590,7 @@ func GetTeaUserToTeamExpiredTransfersAPI(w http.ResponseWriter, r *http.Request)
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对团队转出已经过期记录
-	transfers, err := dao.GetTeaUserToTeamExpiredTransfers(user.Id, page, limit)
+	transfers, err := dao.TeaUserToTeamExpiredTransferOuts(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户对团队转出已过期记录失败")
 		return
@@ -637,7 +637,7 @@ func GetTeaUserPendingUserToTeamTransfersAPI(w http.ResponseWriter, r *http.Requ
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对团队待确认转账记录
-	transfers, err := dao.GetTeaUserToTeamPendingTransferOuts(user.Id, page, limit)
+	transfers, err := dao.TeaUserOutToTeamPendingTransfers(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户对团队待确认转账失败")
 		return
@@ -677,7 +677,7 @@ func GetTeaUserPendingTeamToUserTransferOutsAPI(w http.ResponseWriter, r *http.R
 	page, limit := getPaginationParams(r)
 
 	// 获取待用户确认，团队对用户转账记录
-	transfers, err := dao.GetTeaUserPendingTeamToUserTransferOuts(user.Id, page, limit)
+	transfers, err := dao.TeaUserInFromTeamPendingTransfers(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取待确认转账失败")
 		return
@@ -722,7 +722,7 @@ func GetTeaUserFromTeamTransferInsAPI(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户从团队转入已完成记录
-	transfers, err := dao.GetTeaUserFromTeamCompletedTransferIns(user.Id, page, limit)
+	transfers, err := dao.TeaUserFromTeamCompletedTransferIns(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户从团队转入记录失败")
 		return
@@ -797,7 +797,7 @@ func HandleTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Requ
 	UserFromTeamCompletedTransferInsGet(w, r)
 }
 
-// PendingUserToUserTransfersGet 获取待确认的“用户从用户”转账列表页面
+// PendingUserToUserTransfersGet 获取待对方用户确认,由当前用户发起转账列表页面
 func PendingUserToUserTransfersGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
@@ -811,15 +811,15 @@ func PendingUserToUserTransfersGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	// 确保当前用户有星茶账户
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
 
-	// 获取用户星茶账户
+	// 获取当前用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get tea account", err)
@@ -831,7 +831,7 @@ func PendingUserToUserTransfersGet(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取待对方确认用户对用户转账
-	transfers, err := dao.GetTeaUserFromUserPendingTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserOutToUserPendingTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get pending transfers", err)
 		report(w, s_u, "获取待确认用户对用户转账失败。")
@@ -840,9 +840,7 @@ func PendingUserToUserTransfersGet(w http.ResponseWriter, r *http.Request) {
 
 	// 增强转账数据，添加用户信息和状态显示
 	type EnhancedPendingTransfer struct {
-		dao.TeaUserFromUserTransferIn
-		FromUserName  string
-		ToUserName    string
+		dao.TeaUserToUserTransferOut
 		AmountDisplay string
 		IsExpired     bool
 		CanAccept     bool
@@ -852,21 +850,10 @@ func PendingUserToUserTransfersGet(w http.ResponseWriter, r *http.Request) {
 	var enhancedTransfers []EnhancedPendingTransfer
 	for _, transfer := range transfers {
 		enhanced := EnhancedPendingTransfer{
-			TeaUserFromUserTransferIn: transfer,
-			CanAccept:                 !transfer.ExpiresAt.Before(time.Now()),
+			TeaUserToUserTransferOut: transfer,
+			CanAccept:                !transfer.ExpiresAt.Before(time.Now()),
 		}
-
-		// 获取发送方用户信息
-		fromUser, _ := dao.GetUser(transfer.FromUserId)
-		if fromUser.Id > 0 {
-			enhanced.FromUserName = fromUser.Name
-		}
-
-		// 获取接收方用户信息
-		toUser, _ := dao.GetUser(transfer.ToUserId)
-		if toUser.Id > 0 {
-			enhanced.ToUserName = toUser.Name
-		}
+		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
 
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
@@ -920,53 +907,6 @@ func PendingUserToUserTransfersGet(w http.ResponseWriter, r *http.Request) {
 	pageData.Limit = limit
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.pending_user_to_user_transfers")
-}
-
-// GetTeaUserToUserTransferOutsAPI 获取用户的全部“用户对用户转出”记录（包括成功，拒绝，超时）
-func GetTeaUserToUserTransferOutsAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户对用户转出记录
-	transfers, err := dao.GetTeaUserToUserTransferOuts(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户对用户转出记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserToUserTransferOutResponse
-	for _, transfer := range transfers {
-
-		response := UserToUserTransferOutResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToUserId:         transfer.ToUserId,
-			ToUserName:       transfer.ToUserName,
-			AmountMilligrams: transfer.AmountMilligrams,
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户对用户转出记录成功", responses, page, limit, 0) // TODO: 实现总数统计
 }
 
 // FreezeTeaUserAccountAPI 冻结星茶账户（管理员功能）
@@ -1154,20 +1094,20 @@ func ConfirmTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request)
 
 	// 解析请求体
 	var req struct {
-		TransferUuid string `json:"transfer_uuid"`
+		FromUserId int `json:"from_user_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
 		return
 	}
 
-	if req.TransferUuid == "" {
-		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
+	if req.FromUserId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "转账用户ID无效")
 		return
 	}
 
 	// 确认接收转账
-	err = dao.TeaConfirmTeamToUserTransferOut(req.TransferUuid, user.Id)
+	err = dao.TeaUserConfirmFromUserTransferIn(user.Id, req.FromUserId)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1193,21 +1133,21 @@ func RejectTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request) 
 
 	// 解析请求体
 	var req struct {
-		TransferUuid string `json:"transfer_uuid"`
-		Reason       string `json:"reason"`
+		FromUserId int    `json:"from_user_id"`
+		Reason     string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
 		return
 	}
 
-	if req.TransferUuid == "" {
-		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
+	if req.FromUserId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "转账用户ID无效")
 		return
 	}
 
 	// 拒绝接收用户对用户转账
-	err = dao.RejectTeaUserFromUserTransferIn(req.TransferUuid, user.Id, req.Reason)
+	err = dao.TeaUserRejectFromUserTransferIn(req.FromUserId, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1216,7 +1156,7 @@ func RejectTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request) 
 	respondWithSuccess(w, "用户对用户转账拒绝成功", nil)
 }
 
-// ConfirmTeaUserFromTeamTransferAInPI 确认接收用户对团队转账
+// ConfirmTeaUserFromTeamTransferAInPI 当前用户确认接收,来自团队转账
 func ConfirmTeaUserFromTeamTransferAInPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
@@ -1233,16 +1173,16 @@ func ConfirmTeaUserFromTeamTransferAInPI(w http.ResponseWriter, r *http.Request)
 
 	// 解析请求体
 	var req struct {
-		TransferUuid string `json:"transfer_uuid"`
-		TeamId       int    `json:"team_id"`
+		FromTeamId int `json:"from_team_id"`
+		TeamId     int `json:"team_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
 		return
 	}
 
-	if req.TransferUuid == "" {
-		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
+	if req.FromTeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "转账团队ID无效")
 		return
 	}
 
@@ -1251,30 +1191,19 @@ func ConfirmTeaUserFromTeamTransferAInPI(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, req.TeamId)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "检查团队成员身份失败")
-		return
-	}
-	if !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能确认接收团队转账")
-		return
-	}
-
-	// 确认接收用户对团队转账
-	err = dao.TeaConfirmTeamToUserTransferOut(req.TransferUuid, user.Id)
+	// 确认接收来自团队转账
+	err = dao.TeaUserConfirmFromTeamTransferIn(user.Id, req.FromTeamId)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	respondWithSuccess(w, "用户对团队转账确认接收成功", nil)
+	respondWithSuccess(w, "用户接收来自团队转账确认成功", nil)
 
 }
 
-// RejectTeaUserFromTeamTransferInAPI 拒绝接收用户对团队转账
-func RejectTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request) {
+// TeaUserRejectFromTeamTransferInAPI 当前用户拒绝接收,来自团队转账
+func TeaUserRejectFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -1290,6 +1219,7 @@ func RejectTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request) 
 
 	// 解析请求体
 	var req struct {
+		// TODO:2026-01-31以下方法需要更新
 		TransferUuid string `json:"transfer_uuid"`
 		TeamId       int    `json:"team_id"`
 		Reason       string `json:"reason"`
@@ -1337,12 +1267,12 @@ func RejectTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request) 
 // ProcessExpiredTransfersJob 定时任务：处理过期转账
 func ProcessExpiredTransfersJob() error {
 	// 处理用户对用户过期转账
-	if err := dao.ProcessUserToUserExpiredTransfers(); err != nil {
+	if err := dao.TeaUserProcessToUserExpiredTransfers(); err != nil {
 		return fmt.Errorf("处理用户对用户过期转账失败: %v", err)
 	}
 
 	// 处理用户对团队过期转账
-	if err := dao.ProcessUserToTeamExpiredTransfers(); err != nil {
+	if err := dao.TeaUserProcessToTeamExpiredTransfers(); err != nil {
 		return fmt.Errorf("处理用户对团队过期转账失败: %v", err)
 	}
 
@@ -1374,7 +1304,7 @@ func PendingUserToTeamTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -1493,7 +1423,7 @@ func UserFromUserTransferInsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -1616,7 +1546,7 @@ func UserFromUserCompletedTransferInsGet(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -1635,7 +1565,7 @@ func UserFromUserCompletedTransferInsGet(w http.ResponseWriter, r *http.Request)
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自用户已完成的转入记录（仅已完成状态）
-	transfers, err := dao.GetTeaUserFromUserCompletedTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromUserCompletedTransferIns(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get completed transfer ins", err)
 		report(w, s_u, "获取收入记录失败。")
@@ -1728,7 +1658,7 @@ func UserFromTeamCompletedTransferInsGet(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -1747,7 +1677,7 @@ func UserFromTeamCompletedTransferInsGet(w http.ResponseWriter, r *http.Request)
 	page, limit := getPaginationParams(r)
 
 	// 获取用户从团队转入已完成状态记录
-	transfers, err := dao.GetTeaUserFromTeamCompletedTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromTeamCompletedTransferIns(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get transfer ins from team", err)
 		report(w, s_u, "获取用户从团队转入已完成状态转账记录失败。")
@@ -1860,7 +1790,7 @@ func GetTeaUserToUserCompletedTransfersAPI(w http.ResponseWriter, r *http.Reques
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对用户转出已完成记录
-	transfers, err := dao.GetTeaUserToUserCompletedTransferOuts(user.Id, page, limit)
+	transfers, err := dao.TeaUserToUserCompletedTransferOuts(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户对用户转出已完成记录失败")
 		return
@@ -1917,7 +1847,7 @@ func UserToUserCompletedTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -1936,7 +1866,7 @@ func UserToUserCompletedTransfersGet(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对用户转出已完成记录
-	transfers, err := dao.GetTeaUserToUserCompletedTransferOuts(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToUserCompletedTransferOuts(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get completed transfer outs", err)
 		report(w, s_u, "获取用户对用户转出已完成记录失败。")
@@ -2023,7 +1953,7 @@ func GetTeaUserToTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.Reques
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对团队转出已完成记录
-	transfers, err := dao.GetTeaUserToTeamCompletedTransferOuts(user.Id, page, limit)
+	transfers, err := dao.TeaUserToTeamCompletedTransferOuts(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户对团队转出已完成记录失败")
 		return
@@ -2080,7 +2010,7 @@ func UserToTeamCompletedTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -2099,7 +2029,7 @@ func UserToTeamCompletedTransfersGet(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对团队转出已完成记录
-	transfers, err := dao.GetTeaUserToTeamCompletedTransferOuts(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToTeamCompletedTransferOuts(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get completed transfer outs to team", err)
 		report(w, s_u, "获取用户对团队转出已完成记录失败。")
@@ -2197,7 +2127,7 @@ func UserToUserExpiredTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -2216,7 +2146,7 @@ func UserToUserExpiredTransfersGet(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对用户转出已超时记录
-	transfers, err := dao.GetTeaUserToUserExpiredTransfers(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToUserExpiredTransferOuts(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get expired transfer outs", err)
 		report(w, s_u, "获取用户对用户转出已超时记录失败。")
@@ -2314,7 +2244,7 @@ func UserToTeamExpiredTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -2333,7 +2263,7 @@ func UserToTeamExpiredTransfersGet(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对团队转出已超时记录
-	transfers, err := dao.GetTeaUserToTeamExpiredTransfers(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToTeamExpiredTransferOuts(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get expired transfer outs to team", err)
 		report(w, s_u, "获取用户对团队转出已超时记录失败。")
@@ -2431,7 +2361,7 @@ func UserFromUserPendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
@@ -2636,7 +2566,7 @@ func ConfirmTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request)
 	}
 
 	// 团队(某个成员)确认接收用户对团队转账
-	err = dao.TeaConfirmTeamToUserTransferOut(req.TransferUuid, user.Id)
+	err = dao.TeaUserConfirmFromTeamTransferIn(req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -2658,7 +2588,7 @@ func HandleTeaUserFromTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.R
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自团队已完成转入记录
-	transfers, err := dao.GetTeaUserFromTeamCompletedTransferIns(user.Id, page, limit)
+	transfers, err := dao.TeaUserFromTeamCompletedTransferIns(user.Id, page, limit)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取用户来自团队已完成转入记录失败")
 		return
@@ -2713,7 +2643,7 @@ func UserFromTeamPendingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 确保用户有星茶账户
-	err = dao.EnsureTeaUserAccountExists(s_u.Id)
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
 		util.Debug("cannot ensure tea account exists", err)
 		report(w, s_u, "获取星茶账户失败。")
