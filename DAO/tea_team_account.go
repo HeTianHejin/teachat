@@ -853,7 +853,7 @@ func CreateTeaTransferTeamToTeam(fromTeamId, initiatorUserId, toTeamId int, amou
 }
 
 // TeaConfirmUserToTeamTransferOut 团队(某个成员)确认接收来自用户转账
-func TeaConfirmUserToTeamTransferOut(toTeamId, fromUserId, operationalUserId int) error {
+func TeaConfirmUserToTeamTransferOut(transferUuid string, toTeamId, operationalUserId int) error {
 	// 开始事务
 	tx, err := DB.Begin()
 	if err != nil {
@@ -864,14 +864,15 @@ func TeaConfirmUserToTeamTransferOut(toTeamId, fromUserId, operationalUserId int
 	// 首先锁定并获取转账记录详情
 	var transferOutID int
 	var amountMg int64
+	var fromUserId int
 	var notes, toTeamName, fromUserName string
 	err = tx.QueryRow(`
-		SELECT id, amount_milligrams, notes, to_team_name, from_user_name
+		SELECT id, from_user_id, amount_milligrams, notes, to_team_name, from_user_name
 		FROM tea.user_to_team_transfer_out 
-		WHERE to_team_id = $1 AND from_user_id = $2 AND status = $3
+		WHERE uuid = $1 AND to_team_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		toTeamId, fromUserId, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &amountMg, &notes, &toTeamName, &fromUserName)
+		transferUuid, toTeamId, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromUserId, &amountMg, &notes, &toTeamName, &fromUserName)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -945,7 +946,7 @@ func TeaConfirmUserToTeamTransferOut(toTeamId, fromUserId, operationalUserId int
 }
 
 // TeaConfirmTeamToTeamTransferOut 团队(某个成员)确认接收来自团队转账
-func TeaConfirmTeamToTeamTransferOut(toTeamId, fromTeamId, operationalUserId int) error {
+func TeaConfirmTeamToTeamTransferOut(transferUuid string, toTeamId, operationalUserId int) error {
 	// 开始事务
 	tx, err := DB.Begin()
 	if err != nil {
@@ -956,14 +957,15 @@ func TeaConfirmTeamToTeamTransferOut(toTeamId, fromTeamId, operationalUserId int
 	// 首先锁定并获取转账记录详情
 	var transferOutID int
 	var amountMg int64
+	var fromTeamId int
 	var notes, toTeamName, fromTeamName string
 	err = tx.QueryRow(`
-		SELECT id, amount_milligrams, notes, to_team_name, from_team_name
+		SELECT id, from_team_id, amount_milligrams, notes, to_team_name, from_team_name
 		FROM tea.team_to_team_transfer_out 
-		WHERE to_team_id = $1 AND from_team_id = $2 AND status = $3
+		WHERE uuid = $1 AND to_team_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		toTeamId, fromTeamId, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &amountMg, &notes, &toTeamName, &fromTeamName)
+		transferUuid, toTeamId, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromTeamId, &amountMg, &notes, &toTeamName, &fromTeamName)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -1037,7 +1039,7 @@ func TeaConfirmTeamToTeamTransferOut(toTeamId, fromTeamId, operationalUserId int
 }
 
 // TeaTeamRejectFromUserTransferIn 团队(某个成员)拒绝接收来自用户转账
-func TeaTeamRejectFromUserTransferIn(fromUserId, toTeamId, operatorUserId int, reason string) error {
+func TeaTeamRejectFromUserTransferIn(transferUuid string, toTeamId, operatorUserId int, reason string) error {
 	// 开始事务
 	tx, err := DB.Begin()
 	if err != nil {
@@ -1048,14 +1050,15 @@ func TeaTeamRejectFromUserTransferIn(fromUserId, toTeamId, operatorUserId int, r
 	// 首先锁定并获取转账记录详情
 	var transferOutID int
 	var amountMg int64
+	var fromUserId int
 	var toTeamName, fromUserName, notes string
 	err = tx.QueryRow(`
-		SELECT id, amount_milligrams, to_team_name, from_user_name, notes
+		SELECT id, from_user_id, amount_milligrams, to_team_name, from_user_name, notes
 		FROM tea.user_to_team_transfer_out 
-		WHERE from_user_id = $1 AND to_team_id = $2 AND status = $3
+		WHERE uuid = $1 AND to_team_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		fromUserId, toTeamId, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &amountMg, &toTeamName, &fromUserName, &notes)
+		transferUuid, toTeamId, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromUserId, &amountMg, &toTeamName, &fromUserName, &notes)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -1115,8 +1118,8 @@ func TeaTeamRejectFromUserTransferIn(fromUserId, toTeamId, operatorUserId int, r
 	return nil
 }
 
-// TeaTeamRejectFromTeamTransferIn 团队(某个成员)拒绝接收来自团队转账
-func TeaTeamRejectFromTeamTransferIn(fromTeamId, toTeamId, operatorUserId int, reason string) error {
+// TeaTeamRejectFromTeamTransferIn 团队(某个成员),拒绝接收,来自团队转账
+func TeaTeamRejectFromTeamTransferIn(transferUuid string, toTeamId, operatorUserId int, reason string) error {
 	// 开始事务
 	tx, err := DB.Begin()
 	if err != nil {
@@ -1127,14 +1130,15 @@ func TeaTeamRejectFromTeamTransferIn(fromTeamId, toTeamId, operatorUserId int, r
 	// 首先锁定并获取转账记录详情
 	var transferOutID int
 	var amountMg int64
+	var fromTeamId int
 	var toTeamName, fromTeamName, notes string
 	err = tx.QueryRow(`
-		SELECT id, amount_milligrams, to_team_name, from_team_name, notes
+		SELECT id, from_team_id, amount_milligrams, to_team_name, from_team_name, notes
 		FROM tea.team_to_team_transfer_out 
-		WHERE from_team_id = $1 AND to_team_id = $2 AND status = $3
+		WHERE uuid = $1 AND to_team_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		fromTeamId, toTeamId, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &amountMg, &toTeamName, &fromTeamName, &notes)
+		transferUuid, toTeamId, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromTeamId, &amountMg, &toTeamName, &fromTeamName, &notes)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

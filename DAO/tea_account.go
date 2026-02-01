@@ -3,6 +3,7 @@ package dao
 import (
 	"database/sql"
 	"fmt"
+	util "teachat/Util"
 	"time"
 )
 
@@ -435,6 +436,7 @@ func TeaUserProcessToUserExpiredTransfers() error {
 		// 检查锁定余额是否足够
 		if currentLockedBalance < et.Amount {
 			// 锁定余额不足，记录警告并跳过
+			util.Error("用户对用户转账过期处理时，锁定余额不足，无法解锁，转账ID：%d，用户ID：%d，锁定余额：%d，转账金额：%d", et.Id, et.FromUserId, currentLockedBalance, et.Amount)
 			continue
 		}
 
@@ -516,6 +518,7 @@ func TeaUserProcessToTeamExpiredTransfers() error {
 		// 检查锁定余额是否足够
 		if currentLockedBalance < et.Amount {
 			// 锁定余额不足，记录警告并跳过
+			util.Error("用户对团队转账过期处理时，锁定余额不足，无法解锁，转账ID：%d，用户ID：%d，锁定余额：%d，转账金额：%d", et.Id, et.FromUserId, currentLockedBalance, et.Amount)
 			continue
 		}
 
@@ -818,7 +821,7 @@ func TeaUserInFromUserPendingTransferOutsCount(to_user_id int) (int, error) {
 }
 
 // 用户确认接收来自某个用户转账
-func TeaUserConfirmFromUserTransferIn(to_user_id, from_user_id int) error {
+func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error {
 	// 开始事务
 	tx, err := DB.Begin()
 	if err != nil {
@@ -828,14 +831,15 @@ func TeaUserConfirmFromUserTransferIn(to_user_id, from_user_id int) error {
 
 	// 首先锁定并获取转账记录详情
 	var transferOutID, amountMg int
+	var fromUserId int
 	var notes, toUserName, fromUserName string
 	err = tx.QueryRow(`
-		SELECT id, amount_milligrams, notes, to_user_name, from_user_name
+		SELECT id, from_user_id, amount_milligrams, notes, to_user_name, from_user_name
 		FROM tea.user_to_user_transfer_out 
-		WHERE to_user_id = $1 AND from_user_id = $2 AND status = $3
+		WHERE uuid = $1 AND to_user_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		to_user_id, from_user_id, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &amountMg, &notes, &toUserName, &fromUserName)
+		transferUuid, to_user_id, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromUserId, &amountMg, &notes, &toUserName, &fromUserName)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -867,9 +871,8 @@ func TeaUserConfirmFromUserTransferIn(to_user_id, from_user_id int) error {
 			locked_balance_milligrams = locked_balance_milligrams - $1,
 			updated_at = $2
 		WHERE user_id = $3 
-		AND locked_balance_milligrams >= $1
-		RETURNING id`,
-		amountMg, now, from_user_id)
+		AND locked_balance_milligrams >= $1`,
+		amountMg, now, fromUserId)
 	if err != nil {
 		return fmt.Errorf("更新转出用户账户失败: %v", err)
 	}
@@ -894,7 +897,7 @@ func TeaUserConfirmFromUserTransferIn(to_user_id, from_user_id int) error {
 			from_user_id, from_user_name, amount_milligrams, notes, 
 			balance_after_receipt, status, is_confirmed, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		transferOutID, to_user_id, toUserName, from_user_id, fromUserName,
+		transferOutID, to_user_id, toUserName, fromUserId, fromUserName,
 		amountMg, notes, receiverBalanceAfter, TeaTransferStatusCompleted,
 		true, now)
 	if err != nil {
@@ -909,7 +912,7 @@ func TeaUserConfirmFromUserTransferIn(to_user_id, from_user_id int) error {
 }
 
 // 用户确认接收来自某个团队转账
-func TeaUserConfirmFromTeamTransferIn(to_user_id, from_team_id int) error {
+func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error {
 	// 开始事务
 	tx, err := DB.Begin()
 	if err != nil {
@@ -919,14 +922,15 @@ func TeaUserConfirmFromTeamTransferIn(to_user_id, from_team_id int) error {
 
 	// 首先锁定并获取转账记录详情
 	var transferOutID, amountMg, fromUserID int
+	var fromTeamId int
 	var notes, toUserName, fromTeamName string
 	err = tx.QueryRow(`
-		SELECT id, amount_milligrams, from_user_id, notes, to_user_name, from_team_name
+		SELECT id, from_team_id, amount_milligrams, from_user_id, notes, to_user_name, from_team_name
 		FROM tea.team_to_user_transfer_out 
-		WHERE to_user_id = $1 AND from_team_id = $2 AND status = $3
+		WHERE uuid = $1 AND to_user_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		to_user_id, from_team_id, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &amountMg, &fromUserID, &notes, &toUserName, &fromTeamName)
+		transferUuid, to_user_id, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromTeamId, &amountMg, &fromUserID, &notes, &toUserName, &fromTeamName)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -958,8 +962,7 @@ func TeaUserConfirmFromTeamTransferIn(to_user_id, from_team_id int) error {
 			locked_balance_milligrams = locked_balance_milligrams - $1,
 			updated_at = $2
 		WHERE user_id = $3 
-		AND locked_balance_milligrams >= $1
-		RETURNING id`,
+		AND locked_balance_milligrams >= $1`,
 		amountMg, now, fromUserID)
 	if err != nil {
 		return fmt.Errorf("更新转出用户账户失败: %v", err)
@@ -985,7 +988,7 @@ func TeaUserConfirmFromTeamTransferIn(to_user_id, from_team_id int) error {
 			from_team_id, from_team_name, amount_milligrams, notes, 
 			balance_after_receipt, status, is_confirmed, created_at
 		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
-		transferOutID, to_user_id, toUserName, from_team_id, fromTeamName,
+		transferOutID, to_user_id, toUserName, fromTeamId, fromTeamName,
 		amountMg, notes, receiverBalanceAfter, TeaTransferStatusCompleted,
 		true, now)
 	if err != nil {
@@ -1077,7 +1080,7 @@ func TeaUserFromTeamCompletedTransferIns(user_id int, page, limit int) ([]TeaUse
 }
 
 // TeaUserRejectFromUserTransferIn 某个用户,拒绝接收,用户对用户转账
-func TeaUserRejectFromUserTransferIn(fromUserId, toUserId int, reason string) error {
+func TeaUserRejectFromUserTransferIn(transferUuid string, toUserId int, reason string) error {
 	tx, err := DB.Begin()
 	if err != nil {
 		return fmt.Errorf("开始事务失败: %v", err)
@@ -1087,15 +1090,16 @@ func TeaUserRejectFromUserTransferIn(fromUserId, toUserId int, reason string) er
 	// 首先锁定并获取转账记录详情
 	var transferOutID int
 	var amountMg int64
+	var fromUserId int
 	var toUserName, fromUserName, notes string
 	var expiresAt time.Time
 	err = tx.QueryRow(`
-		SELECT id, amount_milligrams, to_user_name, from_user_name, notes, expires_at
+		SELECT id, from_user_id, amount_milligrams, to_user_name, from_user_name, notes, expires_at
 		FROM tea.user_to_user_transfer_out 
-		WHERE from_user_id = $1 AND to_user_id = $2 AND status = $3
+		WHERE uuid = $1 AND to_user_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		fromUserId, toUserId, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &amountMg, &toUserName, &fromUserName, &notes, &expiresAt)
+		transferUuid, toUserId, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromUserId, &amountMg, &toUserName, &fromUserName, &notes, &expiresAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -1152,7 +1156,7 @@ func TeaUserRejectFromUserTransferIn(fromUserId, toUserId int, reason string) er
 }
 
 // TeaUserRejectFromTeamTransferIn 某个用户,拒绝接收,来自团队转账
-func TeaUserRejectFromTeamTransferIn(fromTeamId, toUserId int, reason string) error {
+func TeaUserRejectFromTeamTransferIn(transferUuid string, toUserId int, reason string) error {
 	tx, err := DB.Begin()
 	if err != nil {
 		return fmt.Errorf("开始事务失败: %v", err)
@@ -1162,15 +1166,16 @@ func TeaUserRejectFromTeamTransferIn(fromTeamId, toUserId int, reason string) er
 	// 首先锁定并获取转账记录详情
 	var transferOutID int
 	var amountMg int64
+	var fromTeamId int
 	var toUserName, fromTeamName, notes string
 	var expiresAt time.Time
 	err = tx.QueryRow(`
-		SELECT id, amount_milligrams, to_user_name, from_team_name, notes, expires_at
+		SELECT id, from_team_id, amount_milligrams, to_user_name, from_team_name, notes, expires_at
 		FROM tea.team_to_user_transfer_out 
-		WHERE from_team_id = $1 AND to_user_id = $2 AND status = $3
+		WHERE uuid = $1 AND to_user_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		fromTeamId, toUserId, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &amountMg, &toUserName, &fromTeamName, &notes, &expiresAt)
+		transferUuid, toUserId, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromTeamId, &amountMg, &toUserName, &fromTeamName, &notes, &expiresAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

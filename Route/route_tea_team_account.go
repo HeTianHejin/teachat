@@ -1093,6 +1093,7 @@ func ConfirmTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
+		ToTeamId     int    `json:"to_team_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
@@ -1103,8 +1104,23 @@ func ConfirmTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
 		return
 	}
+	if req.ToTeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
 
-	err = dao.TeaConfirmUserToTeamTransferOut(req.TransferUuid, user.Id)
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamActiveMember(user.Id, req.ToTeamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队成员身份失败")
+		return
+	}
+	if !isMember {
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能确认接收用户转账")
+		return
+	}
+
+	err = dao.TeaConfirmUserToTeamTransferOut(req.TransferUuid, req.ToTeamId, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1128,6 +1144,7 @@ func RejectTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
+		ToTeamId     int    `json:"to_team_id"`
 		Reason       string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -1139,8 +1156,23 @@ func RejectTeaTeamFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
 		return
 	}
+	if req.ToTeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
 
-	err = dao.TeaTeamRejectFromUserTransferIn(req.TransferUuid, user.Id, req.Reason)
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamActiveMember(user.Id, req.ToTeamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队成员身份失败")
+		return
+	}
+	if !isMember {
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能拒绝接收用户转账")
+		return
+	}
+
+	err = dao.TeaTeamRejectFromUserTransferIn(req.TransferUuid, req.ToTeamId, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1164,7 +1196,7 @@ func ConfirmTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
-		TeamId       int    `json:"team_id"`
+		ToTeamId     int    `json:"to_team_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
@@ -1176,13 +1208,13 @@ func ConfirmTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.TeamId <= 0 {
+	if req.ToTeamId <= 0 {
 		respondWithError(w, http.StatusBadRequest, "团队ID无效")
 		return
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, req.TeamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, req.ToTeamId)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "检查团队成员身份失败")
 		return
@@ -1192,7 +1224,7 @@ func ConfirmTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.ConfirmTeaTeamFromTeamTransfer(req.TransferUuid, user.Id)
+	err = dao.TeaConfirmTeamToTeamTransferOut(req.TransferUuid, req.ToTeamId, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1216,7 +1248,7 @@ func RejectTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
-		TeamId       int    `json:"team_id"`
+		ToTeamId     int    `json:"to_team_id"`
 		Reason       string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -1229,13 +1261,13 @@ func RejectTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.TeamId <= 0 {
+	if req.ToTeamId <= 0 {
 		respondWithError(w, http.StatusBadRequest, "团队ID无效")
 		return
 	}
 
 	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, req.TeamId)
+	isMember, err := dao.IsTeamActiveMember(user.Id, req.ToTeamId)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "检查团队成员身份失败")
 		return
@@ -1245,7 +1277,7 @@ func RejectTeaTeamFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = dao.TeaTeamRejectFromTeamTransferIn(req.TransferUuid, user.Id, req.Reason)
+	err = dao.TeaTeamRejectFromTeamTransferIn(req.TransferUuid, req.ToTeamId, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1273,6 +1305,7 @@ func ApproveTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
+		FromTeamId   int    `json:"from_team_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
@@ -1283,8 +1316,23 @@ func ApproveTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
 		return
 	}
+	if req.FromTeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
 
-	err = dao.TeaTeamApproveToUserTransferOut(req.TransferUuid, user.Id)
+	// 检查用户是否是团队核心成员
+	CoreManage, err := dao.CanUserManageTeamAccount(user.Id, req.FromTeamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队核心成员身份失败")
+		return
+	}
+	if !CoreManage {
+		respondWithError(w, http.StatusForbidden, "只有团队核心成员才能审批团队对用户转账")
+		return
+	}
+
+	err = dao.TeaTeamApproveToUserTransferOut(req.FromTeamId, req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1308,6 +1356,7 @@ func ApproveTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
+		FromTeamId   int    `json:"from_team_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		respondWithError(w, http.StatusBadRequest, "请求格式错误")
@@ -1318,8 +1367,23 @@ func ApproveTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
 		return
 	}
+	if req.FromTeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
 
-	err = dao.TeaTeamApproveToTeamTransferOut(req.TransferUuid, user.Id)
+	// 检查用户是否是团队核心成员
+	CoreManage, err := dao.CanUserManageTeamAccount(user.Id, req.FromTeamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队核心成员身份失败")
+		return
+	}
+	if !CoreManage {
+		respondWithError(w, http.StatusForbidden, "只有团队核心成员才能审批团队对团队转账")
+		return
+	}
+
+	err = dao.TeaTeamApproveToTeamTransferOut(req.FromTeamId, req.TransferUuid, user.Id)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1343,6 +1407,7 @@ func RejectTeaTeamToUserTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
+		FromTeamId   int    `json:"from_team_id"`
 		Reason       string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -1354,8 +1419,23 @@ func RejectTeaTeamToUserTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
 		return
 	}
+	if req.FromTeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
 
-	err = dao.TeaTeamRejectToUserTransferOut(req.TransferUuid, user.Id, req.Reason)
+	// 检查用户是否是团队核心成员
+	CoreManage, err := dao.CanUserManageTeamAccount(user.Id, req.FromTeamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队核心成员身份失败")
+		return
+	}
+	if !CoreManage {
+		respondWithError(w, http.StatusForbidden, "只有团队核心成员才能审批团队对用户转账")
+		return
+	}
+
+	err = dao.TeaTeamRejectToUserTransferOut(req.FromTeamId, req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -1379,6 +1459,7 @@ func RejectTeaTeamToTeamTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 
 	var req struct {
 		TransferUuid string `json:"transfer_uuid"`
+		FromTeamId   int    `json:"from_team_id"`
 		Reason       string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -1390,8 +1471,23 @@ func RejectTeaTeamToTeamTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 		respondWithError(w, http.StatusBadRequest, "转账UUID不能为空")
 		return
 	}
+	if req.FromTeamId <= 0 {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
 
-	err = dao.TeaTeamRejectToTeamTransferOut(req.TransferUuid, user.Id, req.Reason)
+	// 检查用户是否是团队核心成员
+	CoreManage, err := dao.CanUserManageTeamAccount(user.Id, req.FromTeamId)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "检查团队核心成员身份失败")
+		return
+	}
+	if !CoreManage {
+		respondWithError(w, http.StatusForbidden, "只有团队核心成员才能审批团队对团队转账")
+		return
+	}
+
+	err = dao.TeaTeamRejectToTeamTransferOut(req.FromTeamId, req.TransferUuid, user.Id, req.Reason)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return

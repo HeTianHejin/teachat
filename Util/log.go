@@ -78,10 +78,24 @@ func Error(v ...any) {
 	if logLevel <= LevelError {
 		logWithCaller(1, "ERROR", v...)
 	}
+	// 记录错误日志
+	file, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalln("Failed to open log file", err)
+	}
+	logger = log.New(file, "Error", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 // Panic 严重错误并退出
 func Panic(v ...any) {
 	logWithCaller(1, "PANIC", v...)
+	// 记录错误日志
+	file, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Fatalln("Failed to open log file", err)
+	}
+	logger = log.New(file, "Panic", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// 退出程序
 	os.Exit(1)
 }
