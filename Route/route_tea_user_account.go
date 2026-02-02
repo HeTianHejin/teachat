@@ -856,7 +856,7 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea_user_from_team_transfer_outs")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user_from_team_transfer_ins")
 }
 
 // GetTeaUserToUserExpiredTransfersAPI 获取用户对用户超时转出记录
@@ -989,8 +989,8 @@ func GetTeaUserOutPendingToTeamTransfersAPI(w http.ResponseWriter, r *http.Reque
 	respondWithPagination(w, "获取用户对团队待确认转账成功", responses, page, limit, 0)
 }
 
-// HandleTeaUserPendingUserToUserTransfers 由当前用户发起,待对方用户确认,转账列表页面请求
-func HandleTeaUserPendingUserToUserTransfers(w http.ResponseWriter, r *http.Request) {
+// HandleTeaUserToUserPendingTransfers 由当前用户发起,待对方用户确认,转账列表页面请求
+func HandleTeaUserToUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -1835,15 +1835,15 @@ func GetTeaUserToTeamPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 }
 
 // 辅助函数：安全获取time.Time值，处理nil和any类型
-func safeTime(val any) time.Time {
-	if val == nil {
-		return time.Time{}
-	}
-	if t, ok := val.(time.Time); ok {
-		return t
-	}
-	return time.Time{}
-}
+// func safeTime(val any) time.Time {
+// 	if val == nil {
+// 		return time.Time{}
+// 	}
+// 	if t, ok := val.(time.Time); ok {
+// 		return t
+// 	}
+// 	return time.Time{}
+// }
 
 // GetTeaUserToUserCompletedTransfersAPI 获取用户对用户转出已完成记录列表API(仅已完成状态)
 func GetTeaUserToUserCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {

@@ -476,13 +476,6 @@ func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// 获取团队交易历史
-	// transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
-	// if err != nil {
-	// 	util.Debug("cannot get team transaction history", err)
-	// 	transactions = []map[string]any{}
-	// }
-
 	// 获取团队星茶账户信息
 	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
