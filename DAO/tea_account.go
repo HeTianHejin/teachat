@@ -893,13 +893,13 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 	// 4. 创建接收记录
 	_, err = tx.Exec(`
 		INSERT INTO tea.user_from_user_transfer_in (
-			user_to_user_transfer_out_id, to_user_id, to_user_name, 
-			from_user_id, from_user_name, amount_milligrams, notes, 
-			balance_after_receipt, status, is_confirmed, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+			user_to_user_transfer_out_id, to_user_id, to_user_name,
+			from_user_id, from_user_name, amount_milligrams, notes,
+			balance_after_receipt, status, is_confirmed, operational_user_id, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
 		transferOutID, to_user_id, toUserName, fromUserId, fromUserName,
 		amountMg, notes, receiverBalanceAfter, TeaTransferStatusCompleted,
-		true, now)
+		true, to_user_id, now)
 	if err != nil {
 		return fmt.Errorf("创建接收来自用户转账记录失败: %v", err)
 	}
@@ -984,13 +984,13 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error
 	// 4. 创建接收记录
 	_, err = tx.Exec(`
 		INSERT INTO tea.user_from_team_transfer_in (
-			team_to_user_transfer_out_id, to_user_id, to_user_name, 
-			from_team_id, from_team_name, amount_milligrams, notes, 
-			balance_after_receipt, status, is_confirmed, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+			team_to_user_transfer_out_id, to_user_id, to_user_name,
+			from_team_id, from_team_name, amount_milligrams, notes,
+			balance_after_receipt, status, is_confirmed, operational_user_id, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
 		transferOutID, to_user_id, toUserName, fromTeamId, fromTeamName,
 		amountMg, notes, receiverBalanceAfter, TeaTransferStatusCompleted,
-		true, now)
+		true, to_user_id, now)
 	if err != nil {
 		return fmt.Errorf("创建接收来自团队星茶转账记录失败: %v", err)
 	}
@@ -1079,7 +1079,7 @@ func TeaUserFromTeamCompletedTransferIns(user_id int, page, limit int) ([]TeaUse
 	return transfers, nil
 }
 
-// TeaUserRejectFromUserTransferIn 某个用户,拒绝接收,用户对用户转账
+// TeaUserRejectFromUserTransferIn 某个用户,拒绝接收,来自其他用户转账
 func TeaUserRejectFromUserTransferIn(transferUuid string, toUserId int, reason string) error {
 	tx, err := DB.Begin()
 	if err != nil {

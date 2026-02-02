@@ -121,7 +121,7 @@
                                         {{ if .IsExpired }}
                                         <span class="label label-danger">已过期</span>
                                         {{ else }}
-                                        <span class="label label-info time-remaining" data-expires="{{ .ExpiresAt.Format "2006-01-02T15:04:05" }}">计算中...</span>
+                                        <span class="label label-info time-remaining" data-expires="{{ .ExpiresAt.Format "2006-01-02T15:04:05Z07:00" }}">计算中...</span>
                                         {{ end }}
                                     </td>
                                     <td>
@@ -204,7 +204,7 @@
                     <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
                     转账历史
                 </a>
-                <a href="/v1/tea/user/transfers/ins/user_from_user/completed/page" class="btn btn-success">
+                <a href="/v1/tea/user/transfers/in/user_from_user/completed/page" class="btn btn-success">
                     <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
                     查看收入记录
                 </a>
@@ -217,48 +217,19 @@
 {{ end }}
 
 {{ define "scripts" }}
+{{/* 
+  ============================================
+  用户待确认转入页面 - 自定义脚本
+  功能：确认/拒绝用户转账 + 剩余时间计算
+  注意：此脚本在 layout.go.html 的 {{ block "scripts" . }}{{ end }} 中加载
+  ============================================
+*/}}
 <script>
-$(document).ready(function() {
-    // 高亮当前选项卡
-    $('.nav-tabs a[href="' + window.location.pathname + '"]').parent().addClass('active');
-    
-    // 页面加载时显示加载状态
-    $('.pagination a').on('click', function(e) {
-        $('.panel-body').addClass('loading');
-    });
-
-    // 计算剩余时间
-    function updateTimeRemaining() {
-        $('.time-remaining').each(function() {
-            var expiresAt = new Date($(this).data('expires'));
-            var now = new Date();
-            var diff = expiresAt - now;
-            
-            if (diff <= 0) {
-                $(this).removeClass('label-info').addClass('label-danger').text('已过期');
-                return;
-            }
-            
-            var hours = Math.floor(diff / (1000 * 60 * 60));
-            var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            
-            if (hours > 24) {
-                var days = Math.floor(hours / 24);
-                $(this).text(days + '天' + (hours % 24) + '小时');
-            } else if (hours > 0) {
-                $(this).text(hours + '小时' + minutes + '分钟');
-            } else {
-                $(this).removeClass('label-info').addClass('label-warning').text(minutes + '分钟');
-            }
-        });
-    }
-    
-    updateTimeRemaining();
-    setInterval(updateTimeRemaining, 60000); // 每分钟更新一次
-});
-
-// 确认接收转账
+// ============================================
+// 1. 确认接收来自用户的转账
+// ============================================
 function confirmTransfer(transferUuid) {
+    console.log('确认转账:', transferUuid);
     if (!confirm('确定要确认接收这笔转账吗？星茶将计入您的账户余额。')) {
         return;
     }
@@ -287,8 +258,11 @@ function confirmTransfer(transferUuid) {
     });
 }
 
-// 拒绝转账
+// ============================================
+// 2. 拒绝来自用户的转账
+// ============================================
 function rejectTransfer(transferUuid) {
+    console.log('拒绝转账:', transferUuid);
     var reason = prompt('请输入拒绝理由（可选）:', '');
     if (reason === null) {
         return;
@@ -318,6 +292,63 @@ function rejectTransfer(transferUuid) {
         alert('拒绝请求失败，请重试');
     });
 }
+
+// ============================================
+// 3. 页面加载完成后初始化
+// ============================================
+$(document).ready(function() {
+    // 3.1 高亮当前选项卡
+    $('.nav-tabs a[href="' + window.location.pathname + '"]').parent().addClass('active');
+    
+    // 3.2 页面加载时显示加载状态
+    $('.pagination a').on('click', function(e) {
+        $('.panel-body').addClass('loading');
+    });
+
+    // 3.3 计算并显示剩余时间（每分钟更新）
+    function updateTimeRemaining() {
+        $('.time-remaining').each(function() {
+            var expiresStr = $(this).data('expires');
+            console.log('Expires string:', expiresStr);
+            
+            if (!expiresStr) {
+                $(this).text('未知');
+                return;
+            }
+            
+            var expiresAt = new Date(expiresStr);
+            var now = new Date();
+            var diff = expiresAt - now;
+            
+            console.log('Expires at:', expiresAt, 'Now:', now, 'Diff:', diff);
+            
+            if (isNaN(diff)) {
+                $(this).text('格式错误');
+                return;
+            }
+            
+            if (diff <= 0) {
+                $(this).removeClass('label-info').addClass('label-danger').text('已过期');
+                return;
+            }
+            
+            var hours = Math.floor(diff / (1000 * 60 * 60));
+            var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (hours > 24) {
+                var days = Math.floor(hours / 24);
+                $(this).text(days + '天' + (hours % 24) + '小时');
+            } else if (hours > 0) {
+                $(this).text(hours + '小时' + minutes + '分钟');
+            } else {
+                $(this).removeClass('label-info').addClass('label-warning').text(minutes + '分钟');
+            }
+        });
+    }
+    
+    updateTimeRemaining();
+    setInterval(updateTimeRemaining, 60000);
+});
 </script>
 <style>
 .loading {

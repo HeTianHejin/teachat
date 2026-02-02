@@ -1463,7 +1463,7 @@ func respondWithPagination(w http.ResponseWriter, message string, data any, page
 	json.NewEncoder(w).Encode(response)
 }
 
-// ConfirmTeaUserFromUserTransferInAPI 当前用户确认接收用户对用户转账
+// ConfirmTeaUserFromUserTransferInAPI 当前用户确认接收,来自用户转账
 func ConfirmTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
@@ -1502,7 +1502,7 @@ func ConfirmTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request)
 	respondWithSuccess(w, "用户对用户转账确认接收成功", nil)
 }
 
-// RejectTeaUserFromUserTransferInAPI 当前用户拒绝接收用户对用户转账
+// RejectTeaUserFromUserTransferInAPI 当前用户拒绝接收, 来自用户转账
 func RejectTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
