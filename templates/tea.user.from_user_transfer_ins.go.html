@@ -3,7 +3,7 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的星茶罐</a></li>
-  <li class="active">接收历史</li>
+  <li class="active">待确认转入</li>
 </ol>
 
 <div class="container">
@@ -46,13 +46,14 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs">
                 <li class="active">
-                    <a href="/v1/tea/user/transfers/ins/user_from_user/page">
+                    <a href="/v1/tea/user/transfers/in/user_from_user/pending/page">
                         <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
                         用户转入
+                        <span class="badge">{{ len .Transfers }}</span>
                     </a>
                 </li>
                 <li>
-                    <a href="/v1/tea/user/transfers/ins/user_from_team/page">
+                    <a href="/v1/tea/user/transfers/in/user_from_team/pending/page">
                         <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
                         团队转入
                     </a>
@@ -61,71 +62,52 @@
         </div>
     </div>
 
-    <!-- 收入记录列表 -->
+    <!-- 待确认转账列表 -->
     <div class="row">
         <div class="col-md-12">
-            <div class="panel panel-info">
+            <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
-                        用户接收历史
-                        <small class="pull-right">显示所有接收操作（包括成功、拒绝、超时）</small>
+                        待确认用户转入
+                        <small class="pull-right">请确认或拒绝来自其他茶友的转账</small>
                     </h3>
                 </div>
                 <div class="panel-body">
                     {{ if .Transfers }}
+                    <div class="alert alert-info">
+                        <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                        <strong>提示：</strong>您有 {{ len .Transfers }} 笔待确认的转账。请在过期前处理，过期后转账将自动退回给发送方。
+                    </div>
                     <div class="table-responsive">
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
                                     <th>时间</th>
                                     <th>发送方</th>
-                                    <th>接收方</th>
                                     <th>数量</th>
-                                    <th>操作后余额</th>
-                                    <th>状态</th>
-                                    <th>过期时间</th>
                                     <th>备注</th>
-                                    <th>拒绝原因</th>
+                                    <th>过期时间</th>
+                                    <th>剩余时间</th>
+                                    <th>操作</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {{ range .Transfers }}
-                                <tr class="{{ if .IsExpired }}danger{{ else }}success{{ end }}">
+                                <tr class="{{ if .IsExpired }}danger{{ else }}warning{{ end }}">
                                     <td>{{ .CreatedAt.Format "2006-01-02 15:04" }}</td>
                                     <td>
                                         <span class="label label-info">个人</span>
                                         {{ .FromUserName }} (ID: {{ .FromUserId }})
                                     </td>
                                     <td>
-                                        <span class="label label-default">个人</span>
-                                        {{ .ToUserName }} (ID: {{ .ToUserId }})
-                                    </td>
-                                    <td>
                                         <span class="label label-success">{{ .AmountDisplay }}</span>
                                     </td>
                                     <td>
-                                        <span class="text-muted">
-                                            {{ if .BalanceAfterReceipt }}
-                                                {{ FormatFloat .BalanceAfterReceipt 3 }} 克
-                                            {{ else }}
-                                                -
-                                            {{ end }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="label 
-                                            {{ if eq .StatusDisplay "已完成" }}label-success
-                                            {{ else if eq .StatusDisplay "待确认" }}label-warning
-                                            {{ else if eq .StatusDisplay "已拒绝" }}label-danger
-                                            {{ else if eq .StatusDisplay "已过期" }}label-default
-                                            {{ else }}label-primary{{ end }}">
-                                            {{ .StatusDisplay }}
-                                        </span>
-                                        {{ if .IsConfirmed }}
-                                        <span class="label label-success">已确认</span>
+                                        {{ if .Notes }}
+                                        <small class="text-muted">{{ .Notes }}</small>
                                         {{ else }}
-                                        <span class="label label-warning">未确认</span>
+                                        <small class="text-muted">-</small>
                                         {{ end }}
                                     </td>
                                     <td>
@@ -136,17 +118,24 @@
                                         {{ end }}
                                     </td>
                                     <td>
-                                        {{ if .Notes }}
-                                        <small class="text-muted">{{ .Notes }}</small>
+                                        {{ if .IsExpired }}
+                                        <span class="label label-danger">已过期</span>
                                         {{ else }}
-                                        <small class="text-muted">-</small>
+                                        <span class="label label-info time-remaining" data-expires="{{ .ExpiresAt.Format "2006-01-02T15:04:05" }}">计算中...</span>
                                         {{ end }}
                                     </td>
                                     <td>
-                                        {{ if and (eq .StatusDisplay "已拒绝") .RejectionReason.Valid }}
-                                        <small class="text-danger">{{ .RejectionReason.String }}</small>
+                                        {{ if not .IsExpired }}
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-success" onclick="confirmTransfer('{{ .Uuid }}')">
+                                                <span class="glyphicon glyphicon-ok" aria-hidden="true"></span> 确认
+                                            </button>
+                                            <button type="button" class="btn btn-danger" onclick="rejectTransfer('{{ .Uuid }}')">
+                                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 拒绝
+                                            </button>
+                                        </div>
                                         {{ else }}
-                                        <small class="text-muted">-</small>
+                                        <span class="text-muted">已过期</span>
                                         {{ end }}
                                     </td>
                                 </tr>
@@ -192,10 +181,10 @@
                         </ul>
                     </nav>
                     {{ else }}
-                    <div class="alert alert-info">
-                        <h4><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> 暂无转入记录</h4>
-                        <p>您还没有收到过其他茶友的星茶转账。</p>
-                        <p>当其他茶友向您转账时，记录将显示在这里。</p>
+                    <div class="alert alert-success">
+                        <h4><span class="glyphicon glyphicon-check" aria-hidden="true"></span> 暂无待确认转账</h4>
+                        <p>您当前没有需要确认的用户转入。</p>
+                        <p>当其他茶友向您转账时，记录将显示在这里等待您的确认。</p>
                     </div>
                     {{ end }}
                 </div>
@@ -210,10 +199,6 @@
                 <a href="/v1/tea/user/account/page" class="btn btn-default">
                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
                     返回星茶罐
-                </a>
-                <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning">
-                    <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
-                    待确认转账
                 </a>
                 <a href="/v1/tea/user/transfers/history/user_to_user/page" class="btn btn-info">
                     <span class="glyphicon glyphicon-exchange" aria-hidden="true"></span>
@@ -241,7 +226,98 @@ $(document).ready(function() {
     $('.pagination a').on('click', function(e) {
         $('.panel-body').addClass('loading');
     });
+
+    // 计算剩余时间
+    function updateTimeRemaining() {
+        $('.time-remaining').each(function() {
+            var expiresAt = new Date($(this).data('expires'));
+            var now = new Date();
+            var diff = expiresAt - now;
+            
+            if (diff <= 0) {
+                $(this).removeClass('label-info').addClass('label-danger').text('已过期');
+                return;
+            }
+            
+            var hours = Math.floor(diff / (1000 * 60 * 60));
+            var minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (hours > 24) {
+                var days = Math.floor(hours / 24);
+                $(this).text(days + '天' + (hours % 24) + '小时');
+            } else if (hours > 0) {
+                $(this).text(hours + '小时' + minutes + '分钟');
+            } else {
+                $(this).removeClass('label-info').addClass('label-warning').text(minutes + '分钟');
+            }
+        });
+    }
+    
+    updateTimeRemaining();
+    setInterval(updateTimeRemaining, 60000); // 每分钟更新一次
 });
+
+// 确认接收转账
+function confirmTransfer(transferUuid) {
+    if (!confirm('确定要确认接收这笔转账吗？星茶将计入您的账户余额。')) {
+        return;
+    }
+    
+    fetch('/v1/tea/user/transfer/confirm/user_from_user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            transfer_uuid: transferUuid
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('转账确认成功！星茶已计入您的账户。');
+            location.reload();
+        } else {
+            alert('确认失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('确认请求失败，请重试');
+    });
+}
+
+// 拒绝转账
+function rejectTransfer(transferUuid) {
+    var reason = prompt('请输入拒绝理由（可选）:', '');
+    if (reason === null) {
+        return;
+    }
+    
+    fetch('/v1/tea/user/transfer/reject/user_from_user', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            transfer_uuid: transferUuid,
+            reason: reason || ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('转账已拒绝，星茶将退回给发送方。');
+            location.reload();
+        } else {
+            alert('拒绝失败: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('拒绝请求失败，请重试');
+    });
+}
 </script>
 <style>
 .loading {

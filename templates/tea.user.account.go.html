@@ -23,7 +23,7 @@
                 <p>
                     您有 <strong>{{ .PendingTransferFromUserCount }}</strong> 笔待确认的来自其他茶友转账记录，
                     请及时处理以免过期。
-                    <a href="/v1/tea/user/transfers/pending/user_to_user/page" class="btn btn-warning btn-sm">立即查看</a>
+                    <a href="/v1/tea/user/transfers/in/user_from_user/pending/page" class="btn btn-warning btn-sm">立即查看</a>
                 </p>
             </div>
         </div>
@@ -44,7 +44,7 @@
                 <p>
                     您有 <strong>{{ .PendingTransferFromTeamCount }}</strong> 笔待确认的来自其他团队转账记录，
                     请及时处理以免过期。
-                    <a href="/v1/tea/user/transfers/pending/team_to_user/page" class="btn btn-warning btn-sm">立即查看</a>
+                    <a href="/v1/tea/user/transfers/in/user_from_team/pending/page" class="btn btn-warning btn-sm">立即查看</a>
                 </p>
             </div>
         </div>
@@ -243,6 +243,7 @@
                                 <h4 class="list-group-item-heading">
                                     <i class="glyphicon glyphicon-time-fill">
                                     被茶友拒绝接收记录
+                                    </i>
                                 </h4>
                                 <p class="list-group-item-text">查看转出给茶友被拒绝的记录（已退回）</p>
                             </a>
@@ -250,6 +251,7 @@
                                 <h4 class="list-group-item-heading">
                                     <i class="glyphicon glyphicon-time-fill">
                                     被团队拒绝接收记录
+                                    </i>
                                 </h4>
                                 <p class="list-group-item-text">查看转出给团队被拒绝的记录（已退回）</p>
                             </a>

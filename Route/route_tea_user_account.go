@@ -540,8 +540,8 @@ func CreateTeaUserToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "用户对团队转账发起成功", response)
 }
 
-// GetTeaUserInFromUserPendingTransfers 获取用户待确认,来自用户转入记录页面
-func GetTeaUserInFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserInPendingFromUserTransfers 获取用户待确认,来自用户转入记录页面
+func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -626,6 +626,9 @@ func GetTeaUserInFromUserPendingTransfers(w http.ResponseWriter, r *http.Request
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
+		// 金额显示
+		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
+
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
 
@@ -656,6 +659,12 @@ func GetTeaUserInFromUserPendingTransfers(w http.ResponseWriter, r *http.Request
 	} else {
 		pageData.StatusDisplay = "正常"
 	}
+
+	// 余额显示
+	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", account.LockedBalanceMilligrams)
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
 
 	pageData.CurrentPage = page
 	pageData.Limit = limit
@@ -822,6 +831,9 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
+		// 金额显示
+		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
+
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
 
@@ -856,7 +868,7 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user_from_team_transfer_ins")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_transfer_ins")
 }
 
 // GetTeaUserToUserExpiredTransfersAPI 获取用户对用户超时转出记录
@@ -1173,8 +1185,8 @@ func GetTeaUserInFromUserCompletedTransfersAPI(w http.ResponseWriter, r *http.Re
 	respondWithPagination(w, "获取用户来自用户收入已完成记录成功", responses, page, limit, 0)
 }
 
-// HandleTeaUserFromTeamCompletedTransfers 获取用户已经确认,来自团队转入记录页面请求 - 收入记录（仅已完成）
-func HandleTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
+// HandleTeaUserFromTeamCompletedTransferIns 获取用户已经确认,来自团队转入记录页面请求 - 收入记录（仅已完成）
+func HandleTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -1310,6 +1322,9 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
+
+		// 金额显示
+		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
 
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
