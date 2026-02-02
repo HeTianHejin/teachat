@@ -1134,6 +1134,12 @@ func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 		pageData.StatusDisplay = "正常"
 	}
 
+	// 余额显示
+	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", account.LockedBalanceMilligrams)
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
@@ -1357,10 +1363,16 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 		pageData.StatusDisplay = "正常"
 	}
 
+	// 余额显示
+	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", account.LockedBalanceMilligrams)
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_transfer_ins")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_completed_transfer_ins")
 }
 
 // ProcessExpiredTransfersJob 定时任务：处理过期转账
