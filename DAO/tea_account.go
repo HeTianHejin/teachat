@@ -833,13 +833,14 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 	var transferOutID, amountMg int
 	var fromUserId int
 	var notes, toUserName, fromUserName string
+	var expiresAt time.Time
 	err = tx.QueryRow(`
-		SELECT id, from_user_id, amount_milligrams, notes, to_user_name, from_user_name
+		SELECT id, from_user_id, amount_milligrams, notes, to_user_name, from_user_name, expires_at
 		FROM tea.user_to_user_transfer_out 
 		WHERE uuid = $1 AND to_user_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
 		transferUuid, to_user_id, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &fromUserId, &amountMg, &notes, &toUserName, &fromUserName)
+	).Scan(&transferOutID, &fromUserId, &amountMg, &notes, &toUserName, &fromUserName, &expiresAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -895,11 +896,11 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 		INSERT INTO tea.user_from_user_transfer_in (
 			user_to_user_transfer_out_id, to_user_id, to_user_name,
 			from_user_id, from_user_name, amount_milligrams, notes,
-			balance_after_receipt, status, is_confirmed, operational_user_id, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+			balance_after_receipt, status, is_confirmed, operational_user_id, expires_at, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 		transferOutID, to_user_id, toUserName, fromUserId, fromUserName,
 		amountMg, notes, receiverBalanceAfter, TeaTransferStatusCompleted,
-		true, to_user_id, now)
+		true, to_user_id, expiresAt, now)
 	if err != nil {
 		return fmt.Errorf("创建接收来自用户转账记录失败: %v", err)
 	}
@@ -924,13 +925,14 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error
 	var transferOutID, amountMg, fromUserID int
 	var fromTeamId int
 	var notes, toUserName, fromTeamName string
+	var expiresAt time.Time
 	err = tx.QueryRow(`
-		SELECT id, from_team_id, amount_milligrams, from_user_id, notes, to_user_name, from_team_name
+		SELECT id, from_team_id, amount_milligrams, from_user_id, notes, to_user_name, from_team_name, expires_at
 		FROM tea.team_to_user_transfer_out 
 		WHERE uuid = $1 AND to_user_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
 		transferUuid, to_user_id, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &fromTeamId, &amountMg, &fromUserID, &notes, &toUserName, &fromTeamName)
+	).Scan(&transferOutID, &fromTeamId, &amountMg, &fromUserID, &notes, &toUserName, &fromTeamName, &expiresAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -986,11 +988,11 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error
 		INSERT INTO tea.user_from_team_transfer_in (
 			team_to_user_transfer_out_id, to_user_id, to_user_name,
 			from_team_id, from_team_name, amount_milligrams, notes,
-			balance_after_receipt, status, is_confirmed, operational_user_id, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+			balance_after_receipt, status, is_confirmed, operational_user_id, expires_at, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
 		transferOutID, to_user_id, toUserName, fromTeamId, fromTeamName,
 		amountMg, notes, receiverBalanceAfter, TeaTransferStatusCompleted,
-		true, to_user_id, now)
+		true, to_user_id, expiresAt, now)
 	if err != nil {
 		return fmt.Errorf("创建接收来自团队星茶转账记录失败: %v", err)
 	}
