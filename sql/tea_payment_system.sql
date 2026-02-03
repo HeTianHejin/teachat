@@ -354,7 +354,7 @@ ALTER TABLE tea.user_accounts ADD CONSTRAINT check_tea_user_account_balance_posi
 ALTER TABLE tea.team_accounts ADD CONSTRAINT check_tea_team_account_balance_positive 
     CHECK (balance_milligrams >= 0);
 
--- 转账金额必须大于0
+-- 转账数额必须大于0
 ALTER TABLE tea.user_to_user_transfer_out ADD CONSTRAINT check_tea_user_to_user_amount_positive 
     CHECK (amount_milligrams > 0);
 

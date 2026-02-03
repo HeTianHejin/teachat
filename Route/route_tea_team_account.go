@@ -298,17 +298,17 @@ func UnfreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "团队账户解冻成功", nil)
 }
 
-// HandleTeaTeamTeaAccount 处理团队星茶账户页面请求
-func HandleTeaTeamTeaAccount(w http.ResponseWriter, r *http.Request) {
+// HandleTeaTeamAccount 处理团队星茶账户页面请求
+func HandleTeaTeamAccount(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	TeamTeaAccountGet(w, r)
+	TeaTeamAccountGet(w, r)
 }
 
-// TeamTeaAccountGet 获取团队星茶账户页面
-func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
+// TeaTeamAccountGet 获取团队星茶账户页面
+func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -369,6 +369,7 @@ func TeamTeaAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 计算可用余额
+	//TODO： 团队转账直接扣减余额，无需计算锁定余额
 	teamAccountWithAvailable := TeamAccountWithAvailable{
 		TeaTeamAccount:             teamAccount,
 		AvailableBalanceMilligrams: teamAccount.BalanceMilligrams - teamAccount.LockedBalanceMilligrams,
@@ -689,7 +690,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.AmountMilligrams <= 0 {
-		respondWithError(w, http.StatusBadRequest, "转账金额必须大于0")
+		respondWithError(w, http.StatusBadRequest, "转账数额必须大于0")
 		return
 	}
 	if req.ExpireHours <= 0 || req.ExpireHours > 168 {
@@ -747,7 +748,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.AmountMilligrams <= 0 {
-		respondWithError(w, http.StatusBadRequest, "转账金额必须大于0")
+		respondWithError(w, http.StatusBadRequest, "转账数额必须大于0")
 		return
 	}
 	if req.ExpireHours <= 0 || req.ExpireHours > 168 {

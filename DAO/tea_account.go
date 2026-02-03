@@ -957,27 +957,29 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 
 	now := time.Now()
 
-	// 1. 更新转账状态
-	_, err = tx.Exec(`
-		UPDATE tea.user_to_user_transfer_out
-		SET status = $1, updated_at = $2
-		WHERE id = $3 AND status = $4`,
-		TeaTransferStatusCompleted, now, transferOutID, TeaTransferStatusPendingReceipt)
-	if err != nil {
-		return fmt.Errorf("更新转账状态失败: %v", err)
-	}
-
-	// 2. 更新转出用户账户（减少余额和锁定金额）
-	_, err = tx.Exec(`
+	// 1. 更新转出用户账户（减少余额和锁定金额），并获取转出后余额
+	var senderBalanceAfter int
+	err = tx.QueryRow(`
 		UPDATE tea.user_accounts 
 		SET balance_milligrams = balance_milligrams - $1,
 			locked_balance_milligrams = locked_balance_milligrams - $1,
 			updated_at = $2
 		WHERE user_id = $3 
-		AND locked_balance_milligrams >= $1`,
-		amountMg, now, fromUserId)
+		AND locked_balance_milligrams >= $1
+		RETURNING balance_milligrams`,
+		amountMg, now, fromUserId).Scan(&senderBalanceAfter)
 	if err != nil {
 		return fmt.Errorf("更新转出用户账户失败: %v", err)
+	}
+
+	// 2. 更新转账状态（包含转出后余额）
+	_, err = tx.Exec(`
+		UPDATE tea.user_to_user_transfer_out
+		SET status = $1, balance_after_transfer = $2, updated_at = $3
+		WHERE id = $4 AND status = $5`,
+		TeaTransferStatusCompleted, senderBalanceAfter, now, transferOutID, TeaTransferStatusPendingReceipt)
+	if err != nil {
+		return fmt.Errorf("更新转账状态失败: %v", err)
 	}
 
 	// 3. 更新接收用户账户（增加余额）
@@ -1051,26 +1053,28 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, confirm_user_id int) 
 
 	now := time.Now()
 
-	// 1. 更新转账状态为已完成，并设置支付时间
-	_, err = tx.Exec(`
-		UPDATE tea.team_to_user_transfer_out
-		SET status = $1, payment_time = $2, updated_at = $2
-		WHERE id = $3 AND status = $4`,
-		TeaTransferStatusCompleted, now, transferOutID, TeaTransferStatusPendingReceipt)
-	if err != nil {
-		return fmt.Errorf("更新转账状态失败: %v", err)
-	}
-
-	// 2. 更新转出团队账户（减少余额）- 团队转账从团队账户扣减
-	_, err = tx.Exec(`
+	// 1. 更新转出团队账户（减少余额），并获取转出后余额
+	var senderBalanceAfter int
+	err = tx.QueryRow(`
 		UPDATE tea.team_accounts 
 		SET balance_milligrams = balance_milligrams - $1,
 			updated_at = $2
 		WHERE team_id = $3 
-		AND balance_milligrams >= $1`,
-		amountMg, now, fromTeamId)
+		AND balance_milligrams >= $1
+		RETURNING balance_milligrams`,
+		amountMg, now, fromTeamId).Scan(&senderBalanceAfter)
 	if err != nil {
 		return fmt.Errorf("更新转出团队账户失败: %v", err)
+	}
+
+	// 2. 更新转账状态为已完成，并设置支付时间和转出后余额
+	_, err = tx.Exec(`
+		UPDATE tea.team_to_user_transfer_out
+		SET status = $1, payment_time = $2, balance_after_transfer = $3, updated_at = $2
+		WHERE id = $4 AND status = $5`,
+		TeaTransferStatusCompleted, now, senderBalanceAfter, transferOutID, TeaTransferStatusPendingReceipt)
+	if err != nil {
+		return fmt.Errorf("更新转账状态失败: %v", err)
 	}
 
 	// 3. 更新接收用户账户（增加余额）

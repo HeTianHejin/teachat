@@ -344,7 +344,7 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/transfer/reject/user_from_team", route.TeaUserRejectFromTeamTransferInAPI)   // 用户拒绝接收来自团队转账API
 
 	// 团队星茶账户系统路由（对应用户版功能）
-	mux.HandleFunc("/v1/tea/team/account", route.HandleTeaTeamTeaAccount)  // 团队星茶账户页面路由
+	mux.HandleFunc("/v1/tea/team/account", route.HandleTeaTeamAccount)     // 团队星茶账户页面路由
 	mux.HandleFunc("/v1/tea/team/account/api", route.GetTeaTeamAccountAPI) // 团队星茶账户API
 	//mux.HandleFunc("/v1/tea/team/transactions/api", route.GetTeaTeamToTeamCompletedTransferOutsAPI)                   // 团队对团队交易已完成记录API
 	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeaTeamAccountAPI)                                         // 团队星茶账户冻结API
