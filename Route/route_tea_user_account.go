@@ -195,11 +195,11 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 		deskData.AccountInfo.IsFrozen = false
 	}
 
-	// 余额显示
-	deskData.AccountInfo.BalanceDisplay = fmt.Sprintf("%d 毫克", accountInfo.BalanceMilligrams)
-	deskData.AccountInfo.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", accountInfo.LockedBalanceMilligrams)
+	// 余额显示（仅数值，单位在模板标题栏显示）
+	deskData.AccountInfo.BalanceDisplay = fmt.Sprintf("%d", accountInfo.BalanceMilligrams)
+	deskData.AccountInfo.LockedBalanceDisplay = fmt.Sprintf("%d", accountInfo.LockedBalanceMilligrams)
 	availableBalance := accountInfo.BalanceMilligrams - accountInfo.LockedBalanceMilligrams
-	deskData.AccountInfo.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+	deskData.AccountInfo.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
 
 	generateHTML(w, &deskData, "layout", "navbar.private", "tea.user.account")
 }
@@ -626,8 +626,8 @@ func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
-		// 金额显示
-		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
+		// 金额显示（仅数值，单位在模板标题栏显示）
+		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
 
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
@@ -660,11 +660,11 @@ func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request
 		pageData.StatusDisplay = "正常"
 	}
 
-	// 余额显示
-	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", account.BalanceMilligrams)
-	pageData.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", account.LockedBalanceMilligrams)
+	// 余额显示（仅数值，单位在模板标题栏显示）
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
 	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
-	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
 
 	pageData.CurrentPage = page
 	pageData.Limit = limit
@@ -832,7 +832,7 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
 		// 金额显示
-		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
+		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
 
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
@@ -1134,11 +1134,11 @@ func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 		pageData.StatusDisplay = "正常"
 	}
 
-	// 余额显示
-	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", account.BalanceMilligrams)
-	pageData.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", account.LockedBalanceMilligrams)
+	// 余额显示（仅数值，单位在模板标题栏显示）
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
 	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
-	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
 
 	pageData.CurrentPage = page
 	pageData.Limit = limit
@@ -1330,7 +1330,7 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
 		// 金额显示
-		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
+		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
 
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
@@ -1363,11 +1363,11 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 		pageData.StatusDisplay = "正常"
 	}
 
-	// 余额显示
-	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", account.BalanceMilligrams)
-	pageData.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", account.LockedBalanceMilligrams)
+	// 余额显示（仅数值，单位在模板标题栏显示）
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
 	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
-	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
 
 	pageData.CurrentPage = page
 	pageData.Limit = limit
@@ -1690,7 +1690,7 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 		enhanced := EnhancedPendingTransfer{
 			TeaUserToUserTransferOut: transfer,
 		}
-		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
+		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
 
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
@@ -1729,11 +1729,11 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 	pageData.TeaAccount = account
 	pageData.Transfers = enhancedTransfers
 
-	// 账户余额显示
-	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", account.BalanceMilligrams)
-	pageData.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", account.LockedBalanceMilligrams)
+	// 账户余额显示（仅数值，单位在模板标题栏显示）
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
 	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
-	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
 
 	// 状态显示
 	if account.Status == dao.TeaAccountStatus_Frozen {
@@ -1809,7 +1809,7 @@ func GetTeaUserToTeamPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 			CanAccept:                !transfer.ExpiresAt.Before(time.Now()),
 		}
 
-		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
+		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
 
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
