@@ -4,7 +4,7 @@
   <li><a href="/v1/">大堂</a></li>
    <li>{{ .SessUser.Name }} 的星茶罐</li>
   <li><a href="/v1/tea/user/account/page">管理个人星茶账户</a></li>
-  <li class="active">待确认转账</li>
+  <li class="active">等待对方接收的转账</li>
 </ol>
 
 <div class="container">
@@ -65,8 +65,8 @@
             <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title">
-                        <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
-                        待确认转账
+                        <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
+                        等待对方接收的转账
                         {{ if .Transfers }}
                         <span class="badge">{{ len .Transfers }}</span>
                         {{ end }}
@@ -78,22 +78,22 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>发送方</th>
+                                    <th>接收方</th>
                                     <th>转账金额</th>
                                     <th>转账说明</th>
                                     <th>剩余时间</th>
-                                    <th>操作</th>
+                                    <th>状态</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {{ range .Transfers }}
                                 <tr class="{{ if .IsExpired }}danger{{ end }}">
                                     <td>
-                                        <a href="/v1/user/biography?uuid={{ .FromUserId }}" class="btn-link">
-                                            <strong>{{ .FromUserName }}</strong>
+                                        <a href="/v1/user/biography?uuid={{ .ToUserId }}" class="btn-link">
+                                            <strong>{{ .ToUserName }}</strong>
                                         </a>
                                         <br>
-                                        <small class="text-muted">用户ID: {{ .FromUserId }}</small>
+                                        <small class="text-muted">用户ID: {{ .ToUserId }}</small>
                                     </td>
                                     <td>
                                         <strong class="text-success">{{ .AmountDisplay }}</strong>
@@ -119,22 +119,10 @@
                                         {{ end }}
                                     </td>
                                     <td>
-                                        {{ if .CanAccept }}
-                                        <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-success btn-sm" onclick="acceptTransfer('{{ .Uuid }}')">
-                                                <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
-                                                接受
-                                            </button>
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="rejectTransfer('{{ .Uuid }}')">
-                                                <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
-                                                拒绝
-                                            </button>
-                                        </div>
+                                        {{ if .IsExpired }}
+                                        <span class="label label-danger">已过期</span>
                                         {{ else }}
-                                        <span class="text-muted">
-                                            <span class="glyphicon glyphicon-ban-circle" aria-hidden="true"></span>
-                                            无法操作
-                                        </span>
+                                        <span class="label label-warning">等待对方接收</span>
                                         {{ end }}
                                     </td>
                                 </tr>
@@ -144,10 +132,13 @@
                     </div>
                     {{ else }}
                     <div class="text-center" style="padding: 40px;">
-                        <span class="glyphicon glyphicon-bell" style="font-size: 48px; color: #ccc;" aria-hidden="true"></span>
-                        <h3 class="text-muted">暂无待确认转账</h3>
-                        <p class="text-muted">当有其他茶友向您转账时，将显示在这里</p>
-                       
+                        <span class="glyphicon glyphicon-send" style="font-size: 48px; color: #ccc;" aria-hidden="true"></span>
+                        <h3 class="text-muted">暂无进行中转账</h3>
+                        <p class="text-muted">您向其他茶友发起的转账将在对方接收前显示在这里</p>
+                        <a href="/v1/tea/user/transfer/to_user/page" class="btn btn-primary" style="margin-top: 15px;">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                            发起转账
+                        </a>
                     </div>
                     {{ end }}
                 </div>
@@ -158,7 +149,7 @@
                             <p class="text-muted">
                                 <small>
                                     <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                                    待确认转账会在过期后自动失效，请及时处理
+                                    转账过期后将自动失效，锁定的星茶将退回您的账户
                                 </small>
                             </p>
                         </div>
@@ -188,22 +179,22 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <h5><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> 接受转账</h5>
-                            <p>点击"接受"按钮，转账金额将直接计入您的星茶账户余额中。</p>
+                            <h5><span class="glyphicon glyphicon-send" aria-hidden="true"></span> 转账发起</h5>
+                            <p>您发起的转账正在等待对方接收，转账金额已从您的账户中锁定。</p>
                         </div>
                         <div class="col-md-6">
-                            <h5><span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span> 拒绝转账</h5>
-                            <p>点击"拒绝"按钮，转账将被拒绝，星茶将退回给发送方。</p>
+                            <h5><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> 接收确认</h5>
+                            <p>对方接受转账后，星茶将转入对方账户；若对方拒绝，星茶将退回您的账户。</p>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <h5><span class="glyphicon glyphicon-time" aria-hidden="true"></span> 有效期限</h5>
-                            <p>每个转账都有有效期限制，过期后无法接受或拒绝。</p>
+                            <p>每个转账都有有效期限制，过期后转账将自动失效，锁定的星茶将退回。</p>
                         </div>
                         <div class="col-md-6">
-                            <h5><span class="glyphicon glyphicon-bell" aria-hidden="true"></span> 及时处理</h5>
-                            <p>建议及时处理待确认转账，避免因过期而失效。</p>
+                            <h5><span class="glyphicon glyphicon-lock" aria-hidden="true"></span> 锁定说明</h5>
+                            <p>转账发起后，相应金额将被锁定，在对方确认或转账过期前无法使用。</p>
                         </div>
                     </div>
                 </div>
@@ -214,68 +205,6 @@
 </div>
 
 <script>
-// 接受转账
-function acceptTransfer(transferUuid) {
-    if (!confirm('确定要接受这笔转账吗？星茶将计入您的账户余额。')) {
-        return;
-    }
-    
-    fetch('/v1/tea/user/transfer/confirm/user_to_user', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            transfer_uuid: transferUuid
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('转账接受成功！星茶已计入您的账户。');
-            location.reload(); // 刷新页面
-        } else {
-            alert('接受失败: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('接受请求失败，请重试');
-    });
-}
-
-// 拒绝转账
-function rejectTransfer(transferUuid) {
-    var reason = prompt('请输入拒绝理由（可选）:', '');
-    if (reason === null) {
-        return; // 用户点击了取消
-    }
-    
-    fetch('/v1/tea/user/transfer/reject/user_to_user', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            transfer_uuid: transferUuid,
-            reason: reason || ''
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            alert('转账已拒绝，星茶将退回给发送方。');
-            location.reload(); // 刷新页面
-        } else {
-            alert('拒绝失败: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('拒绝请求失败，请重试');
-    });
-}
-
 // 刷新页面
 function refreshPage() {
     location.reload();

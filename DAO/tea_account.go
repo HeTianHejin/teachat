@@ -580,17 +580,66 @@ func CheckTeaUserAccountFrozen(userId int) (bool, string, error) {
 	return frozen, reason, nil
 }
 
-func CreateTeaUserToUserTransferOut(fromUserId int, from_user_name string, toUserId int, to_user_name string, amount_milligrams int64, notes string, expireHours int) (TeaUserToUserTransferOut, error) {
+// 创建用户对用户转账记录
+func CreateTeaUserToUserTransferOut(fromUserId int, fromUserName string, toUserId int, to_user_name string, amount_milligrams int64, notes string, expireHours int) (TeaUserToUserTransferOut, error) {
 	transfer := TeaUserToUserTransferOut{}
-	err := DB.QueryRow(`
+
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return transfer, fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 1. 锁定并检查转出用户账户余额
+	var balance, lockedBalance int64
+	err = tx.QueryRow(`
+		SELECT balance_milligrams, locked_balance_milligrams 
+		FROM tea.user_accounts 
+		WHERE user_id = $1 
+		FOR UPDATE`,
+		fromUserId).Scan(&balance, &lockedBalance)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return transfer, fmt.Errorf("转出用户星茶账户不存在")
+		}
+		return transfer, fmt.Errorf("查询转出用户账户失败: %v", err)
+	}
+
+	// 2. 检查可用余额是否足够
+	availableBalance := balance - lockedBalance
+	if availableBalance < amount_milligrams {
+		return transfer, fmt.Errorf("星茶余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amount_milligrams)
+	}
+
+	// 3. 锁定转出金额（增加 locked_balance_milligrams）
+	_, err = tx.Exec(`
+		UPDATE tea.user_accounts 
+		SET locked_balance_milligrams = locked_balance_milligrams + $1,
+		    updated_at = $2
+		WHERE user_id = $3`,
+		amount_milligrams, time.Now(), fromUserId)
+	if err != nil {
+		return transfer, fmt.Errorf("锁定转出金额失败: %v", err)
+	}
+
+	// 4. 创建转账记录
+	expiresAt := time.Now().Add(time.Duration(expireHours) * time.Hour)
+	err = tx.QueryRow(`
 		INSERT INTO tea.user_to_user_transfer_out (from_user_id, to_user_id, from_user_name, to_user_name, amount_milligrams, notes, status, expires_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id, uuid, from_user_id,from_user_name, to_user_id, to_user_name , amount_milligrams, notes, status, expires_at, created_at, updated_at`,
-		fromUserId, toUserId, from_user_name, to_user_name, amount_milligrams, notes, TeaTransferStatusPendingReceipt, time.Now().Add(time.Duration(expireHours)*time.Hour)).
+		RETURNING id, uuid, from_user_id, from_user_name, to_user_id, to_user_name, amount_milligrams, notes, status, expires_at, created_at, updated_at`,
+		fromUserId, toUserId, fromUserName, to_user_name, amount_milligrams, notes, TeaTransferStatusPendingReceipt, expiresAt).
 		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.FromUserName, &transfer.ToUserId, &transfer.ToUserName, &transfer.AmountMilligrams, &transfer.Notes, &transfer.Status, &transfer.ExpiresAt, &transfer.CreatedAt, &transfer.UpdatedAt)
 	if err != nil {
-		return transfer, fmt.Errorf("创建用户间转账失败: %v", err)
+		return transfer, fmt.Errorf("创建用户间转账记录失败: %v", err)
 	}
+
+	// 5. 提交事务
+	if err = tx.Commit(); err != nil {
+		return transfer, fmt.Errorf("提交事务失败: %v", err)
+	}
+
 	return transfer, nil
 }
 func CreateTeaUserFromUserTransferIn(userToUserTransferOutId int, toUserId int, to_user_name string, fromUserId int, from_user_name string, amount_milligrams int64, notes string, balanceAfterReceipt int64, expiresAt time.Time) (TeaUserFromUserTransferIn, error) {
@@ -612,17 +661,66 @@ func CreateTeaUserFromUserTransferIn(userToUserTransferOutId int, toUserId int, 
 	return transfer, nil
 }
 
+// 创建用户对团队转账记录
 func CreateTeaUserToTeamTransferOut(from_user_id int, from_user_name string, to_team_id int, to_team_name string, amount_milligrams int64, notes string, expire_hours int) (TeaUserToTeamTransferOut, error) {
 	transfer := TeaUserToTeamTransferOut{}
-	err := DB.QueryRow(`
+
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return transfer, fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 1. 锁定并检查转出用户账户余额
+	var balance, lockedBalance int64
+	err = tx.QueryRow(`
+		SELECT balance_milligrams, locked_balance_milligrams 
+		FROM tea.user_accounts 
+		WHERE user_id = $1 
+		FOR UPDATE`,
+		from_user_id).Scan(&balance, &lockedBalance)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return transfer, fmt.Errorf("转出用户星茶账户不存在")
+		}
+		return transfer, fmt.Errorf("查询转出用户账户失败: %v", err)
+	}
+
+	// 2. 检查可用余额是否足够
+	availableBalance := balance - lockedBalance
+	if availableBalance < amount_milligrams {
+		return transfer, fmt.Errorf("星茶余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amount_milligrams)
+	}
+
+	// 3. 锁定转出金额（增加 locked_balance_milligrams）
+	_, err = tx.Exec(`
+		UPDATE tea.user_accounts 
+		SET locked_balance_milligrams = locked_balance_milligrams + $1,
+		    updated_at = $2
+		WHERE user_id = $3`,
+		amount_milligrams, time.Now(), from_user_id)
+	if err != nil {
+		return transfer, fmt.Errorf("锁定转出金额失败: %v", err)
+	}
+
+	// 4. 创建转账记录
+	expiresAt := time.Now().Add(time.Duration(expire_hours) * time.Hour)
+	err = tx.QueryRow(`
 		INSERT INTO tea.user_to_team_transfer_out (from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, status, expires_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-		RETURNING id, uuid, from_user_id, from_user_name,to_team_id,to_team_name , amount_milligrams, notes, status, expires_at, created_at, updated_at`,
-		from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, TeaTransferStatusPendingReceipt, time.Now().Add(time.Duration(expire_hours)*time.Hour)).
+		RETURNING id, uuid, from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, status, expires_at, created_at, updated_at`,
+		from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, TeaTransferStatusPendingReceipt, expiresAt).
 		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.FromUserName, &transfer.ToTeamId, &transfer.ToTeamName, &transfer.AmountMilligrams, &transfer.Notes, &transfer.Status, &transfer.ExpiresAt, &transfer.CreatedAt, &transfer.UpdatedAt)
 	if err != nil {
-		return transfer, fmt.Errorf("创建用户组间转账失败: %v", err)
+		return transfer, fmt.Errorf("创建用户对团队转账记录失败: %v", err)
 	}
+
+	// 5. 提交事务
+	if err = tx.Commit(); err != nil {
+		return transfer, fmt.Errorf("提交事务失败: %v", err)
+	}
+
 	return transfer, nil
 }
 func CreateTeaUserFromTeamTransferIn(teamToUserTransferOutId int, to_user_id int, to_user_name string, from_team_id int, from_team_name string, amount_milligrams int64, notes string, balance_after_receipt int64, expires_at time.Time) (TeaUserFromTeamTransferIn, error) {
@@ -853,6 +951,10 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 		return fmt.Errorf("转账金额无效: %d", amountMg)
 	}
 
+	if to_user_id == fromUserId {
+		return fmt.Errorf("不能接收自己发出的转账")
+	}
+
 	now := time.Now()
 
 	// 1. 更新转账状态
@@ -913,7 +1015,7 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 }
 
 // 用户确认接收来自某个团队转账
-func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error {
+func TeaUserConfirmFromTeamTransferIn(transferUuid string, confirm_user_id int) error {
 	// 开始事务
 	tx, err := DB.Begin()
 	if err != nil {
@@ -922,17 +1024,16 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error
 	defer tx.Rollback()
 
 	// 首先锁定并获取转账记录详情
-	var transferOutID, amountMg, fromUserID int
-	var fromTeamId int
+	var transferOutID, amountMg, toUserID, fromTeamId int
 	var notes, toUserName, fromTeamName string
 	var expiresAt time.Time
 	err = tx.QueryRow(`
-		SELECT id, from_team_id, amount_milligrams, from_user_id, notes, to_user_name, from_team_name, expires_at
+		SELECT id, from_team_id, amount_milligrams, to_user_id, notes, to_user_name, from_team_name, expires_at
 		FROM tea.team_to_user_transfer_out 
 		WHERE uuid = $1 AND to_user_id = $2 AND status = $3
 		FOR UPDATE SKIP LOCKED`,
-		transferUuid, to_user_id, TeaTransferStatusPendingReceipt,
-	).Scan(&transferOutID, &fromTeamId, &amountMg, &fromUserID, &notes, &toUserName, &fromTeamName, &expiresAt)
+		transferUuid, confirm_user_id, TeaTransferStatusPendingReceipt,
+	).Scan(&transferOutID, &fromTeamId, &amountMg, &toUserID, &notes, &toUserName, &fromTeamName, &expiresAt)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -944,30 +1045,32 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error
 	if amountMg <= 0 {
 		return fmt.Errorf("转账金额无效: %d", amountMg)
 	}
+	if confirm_user_id != toUserID {
+		return fmt.Errorf("确认接收用户与转账目标用户不匹配")
+	}
 
 	now := time.Now()
 
-	// 1. 更新转账状态
+	// 1. 更新转账状态为已完成，并设置支付时间
 	_, err = tx.Exec(`
 		UPDATE tea.team_to_user_transfer_out
-		SET status = $1, updated_at = $2
+		SET status = $1, payment_time = $2, updated_at = $2
 		WHERE id = $3 AND status = $4`,
 		TeaTransferStatusCompleted, now, transferOutID, TeaTransferStatusPendingReceipt)
 	if err != nil {
 		return fmt.Errorf("更新转账状态失败: %v", err)
 	}
 
-	// 2. 更新转出用户账户（减少余额和锁定金额）
+	// 2. 更新转出团队账户（减少余额）- 团队转账从团队账户扣减
 	_, err = tx.Exec(`
-		UPDATE tea.user_accounts 
+		UPDATE tea.team_accounts 
 		SET balance_milligrams = balance_milligrams - $1,
-			locked_balance_milligrams = locked_balance_milligrams - $1,
 			updated_at = $2
-		WHERE user_id = $3 
-		AND locked_balance_milligrams >= $1`,
-		amountMg, now, fromUserID)
+		WHERE team_id = $3 
+		AND balance_milligrams >= $1`,
+		amountMg, now, fromTeamId)
 	if err != nil {
-		return fmt.Errorf("更新转出用户账户失败: %v", err)
+		return fmt.Errorf("更新转出团队账户失败: %v", err)
 	}
 
 	// 3. 更新接收用户账户（增加余额）
@@ -978,7 +1081,7 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error
 			updated_at = $2
 		WHERE user_id = $3
 		RETURNING balance_milligrams`,
-		amountMg, now, to_user_id).Scan(&receiverBalanceAfter)
+		amountMg, now, confirm_user_id).Scan(&receiverBalanceAfter)
 	if err != nil {
 		return fmt.Errorf("更新接收用户账户失败: %v", err)
 	}
@@ -988,11 +1091,11 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, to_user_id int) error
 		INSERT INTO tea.user_from_team_transfer_in (
 			team_to_user_transfer_out_id, to_user_id, to_user_name,
 			from_team_id, from_team_name, amount_milligrams, notes,
-			balance_after_receipt, status, is_confirmed, operational_user_id, expires_at, created_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-		transferOutID, to_user_id, toUserName, fromTeamId, fromTeamName,
+			balance_after_receipt, status, is_confirmed, operational_user_id, rejection_reason, expires_at, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`,
+		transferOutID, confirm_user_id, toUserName, fromTeamId, fromTeamName,
 		amountMg, notes, receiverBalanceAfter, TeaTransferStatusCompleted,
-		true, to_user_id, expiresAt, now)
+		true, confirm_user_id, "-", expiresAt, now)
 	if err != nil {
 		return fmt.Errorf("创建接收来自团队星茶转账记录失败: %v", err)
 	}

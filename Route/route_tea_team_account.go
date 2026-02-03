@@ -704,7 +704,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建团队对用户转账
-	transfer, err := dao.CreateTeaTransferTeamToUser(req.FromTeamId, user.Id, req.ToUserId, req.AmountMilligrams, req.Notes, req.ExpireHours)
+	transfer, err := dao.CreateTeaTeamToUserTransferOut(req.FromTeamId, user.Id, req.ToUserId, req.AmountMilligrams, req.Notes, req.ExpireHours)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -762,7 +762,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建团队对团队转账
-	transfer, err := dao.CreateTeaTransferTeamToTeam(req.FromTeamId, user.Id, req.ToTeamId, req.AmountMilligrams, req.Notes, req.ExpireHours)
+	transfer, err := dao.CreateTeaTeamToTeamTransferOut(req.FromTeamId, user.Id, req.ToTeamId, req.AmountMilligrams, req.Notes, req.ExpireHours)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return

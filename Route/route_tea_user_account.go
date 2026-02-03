@@ -669,7 +669,7 @@ func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_transfer_ins")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_pending_transfer_ins")
 }
 
 // GetTeaUserInPendingFromUserTransfersAPI 获取用户待确认的,来自用户转账列表API
@@ -1143,7 +1143,7 @@ func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.completed_transfer_ins")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_completed_transfer_ins")
 }
 
 // GetTeaUserInFromUserCompletedTransfersAPI 获取用户已经确认,来自用户的转入记录API - 收入记录（仅已完成）
@@ -1677,12 +1677,11 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// 增强转账数据，添加用户信息和状态显示
+	// 增强转账数据，添加用户信息和状态显示（转出方视角）
 	type EnhancedPendingTransfer struct {
 		dao.TeaUserToUserTransferOut
 		AmountDisplay string
 		IsExpired     bool
-		CanAccept     bool
 		TimeRemaining string
 	}
 
@@ -1690,7 +1689,6 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 	for _, transfer := range transfers {
 		enhanced := EnhancedPendingTransfer{
 			TeaUserToUserTransferOut: transfer,
-			CanAccept:                !transfer.ExpiresAt.Before(time.Now()),
 		}
 		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", transfer.AmountMilligrams)
 
@@ -1698,7 +1696,7 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
 		// 计算剩余时间
-		if enhanced.CanAccept {
+		if !enhanced.IsExpired {
 			timeRemaining := time.Until(transfer.ExpiresAt)
 			if timeRemaining > time.Hour {
 				enhanced.TimeRemaining = fmt.Sprintf("%.0f小时", timeRemaining.Hours())
@@ -1731,6 +1729,12 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 	pageData.TeaAccount = account
 	pageData.Transfers = enhancedTransfers
 
+	// 账户余额显示
+	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d 毫克", account.LockedBalanceMilligrams)
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d 毫克", availableBalance)
+
 	// 状态显示
 	if account.Status == dao.TeaAccountStatus_Frozen {
 		if account.FrozenReason != "-" {
@@ -1745,7 +1749,7 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.pending_user_to_user_transfers")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_pending_transfers")
 }
 
 // GetTeaUserToTeamPendingTransferOuts 获取当前用户发起,待对方团队确认,转账页面
