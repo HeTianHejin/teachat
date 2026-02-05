@@ -1865,63 +1865,6 @@ func GetTeaUserToTeamPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.pending_user_to_team_transfers")
 }
 
-// 辅助函数：安全获取time.Time值，处理nil和any类型
-// func safeTime(val any) time.Time {
-// 	if val == nil {
-// 		return time.Time{}
-// 	}
-// 	if t, ok := val.(time.Time); ok {
-// 		return t
-// 	}
-// 	return time.Time{}
-// }
-
-// GetTeaUserToUserCompletedTransfersAPI 获取用户对用户转出已完成记录列表API(仅已完成状态)
-func GetTeaUserToUserCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户对用户转出已完成记录
-	transfers, err := dao.TeaUserToUserCompletedTransferOuts(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户对用户转出已完成记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserToUserTransferOutResponse
-	for _, transfer := range transfers {
-		response := UserToUserTransferOutResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToUserId:         transfer.ToUserId,
-			ToUserName:       transfer.ToUserName,
-			AmountMilligrams: transfer.AmountMilligrams,
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户对用户转出已完成记录成功", responses, page, limit, 0)
-}
-
 // HandleTeaUserToUserCompletedTransfers 获取用户对用户转出已完成记录列表页面(仅已完成状态)
 func HandleTeaUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -1975,8 +1918,6 @@ func GetUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	// 增强转账数据，添加用户信息和状态显示
 	type EnhancedTransferOut struct {
 		dao.TeaUserToUserTransferOut
-		FromUserName  string
-		ToUserName    string
 		StatusDisplay string
 		AmountDisplay string
 	}
@@ -1985,18 +1926,6 @@ func GetUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	for _, transfer := range transfers {
 		enhanced := EnhancedTransferOut{
 			TeaUserToUserTransferOut: transfer,
-		}
-
-		// 获取发送方用户信息
-		fromUser, _ := dao.GetUser(transfer.FromUserId)
-		if fromUser.Id > 0 {
-			enhanced.FromUserName = fromUser.Name
-		}
-
-		// 获取接收方用户信息
-		toUser, _ := dao.GetUser(transfer.ToUserId)
-		if toUser.Id > 0 {
-			enhanced.ToUserName = toUser.Name
 		}
 
 		// 添加状态显示（只有已完成状态）
