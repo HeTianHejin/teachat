@@ -2036,7 +2036,7 @@ func GetUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.completed_transfer_outs")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_completed_transfer_outs")
 }
 
 // GetTeaUserToTeamCompletedTransfersAPI 获取用户对团队转出已完成记录列表API(仅已完成状态)
