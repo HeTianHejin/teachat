@@ -27,7 +27,7 @@ type UserToUserTransferOutResponse struct {
 	FromUserName     string  `json:"from_user_name,omitempty"`
 	ToUserId         int     `json:"to_user_id"`
 	ToUserName       string  `json:"to_user_name,omitempty"`
-	AmountMilligrams int64   `json:"amount_milligrams"`
+	AmountMilligrams int     `json:"amount_milligrams"`
 	Status           string  `json:"status"`
 	PaymentTime      *string `json:"payment_time,omitempty"`
 	Notes            string  `json:"notes"`
@@ -43,7 +43,7 @@ type UserToTeamTransferResponse struct {
 	FromUserName     string  `json:"from_user_name,omitempty"`
 	ToTeamId         int     `json:"to_team_id"`
 	ToTeamName       string  `json:"to_team_name,omitempty"`
-	AmountMilligrams int64   `json:"amount_milligrams"`
+	AmountMilligrams int     `json:"amount_milligrams"`
 	Status           string  `json:"status"`
 	PaymentTime      *string `json:"payment_time,omitempty"`
 	Notes            string  `json:"notes"`
@@ -80,7 +80,7 @@ type UserFromTeamTransferInResponse struct {
 	FromTeamName            string `json:"from_team_name"`
 	ToUserId                int    `json:"to_user_id"`
 	ToUserName              string `json:"to_user_name"`
-	AmountMilligrams        int64  `json:"amount_milligrams"`
+	AmountMilligrams        int    `json:"amount_milligrams"`
 	BalanceAfterReceipt     int64  `json:"balance_after_receipt"`
 	Status                  string `json:"status"`
 	Notes                   string `json:"notes"`
@@ -425,19 +425,13 @@ func CreateTeaUserToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		FromUserName:     transfer.FromUserName,
 		ToUserId:         transfer.ToUserId,
 		ToUserName:       transfer.ToUserName,
-		AmountMilligrams: transfer.AmountMilligrams,
+		AmountMilligrams: int(transfer.AmountMilligrams),
 		Status:           transfer.Status,
 		Notes:            transfer.Notes,
 		ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
 		CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
 	}
 	// 用户对用户转账无需审核，需要等待对方接收后，创建用户对用户转入IN记录
-	// _, err = dao.CreateTeaUserFromUserTransferIn(transfer.Id, toUser.Id, toUser.Name, transfer.FromUserId, transfer.FromUserName, transfer.AmountMilligrams, transfer.Notes, transfer.ExpiresAt)
-	// if err != nil {
-	// 	util.Debug("CreateTeaUserFromUserTransferIn error:", err)
-	// 	respondWithError(w, http.StatusInternalServerError, "创建接收方转账记录失败")
-	// 	return
-	// }
 
 	respondWithSuccess(w, "用户对用户转账发起成功", response)
 }
@@ -530,7 +524,7 @@ func CreateTeaUserToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		FromUserName:     transfer.FromUserName,
 		ToTeamId:         transfer.ToTeamId,
 		ToTeamName:       transfer.ToTeamName,
-		AmountMilligrams: transfer.AmountMilligrams,
+		AmountMilligrams: int(transfer.AmountMilligrams),
 		Status:           transfer.Status,
 		Notes:            transfer.Notes,
 		ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
@@ -627,7 +621,7 @@ func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
 		// 金额显示（仅数值，单位在模板标题栏显示）
-		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
@@ -701,7 +695,7 @@ func GetTeaUserInPendingFromUserTransfersAPI(w http.ResponseWriter, r *http.Requ
 			FromUserName:     transfer.FromUserName,
 			ToUserId:         transfer.ToUserId,
 			ToUserName:       transfer.ToUserName,
-			AmountMilligrams: transfer.AmountMilligrams,
+			AmountMilligrams: int(transfer.AmountMilligrams),
 			Status:           transfer.Status,
 			Notes:            transfer.Notes,
 			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
@@ -743,7 +737,7 @@ func GetTeaUserInPendingFromTeamTransfersAPI(w http.ResponseWriter, r *http.Requ
 			Uuid:             transfer.Uuid,
 			ToUserId:         transfer.ToUserId,
 			FromTeamId:       transfer.FromTeamId,
-			AmountMilligrams: transfer.AmountMilligrams,
+			AmountMilligrams: int(transfer.AmountMilligrams),
 			Status:           transfer.Status,
 			Notes:            transfer.Notes,
 			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
@@ -832,7 +826,7 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
 		// 金额显示
-		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
@@ -897,7 +891,7 @@ func GetTeaUserToUserExpiredTransfersAPI(w http.ResponseWriter, r *http.Request)
 			FromUserName:     transfer.FromUserName,
 			ToUserId:         transfer.ToUserId,
 			ToUserName:       transfer.ToUserName,
-			AmountMilligrams: transfer.AmountMilligrams,
+			AmountMilligrams: int(transfer.AmountMilligrams),
 			Status:           transfer.Status,
 			Notes:            transfer.Notes,
 			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
@@ -943,7 +937,7 @@ func GetTeaUserToTeamExpiredTransfersAPI(w http.ResponseWriter, r *http.Request)
 			FromUserName:     transfer.FromUserName,
 			ToTeamId:         transfer.ToTeamId,
 			ToTeamName:       transfer.ToTeamName,
-			AmountMilligrams: transfer.AmountMilligrams,
+			AmountMilligrams: int(transfer.AmountMilligrams),
 			Status:           transfer.Status,
 			Notes:            transfer.Notes,
 			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
@@ -989,7 +983,7 @@ func GetTeaUserOutPendingToTeamTransfersAPI(w http.ResponseWriter, r *http.Reque
 			FromUserName:     transfer.FromUserName,
 			ToTeamId:         transfer.ToTeamId,
 			ToTeamName:       transfer.ToTeamName,
-			AmountMilligrams: transfer.AmountMilligrams,
+			AmountMilligrams: int(transfer.AmountMilligrams),
 			Status:           transfer.Status,
 			Notes:            transfer.Notes,
 			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
@@ -1072,8 +1066,6 @@ func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	// 增强转账数据，添加用户信息和状态显示
 	type EnhancedTransferIn struct {
 		dao.TeaUserFromUserTransferIn
-		FromUserName  string
-		ToUserName    string
 		StatusDisplay string
 		AmountDisplay string
 		IsExpired     bool
@@ -1085,20 +1077,10 @@ func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 			TeaUserFromUserTransferIn: transfer,
 		}
 
-		// 获取发送方用户信息
-		fromUser, _ := dao.GetUser(transfer.FromUserId)
-		if fromUser.Id > 0 {
-			enhanced.FromUserName = fromUser.Name
-		}
-
-		// 获取接收方用户信息
-		toUser, _ := dao.GetUser(transfer.ToUserId)
-		if toUser.Id > 0 {
-			enhanced.ToUserName = toUser.Name
-		}
-
 		// 添加状态显示（只有已完成状态）
 		enhanced.StatusDisplay = "已完成"
+		// 金额显示
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
 		// 检查是否过期（已完成的不会过期）
 		enhanced.IsExpired = false
@@ -1146,51 +1128,6 @@ func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_completed_transfer_ins")
 }
 
-// GetTeaUserInFromUserCompletedTransfersAPI 获取用户已经确认,来自用户的转入记录API - 收入记录（仅已完成）
-func GetTeaUserInFromUserCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户来自用户已完成的转入记录（仅已完成状态）
-	transfers, err := dao.TeaUserFromUserCompletedTransferIns(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户已完成来自用户收入记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserFromUserTransferInResponse
-	for _, transfer := range transfers {
-		response := UserFromUserTransferInResponse{
-			Uuid:                    transfer.Uuid,
-			UserToUserTransferOutId: transfer.UserToUserTransferOutId,
-			ToUserId:                transfer.ToUserId,
-			ToUserName:              transfer.ToUserName,
-			FromUserId:              transfer.FromUserId,
-			FromUserName:            transfer.FromUserName,
-			AmountMilligrams:        transfer.AmountMilligrams,
-			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
-			Status:                  transfer.Status,
-			Notes:                   transfer.Notes,
-			IsConfirmed:             transfer.IsConfirmed,
-			OperationalUserId:       transfer.OperationalUserId,
-			RejectionReason:         transfer.RejectionReason,
-			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户来自用户收入已完成记录成功", responses, page, limit, 0)
-}
-
 // HandleTeaUserFromTeamCompletedTransferIns 获取用户已经确认,来自团队转入记录页面请求 - 收入记录（仅已完成）
 func HandleTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -1198,49 +1135,6 @@ func HandleTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Re
 		return
 	}
 	GetTeaUserFromTeamCompletedTransferIns(w, r)
-}
-
-// GetTeaUserFromTeamCompletedTransferInsAPI 获取用户从团队转入已完成记录API
-func GetTeaUserFromTeamCompletedTransferInsAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户从团队转入已完成记录
-	transfers, err := dao.TeaUserFromTeamCompletedTransferIns(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户从团队转入记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserFromTeamTransferInResponse
-	for _, transfer := range transfers {
-		response := UserFromTeamTransferInResponse{
-			Uuid:                    transfer.Uuid,
-			TeamToUserTransferOutId: transfer.TeamToUserTransferOutId,
-			ToUserId:                transfer.ToUserId,
-			ToUserName:              transfer.ToUserName,
-			FromTeamId:              transfer.FromTeamId,
-			FromTeamName:            transfer.FromTeamName,
-			AmountMilligrams:        transfer.AmountMilligrams,
-			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
-			Status:                  transfer.Status,
-			IsConfirmed:             transfer.IsConfirmed,
-			RejectionReason:         transfer.RejectionReason,
-			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户从团队已完成转入记录成功", responses, page, limit, 0)
 }
 
 // GetTeaUserFromTeamCompletedTransferIns 获取用户从团队转入已完成记录页面
@@ -1287,8 +1181,6 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	// 增强转账数据，添加团队信息和状态显示
 	type EnhancedTransferIn struct {
 		dao.TeaUserFromTeamTransferIn
-		FromTeamName  string
-		ToUserName    string
 		StatusDisplay string
 		AmountDisplay string
 		IsExpired     bool
@@ -1298,18 +1190,6 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	for _, transfer := range transfers {
 		enhanced := EnhancedTransferIn{
 			TeaUserFromTeamTransferIn: transfer,
-		}
-
-		// 获取发送方团队信息
-		team, _ := dao.GetTeam(transfer.FromTeamId)
-		if team.Id > 0 {
-			enhanced.FromTeamName = team.Name
-		}
-
-		// 获取接收方用户信息
-		toUser, _ := dao.GetUser(transfer.ToUserId)
-		if toUser.Id > 0 {
-			enhanced.ToUserName = toUser.Name
 		}
 
 		// 添加状态显示
@@ -1330,8 +1210,7 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
 
 		// 金额显示
-		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
-
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
 
@@ -1690,7 +1569,7 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 		enhanced := EnhancedPendingTransfer{
 			TeaUserToUserTransferOut: transfer,
 		}
-		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
@@ -1809,7 +1688,7 @@ func GetTeaUserToTeamPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 			CanAccept:                !transfer.ExpiresAt.Before(time.Now()),
 		}
 
-		enhanced.AmountDisplay = fmt.Sprintf("%d", transfer.AmountMilligrams)
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
 		// 检查是否过期
 		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
@@ -1915,40 +1794,64 @@ func GetUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 增强转账数据，添加用户信息和状态显示
+	// 增强转账数据，添加状态显示和类型转换
 	type EnhancedTransferOut struct {
-		dao.TeaUserToUserTransferOut
-		StatusDisplay string
-		AmountDisplay string
+		Id                   int
+		Uuid                 string
+		FromUserId           int
+		FromUserName         string
+		ToUserId             int
+		ToUserName           string
+		AmountMilligrams     int
+		Notes                string
+		Status               string
+		BalanceAfterTransfer int
+		ExpiresAt            time.Time
+		CreatedAt            time.Time
+		UpdatedAt            time.Time
+		StatusDisplay        string
 	}
 
 	var enhancedTransfers []EnhancedTransferOut
 	for _, transfer := range transfers {
 		enhanced := EnhancedTransferOut{
-			TeaUserToUserTransferOut: transfer,
+			Id:                   transfer.Id,
+			Uuid:                 transfer.Uuid,
+			FromUserId:           transfer.FromUserId,
+			FromUserName:         transfer.FromUserName,
+			ToUserId:             transfer.ToUserId,
+			ToUserName:           transfer.ToUserName,
+			AmountMilligrams:     int(transfer.AmountMilligrams),
+			Notes:                transfer.Notes,
+			Status:               transfer.Status,
+			BalanceAfterTransfer: int(transfer.BalanceAfterTransfer),
+			ExpiresAt:            transfer.ExpiresAt,
+			CreatedAt:            transfer.CreatedAt,
+			StatusDisplay:        "已完成",
 		}
-
-		// 添加状态显示（只有已完成状态）
-		enhanced.StatusDisplay = "已完成"
-
+		// UpdatedAt 是指针类型，需要判断是否为 nil
+		if transfer.UpdatedAt != nil {
+			enhanced.UpdatedAt = *transfer.UpdatedAt
+		}
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
 
 	// 创建页面数据结构
 	var pageData struct {
 		SessUser                dao.User
-		TeaAccount              dao.TeaUserAccount
+		BalanceMilligrams       int
+		LockedBalanceMilligrams int
+		AvailableBalance        int
 		Transfers               []EnhancedTransferOut
-		BalanceDisplay          string
-		LockedBalanceDisplay    string
-		AvailableBalanceDisplay string
 		StatusDisplay           string
 		CurrentPage             int
 		Limit                   int
 	}
 
 	pageData.SessUser = s_u
-	pageData.TeaAccount = account
+	pageData.BalanceMilligrams = int(account.BalanceMilligrams)
+	pageData.LockedBalanceMilligrams = int(account.LockedBalanceMilligrams)
+	pageData.AvailableBalance = int(account.BalanceMilligrams - account.LockedBalanceMilligrams)
 	pageData.Transfers = enhancedTransfers
 
 	// 状态显示
@@ -1996,7 +1899,7 @@ func GetTeaUserToTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.Reques
 			FromUserName:     transfer.FromUserName,
 			ToTeamId:         transfer.ToTeamId,
 			ToTeamName:       transfer.ToTeamName,
-			AmountMilligrams: transfer.AmountMilligrams,
+			AmountMilligrams: int(transfer.AmountMilligrams),
 			Status:           transfer.Status,
 			Notes:            transfer.Notes,
 			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
@@ -2394,7 +2297,7 @@ func TeaUserFromTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.Request
 			ToUserName:              transfer.ToUserName,
 			FromTeamId:              transfer.FromTeamId,
 			FromTeamName:            transfer.FromTeamName,
-			AmountMilligrams:        transfer.AmountMilligrams,
+			AmountMilligrams:        int(transfer.AmountMilligrams),
 			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
 			Status:                  transfer.Status,
 			Notes:                   transfer.Notes,

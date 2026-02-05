@@ -928,7 +928,8 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 	defer tx.Rollback()
 
 	// 首先锁定并获取转账记录详情
-	var transferOutID, amountMg int
+	var transferOutID int
+	var amountMg int64
 	var fromUserId int
 	var notes, toUserName, fromUserName string
 	var expiresAt time.Time
@@ -958,7 +959,7 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 	now := time.Now()
 
 	// 1. 更新转出用户账户（减少余额和锁定金额），并获取转出后余额
-	var senderBalanceAfter int
+	var senderBalanceAfter int64
 	err = tx.QueryRow(`
 		UPDATE tea.user_accounts 
 		SET balance_milligrams = balance_milligrams - $1,
@@ -983,7 +984,7 @@ func TeaUserConfirmFromUserTransferIn(transferUuid string, to_user_id int) error
 	}
 
 	// 3. 更新接收用户账户（增加余额）
-	var receiverBalanceAfter int
+	var receiverBalanceAfter int64
 	err = tx.QueryRow(`
 		UPDATE tea.user_accounts 
 		SET balance_milligrams = balance_milligrams + $1,
@@ -1483,7 +1484,7 @@ func TeaUserToTeamExpiredTransferOuts(user_id, page, limit int) ([]TeaUserToTeam
 func TeaUserToUserCompletedTransferOuts(from_user_id int, page, limit int) ([]TeaUserToUserTransferOut, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, from_user_id, from_user_name, to_user_id, to_user_name,
-		       amount_milligrams, notes, status, balance_after_transfer,
+		       amount_milligrams, notes, status, COALESCE(balance_after_transfer, 0),
 		       expires_at, created_at, payment_time, updated_at
 		FROM tea.user_to_user_transfer_out
 		WHERE from_user_id = $1 AND status = $2

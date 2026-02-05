@@ -42,13 +42,13 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <h5>账户余额（毫克）: <strong>{{ .BalanceDisplay }}</strong></h5>
+                            <h5>账户余额（毫克）: <strong>{{ .BalanceMilligrams }}</strong></h5>
                         </div>
                         <div class="col-md-4">
-                            <h5>锁定余额（毫克）: <strong>{{ .LockedBalanceDisplay }}</strong></h5>
+                            <h5>锁定余额（毫克）: <strong>{{ .LockedBalanceMilligrams }}</strong></h5>
                         </div>
                         <div class="col-md-4">
-                            <h5>可用余额（毫克）: <strong>{{ .AvailableBalanceDisplay }}</strong></h5>
+                            <h5>可用余额（毫克）: <strong>{{ .AvailableBalance }}</strong></h5>
                         </div>
                     </div>
                 </div>
@@ -95,7 +95,7 @@
                                     </td>
                                     <td>
                                         <span class="text-danger">
-                                            <strong>-{{ .AmountDisplay }}</strong>
+                                            <strong>-{{ .AmountMilligrams }}</strong>
                                         </span>
                                     </td>
                                     <td>
