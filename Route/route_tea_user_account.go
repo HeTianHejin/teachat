@@ -617,8 +617,12 @@ func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request
 			enhanced.StatusDisplay = "未知"
 		}
 
+		// 统一使用 UTC 时间进行比较，避免时区问题
+		expiresAtUTC := transfer.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+
 		// 检查是否过期
-		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
+		enhanced.IsExpired = expiresAtUTC.Before(nowUTC)
 
 		// 金额显示（仅数值，单位在模板标题栏显示）
 		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
@@ -822,8 +826,12 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 			enhanced.StatusDisplay = "未知"
 		}
 
+		// 统一使用 UTC 时间进行比较，避免时区问题
+		expiresAtUTC := transfer.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+
 		// 检查是否过期
-		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
+		enhanced.IsExpired = expiresAtUTC.Before(nowUTC)
 
 		// 金额显示
 		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
@@ -1206,8 +1214,12 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 			enhanced.StatusDisplay = "未知"
 		}
 
+		// 统一使用 UTC 时间进行比较，避免时区问题
+		expiresAtUTC := transfer.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+
 		// 检查是否过期
-		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
+		enhanced.IsExpired = expiresAtUTC.Before(nowUTC)
 
 		// 金额显示
 		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
@@ -1571,16 +1583,27 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 		}
 		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
+		// 统一使用 UTC 时间进行比较，避免时区问题
+		expiresAtUTC := transfer.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+
 		// 检查是否过期
-		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
+		enhanced.IsExpired = expiresAtUTC.Before(nowUTC)
 
 		// 计算剩余时间
 		if !enhanced.IsExpired {
-			timeRemaining := time.Until(transfer.ExpiresAt)
+			timeRemaining := expiresAtUTC.Sub(nowUTC)
 			if timeRemaining > time.Hour {
-				enhanced.TimeRemaining = fmt.Sprintf("%.0f小时", timeRemaining.Hours())
+				hours := int(timeRemaining.Hours())
+				minutes := int(timeRemaining.Minutes()) % 60
+				if minutes > 0 {
+					enhanced.TimeRemaining = fmt.Sprintf("%d小时%d分钟", hours, minutes)
+				} else {
+					enhanced.TimeRemaining = fmt.Sprintf("%d小时", hours)
+				}
 			} else if timeRemaining > time.Minute {
-				enhanced.TimeRemaining = fmt.Sprintf("%.0f分钟", timeRemaining.Minutes())
+				minutes := int(timeRemaining.Minutes())
+				enhanced.TimeRemaining = fmt.Sprintf("%d分钟", minutes)
 			} else {
 				enhanced.TimeRemaining = "即将过期"
 			}
@@ -1683,23 +1706,34 @@ func GetTeaUserToTeamPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 
 	var enhancedTransfers []EnhancedPendingTransfer
 	for _, transfer := range transfers {
+		// 统一使用 UTC 时间进行比较，避免时区问题
+		expiresAtUTC := transfer.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+
 		enhanced := EnhancedPendingTransfer{
 			TeaUserToTeamTransferOut: transfer,
-			CanAccept:                !transfer.ExpiresAt.Before(time.Now()),
+			CanAccept:                !expiresAtUTC.Before(nowUTC),
 		}
 
 		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
 		// 检查是否过期
-		enhanced.IsExpired = transfer.ExpiresAt.Before(time.Now())
+		enhanced.IsExpired = expiresAtUTC.Before(nowUTC)
 
 		// 计算剩余时间
 		if enhanced.CanAccept {
-			timeRemaining := time.Until(transfer.ExpiresAt)
+			timeRemaining := expiresAtUTC.Sub(nowUTC)
 			if timeRemaining > time.Hour {
-				enhanced.TimeRemaining = fmt.Sprintf("%.0f小时", timeRemaining.Hours())
+				hours := int(timeRemaining.Hours())
+				minutes := int(timeRemaining.Minutes()) % 60
+				if minutes > 0 {
+					enhanced.TimeRemaining = fmt.Sprintf("%d小时%d分钟", hours, minutes)
+				} else {
+					enhanced.TimeRemaining = fmt.Sprintf("%d小时", hours)
+				}
 			} else if timeRemaining > time.Minute {
-				enhanced.TimeRemaining = fmt.Sprintf("%.0f分钟", timeRemaining.Minutes())
+				minutes := int(timeRemaining.Minutes())
+				enhanced.TimeRemaining = fmt.Sprintf("%d分钟", minutes)
 			} else {
 				enhanced.TimeRemaining = "即将过期"
 			}

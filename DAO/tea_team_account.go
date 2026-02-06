@@ -3,7 +3,6 @@ package dao
 import (
 	"database/sql"
 	"fmt"
-	util "teachat/Util"
 	"time"
 )
 
@@ -14,21 +13,24 @@ import (
 
 注意：用户星茶账户相关定义（TeaUserToUserTransferOut、TeaUserFromTeamTransferIn……）已迁移至tea_account.go文件，保留此注释以提示开发者--
 
-【重要：团队转账与用户转账的处理方式差异】
-- 用户转账：使用 locked_balance_milligrams 锁定金额（等待对方确认后才扣减余额）
-- 团队转账：直接扣减 balance_milligrams（进入待审批状态，审批通过后直接完成）
-原因：团队转账有额外的审批流程，资金需要立即冻结，所以直接扣减余额更合适。
+【团队转账与用户转账的处理方式一致】
+- 都使用 locked_balance_milligrams 锁定金额（发起时锁定，对方确认后扣减余额）
+- 流程保持一致：发起→锁定→审批→对方确认→扣减余额/释放锁定
 
 团队星茶账户转账流程：
-1、发起方法：团队转出额度星茶，无论接收方是团队还是用户（个人），都要求由1成员填写转账表单，第一步创建待审核转账表单，
+1、发起方法：团队转出额度星茶，无论接收方是团队还是用户（个人），都由1成员填写转账表单，
+   创建待审核转账表单，同时锁定转出金额（locked_balance_milligrams += 金额，余额不变）；
 2、审核方法：由任意1核心成员审批待审核表单，
-2.1、如果审核批准，转账表单状态更新为已批准，执行第3步锁定转账额度，
-2.2、如果审核否决，转账表单状态更新为已否决，记录审批操作记录，流程结束。
-3、锁定方法：已批准的转出团队账户转出额度星茶数量被锁定，防止重复发起转账；
-4.1、接收方法：目标接受方，用户或者团队任意1状态正常成员TeamMemberStatusActive(1)，有效期内，操作“确认”，继续第5步结算双方账户，
-4.2、拒收方法，目标接受方，用户或者团队任意1状态正常成员，有效期内，操作“拒收”。系统创建转入（transferIn）记录状态“已拒收”，同时out转账表单状态更新为“已拒收”，解锁被转出方锁定星茶，记录拒收操作用户id及时间原因，流程结束。
-5、结算方法：按锁定额度（接收额度）清算双方账户数额，创建转入（transferIn）记录；
-6、超时处理：自动解锁转出团队账户被锁定额度星茶，不创建接收目标方转入（transferIn）记录。
+2.1、如果审核批准，转账表单状态更新为待接收，保持锁定不变
+     （等待对方确认接收时再扣减余额并释放锁定）；
+2.2、如果审核否决，转账表单状态更新为已否决，释放锁定
+     （locked_balance_milligrams -= 金额，余额不变），流程结束；
+3、接收方法：目标接受方操作"确认接收"，扣减余额并释放锁定
+     （balance_milligrams -= 金额, locked_balance_milligrams -= 金额），完成转账；
+4、拒收方法：目标接受方操作"拒收"，释放锁定（locked_balance_milligrams -= 金额，余额不变）；
+5、超时处理：
+   - PendingApproval 过期：释放锁定（locked_balance_milligrams -= 金额）
+   - PendingReceipt 过期：释放锁定（locked_balance_milligrams -= 金额，余额不变）。
 */
 
 // // 团队星茶账户状态常量
@@ -294,6 +296,10 @@ func CheckTeaTeamAccountFrozen(teamId int) (bool, string, error) {
 }
 
 // processExpiredTransfers 处理过期转账的通用函数
+// 处理两种状态的过期：
+// 1. PendingApproval: 释放锁定金额（locked_balance_milligrams -= amount）
+// 2. PendingReceipt: 释放锁定金额（locked_balance_milligrams -= amount）
+// 注意：两种状态都只是释放锁定，余额不变，因为余额在对方确认接收时才扣减
 func processExpiredTransfers(tableName string) error {
 	tx, err := DB.Begin()
 	if err != nil {
@@ -301,58 +307,98 @@ func processExpiredTransfers(tableName string) error {
 	}
 	defer tx.Rollback()
 
-	query := fmt.Sprintf(`SELECT id, from_team_id, amount_milligrams FROM %s WHERE status = $1 AND expires_at < $2`, tableName)
-	rows, err := tx.Query(query, TeaTransferStatusPendingReceipt, time.Now())
+	// 处理 PendingApproval 状态的过期（释放锁定）
+	query1 := fmt.Sprintf(`SELECT id, from_team_id, amount_milligrams FROM %s WHERE status = $1 AND expires_at < $2`, tableName)
+	rows1, err := tx.Query(query1, TeaTransferStatusPendingApproval, time.Now())
 	if err != nil {
-		return fmt.Errorf("查询过期转账失败: %v", err)
+		return fmt.Errorf("查询待审批过期转账失败: %v", err)
 	}
-	defer rows.Close()
 
-	var expiredTransfers []struct {
+	var pendingApprovalExpired []struct {
 		Id         int
 		FromTeamId int
 		Amount     int64
 	}
-
-	for rows.Next() {
+	for rows1.Next() {
 		var et struct {
 			Id         int
 			FromTeamId int
 			Amount     int64
 		}
-		if err := rows.Scan(&et.Id, &et.FromTeamId, &et.Amount); err != nil {
-			return fmt.Errorf("扫描过期转账失败: %v", err)
+		if err := rows1.Scan(&et.Id, &et.FromTeamId, &et.Amount); err != nil {
+			rows1.Close()
+			return fmt.Errorf("扫描待审批过期转账失败: %v", err)
 		}
-		expiredTransfers = append(expiredTransfers, et)
+		pendingApprovalExpired = append(pendingApprovalExpired, et)
+	}
+	rows1.Close()
+
+	// 处理 PendingReceipt 状态的过期（释放锁定）
+	query2 := fmt.Sprintf(`SELECT id, from_team_id, amount_milligrams FROM %s WHERE status = $1 AND expires_at < $2`, tableName)
+	rows2, err := tx.Query(query2, TeaTransferStatusPendingReceipt, time.Now())
+	if err != nil {
+		return fmt.Errorf("查询待接收过期转账失败: %v", err)
 	}
 
-	if len(expiredTransfers) == 0 {
-		return nil
+	var pendingReceiptExpired []struct {
+		Id         int
+		FromTeamId int
+		Amount     int64
 	}
-
-	for _, et := range expiredTransfers {
-		var currentLockedBalance int64
-		err = tx.QueryRow("SELECT locked_balance_milligrams FROM tea.team_accounts WHERE team_id = $1 FOR UPDATE", et.FromTeamId).Scan(&currentLockedBalance)
-		if err != nil {
-			return fmt.Errorf("查询锁定余额失败: %v", err)
+	for rows2.Next() {
+		var et struct {
+			Id         int
+			FromTeamId int
+			Amount     int64
 		}
-
-		if currentLockedBalance < et.Amount {
-			util.Warning("团队锁定余额不足，无法处理过期转账", et.FromTeamId, et.Id, currentLockedBalance, et.Amount)
-			continue
+		if err := rows2.Scan(&et.Id, &et.FromTeamId, &et.Amount); err != nil {
+			rows2.Close()
+			return fmt.Errorf("扫描待接收过期转账失败: %v", err)
 		}
+		pendingReceiptExpired = append(pendingReceiptExpired, et)
+	}
+	rows2.Close()
 
+	// 处理 PendingApproval 过期：释放锁定
+	for _, et := range pendingApprovalExpired {
+		// 更新状态为过期
 		updateQuery := fmt.Sprintf("UPDATE %s SET status = $1, updated_at = $2 WHERE id = $3", tableName)
 		_, err = tx.Exec(updateQuery, TeaTransferStatusExpired, time.Now(), et.Id)
 		if err != nil {
-			return fmt.Errorf("更新过期转账状态失败: %v", err)
+			return fmt.Errorf("更新待审批过期转账状态失败: %v", err)
 		}
 
-		newLockedBalance := currentLockedBalance - et.Amount
-		_, err = tx.Exec("UPDATE tea.team_accounts SET locked_balance_milligrams = $1, updated_at = $2 WHERE team_id = $3",
-			newLockedBalance, time.Now(), et.FromTeamId)
+		// 释放锁定金额
+		_, err = tx.Exec(`
+			UPDATE tea.team_accounts 
+			SET locked_balance_milligrams = locked_balance_milligrams - $1,
+			    updated_at = $2
+			WHERE team_id = $3
+			AND locked_balance_milligrams >= $1`,
+			et.Amount, time.Now(), et.FromTeamId)
 		if err != nil {
-			return fmt.Errorf("解锁过期转账金额失败: %v", err)
+			return fmt.Errorf("释放锁定金额失败: %v", err)
+		}
+	}
+
+	// 处理 PendingReceipt 过期：释放锁定（余额不变，因为还未扣减）
+	for _, et := range pendingReceiptExpired {
+		// 更新状态为过期
+		updateQuery := fmt.Sprintf("UPDATE %s SET status = $1, updated_at = $2 WHERE id = $3", tableName)
+		_, err = tx.Exec(updateQuery, TeaTransferStatusExpired, time.Now(), et.Id)
+		if err != nil {
+			return fmt.Errorf("更新待接收过期转账状态失败: %v", err)
+		}
+
+		// 退回余额到团队账户
+		_, err = tx.Exec(`
+			UPDATE tea.team_accounts 
+			SET balance_milligrams = balance_milligrams + $1,
+			    updated_at = $2
+			WHERE team_id = $3`,
+			et.Amount, time.Now(), et.FromTeamId)
+		if err != nil {
+			return fmt.Errorf("退回余额失败: %v", err)
 		}
 	}
 
@@ -752,6 +798,7 @@ func GetPendingTeamToTeamOperations(teamId, page, limit int) ([]map[string]any, 
 }
 
 // CreateTeaTeamToUserTransferOut 创建团队对用户转账
+// 流程：发起时锁定金额（不扣减余额），审批通过后扣减余额
 func CreateTeaTeamToUserTransferOut(fromTeamId, initiatorUserId, toUserId int, amountMilligrams int64, notes string, expireHours int) (TeaTeamToUserTransferOut, error) {
 	var transfer TeaTeamToUserTransferOut
 
@@ -771,14 +818,14 @@ func CreateTeaTeamToUserTransferOut(fromTeamId, initiatorUserId, toUserId int, a
 	defer tx.Rollback()
 
 	// 1. 锁定并检查转出团队账户余额
-	var balance int64
+	var balance, lockedBalance int64
 	var status string
 	err = tx.QueryRow(`
-		SELECT balance_milligrams, status 
+		SELECT balance_milligrams, locked_balance_milligrams, status 
 		FROM tea.team_accounts 
 		WHERE team_id = $1 
 		FOR UPDATE`,
-		fromTeamId).Scan(&balance, &status)
+		fromTeamId).Scan(&balance, &lockedBalance, &status)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return transfer, fmt.Errorf("转出团队星茶账户不存在")
@@ -790,25 +837,25 @@ func CreateTeaTeamToUserTransferOut(fromTeamId, initiatorUserId, toUserId int, a
 		return transfer, fmt.Errorf("团队账户已冻结")
 	}
 
-	// 2. 检查余额是否足够（团队转账直接扣减余额，不锁定）
-	if balance < amountMilligrams {
-		return transfer, fmt.Errorf("团队星茶余额不足，当前余额: %d 毫克，需要: %d 毫克", balance, amountMilligrams)
+	// 2. 检查可用余额是否足够（与用户转账一致）
+	availableBalance := balance - lockedBalance
+	if availableBalance < amountMilligrams {
+		return transfer, fmt.Errorf("团队星茶可用余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amountMilligrams)
 	}
 
-	// 3. 直接扣减团队账户余额（团队转账进入待审批状态，直接扣减）
+	// 3. 锁定转出金额（增加 locked_balance_milligrams，与用户转账一致）
 	_, err = tx.Exec(`
 		UPDATE tea.team_accounts 
-		SET balance_milligrams = balance_milligrams - $1,
+		SET locked_balance_milligrams = locked_balance_milligrams + $1,
 		    updated_at = $2
-		WHERE team_id = $3 
-		AND balance_milligrams >= $1`,
+		WHERE team_id = $3`,
 		amountMilligrams, time.Now(), fromTeamId)
 	if err != nil {
-		return transfer, fmt.Errorf("扣减团队账户余额失败: %v", err)
+		return transfer, fmt.Errorf("锁定转出金额失败: %v", err)
 	}
 
-	// 4. 创建转账记录
-	expiresAt := time.Now().Add(time.Duration(expireHours) * time.Hour)
+	// 4. 创建转账记录（使用 UTC 时间避免时区问题）
+	expiresAt := time.Now().UTC().Add(time.Duration(expireHours) * time.Hour)
 	err = tx.QueryRow(`
 		INSERT INTO tea.team_to_user_transfer_out 
 		(from_team_id, to_user_id, initiator_user_id, amount_milligrams, notes, status, expires_at)
@@ -838,6 +885,7 @@ func CreateTeaTeamToUserTransferOut(fromTeamId, initiatorUserId, toUserId int, a
 }
 
 // CreateTeaTeamToTeamTransferOut 创建团队对团队转账
+// 流程：发起时锁定金额（不扣减余额），审批通过后扣减余额
 func CreateTeaTeamToTeamTransferOut(fromTeamId, initiatorUserId, toTeamId int, amountMilligrams int64, notes string, expireHours int) (TeaTeamToTeamTransferOut, error) {
 	var transfer TeaTeamToTeamTransferOut
 
@@ -861,14 +909,14 @@ func CreateTeaTeamToTeamTransferOut(fromTeamId, initiatorUserId, toTeamId int, a
 	defer tx.Rollback()
 
 	// 1. 锁定并检查转出团队账户余额
-	var balance int64
+	var balance, lockedBalance int64
 	var status string
 	err = tx.QueryRow(`
-		SELECT balance_milligrams, status 
+		SELECT balance_milligrams, locked_balance_milligrams, status 
 		FROM tea.team_accounts 
 		WHERE team_id = $1 
 		FOR UPDATE`,
-		fromTeamId).Scan(&balance, &status)
+		fromTeamId).Scan(&balance, &lockedBalance, &status)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return transfer, fmt.Errorf("转出团队星茶账户不存在")
@@ -880,25 +928,25 @@ func CreateTeaTeamToTeamTransferOut(fromTeamId, initiatorUserId, toTeamId int, a
 		return transfer, fmt.Errorf("团队账户已冻结")
 	}
 
-	// 2. 检查余额是否足够（团队转账直接扣减余额，不锁定）
-	if balance < amountMilligrams {
-		return transfer, fmt.Errorf("团队星茶余额不足，当前余额: %d 毫克，需要: %d 毫克", balance, amountMilligrams)
+	// 2. 检查可用余额是否足够（与用户转账一致）
+	availableBalance := balance - lockedBalance
+	if availableBalance < amountMilligrams {
+		return transfer, fmt.Errorf("团队星茶可用余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amountMilligrams)
 	}
 
-	// 3. 直接扣减团队账户余额（团队转账进入待审批状态，直接扣减）
+	// 3. 锁定转出金额（增加 locked_balance_milligrams，与用户转账一致）
 	_, err = tx.Exec(`
 		UPDATE tea.team_accounts 
-		SET balance_milligrams = balance_milligrams - $1,
+		SET locked_balance_milligrams = locked_balance_milligrams + $1,
 		    updated_at = $2
-		WHERE team_id = $3 
-		AND balance_milligrams >= $1`,
+		WHERE team_id = $3`,
 		amountMilligrams, time.Now(), fromTeamId)
 	if err != nil {
-		return transfer, fmt.Errorf("扣减团队账户余额失败: %v", err)
+		return transfer, fmt.Errorf("锁定转出金额失败: %v", err)
 	}
 
-	// 4. 创建转账记录
-	expiresAt := time.Now().Add(time.Duration(expireHours) * time.Hour)
+	// 4. 创建转账记录（使用 UTC 时间避免时区问题）
+	expiresAt := time.Now().UTC().Add(time.Duration(expireHours) * time.Hour)
 	err = tx.QueryRow(`
 		INSERT INTO tea.team_to_team_transfer_out 
 		(from_team_id, to_team_id, initiator_user_id, amount_milligrams, notes, status, expires_at)
@@ -1275,6 +1323,7 @@ func TeaTeamRejectFromTeamTransferIn(transferUuid string, toTeamId, operatorUser
 }
 
 // TeaTeamApproveToUserTransferOut 某个团队核心成员,审批通过,团队对用户转账
+// 流程：审批通过后，更新状态为待接收，保持锁定不变，等待对方确认接收时再扣减余额
 func TeaTeamApproveToUserTransferOut(fromTeamId int, transferUuid string, approverUserId int) error {
 	tx, err := DB.Begin()
 	if err != nil {
@@ -1308,40 +1357,19 @@ func TeaTeamApproveToUserTransferOut(fromTeamId int, transferUuid string, approv
 
 	now := time.Now()
 
-	// 1. 更新转账状态为已批准
+	// 1. 更新转账状态为待接收（审批通过，等待对方确认）
+	// 保持锁定不变，等待对方确认接收时再扣减余额并释放锁定
 	_, err = tx.Exec(`
 		UPDATE tea.team_to_user_transfer_out 
 		SET status = $1, approver_user_id = $2, approved_at = $3, updated_at = $4
 		WHERE id = $5 AND status = $6`,
-		TeaTransferStatusApproved, approverUserId, now, now, transferOutID, TeaTransferStatusPendingApproval)
+		TeaTransferStatusPendingReceipt, approverUserId, now, now, transferOutID, TeaTransferStatusPendingApproval)
 	if err != nil {
 		return fmt.Errorf("更新转账审批状态失败: %v", err)
 	}
 
-	// 2. 锁定转出团队账户的金额
-	_, err = tx.Exec(`
-		UPDATE tea.team_accounts 
-		SET locked_balance_milligrams = locked_balance_milligrams + $1,
-			updated_at = $2
-		WHERE team_id = $3`,
-		amountMg, now, fromTeamId)
-	if err != nil {
-		return fmt.Errorf("锁定转出团队账户金额失败: %v", err)
-	}
-
-	// 3. 创建接收记录（用户确认 接收/拒绝 操作后创建）
-	// _, err = tx.Exec(`
-	// 	INSERT INTO tea.user_from_team_transfer_in (
-	// 		team_to_user_transfer_out_id, to_user_id, to_user_name,
-	// 		from_team_id, from_team_name, amount_milligrams, notes,
-	// 		status, is_confirmed, operational_user_id, rejection_reason, expires_at, created_at
-	// 	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-	// 	transferOutID, toUserId, toUserName, fromTeamId,
-	// 	fromTeamName, amountMg, notes, TeaTransferStatusPendingReceipt,
-	// 	false, approverUserId, "-", now.Add(24*time.Hour), now)
-	// if err != nil {
-	// 	return fmt.Errorf("创建待接收记录失败: %v", err)
-	// }
+	// 2. 审批通过时只更新状态，不扣减余额，保持锁定不变
+	// 余额扣减和锁定释放将在对方确认接收时处理
 
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("提交事务失败: %v", err)
@@ -1351,6 +1379,7 @@ func TeaTeamApproveToUserTransferOut(fromTeamId int, transferUuid string, approv
 }
 
 // TeaTeamApproveToTeamTransferOut 某个团队核心成员,审批通过,团队对团队转账
+// 流程：审批通过后，更新状态为待接收，保持锁定不变，等待对方确认接收时再扣减余额
 func TeaTeamApproveToTeamTransferOut(fromTeamId int, transferUuid string, approverUserId int) error {
 	tx, err := DB.Begin()
 	if err != nil {
@@ -1384,40 +1413,19 @@ func TeaTeamApproveToTeamTransferOut(fromTeamId int, transferUuid string, approv
 
 	now := time.Now()
 
-	// 1. 更新转账状态为已批准
+	// 1. 更新转账状态为待接收（审批通过，等待对方确认）
+	// 保持锁定不变，等待对方确认接收时再扣减余额并释放锁定
 	_, err = tx.Exec(`
 		UPDATE tea.team_to_team_transfer_out 
 		SET status = $1, approver_user_id = $2, approved_at = $3, updated_at = $4
 		WHERE id = $5 AND status = $6`,
-		TeaTransferStatusApproved, approverUserId, now, now, transferOutID, TeaTransferStatusPendingApproval)
+		TeaTransferStatusPendingReceipt, approverUserId, now, now, transferOutID, TeaTransferStatusPendingApproval)
 	if err != nil {
 		return fmt.Errorf("更新转账审批状态失败: %v", err)
 	}
 
-	// 2. 锁定转出团队账户的金额
-	_, err = tx.Exec(`
-		UPDATE tea.team_accounts 
-		SET locked_balance_milligrams = locked_balance_milligrams + $1,
-			updated_at = $2
-		WHERE team_id = $3`,
-		amountMg, now, fromTeamId)
-	if err != nil {
-		return fmt.Errorf("锁定转出团队账户金额失败: %v", err)
-	}
-
-	// 3. 创建待接收记录（接收团队需要确认接收）
-	// _, err = tx.Exec(`
-	// 	INSERT INTO tea.team_from_team_transfer_in (
-	// 		team_to_team_transfer_out_id, to_team_id, to_team_name,
-	// 		from_team_id, from_team_name, amount_milligrams, notes,
-	// 		status, is_confirmed, operational_user_id, rejection_reason, expires_at, created_at
-	// 	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
-	// 	transferOutID, toTeamId, toTeamName, fromTeamId,
-	// 	fromTeamName, amountMg, notes, TeaTransferStatusPendingReceipt,
-	// 	false, approverUserId, "-", now.Add(24*time.Hour), now)
-	// if err != nil {
-	// 	return fmt.Errorf("创建待接收记录失败: %v", err)
-	// }
+	// 2. 审批通过时只更新状态，不扣减余额，保持锁定不变
+	// 余额扣减和锁定释放将在对方确认接收时处理
 
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("提交事务失败: %v", err)

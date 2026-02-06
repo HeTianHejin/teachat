@@ -27,11 +27,11 @@ CREATE TABLE tea.user_accounts (
     uuid                  UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
     user_id               INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     balance_milligrams    INTEGER NOT NULL DEFAULT 0, -- 星茶数量(毫克)，整数重量
-    locked_balance_milligrams INTEGER NOT NULL DEFAULT 0, -- 交易有效期被锁定的星茶数量(毫克)
+    locked_balance_milligrams INTEGER NOT NULL DEFAULT 0, -- 转账发起时被锁定的星茶数量(毫克)，待对方确认或过期后释放
     status                VARCHAR(20) NOT NULL DEFAULT 'normal', -- normal, frozen
     frozen_reason         TEXT DEFAULT '-', -- 冻结原因
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -39,9 +39,9 @@ CREATE UNIQUE INDEX idx_tea_user_accounts_user_id ON tea.user_accounts(user_id);
 CREATE INDEX idx_tea_user_accounts_status ON tea.user_accounts(status);
 
 -- 添加表注释
-COMMENT ON TABLE tea.user_accounts IS '用户星茶账户表（匹配TeaUserAccount结构体）';
+COMMENT ON TABLE tea.user_accounts IS '用户星茶账户表（匹配TeaUserAccount结构体）。转账流程：发起时锁定金额，对方接收后扣减余额并释放锁定';
 COMMENT ON COLUMN tea.user_accounts.balance_milligrams IS '星茶整数重量，单位(毫克)';
-COMMENT ON COLUMN tea.user_accounts.locked_balance_milligrams IS '交易有效期被锁定的星茶数量(毫克)';
+COMMENT ON COLUMN tea.user_accounts.locked_balance_milligrams IS '转账发起时被锁定的星茶数量(毫克)，待对方确认或过期后释放';
 COMMENT ON COLUMN tea.user_accounts.status IS '账户状态: normal-正常, frozen-冻结';
 
 -- 用户对用户转账记录表（完全匹配TeaUserToUserTransferOut结构体）
@@ -56,10 +56,10 @@ CREATE TABLE tea.user_to_user_transfer_out (
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_receipt', -- 转账状态
     balance_after_transfer INTEGER, -- 转出后账户余额（毫克），整数重量
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at            TIMESTAMP NOT NULL, -- 过期时间
-    payment_time          TIMESTAMP, -- 实际支付时间
-    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at            TIMESTAMPTZ NOT NULL, -- 过期时间
+    payment_time          TIMESTAMPTZ, -- 实际支付时间
+    updated_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -69,8 +69,8 @@ CREATE INDEX idx_tea_user_to_user_status ON tea.user_to_user_transfer_out(status
 CREATE INDEX idx_tea_user_to_user_expires_at ON tea.user_to_user_transfer_out(expires_at);
 
 -- 添加表注释
-COMMENT ON TABLE tea.user_to_user_transfer_out IS '用户对用户转账记录表（匹配TeaUserToUserTransferOut结构体）';
-COMMENT ON COLUMN tea.user_to_user_transfer_out.status IS '转账状态: pending_receipt-待接收, completed-已完成, rejected-接收拒绝, expired-已过期';
+COMMENT ON TABLE tea.user_to_user_transfer_out IS '用户对用户转账记录表（匹配TeaUserToUserTransferOut结构体）。流程：发起时锁定金额→对方接收完成';
+COMMENT ON COLUMN tea.user_to_user_transfer_out.status IS '转账状态: pending_receipt-待接收(已锁定), completed-已完成, rejected-接收拒绝, expired-已过期';
 
 -- 用户对团队转账记录表（完全匹配TeaUserToTeamTransferOut结构体）
 CREATE TABLE tea.user_to_team_transfer_out (
@@ -84,10 +84,10 @@ CREATE TABLE tea.user_to_team_transfer_out (
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_receipt', -- 转账状态
     balance_after_transfer INTEGER, -- 转出后账户余额（毫克），整数重量
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at            TIMESTAMP NOT NULL, -- 过期时间
-    payment_time          TIMESTAMP, -- 实际支付时间
-    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at            TIMESTAMPTZ NOT NULL, -- 过期时间
+    payment_time          TIMESTAMPTZ, -- 实际支付时间
+    updated_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -97,8 +97,8 @@ CREATE INDEX idx_tea_user_to_team_status ON tea.user_to_team_transfer_out(status
 CREATE INDEX idx_tea_user_to_team_expires_at ON tea.user_to_team_transfer_out(expires_at);
 
 -- 添加表注释
-COMMENT ON TABLE tea.user_to_team_transfer_out IS '用户对团队转账记录表（匹配TeaUserToTeamTransferOut结构体）';
-COMMENT ON COLUMN tea.user_to_team_transfer_out.status IS '转账状态: pending_receipt-待接收, completed-已完成, rejected-接收拒绝, expired-已过期';
+COMMENT ON TABLE tea.user_to_team_transfer_out IS '用户对团队转账记录表（匹配TeaUserToTeamTransferOut结构体）。流程：发起时锁定金额→对方接收完成';
+COMMENT ON COLUMN tea.user_to_team_transfer_out.status IS '转账状态: pending_receipt-待接收(已锁定), completed-已完成, rejected-接收拒绝, expired-已过期';
 
 -- 用户对用户转账接收记录表（完全匹配TeaUserFromUserTransferIn结构体）
 CREATE TABLE tea.user_from_user_transfer_in (
@@ -116,8 +116,8 @@ CREATE TABLE tea.user_from_user_transfer_in (
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
     rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
-    expires_at            TIMESTAMP NOT NULL, -- 过期时间
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    expires_at            TIMESTAMPTZ NOT NULL, -- 过期时间
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -145,8 +145,8 @@ CREATE TABLE tea.user_from_team_transfer_in (
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
     rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
-    expires_at            TIMESTAMP NOT NULL, -- 过期时间
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    expires_at            TIMESTAMPTZ NOT NULL, -- 过期时间
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -167,11 +167,11 @@ CREATE TABLE tea.team_accounts (
     uuid                  UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
     team_id               INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
     balance_milligrams    INTEGER NOT NULL DEFAULT 0, -- 星茶数量(毫克)，整数重量
-    locked_balance_milligrams INTEGER NOT NULL DEFAULT 0, -- 被锁定的星茶数量(毫克)
+    locked_balance_milligrams INTEGER NOT NULL DEFAULT 0, -- 转账发起时被锁定的星茶数量(毫克)，审批通过扣减余额后释放
     status                VARCHAR(20) NOT NULL DEFAULT 'normal', -- normal, frozen
     frozen_reason         TEXT DEFAULT '-', -- 冻结原因
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -179,7 +179,7 @@ CREATE UNIQUE INDEX idx_tea_team_accounts_team_id ON tea.team_accounts(team_id);
 CREATE INDEX idx_tea_team_accounts_status ON tea.team_accounts(status);
 
 -- 添加表注释
-COMMENT ON TABLE tea.team_accounts IS '团队星茶账户表（匹配TeaTeamAccount结构体）';
+COMMENT ON TABLE tea.team_accounts IS '团队星茶账户表（匹配TeaTeamAccount结构体）。团队转账流程：发起时锁定金额，审批通过后扣减余额并释放锁定，与用户转账流程一致';
 
 -- 团队对用户转账记录表（完全匹配TeaTeamToUserTransferOut结构体）
 CREATE TABLE tea.team_to_user_transfer_out (
@@ -194,15 +194,15 @@ CREATE TABLE tea.team_to_user_transfer_out (
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
-    approved_at           TIMESTAMP, -- 审批时间
+    approved_at           TIMESTAMPTZ, -- 审批时间
     approval_rejection_reason TEXT  NOT NULL DEFAULT '-', -- 审批拒绝原因
     rejected_by           INTEGER REFERENCES users(id), -- 拒绝人ID
-    rejected_at           TIMESTAMP, -- 拒绝时间
+    rejected_at           TIMESTAMPTZ, -- 拒绝时间
     balance_after_transfer INTEGER, -- 转账后余额(毫克)，整数重量
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at            TIMESTAMP NOT NULL, -- 转账请求过期时间
-    payment_time          TIMESTAMP, -- 实际支付时间
-    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at            TIMESTAMPTZ NOT NULL, -- 转账请求过期时间
+    payment_time          TIMESTAMPTZ, -- 实际支付时间
+    updated_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -212,8 +212,8 @@ CREATE INDEX idx_tea_team_to_user_status ON tea.team_to_user_transfer_out(status
 CREATE INDEX idx_tea_team_to_user_expires_at ON tea.team_to_user_transfer_out(expires_at);
 
 -- 添加表注释
-COMMENT ON TABLE tea.team_to_user_transfer_out IS '团队对用户转账记录表（匹配TeaTeamToUserTransferOut结构体）';
-COMMENT ON COLUMN tea.team_to_user_transfer_out.status IS '转账状态: pending_approval-待审批, approved-审批通过, approval_rejected-审批拒绝, pending_receipt-待接收, completed-已完成, rejected-接收拒绝, expired-已超时';
+COMMENT ON TABLE tea.team_to_user_transfer_out IS '团队对用户转账记录表（匹配TeaTeamToUserTransferOut结构体）。流程：发起时锁定金额→审批通过等待对方确认→对方确认后扣减余额。与用户转账流程一致';
+COMMENT ON COLUMN tea.team_to_user_transfer_out.status IS '转账状态: pending_approval-待审批(已锁定), approved-审批通过(已锁定), approval_rejected-审批拒绝(已释放锁定), pending_receipt-待接收(已锁定), completed-已完成(已扣减), rejected-接收拒绝(已释放), expired-已超时(已释放)';
 
 -- 团队对团队转账记录表（完全匹配TeaTeamToTeamTransferOut结构体）
 CREATE TABLE tea.team_to_team_transfer_out (
@@ -228,15 +228,15 @@ CREATE TABLE tea.team_to_team_transfer_out (
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
-    approved_at           TIMESTAMP, -- 审批时间
+    approved_at           TIMESTAMPTZ, -- 审批时间
     approval_rejection_reason TEXT  NOT NULL DEFAULT '-', -- 审批拒绝原因
     rejected_by           INTEGER REFERENCES users(id), -- 拒绝人ID
-    rejected_at           TIMESTAMP, -- 拒绝时间
+    rejected_at           TIMESTAMPTZ, -- 拒绝时间
     balance_after_transfer INTEGER, -- 转账后余额(毫克)，整数重量
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expires_at            TIMESTAMP NOT NULL, -- 转账请求过期时间
-    payment_time          TIMESTAMP, -- 实际支付时间
-    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at            TIMESTAMPTZ NOT NULL, -- 转账请求过期时间
+    payment_time          TIMESTAMPTZ, -- 实际支付时间
+    updated_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -246,8 +246,8 @@ CREATE INDEX idx_tea_team_to_team_status ON tea.team_to_team_transfer_out(status
 CREATE INDEX idx_tea_team_to_team_expires_at ON tea.team_to_team_transfer_out(expires_at);
 
 -- 添加表注释
-COMMENT ON TABLE tea.team_to_team_transfer_out IS '团队对团队转账记录表（匹配TeaTeamToTeamTransferOut结构体）';
-COMMENT ON COLUMN tea.team_to_team_transfer_out.status IS '转账状态: pending_approval-待审批, approved-审批通过, approval_rejected-审批拒绝, pending_receipt-待接收, completed-已完成, rejected-接收拒绝, expired-已超时';
+COMMENT ON TABLE tea.team_to_team_transfer_out IS '团队对团队转账记录表（匹配TeaTeamToTeamTransferOut结构体）。流程：发起时锁定金额→审批通过等待对方确认→对方确认后扣减余额。与用户转账流程一致';
+COMMENT ON COLUMN tea.team_to_team_transfer_out.status IS '转账状态: pending_approval-待审批(已锁定), approved-审批通过(已锁定), approval_rejected-审批拒绝(已释放锁定), pending_receipt-待接收(已锁定), completed-已完成(已扣减), rejected-接收拒绝(已释放), expired-已超时(已释放)';
 
 -- 团队接收用户转入记录表（完全匹配TeaTeamFromUserTransferIn结构体）
 CREATE TABLE tea.team_from_user_transfer_in (
@@ -264,8 +264,8 @@ CREATE TABLE tea.team_from_user_transfer_in (
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
     rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
-    expires_at            TIMESTAMP NOT NULL, -- 过期时间
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    expires_at            TIMESTAMPTZ NOT NULL, -- 过期时间
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -291,8 +291,8 @@ CREATE TABLE tea.team_from_team_transfer_in (
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
     rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
-    expires_at            TIMESTAMP NOT NULL, -- 过期时间
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    expires_at            TIMESTAMPTZ NOT NULL, -- 过期时间
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -383,7 +383,7 @@ ALTER TABLE tea.team_to_team_transfer_out ADD CONSTRAINT check_tea_team_to_team_
 CREATE OR REPLACE FUNCTION update_tea_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
+    NEW.updated_at = CURRENT_TIMESTAMP::TIMESTAMPTZ;
     RETURN NEW;
 END;
 $$ language 'plpgsql';
@@ -566,7 +566,7 @@ BEGIN
     GET DIAGNOSTICS affected_rows = ROW_COUNT;
     RETURN QUERY SELECT 'user_accounts_reset' as action_type, affected_rows as affected_rows;
     
-    -- 团队账户目前没有锁定余额机制，将其重置为0
+    -- 重置团队账户锁定余额（清理无效的锁定记录）
     UPDATE tea.team_accounts 
     SET locked_balance_milligrams = 0
     WHERE locked_balance_milligrams != 0;
@@ -620,7 +620,7 @@ SELECT * FROM tea.team_to_team_transfer_out WHERE from_team_id = ? OR to_team_id
 
 -- 查看待确认转账
 SELECT * FROM tea.user_to_user_transfer_out 
-WHERE status = 'pending_receipt' AND expires_at > CURRENT_TIMESTAMP;
+WHERE status = 'pending_receipt' AND expires_at > NOW();
 
 -- 查看账户汇总信息
 SELECT * FROM tea.user_account_summary WHERE user_id = ?;

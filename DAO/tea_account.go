@@ -623,8 +623,8 @@ func CreateTeaUserToUserTransferOut(fromUserId int, fromUserName string, toUserI
 		return transfer, fmt.Errorf("锁定转出金额失败: %v", err)
 	}
 
-	// 4. 创建转账记录
-	expiresAt := time.Now().Add(time.Duration(expireHours) * time.Hour)
+	// 4. 创建转账记录（使用 UTC 时间避免时区问题）
+	expiresAt := time.Now().UTC().Add(time.Duration(expireHours) * time.Hour)
 	err = tx.QueryRow(`
 		INSERT INTO tea.user_to_user_transfer_out (from_user_id, to_user_id, from_user_name, to_user_name, amount_milligrams, notes, status, expires_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -704,8 +704,8 @@ func CreateTeaUserToTeamTransferOut(from_user_id int, from_user_name string, to_
 		return transfer, fmt.Errorf("锁定转出金额失败: %v", err)
 	}
 
-	// 4. 创建转账记录
-	expiresAt := time.Now().Add(time.Duration(expire_hours) * time.Hour)
+	// 4. 创建转账记录（使用 UTC 时间避免时区问题）
+	expiresAt := time.Now().UTC().Add(time.Duration(expire_hours) * time.Hour)
 	err = tx.QueryRow(`
 		INSERT INTO tea.user_to_team_transfer_out (from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, status, expires_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
