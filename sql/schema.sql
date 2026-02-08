@@ -23,8 +23,8 @@ CREATE TABLE users (
     role                  VARCHAR(64),
     gender                INTEGER,
     avatar                VARCHAR(255),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 家庭表
@@ -41,9 +41,9 @@ CREATE TABLE families (
     status                INTEGER DEFAULT 1,
     logo                  VARCHAR(255),
     is_open               BOOLEAN DEFAULT true,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ,
     perspective_user_id   INTEGER
 );
 
@@ -57,9 +57,9 @@ CREATE TABLE family_message_preferences (
     family_id             INTEGER REFERENCES families(id),
     receive_messages      BOOLEAN DEFAULT true,
     notification_type     INTEGER DEFAULT 2,
-    muted_until           TIMESTAMP,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    muted_until           TIMESTAMPTZ,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 COMMENT ON TABLE family_message_preferences IS '家庭消息偏好设置，用户可以选择接收哪些家庭成员的消息';
@@ -75,9 +75,9 @@ CREATE TABLE family_relations (
     confirmed_by          INTEGER REFERENCES users(id),
     status                INTEGER DEFAULT 0,
     note                  TEXT,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 COMMENT ON TABLE family_relations IS '家庭关联表，用于识别三代以内近亲关系实现利益回避';
@@ -96,9 +96,9 @@ CREATE TABLE teams (
     abbreviation          VARCHAR(255),
     logo                  VARCHAR(255),
     tags                  VARCHAR(500),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 -- 为teams表添加is_private字段
 -- 私密团队不公开显示，但可以接收通知和作业进度
@@ -122,9 +122,9 @@ CREATE TABLE groups (
     class                 INTEGER DEFAULT 1,
     logo                  VARCHAR(255),
     tags                  VARCHAR(500),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 集团成员表
@@ -138,9 +138,9 @@ CREATE TABLE group_members (
     role                  INTEGER DEFAULT 0,
     status                INTEGER DEFAULT 1,
     user_id               INTEGER REFERENCES users(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 集团邀请函表
@@ -154,7 +154,7 @@ CREATE TABLE group_invitations (
     level                 INTEGER DEFAULT 2,
     status                INTEGER DEFAULT 0,
     author_user_id        INTEGER REFERENCES users(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 集团邀请函回复表
@@ -164,7 +164,7 @@ CREATE TABLE group_invitation_replies (
     invitation_id         INTEGER REFERENCES group_invitations(id),
     user_id               INTEGER REFERENCES users(id),
     reply_word            TEXT,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 创建索引
@@ -200,8 +200,8 @@ CREATE TABLE addresses (
     portal_number         VARCHAR(255),
     postal_code           VARCHAR(20) DEFAULT '0',
     category              INTEGER DEFAULT 0,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 场所表
@@ -219,8 +219,8 @@ CREATE TABLE places (
     is_public             BOOLEAN DEFAULT true,
     is_government         BOOLEAN DEFAULT false,
     user_id               INTEGER,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- ============================================
@@ -237,11 +237,11 @@ CREATE TABLE family_members (
     is_adult              BOOLEAN DEFAULT true,
     nick_name             VARCHAR(255) DEFAULT ':P',
     is_adopted            BOOLEAN DEFAULT false,
-    birthday              TIMESTAMP,
-    death_date            TIMESTAMP,
+    birthday              TIMESTAMPTZ,
+    death_date            TIMESTAMPTZ,
     order_of_seniority    INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 COMMENT ON TABLE family_members IS '家庭成员表';
@@ -257,8 +257,8 @@ CREATE TABLE team_members (
     user_id               INTEGER REFERENCES users(id),
     role                  INTEGER DEFAULT 0,
     status                INTEGER DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 用户默认家庭表
@@ -267,7 +267,7 @@ CREATE TABLE user_default_families (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     family_id             INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 用户默认团队表
@@ -276,8 +276,8 @@ CREATE TABLE user_default_teams (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER REFERENCES users(id),
     team_id               INTEGER REFERENCES teams(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 用户场所关联表
@@ -286,7 +286,7 @@ CREATE TABLE user_place (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     place_id              INTEGER,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 用户默认场所表
@@ -295,7 +295,7 @@ CREATE TABLE user_default_place (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     place_id              INTEGER,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 用户地址关联表
@@ -304,7 +304,7 @@ CREATE TABLE user_address (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER REFERENCES users(id),
     address_id            INTEGER REFERENCES addresses(id),
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 用户默认地址表
@@ -313,7 +313,7 @@ CREATE TABLE user_default_address (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER REFERENCES users(id),
     address_id            INTEGER REFERENCES addresses(id),
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 场所地址关联表
@@ -334,7 +334,7 @@ CREATE TABLE sessions (
     email                 VARCHAR(255),
     user_id               INTEGER REFERENCES users(id),
     gender                INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 最近查询表
@@ -344,7 +344,7 @@ CREATE TABLE last_queries (
     user_id               INTEGER REFERENCES users(id),
     path                  VARCHAR(255),
     query                 VARCHAR(255),
-    query_at              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    query_at              TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
@@ -363,8 +363,8 @@ CREATE TABLE objectives (
     team_id               INTEGER NOT NULL DEFAULT 2,
     cover                 VARCHAR(64),
     is_private            BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edit_at               TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edit_at               TIMESTAMPTZ
 );
 
 -- 项目表
@@ -381,8 +381,8 @@ CREATE TABLE projects (
     cover                 VARCHAR(64) DEFAULT 'default-pr-cover',
     is_private            BOOLEAN DEFAULT false,
     status                INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edit_at               TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edit_at               TIMESTAMPTZ
 );
 
 -- 项目批准表
@@ -392,7 +392,7 @@ CREATE TABLE project_approved (
     user_id               INTEGER NOT NULL,
     project_id            INTEGER NOT NULL,
     objective_id          INTEGER NOT NULL,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 项目邀请团队表
@@ -401,8 +401,8 @@ CREATE TABLE project_invited_teams (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     project_id            INTEGER REFERENCES projects(id),
     team_id               INTEGER REFERENCES teams(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 目标邀请团队表
@@ -411,8 +411,8 @@ CREATE TABLE objective_invited_teams (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     objective_id          INTEGER REFERENCES objectives(id),
     team_id               INTEGER REFERENCES teams(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 项目场所关联表
@@ -422,7 +422,7 @@ CREATE TABLE project_place (
     project_id            INTEGER,
     place_id              INTEGER,
     user_id               INTEGER,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 项目预约表
@@ -431,8 +431,8 @@ CREATE TABLE project_appointments (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     project_id            INTEGER NOT NULL,
     note                  VARCHAR(255),
-    start_time            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    end_time              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
+    start_time            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_time              TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
     place_id              INTEGER NOT NULL DEFAULT 0,
     payer_user_id         INTEGER,
     payer_team_id         INTEGER,
@@ -444,10 +444,10 @@ CREATE TABLE project_appointments (
     verifier_family_id    INTEGER,
     verifier_team_id      INTEGER,
     status                SMALLINT NOT NULL DEFAULT 0,
-    confirmed_at          TIMESTAMP,
-    rejected_at           TIMESTAMP,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    confirmed_at          TIMESTAMPTZ,
+    rejected_at           TIMESTAMPTZ,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
@@ -466,8 +466,8 @@ CREATE TABLE posts (
     team_id               INTEGER NOT NULL DEFAULT 2,
     is_private            BOOLEAN DEFAULT false,
     class                 INTEGER DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edit_at               TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edit_at               TIMESTAMPTZ
 );
 
 -- 主题表
@@ -485,8 +485,8 @@ CREATE TABLE threads (
     type                  INTEGER DEFAULT 0,
     category              INTEGER DEFAULT 0,
     is_private            BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    edit_at               TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    edit_at               TIMESTAMPTZ
 );
 
 -- 草稿帖子表
@@ -500,7 +500,7 @@ CREATE TABLE draft_posts (
     team_id               INTEGER NOT NULL DEFAULT 2,
     is_private            BOOLEAN DEFAULT false,
     family_id             INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 草稿主题表
@@ -517,7 +517,7 @@ CREATE TABLE draft_threads (
     is_private            BOOLEAN DEFAULT false,
     family_id             INTEGER DEFAULT 0,
     category              INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 阅读记录表
@@ -525,7 +525,7 @@ CREATE TABLE reads (
     id                    SERIAL PRIMARY KEY,
     user_id               INTEGER,
     thread_id             INTEGER REFERENCES threads(id),
-    read_at               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    read_at               TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 主题批准表
@@ -535,7 +535,7 @@ CREATE TABLE thread_approved (
     project_id            INTEGER NOT NULL REFERENCES projects(id),
     thread_id             INTEGER NOT NULL REFERENCES threads(id),
     user_id               INTEGER NOT NULL REFERENCES users(id),
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- ============================================
@@ -552,7 +552,7 @@ CREATE TABLE invitations (
     invite_word           TEXT,
     status                INTEGER,
     author_user_id        INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 邀请回复表
@@ -562,7 +562,7 @@ CREATE TABLE invitation_replies (
     invitation_id         INTEGER,
     user_id               INTEGER,
     reply_word            TEXT NOT NULL,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 接受对象表
@@ -571,7 +571,7 @@ CREATE TABLE accept_objects (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     object_type           INTEGER DEFAULT 0,
     object_id             INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 接受通知表
@@ -584,8 +584,8 @@ CREATE TABLE accept_notifications (
     content               TEXT,
     accept_object_id      INTEGER REFERENCES accept_objects(id),
     class                 INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 接受记录表
@@ -595,10 +595,10 @@ CREATE TABLE acceptances (
     accept_object_id      INTEGER,
     x_accept              BOOLEAN DEFAULT false,
     x_user_id             INTEGER,
-    x_accepted_at         TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    x_accepted_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     y_accept              BOOLEAN DEFAULT false,
     y_user_id             INTEGER DEFAULT 0,
-    y_accepted_at         TIMESTAMP
+    y_accepted_at         TIMESTAMPTZ
 );
 
 -- 新通知计数表
@@ -626,8 +626,8 @@ CREATE TABLE family_member_sign_ins (
     place_id              INTEGER DEFAULT 0,
     status                INTEGER DEFAULT 0,
     is_adopted            BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 家庭成员签到回复表
@@ -637,7 +637,7 @@ CREATE TABLE family_member_sign_in_replies (
     sign_in_id            INTEGER,
     user_id               INTEGER,
     is_confirm            BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 家庭成员签出表
@@ -654,8 +654,8 @@ CREATE TABLE family_member_sign_outs (
     status                INTEGER DEFAULT 0,
     is_adopted            BOOLEAN DEFAULT false,
     author_user_id        INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 团队成员角色通知表
@@ -670,8 +670,8 @@ CREATE TABLE team_member_role_notices (
     title                 VARCHAR(64),
     content               TEXT,
     status                INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 团队成员辞职表
@@ -687,8 +687,8 @@ CREATE TABLE team_member_resignations (
     title                 VARCHAR(255),
     content               TEXT,
     status                SMALLINT,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 成员申请表
@@ -699,8 +699,8 @@ CREATE TABLE member_applications (
     user_id               INTEGER,
     content               TEXT,
     status                SMALLINT NOT NULL DEFAULT 0,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 成员申请回复表
@@ -712,8 +712,8 @@ CREATE TABLE member_application_replies (
     user_id               INTEGER,
     reply_content         VARCHAR(255),
     status                SMALLINT NOT NULL DEFAULT 0,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- ============================================
@@ -750,8 +750,8 @@ CREATE TABLE goods (
     manufacturer_url      VARCHAR(255),
     engine_type           VARCHAR(255),
     purchase_url          VARCHAR(255),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 团队物资表
@@ -761,8 +761,8 @@ CREATE TABLE goods_teams (
     team_id               INTEGER,
     goods_id              INTEGER,
     availability          INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 用户物资表
@@ -771,7 +771,7 @@ CREATE TABLE goods_users (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER,
     goods_id              INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 家庭物资表
@@ -781,8 +781,8 @@ CREATE TABLE goods_families (
     family_id             INTEGER,
     goods_id              INTEGER,
     availability          INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 项目物资表
@@ -798,9 +798,9 @@ CREATE TABLE goods_projects (
     category              INTEGER NOT NULL DEFAULT 1,
     status                INTEGER NOT NULL DEFAULT 0,
     notes                 TEXT,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 项目物资准备状态表
@@ -811,8 +811,8 @@ CREATE TABLE goods_project_readiness (
     is_ready              BOOLEAN NOT NULL DEFAULT FALSE,
     user_id               INTEGER NOT NULL,
     notes                 TEXT,
-    created_at            TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    updated_at            TIMESTAMP WITH TIME ZONE
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at            TIMESTAMPTZ
 );
 
 -- ============================================
@@ -831,9 +831,9 @@ CREATE TABLE skills (
     difficulty_level      INTEGER NOT NULL DEFAULT 3,
     category              INTEGER NOT NULL DEFAULT 2,
     level                 INTEGER NOT NULL DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 用户技能记录表
@@ -844,9 +844,9 @@ CREATE TABLE skill_users (
     user_id               INTEGER REFERENCES users(id),
     level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
     status                INTEGER NOT NULL DEFAULT 2,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 团队技能记录表
@@ -857,9 +857,9 @@ CREATE TABLE skill_teams (
     team_id               INTEGER REFERENCES teams(id),
     level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
     status                INTEGER NOT NULL DEFAULT 2,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 法力表
@@ -874,9 +874,9 @@ CREATE TABLE magics (
     difficulty_level      INTEGER NOT NULL DEFAULT 3,
     category              INTEGER NOT NULL DEFAULT 1,
     level                 INTEGER NOT NULL DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 用户法力记录表
@@ -887,9 +887,9 @@ CREATE TABLE magic_users (
     user_id               INTEGER REFERENCES users(id),
     level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
     status                INTEGER NOT NULL DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 团队法力记录表
@@ -900,9 +900,9 @@ CREATE TABLE magic_teams (
     team_id               INTEGER REFERENCES teams(id),
     level                 INTEGER NOT NULL CHECK (level >= 1 AND level <= 9),
     status                INTEGER NOT NULL DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- ============================================
@@ -924,11 +924,11 @@ CREATE TABLE tea_orders (
     is_approved           BOOLEAN NOT NULL DEFAULT FALSE,
     approver_user_id      INTEGER REFERENCES users(id),
     approval_rejection_reason TEXT NOT NULL DEFAULT '-',
-    approved_at            TIMESTAMP,
+    approved_at            TIMESTAMPTZ,
     final_score             INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 见证日志表
@@ -940,7 +940,7 @@ CREATE TABLE witness_logs (
     reason        TEXT NOT NULL,
     witness_id    INTEGER NOT NULL REFERENCES users(id),
     evidence_id   INTEGER DEFAULT 0,
-    witness_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    witness_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 
@@ -963,9 +963,9 @@ CREATE TABLE handicrafts (
     magic_difficulty      INTEGER NOT NULL DEFAULT 3,
     contributor_count     INTEGER DEFAULT 0,
     final_score            INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 -- 手工艺评分表
 CREATE TABLE handicraft_ratings (
@@ -975,7 +975,7 @@ CREATE TABLE handicraft_ratings (
     rater_user_id   INTEGER NOT NULL REFERENCES users(id),  -- 评分员ID
     raw_score       INTEGER NOT NULL CHECK (raw_score >= 0 AND raw_score <= 100),
     comment         TEXT,      -- 评分备注（可选）
-    created_at      TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(handicraft_id, rater_user_id)  -- 防止同一人重复评分
 );
 -- 手工艺协助者表
@@ -985,8 +985,8 @@ CREATE TABLE handicraft_contributors (
     handicraft_id         INTEGER REFERENCES handicrafts(id),
     user_id               INTEGER REFERENCES users(id),
     contribution_rate     INTEGER DEFAULT 50,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 手工艺技能关联表
@@ -995,9 +995,9 @@ CREATE TABLE handicraft_skills (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     handicraft_id         INTEGER REFERENCES handicrafts(id),
     skill_id              INTEGER REFERENCES skills(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 手工艺法力关联表
@@ -1006,9 +1006,9 @@ CREATE TABLE handicraft_magics (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     handicraft_id         INTEGER REFERENCES handicrafts(id),
     magic_id              INTEGER REFERENCES magics(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 开工仪式表
@@ -1021,8 +1021,8 @@ CREATE TABLE inaugurations (
     recorder_user_id      INTEGER REFERENCES users(id),
     evidence_id           INTEGER DEFAULT 0,
     status                INTEGER NOT NULL DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 过程记录表
@@ -1035,9 +1035,9 @@ CREATE TABLE process_records (
     recorder_user_id      INTEGER REFERENCES users(id),
     evidence_id           INTEGER DEFAULT 0,
     status                INTEGER NOT NULL DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 结束仪式表
@@ -1050,8 +1050,8 @@ CREATE TABLE endings (
     recorder_user_id      INTEGER REFERENCES users(id),
     evidence_id           INTEGER DEFAULT 0,
     status                INTEGER NOT NULL DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- ============================================
@@ -1076,9 +1076,9 @@ CREATE TABLE evidences (
     height                INTEGER DEFAULT 0,
     duration              INTEGER DEFAULT 0,
     visibility            INTEGER NOT NULL DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 手工艺凭据关联表
@@ -1088,9 +1088,9 @@ CREATE TABLE handicraft_evidences (
     handicraft_id         INTEGER NOT NULL REFERENCES handicrafts(id),
     evidence_id           INTEGER NOT NULL REFERENCES evidences(id),
     note                  TEXT,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- ============================================
@@ -1116,8 +1116,8 @@ CREATE TABLE environments (
     dust                  INTEGER,
     odor                  INTEGER,
     visibility            INTEGER,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 隐患表
@@ -1132,8 +1132,8 @@ CREATE TABLE hazards (
     source                VARCHAR(255),
     severity              INTEGER NOT NULL DEFAULT 1,
     category              INTEGER NOT NULL DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 风险表
@@ -1147,8 +1147,8 @@ CREATE TABLE risks (
     description           TEXT,
     source                VARCHAR(255),
     severity              INTEGER NOT NULL DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 安全措施表
@@ -1161,10 +1161,10 @@ CREATE TABLE safety_measures (
     description           TEXT,
     priority              INTEGER NOT NULL DEFAULT 3,
     status                INTEGER NOT NULL DEFAULT 1,
-    planned_date          TIMESTAMP,
-    completed_date        TIMESTAMP,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    planned_date          TIMESTAMPTZ,
+    completed_date        TIMESTAMPTZ,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 安全防护表
@@ -1179,10 +1179,10 @@ CREATE TABLE safety_protections (
     priority              INTEGER NOT NULL DEFAULT 3,
     status                INTEGER NOT NULL DEFAULT 1,
     equipment             VARCHAR(255),
-    planned_date          TIMESTAMP,
-    completed_date        TIMESTAMP,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    planned_date          TIMESTAMPTZ,
+    completed_date        TIMESTAMPTZ,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- ============================================
@@ -1198,8 +1198,8 @@ CREATE TABLE see_seeks (
     description           TEXT,
     place_id              INTEGER,
     project_id            INTEGER,
-    start_time            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    end_time              TIMESTAMP DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
+    start_time            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    end_time              TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
     payer_user_id         INTEGER,
     payer_team_id         INTEGER,
     payer_family_id       INTEGER,
@@ -1212,8 +1212,8 @@ CREATE TABLE see_seeks (
     category              INTEGER DEFAULT 0,
     status                INTEGER DEFAULT 0,
     step                  INTEGER DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看环境关联表
@@ -1222,8 +1222,8 @@ CREATE TABLE see_seek_environments (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     see_seek_id           INTEGER REFERENCES see_seeks(id),
     environment_id        INTEGER REFERENCES environments(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看隐患关联表
@@ -1232,8 +1232,8 @@ CREATE TABLE see_seek_hazards (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     see_seek_id           INTEGER REFERENCES see_seeks(id),
     hazard_id             INTEGER REFERENCES hazards(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看风险关联表
@@ -1242,8 +1242,8 @@ CREATE TABLE see_seek_risks (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     see_seek_id           INTEGER REFERENCES see_seeks(id),
     risk_id               INTEGER REFERENCES risks(id),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看-看表
@@ -1259,8 +1259,8 @@ CREATE TABLE see_seek_looks (
     is_graze              BOOLEAN DEFAULT false,
     color                 VARCHAR(255),
     is_change             BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看-听表
@@ -1272,8 +1272,8 @@ CREATE TABLE see_seek_listens (
     status                INTEGER DEFAULT 0,
     sound                 TEXT,
     is_abnormal           BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看-闻表
@@ -1285,8 +1285,8 @@ CREATE TABLE see_seek_smells (
     status                INTEGER DEFAULT 0,
     odour                 TEXT,
     is_foul_odour         BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看-摸表
@@ -1302,8 +1302,8 @@ CREATE TABLE see_seek_touches (
     is_stiff              BOOLEAN DEFAULT false,
     shake                 VARCHAR(255),
     is_shake              BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看检查报告表
@@ -1323,11 +1323,11 @@ CREATE TABLE see_seek_examination_reports (
     report_content        TEXT,
     master_user_id        INTEGER,
     reviewer_user_id      INTEGER,
-    report_date           TIMESTAMP,
+    report_date           TIMESTAMPTZ,
     attachment            TEXT,
     tags                  VARCHAR(255),
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看检查项目表
@@ -1347,8 +1347,8 @@ CREATE TABLE see_seek_examination_items (
     method                VARCHAR(255),
     operator              VARCHAR(255),
     status                INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 看看凭据关联表
@@ -1358,9 +1358,9 @@ CREATE TABLE see_seek_look_evidences (
     see_seek_id           INTEGER NOT NULL REFERENCES see_seeks(id),
     evidence_id           INTEGER NOT NULL REFERENCES evidences(id),
     note                  TEXT,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- ============================================
@@ -1375,9 +1375,9 @@ CREATE TABLE message_boxes (
     object_id             INTEGER NOT NULL, -- 家庭id或团队id
     count                 INTEGER DEFAULT 0,
     max_count             INTEGER DEFAULT 199,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 消息表
@@ -1391,9 +1391,9 @@ CREATE TABLE messages (
     receiver_id           INTEGER DEFAULT 0, -- 接收者id
     content               TEXT NOT NULL,
     is_read               BOOLEAN DEFAULT false,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP,
-    deleted_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 消息盒子相关索引
@@ -1428,8 +1428,8 @@ CREATE TABLE brain_fires (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     project_id            INTEGER NOT NULL,
-    start_time            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    end_time              TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
+    start_time            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_time              TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP + INTERVAL '1 hour',
     environment_id        INTEGER,
     title                 VARCHAR(255) NOT NULL,
     inference             TEXT,
@@ -1447,8 +1447,8 @@ CREATE TABLE brain_fires (
     status                INTEGER DEFAULT 1,
     brain_fire_class      INTEGER DEFAULT 1,
     brain_fire_type       INTEGER DEFAULT 1,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 建议表
@@ -1461,8 +1461,8 @@ CREATE TABLE suggestions (
     body                  TEXT NOT NULL,
     category              INTEGER DEFAULT 0,
     status                INTEGER DEFAULT 0,
-    created_at            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ
 );
 
 -- 足迹表
@@ -1475,7 +1475,7 @@ CREATE TABLE footprints (
     team_type             SMALLINT,
     content               TEXT,
     content_id            INTEGER,
-    created_at            TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 警示词表
