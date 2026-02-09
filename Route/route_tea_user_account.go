@@ -667,7 +667,7 @@ func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_pending_transfer_ins")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_pending_transfers")
 }
 
 // GetTeaUserInPendingFromUserTransfersAPI 获取用户待确认的,来自用户转账列表API
@@ -870,7 +870,7 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_transfer_ins")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_pending_transfers")
 }
 
 // GetTeaUserToUserExpiredTransfersAPI 获取用户对用户超时转出记录
@@ -1133,7 +1133,7 @@ func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_completed_transfer_ins")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_completed_transfers")
 }
 
 // HandleTeaUserFromTeamCompletedTransferIns 获取用户已经确认,来自团队转入记录页面请求 - 收入记录（仅已完成）
@@ -1902,7 +1902,7 @@ func GetUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_completed_transfer_outs")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_completed_transfers")
 }
 
 // GetTeaUserToTeamCompletedTransfersAPI 获取用户对团队转出已完成记录列表API(仅已完成状态)
@@ -2074,11 +2074,11 @@ func HandleTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetUserToUserExpiredTransfers(w, r)
+	GetTeaUserToUserExpiredTransfers(w, r)
 }
 
-// GetUserToUserExpiredTransfers 获取用户对用户转出已超时记录页面
-func GetUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserToUserExpiredTransfers 获取用户对用户转出已超时记录页面
+func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -2121,8 +2121,6 @@ func GetUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	// 增强转账数据，添加用户信息和状态显示
 	type EnhancedTransferOut struct {
 		dao.TeaUserToUserTransferOut
-		FromUserName  string
-		ToUserName    string
 		StatusDisplay string
 		AmountDisplay string
 	}
@@ -2133,17 +2131,7 @@ func GetUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 			TeaUserToUserTransferOut: transfer,
 		}
 
-		// 获取发送方用户信息
-		fromUser, _ := dao.GetUser(transfer.FromUserId)
-		if fromUser.Id > 0 {
-			enhanced.FromUserName = fromUser.Name
-		}
-
-		// 获取接收方用户信息
-		toUser, _ := dao.GetUser(transfer.ToUserId)
-		if toUser.Id > 0 {
-			enhanced.ToUserName = toUser.Name
-		}
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
 		// 添加状态显示（只有已超时状态）
 		enhanced.StatusDisplay = "已超时"
@@ -2182,7 +2170,7 @@ func GetUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.expired_transfer_outs")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_expired_transfers")
 }
 
 // HandleTeaUserToTeamExpiredTransfers 获取用户对团队转出已超时记录列表页面(仅已超时状态)
