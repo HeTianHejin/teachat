@@ -1,0 +1,209 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的星茶罐</a></li>
+  <li class="active">来自用户的收入 - 已超时</li>
+</ol>
+
+<div class="container">
+    <!-- 收入类型导航 -->
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs">
+                <li class="active">
+                    <a href="/v1/tea/user/transfers/in/user_from_user/expired/page">
+                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+                        来自其他用户
+                    </a>
+                </li>
+                <li>
+                    <a href="/v1/tea/user/transfers/in/user_from_team/expired/page">
+                        <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
+                        来自团队
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-danger">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                        来自其他用户的收入 - 已超时
+                        <span class="pull-right">
+                            <small>已超时的转入，星茶已退回转出方账户</small>
+                        </span>
+                    </h3>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h5>账户余额（毫克）: <strong>{{ .BalanceDisplay }}</strong></h5>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>锁定余额（毫克）: <strong>{{ .LockedBalanceDisplay }}</strong></h5>
+                        </div>
+                        <div class="col-md-4">
+                            <h5>可用余额（毫克）: <strong>{{ .AvailableBalanceDisplay }}</strong></h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
+                        已超时收入记录列表
+                        <span class="pull-right">
+                            <a href="/v1/tea/user/transfers/in/user_from_user/pending/page" class="btn btn-warning btn-xs">
+                                <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                查看待确认转入
+                            </a>
+                            <a href="/v1/tea/user/transfers/in/user_from_user/completed/page" class="btn btn-success btn-xs">
+                                <span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span>
+                                查看已完成收入
+                            </a>
+                        </span>
+                    </h4>
+                </div>
+                <div class="panel-body">
+                    {{ if .Transfers }}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>转出方</th>
+                                    <th>金额（毫克）</th>
+                                    <th>状态</th>
+                                    <th>备注</th>
+                                    <th>过期时间</th>
+                                    <th>记录创建时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ range .Transfers }}
+                                <tr>
+                                    <td>
+                                        <span class="label label-info">个人</span>
+                                        <strong>{{ .FromUserName }}</strong>
+                                        <br><small class="text-muted">ID: {{ .FromUserId }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">
+                                            <strong>{{ .AmountDisplay }}</strong>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="label label-danger">{{ .StatusDisplay }}</span>
+                                    </td>
+                                    <td>
+                                        {{ if .Notes }}
+                                            <small>{{ .Notes }}</small>
+                                        {{ else }}
+                                            <small class="text-muted">无备注</small>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        <small>{{ .ExpiresAt.Format "2006-01-02 15:04" }}</small>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ .CreatedAt.Format "2006-01-02 15:04" }}</small>
+                                    </td>
+                                </tr>
+                                {{ end }}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页导航 -->
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination">
+                            {{ if gt .CurrentPage 1 }}
+                            <li>
+                                <a href="?page={{ subtract .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo; 上一页</span>
+                                </a>
+                            </li>
+                            {{ else }}
+                            <li class="disabled">
+                                <a href="#" aria-label="Previous">
+                                    <span aria-hidden="true">&laquo; 上一页</span>
+                                </a>
+                            </li>
+                            {{ end }}
+
+                            {{ $currentPage := .CurrentPage }}
+                            {{ $startPage := max 1 (subtract $currentPage 2) }}
+                            {{ $endPage := add $startPage 4 }}
+                            
+                            {{ range $i := seq $startPage $endPage }}
+                                {{ if eq $i $currentPage }}
+                                <li class="active"><a href="?page={{ $i }}&limit={{ $.Limit }}">{{ $i }}</a></li>
+                                {{ else }}
+                                <li><a href="?page={{ $i }}&limit={{ $.Limit }}">{{ $i }}</a></li>
+                                {{ end }}
+                            {{ end }}
+
+                            <li>
+                                <a href="?page={{ add .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="Next">
+                                    <span aria-hidden="true">下一页 &raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+
+                    {{ else }}
+                    <div class="alert alert-info" role="alert">
+                        <h4>
+                            <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
+                            暂无已超时收入记录
+                        </h4>
+                        <p>您还没有任何已超时的来自其他用户的星茶转入记录。</p>
+                        <p>
+                            <a href="/v1/tea/user/account/page" class="btn btn-primary">
+                                <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                返回星茶罐
+                            </a>
+                            <a href="/v1/tea/user/transfers/in/user_from_user/pending/page" class="btn btn-warning">
+                                <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                                查看待确认转入
+                            </a>
+                            <a href="/v1/tea/user/transfers/in/user_from_user/completed/page" class="btn btn-success">
+                                <span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span>
+                                查看已完成收入
+                            </a>
+                        </p>
+                    </div>
+                    {{ end }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 操作按钮 -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="btn-group">
+                <a href="/v1/tea/user/account/page" class="btn btn-default">
+                    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                    返回星茶罐
+                </a>
+                <a href="/v1/tea/user/transfers/in/user_from_team/expired/page" class="btn btn-success">
+                    <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
+                    查看团队超时收入
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ end }}

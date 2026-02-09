@@ -1193,6 +1193,160 @@ func TeaUserFromTeamCompletedTransferIns(user_id int, page, limit int) ([]TeaUse
 	return transfers, nil
 }
 
+// 获取用户来自用户已超时的转入记录（仅已超时状态）
+// 注意：根据转账流程，超时未接收的记录不会创建到 tea.user_from_user_transfer_in 表
+// 需要从 tea.user_to_user_transfer_out 表中查询，根据 to_user_id 和 status = expired 获取
+func TeaUserFromUserExpiredTransferIns(user_id int, page, limit int) ([]TeaUserToUserTransferOut, error) {
+	rows, err := DB.Query(`
+		SELECT id, uuid, from_user_id, from_user_name, to_user_id, to_user_name,
+		       amount_milligrams, notes, status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
+		FROM tea.user_to_user_transfer_out
+		WHERE to_user_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, user_id, TeaTransferStatusExpired, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询用户来自用户已超时转入记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaUserToUserTransferOut{}
+	for rows.Next() {
+		var transfer TeaUserToUserTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid,
+			&transfer.FromUserId, &transfer.FromUserName,
+			&transfer.ToUserId, &transfer.ToUserName,
+			&transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.Status,
+			&transfer.BalanceAfterTransfer,
+			&transfer.CreatedAt, &transfer.ExpiresAt,
+			&transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("扫描用户来自用户已超时转入记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("遍历用户来自用户已超时转入记录失败: %v", err)
+	}
+	return transfers, nil
+}
+
+// 获取用户来自团队已超时的转入记录（仅已超时状态）
+// 注意：根据转账流程，超时未接收的记录不会创建到 tea.user_from_team_transfer_in 表
+// 需要从 tea.team_to_user_transfer_out 表中查询，根据 to_user_id 和 status = expired 获取
+func TeaUserFromTeamExpiredTransferIns(user_id int, page, limit int) ([]TeaTeamToUserTransferOut, error) {
+	rows, err := DB.Query(`
+		SELECT id, uuid, from_team_id, from_team_name, to_user_id, to_user_name,
+		       initiator_user_id, amount_milligrams, notes, is_only_one_member_team,
+		       is_approved, approver_user_id, approval_rejection_reason, approved_at,
+		       status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
+		FROM tea.team_to_user_transfer_out
+		WHERE to_user_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, user_id, TeaTransferStatusExpired, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询用户来自团队已超时转入记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaTeamToUserTransferOut{}
+	for rows.Next() {
+		var transfer TeaTeamToUserTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid,
+			&transfer.FromTeamId, &transfer.FromTeamName,
+			&transfer.ToUserId, &transfer.ToUserName,
+			&transfer.InitiatorUserId, &transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.IsOnlyOneMemberTeam, &transfer.IsApproved, &transfer.ApproverUserId,
+			&transfer.ApprovalRejectionReason, &transfer.ApprovedAt,
+			&transfer.Status, &transfer.BalanceAfterTransfer,
+			&transfer.CreatedAt, &transfer.ExpiresAt,
+			&transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("扫描用户来自团队已超时转入记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("遍历用户来自团队已超时转入记录失败: %v", err)
+	}
+	return transfers, nil
+}
+
+// 获取用户来自用户已被拒绝的转入记录（仅rejected状态）
+func TeaUserFromUserRejectedTransferIns(user_id int, page, limit int) ([]TeaUserFromUserTransferIn, error) {
+	rows, err := DB.Query(`
+		SELECT id, uuid, user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name,
+		       amount_milligrams, notes, balance_after_receipt, status, is_confirmed, 
+		       operational_user_id, rejection_reason, expires_at, created_at
+		FROM tea.user_from_user_transfer_in
+		WHERE to_user_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, user_id, TeaTransferStatusRejected, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询用户来自用户已被拒绝转入记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaUserFromUserTransferIn{}
+	for rows.Next() {
+		var transfer TeaUserFromUserTransferIn
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.UserToUserTransferOutId,
+			&transfer.ToUserId, &transfer.ToUserName, &transfer.FromUserId, &transfer.FromUserName,
+			&transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.BalanceAfterReceipt,
+			&transfer.Status,
+			&transfer.IsConfirmed,
+			&transfer.OperationalUserId,
+			&transfer.RejectionReason,
+			&transfer.ExpiresAt,
+			&transfer.CreatedAt); err != nil {
+			return nil, fmt.Errorf("扫描用户来自用户已被拒绝转入记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("遍历用户来自用户已被拒绝转入记录失败: %v", err)
+	}
+	return transfers, nil
+}
+
+// 获取用户来自团队已被拒绝的转入记录（仅rejected状态）
+func TeaUserFromTeamRejectedTransferIns(user_id int, page, limit int) ([]TeaUserFromTeamTransferIn, error) {
+	rows, err := DB.Query(`
+		SELECT id, uuid, team_to_user_transfer_out_id, to_user_id, to_user_name, from_team_id, from_team_name,
+		       amount_milligrams, notes, balance_after_receipt, status, is_confirmed, 
+		       rejection_reason, expires_at, created_at
+		FROM tea.user_from_team_transfer_in
+		WHERE to_user_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, user_id, TeaTransferStatusRejected, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询用户来自团队已被拒绝转入记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaUserFromTeamTransferIn{}
+	for rows.Next() {
+		var transfer TeaUserFromTeamTransferIn
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid,
+			&transfer.TeamToUserTransferOutId,
+			&transfer.ToUserId, &transfer.ToUserName,
+			&transfer.FromTeamId, &transfer.FromTeamName,
+			&transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.BalanceAfterReceipt,
+			&transfer.Status,
+			&transfer.IsConfirmed,
+			&transfer.RejectionReason,
+			&transfer.ExpiresAt,
+			&transfer.CreatedAt); err != nil {
+			return nil, fmt.Errorf("扫描用户来自团队已被拒绝转入记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("遍历用户来自团队已被拒绝转入记录失败: %v", err)
+	}
+	return transfers, nil
+}
+
 // TeaUserRejectFromUserTransferIn 某个用户,拒绝接收,来自其他用户转账
 func TeaUserRejectFromUserTransferIn(transferUuid string, toUserId int, reason string) error {
 	tx, err := DB.Begin()
@@ -1343,83 +1497,6 @@ func TeaUserRejectFromTeamTransferIn(transferUuid string, toUserId int, reason s
 	}
 
 	return nil
-}
-
-// 获取某个用户,已经拒绝,来自用户转入记录（已拒绝状态）
-func TeaUserFromUserRejectedTransferIns(toUserId int, page, limit int) ([]TeaUserFromUserTransferIn, error) {
-	rows, err := DB.Query(`
-		SELECT id, uuid, user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name,
-		       amount_milligrams, notes, balance_after_receipt, status, is_confirmed,
-		       operational_user_id, rejection_reason, expires_at, created_at
-		FROM tea.user_from_user_transfer_in
-		WHERE to_user_id = $1 AND status = $2
-		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4`, toUserId, TeaTransferStatusRejected, limit, (page-1)*limit)
-	if err != nil {
-		return nil, fmt.Errorf("查询用户对用户已拒绝转入记录失败: %v", err)
-	}
-	defer rows.Close()
-
-	transfers := []TeaUserFromUserTransferIn{}
-	for rows.Next() {
-		var transfer TeaUserFromUserTransferIn
-		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.UserToUserTransferOutId,
-			&transfer.ToUserId, &transfer.ToUserName, &transfer.FromUserId, &transfer.FromUserName,
-			&transfer.AmountMilligrams, &transfer.Notes,
-			&transfer.BalanceAfterReceipt,
-			&transfer.Status,
-			&transfer.IsConfirmed,
-			&transfer.OperationalUserId,
-			&transfer.RejectionReason,
-			&transfer.ExpiresAt,
-			&transfer.CreatedAt); err != nil {
-			return nil, fmt.Errorf("扫描用户对用户已拒绝转入记录失败: %v", err)
-		}
-		transfers = append(transfers, transfer)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("遍历用户对用户已拒绝转入记录失败: %v", err)
-	}
-	return transfers, nil
-}
-
-// 获取某个用户,已经拒绝,来自团队转入记录（已拒绝状态）
-func TeaUserRejectedTeamToUserTransferIns(to_user_id int, page, limit int) ([]TeaUserFromTeamTransferIn, error) {
-	rows, err := DB.Query(`
-		SELECT id, uuid, team_to_user_transfer_out_id, to_user_id, to_user_name, from_team_id, from_team_name,
-		       amount_milligrams, notes, balance_after_receipt, status, is_confirmed,
-		       rejection_reason, expires_at, created_at
-		FROM tea.user_from_team_transfer_in
-		WHERE to_user_id = $1 AND status = $2
-		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4`, to_user_id, TeaTransferStatusRejected, limit, (page-1)*limit)
-	if err != nil {
-		return nil, fmt.Errorf("查询用户来自团队已拒绝转入记录失败: %v", err)
-	}
-	defer rows.Close()
-
-	transfers := []TeaUserFromTeamTransferIn{}
-	for rows.Next() {
-		var transfer TeaUserFromTeamTransferIn
-		if err := rows.Scan(&transfer.Id, &transfer.Uuid,
-			&transfer.TeamToUserTransferOutId,
-			&transfer.ToUserId, &transfer.ToUserName,
-			&transfer.FromTeamId, &transfer.FromTeamName,
-			&transfer.AmountMilligrams, &transfer.Notes,
-			&transfer.BalanceAfterReceipt,
-			&transfer.Status,
-			&transfer.IsConfirmed,
-			&transfer.RejectionReason,
-			&transfer.ExpiresAt,
-			&transfer.CreatedAt); err != nil {
-			return nil, fmt.Errorf("扫描用户来自团队已拒绝转入记录失败: %v", err)
-		}
-		transfers = append(transfers, transfer)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("遍历用户来自团队已拒绝转入记录失败: %v", err)
-	}
-	return transfers, nil
 }
 
 // 获取用户对用户转出已经过期记录

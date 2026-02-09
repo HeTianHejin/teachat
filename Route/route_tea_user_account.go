@@ -72,6 +72,22 @@ type UserFromUserTransferInResponse struct {
 	CreatedAt         string `json:"created_at"`
 }
 
+// 用户来自用户超时转账接收响应结构体（从转出表查询）
+type UserFromUserExpiredTransferInResponse struct {
+	Uuid                 string  `json:"uuid"`
+	FromUserId           int     `json:"from_user_id"`
+	FromUserName         string  `json:"from_user_name"`
+	ToUserId             int     `json:"to_user_id"`
+	ToUserName           string  `json:"to_user_name"`
+	AmountMilligrams     int64   `json:"amount_milligrams"`
+	BalanceAfterTransfer int64   `json:"balance_after_transfer"`
+	Status               string  `json:"status"`
+	Notes                string  `json:"notes"`
+	PaymentTime          *string `json:"payment_time,omitempty"`
+	ExpiresAt            string  `json:"expires_at"`
+	CreatedAt            string  `json:"created_at"`
+}
+
 // 用户来自团队转账接收响应结构体
 type UserFromTeamTransferInResponse struct {
 	Uuid                    string `json:"uuid"`
@@ -89,6 +105,22 @@ type UserFromTeamTransferInResponse struct {
 	RejectionReason string `json:"rejection_reason,omitempty"`
 	ExpiresAt       string `json:"expires_at"`
 	CreatedAt       string `json:"created_at"`
+}
+
+// 用户来自团队超时转账接收响应结构体（从转出表查询）
+type UserFromTeamExpiredTransferInResponse struct {
+	Uuid                 string  `json:"uuid"`
+	FromTeamId           int     `json:"from_team_id"`
+	FromTeamName         string  `json:"from_team_name"`
+	ToUserId             int     `json:"to_user_id"`
+	ToUserName           string  `json:"to_user_name"`
+	AmountMilligrams     int64   `json:"amount_milligrams"`
+	BalanceAfterTransfer int64   `json:"balance_after_transfer"`
+	Status               string  `json:"status"`
+	Notes                string  `json:"notes"`
+	PaymentTime          *string `json:"payment_time,omitempty"`
+	ExpiresAt            string  `json:"expires_at"`
+	CreatedAt            string  `json:"created_at"`
 }
 
 // 通用API响应结构体
@@ -1264,6 +1296,633 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	pageData.Limit = limit
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_completed_transfer_ins")
+}
+
+// HandleTeaUserFromUserExpiredTransferIns 用户接收来自用户转入已超时记录页面请求 - 收入记录（仅已超时）
+func HandleTeaUserFromUserExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	GetTeaUserFromUserExpiredTransferIns(w, r)
+}
+
+// GetTeaUserFromUserExpiredTransferIns 获取用户来自用户已超时转入记录页面
+func GetTeaUserFromUserExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 确保用户有星茶账户
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
+	if err != nil {
+		util.Debug("cannot ensure tea account exists", err)
+		report(w, s_u, "获取星茶账户失败。")
+		return
+	}
+
+	// 获取用户星茶账户
+	account, err := dao.GetTeaAccountByUserId(s_u.Id)
+	if err != nil {
+		util.Debug("cannot get tea account", err)
+		report(w, s_u, "获取星茶账户失败。")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取用户来自用户已超时的转入记录（仅已超时状态）
+	transfers, err := dao.TeaUserFromUserExpiredTransferIns(s_u.Id, page, limit)
+	if err != nil {
+		util.Debug("cannot get expired transfer ins", err)
+		report(w, s_u, "获取已超时收入记录失败。")
+		return
+	}
+
+	// 增强转账数据，添加用户信息和状态显示
+	type EnhancedTransferIn struct {
+		dao.TeaUserToUserTransferOut
+		StatusDisplay string
+		AmountDisplay string
+		IsExpired     bool
+	}
+
+	var enhancedTransfers []EnhancedTransferIn
+	for _, transfer := range transfers {
+		enhanced := EnhancedTransferIn{
+			TeaUserToUserTransferOut: transfer,
+		}
+
+		// 添加状态显示（只有已超时状态）
+		enhanced.StatusDisplay = "已超时"
+		// 金额显示
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
+
+		// 已超时记录标记为过期
+		enhanced.IsExpired = true
+
+		enhancedTransfers = append(enhancedTransfers, enhanced)
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser                dao.User
+		TeaAccount              dao.TeaUserAccount
+		Transfers               []EnhancedTransferIn
+		BalanceDisplay          string
+		LockedBalanceDisplay    string
+		AvailableBalanceDisplay string
+		StatusDisplay           string
+		CurrentPage             int
+		Limit                   int
+	}
+
+	pageData.SessUser = s_u
+	pageData.TeaAccount = account
+	pageData.Transfers = enhancedTransfers
+
+	// 状态显示
+	if account.Status == dao.TeaAccountStatus_Frozen {
+		if account.FrozenReason != "-" {
+			pageData.StatusDisplay = "已冻结 (" + account.FrozenReason + ")"
+		} else {
+			pageData.StatusDisplay = "已冻结"
+		}
+	} else {
+		pageData.StatusDisplay = "正常"
+	}
+
+	// 余额显示（仅数值，单位在模板标题栏显示）
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
+
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_expired_transfers")
+}
+
+// GetTeaUserFromUserExpiredTransfersAPI 获取用户来自用户已超时转入记录API
+func GetTeaUserFromUserExpiredTransfersAPI(w http.ResponseWriter, r *http.Request) {
+	// 验证用户登录
+	user, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
+	}
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+	// 获取用户来自用户已超时转入记录
+	transfers, err := dao.TeaUserFromUserExpiredTransferIns(user.Id, page, limit)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取已超时收入记录失败")
+		return
+	}
+	// 转换响应格式
+	var responses []UserFromUserExpiredTransferInResponse
+	for _, transfer := range transfers {
+		response := UserFromUserExpiredTransferInResponse{
+			Uuid:                 transfer.Uuid,
+			FromUserId:           transfer.FromUserId,
+			FromUserName:         transfer.FromUserName,
+			ToUserId:             transfer.ToUserId,
+			ToUserName:           transfer.ToUserName,
+			AmountMilligrams:     transfer.AmountMilligrams,
+			BalanceAfterTransfer: transfer.BalanceAfterTransfer,
+			Status:               transfer.Status,
+			Notes:                transfer.Notes,
+			ExpiresAt:            transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
+			CreatedAt:            transfer.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+		if transfer.PaymentTime != nil {
+			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
+			response.PaymentTime = &paymentTime
+		}
+		responses = append(responses, response)
+	}
+	respondWithPagination(w, "获取已超时收入记录成功", responses, page, limit, 0)
+}
+
+// HandleTeaUserFromTeamExpiredTransferIns 用户接收来自团队转入已超时记录页面请求 - 收入记录（仅已超时）
+func HandleTeaUserFromTeamExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	GetTeaUserFromTeamExpiredTransferIns(w, r)
+}
+
+// GetTeaUserFromTeamExpiredTransferIns 获取用户来自团队已超时转入记录页面
+func GetTeaUserFromTeamExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 确保用户有星茶账户
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
+	if err != nil {
+		util.Debug("cannot ensure tea account exists", err)
+		report(w, s_u, "获取星茶账户失败。")
+		return
+	}
+
+	// 获取用户星茶账户
+	account, err := dao.GetTeaAccountByUserId(s_u.Id)
+	if err != nil {
+		util.Debug("cannot get tea account", err)
+		report(w, s_u, "获取星茶账户失败。")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取用户来自团队已超时的转入记录（仅已超时状态）
+	transfers, err := dao.TeaUserFromTeamExpiredTransferIns(s_u.Id, page, limit)
+	if err != nil {
+		util.Debug("cannot get expired transfer ins from team", err)
+		report(w, s_u, "获取已超时收入记录失败。")
+		return
+	}
+
+	// 增强转账数据，添加用户信息和状态显示
+	type EnhancedTransferIn struct {
+		dao.TeaTeamToUserTransferOut
+		StatusDisplay string
+		AmountDisplay string
+		IsExpired     bool
+	}
+
+	var enhancedTransfers []EnhancedTransferIn
+	for _, transfer := range transfers {
+		enhanced := EnhancedTransferIn{
+			TeaTeamToUserTransferOut: transfer,
+		}
+
+		// 添加状态显示（只有已超时状态）
+		enhanced.StatusDisplay = "已超时"
+		// 金额显示
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
+
+		// 已超时记录标记为过期
+		enhanced.IsExpired = true
+
+		enhancedTransfers = append(enhancedTransfers, enhanced)
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser                dao.User
+		TeaAccount              dao.TeaUserAccount
+		Transfers               []EnhancedTransferIn
+		BalanceDisplay          string
+		LockedBalanceDisplay    string
+		AvailableBalanceDisplay string
+		StatusDisplay           string
+		CurrentPage             int
+		Limit                   int
+	}
+
+	pageData.SessUser = s_u
+	pageData.TeaAccount = account
+	pageData.Transfers = enhancedTransfers
+
+	// 状态显示
+	if account.Status == dao.TeaAccountStatus_Frozen {
+		if account.FrozenReason != "-" {
+			pageData.StatusDisplay = "已冻结 (" + account.FrozenReason + ")"
+		} else {
+			pageData.StatusDisplay = "已冻结"
+		}
+	} else {
+		pageData.StatusDisplay = "正常"
+	}
+
+	// 余额显示（仅数值，单位在模板标题栏显示）
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
+
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_expired_transfers")
+}
+
+// GetTeaUserFromTeamExpiredTransfersAPI 获取用户来自团队已超时转入记录API
+func GetTeaUserFromTeamExpiredTransfersAPI(w http.ResponseWriter, r *http.Request) {
+	// 验证用户登录
+	user, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
+	}
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+	// 获取用户来自团队已超时转入记录
+	transfers, err := dao.TeaUserFromTeamExpiredTransferIns(user.Id, page, limit)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取已超时收入记录失败")
+		return
+	}
+	// 转换响应格式
+	var responses []UserFromTeamExpiredTransferInResponse
+	for _, transfer := range transfers {
+		response := UserFromTeamExpiredTransferInResponse{
+			Uuid:                 transfer.Uuid,
+			FromTeamId:           transfer.FromTeamId,
+			FromTeamName:         transfer.FromTeamName,
+			ToUserId:             transfer.ToUserId,
+			ToUserName:           transfer.ToUserName,
+			AmountMilligrams:     transfer.AmountMilligrams,
+			BalanceAfterTransfer: transfer.BalanceAfterTransfer,
+			Status:               transfer.Status,
+			Notes:                transfer.Notes,
+			ExpiresAt:            transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
+			CreatedAt:            transfer.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+		if transfer.PaymentTime != nil {
+			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
+			response.PaymentTime = &paymentTime
+		}
+		responses = append(responses, response)
+	}
+	respondWithPagination(w, "获取已超时收入记录成功", responses, page, limit, 0)
+}
+
+// HandleTeaUserFromUserRejectedTransferIns 用户接收来自用户转入已被拒绝记录页面请求 - 收入记录（仅已被拒绝）
+func HandleTeaUserFromUserRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	GetTeaUserFromUserRejectedTransferIns(w, r)
+}
+
+// GetTeaUserFromUserRejectedTransferIns 获取用户来自用户已被拒绝转入记录页面
+func GetTeaUserFromUserRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 确保用户有星茶账户
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
+	if err != nil {
+		util.Debug("cannot ensure tea account exists", err)
+		report(w, s_u, "获取星茶账户失败。")
+		return
+	}
+
+	// 获取用户星茶账户
+	account, err := dao.GetTeaAccountByUserId(s_u.Id)
+	if err != nil {
+		util.Debug("cannot get tea account", err)
+		report(w, s_u, "获取星茶账户失败。")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取用户来自用户已被拒绝的转入记录（仅rejected状态）
+	transfers, err := dao.TeaUserFromUserRejectedTransferIns(s_u.Id, page, limit)
+	if err != nil {
+		util.Debug("cannot get rejected transfer ins", err)
+		report(w, s_u, "获取被拒绝收入记录失败。")
+		return
+	}
+
+	// 增强转账数据，添加用户信息和状态显示
+	type EnhancedTransferIn struct {
+		dao.TeaUserFromUserTransferIn
+		StatusDisplay string
+		AmountDisplay string
+		IsExpired     bool
+	}
+
+	var enhancedTransfers []EnhancedTransferIn
+	for _, transfer := range transfers {
+		enhanced := EnhancedTransferIn{
+			TeaUserFromUserTransferIn: transfer,
+		}
+
+		// 添加状态显示（只有已被拒绝状态）
+		enhanced.StatusDisplay = "已被拒绝"
+		// 金额显示
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
+
+		// 检查是否过期
+		expiresAtUTC := transfer.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+		enhanced.IsExpired = expiresAtUTC.Before(nowUTC)
+
+		enhancedTransfers = append(enhancedTransfers, enhanced)
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser                dao.User
+		TeaAccount              dao.TeaUserAccount
+		Transfers               []EnhancedTransferIn
+		BalanceDisplay          string
+		LockedBalanceDisplay    string
+		AvailableBalanceDisplay string
+		StatusDisplay           string
+		CurrentPage             int
+		Limit                   int
+	}
+
+	pageData.SessUser = s_u
+	pageData.TeaAccount = account
+	pageData.Transfers = enhancedTransfers
+
+	// 状态显示
+	if account.Status == dao.TeaAccountStatus_Frozen {
+		if account.FrozenReason != "-" {
+			pageData.StatusDisplay = "已冻结 (" + account.FrozenReason + ")"
+		} else {
+			pageData.StatusDisplay = "已冻结"
+		}
+	} else {
+		pageData.StatusDisplay = "正常"
+	}
+
+	// 余额显示（仅数值，单位在模板标题栏显示）
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
+
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_rejected_transfers")
+}
+
+// GetTeaUserFromUserRejectedTransfersAPI 获取用户来自用户已被拒绝转入记录API
+func GetTeaUserFromUserRejectedTransfersAPI(w http.ResponseWriter, r *http.Request) {
+	// 验证用户登录
+	user, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
+	}
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+	// 获取用户来自用户已被拒绝转入记录
+	transfers, err := dao.TeaUserFromUserRejectedTransferIns(user.Id, page, limit)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取被拒绝收入记录失败")
+		return
+	}
+	// 转换响应格式
+	var responses []UserFromUserTransferInResponse
+	for _, transfer := range transfers {
+		response := UserFromUserTransferInResponse{
+			Uuid:                    transfer.Uuid,
+			UserToUserTransferOutId: transfer.UserToUserTransferOutId,
+			FromUserId:              transfer.FromUserId,
+			FromUserName:            transfer.FromUserName,
+			ToUserId:                transfer.ToUserId,
+			ToUserName:              transfer.ToUserName,
+			AmountMilligrams:        transfer.AmountMilligrams,
+			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
+			Status:                  transfer.Status,
+			Notes:                   transfer.Notes,
+			IsConfirmed:             transfer.IsConfirmed,
+			OperationalUserId:       transfer.OperationalUserId,
+			RejectionReason:         transfer.RejectionReason,
+			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
+			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+		responses = append(responses, response)
+	}
+	respondWithPagination(w, "获取被拒绝收入记录成功", responses, page, limit, 0)
+}
+
+// HandleTeaUserFromTeamRejectedTransferIns 用户接收来自团队转入已被拒绝记录页面请求 - 收入记录（仅已被拒绝）
+func HandleTeaUserFromTeamRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	GetTeaUserFromTeamRejectedTransferIns(w, r)
+}
+
+// GetTeaUserFromTeamRejectedTransferIns 获取用户来自团队已被拒绝转入记录页面
+func GetTeaUserFromTeamRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+		return
+	}
+
+	// 确保用户有星茶账户
+	err = dao.TeaUserEnsureAccountExists(s_u.Id)
+	if err != nil {
+		util.Debug("cannot ensure tea account exists", err)
+		report(w, s_u, "获取星茶账户失败。")
+		return
+	}
+
+	// 获取用户星茶账户
+	account, err := dao.GetTeaAccountByUserId(s_u.Id)
+	if err != nil {
+		util.Debug("cannot get tea account", err)
+		report(w, s_u, "获取星茶账户失败。")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取用户来自团队已被拒绝的转入记录（仅rejected状态）
+	transfers, err := dao.TeaUserFromTeamRejectedTransferIns(s_u.Id, page, limit)
+	if err != nil {
+		util.Debug("cannot get rejected transfer ins from team", err)
+		report(w, s_u, "获取被拒绝收入记录失败。")
+		return
+	}
+
+	// 增强转账数据，添加用户信息和状态显示
+	type EnhancedTransferIn struct {
+		dao.TeaUserFromTeamTransferIn
+		StatusDisplay string
+		AmountDisplay string
+		IsExpired     bool
+	}
+
+	var enhancedTransfers []EnhancedTransferIn
+	for _, transfer := range transfers {
+		enhanced := EnhancedTransferIn{
+			TeaUserFromTeamTransferIn: transfer,
+		}
+
+		// 添加状态显示（只有已被拒绝状态）
+		enhanced.StatusDisplay = "已被拒绝"
+		// 金额显示
+		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
+
+		// 检查是否过期
+		expiresAtUTC := transfer.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+		enhanced.IsExpired = expiresAtUTC.Before(nowUTC)
+
+		enhancedTransfers = append(enhancedTransfers, enhanced)
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser                dao.User
+		TeaAccount              dao.TeaUserAccount
+		Transfers               []EnhancedTransferIn
+		BalanceDisplay          string
+		LockedBalanceDisplay    string
+		AvailableBalanceDisplay string
+		StatusDisplay           string
+		CurrentPage             int
+		Limit                   int
+	}
+
+	pageData.SessUser = s_u
+	pageData.TeaAccount = account
+	pageData.Transfers = enhancedTransfers
+
+	// 状态显示
+	if account.Status == dao.TeaAccountStatus_Frozen {
+		if account.FrozenReason != "-" {
+			pageData.StatusDisplay = "已冻结 (" + account.FrozenReason + ")"
+		} else {
+			pageData.StatusDisplay = "已冻结"
+		}
+	} else {
+		pageData.StatusDisplay = "正常"
+	}
+
+	// 余额显示（仅数值，单位在模板标题栏显示）
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
+
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_rejected_transfers")
+}
+
+// GetTeaUserFromTeamRejectedTransfersAPI 获取用户来自团队已被拒绝转入记录API
+func GetTeaUserFromTeamRejectedTransfersAPI(w http.ResponseWriter, r *http.Request) {
+	// 验证用户登录
+	user, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
+	}
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+	// 获取用户来自团队已被拒绝转入记录
+	transfers, err := dao.TeaUserFromTeamRejectedTransferIns(user.Id, page, limit)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取被拒绝收入记录失败")
+		return
+	}
+	// 转换响应格式
+	var responses []UserFromTeamTransferInResponse
+	for _, transfer := range transfers {
+		response := UserFromTeamTransferInResponse{
+			Uuid:                    transfer.Uuid,
+			TeamToUserTransferOutId: transfer.TeamToUserTransferOutId,
+			FromTeamId:              transfer.FromTeamId,
+			FromTeamName:            transfer.FromTeamName,
+			ToUserId:                transfer.ToUserId,
+			ToUserName:              transfer.ToUserName,
+			AmountMilligrams:        int(transfer.AmountMilligrams),
+			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
+			Status:                  transfer.Status,
+			Notes:                   transfer.Notes,
+			IsConfirmed:             transfer.IsConfirmed,
+			RejectionReason:         transfer.RejectionReason,
+			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
+			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
+		}
+		responses = append(responses, response)
+	}
+	respondWithPagination(w, "获取被拒绝收入记录成功", responses, page, limit, 0)
 }
 
 // ProcessExpiredTransfersJob 定时任务：处理过期转账
