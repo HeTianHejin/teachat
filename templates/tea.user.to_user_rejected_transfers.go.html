@@ -3,7 +3,7 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的星茶罐</a></li>
-  <li class="active">向其他用户转出 - 已超时</li>
+  <li class="active">向其他用户转出 - 已被拒绝</li>
 </ol>
 
 <div class="container">
@@ -12,13 +12,13 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs">
                 <li class="active">
-                    <a href="/v1/tea/user/transfers/out/user_to_user/expired/page">
+                    <a href="/v1/tea/user/transfers/out/user_to_user/failed/page">
                         <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
                         向其他用户
                     </a>
                 </li>
                 <li>
-                    <a href="/v1/tea/user/transfers/out/user_to_team/expired/page">
+                    <a href="/v1/tea/user/transfers/out/user_to_team/failed/page">
                         <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
                         向团队
                     </a>
@@ -29,13 +29,13 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="panel panel-danger">
+            <div class="panel panel-warning">
                 <div class="panel-heading">
                     <h3 class="panel-title">
-                        <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
-                        向其他用户转出 - 已超时
+                        <span class="glyphicon glyphicon-remove-circle" aria-hidden="true"></span>
+                        向其他用户转出 - 已被拒绝
                         <span class="pull-right">
-                            <small>已超时的转账，星茶已退回您的账户</small>
+                            <small>已被拒绝的转账记录</small>
                         </span>
                     </h3>
                 </div>
@@ -62,7 +62,7 @@
                 <div class="panel-heading">
                     <h4 class="panel-title">
                         <span class="glyphicon glyphicon-list" aria-hidden="true"></span>
-                        已超时转账记录
+                        已被拒绝转账记录
                         <span class="pull-right">
                             <a href="/v1/tea/user/transfers/pending/page" class="btn btn-warning btn-xs">
                                 <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
@@ -100,7 +100,11 @@
                                         </span>
                                     </td>
                                     <td>
+                                        {{ if eq .StatusDisplay "已拒绝" }}
+                                        <span class="label label-warning">{{ .StatusDisplay }}</span>
+                                        {{ else }}
                                         <span class="label label-danger">{{ .StatusDisplay }}</span>
+                                        {{ end }}
                                     </td>
                                     <td>
                                         {{ if .Notes }}
@@ -111,7 +115,6 @@
                                     </td>
                                     <td>
                                         {{ .BalanceAfterTransfer }}
-                                        
                                     </td>
                                     <td>
                                         <small>{{ .ExpiresAt.Format "2006-01-02 15:04" }}</small>
@@ -166,9 +169,9 @@
                     <div class="alert alert-info" role="alert">
                         <h4>
                             <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
-                            暂无已超时记录
+                            暂无已被拒绝记录
                         </h4>
-                        <p>您还没有任何已超时的向其他用户的星茶转出记录。</p>
+                        <p>您还没有任何已被拒绝的向其他用户的星茶转出记录。</p>
                         <p>
                             <a href="/v1/tea/user/account/page" class="btn btn-primary">
                                 <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
@@ -194,7 +197,7 @@
                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
                     返回星茶罐
                 </a>
-                <a href="/v1/tea/user/transfers/out/user_to_team/expired/page" class="btn btn-success">
+                <a href="/v1/tea/user/transfers/out/user_to_team/failed/page" class="btn btn-success">
                     <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
                     查看团队转出
                 </a>
