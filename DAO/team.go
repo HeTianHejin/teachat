@@ -569,17 +569,17 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role int, err err
 func GetUserSurvivalTeams(user_id int, ctx context.Context) ([]Team, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	count, err := GetUserSurvivalTeamsCount(user_id)
-	if err != nil || count == 0 {
-		return []Team{}, err
-	}
-	if count == 1 {
-		team, err := GetFreelancerTeam(ctx)
-		if err != nil {
-			return []Team{}, err
-		}
-		return []Team{team}, nil
-	}
+	// count, err := GetUserSurvivalTeamsCount(user_id)
+	// if err != nil || count == 0 {
+	// 	return []Team{}, err
+	// }
+	// if count == 1 {
+	// 	team, err := GetFreelancerTeam(ctx)
+	// 	if err != nil {
+	// 		return []Team{}, err
+	// 	}
+	// 	return []Team{team}, nil
+	// }
 
 	query := `
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags
@@ -591,7 +591,7 @@ func GetUserSurvivalTeams(user_id int, ctx context.Context) ([]Team, error) {
 	teams := make([]Team, 0, estimatedCapacity)
 
 	query += ` LIMIT $3` // 限制最大团队数
-	rows, err := DB.Query(query, user_id, TeamMemberStatusActive, estimatedCapacity)
+	rows, err := DB.QueryContext(ctx, query, user_id, TeamMemberStatusActive, estimatedCapacity)
 	if err != nil {
 		return nil, err
 	}

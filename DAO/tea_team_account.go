@@ -459,12 +459,12 @@ func GetTeaTeamToTeamCompletedTransferOuts(team_id, page, limit int) ([]TeaTeamT
 	return transfers, nil
 }
 
-// CountPendingTeamReceipts 统计团队待接收的来自团队的转账数量
-func CountPendingTeamReceipts(teamId int) (int, error) {
+// TeaTeamCountPendingFromTeamReceipts 统计团队待接收的来自其他团队的转账数量(包含已经过期)
+func TeaTeamCountPendingFromTeamReceipts(teamId int) (int, error) {
 	var count int
 	err := DB.QueryRow(`
 		SELECT COUNT(*) 
-		FROM tea.team_from_team_transfer_in 
+		FROM tea.team_to_team_transfer_out
 		WHERE to_team_id = $1 AND status = $2`, teamId, TeaTransferStatusPendingReceipt).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("查询团队待接收转账数量失败: %v", err)
@@ -472,12 +472,12 @@ func CountPendingTeamReceipts(teamId int) (int, error) {
 	return count, nil
 }
 
-// CountPendingUserReceipts 统计团队待接收的来自用户的转账数量
-func CountPendingUserReceipts(teamId int) (int, error) {
+// TeaTeamCountPendingFromUserReceipts 统计团队待接收的来自用户的转账数量(包含已经过期)
+func TeaTeamCountPendingFromUserReceipts(teamId int) (int, error) {
 	var count int
 	err := DB.QueryRow(`
 		SELECT COUNT(*) 
-		FROM tea.team_from_user_transfer_in 
+		FROM tea.user_to_user_transfer_out 
 		WHERE to_team_id = $1 AND status = $2`, teamId, TeaTransferStatusPendingReceipt).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("查询团队待接收用户转账数量失败: %v", err)

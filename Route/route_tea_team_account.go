@@ -369,42 +369,41 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 计算可用余额
-	//TODO： 团队转账直接扣减余额，无需计算锁定余额
 	teamAccountWithAvailable := TeamAccountWithAvailable{
 		TeaTeamAccount:             teamAccount,
 		AvailableBalanceMilligrams: teamAccount.BalanceMilligrams - teamAccount.LockedBalanceMilligrams,
 	}
 
 	// 获取待确认接收来自团队转账操作数量
-	pendingIncomingCount, err := dao.CountPendingTeamReceipts(team.Id)
+	pendingFromTeamCount, err := dao.TeaTeamCountPendingFromTeamReceipts(team.Id)
 	if err != nil {
 		util.Debug("cannot get pending incoming transfers count", err)
-		pendingIncomingCount = 0
 	}
-	//TODO： 获取待确认接收来自用户转账操作数量
-	pendingIncomingUserCount, err := dao.CountPendingUserReceipts(team.Id)
+	// 获取待确认接收来自用户转账操作数量
+	pendingFromUserCount, err := dao.TeaTeamCountPendingFromUserReceipts(team.Id)
 	if err != nil {
 		util.Debug("cannot get pending incoming user transfers count", err)
-		pendingIncomingUserCount = 0
 	}
 
 	// 获取帐户转出，待审批操作数量
 	pendingApprovalCount, err := dao.CountPendingTeamApprovals(team.Id)
 	if err != nil {
 		util.Debug("cannot get pending approval operations count", err)
-		pendingApprovalCount = 0
 	}
 
 	// 创建页面数据结构
 	// 判断是否核心成员
-	isCoreMember, _ := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
+	isCoreMember, err := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
+	if err != nil {
+		util.Debug("cannot check if user is core member", err)
+	}
 	pageData := PageData{
 		SessUser:                 s_u,
 		Team:                     singleTeam,
 		TeamAccount:              teamAccountWithAvailable,
 		UserIsCoreMember:         isCoreMember,
-		PendingIncomingTeamCount: pendingIncomingCount,
-		PendingIncomingUserCount: pendingIncomingUserCount,
+		PendingIncomingTeamCount: pendingFromTeamCount,
+		PendingIncomingUserCount: pendingFromUserCount,
 		PendingApprovalCount:     pendingApprovalCount,
 	}
 	// 生成页面

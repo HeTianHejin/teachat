@@ -343,10 +343,10 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/completed", route.TeaUserFromTeamCompletedTransfersAPI)           // 用户已经确认接收来自团队转入记录API - 收入记录（仅已完成）
 	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/completed/page", route.HandleTeaUserFromTeamCompletedTransferIns) // 用户已经确认接收来自团队转入记录页面路由 - 收入记录（仅已完成）
 	// 超时的转入记录
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/expired", route.GetTeaUserFromUserExpiredTransfersAPI)        // 用户接收来自用户转入已超时记录API - 收入记录（仅已超时）
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/expired/page", route.HandleTeaUserFromUserExpiredTransferIns) // 用户接收来自用户转入已超时记录页面 - 收入记录（仅已超时）
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/expired", route.GetTeaUserFromTeamExpiredTransfersAPI)        // 用户接收来自团队转入已超时记录API - 收入记录（仅已超时）
-	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/expired/page", route.HandleTeaUserFromTeamExpiredTransferIns) // 用户接收来自团队转入已超时记录页面 - 收入记录（仅已超时）
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/expired", route.GetTeaUserFromUserExpiredTransfersAPI)          // 用户接收来自用户转入已超时记录API - 收入记录（仅已超时）
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/expired/page", route.HandleTeaUserFromUserExpiredTransferIns)   // 用户接收来自用户转入已超时记录页面 - 收入记录（仅已超时）
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/expired", route.GetTeaUserFromTeamExpiredTransfersAPI)          // 用户接收来自团队转入已超时记录API - 收入记录（仅已超时）
+	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/expired/page", route.HandleTeaUserFromTeamExpiredTransferIns)   // 用户接收来自团队转入已超时记录页面 - 收入记录（仅已超时）
 	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/rejected", route.GetTeaUserFromUserRejectedTransfersAPI)        // 用户接收来自用户转入已被拒绝记录API - 收入记录（仅已被拒绝）
 	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/rejected/page", route.HandleTeaUserFromUserRejectedTransferIns) // 用户接收来自用户转入已被拒绝记录页面 - 收入记录（仅已被拒绝）
 	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/rejected", route.GetTeaUserFromTeamRejectedTransfersAPI)        // 用户接收来自团队转入已被拒绝记录API - 收入记录（仅已被拒绝）
@@ -357,7 +357,7 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/transfer/confirm/user_from_team", route.ConfirmTeaUserFromTeamTransferInAPI) // 用户确认接收来自团队转账API
 	mux.HandleFunc("/v1/tea/user/transfer/reject/user_from_team", route.TeaUserRejectFromTeamTransferInAPI)   // 用户拒绝接收来自团队转账API
 
-	// 团队星茶账户系统路由（对应用户版功能）
+	// TODO：需要更新，团队星茶账户系统路由（对应用户版功能）
 	mux.HandleFunc("/v1/tea/team/account", route.HandleTeaTeamAccount)     // 团队星茶账户页面路由
 	mux.HandleFunc("/v1/tea/team/account/api", route.GetTeaTeamAccountAPI) // 团队星茶账户API
 	//mux.HandleFunc("/v1/tea/team/transactions/api", route.GetTeaTeamToTeamCompletedTransferOutsAPI)                   // 团队对团队交易已完成记录API
