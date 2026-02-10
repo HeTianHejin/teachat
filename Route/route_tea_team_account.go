@@ -34,14 +34,14 @@ type TeamAccountWithAvailable struct {
 
 // PageData 用于模板渲染
 type PageData struct {
-	SessUser                 dao.User
-	Team                     *dao.Team
-	TeamAccount              TeamAccountWithAvailable
-	TransactionHistory       []map[string]any
-	UserIsCoreMember         bool
-	PendingIncomingTeamCount int
-	PendingIncomingUserCount int
-	PendingApprovalCount     int
+	SessUser             dao.User
+	Team                 *dao.Team
+	TeamAccount          TeamAccountWithAvailable
+	TransactionHistory   []map[string]any
+	UserIsCoreMember     bool
+	PendingFromTeamCount int
+	PendingFromUserCount int
+	PendingApprovalCount int
 }
 
 // GetTeaTeamAccountAPI 获取团队星茶账户信息
@@ -398,13 +398,13 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 		util.Debug("cannot check if user is core member", err)
 	}
 	pageData := PageData{
-		SessUser:                 s_u,
-		Team:                     singleTeam,
-		TeamAccount:              teamAccountWithAvailable,
-		UserIsCoreMember:         isCoreMember,
-		PendingIncomingTeamCount: pendingFromTeamCount,
-		PendingIncomingUserCount: pendingFromUserCount,
-		PendingApprovalCount:     pendingApprovalCount,
+		SessUser:             s_u,
+		Team:                 singleTeam,
+		TeamAccount:          teamAccountWithAvailable,
+		UserIsCoreMember:     isCoreMember,
+		PendingFromTeamCount: pendingFromTeamCount,
+		PendingFromUserCount: pendingFromUserCount,
+		PendingApprovalCount: pendingApprovalCount,
 	}
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")

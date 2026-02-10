@@ -46,7 +46,7 @@
     {{ end }}
 
     <!-- 待确认接收，来自其他团队转账提示 -->
-    {{ if gt .pendingFromTeamCount 0 }}
+    {{ if gt .PendingFromTeamCount 0 }}
     <div class="row">
         <div class="col-md-12">
             <div class="alert alert-warning alert-dismissible" role="alert">
@@ -58,7 +58,28 @@
                     您有待确认的接收来自团队转账！
                 </h4>
                 <p>
-                    您有 <strong>{{ .PendingIncomingCount }}</strong> 笔待确认的接收记录，
+                    您有 <strong>{{ .PendingFromTeamCount }}</strong> 笔待确认的接收记录，
+                    请及时处理以免过期。
+                    <a href="/v1/tea/team/transfers/pending/page?team_id={{ .TeamAccount.TeamId }}" class="btn btn-warning btn-sm">立即查看</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+    <!-- 待确认接收，来自其他用户转账提示 -->
+    {{ if gt .PendingFromUserCount 0 }}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-warning alert-dismissible" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4>
+                    <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
+                    您有待确认的接收来自茶友转账！
+                </h4>
+                <p>
+                    您有 <strong>{{ .PendingFromUserCount }}</strong> 笔待确认的接收记录，
                     请及时处理以免过期。
                     <a href="/v1/tea/team/transfers/pending/page?team_id={{ .TeamAccount.TeamId }}" class="btn btn-warning btn-sm">立即查看</a>
                 </p>
@@ -74,7 +95,7 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-leaf" aria-hidden="true"></span>
-                        {{ .Team.Name }} 星茶罐
+                        星茶罐
                         <span class="pull-right">
                             状态: <span class="label {{ if eq .TeamAccount.Status "frozen" }}label-danger{{ else }}label-success{{ end }}">
                                 {{ if eq .TeamAccount.Status "frozen" }}已冻结{{ else }}正常{{ end }}
@@ -85,15 +106,15 @@
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-4">
-                            <h4>总余额: <strong>{{ printf "%.3f" .TeamAccount.BalanceMilligrams }} 克</strong></h4>
+                            <h4>总余额(毫克): <strong>{{ .TeamAccount.BalanceMilligrams }}</strong></h4>
                             <p class="text-muted">团队星茶资产总量</p>
                         </div>
                         <div class="col-md-4">
-                            <h4>锁定余额: <strong>{{ printf "%.3f" .TeamAccount.LockedBalanceMilligrams }} 克</strong></h4>
+                            <h4>锁定余额(毫克): <strong>{{ .TeamAccount.LockedBalanceMilligrams }}</strong></h4>
                             <p class="text-muted">待确认操作中锁定的星茶</p>
                         </div>
                         <div class="col-md-4">
-                            <h4>可用余额: <strong>{{ printf "%.3f" .TeamAccount.AvailableBalanceMilligrams }} 克</strong></h4>
+                            <h4>可用余额(毫克): <strong>{{ .TeamAccount.AvailableBalanceMilligrams }}</strong></h4>
                             <p class="text-muted"><strong>可以立即使用的星茶</strong></p>
                         </div>
                     </div>
@@ -117,19 +138,35 @@
                 </div>
                 <div class="panel-body">
                     <div class="list-group">
-                        <a href="/v1/tea/team/transfers/pending/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item {{ if gt .PendingIncomingCount 0 }}list-group-item-warning{{ end }}">
+                        <a href="/v1/tea/team/transfers/pending/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item {{ if gt .PendingFromTeamCount 0 }}list-group-item-warning{{ end }}">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
                                 待确认接收的操作
-                                {{ if gt .PendingIncomingCount 0 }}
-                                <span class="badge">{{ .PendingIncomingCount }}</span>
+                                {{ if gt .PendingFromTeamCount 0 }}
+                                <span class="badge">{{ .PendingFromTeamCount }}</span>
                                 {{ end }}
                             </h4>
                             <p class="list-group-item-text">
-                                {{ if gt .PendingIncomingCount 0 }}
-                                <strong>您有 {{ .PendingIncomingCount }} 笔待确认接收操作，请及时处理！</strong>
+                                {{ if gt .PendingFromTeamCount 0 }}
+                                <strong>您有 {{ .PendingFromTeamCount }} 笔待确认接收操作，请及时处理！</strong>
                                 {{ else }}
-                                确认接受其他用户或团队转入的星茶
+                                确认接受其他团队转入的星茶
+                                {{ end }}
+                            </p>
+                        </a>
+                        <a href="/v1/tea/team/transfers/pending/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item {{ if gt .PendingFromUserCount 0 }}list-group-item-warning{{ end }}">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
+                                待确认接收的操作
+                                {{ if gt .PendingFromUserCount 0 }}
+                                <span class="badge">{{ .PendingFromUserCount }}</span>
+                                {{ end }}
+                            </h4>
+                            <p class="list-group-item-text">
+                                {{ if gt .PendingFromUserCount 0 }}
+                                <strong>您有 {{ .PendingFromUserCount }} 笔待确认接收操作，请及时处理！</strong>
+                                {{ else }}
+                                确认接受其他用户转入的星茶
                                 {{ end }}
                             </p>
                         </a>
@@ -290,9 +327,9 @@
                         <small class="help-block">请输入要转账的用户ID</small>
                     </div>
                     <div class="form-group">
-                        <label for="amountMilligrams">转账数量(克):</label>
+                        <label for="amountMilligrams">转账数量(毫克):</label>
                         <input type="number" class="form-control" id="amountMilligrams" name="amount_milligrams" required min="0.001" step="0.001">
-                        <small class="help-block">当前余额: {{ printf "%.3f" .TeamAccount.BalanceMilligrams }} 克，可输入小数，最小单位0.001克(1毫克)</small>
+                        <small class="help-block">当前余额(毫克): {{ printf "%.3f" .TeamAccount.BalanceMilligrams }} 克，可输入小数，最小单位0.001克(1毫克)</small>
                     </div>
                     <div class="form-group">
                         <label for="notes">备注说明:</label>

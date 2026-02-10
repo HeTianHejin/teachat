@@ -477,7 +477,7 @@ func TeaTeamCountPendingFromUserReceipts(teamId int) (int, error) {
 	var count int
 	err := DB.QueryRow(`
 		SELECT COUNT(*) 
-		FROM tea.user_to_user_transfer_out 
+		FROM tea.user_to_team_transfer_out 
 		WHERE to_team_id = $1 AND status = $2`, teamId, TeaTransferStatusPendingReceipt).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("查询团队待接收用户转账数量失败: %v", err)

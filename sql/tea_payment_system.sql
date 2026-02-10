@@ -582,7 +582,7 @@ $$ LANGUAGE plpgsql;
 
 -- 为现有用户创建星茶账户（如果还没有的话）
 INSERT INTO tea.user_accounts (user_id, balance_milligrams, locked_balance_milligrams, status)
-SELECT id, 0.000, 0.000, 'normal'
+SELECT id, 0, 0, 'normal'
 FROM users u
 WHERE NOT EXISTS (
     SELECT 1 FROM tea.user_accounts tua 
@@ -591,7 +591,7 @@ WHERE NOT EXISTS (
 
 -- 为现有团队创建星茶账户（如果还没有的话）
 INSERT INTO tea.team_accounts (team_id, balance_milligrams, locked_balance_milligrams, status)
-SELECT id, 0.000, 0.000, 'normal'
+SELECT id, 0, 0, 'normal'
 FROM teams t
 WHERE NOT EXISTS (
     SELECT 1 FROM tea.team_accounts tta 
