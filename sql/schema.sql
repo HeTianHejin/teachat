@@ -1,9 +1,9 @@
 -- TeaChat 数据库架构定义
 
 -- 创建数据库(如果需要)
---DROP DATABASE IF EXISTS teachat;
 --CREATE USER robin WITH PASSWORD 'robin';
 --ALTER USER robin SUPERUSER;
+--DROP DATABASE IF EXISTS teachat;
 --CREATE DATABASE teachat OWNER robin;
 -- 连接到新数据库
 \c teachat
