@@ -358,41 +358,44 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/transfer/reject/user_from_team", route.TeaUserRejectFromTeamTransferInAPI)   // 用户拒绝接收来自团队转账API
 
 	// TODO：需要更新，团队星茶账户系统路由（对应用户版功能）
-	mux.HandleFunc("/v1/tea/team/account", route.HandleTeaTeamAccount)     // 团队星茶账户页面路由
-	mux.HandleFunc("/v1/tea/team/account/api", route.GetTeaTeamAccountAPI) // 团队星茶账户API
-	//mux.HandleFunc("/v1/tea/team/transactions/api", route.GetTeaTeamToTeamCompletedTransferOutsAPI)                   // 团队对团队交易已完成记录API
-	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeaTeamAccountAPI)                                         // 团队星茶账户冻结API
-	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeaTeamAccountAPI)                                     // 团队星茶账户解冻API
-	mux.HandleFunc("/v1/tea/team/transfer/team_to_user", route.CreateTeaTeamToUserTransferAPI)                           // 团队对用户创建转账API
-	mux.HandleFunc("/v1/tea/team/transfer/team_to_team", route.CreateTeaTeamToTeamTransferAPI)                           // 团队对团队创建转账API
-	mux.HandleFunc("/v1/tea/team/transfers/outs/team_to_user", route.GetTeaTeamToUserTransferOutsAPI)                    // 团队对用户转出记录API
-	mux.HandleFunc("/v1/tea/team/transfers/outs/team_to_team", route.GetTeaTeamToTeamTransferOutsAPI)                    // 团队对团队转出记录API
-	mux.HandleFunc("/v1/tea/team/transfers/pending/team_to_user", route.GetTeaTeamPendingTeamToUserTransfersAPI)         // 团队待确认团队对用户转账API
-	mux.HandleFunc("/v1/tea/team/transfers/pending/team_to_team", route.GetTeaTeamPendingTeamToTeamTransfersAPI)         // 团队待确认团队对团队转账API
-	mux.HandleFunc("/v1/tea/team/transfers/pending/team_to_user/page", route.HandleTeaTeamPendingTeamToUserTransfers)    // 团队待确认团队对用户转账页面路由
-	mux.HandleFunc("/v1/tea/team/transfers/pending/team_to_team/page", route.HandleTeaTeamPendingTeamToTeamTransfers)    // 团队待确认团队对团队转账页面路由
-	mux.HandleFunc("/v1/tea/team/transfers/history/team_to_user", route.GetTeaTeamToUserTransferHistoryAPI)              // 团队对用户转账历史API
-	mux.HandleFunc("/v1/tea/team/transfers/completed/team_to_team", route.GetTeaTeamToTeamCompletedTransferOutsAPI)      // 团队对团队转账已完成状态API
-	mux.HandleFunc("/v1/tea/team/transfers/history/team_to_user/page", route.HandleTeaTeamToUserTransferHistory)         // 团队对用户转账历史页面路由
-	mux.HandleFunc("/v1/tea/team/transfers/completed/team_to_team/page", route.HandleTeaTeamToTeamCompletedTransferOuts) // 团队对团队转账历史页面路由
-	mux.HandleFunc("/v1/tea/team/transfers/ins/team_from_user", route.GetTeaTeamFromUserTransferInsAPI)                  // 团队接收用户转入记录API
-	mux.HandleFunc("/v1/tea/team/transfers/ins/team_from_team", route.GetTeaTeamFromTeamTransferInsAPI)                  // 团队接收团队转入记录API
-	mux.HandleFunc("/v1/tea/team/transfers/ins/team_from_user/page", route.HandleTeaTeamFromUserTransferIns)             // 团队接收用户转入记录页面路由
-	mux.HandleFunc("/v1/tea/team/transfers/ins/team_from_team/page", route.HandleTeaTeamFromTeamTransferIns)             // 团队接收团队转入记录页面路由
-	// 新增：区分团队对用户和团队对团队转账的确认/拒绝路由
-	mux.HandleFunc("/v1/tea/team/transfer/confirm/team_to_user", route.ConfirmTeaTeamFromUserTransferAPI) // 确认接收团队对用户转账API
-	mux.HandleFunc("/v1/tea/team/transfer/reject/team_to_user", route.RejectTeaTeamFromUserTransferAPI)   // 拒绝接收团队对用户转账API
-	mux.HandleFunc("/v1/tea/team/transfer/confirm/team_to_team", route.ConfirmTeaTeamFromTeamTransferAPI) // 确认接收团队对团队转账API
-	mux.HandleFunc("/v1/tea/team/transfer/reject/team_to_team", route.RejectTeaTeamFromTeamTransferAPI)   // 拒绝接收团队对团队转账API
-	// 团队转账审批路由
-	mux.HandleFunc("/v1/tea/team/transfer/approve/team_to_user", route.ApproveTeaTeamToUserTransferAPI)                // 审批团队对用户转账API
-	mux.HandleFunc("/v1/tea/team/transfer/approve/team_to_team", route.ApproveTeaTeamToTeamTransferAPI)                // 审批团队对团队转账API
-	mux.HandleFunc("/v1/tea/team/transfer/reject_approval/team_to_user", route.RejectTeaTeamToUserTransferApprovalAPI) // 拒绝审批团队对用户转账API
-	mux.HandleFunc("/v1/tea/team/transfer/reject_approval/team_to_team", route.RejectTeaTeamToTeamTransferApprovalAPI) // 拒绝审批团队对团队转账API
-	mux.HandleFunc("/v1/tea/team/transfers/pending/page", route.HandleTeaTeamPendingIncomingTransfers)                 // 团队待确认转入转账页面路由
-	mux.HandleFunc("/v1/tea/team/transfers/pending/api", route.GetTeaTeamPendingIncomingTransfersAPI)                  // 团队待确认转入转账API
-	mux.HandleFunc("/v1/tea/team/transactions/page", route.HandleTeaTeamTransactionHistory)                            // 团队交易流水页面路由
-	mux.HandleFunc("/v1/tea/team/operations/history/page", route.HandleTeaTeamOperationsHistory)                       // 团队操作历史页面路由
+	mux.HandleFunc("/v1/tea/team/account", route.HandleTeaTeamAccount)               // 团队星茶账户页面路由
+	mux.HandleFunc("/v1/tea/team/account/api", route.GetTeaTeamAccountAPI)           // 团队星茶账户API
+	mux.HandleFunc("/v1/tea/team/account/freeze", route.FreezeTeaTeamAccountAPI)     // 团队星茶账户冻结API
+	mux.HandleFunc("/v1/tea/team/account/unfreeze", route.UnfreezeTeaTeamAccountAPI) // 团队星茶账户解冻API
+	// 团队(out)转出创建
+	mux.HandleFunc("/v1/tea/team/transfer/team_to_team/new", route.CreateTeaTeamToTeamTransferAPI)                    // 团队对团队创建转账API 0211
+	mux.HandleFunc("/v1/tea/team/transfer/team_to_user/new", route.CreateTeaTeamToUserTransferAPI)                    // 团队对用户创建转账API
+	mux.HandleFunc("/v1/tea/team/transfers/team_to_team/approve/page", route.GetTeaTeamPendingToTeamTransferOuts)     // 团队待审批对其他团队转账页面 0211
+	mux.HandleFunc("/v1/tea/team/transfers/team_to_user/approve/page", route.GetTeaTeamPendingTeamToUserTransfersAPI) // 团队待审批对其他个人转账页面
+	// 团队(out)转出审批
+	mux.HandleFunc("/v1/tea/team/transfer/approve/team_to_user", route.ApproveTeaTeamToUserTransferAPI)                  // 审批团队对用户转账API
+	mux.HandleFunc("/v1/tea/team/transfer/approve/team_to_team", route.ApproveTeaTeamToTeamTransferAPI)                  // 审批团队对团队转账API
+	mux.HandleFunc("/v1/tea/team/transfer/reject_approval/team_to_user", route.RejectTeaTeamToUserTransferApprovalAPI)   // 拒绝审批团队对用户转账API
+	mux.HandleFunc("/v1/tea/team/transfer/reject_approval/team_to_team", route.RejectTeaTeamToTeamTransferApprovalAPI)   // 拒绝审批团队对团队转账API
+	mux.HandleFunc("/v1/tea/team/transfers/team_to_team/completed/page", route.GetTeaTeamToTeamCompletedTransferOutsAPI) // 团队对团队转账已完成状态页面
+	mux.HandleFunc("/v1/tea/team/transfers/team_to_user/completed/page", route.GetTeaTeamToUserTransferHistoryAPI)       // 团队对个人转账已完成状态页面
+	// 团队(out)转出未成功记录
+	mux.HandleFunc("/v1/tea/team/transfers/team_to_team/failed/page", route.HandleTeaTeamToTeamCompletedTransferOuts) // 团队对团队转账未完成页面（包含不批准、被拒绝、超时）
+	mux.HandleFunc("/v1/tea/team/transfers/team_to_user/failed/page", route.HandleTeaTeamToUserTransferHistory)       // 团队对个人转账未完成页面（包含不批准、被拒绝、超时）
+	// 团队(in)转入待确认
+	mux.HandleFunc("/v1/tea/team/transfers/team_from_team/pending/page", route.HandleTeaTeamPendingIncomingTransfers) // 团队待确认来自其他团队转入转账页面
+	mux.HandleFunc("/v1/tea/team/transfers/team_from_user/pending/page", route.GetTeaTeamPendingIncomingTransfersAPI) // 团队待确认来自其他个人转入转账页面
+	// 团队(in)对来自其他团队或者个人转入的（确认/拒绝）操作
+	mux.HandleFunc("/v1/tea/team/transfer/confirm/team_to_user", route.ConfirmTeaTeamFromUserTransferAPI) // 团队确认接收来自个人转账API
+	mux.HandleFunc("/v1/tea/team/transfer/reject/team_to_user", route.RejectTeaTeamFromUserTransferAPI)   // 团队拒绝接收来自个人转账API
+	mux.HandleFunc("/v1/tea/team/transfer/confirm/team_to_team", route.ConfirmTeaTeamFromTeamTransferAPI) // 团队确认接收来自团队转账API
+	mux.HandleFunc("/v1/tea/team/transfer/reject/team_to_team", route.RejectTeaTeamFromTeamTransferAPI)   // 团队拒绝接收来自团队转账API
+	// 团队(in)转入成功记录
+	mux.HandleFunc("/v1/tea/team/transfers/team_from_team/", route.GetTeaTeamFromTeamTransferInsAPI)         // 团队接收团队转入记录API
+	mux.HandleFunc("/v1/tea/team/transfers/ins/team_from_user", route.GetTeaTeamFromUserTransferInsAPI)      // 团队接收用户转入记录API
+	mux.HandleFunc("/v1/tea/team/transfers/ins/team_from_user/page", route.HandleTeaTeamFromUserTransferIns) // 团队接收用户转入记录页面路由
+	mux.HandleFunc("/v1/tea/team/transfers/ins/team_from_team/page", route.HandleTeaTeamFromTeamTransferIns) // 团队接收团队转入记录页面路由
+	// 团队(in)转入未成功记录（拒绝、超时）
+	//mux.HandleFunc("/v1/tea/team/transfers/team_from_team/failed/page", route.HandleTeaTeamFromTeamTransferInsFailed) // 团队接收团队转入失败记录（未入账）页面路由（包括已拒绝、超时）
+	//mux.HandleFunc("/v1/tea/team/transfers/team_from_user/failed/page", route.HandleTeaTeamFromUserTransferInsFailed) // 团队接收用户转入失败记录（未入账）页面路由（包括已拒绝、超时）
+	// 团队查询特定转账记录
+	mux.HandleFunc("/v1/tea/team/transactions/page", route.HandleTeaTeamTransactionHistory)      // 团队交易流水页面路由
+	mux.HandleFunc("/v1/tea/team/operations/history/page", route.HandleTeaTeamOperationsHistory) // 团队操作历史页面路由
 
 	// define in help.go 帮助 文档 信息
 	mux.HandleFunc("/v1/help/faq", route.FAQ)

@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"time"
@@ -757,44 +758,38 @@ func GetPendingTeamToUserOperations(teamId, page, limit int) ([]map[string]any, 
 	return operations, nil
 }
 
-// GetPendingTeamToTeamOperations 获取团队对团队待确认操作
-func GetPendingTeamToTeamOperations(teamId, page, limit int) ([]map[string]any, error) {
-	rows, err := DB.Query(`
-		SELECT uuid, to_team_id, to_team_name, amount_milligrams, notes, status, created_at, expires_at
-		FROM tea.team_to_team_transfer_out 
+// TeaTeamPendingApproveToTeamTransferOuts 获取团队对团队星茶转出，待审批状态记录
+func TeaTeamPendingApproveToTeamTransferOuts(teamId, page, limit int, ctx context.Context) ([]TeaTeamToTeamTransferOut, error) {
+	// 超时5秒取消
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := DB.QueryContext(ctx, `
+		SELECT id, uuid, from_team_id, from_team_name, to_team_id, to_team_name,
+		       initiator_user_id, amount_milligrams, notes, is_only_one_member_team,
+		       is_approved, approver_user_id, approval_rejection_reason, approved_at,
+		       status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
+		FROM tea.team_to_team_transfer_out
 		WHERE from_team_id = $1 AND status = $2
 		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
+		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusPendingApproval, limit, (page-1)*limit)
 	if err != nil {
-		return nil, fmt.Errorf("查询团队对团队待确认操作失败: %v", err)
+		return nil, fmt.Errorf("查询团队对团队待审批转出记录失败: %v", err)
 	}
 	defer rows.Close()
 
-	operations := []map[string]any{}
+	transfers := []TeaTeamToTeamTransferOut{}
 	for rows.Next() {
-		var uuid, toTeamName, notes, status string
-		var toTeamId int
-		var amount int64
-		var createdAt, expiresAt time.Time
-
-		if err := rows.Scan(&uuid, &toTeamId, &toTeamName, &amount, &notes, &status, &createdAt, &expiresAt); err != nil {
-			return nil, fmt.Errorf("扫描团队对团队待确认操作失败: %v", err)
+		var transfer TeaTeamToTeamTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.FromTeamId, &transfer.FromTeamName, &transfer.ToTeamId, &transfer.ToTeamName,
+			&transfer.InitiatorUserId, &transfer.AmountMilligrams, &transfer.Notes, &transfer.IsOnlyOneMemberTeam,
+			&transfer.IsApproved, &transfer.ApproverUserId, &transfer.ApprovalRejectionReason, &transfer.ApprovedAt,
+			&transfer.Status, &transfer.BalanceAfterTransfer, &transfer.CreatedAt, &transfer.ExpiresAt, &transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("扫描团队对团队待审批转出记录失败: %v", err)
 		}
-
-		operation := map[string]any{
-			"uuid":              uuid,
-			"to_team_id":        toTeamId,
-			"to_team_name":      toTeamName,
-			"amount_milligrams": amount,
-			"notes":             notes,
-			"status":            status,
-			"created_at":        createdAt,
-			"expires_at":        expiresAt,
-		}
-		operations = append(operations, operation)
+		transfers = append(transfers, transfer)
 	}
-
-	return operations, nil
+	return transfers, nil
 }
 
 // CreateTeaTeamToUserTransferOut 创建团队对用户转账
