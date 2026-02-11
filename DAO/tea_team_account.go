@@ -718,46 +718,6 @@ func GetPendingTeamIncomingTransfers(teamId, page, limit int) ([]map[string]any,
 	return transfers, nil
 }
 
-// GetPendingTeamToUserOperations 获取团队对用户待确认操作
-func GetPendingTeamToUserOperations(teamId, page, limit int) ([]map[string]any, error) {
-	rows, err := DB.Query(`
-		SELECT uuid, to_user_id, to_user_name, amount_milligrams, notes, status, created_at, expires_at
-		FROM tea.team_to_user_transfer_out 
-		WHERE from_team_id = $1 AND status = $2
-		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
-	if err != nil {
-		return nil, fmt.Errorf("查询团队对用户待确认操作失败: %v", err)
-	}
-	defer rows.Close()
-
-	operations := []map[string]any{}
-	for rows.Next() {
-		var uuid, toUserName, notes, status string
-		var toUserId int
-		var amount int64
-		var createdAt, expiresAt time.Time
-
-		if err := rows.Scan(&uuid, &toUserId, &toUserName, &amount, &notes, &status, &createdAt, &expiresAt); err != nil {
-			return nil, fmt.Errorf("扫描团队对用户待确认操作失败: %v", err)
-		}
-
-		operation := map[string]any{
-			"uuid":              uuid,
-			"to_user_id":        toUserId,
-			"to_user_name":      toUserName,
-			"amount_milligrams": amount,
-			"notes":             notes,
-			"status":            status,
-			"created_at":        createdAt,
-			"expires_at":        expiresAt,
-		}
-		operations = append(operations, operation)
-	}
-
-	return operations, nil
-}
-
 // TeaTeamPendingApproveToTeamTransferOuts 获取团队对团队星茶转出，待审批状态记录
 func TeaTeamPendingApproveToTeamTransferOuts(teamId, page, limit int, ctx context.Context) ([]TeaTeamToTeamTransferOut, error) {
 	// 超时5秒取消
@@ -786,6 +746,40 @@ func TeaTeamPendingApproveToTeamTransferOuts(teamId, page, limit int, ctx contex
 			&transfer.IsApproved, &transfer.ApproverUserId, &transfer.ApprovalRejectionReason, &transfer.ApprovedAt,
 			&transfer.Status, &transfer.BalanceAfterTransfer, &transfer.CreatedAt, &transfer.ExpiresAt, &transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("扫描团队对团队待审批转出记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	return transfers, nil
+}
+
+// TeaTeamPendingApproveToUserTransferOuts 获取团队对用户星茶转出，待审批状态记录
+func TeaTeamPendingApproveToUserTransferOuts(teamId, page, limit int, ctx context.Context) ([]TeaTeamToUserTransferOut, error) {
+	// 超时5秒取消
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := DB.QueryContext(ctx, `
+		SELECT id, uuid, from_team_id, from_team_name, to_user_id, to_user_name,
+		       initiator_user_id, amount_milligrams, notes, is_only_one_member_team,
+		       is_approved, approver_user_id, approval_rejection_reason, approved_at,
+		       status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
+		FROM tea.team_to_user_transfer_out
+		WHERE from_team_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusPendingApproval, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询团队对用户待审批转出记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaTeamToUserTransferOut{}
+	for rows.Next() {
+		var transfer TeaTeamToUserTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.FromTeamId, &transfer.FromTeamName, &transfer.ToUserId, &transfer.ToUserName,
+			&transfer.InitiatorUserId, &transfer.AmountMilligrams, &transfer.Notes, &transfer.IsOnlyOneMemberTeam,
+			&transfer.IsApproved, &transfer.ApproverUserId, &transfer.ApprovalRejectionReason, &transfer.ApprovedAt,
+			&transfer.Status, &transfer.BalanceAfterTransfer, &transfer.CreatedAt, &transfer.ExpiresAt, &transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("扫描团队对用户待审批转出记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
 	}
@@ -1373,7 +1367,7 @@ func TeaTeamApproveToUserTransferOut(fromTeamId int, transferUuid string, approv
 	return nil
 }
 
-// TeaTeamApproveToTeamTransferOut 某个团队核心成员,审批通过,团队对团队转账
+// TeaTeamApproveToTeamTransferOut 某个团队核心成员,审批通过,团队对团队转账 0211
 // 流程：审批通过后，更新状态为待接收，保持锁定不变，等待对方确认接收时再扣减余额
 func TeaTeamApproveToTeamTransferOut(fromTeamId int, transferUuid string, approverUserId int) error {
 	tx, err := DB.Begin()
@@ -1429,7 +1423,7 @@ func TeaTeamApproveToTeamTransferOut(fromTeamId int, transferUuid string, approv
 	return nil
 }
 
-// TeaTeamRejectToUserTransferOut 某个团队核心成员,拒绝审批,团队对用户转账
+// TeaTeamRejectToUserTransferOut 某个团队核心成员,拒绝审批,团队对用户转账 0211
 func TeaTeamRejectToUserTransferOut(fromTeamId int, transferUuid string, approverUserId int, reason string) error {
 	tx, err := DB.Begin()
 	if err != nil {
@@ -1485,7 +1479,7 @@ func TeaTeamRejectToUserTransferOut(fromTeamId int, transferUuid string, approve
 		return fmt.Errorf("释放转出团队账户锁定金额失败: %v", err)
 	}
 
-	// 3. 创建拒绝记录（用于历史追溯）
+	// 3. 创建拒绝记录 --不创建对方的转入表
 	// _, err = tx.Exec(`
 	// 	INSERT INTO tea.user_from_team_transfer_in (
 	// 		team_to_user_transfer_out_id, to_user_id, to_user_name,
@@ -1506,7 +1500,7 @@ func TeaTeamRejectToUserTransferOut(fromTeamId int, transferUuid string, approve
 	return nil
 }
 
-// TeaTeamRejectToTeamTransferOut 某个团队核心成员,拒绝审批团队对团队转账
+// TeaTeamRejectToTeamTransferOut 某个团队核心成员,拒绝审批团队对团队转账 0211
 func TeaTeamRejectToTeamTransferOut(fromTeamId int, transferUuid string, approverUserId int, reason string) error {
 	tx, err := DB.Begin()
 	if err != nil {
@@ -1562,7 +1556,7 @@ func TeaTeamRejectToTeamTransferOut(fromTeamId int, transferUuid string, approve
 		return fmt.Errorf("释放转出团队账户锁定金额失败: %v", err)
 	}
 
-	// 3. 创建拒绝记录（用于历史追溯）
+	// 3. 创建拒绝记录 --不创建对方的转入表
 	// _, err = tx.Exec(`
 	// 	INSERT INTO tea.team_from_team_transfer_in (
 	// 		team_to_team_transfer_out_id, to_team_id, to_team_name,

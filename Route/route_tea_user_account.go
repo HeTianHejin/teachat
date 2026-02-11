@@ -2663,8 +2663,6 @@ func GetUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	// 增强转账数据，添加团队信息和状态显示
 	type EnhancedTransferOut struct {
 		dao.TeaUserToTeamTransferOut
-		FromUserName  string
-		ToTeamName    string
 		StatusDisplay string
 		AmountDisplay string
 	}
@@ -2673,18 +2671,6 @@ func GetUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	for _, transfer := range transfers {
 		enhanced := EnhancedTransferOut{
 			TeaUserToTeamTransferOut: transfer,
-		}
-
-		// 获取发送方用户信息
-		fromUser, _ := dao.GetUser(transfer.FromUserId)
-		if fromUser.Id > 0 {
-			enhanced.FromUserName = fromUser.Name
-		}
-
-		// 获取接收方团队信息
-		toTeam, _ := dao.GetTeam(transfer.ToTeamId)
-		if toTeam.Id > 0 {
-			enhanced.ToTeamName = toTeam.Name
 		}
 
 		// 添加状态显示（只有已完成状态）
