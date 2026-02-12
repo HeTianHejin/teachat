@@ -419,8 +419,11 @@ func ProcessTeamToTeamExpiredTransfers() error {
 	return processExpiredTransfers("tea.team_to_team_transfer_out")
 }
 
-// GetTeaTeamToTeamCompletedTransferOuts 获取团队对团队已经完成状态交易记录
-func GetTeaTeamToTeamCompletedTransferOuts(team_id, page, limit int) ([]TeaTeamToTeamTransferOut, error) {
+// TeaTeamToTeamCompletedTransferOuts 获取团队对团队已经完成状态星茶转账记录 0211
+func TeaTeamToTeamCompletedTransferOuts(team_id, page, limit int, ctx context.Context) ([]TeaTeamToTeamTransferOut, error) {
+	// 超时5秒取消
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	if team_id == TeamIdNone {
 		// 错误参数
 		return nil, fmt.Errorf("团队ID不能为0")
@@ -428,7 +431,7 @@ func GetTeaTeamToTeamCompletedTransferOuts(team_id, page, limit int) ([]TeaTeamT
 	if team_id == TeamIdFreelancer {
 		return nil, fmt.Errorf("自由人团队没有星茶帐户")
 	}
-	rows, err := DB.Query(`
+	rows, err := DB.QueryContext(ctx, `
 		SELECT id, uuid, from_team_id, from_team_name, to_team_id, to_team_name,
 		       initiator_user_id, amount_milligrams, notes, is_only_one_member_team,
 		       is_approved, approver_user_id, approval_rejection_reason, approved_at,
@@ -454,6 +457,57 @@ func GetTeaTeamToTeamCompletedTransferOuts(team_id, page, limit int) ([]TeaTeamT
 			&transfer.CreatedAt, &transfer.ExpiresAt, &transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
 			// amazonq-ignore-next-line
 			return nil, fmt.Errorf("扫描团队对团队已完成转出记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	return transfers, nil
+}
+
+// TeaTeamToUserCompletedTranferOuts 获取团队对用户的已完成状态星茶转账记录
+func TeaTeamToUserCompletedTranferOuts(teamId, page, limit int, ctx context.Context) ([]TeaTeamToUserTransferOut, error) {
+	if teamId == TeamIdFreelancer {
+		return nil, fmt.Errorf("自由人团队没有星茶帐户")
+	}
+	if teamId <= 0 {
+		return nil, fmt.Errorf("团队ID必须大于0")
+	}
+
+	// 查询团队对用户已完成状态转账记录
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := DB.QueryContext(ctx, `
+		SELECT id, uuid, from_team_id, from_team_name, to_user_id, to_user_name,
+		       amount_milligrams, notes, is_approved, approver_user_id,
+		       approval_rejection_reason, approved_at, status,
+		       balance_after_transfer, created_at, expires_at, payment_time
+		FROM tea.team_to_user_transfer_out
+		WHERE from_team_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusCompleted, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询团队对用户已完成转出记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaTeamToUserTransferOut{}
+	for rows.Next() {
+		var transfer TeaTeamToUserTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid,
+			&transfer.FromTeamId, &transfer.FromTeamName,
+			&transfer.ToUserId, &transfer.ToUserName,
+			&transfer.AmountMilligrams,
+			&transfer.Notes,
+			&transfer.IsApproved,
+			&transfer.ApproverUserId,
+			&transfer.ApprovalRejectionReason,
+			&transfer.ApprovedAt,
+			&transfer.Status,
+			&transfer.BalanceAfterTransfer,
+			&transfer.CreatedAt,
+			&transfer.ExpiresAt,
+			&transfer.PaymentTime); err != nil {
+			return nil, fmt.Errorf("扫描团队对用户已完成转出记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
 	}
@@ -499,65 +553,6 @@ func CountPendingTeamApprovals(teamId int) (int, error) {
 		return 0, fmt.Errorf("查询团队待审批操作数量失败: %v", err)
 	}
 	return count, nil
-}
-
-// GetTeamTeaTransactions 获取团队星茶交易历史
-func GetTeamTeaTransactions(teamId, page, limit int) ([]map[string]any, error) {
-	if teamId == TeamIdFreelancer {
-		return []map[string]any{}, nil
-	}
-
-	// 合并查询团队的所有转账记录
-	query := `
-		SELECT 'team_to_user' as type, id, amount_milligrams, status, created_at, notes
-		FROM tea.team_to_user_transfer_out 
-		WHERE from_team_id = $1
-		UNION ALL
-		SELECT 'team_to_team' as type, id, amount_milligrams, status, created_at, notes
-		FROM tea.team_to_team_transfer_out 
-		WHERE from_team_id = $1
-		UNION ALL
-		SELECT 'user_to_team' as type, id, amount_milligrams, status, created_at, notes
-		FROM tea.team_from_user_transfer_in 
-		WHERE to_team_id = $1
-		UNION ALL
-		SELECT 'team_from_team' as type, id, amount_milligrams, status, created_at, notes
-		FROM tea.team_from_team_transfer_in 
-		WHERE to_team_id = $1
-		ORDER BY created_at DESC
-		LIMIT $2 OFFSET $3`
-
-	rows, err := DB.Query(query, teamId, limit, (page-1)*limit)
-	if err != nil {
-		return nil, fmt.Errorf("查询团队交易历史失败: %v", err)
-	}
-	defer rows.Close()
-
-	transactions := []map[string]any{}
-	for rows.Next() {
-		var txType string
-		var id int
-		var amount int64
-		var status string
-		var createdAt time.Time
-		var notes string
-
-		if err := rows.Scan(&txType, &id, &amount, &status, &createdAt, &notes); err != nil {
-			return nil, fmt.Errorf("扫描交易记录失败: %v", err)
-		}
-
-		transaction := map[string]any{
-			"type":       txType,
-			"id":         id,
-			"amount":     amount,
-			"status":     status,
-			"created_at": createdAt,
-			"notes":      notes,
-		}
-		transactions = append(transactions, transaction)
-	}
-
-	return transactions, nil
 }
 
 // GetTeamTransferOutOperations 获取团队转出操作记录
@@ -667,55 +662,9 @@ func GetTeamTransferInOperations(teamId, page, limit int) ([]map[string]any, err
 }
 
 // GetPendingTeamIncomingTransfers 获取团队待确认转入转账
-func GetPendingTeamIncomingTransfers(teamId, page, limit int) ([]map[string]any, error) {
-	if teamId == TeamIdFreelancer {
-		return []map[string]any{}, nil
-	}
+func GetPendingTeamIncomingTransfers(teamId, page, limit int) ([]TeaTeamToTeamTransferOut, error) {
 
-	query := `
-		SELECT 'user_to_team' as transfer_type, uuid, from_user_id as from_id, from_user_name as from_name,
-		       amount_milligrams, notes, created_at, expires_at
-		FROM tea.team_from_user_transfer_in 
-		WHERE to_team_id = $1 AND status = $2
-		UNION ALL
-		SELECT 'team_to_team' as transfer_type, uuid, from_team_id as from_id, from_team_name as from_name,
-		       amount_milligrams, notes, created_at, expires_at
-		FROM tea.team_from_team_transfer_in 
-		WHERE to_team_id = $1 AND status = $2
-		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4`
-
-	rows, err := DB.Query(query, teamId, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
-	if err != nil {
-		return nil, fmt.Errorf("查询团队待确认转入转账失败: %v", err)
-	}
-	defer rows.Close()
-
-	transfers := []map[string]any{}
-	for rows.Next() {
-		var transferType, uuid, fromName, notes string
-		var fromId int
-		var amount int64
-		var createdAt, expiresAt time.Time
-
-		if err := rows.Scan(&transferType, &uuid, &fromId, &fromName, &amount, &notes, &createdAt, &expiresAt); err != nil {
-			return nil, fmt.Errorf("扫描待确认转入转账失败: %v", err)
-		}
-
-		transfer := map[string]any{
-			"transfer_type":     transferType,
-			"uuid":              uuid,
-			"from_id":           fromId,
-			"from_name":         fromName,
-			"amount_milligrams": amount,
-			"notes":             notes,
-			"created_at":        createdAt,
-			"expires_at":        expiresAt,
-		}
-		transfers = append(transfers, transfer)
-	}
-
-	return transfers, nil
+	return nil, fmt.Errorf("功能未实现")
 }
 
 // TeaTeamPendingApproveToTeamTransferOuts 获取团队对团队星茶转出，待审批状态记录

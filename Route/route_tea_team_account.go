@@ -26,22 +26,10 @@ type UnfreezeTeamAccountRequest struct {
 	TeamId int `json:"team_id"`
 }
 
-// TeamAccountWithAvailable 用于模板渲染，包含可用余额
-type TeamAccountWithAvailable struct {
+// TeaTeamAccountWithAvailable 用于模板渲染，包含可用余额
+type TeaTeamAccountWithAvailable struct {
 	dao.TeaTeamAccount
-	AvailableBalanceMilligrams int64
-}
-
-// PageData 用于模板渲染
-type PageData struct {
-	SessUser             dao.User
-	Team                 *dao.Team
-	TeamAccount          TeamAccountWithAvailable
-	TransactionHistory   []map[string]any
-	UserIsCoreMember     bool
-	PendingFromTeamCount int
-	PendingFromUserCount int
-	PendingApprovalCount int
+	AvailableBalanceMilligrams int
 }
 
 // GetTeaTeamAccountAPI 获取团队星茶账户信息
@@ -114,94 +102,6 @@ func GetTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithSuccess(w, "获取团队星茶账户成功", response)
-}
-
-// GetTeaTeamToTeamCompletedTransferOuts 获取团队对团队转账已完成状态记录页面 0211
-func GetTeaTeamToTeamCompletedTransferOuts(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	sess, err := session(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "未登录")
-		return
-	}
-
-	user, err := sess.User()
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "获取用户信息失败")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-	if teamId == dao.TeamIdFreelancer {
-		respondWithError(w, http.StatusForbidden, "自由人团队不能查看团队对团队已完成状态转账纪录")
-		return
-	}
-	team, err := dao.GetTeamByID(teamIdStr)
-	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
-		report(w, user, "团队资料缺失")
-		return
-	}
-	// 获取团队帐户
-	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
-	if err != nil {
-		util.Debug("cannot get tea team account by id", err)
-		report(w, user, "团队帐户资料失踪")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看团队对团队已完成状态转账纪录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取团队对团队已经完成状态交易记录
-	transfers, err := dao.GetTeaTeamToTeamCompletedTransferOuts(teamId, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取团队对团队已完成状态转账纪录失败")
-		return
-	}
-
-	// 创建页面数据结构
-	var pageData struct {
-		SessUser       dao.User
-		TeaTeamAccount dao.TeaTeamAccount
-		Team           *dao.Team
-		Transfers      []dao.TeaTeamToTeamTransferOut
-		CurrentPage    int
-		Limit          int
-		StatusDisplay  string
-	}
-	pageData.SessUser = user
-	pageData.Team = &team
-	pageData.TeaTeamAccount = account
-	pageData.Transfers = transfers
-	pageData.CurrentPage = page
-	pageData.Limit = limit
-	pageData.StatusDisplay = "已完成"
-
-	// 生成页面
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.to_team_completed_transfers")
-
 }
 
 // FreezeTeaTeamAccountAPI 冻结团队星茶账户
@@ -383,7 +283,7 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取团队星茶账户
-	teamAccount, err := dao.GetTeaTeamAccountByTeamId(team.Id)
+	teaTeamAccount, err := dao.GetTeaTeamAccountByTeamId(team.Id)
 	if err != nil {
 		util.Debug("cannot get team tea account", err)
 		report(w, s_u, "获取团队星茶账户失败。")
@@ -391,9 +291,9 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 计算可用余额
-	teamAccountWithAvailable := TeamAccountWithAvailable{
-		TeaTeamAccount:             teamAccount,
-		AvailableBalanceMilligrams: teamAccount.BalanceMilligrams - teamAccount.LockedBalanceMilligrams,
+	teaTeamAccountWithAvailable := TeaTeamAccountWithAvailable{
+		TeaTeamAccount:             teaTeamAccount,
+		AvailableBalanceMilligrams: int(teaTeamAccount.BalanceMilligrams) - int(teaTeamAccount.LockedBalanceMilligrams),
 	}
 
 	// 获取待确认接收来自团队转账操作数量
@@ -419,139 +319,25 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.Debug("cannot check if user is core member", err)
 	}
-	pageData := PageData{
-		SessUser:             s_u,
-		Team:                 singleTeam,
-		TeamAccount:          teamAccountWithAvailable,
-		UserIsCoreMember:     isCoreMember,
-		PendingFromTeamCount: pendingFromTeamCount,
-		PendingFromUserCount: pendingFromUserCount,
-		PendingApprovalCount: pendingApprovalCount,
+	var pageData struct {
+		SessUser             dao.User
+		Team                 *dao.Team
+		TeamAccount          TeaTeamAccountWithAvailable
+		UserIsCoreMember     bool
+		PendingFromTeamCount int
+		PendingFromUserCount int
+		PendingApprovalCount int
 	}
+	pageData.SessUser = s_u
+	pageData.Team = singleTeam
+	pageData.TeamAccount = teaTeamAccountWithAvailable
+	pageData.UserIsCoreMember = isCoreMember
+	pageData.PendingFromTeamCount = pendingFromTeamCount
+	pageData.PendingFromUserCount = pendingFromUserCount
+	pageData.PendingApprovalCount = pendingApprovalCount
+
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")
-}
-
-// HandleTeaTeamTransactionHistory 处理团队交易历史页面请求
-func HandleTeaTeamTransactionHistory(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	sess, err := session(r)
-	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-
-	user, err := sess.User()
-	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, user, "你好，茶博士失魂鱼，有眼不识泰山。")
-		return
-	}
-
-	// 必须指定团队ID
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		report(w, user, "必须指定团队ID。")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		report(w, user, "团队ID无效。")
-		return
-	}
-
-	// 获取团队信息
-	team, err := dao.GetTeam(teamId)
-	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
-		report(w, user, "团队不存在。")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		report(w, user, "您不是该团队成员，无法查看交易历史。")
-		return
-	}
-
-	// 获取分页参数
-	pageStr := r.URL.Query().Get("page")
-	limitStr := r.URL.Query().Get("limit")
-
-	page := 1
-	limit := 20
-
-	if pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-			page = p
-		}
-	}
-	if limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
-			limit = l
-		}
-	}
-
-	// 获取团队星茶账户信息
-	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
-	if err != nil {
-		util.Debug("cannot get team tea account", err)
-		teamAccount = dao.TeaTeamAccount{}
-	}
-
-	// 获取过滤器类型
-	filterType := r.URL.Query().Get("type")
-
-	// 获取团队交易历史
-	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
-	if err != nil {
-		util.Debug("cannot get team transaction history", err)
-		transactions = []map[string]any{}
-	}
-
-	// 创建页面数据结构
-	var pageData struct {
-		SessUser       dao.User
-		Team           *dao.Team
-		TeamAccount    dao.TeaTeamAccount
-		Transactions   []map[string]any
-		CurrentPage    int
-		Limit          int
-		FilterType     string
-		BalanceDisplay string
-		StatusDisplay  string
-	}
-
-	pageData.SessUser = user
-	pageData.Team = &team
-	pageData.TeamAccount = teamAccount
-	pageData.Transactions = transactions
-	pageData.CurrentPage = page
-	pageData.Limit = limit
-	pageData.FilterType = filterType
-
-	// 格式化余额显示
-	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", teamAccount.BalanceMilligrams)
-
-	// 状态显示
-	if teamAccount.Status == "frozen" {
-		if teamAccount.FrozenReason != "" {
-			pageData.StatusDisplay = "已冻结 (" + teamAccount.FrozenReason + ")"
-		} else {
-			pageData.StatusDisplay = "已冻结"
-		}
-	} else {
-		pageData.StatusDisplay = "正常"
-	}
-
-	// 生成页面
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.transactions")
 }
 
 // CreateTeaTeamToUserTransferAPI 发起团队对用户星茶转账 0211
@@ -721,409 +507,6 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithSuccess(w, "团队对团队转账发起成功", transfer)
-}
-
-// GetTeaTeamPendingApproveToUserTransfers 获取团队待审批团队对用户转账页面 0211
-func GetTeaTeamPendingApproveToUserTransfers(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-	team, err := dao.GetTeamByID(teamIdStr)
-	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员(查看)
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看待审批转账")
-		return
-	}
-	//检查用户是否核心成员（审批）
-	isCoreMember, err := team.IsCoreMember(user.Id)
-	if err != nil {
-		util.Debug("cannot check if user is core member", err)
-	}
-
-	// 确保团队有星茶账户
-	err = dao.EnsureTeaTeamAccountExists(teamId)
-	if err != nil {
-		util.Debug("cannot ensure tea team account exists", err)
-		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
-		return
-	}
-	// 获取团队星茶账户
-	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
-	if err != nil {
-		util.Debug("cannot get tea team account", err)
-		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transfers, err := dao.TeaTeamPendingApproveToUserTransferOuts(teamId, page, limit, r.Context())
-	if err != nil {
-		util.Debug("cannot get pending approve team to user transfer outs", err)
-		respondWithError(w, http.StatusInternalServerError, "获取待审批转账记录失败")
-		return
-	}
-
-	// 增强转账数据，添加用户信息和状态显示
-	type EnhancedPendingApproveTransfer struct {
-		dao.TeaTeamToUserTransferOut
-		IsExpired     bool
-		CanApprove    bool
-		TimeRemaining string
-	}
-	var enhancedTransfers []EnhancedPendingApproveTransfer
-	for _, t := range transfers {
-		// 计算过期时间,使用UTC时间比较
-		expiresAtUTC := t.ExpiresAt.UTC()
-		nowUTC := time.Now().UTC()
-		enhanced := EnhancedPendingApproveTransfer{
-			TeaTeamToUserTransferOut: t,
-			IsExpired:                nowUTC.After(expiresAtUTC),
-			CanApprove:               !expiresAtUTC.Before(nowUTC),
-		}
-
-		if enhanced.CanApprove {
-			timeRemaining := expiresAtUTC.Sub(nowUTC)
-			if timeRemaining > time.Hour {
-				hours := int(timeRemaining.Hours())
-				minutes := int(timeRemaining.Minutes()) % 60
-				if minutes > 0 {
-					enhanced.TimeRemaining = fmt.Sprintf("%d小时%d分钟", hours, minutes)
-				} else {
-					enhanced.TimeRemaining = fmt.Sprintf("%d小时", hours)
-				}
-			} else if timeRemaining > time.Minute {
-				minutes := int(timeRemaining.Minutes())
-				enhanced.TimeRemaining = fmt.Sprintf("%d分钟", minutes)
-			} else {
-				enhanced.TimeRemaining = "即将过期"
-			}
-		} else {
-			enhanced.TimeRemaining = "已过期"
-		}
-
-		enhancedTransfers = append(enhancedTransfers, enhanced)
-	}
-
-	// 创建页面数据结构
-	var pageData struct {
-		SessUser       dao.User
-		Team           *dao.Team
-		IsTeamMember   bool
-		IsCoreMember   bool
-		TeaTeamAccount dao.TeaTeamAccount
-		Transfers      []EnhancedPendingApproveTransfer
-		StatusDisplay  string
-		CurrentPage    int
-		Limit          int
-	}
-
-	pageData.SessUser = user
-	pageData.Team = &team
-	pageData.IsTeamMember = isMember
-	pageData.IsCoreMember = isCoreMember
-	pageData.TeaTeamAccount = account
-	pageData.Transfers = enhancedTransfers
-	pageData.CurrentPage = page
-	pageData.Limit = limit
-
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_approve_to_user_transfers")
-}
-
-// GetTeaTeamPendingApproveToTeamTransfers 获取团队转出待审批对团队转账页面 0211
-func GetTeaTeamPendingApproveToTeamTransfers(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-	team, err := dao.GetTeamByID(teamIdStr)
-	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员(查看)
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看待审批转账")
-		return
-	}
-	//检查用户是否核心成员（审批）
-	isCoreMember, err := team.IsCoreMember(user.Id)
-	if err != nil {
-		util.Debug("cannot check if user is core member", err)
-	}
-
-	// 确保团队有星茶账户
-	err = dao.EnsureTeaTeamAccountExists(teamId)
-	if err != nil {
-		util.Debug("cannot ensure tea team account exists", err)
-		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
-		return
-	}
-	// 获取团队星茶账户
-	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
-	if err != nil {
-		util.Debug("cannot get tea team account", err)
-		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transfers, err := dao.TeaTeamPendingApproveToTeamTransferOuts(teamId, page, limit, r.Context())
-	if err != nil {
-		util.Debug("cannot get pending approve team to team transfer outs", err)
-		respondWithError(w, http.StatusInternalServerError, "获取待审批转账记录失败")
-		return
-	}
-
-	// 增强转账数据，添加团队信息和状态显示
-	type EnhancedPendingApproveTransfer struct {
-		dao.TeaTeamToTeamTransferOut
-		IsExpired     bool
-		CanApprove    bool
-		TimeRemaining string
-	}
-	var enhancedTransfers []EnhancedPendingApproveTransfer
-	for _, t := range transfers {
-		// 计算过期时间,使用UTC时间比较
-		expiresAtUTC := t.ExpiresAt.UTC()
-		nowUTC := time.Now().UTC()
-		enhanced := EnhancedPendingApproveTransfer{
-			TeaTeamToTeamTransferOut: t,
-			IsExpired:                nowUTC.After(expiresAtUTC),
-			CanApprove:               !expiresAtUTC.Before(nowUTC),
-		}
-
-		if enhanced.CanApprove {
-			timeRemaining := expiresAtUTC.Sub(nowUTC)
-			if timeRemaining > time.Hour {
-				hours := int(timeRemaining.Hours())
-				minutes := int(timeRemaining.Minutes()) % 60
-				if minutes > 0 {
-					enhanced.TimeRemaining = fmt.Sprintf("%d小时%d分钟", hours, minutes)
-				} else {
-					enhanced.TimeRemaining = fmt.Sprintf("%d小时", hours)
-				}
-			} else if timeRemaining > time.Minute {
-				minutes := int(timeRemaining.Minutes())
-				enhanced.TimeRemaining = fmt.Sprintf("%d分钟", minutes)
-			} else {
-				enhanced.TimeRemaining = "即将过期"
-			}
-		} else {
-			enhanced.TimeRemaining = "已过期"
-		}
-
-		enhancedTransfers = append(enhancedTransfers, enhanced)
-	}
-
-	// 创建页面数据结构
-	var pageData struct {
-		SessUser       dao.User
-		Team           *dao.Team
-		IsTeamMember   bool
-		IsCoreMember   bool
-		TeaTeamAccount dao.TeaTeamAccount
-		Transfers      []EnhancedPendingApproveTransfer
-		StatusDisplay  string
-		CurrentPage    int
-		Limit          int
-	}
-
-	pageData.SessUser = user
-	pageData.Team = &team
-	pageData.IsTeamMember = isMember
-	pageData.IsCoreMember = isCoreMember
-	pageData.TeaTeamAccount = account
-	pageData.Transfers = enhancedTransfers
-	pageData.CurrentPage = page
-	pageData.Limit = limit
-
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_approve_to_team_transfers")
-
-}
-
-// GetTeaTeamToUserTransferHistoryAPI 获取团队对用户转账历史API
-func GetTeaTeamToUserTransferHistoryAPI(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转账历史")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取转账历史失败")
-		return
-	}
-
-	respondWithPagination(w, "获取团队对用户转账历史成功", transactions, page, limit, 0)
-}
-
-// GetTeaTeamToTeamTransferHistoryAPI 获取团队对团队转账已完成状态记录API
-func GetTeaTeamToTeamTransferHistoryAPI(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转账历史")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transactions, err := dao.GetTeamTeaTransactions(teamId, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取转账历史失败")
-		return
-	}
-
-	respondWithPagination(w, "获取团队对团队转账历史成功", transactions, page, limit, 0)
-}
-
-// GetTeaTeamFromUserTransferInsAPI 获取团队接收用户转入记录API
-func GetTeaTeamFromUserTransferInsAPI(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转入记录")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transfers, err := dao.GetTeamTransferInOperations(teamId, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取转入记录失败")
-		return
-	}
-
-	respondWithPagination(w, "获取团队接收用户转入记录成功", transfers, page, limit, 0)
-}
-
-// GetTeaTeamFromTeamTransferInsAPI 获取团队接收团队转入记录API
-func GetTeaTeamFromTeamTransferInsAPI(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转入记录")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transfers, err := dao.GetTeamTransferInOperations(teamId, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取转入记录失败")
-		return
-	}
-
-	respondWithPagination(w, "获取团队接收团队转入记录成功", transfers, page, limit, 0)
 }
 
 // ============================================
@@ -1549,60 +932,372 @@ func RejectTeaTeamToTeamTransferApprovalAPI(w http.ResponseWriter, r *http.Reque
 }
 
 // ============================================
-// 团队转账页面路由处理函数
+// 团队转出页面路由处理函数 (outgoing transfer list)
 // ============================================
+// GetTeaTeamPendingApproveToTeamTransfers 获取团队转出待审批对团队转账页面 0211
+func GetTeaTeamPendingApproveToTeamTransfers(w http.ResponseWriter, r *http.Request) {
+	user, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
+	}
 
-// HandleTeaTeamToUserTransferHistory 处理团队对用户转账历史页面请求
-func HandleTeaTeamToUserTransferHistory(w http.ResponseWriter, r *http.Request) {
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
+		return
+	}
+
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
+	team, err := dao.GetTeamByID(teamIdStr)
+	if err != nil {
+		util.Debug("cannot get team by id:", teamIdStr, err)
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
+
+	// 检查用户是否是团队成员(查看)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
+	if err != nil || !isMember {
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看待审批转账")
+		return
+	}
+	//检查用户是否核心成员（审批）
+	isCoreMember, err := team.IsCoreMember(user.Id)
+	if err != nil {
+		util.Debug("cannot check if user is core member", err)
+	}
+
+	// 确保团队有星茶账户
+	err = dao.EnsureTeaTeamAccountExists(teamId)
+	if err != nil {
+		util.Debug("cannot ensure tea team account exists", err)
+		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
+		return
+	}
+	// 获取团队星茶账户
+	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
+	if err != nil {
+		util.Debug("cannot get tea team account", err)
+		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
+		return
+	}
+	if account.Status == dao.TeaTeamAccountStatus_Frozen {
+		respondWithError(w, http.StatusForbidden, fmt.Sprintf("账户已被冻结：%s", account.FrozenReason))
+		return
+	}
+
+	page, limit := getPaginationParams(r)
+	transfers, err := dao.TeaTeamPendingApproveToTeamTransferOuts(teamId, page, limit, r.Context())
+	if err != nil {
+		util.Debug("cannot get pending approve team to team transfer outs", err)
+		respondWithError(w, http.StatusInternalServerError, "获取待审批转账记录失败")
+		return
+	}
+
+	// 增强转账数据，添加团队信息和状态显示
+	type EnhancedPendingApproveTransfer struct {
+		dao.TeaTeamToTeamTransferOut
+		IsExpired     bool
+		CanApprove    bool
+		TimeRemaining string
+	}
+	var enhancedTransfers []EnhancedPendingApproveTransfer
+	for _, t := range transfers {
+		// 计算过期时间,使用UTC时间比较
+		expiresAtUTC := t.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+		enhanced := EnhancedPendingApproveTransfer{
+			TeaTeamToTeamTransferOut: t,
+			IsExpired:                nowUTC.After(expiresAtUTC),
+			CanApprove:               !expiresAtUTC.Before(nowUTC),
+		}
+
+		if enhanced.CanApprove {
+			timeRemaining := expiresAtUTC.Sub(nowUTC)
+			if timeRemaining > time.Hour {
+				hours := int(timeRemaining.Hours())
+				minutes := int(timeRemaining.Minutes()) % 60
+				if minutes > 0 {
+					enhanced.TimeRemaining = fmt.Sprintf("%d小时%d分钟", hours, minutes)
+				} else {
+					enhanced.TimeRemaining = fmt.Sprintf("%d小时", hours)
+				}
+			} else if timeRemaining > time.Minute {
+				minutes := int(timeRemaining.Minutes())
+				enhanced.TimeRemaining = fmt.Sprintf("%d分钟", minutes)
+			} else {
+				enhanced.TimeRemaining = "即将过期"
+			}
+		} else {
+			enhanced.TimeRemaining = "已过期"
+		}
+
+		enhancedTransfers = append(enhancedTransfers, enhanced)
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser       dao.User
+		Team           *dao.Team
+		IsTeamMember   bool
+		IsCoreMember   bool
+		TeaTeamAccount dao.TeaTeamAccount
+		Transfers      []EnhancedPendingApproveTransfer
+		StatusDisplay  string
+		CurrentPage    int
+		Limit          int
+	}
+
+	pageData.SessUser = user
+	pageData.Team = &team
+	pageData.IsTeamMember = isMember
+	pageData.IsCoreMember = isCoreMember
+	pageData.TeaTeamAccount = account
+	pageData.Transfers = enhancedTransfers
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_approve_to_team_transfers")
+
+}
+
+// GetTeaTeamPendingApproveToUserTransfers 获取团队待审批团队对用户转账页面 0211
+func GetTeaTeamPendingApproveToUserTransfers(w http.ResponseWriter, r *http.Request) {
+	user, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
+	}
+
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
+		return
+	}
+
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
+	team, err := dao.GetTeamByID(teamIdStr)
+	if err != nil {
+		util.Debug("cannot get team by id:", teamIdStr, err)
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
+
+	// 检查用户是否是团队成员(查看)
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
+	if err != nil || !isMember {
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看待审批转账")
+		return
+	}
+	//检查用户是否核心成员（审批）
+	isCoreMember, err := team.IsCoreMember(user.Id)
+	if err != nil {
+		util.Debug("cannot check if user is core member", err)
+	}
+
+	// 确保团队有星茶账户
+	err = dao.EnsureTeaTeamAccountExists(teamId)
+	if err != nil {
+		util.Debug("cannot ensure tea team account exists", err)
+		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
+		return
+	}
+	// 获取团队星茶账户
+	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
+	if err != nil {
+		util.Debug("cannot get tea team account", err)
+		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
+		return
+	}
+	if account.Status == dao.TeaTeamAccountStatus_Frozen {
+		respondWithError(w, http.StatusForbidden, fmt.Sprintf("账户已被冻结：%s", account.FrozenReason))
+		return
+	}
+
+	page, limit := getPaginationParams(r)
+	transfers, err := dao.TeaTeamPendingApproveToUserTransferOuts(teamId, page, limit, r.Context())
+	if err != nil {
+		util.Debug("cannot get pending approve team to user transfer outs", err)
+		respondWithError(w, http.StatusInternalServerError, "获取待审批转账记录失败")
+		return
+	}
+
+	// 增强转账数据，添加用户信息和状态显示
+	type EnhancedPendingApproveTransfer struct {
+		dao.TeaTeamToUserTransferOut
+		IsExpired     bool
+		CanApprove    bool
+		TimeRemaining string
+	}
+	var enhancedTransfers []EnhancedPendingApproveTransfer
+	for _, t := range transfers {
+		// 计算过期时间,使用UTC时间比较
+		expiresAtUTC := t.ExpiresAt.UTC()
+		nowUTC := time.Now().UTC()
+		enhanced := EnhancedPendingApproveTransfer{
+			TeaTeamToUserTransferOut: t,
+			IsExpired:                nowUTC.After(expiresAtUTC),
+			CanApprove:               !expiresAtUTC.Before(nowUTC),
+		}
+
+		if enhanced.CanApprove {
+			timeRemaining := expiresAtUTC.Sub(nowUTC)
+			if timeRemaining > time.Hour {
+				hours := int(timeRemaining.Hours())
+				minutes := int(timeRemaining.Minutes()) % 60
+				if minutes > 0 {
+					enhanced.TimeRemaining = fmt.Sprintf("%d小时%d分钟", hours, minutes)
+				} else {
+					enhanced.TimeRemaining = fmt.Sprintf("%d小时", hours)
+				}
+			} else if timeRemaining > time.Minute {
+				minutes := int(timeRemaining.Minutes())
+				enhanced.TimeRemaining = fmt.Sprintf("%d分钟", minutes)
+			} else {
+				enhanced.TimeRemaining = "即将过期"
+			}
+		} else {
+			enhanced.TimeRemaining = "已过期"
+		}
+
+		enhancedTransfers = append(enhancedTransfers, enhanced)
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser       dao.User
+		Team           *dao.Team
+		IsTeamMember   bool
+		IsCoreMember   bool
+		TeaTeamAccount dao.TeaTeamAccount
+		Transfers      []EnhancedPendingApproveTransfer
+		StatusDisplay  string
+		CurrentPage    int
+		Limit          int
+	}
+
+	pageData.SessUser = user
+	pageData.Team = &team
+	pageData.IsTeamMember = isMember
+	pageData.IsCoreMember = isCoreMember
+	pageData.TeaTeamAccount = account
+	pageData.Transfers = enhancedTransfers
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_approve_to_user_transfers")
+}
+
+// GetTeaTeamToTeamCompletedTransfers 获取团队对团队转账已完成状态记录页面 0211
+func GetTeaTeamToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	// 实现页面渲染逻辑
-	respondWithError(w, http.StatusNotImplemented, "页面功能待实现")
-}
 
-// HandleTeaTeamToTeamTransferHistory 处理团队对团队转账历史页面请求
-func HandleTeaTeamToTeamTransferHistory(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	sess, err := session(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "未登录")
 		return
 	}
-	// 实现页面渲染逻辑
-	respondWithError(w, http.StatusNotImplemented, "页面功能待实现")
-}
 
-// HandleTeaTeamFromUserTransferIns 处理团队接收用户转入记录页面请求
-func HandleTeaTeamFromUserTransferIns(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	user, err := sess.User()
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "获取用户信息失败")
 		return
 	}
-	// 实现页面渲染逻辑
-	respondWithError(w, http.StatusNotImplemented, "页面功能待实现")
-}
 
-// HandleTeaTeamFromTeamTransferIns 处理团队接收团队转入记录页面请求
-func HandleTeaTeamFromTeamTransferIns(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
 		return
 	}
-	// 实现页面渲染逻辑
-	respondWithError(w, http.StatusNotImplemented, "页面功能待实现")
-}
 
-// HandleTeaTeamPendingIncomingTransfers 处理团队待确认转入转账页面请求
-func HandleTeaTeamPendingIncomingTransfers(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
 		return
 	}
-	TeamPendingIncomingTransfersGet(w, r)
+	if teamId == dao.TeamIdFreelancer {
+		respondWithError(w, http.StatusForbidden, "自由人团队不能查看团队转账纪录")
+		return
+	}
+	team, err := dao.GetTeamByID(teamIdStr)
+	if err != nil {
+		util.Debug("cannot get team by id:", teamIdStr, err)
+		report(w, user, "团队资料缺失")
+		return
+	}
+	// 获取团队帐户
+	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
+	if err != nil {
+		util.Debug("cannot get tea team account by id", err)
+		report(w, user, "团队帐户资料失踪")
+		return
+	}
+
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
+	if err != nil || !isMember {
+		respondWithError(w, http.StatusForbidden, "您不是该团队成员，无法查看团队转账纪录")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取团队对团队已经完成状态交易记录
+	transfers, err := dao.TeaTeamToTeamCompletedTransferOuts(teamId, page, limit, r.Context())
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取团队对团队已完成状态转账纪录失败")
+		return
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser      dao.User
+		TeamAccount   dao.TeaTeamAccount
+		Team          *dao.Team
+		Transfers     []dao.TeaTeamToTeamTransferOut
+		CurrentPage   int
+		Limit         int
+		StatusDisplay string
+	}
+	pageData.SessUser = user
+	pageData.Team = &team
+	pageData.TeamAccount = account
+	pageData.Transfers = transfers
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+	if account.Status == dao.TeaTeamAccountStatus_Frozen {
+		pageData.StatusDisplay = "已冻结"
+	} else {
+		pageData.StatusDisplay = "正常"
+	}
+
+	// 生成页面
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.to_team_completed_transfers")
+
 }
 
+// ============================================
+// 团队转入页面路由处理函数(incoming transfer)
+// ============================================
 // TeamPendingIncomingTransfersGet 获取团队待确认转入转账页面
 func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1662,86 +1357,12 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 增强转账数据，添加预处理字段
-	type EnhancedTransfer struct {
-		Uuid          string
-		TransferType  string
-		FromId        int
-		FromName      string
-		TeamId        int
-		ToTeamName    string
-		AmountDisplay string
-		Notes         string
-		CreatedAt     string
-		ExpiresAt     string
-		StatusDisplay string
-		IsExpired     bool
-		IsNearExpiry  bool
-		CanConfirm    bool
-	}
-
-	var enhancedTransfers []EnhancedTransfer
-	for _, transfer := range transfers {
-		enhanced := EnhancedTransfer{
-			Uuid:         safeString(transfer["uuid"]),
-			TransferType: safeString(transfer["transfer_type"]),
-			FromId:       int(safeInt64(transfer["from_id"])),
-			FromName:     safeString(transfer["from_name"]),
-			Notes:        safeString(transfer["notes"]),
-			CreatedAt:    safeString(transfer["created_at"]),
-			ExpiresAt:    safeString(transfer["expires_at"]),
-		}
-
-		// 获取发送方信息
-		if enhanced.TransferType == "user_to_team" {
-			enhanced.FromName = safeString(transfer["from_user_name"])
-		} else if enhanced.TransferType == "team_to_team" {
-			enhanced.ToTeamName = safeString(transfer["from_team_name"])
-		}
-
-		// 格式化金额显示
-		amountMilligrams := safeInt64(transfer["amount_milligrams"])
-		enhanced.AmountDisplay = fmt.Sprintf("%d 毫克", amountMilligrams)
-
-		// 格式化时间显示和检查过期状态
-		if createdAt, ok := transfer["created_at"].(time.Time); ok {
-			enhanced.CreatedAt = createdAt.Format("2006-01-02 15:04:05")
-		} else {
-			enhanced.CreatedAt = safeString(transfer["created_at"])
-		}
-
-		if expiresAt, ok := transfer["expires_at"].(time.Time); ok {
-			enhanced.ExpiresAt = expiresAt.Format("2006-01-02 15:04:05")
-			// 检查是否过期和即将过期
-			nowTime := time.Now()
-			enhanced.IsExpired = expiresAt.Before(nowTime)
-			enhanced.IsNearExpiry = !enhanced.IsExpired && expiresAt.Sub(nowTime) < time.Hour
-		} else {
-			enhanced.ExpiresAt = safeString(transfer["expires_at"])
-			// 如果无法解析时间，默认为未过期
-			enhanced.IsExpired = false
-			enhanced.IsNearExpiry = false
-		}
-		enhanced.CanConfirm = !enhanced.IsExpired
-
-		// 状态显示
-		if enhanced.IsExpired {
-			enhanced.StatusDisplay = "已过期"
-		} else if enhanced.IsNearExpiry {
-			enhanced.StatusDisplay = "即将过期"
-		} else {
-			enhanced.StatusDisplay = "可确认"
-		}
-
-		enhancedTransfers = append(enhancedTransfers, enhanced)
-	}
-
 	// 创建页面数据结构
 	var pageData struct {
 		SessUser    dao.User
 		Team        *dao.Team
 		TeamAccount dao.TeaTeamAccount
-		Transfers   []EnhancedTransfer
+		Transfers   []dao.TeaTeamToTeamTransferOut
 		CurrentPage int
 		Limit       int
 	}
@@ -1749,7 +1370,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	pageData.SessUser = s_u
 	pageData.Team = &team
 	pageData.TeamAccount = teamAccount
-	pageData.Transfers = enhancedTransfers
+	pageData.Transfers = transfers
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
@@ -1793,160 +1414,76 @@ func GetTeaTeamPendingIncomingTransfersAPI(w http.ResponseWriter, r *http.Reques
 	respondWithPagination(w, "获取团队待确认转入转账成功", transfers, page, limit, 0)
 }
 
-// 辅助函数：安全获取字符串值
-func safeString(val any) string {
-	if val == nil {
-		return ""
-	}
-	if s, ok := val.(string); ok {
-		return s
-	}
-	return fmt.Sprintf("%v", val)
-}
-
-// HandleTeaTeamToTeamCompletedTransferOuts 处理团队对团队已完成状态转账记录页面请求
-func HandleTeaTeamToTeamCompletedTransferOuts(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
-	sess, err := session(r)
+// GetTeaTeamFromTeamCompletedTransfers 获取团队接收团队转入成功记录
+func GetTeaTeamFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
+	user, err := getCurrentUserFromSession(r)
 	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
 		return
 	}
 
-	user, err := sess.User()
-	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, user, "你好，茶博士失魂鱼，有眼不识泰山。")
-		return
-	}
-
-	// 必须指定团队ID
 	teamIdStr := r.URL.Query().Get("team_id")
 	if teamIdStr == "" {
-		report(w, user, "必须指定团队ID。")
+		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
 		return
 	}
 
 	teamId, err := strconv.Atoi(teamIdStr)
 	if err != nil {
-		report(w, user, "团队ID无效。")
-		return
-	}
-
-	// 获取团队信息
-	team, err := dao.GetTeam(teamId)
-	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
-		report(w, user, "团队不存在。")
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
 		return
 	}
 
 	// 检查用户是否是团队成员
 	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
 	if err != nil || !isMember {
-		report(w, user, "您不是该团队成员，无法查看已完成转账记录。")
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转入记录")
 		return
 	}
 
-	// 获取分页参数
-	pageStr := r.URL.Query().Get("page")
-	limitStr := r.URL.Query().Get("limit")
-
-	page := 1
-	limit := 20
-
-	if pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-			page = p
-		}
-	}
-	if limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
-			limit = l
-		}
-	}
-
-	// 获取团队对团队已完成状态转账记录
-	transferOuts, err := dao.GetTeaTeamToTeamCompletedTransferOuts(teamId, page, limit)
+	page, limit := getPaginationParams(r)
+	transfers, err := dao.GetTeamTransferInOperations(teamId, page, limit)
 	if err != nil {
-		util.Debug("cannot get team-to-team completed transfers", err)
-		transferOuts = []dao.TeaTeamToTeamTransferOut{}
+		respondWithError(w, http.StatusInternalServerError, "获取转入记录失败")
+		return
 	}
 
-	// 转换为模板需要的map格式
-	transactionMaps := make([]map[string]any, len(transferOuts))
-	for i, t := range transferOuts {
-		transactionMaps[i] = map[string]any{
-			"created_at":        t.CreatedAt,
-			"amount_milligrams": t.AmountMilligrams,
-			"notes":             t.Notes,
-			"to_team_name":      t.ToTeamName,
-			"to_team_id":        t.ToTeamId,
-			"status":            t.Status,
-		}
-	}
-
-	// 获取团队星茶账户信息
-	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
-	if err != nil {
-		util.Debug("cannot get team tea account", err)
-		teamAccount = dao.TeaTeamAccount{}
-	}
-
-	// 创建页面数据结构
-	var pageData struct {
-		SessUser       dao.User
-		Team           *dao.Team
-		TeamAccount    dao.TeaTeamAccount
-		Transactions   []map[string]any
-		CurrentPage    int
-		Limit          int
-		BalanceDisplay string
-		StatusDisplay  string
-	}
-
-	pageData.SessUser = user
-	pageData.Team = &team
-	pageData.TeamAccount = teamAccount
-	pageData.Transactions = transactionMaps
-	pageData.CurrentPage = page
-	pageData.Limit = limit
-
-	// 格式化余额显示
-	pageData.BalanceDisplay = fmt.Sprintf("%d 毫克", teamAccount.BalanceMilligrams)
-
-	// 状态显示
-	if teamAccount.Status == "frozen" {
-		if teamAccount.FrozenReason != "" {
-			pageData.StatusDisplay = "已冻结 (" + teamAccount.FrozenReason + ")"
-		} else {
-			pageData.StatusDisplay = "已冻结"
-		}
-	} else {
-		pageData.StatusDisplay = "正常"
-	}
-
-	// 生成页面
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.completed_team_to_team_transfers")
+	respondWithPagination(w, "获取团队接收团队转入记录成功", transfers, page, limit, 0)
 }
 
-// 辅助函数：安全获取int64值
-func safeInt64(val any) int64 {
-	if val == nil {
-		return 0
+// GetTeaTeamFromUserCompletedTransfers 获取团队接收用户转入成功记录
+func GetTeaTeamFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
+	user, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
 	}
-	switch v := val.(type) {
-	case int64:
-		return v
-	case int:
-		return int64(v)
-	case float64:
-		return int64(v)
-	default:
-		return 0
+
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
+		return
 	}
+
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "团队ID无效")
+		return
+	}
+
+	// 检查用户是否是团队成员
+	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
+	if err != nil || !isMember {
+		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转入记录")
+		return
+	}
+
+	page, limit := getPaginationParams(r)
+	transfers, err := dao.GetTeamTransferInOperations(teamId, page, limit)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取转入记录失败")
+		return
+	}
+
+	respondWithPagination(w, "获取团队接收用户转入记录成功", transfers, page, limit, 0)
 }
