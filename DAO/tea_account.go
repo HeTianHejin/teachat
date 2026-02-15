@@ -1201,9 +1201,10 @@ func TeaUserFromUserExpiredTransferIns(user_id int, page, limit int) ([]TeaUserT
 		SELECT id, uuid, from_user_id, from_user_name, to_user_id, to_user_name,
 		       amount_milligrams, notes, status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
 		FROM tea.user_to_user_transfer_out
-		WHERE to_user_id = $1 AND status = $2
+		WHERE to_user_id = $1 AND (status = $2 
+		       OR (status = $3 AND expires_at < NOW()))
 		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4`, user_id, TeaTransferStatusExpired, limit, (page-1)*limit)
+		LIMIT $4 OFFSET $5`, user_id, TeaTransferStatusExpired, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
 	if err != nil {
 		return nil, fmt.Errorf("查询用户来自用户已超时转入记录失败: %v", err)
 	}
@@ -1240,9 +1241,10 @@ func TeaUserFromTeamExpiredTransferIns(user_id int, page, limit int) ([]TeaTeamT
 		       is_approved, approver_user_id, approval_rejection_reason, approved_at,
 		       status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
 		FROM tea.team_to_user_transfer_out
-		WHERE to_user_id = $1 AND status = $2
+		WHERE to_user_id = $1 AND (status = $2 
+		       OR (status = $3 AND expires_at < NOW()))
 		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4`, user_id, TeaTransferStatusExpired, limit, (page-1)*limit)
+		LIMIT $4 OFFSET $5`, user_id, TeaTransferStatusExpired, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
 	if err != nil {
 		return nil, fmt.Errorf("查询用户来自团队已超时转入记录失败: %v", err)
 	}
