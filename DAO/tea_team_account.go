@@ -1045,8 +1045,8 @@ func TeaTeamToUserCompletedTransferOuts(teamId, page, limit int, ctx context.Con
 	return transfers, nil
 }
 
-// TeaTeamToTeamFailedTransferOuts 获取团队对团队的未成功页面（包含不批准、被拒绝、超时）
-func TeaTeamToTeamFailedTransferOuts(teamId, page, limit int, ctx context.Context) ([]TeaTeamToTeamTransferOut, error) {
+// TeaTeamToTeamOutstandingTransferOuts 获取团队对团队的未成功页面（包含不批准、待接收、被拒绝、超时）
+func TeaTeamToTeamOutstandingTransferOuts(teamId, page, limit int, ctx context.Context) ([]TeaTeamToTeamTransferOut, error) {
 	if teamId == TeamIdFreelancer {
 		return nil, fmt.Errorf("自由人团队没有星茶帐户")
 	}
@@ -1080,12 +1080,66 @@ func TeaTeamToTeamFailedTransferOuts(teamId, page, limit int, ctx context.Contex
 			&transfer.IsApproved, &transfer.ApproverUserId, &transfer.ApprovalRejectionReason,
 			&transfer.ApprovedAt, &transfer.Status, &transfer.BalanceAfterTransfer,
 			&transfer.CreatedAt, &transfer.ExpiresAt, &transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("扫描团队对团队失败转出记录失败: %v", err)
+			return nil, fmt.Errorf("扫描团队对团队未成功转出记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("迭代团队对团队失败转出记录失败: %v", err)
+		return nil, fmt.Errorf("迭代团队对团队未成功转出记录失败: %v", err)
+	}
+
+	return transfers, nil
+}
+
+// TeaTeamToUserOutstandingTransferOuts 获取团队对用户的未成功页面（包含不批准、待接收、被拒绝、超时）
+func TeaTeamToUserOutstandingTransferOuts(teamId, page, limit int, ctx context.Context) ([]TeaTeamToUserTransferOut, error) {
+	if teamId == TeamIdFreelancer {
+		return nil, fmt.Errorf("自由人团队没有星茶帐户")
+	}
+	if teamId <= 0 {
+		return nil, fmt.Errorf("团队ID必须大于0")
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := DB.QueryContext(ctx, `
+		SELECT id, uuid, from_team_id, from_team_name, to_user_id, to_user_name,
+		       amount_milligrams, notes, is_approved, approver_user_id,
+		       approval_rejection_reason, approved_at, status,
+		       balance_after_transfer, created_at, expires_at, payment_time
+		FROM tea.team_to_user_transfer_out
+		WHERE from_team_id = $1 AND (status IN ($2, $3, $4) OR (status = $5 AND expires_at < NOW()))
+		ORDER BY created_at DESC
+		LIMIT $6 OFFSET $7`, teamId, TeaTransferStatusApprovalRejected, TeaTransferStatusRejected, TeaTransferStatusExpired, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询团队对用户未成功转出记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaTeamToUserTransferOut{}
+	for rows.Next() {
+		var transfer TeaTeamToUserTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid,
+			&transfer.FromTeamId, &transfer.FromTeamName,
+			&transfer.ToUserId, &transfer.ToUserName,
+			&transfer.AmountMilligrams,
+			&transfer.Notes,
+			&transfer.IsApproved,
+			&transfer.ApproverUserId,
+			&transfer.ApprovalRejectionReason,
+			&transfer.ApprovedAt,
+			&transfer.Status,
+			&transfer.BalanceAfterTransfer,
+			&transfer.CreatedAt,
+			&transfer.ExpiresAt,
+			&transfer.PaymentTime); err != nil {
+			return nil, fmt.Errorf("扫描团队对用户未成功转出记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("迭代团队对用户未成功转出记录失败: %v", err)
 	}
 
 	return transfers, nil

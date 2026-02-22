@@ -3169,8 +3169,8 @@ func GetTeaUserToTeamRejectedTransfersAPI(w http.ResponseWriter, r *http.Request
 	respondWithPagination(w, "获取用户对团队转出已被拒绝记录成功", responses, page, limit, 0)
 }
 
-// GetTeaUserToTeamFailedTransfers 获取用户对团队转出已被拒绝记录页面（已拒绝 + 已超时）
-func GetTeaUserToTeamFailedTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserToTeamRejectedTransfers 获取用户对团队转出已被拒绝记录页面（已拒绝 + 已超时）
+func GetTeaUserToTeamRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
