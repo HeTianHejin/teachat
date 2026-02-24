@@ -375,21 +375,21 @@ func main() {
 	// 团队(out)转出成功记录
 	mux.HandleFunc("/v1/tea/team/transfers/team_to_team/completed/page", route.GetTeaTeamToTeamCompletedTransfers) // 团队对团队转账已完成状态页面 0211
 	mux.HandleFunc("/v1/tea/team/transfers/team_to_user/completed/page", route.GetTeaTeamToUserCompletedTransfers) // 团队对个人转账已完成状态页面 0213
-	// 团队(out)转出支付未完成记录
-	mux.HandleFunc("/v1/tea/team/transfers/team_to_team/Outstanding/page", route.GetTeaTeamToTeamOutstandingTransfers) // 团队对团队转账未完成页面（包含不批准、待接收、被拒绝、超时）0222
-	mux.HandleFunc("/v1/tea/team/transfers/team_to_user/Outstanding/page", route.GetTeaTeamToUserOutstandingTransfers) // 团队对个人转账未完成页面（包含不批准、待接收、被拒绝、超时）
+	// 团队(out)转出支付未达成记录
+	mux.HandleFunc("/v1/tea/team/transfers/team_to_team/Outstanding/page", route.GetTeaTeamToTeamOutstandingTransfers) // 团队对团队转账未达成页面（包含不批准、待接收、被拒绝、超时）0222
+	mux.HandleFunc("/v1/tea/team/transfers/team_to_user/Outstanding/page", route.GetTeaTeamToUserOutstandingTransfers) // 团队对个人转账未达成页面（包含不批准、待接收、被拒绝、超时）0222
 	// TODO:团队(in)转入待确认
-	//mux.HandleFunc("/v1/tea/team/transfers/team_from_team/pending/page", route.GetTeaTeamPendingFromTeamTransfers) // 团队待确认来自其他团队转入转账页面
+	mux.HandleFunc("/v1/tea/team/transfers/team_from_team/pending/page", route.GetTeaTeamPendingFromTeamTransfers) // 团队待确认来自其他团队转入转账页面
 	//mux.HandleFunc("/v1/tea/team/transfers/team_from_user/pending/page", route.GetTeaTeamPendingFromUserTransfers) // 团队待确认来自其他个人转入转账页面
 	// 团队(in)对来自其他团队或者个人转入的（确认/拒绝）操作
 	mux.HandleFunc("/v1/tea/team/transfer/confirm/team_to_user", route.ConfirmTeaTeamFromUserTransferAPI) // 团队确认接收来自个人转账API
 	mux.HandleFunc("/v1/tea/team/transfer/reject/team_to_user", route.RejectTeaTeamFromUserTransferAPI)   // 团队拒绝接收来自个人转账API
 	mux.HandleFunc("/v1/tea/team/transfer/confirm/team_to_team", route.ConfirmTeaTeamFromTeamTransferAPI) // 团队确认接收来自团队转账API
 	mux.HandleFunc("/v1/tea/team/transfer/reject/team_to_team", route.RejectTeaTeamFromTeamTransferAPI)   // 团队拒绝接收来自团队转账API
-	// 团队(in)转入成功记录
-	mux.HandleFunc("/v1/tea/team/transfers/team_from_team/completed/page", route.GetTeaTeamFromTeamCompletedTransfers) // 团队接收团队转入已完成记录页面
-	mux.HandleFunc("/v1/tea/team/transfers/team_from_user/completed/page", route.GetTeaTeamFromUserCompletedTransfers) // 团队接收用户转入已完成记录页面
-	// 团队(in)转入未成功记录（拒绝、超时）
+	//TODO: 团队(in)转入成功记录
+	//mux.HandleFunc("/v1/tea/team/transfers/team_from_team/completed/page", route.GetTeaTeamFromTeamCompletedTransfers) // 团队接收团队转入已完成记录页面
+	//mux.HandleFunc("/v1/tea/team/transfers/team_from_user/completed/page", route.GetTeaTeamFromUserCompletedTransfers) // 团队接收用户转入已完成记录页面
+	// TODO：团队(in)转入未成功记录（拒绝、超时）
 	//mux.HandleFunc("/v1/tea/team/transfers/team_from_team/Outstanding/page", route.HandleTeaTeamFromTeamTransferInsOutstanding) // 团队接收团队转入失败记录（未入账）页面路由（包括已拒绝、超时）
 	//mux.HandleFunc("/v1/tea/team/transfers/team_from_user/Outstanding/page", route.HandleTeaTeamFromUserTransferInsOutstanding) // 团队接收用户转入失败记录（未入账）页面路由（包括已拒绝、超时）
 	// TODO:团队查询特定转账记录

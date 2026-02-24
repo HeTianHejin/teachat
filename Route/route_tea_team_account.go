@@ -1368,7 +1368,7 @@ func GetTeaTeamToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.to_user_completed_transfers")
 }
 
-// GetTeaTeamToTeamOutstandingTransfers 获取团队对团队转账未完成状态记录页面 0222
+// GetTeaTeamToTeamOutstandingTransfers 获取团队对团队转账未达成状态记录页面 0222
 func GetTeaTeamToTeamOutstandingTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -1418,7 +1418,7 @@ func GetTeaTeamToTeamOutstandingTransfers(w http.ResponseWriter, r *http.Request
 
 	transfers, err := dao.TeaTeamToTeamOutstandingTransferOuts(teamId, page, limit, r.Context())
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取团队对团队未完成状态转账纪录失败")
+		respondWithError(w, http.StatusInternalServerError, "获取团队对团队未达成状态转账纪录失败")
 		return
 	}
 
@@ -1446,7 +1446,7 @@ func GetTeaTeamToTeamOutstandingTransfers(w http.ResponseWriter, r *http.Request
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.to_team_outstanding_transfers")
 }
 
-// GetTeaTeamToUserOutstandingTransfers 获取团队对用户转账未完成状态记录页面 0222
+// GetTeaTeamToUserOutstandingTransfers 获取团队对用户转账未达成状态记录页面 0222
 func GetTeaTeamToUserOutstandingTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -1496,7 +1496,7 @@ func GetTeaTeamToUserOutstandingTransfers(w http.ResponseWriter, r *http.Request
 
 	transfers, err := dao.TeaTeamToUserOutstandingTransferOuts(teamId, page, limit, r.Context())
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取团队对用户未完成状态转账纪录失败")
+		respondWithError(w, http.StatusInternalServerError, "获取团队对用户未达成状态转账纪录失败")
 		return
 	}
 
@@ -1527,21 +1527,16 @@ func GetTeaTeamToUserOutstandingTransfers(w http.ResponseWriter, r *http.Request
 // ============================================
 // 团队转入页面路由处理函数(incoming transfer)
 // ============================================
-// TeamPendingIncomingTransfersGet 获取团队待确认转入转账页面
-func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
+// GetTeaTeamPendingFromTeamTransfers 获取团队待确认转入转账页面
+func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	sess, err := session(r)
+	// 验证用户登录
+	s_u, err := getCurrentUserFromSession(r)
 	if err != nil {
-		http.Redirect(w, r, "/v1/login", http.StatusFound)
-		return
-	}
-	s_u, err := sess.User()
-	if err != nil {
-		util.Debug("Cannot get user from session", err)
-		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
 		return
 	}
 
@@ -1585,7 +1580,7 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取待确认转入转账
-	transfers, err := dao.GetPendingTeamIncomingTransfers(teamId, page, limit)
+	transfers, err := dao.TeaTeamPendingFromTeamTransfers(teamId, page, limit, r.Context())
 	if err != nil {
 		util.Debug("cannot get pending incoming transfers", err)
 		report(w, s_u, "获取待确认转账失败。")
@@ -1609,116 +1604,5 @@ func TeamPendingIncomingTransfersGet(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_incoming_transfers")
-}
-
-// GetTeaTeamPendingIncomingTransfersAPI 获取团队待确认转入转账API
-func GetTeaTeamPendingIncomingTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看待确认转账")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transfers, err := dao.GetPendingTeamIncomingTransfers(teamId, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取待确认转账失败")
-		return
-	}
-
-	respondWithPagination(w, "获取团队待确认转入转账成功", transfers, page, limit, 0)
-}
-
-// GetTeaTeamFromTeamCompletedTransfers 获取团队接收团队转入成功记录
-func GetTeaTeamFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转入记录")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transfers, err := dao.GetTeamTransferInOperations(teamId, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取转入记录失败")
-		return
-	}
-
-	respondWithPagination(w, "获取团队接收团队转入记录成功", transfers, page, limit, 0)
-}
-
-// GetTeaTeamFromUserCompletedTransfers 获取团队接收用户转入成功记录
-func GetTeaTeamFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	teamIdStr := r.URL.Query().Get("team_id")
-	if teamIdStr == "" {
-		respondWithError(w, http.StatusBadRequest, "必须指定团队ID")
-		return
-	}
-
-	teamId, err := strconv.Atoi(teamIdStr)
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "团队ID无效")
-		return
-	}
-
-	// 检查用户是否是团队成员
-	isMember, err := dao.IsTeamActiveMember(user.Id, teamId)
-	if err != nil || !isMember {
-		respondWithError(w, http.StatusForbidden, "只有团队成员才能查看转入记录")
-		return
-	}
-
-	page, limit := getPaginationParams(r)
-	transfers, err := dao.GetTeamTransferInOperations(teamId, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取转入记录失败")
-		return
-	}
-
-	respondWithPagination(w, "获取团队接收用户转入记录成功", transfers, page, limit, 0)
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_from_team_transfers")
 }
