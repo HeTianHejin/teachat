@@ -1216,6 +1216,45 @@ func TeaTeamPendingFromTeamTransfers(teamId, page, limit int, ctx context.Contex
 	return transfers, nil
 }
 
+// TeaTeamPendingFromUserTransfers 获取团队待确认接收的来自用户转账记录，按照时间排序，分页返回 0223
+func TeaTeamPendingFromUserTransfers(teamId, page, limit int, ctx context.Context) ([]TeaUserToTeamTransferOut, error) {
+	// 超时5秒取消
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := DB.QueryContext(ctx, `
+		SELECT id, uuid, from_user_id, from_user_name, to_team_id, to_team_name,
+		       amount_milligrams, notes,
+		       status, balance_after_transfer, created_at, expires_at, payment_time
+		FROM tea.user_to_team_transfer_out
+		WHERE to_team_id = $1 AND status = $2
+		ORDER BY created_at ASC
+		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询团队待接收的来自用户转账记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaUserToTeamTransferOut{}
+	for rows.Next() {
+		var transfer TeaUserToTeamTransferOut
+		if err := rows.Scan(&transfer.Id, &transfer.Uuid,
+			&transfer.FromUserId, &transfer.FromUserName,
+			&transfer.ToTeamId, &transfer.ToTeamName,
+			&transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.Status, &transfer.BalanceAfterTransfer,
+			&transfer.CreatedAt, &transfer.ExpiresAt, &transfer.PaymentTime); err != nil {
+			return nil, fmt.Errorf("扫描团队待接收的来自用户转账记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("迭代团队待接收的来自用户转账记录失败: %v", err)
+	}
+
+	return transfers, nil
+}
+
 // TeaConfirmUserToTeamTransferOut 团队(某个成员)确认接收来自用户转账
 func TeaConfirmUserToTeamTransferOut(transferUuid string, toTeamId, operationalUserId int) error {
 	// 开始事务

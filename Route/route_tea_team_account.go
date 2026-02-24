@@ -1527,7 +1527,7 @@ func GetTeaTeamToUserOutstandingTransfers(w http.ResponseWriter, r *http.Request
 // ============================================
 // 团队转入页面路由处理函数(incoming transfer)
 // ============================================
-// GetTeaTeamPendingFromTeamTransfers 获取团队待确认转入转账页面
+// GetTeaTeamPendingFromTeamTransfers 获取团队待确认转入转账页面 0223
 func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -1605,4 +1605,84 @@ func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) 
 	pageData.Limit = limit
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_from_team_transfers")
+}
+
+// GetTeaTeamPendingFromUserTransfers 获取团队待确认转入用户转账页面 0224
+func GetTeaTeamPendingFromUserTransfers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	// 验证用户登录
+	s_u, err := getCurrentUserFromSession(r)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "请先登录")
+		return
+	}
+
+	// 必须指定团队ID
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		report(w, s_u, "必须指定团队ID。")
+		return
+	}
+
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil {
+		report(w, s_u, "团队ID无效。")
+		return
+	}
+
+	// 获取团队信息
+	team, err := dao.GetTeam(teamId)
+	if err != nil {
+		util.Debug("cannot get team by id", teamId, err)
+		report(w, s_u, "团队不存在。")
+		return
+	}
+
+	// 检查用户是否是团队正常成员
+	isMember, err := dao.IsTeamActiveMember(s_u.Id, teamId)
+	if err != nil || !isMember {
+		report(w, s_u, "只有团队成员才能查看待确认转账。")
+		return
+	}
+
+	// 获取团队星茶账户
+	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
+	if err != nil {
+		util.Debug("cannot get team tea account", err)
+		report(w, s_u, "获取团队星茶账户失败。")
+		return
+	}
+
+	// 获取分页参数
+	page, limit := getPaginationParams(r)
+
+	// 获取待确认转入转账
+	transfers, err := dao.TeaTeamPendingFromUserTransfers(teamId, page, limit, r.Context())
+	if err != nil {
+		util.Debug("cannot get pending from user transfers", err)
+		report(w, s_u, "获取待确认转账失败。")
+		return
+	}
+
+	// 创建页面数据结构
+	var pageData struct {
+		SessUser    dao.User
+		Team        *dao.Team
+		TeamAccount dao.TeaTeamAccount
+		Transfers   []dao.TeaUserToTeamTransferOut
+		CurrentPage int
+		Limit       int
+	}
+
+	pageData.SessUser = s_u
+	pageData.Team = &team
+	pageData.TeamAccount = teamAccount
+	pageData.Transfers = transfers
+	pageData.CurrentPage = page
+	pageData.Limit = limit
+
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_from_user_transfers")
 }
