@@ -566,8 +566,8 @@ func CreateTeaUserToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	respondWithSuccess(w, "用户对团队转账发起成功", response)
 }
 
-// GetTeaUserInPendingFromUserTransfers 获取用户待确认,来自用户转入记录页面
-func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserFromUserPendingTransfers 获取用户待确认,来自用户转入记录页面
+func GetTeaUserFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -702,8 +702,8 @@ func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_pending_transfers")
 }
 
-// GetTeaUserInPendingFromTeamTransfers 获取用户待确认的,来自团队转账列表页面
-func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserFromTeamPendingTransfers 获取用户待确认的,来自团队转账列表页面
+func GetTeaUserFromTeamPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -818,35 +818,12 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_pending_transfers")
 }
 
-// HandleTeaUserToUserPendingTransfers 由当前用户发起,待对方用户确认,转账列表页面请求
-func HandleTeaUserToUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserFromUserCompletedTransfers 获取用户来自用户已完成转入记录页面
+func GetTeaUserFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetTeaUserToUserPendingTransferOuts(w, r)
-}
-
-// HandleTeaUserOutToTeamPendingTransfers 用户发起，待对方团队确认接受转账页面请求
-func HandleTeaUserOutToTeamPendingTransfers(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	GetTeaUserToTeamPendingTransferOuts(w, r)
-}
-
-// HandleTeaUserFromUserCompletedTransferIns 用户已经确认,来自用户转入记录页面请求 - 收入记录（仅已完成）
-func HandleTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-	GetTeaUserFromUserCompletedTransferIns(w, r)
-}
-
-// GetTeaUserFromUserCompletedTransferIns 获取用户来自用户已完成转入记录页面
-func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -951,17 +928,12 @@ func GetTeaUserFromUserCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_completed_transfers")
 }
 
-// HandleTeaUserFromTeamCompletedTransferIns 获取用户已经确认,来自团队转入记录页面请求 - 收入记录（仅已完成）
-func HandleTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserFromTeamCompletedTransfers 获取用户从团队转入已完成记录页面
+func GetTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetTeaUserFromTeamCompletedTransferIns(w, r)
-}
-
-// GetTeaUserFromTeamCompletedTransferIns 获取用户从团队转入已完成记录页面
-func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1081,17 +1053,12 @@ func GetTeaUserFromTeamCompletedTransferIns(w http.ResponseWriter, r *http.Reque
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_completed_transfer_ins")
 }
 
-// HandleTeaUserFromUserExpiredTransferIns 用户接收来自用户转入已超时记录页面请求 - 收入记录（仅已超时）
-func HandleTeaUserFromUserExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserFromUserExpiredTransfers 获取用户来自用户已超时转入记录页面
+func GetTeaUserFromUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetTeaUserFromUserExpiredTransferIns(w, r)
-}
-
-// GetTeaUserFromUserExpiredTransferIns 获取用户来自用户已超时转入记录页面
-func GetTeaUserFromUserExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1196,17 +1163,12 @@ func GetTeaUserFromUserExpiredTransferIns(w http.ResponseWriter, r *http.Request
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_expired_transfers")
 }
 
-// HandleTeaUserFromTeamExpiredTransferIns 用户接收来自团队转入已超时记录页面请求 - 收入记录（仅已超时）
-func HandleTeaUserFromTeamExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserFromTeamExpiredTransfers 获取用户来自团队已超时转入记录页面
+func GetTeaUserFromTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetTeaUserFromTeamExpiredTransferIns(w, r)
-}
-
-// GetTeaUserFromTeamExpiredTransferIns 获取用户来自团队已超时转入记录页面
-func GetTeaUserFromTeamExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1311,17 +1273,12 @@ func GetTeaUserFromTeamExpiredTransferIns(w http.ResponseWriter, r *http.Request
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_expired_transfers")
 }
 
-// HandleTeaUserFromUserRejectedTransferIns 用户接收来自用户转入已被拒绝记录页面请求 - 收入记录（仅已被拒绝）
-func HandleTeaUserFromUserRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserFromUserRejectedTransfers 获取用户来自用户已被拒绝转入记录页面
+func GetTeaUserFromUserRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetTeaUserFromUserRejectedTransferIns(w, r)
-}
-
-// GetTeaUserFromUserRejectedTransferIns 获取用户来自用户已被拒绝转入记录页面
-func GetTeaUserFromUserRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1428,17 +1385,12 @@ func GetTeaUserFromUserRejectedTransferIns(w http.ResponseWriter, r *http.Reques
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_rejected_transfers")
 }
 
-// HandleTeaUserFromTeamRejectedTransferIns 用户接收来自团队转入已被拒绝记录页面请求 - 收入记录（仅已被拒绝）
-func HandleTeaUserFromTeamRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserFromTeamRejectedTransfers 获取用户来自团队已被拒绝转入记录页面
+func GetTeaUserFromTeamRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetTeaUserFromTeamRejectedTransferIns(w, r)
-}
-
-// GetTeaUserFromTeamRejectedTransferIns 获取用户来自团队已被拒绝转入记录页面
-func GetTeaUserFromTeamRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1625,28 +1577,28 @@ func getCurrentUserFromSession(r *http.Request) (dao.User, error) {
 }
 
 // 辅助函数：返回分页响应
-func respondWithPagination(w http.ResponseWriter, message string, data any, page, limit, total int) {
-	totalPages := (total + limit - 1) / limit
-	pageInfo := PageInfo{
-		Page:       page,
-		Limit:      limit,
-		Total:      total,
-		TotalPages: totalPages,
-	}
+// func respondWithPagination(w http.ResponseWriter, message string, data any, page, limit, total int) {
+// 	totalPages := (total + limit - 1) / limit
+// 	pageInfo := PageInfo{
+// 		Page:       page,
+// 		Limit:      limit,
+// 		Total:      total,
+// 		TotalPages: totalPages,
+// 	}
 
-	response := ApiResponse{
-		Success:  true,
-		Message:  message,
-		Data:     data,
-		PageInfo: &pageInfo,
-	}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
-}
+// 	response := ApiResponse{
+// 		Success:  true,
+// 		Message:  message,
+// 		Data:     data,
+// 		PageInfo: &pageInfo,
+// 	}
+// 	w.Header().Set("Content-Type", "application/json")
+// 	w.WriteHeader(http.StatusOK)
+// 	json.NewEncoder(w).Encode(response)
+// }
 
-// ConfirmTeaUserFromUserTransferInAPI 当前用户确认接收,来自用户转账
-func ConfirmTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request) {
+// ConfirmTeaUserFromUserTransferAPI 当前用户确认接收,来自用户转账
+func ConfirmTeaUserFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -1684,8 +1636,8 @@ func ConfirmTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request)
 	respondWithSuccess(w, "用户对用户转账确认接收成功", nil)
 }
 
-// RejectTeaUserFromUserTransferInAPI 当前用户拒绝接收, 来自用户转账
-func RejectTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request) {
+// RejectTeaUserFromUserTransferAPI 当前用户拒绝接收, 来自用户转账
+func RejectTeaUserFromUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -1724,8 +1676,8 @@ func RejectTeaUserFromUserTransferInAPI(w http.ResponseWriter, r *http.Request) 
 	respondWithSuccess(w, "用户对用户转账拒绝成功", nil)
 }
 
-// ConfirmTeaUserFromTeamTransferInAPI 当前用户确认接收,来自团队转账
-func ConfirmTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request) {
+// ConfirmTeaUserFromTeamTransferAPI 当前用户确认接收,来自团队转账
+func ConfirmTeaUserFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -1764,8 +1716,8 @@ func ConfirmTeaUserFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request)
 
 }
 
-// TeaUserRejectFromTeamTransferInAPI 当前用户拒绝接收,来自团队转账
-func TeaUserRejectFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request) {
+// TeaUserRejectFromTeamTransferAPI 当前用户拒绝接收,来自团队转账
+func TeaUserRejectFromTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 只接受POST请求
 	if r.Method != "POST" {
 		respondWithError(w, http.StatusMethodNotAllowed, "请求方法错误")
@@ -1806,8 +1758,8 @@ func TeaUserRejectFromTeamTransferInAPI(w http.ResponseWriter, r *http.Request) 
 
 }
 
-// GetTeaUserToUserPendingTransferOuts 获取由当前用户发起,待对方用户确认,转账列表页面
-func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserToUserPendingTransfers 获取由当前用户发起,待对方用户确认,转账列表页面
+func GetTeaUserToUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -1933,8 +1885,12 @@ func GetTeaUserToUserPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_pending_transfers")
 }
 
-// GetTeaUserToTeamPendingTransferOuts 获取当前用户发起,待对方团队确认,转账页面
-func GetTeaUserToTeamPendingTransferOuts(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserToTeamPendingTransfers 获取当前用户发起,待对方团队确认,转账页面
+func GetTeaUserToTeamPendingTransfers(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -2057,17 +2013,12 @@ func GetTeaUserToTeamPendingTransferOuts(w http.ResponseWriter, r *http.Request)
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.pending_user_to_team_transfers")
 }
 
-// HandleTeaUserToUserCompletedTransfers 获取用户对用户转出已完成记录列表页面(仅已完成状态)
-func HandleTeaUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserToUserCompletedTransfers 获取用户对用户转出已完成记录页面
+func GetTeaUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetUserToUserCompletedTransfers(w, r)
-}
-
-// GetUserToUserCompletedTransfers 获取用户对用户转出已完成记录页面
-func GetUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -2282,17 +2233,12 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.completed_transfer_outs_to_team")
 }
 
-// HandleTeaUserToUserExpiredTransfers 获取用户对用户转出已超时记录列表页面(仅已超时状态)
-func HandleTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserToUserExpiredTransfers 获取用户对用户转出已超时记录页面
+func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetTeaUserToUserExpiredTransfers(w, r)
-}
-
-// GetTeaUserToUserExpiredTransfers 获取用户对用户转出已超时记录页面
-func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -2392,17 +2338,12 @@ func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_expired_transfers")
 }
 
-// HandleTeaUserToTeamExpiredTransfers 获取用户对团队转出已超时记录列表页面(仅已超时状态)
-func HandleTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
+// GetTeaUserToTeamExpiredTransfers 获取用户对团队转出已超时记录页面
+func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetUserToTeamExpiredTransfers(w, r)
-}
-
-// GetUserToTeamExpiredTransfers 获取用户对团队转出已超时记录页面
-func GetUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
