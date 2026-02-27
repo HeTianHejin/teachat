@@ -1685,3 +1685,89 @@ func TeaTeamFromUserCompletedTransfers(teamId, page, limit int, ctx context.Cont
 
 	return transfers, nil
 }
+
+// TeaTeamFromTeamRejectedTransfers 获取团队作为接收方的已拒绝来自其他团队转账纪录
+func TeaTeamFromTeamRejectedTransfers(teamId, page, limit int, ctx context.Context) ([]TeaTeamFromTeamTransferIn, error) {
+	// 超时5秒取消
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := DB.QueryContext(ctx, `
+		SELECT id, team_to_team_transfer_out_id, to_team_id, to_team_name,
+		       from_team_id, from_team_name, amount_milligrams, notes,
+		       balance_after_transfer, status, is_confirmed,
+		       operational_user_id, rejection_reason,
+		       created_at
+		FROM tea.team_from_team_transfer_in
+		WHERE to_team_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusRejected,
+		limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询团队作为接收方的未成功转账记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaTeamFromTeamTransferIn{}
+	for rows.Next() {
+		var transfer TeaTeamFromTeamTransferIn
+		if err := rows.Scan(&transfer.Id, &transfer.TeamToTeamTransferOutId,
+			&transfer.ToTeamId, &transfer.ToTeamName,
+			&transfer.FromTeamId, &transfer.FromTeamName,
+			&transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.BalanceAfterTransfer, &transfer.Status,
+			&transfer.IsConfirmed, &transfer.OperationalUserId,
+			&transfer.RejectionReason, &transfer.CreatedAt); err != nil {
+			return nil, fmt.Errorf("扫描团队作为接收方已拒绝来自其他团队转账记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("迭代团队作为接收方已拒绝来自其他团队转账记录失败: %v", err)
+	}
+
+	return transfers, nil
+}
+
+// TeaTeamFromUserRejectedTransfers 获取团队作为接收方的已拒绝来自用户转账纪录
+func TeaTeamFromUserRejectedTransfers(teamId, page, limit int, ctx context.Context) ([]TeaTeamFromUserTransferIn, error) {
+	// 超时5秒取消
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := DB.QueryContext(ctx, `
+		SELECT id, user_to_team_transfer_out_id, to_team_id, to_team_name,
+		       from_user_id, from_user_name, amount_milligrams, notes,
+		       balance_after_transfer, status,
+		       operational_user_id, rejection_reason,
+		       created_at
+		FROM tea.team_from_user_transfer_in
+		WHERE to_team_id = $1 AND status = $2
+		ORDER BY created_at DESC
+		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusRejected,
+		limit, (page-1)*limit)
+	if err != nil {
+		return nil, fmt.Errorf("查询团队作为接收方的未成功转账记录失败: %v", err)
+	}
+	defer rows.Close()
+
+	transfers := []TeaTeamFromUserTransferIn{}
+	for rows.Next() {
+		var transfer TeaTeamFromUserTransferIn
+		if err := rows.Scan(&transfer.Id, &transfer.UserToTeamTransferOutId,
+			&transfer.ToTeamId, &transfer.ToTeamName,
+			&transfer.FromUserId, &transfer.FromUserName,
+			&transfer.AmountMilligrams, &transfer.Notes,
+			&transfer.BalanceAfterTransfer, &transfer.Status,
+			&transfer.OperationalUserId, &transfer.RejectionReason,
+			&transfer.CreatedAt); err != nil {
+			return nil, fmt.Errorf("扫描团队作为接收方已拒绝来自用户转账记录失败: %v", err)
+		}
+		transfers = append(transfers, transfer)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("迭代团队作为接收方已拒绝来自用户转账记录失败: %v", err)
+	}
+
+	return transfers, nil
+}
