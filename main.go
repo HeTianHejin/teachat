@@ -313,18 +313,18 @@ func main() {
 	mux.HandleFunc("/v1/tea/user/account/freeze", route.FreezeTeaUserAccountAPI)     // 用户星茶账户冻结API
 	mux.HandleFunc("/v1/tea/user/account/unfreeze", route.UnfreezeTeaUserAccountAPI) // 用户星茶账户解冻API
 	// out
-	mux.HandleFunc("/v1/tea/user/transfer/new/user_to_user", route.CreateTeaUserToUserTransferAPI)                        // 用户对用户创建转账API
-	mux.HandleFunc("/v1/tea/user/transfer/new/user_to_team", route.CreateTeaUserToTeamTransferAPI)                        // 用户对团队创建转账API
-	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_user/pending/page", route.HandleTeaUserToUserPendingTransfers)     // 等待对方用户待确认，用户对用户转账(待确认状态)页面
-	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_team/pending/page", route.HandleTeaUserOutToTeamPendingTransfers)  // 等待对方团队成员确认，用户对团队转账(待确认状态)页面
-	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_user/completed/page", route.HandleTeaUserToUserCompletedTransfers) // 用户对用户转出已完成记录列表页面(仅已完成状态)
-	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_team/completed/page", route.GetTeaUserToTeamCompletedTransfers)    // 用户对团队转出已完成记录列表页面(仅已完成状态)
+	mux.HandleFunc("/v1/tea/user/transfer/new/user_to_user", route.CreateTeaUserToUserTransferAPI)                    // 用户对用户创建转账API
+	mux.HandleFunc("/v1/tea/user/transfer/new/user_to_team", route.CreateTeaUserToTeamTransferAPI)                    // 用户对团队创建转账API
+	mux.HandleFunc("/v1/tea/user/transfers/user_to_user/pending/page", route.HandleTeaUserToUserPendingTransfers)     // 等待对方用户待确认，用户对用户转账(待确认状态)页面
+	mux.HandleFunc("/v1/tea/user/transfers/user_to_team/pending/page", route.HandleTeaUserOutToTeamPendingTransfers)  // 等待对方团队成员确认，用户对团队转账(待确认状态)页面
+	mux.HandleFunc("/v1/tea/user/transfers/user_to_user/completed/page", route.HandleTeaUserToUserCompletedTransfers) // 用户对用户转出已完成记录列表页面(仅已完成状态)
+	mux.HandleFunc("/v1/tea/user/transfers/user_to_team/completed/page", route.GetTeaUserToTeamCompletedTransfers)    // 用户对团队转出已完成记录列表页面(仅已完成状态)
 	// 超时的转账记录
-	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_user/expired/page", route.HandleTeaUserToUserExpiredTransfers) // 用户对用户转出已超时记录列表页面(仅已超时状态)
-	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_team/expired/page", route.HandleTeaUserToTeamExpiredTransfers) // 用户对团队转出已超时记录列表页面(仅已超时状态)
+	mux.HandleFunc("/v1/tea/user/transfers/user_to_user/expired/page", route.HandleTeaUserToUserExpiredTransfers) // 用户对用户转出已超时记录列表页面(仅已超时状态)
+	mux.HandleFunc("/v1/tea/user/transfers/user_to_team/expired/page", route.HandleTeaUserToTeamExpiredTransfers) // 用户对团队转出已超时记录列表页面(仅已超时状态)
 	// 转出已被拒绝的记录
-	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_user/rejected/page", route.GetTeaUserToUserRejectedTransfers) // 用户对用户转出已被拒绝记录列表页面（已拒绝状态）
-	mux.HandleFunc("/v1/tea/user/transfers/out/user_to_team/rejected/page", route.GetTeaUserToTeamRejectedTransfers) // 用户对团队转出已被拒绝记录列表页面（已拒绝状态）
+	mux.HandleFunc("/v1/tea/user/transfers/user_to_user/rejected/page", route.GetTeaUserToUserRejectedTransfers) // 用户对用户转出已被拒绝记录列表页面（已拒绝状态）
+	mux.HandleFunc("/v1/tea/user/transfers/user_to_team/rejected/page", route.GetTeaUserToTeamRejectedTransfers) // 用户对团队转出已被拒绝记录列表页面（已拒绝状态）
 	// in
 	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_user/pending/page", route.GetTeaUserInPendingFromUserTransfers)        // 等待用户确认接收来自用户转入记录列表页面 - 待确认状态
 	mux.HandleFunc("/v1/tea/user/transfers/in/user_from_team/pending/page", route.GetTeaUserInPendingFromTeamTransfers)        // 等待用户确认接收来自团队转入记录页面 - 待确认状态
