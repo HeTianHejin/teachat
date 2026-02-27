@@ -702,93 +702,6 @@ func GetTeaUserInPendingFromUserTransfers(w http.ResponseWriter, r *http.Request
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_pending_transfers")
 }
 
-// GetTeaUserInPendingFromUserTransfersAPI 获取用户待确认的,来自用户转账列表API
-func GetTeaUserInPendingFromUserTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取待确认用户对用户转账
-	transfers, err := dao.TeaUserInFromUserPendingTransfers(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户待确认转账失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserToUserTransferOutResponse
-	for _, transfer := range transfers {
-
-		response := UserToUserTransferOutResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToUserId:         transfer.ToUserId,
-			ToUserName:       transfer.ToUserName,
-			AmountMilligrams: int(transfer.AmountMilligrams),
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取待确认用户对用户转账成功", responses, page, limit, 0)
-}
-
-// GetTeaUserInPendingFromTeamTransfersAPI 获取用户待确认的,来自团队转账列表
-func GetTeaUserInPendingFromTeamTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取待用户确认，团队对用户转账记录
-	transfers, err := dao.TeaUserInFromTeamPendingTransfers(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取待确认转账失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserFromTeamTransferInResponse
-	for _, transfer := range transfers {
-		// 获取用户名信息
-		toUser, _ := dao.GetUser(transfer.ToUserId)
-
-		response := UserFromTeamTransferInResponse{
-			Uuid:             transfer.Uuid,
-			ToUserId:         transfer.ToUserId,
-			FromTeamId:       transfer.FromTeamId,
-			AmountMilligrams: int(transfer.AmountMilligrams),
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		if toUser.Name != "" {
-			response.ToUserName = toUser.Name
-		}
-
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取待确认用户对团队转账成功", responses, page, limit, 0)
-}
-
 // GetTeaUserInPendingFromTeamTransfers 获取用户待确认的,来自团队转账列表页面
 func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
@@ -903,136 +816,6 @@ func GetTeaUserInPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request
 	pageData.Limit = limit
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_pending_transfers")
-}
-
-// GetTeaUserToUserExpiredTransfersAPI 获取用户对用户超时转出记录
-func GetTeaUserToUserExpiredTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-	// 获取用户对用户转出已经过期记录
-	transfers, err := dao.TeaUserToUserExpiredTransferOuts(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户对用户转出已过期记录失败")
-		return
-	}
-	// 转换响应格式
-	var responses []UserToUserTransferOutResponse
-	for _, transfer := range transfers {
-
-		response := UserToUserTransferOutResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToUserId:         transfer.ToUserId,
-			ToUserName:       transfer.ToUserName,
-			AmountMilligrams: int(transfer.AmountMilligrams),
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-
-		responses = append(responses, response)
-	}
-	respondWithPagination(w, "获取用户对用户已经过期记录成功", responses, page, limit, 0)
-}
-
-// GetTeaUserToTeamExpiredTransfersAPI 获取用户对团队超时转出记录
-func GetTeaUserToTeamExpiredTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户对团队转出已经过期记录
-	transfers, err := dao.TeaUserToTeamExpiredTransferOuts(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户对团队转出已过期记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserToTeamTransferResponse
-	for _, transfer := range transfers {
-
-		response := UserToTeamTransferResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToTeamId:         transfer.ToTeamId,
-			ToTeamName:       transfer.ToTeamName,
-			AmountMilligrams: int(transfer.AmountMilligrams),
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户对团队已经过期记录成功", responses, page, limit, 0)
-}
-
-// GetTeaUserOutPendingToTeamTransfersAPI 获取用户发起的,待团队确认的用户对团队转账列表API
-func GetTeaUserOutPendingToTeamTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户对团队待确认转账记录
-	transfers, err := dao.TeaUserOutToTeamPendingTransfers(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户对团队待确认转账失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserToTeamTransferResponse
-	for _, transfer := range transfers {
-		response := UserToTeamTransferResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToTeamId:         transfer.ToTeamId,
-			ToTeamName:       transfer.ToTeamName,
-			AmountMilligrams: int(transfer.AmountMilligrams),
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户对团队待确认转账成功", responses, page, limit, 0)
 }
 
 // HandleTeaUserToUserPendingTransfers 由当前用户发起,待对方用户确认,转账列表页面请求
@@ -1413,47 +1196,6 @@ func GetTeaUserFromUserExpiredTransferIns(w http.ResponseWriter, r *http.Request
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_expired_transfers")
 }
 
-// GetTeaUserFromUserExpiredTransfersAPI 获取用户来自用户已超时转入记录API
-func GetTeaUserFromUserExpiredTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-	// 获取用户来自用户已超时转入记录
-	transfers, err := dao.TeaUserFromUserExpiredTransferIns(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取已超时收入记录失败")
-		return
-	}
-	// 转换响应格式
-	var responses []UserFromUserExpiredTransferInResponse
-	for _, transfer := range transfers {
-		response := UserFromUserExpiredTransferInResponse{
-			Uuid:                 transfer.Uuid,
-			FromUserId:           transfer.FromUserId,
-			FromUserName:         transfer.FromUserName,
-			ToUserId:             transfer.ToUserId,
-			ToUserName:           transfer.ToUserName,
-			AmountMilligrams:     transfer.AmountMilligrams,
-			BalanceAfterTransfer: transfer.BalanceAfterTransfer,
-			Status:               transfer.Status,
-			Notes:                transfer.Notes,
-			ExpiresAt:            transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:            transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-		responses = append(responses, response)
-	}
-	respondWithPagination(w, "获取已超时收入记录成功", responses, page, limit, 0)
-}
-
 // HandleTeaUserFromTeamExpiredTransferIns 用户接收来自团队转入已超时记录页面请求 - 收入记录（仅已超时）
 func HandleTeaUserFromTeamExpiredTransferIns(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -1567,47 +1309,6 @@ func GetTeaUserFromTeamExpiredTransferIns(w http.ResponseWriter, r *http.Request
 	pageData.Limit = limit
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_expired_transfers")
-}
-
-// GetTeaUserFromTeamExpiredTransfersAPI 获取用户来自团队已超时转入记录API
-func GetTeaUserFromTeamExpiredTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-	// 获取用户来自团队已超时转入记录
-	transfers, err := dao.TeaUserFromTeamExpiredTransferIns(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取已超时收入记录失败")
-		return
-	}
-	// 转换响应格式
-	var responses []UserFromTeamExpiredTransferInResponse
-	for _, transfer := range transfers {
-		response := UserFromTeamExpiredTransferInResponse{
-			Uuid:                 transfer.Uuid,
-			FromTeamId:           transfer.FromTeamId,
-			FromTeamName:         transfer.FromTeamName,
-			ToUserId:             transfer.ToUserId,
-			ToUserName:           transfer.ToUserName,
-			AmountMilligrams:     transfer.AmountMilligrams,
-			BalanceAfterTransfer: transfer.BalanceAfterTransfer,
-			Status:               transfer.Status,
-			Notes:                transfer.Notes,
-			ExpiresAt:            transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:            transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-		responses = append(responses, response)
-	}
-	respondWithPagination(w, "获取已超时收入记录成功", responses, page, limit, 0)
 }
 
 // HandleTeaUserFromUserRejectedTransferIns 用户接收来自用户转入已被拒绝记录页面请求 - 收入记录（仅已被拒绝）
@@ -1727,47 +1428,6 @@ func GetTeaUserFromUserRejectedTransferIns(w http.ResponseWriter, r *http.Reques
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_user_rejected_transfers")
 }
 
-// GetTeaUserFromUserRejectedTransfersAPI 获取用户来自用户已被拒绝转入记录API
-func GetTeaUserFromUserRejectedTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-	// 获取用户来自用户已被拒绝转入记录
-	transfers, err := dao.TeaUserFromUserRejectedTransferIns(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取被拒绝收入记录失败")
-		return
-	}
-	// 转换响应格式
-	var responses []UserFromUserTransferInResponse
-	for _, transfer := range transfers {
-		response := UserFromUserTransferInResponse{
-			Uuid:                    transfer.Uuid,
-			UserToUserTransferOutId: transfer.UserToUserTransferOutId,
-			FromUserId:              transfer.FromUserId,
-			FromUserName:            transfer.FromUserName,
-			ToUserId:                transfer.ToUserId,
-			ToUserName:              transfer.ToUserName,
-			AmountMilligrams:        transfer.AmountMilligrams,
-			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
-			Status:                  transfer.Status,
-			Notes:                   transfer.Notes,
-			IsConfirmed:             transfer.IsConfirmed,
-			OperationalUserId:       transfer.OperationalUserId,
-			RejectionReason:         transfer.RejectionReason,
-			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		responses = append(responses, response)
-	}
-	respondWithPagination(w, "获取被拒绝收入记录成功", responses, page, limit, 0)
-}
-
 // HandleTeaUserFromTeamRejectedTransferIns 用户接收来自团队转入已被拒绝记录页面请求 - 收入记录（仅已被拒绝）
 func HandleTeaUserFromTeamRejectedTransferIns(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -1883,46 +1543,6 @@ func GetTeaUserFromTeamRejectedTransferIns(w http.ResponseWriter, r *http.Reques
 	pageData.Limit = limit
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_rejected_transfers")
-}
-
-// GetTeaUserFromTeamRejectedTransfersAPI 获取用户来自团队已被拒绝转入记录API
-func GetTeaUserFromTeamRejectedTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-	// 获取用户来自团队已被拒绝转入记录
-	transfers, err := dao.TeaUserFromTeamRejectedTransferIns(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取被拒绝收入记录失败")
-		return
-	}
-	// 转换响应格式
-	var responses []UserFromTeamTransferInResponse
-	for _, transfer := range transfers {
-		response := UserFromTeamTransferInResponse{
-			Uuid:                    transfer.Uuid,
-			TeamToUserTransferOutId: transfer.TeamToUserTransferOutId,
-			FromTeamId:              transfer.FromTeamId,
-			FromTeamName:            transfer.FromTeamName,
-			ToUserId:                transfer.ToUserId,
-			ToUserName:              transfer.ToUserName,
-			AmountMilligrams:        int(transfer.AmountMilligrams),
-			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
-			Status:                  transfer.Status,
-			Notes:                   transfer.Notes,
-			IsConfirmed:             transfer.IsConfirmed,
-			RejectionReason:         transfer.RejectionReason,
-			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		responses = append(responses, response)
-	}
-	respondWithPagination(w, "获取被拒绝收入记录成功", responses, page, limit, 0)
 }
 
 // ProcessExpiredTransfersJob 定时任务：处理过期转账
@@ -2564,63 +2184,12 @@ func GetUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_completed_transfers")
 }
 
-// GetTeaUserToTeamCompletedTransfersAPI 获取用户对团队转出已完成记录列表API(仅已完成状态)
-func GetTeaUserToTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户对团队转出已完成记录
-	transfers, err := dao.TeaUserToTeamCompletedTransferOuts(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户对团队转出已完成记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserToTeamTransferResponse
-	for _, transfer := range transfers {
-		response := UserToTeamTransferResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToTeamId:         transfer.ToTeamId,
-			ToTeamName:       transfer.ToTeamName,
-			AmountMilligrams: int(transfer.AmountMilligrams),
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户对团队转出已完成记录成功", responses, page, limit, 0)
-}
-
-// HandleTeaUserToTeamCompletedTransfers 获取用户对团队转出已完成记录列表页面(仅已完成状态)
-func HandleTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
+// GetUserToTeamCompletedTransfers 获取用户对团队转出已完成记录页面
+func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	GetUserToTeamCompletedTransfers(w, r)
-}
-
-// GetUserToTeamCompletedTransfers 获取用户对团队转出已完成记录页面
-func GetUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
@@ -2928,96 +2497,6 @@ func GetUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.expired_transfer_outs_to_team")
 }
 
-// TeaUserFromTeamCompletedTransfersAPI 用户已经确认接收团队转入记录API - 收入记录（仅已完成）
-func TeaUserFromTeamCompletedTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户来自团队已完成转入记录
-	transfers, err := dao.TeaUserFromTeamCompletedTransferIns(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户来自团队已完成转入记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserFromTeamTransferInResponse
-	for _, transfer := range transfers {
-		response := UserFromTeamTransferInResponse{
-			Uuid:                    transfer.Uuid,
-			TeamToUserTransferOutId: transfer.TeamToUserTransferOutId,
-			ToUserId:                transfer.ToUserId,
-			ToUserName:              transfer.ToUserName,
-			FromTeamId:              transfer.FromTeamId,
-			FromTeamName:            transfer.FromTeamName,
-			AmountMilligrams:        int(transfer.AmountMilligrams),
-			BalanceAfterReceipt:     transfer.BalanceAfterReceipt,
-			Status:                  transfer.Status,
-			Notes:                   transfer.Notes,
-			IsConfirmed:             transfer.IsConfirmed,
-			RejectionReason:         transfer.RejectionReason,
-			ExpiresAt:               transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:               transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户来自团队已完成转入记录成功", responses, page, limit, 0)
-}
-
-// GetTeaUserToUserRejectedTransfersAPI 获取用户对用户转出已被拒绝记录列表API（已拒绝 状态）
-func GetTeaUserToUserRejectedTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户对用户转出已被拒绝记录
-	transfers, err := dao.TeaUserToUserRejectedTransferOuts(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户对用户转出已被拒绝记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserToUserTransferOutResponse
-	for _, transfer := range transfers {
-		response := UserToUserTransferOutResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToUserId:         transfer.ToUserId,
-			ToUserName:       transfer.ToUserName,
-			AmountMilligrams: int(transfer.AmountMilligrams),
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户对用户转出已被拒绝记录成功", responses, page, limit, 0)
-}
-
 // GetTeaUserToUserRejectedTransfers 获取用户对用户转出已被拒绝记录页面（已拒绝）
 func GetTeaUserToUserRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
@@ -3121,52 +2600,6 @@ func GetTeaUserToUserRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	pageData.Limit = limit
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_user_rejected_transfers")
-}
-
-// GetTeaUserToTeamRejectedTransfersAPI 获取用户对团队转出已被拒绝记录列表API（已拒绝 + 已超时）
-func GetTeaUserToTeamRejectedTransfersAPI(w http.ResponseWriter, r *http.Request) {
-	// 验证用户登录
-	user, err := getCurrentUserFromSession(r)
-	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "请先登录")
-		return
-	}
-
-	// 获取分页参数
-	page, limit := getPaginationParams(r)
-
-	// 获取用户对团队转出已被拒绝记录
-	transfers, err := dao.TeaUserToTeamRejectedTransferOuts(user.Id, page, limit)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "获取用户对团队转出已被拒绝记录失败")
-		return
-	}
-
-	// 转换响应格式
-	var responses []UserToTeamTransferResponse
-	for _, transfer := range transfers {
-		response := UserToTeamTransferResponse{
-			Uuid:             transfer.Uuid,
-			FromUserId:       transfer.FromUserId,
-			FromUserName:     transfer.FromUserName,
-			ToTeamId:         transfer.ToTeamId,
-			ToTeamName:       transfer.ToTeamName,
-			AmountMilligrams: int(transfer.AmountMilligrams),
-			Status:           transfer.Status,
-			Notes:            transfer.Notes,
-			ExpiresAt:        transfer.ExpiresAt.Format("2006-01-02 15:04:05"),
-			CreatedAt:        transfer.CreatedAt.Format("2006-01-02 15:04:05"),
-		}
-
-		if transfer.PaymentTime != nil {
-			paymentTime := transfer.PaymentTime.Format("2006-01-02 15:04:05")
-			response.PaymentTime = &paymentTime
-		}
-
-		responses = append(responses, response)
-	}
-
-	respondWithPagination(w, "获取用户对团队转出已被拒绝记录成功", responses, page, limit, 0)
 }
 
 // GetTeaUserToTeamRejectedTransfers 获取用户对团队转出已被拒绝记录页面（已拒绝 + 已超时）
