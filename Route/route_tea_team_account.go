@@ -1527,7 +1527,7 @@ func GetTeaTeamToUserOutstandingTransfers(w http.ResponseWriter, r *http.Request
 // ============================================
 // 团队转入页面路由处理函数(incoming transfer)
 // ============================================
-// GetTeaTeamPendingFromTeamTransfers 获取团队待确认转入转账页面 0223
+// GetTeaTeamPendingFromTeamTransfers 获取团队待确认（包含已经超时）转入转账页面 0223
 func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -1607,7 +1607,7 @@ func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) 
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_from_team_transfers")
 }
 
-// GetTeaTeamPendingFromUserTransfers 获取团队待确认转入用户转账页面 0224
+// GetTeaTeamPendingFromUserTransfers 获取团队待确认（包含已经超时）转入用户转账页面 0224
 func GetTeaTeamPendingFromUserTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

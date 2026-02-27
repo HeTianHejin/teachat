@@ -1175,7 +1175,7 @@ func TeaTeamCountPendingFromUserReceipts(teamId int) (int, error) {
 	return count, nil
 }
 
-// TeaTeamPendingFromTeamTransfers 获取团队待确认接收的来自团队转账记录，按照时间排序，分页返回 0223
+// TeaTeamPendingFromTeamTransfers 获取团队待确认接收（包含已经超时）的来自团队转账记录，按照时间排序，分页返回 0227
 func TeaTeamPendingFromTeamTransfers(teamId, page, limit int, ctx context.Context) ([]TeaTeamToTeamTransferOut, error) {
 	// 超时5秒取消
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -1187,9 +1187,9 @@ func TeaTeamPendingFromTeamTransfers(teamId, page, limit int, ctx context.Contex
 		       is_approved, approver_user_id, approval_rejection_reason, approved_at,
 		       status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
 		FROM tea.team_to_team_transfer_out
-		WHERE to_team_id = $1 AND status = $2
+		WHERE to_team_id = $1 AND status in ($2, $3)
 		ORDER BY created_at ASC
-		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
+		LIMIT $4 OFFSET $5`, teamId, TeaTransferStatusPendingReceipt, TeaTransferStatusExpired, limit, (page-1)*limit)
 	if err != nil {
 		return nil, fmt.Errorf("查询团队待接收的来自团队转账记录失败: %v", err)
 	}
@@ -1216,7 +1216,7 @@ func TeaTeamPendingFromTeamTransfers(teamId, page, limit int, ctx context.Contex
 	return transfers, nil
 }
 
-// TeaTeamPendingFromUserTransfers 获取团队待确认接收的来自用户转账记录，按照时间排序，分页返回 0223
+// TeaTeamPendingFromUserTransfers 获取团队待确认接收（包含已经超时）的来自用户转账记录，按照时间排序，分页返回 0227
 func TeaTeamPendingFromUserTransfers(teamId, page, limit int, ctx context.Context) ([]TeaUserToTeamTransferOut, error) {
 	// 超时5秒取消
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -1227,9 +1227,9 @@ func TeaTeamPendingFromUserTransfers(teamId, page, limit int, ctx context.Contex
 		       amount_milligrams, notes,
 		       status, balance_after_transfer, created_at, expires_at, payment_time
 		FROM tea.user_to_team_transfer_out
-		WHERE to_team_id = $1 AND status = $2
+		WHERE to_team_id = $1 AND status in ($2, $3)
 		ORDER BY created_at ASC
-		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
+		LIMIT $4 OFFSET $5`, teamId, TeaTransferStatusPendingReceipt, TeaTransferStatusExpired, limit, (page-1)*limit)
 	if err != nil {
 		return nil, fmt.Errorf("查询团队待接收的来自用户转账记录失败: %v", err)
 	}
