@@ -600,7 +600,7 @@ func GetTeaUserFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	page, limit := getPaginationParams(r)
 
 	// 获取用户待确认状态来自用户转账记录
-	transfers, err := dao.TeaUserInFromUserPendingTransfers(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromUserPendingTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get transfer ins", err)
 		report(w, s_u, "获取用户对用户待确认状态转账记录失败。")
