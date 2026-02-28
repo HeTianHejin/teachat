@@ -192,6 +192,8 @@ CREATE TABLE tea.team_to_user_transfer_out (
     initiator_user_id     INTEGER NOT NULL REFERENCES users(id), -- 发起转账的用户id
     amount_milligrams     INTEGER NOT NULL, -- 转账星茶数量(毫克)，整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
+    is_only_one_member_team BOOLEAN NOT NULL DEFAULT FALSE, -- 是否单人团队，false:多人团队审批，true:单人团队自动批准
+    is_approved           BOOLEAN NOT NULL DEFAULT FALSE, -- 是否批准
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
     approved_at           TIMESTAMPTZ, -- 审批时间
@@ -226,6 +228,8 @@ CREATE TABLE tea.team_to_team_transfer_out (
     initiator_user_id     INTEGER NOT NULL REFERENCES users(id), -- 发起转账的用户id
     amount_milligrams     INTEGER NOT NULL, -- 转账星茶数量(毫克)，整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
+    is_only_one_member_team BOOLEAN NOT NULL DEFAULT FALSE, -- 是否单人团队，false:多人团队审批，true:单人团队自动批准
+    is_approved           BOOLEAN NOT NULL DEFAULT FALSE, -- 是否批准
     status                VARCHAR(20) NOT NULL DEFAULT 'pending_approval', -- 转账状态
     approver_user_id      INTEGER REFERENCES users(id), -- 审批人ID
     approved_at           TIMESTAMPTZ, -- 审批时间
