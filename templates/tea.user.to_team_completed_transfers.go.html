@@ -3,7 +3,7 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/tea/user/account/page">{{ .SessUser.Name }} 的星茶罐</a></li>
-  <li class="active">向其他用户转帐已完成记录</li>
+  <li class="active">向团队转出</li>
 </ol>
 
 <div class="container">
@@ -11,13 +11,13 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs">
-                <li class="active">
+                <li>
                     <a href="/v1/tea/user/transfers/user_to_user/completed/page">
                         <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
                         向其他用户
                     </a>
                 </li>
-                <li>
+                <li class="active">
                     <a href="/v1/tea/user/transfers/user_to_team/completed/page">
                         <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
                         向团队
@@ -33,7 +33,7 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-share" aria-hidden="true"></span>
-                        向其他用户转出 - 已完成
+                        向团队转出 - 已完成
                         <span class="pull-right">
                             <small>仅显示转账成功的转出记录</small>
                         </span>
@@ -89,9 +89,9 @@
                                 {{ range .Transfers }}
                                 <tr>
                                     <td>
-                                        <span class="label label-info">个人</span>
-                                        <strong>{{ .ToUserName }}</strong>
-                                        <br><small class="text-muted">ID: {{ .ToUserId }}</small>
+                                        <span class="label label-primary">团队</span>
+                                        <strong>{{ .ToTeamName }}</strong>
+                                        <br><small class="text-muted">ID: {{ .ToTeamId }}</small>
                                     </td>
                                     <td>
                                         <span class="text-danger">
@@ -109,7 +109,11 @@
                                         {{ end }}
                                     </td>
                                     <td>
+                                        {{ if .UpdatedAt }}
                                         <small>{{ .UpdatedAt.Format "2006-01-02 15:04" }}</small>
+                                        {{ else }}
+                                        <small class="text-muted">-</small>
+                                        {{ end }}
                                     </td>
                                     <td>
                                         <small class="text-muted">
@@ -165,7 +169,7 @@
                             <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                             暂无转出记录
                         </h4>
-                        <p>您还没有任何已完成的向其他用户的星茶转出记录。</p>
+                        <p>您还没有任何已完成的向团队的星茶转出记录。</p>
                         <p>
                             <a href="/v1/tea/user/account/page" class="btn btn-primary">
                                 <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
@@ -191,11 +195,11 @@
                     <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
                     返回星茶罐
                 </a>
-                <a href="/v1/tea/user/transfers/user_to_team/completed/page" class="btn btn-success">
-                    <span class="glyphicon glyphicon-briefcase" aria-hidden="true"></span>
-                    查看团队转出
+                <a href="/v1/tea/user/transfers/user_to_user/completed/page" class="btn btn-info">
+                    <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+                    查看用户转出
                 </a>
-                <a href="/v1/tea/user/transfer/to_user/page" class="btn btn-primary">
+                <a href="/v1/tea/user/transfer/to_team/page" class="btn btn-primary">
                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                     发起转账
                 </a>

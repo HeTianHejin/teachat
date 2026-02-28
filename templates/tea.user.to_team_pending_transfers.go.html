@@ -4,7 +4,7 @@
   <li><a href="/v1/">大堂</a></li>
    <li>{{ .SessUser.Name }} 的星茶罐</li>
   <li><a href="/v1/tea/user/account/page">管理个人星茶账户</a></li>
-  <li class="active">等待对方接收的转账</li>
+  <li class="active">等待团队接收的转账</li>
 </ol>
 
 <div class="container">
@@ -65,7 +65,7 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
-                        等待对方接收的转账
+                        等待团队接收的转账
                         {{ if .Transfers }}
                         <span class="badge">{{ len .Transfers }}</span>
                         {{ end }}
@@ -77,7 +77,7 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>接收方</th>
+                                    <th>接收团队</th>
                                     <th>数额(毫克)</th>
                                     <th>转账说明</th>
                                     <th>剩余时间</th>
@@ -88,11 +88,11 @@
                                 {{ range .Transfers }}
                                 <tr class="{{ if .IsExpired }}danger{{ end }}">
                                     <td>
-                                        <a href="/v1/user/biography?uuid={{ .ToUserId }}" class="btn-link">
-                                            <strong>{{ .ToUserName }}</strong>
+                                        <a href="/v1/tea/team/profile?uuid={{ .ToTeamId }}" class="btn-link">
+                                            <strong>{{ .ToTeamName }}</strong>
                                         </a>
                                         <br>
-                                        <small class="text-muted">用户ID: {{ .ToUserId }}</small>
+                                        <small class="text-muted">团队ID: {{ .ToTeamId }}</small>
                                     </td>
                                     <td>
                                         <strong class="text-success">{{ .AmountDisplay }}</strong>
@@ -121,7 +121,7 @@
                                         {{ if .IsExpired }}
                                         <span class="label label-danger">已过期</span>
                                         {{ else }}
-                                        <span class="label label-warning">等待对方接收</span>
+                                        <span class="label label-warning">等待团队接收</span>
                                         {{ end }}
                                     </td>
                                 </tr>
@@ -133,8 +133,8 @@
                     <div class="text-center" style="padding: 40px;">
                         <span class="glyphicon glyphicon-send" style="font-size: 48px; color: #ccc;" aria-hidden="true"></span>
                         <h3 class="text-muted">暂无进行中转账</h3>
-                        <p class="text-muted">您向其他茶友发起的转账将在对方接收前显示在这里</p>
-                        <a href="/v1/tea/user/transfer/to_user/page" class="btn btn-primary" style="margin-top: 15px;">
+                        <p class="text-muted">您向团队发起的转账将在团队接收前显示在这里</p>
+                        <a href="/v1/tea/user/transfer/to_team/page" class="btn btn-primary" style="margin-top: 15px;">
                             <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
                             发起转账
                         </a>
@@ -179,21 +179,21 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h5><span class="glyphicon glyphicon-send" aria-hidden="true"></span> 转账发起</h5>
-                            <p>您发起的转账正在等待对方接收，转账数额已从您的账户中锁定。</p>
+                            <p>您发起的转账正在等待团队接收，转账数额已从您的账户中锁定。</p>
                         </div>
                         <div class="col-md-6">
                             <h5><span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span> 接收确认</h5>
-                            <p>对方接受转账后，星茶将转入对方账户；若对方拒绝，星茶将退回您的账户。</p>
+                            <p>团队成员接受转账后，星茶将转入团队账户；若拒绝，星茶将退回您的账户。</p>
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <h5><span class="glyphicon glyphicon-time" aria-hidden="true"></span> 有效期限</h5>
-                            <p>每个转账都有有效期限制，过期后转账将自动失效，锁定的星茶将退回。</p>
+                            <p>转账有效期为24小时，过期后将自动失效并退回星茶。</p>
                         </div>
                         <div class="col-md-6">
-                            <h5><span class="glyphicon glyphicon-lock" aria-hidden="true"></span> 锁定说明</h5>
-                            <p>转账发起后，相应金额将被锁定，在对方确认或转账过期前无法使用。</p>
+                            <h5><span class="glyphicon glyphicon-lock" aria-hidden="true"></span> 锁定机制</h5>
+                            <p>转账期间星茶被锁定，无法用于其他操作，确保转账安全。</p>
                         </div>
                     </div>
                 </div>
@@ -204,11 +204,9 @@
 </div>
 
 <script>
-// 刷新页面
 function refreshPage() {
     location.reload();
 }
-
 </script>
 
 {{ end }}

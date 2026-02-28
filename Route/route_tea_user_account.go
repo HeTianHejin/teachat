@@ -2010,7 +2010,7 @@ func GetTeaUserToTeamPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.pending_user_to_team_transfers")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_team_pending_transfers")
 }
 
 // GetTeaUserToUserCompletedTransfers 获取用户对用户转出已完成记录页面
@@ -2051,7 +2051,7 @@ func GetTeaUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对用户转出已完成记录
-	transfers, err := dao.TeaUserToUserCompletedTransferOuts(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToUserCompletedTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get completed transfer outs", err)
 		report(w, s_u, "获取用户对用户转出已完成记录失败。")
@@ -2184,36 +2184,33 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	type EnhancedTransferOut struct {
 		dao.TeaUserToTeamTransferOut
 		StatusDisplay string
-		AmountDisplay string
 	}
 
 	var enhancedTransfers []EnhancedTransferOut
 	for _, transfer := range transfers {
 		enhanced := EnhancedTransferOut{
 			TeaUserToTeamTransferOut: transfer,
+			StatusDisplay:            "已完成",
 		}
-
-		// 添加状态显示（只有已完成状态）
-		enhanced.StatusDisplay = "已完成"
-
 		enhancedTransfers = append(enhancedTransfers, enhanced)
 	}
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser                dao.User
-		TeaAccount              dao.TeaUserAccount
-		Transfers               []EnhancedTransferOut
-		BalanceDisplay          string
-		LockedBalanceDisplay    string
-		AvailableBalanceDisplay string
-		StatusDisplay           string
-		CurrentPage             int
-		Limit                   int
+		SessUser             dao.User
+		BalanceMilligrams    int
+		LockedBalanceMilligrams int
+		AvailableBalance     int
+		Transfers            []EnhancedTransferOut
+		StatusDisplay        string
+		CurrentPage          int
+		Limit                int
 	}
 
 	pageData.SessUser = s_u
-	pageData.TeaAccount = account
+	pageData.BalanceMilligrams = int(account.BalanceMilligrams)
+	pageData.LockedBalanceMilligrams = int(account.LockedBalanceMilligrams)
+	pageData.AvailableBalance = int(account.BalanceMilligrams - account.LockedBalanceMilligrams)
 	pageData.Transfers = enhancedTransfers
 
 	// 状态显示
@@ -2230,7 +2227,7 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.completed_transfer_outs_to_team")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_team_completed_transfers")
 }
 
 // GetTeaUserToUserExpiredTransfers 获取用户对用户转出已超时记录页面
