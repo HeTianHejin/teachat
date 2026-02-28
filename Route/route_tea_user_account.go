@@ -1050,7 +1050,7 @@ func GetTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_completed_transfer_ins")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.from_team_completed_transfers")
 }
 
 // GetTeaUserFromUserExpiredTransfers 获取用户来自用户已超时转入记录页面
