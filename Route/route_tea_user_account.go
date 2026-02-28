@@ -1201,7 +1201,7 @@ func GetTeaUserFromTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自团队已超时的转入记录（仅已超时状态）
-	transfers, err := dao.TeaUserFromTeamExpiredTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromTeamExpiredTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get expired transfer ins from team", err)
 		report(w, s_u, "获取已超时收入记录失败。")

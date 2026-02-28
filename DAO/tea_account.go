@@ -842,7 +842,7 @@ func TeaUserInFromTeamPendingTransfers(to_user_id int, page, limit int) ([]TeaTe
 		SELECT id, uuid, to_user_id, to_user_name, from_team_id, from_team_name,
 		amount_milligrams, notes, status, expires_at, created_at, updated_at
 		FROM tea.team_to_user_transfer_out
-		WHERE to_user_id = $1 AND (status = $2 AND expires_at < NOW())
+		WHERE to_user_id = $1 AND (status = $2 AND expires_at > NOW())
 		ORDER BY created_at DESC
 		LIMIT $3 OFFSET $4`, to_user_id, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
 	if err != nil {
@@ -871,7 +871,7 @@ func TeaUserInFromTeamPendingTransferOutsCount(to_user_id int) (int, error) {
 	err := DB.QueryRow(`
 		SELECT COUNT(*) 
 		FROM tea.team_to_user_transfer_out 
-		WHERE to_user_id = $1 AND (status = $2 AND expires_at < NOW())`, to_user_id, TeaTransferStatusPendingReceipt).Scan(&count)
+		WHERE to_user_id = $1 AND (status = $2 AND expires_at > NOW())`, to_user_id, TeaTransferStatusPendingReceipt).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("查询用户待确认状态团队对用户转账数量失败: %v", err)
 	}
@@ -884,7 +884,7 @@ func TeaUserFromUserPendingTransfers(to_user_id int, page, limit int) ([]TeaUser
 		SELECT id, uuid, from_user_id, from_user_name, to_user_id, to_user_name,
 		amount_milligrams, notes, status, expires_at, created_at, updated_at
 		FROM tea.user_to_user_transfer_out
-		WHERE to_user_id = $1 AND (status = $2 AND expires_at < NOW())
+		WHERE to_user_id = $1 AND (status = $2 AND expires_at > NOW())
 		ORDER BY created_at DESC
 		LIMIT $3 OFFSET $4`, to_user_id, TeaTransferStatusPendingReceipt, limit, (page-1)*limit)
 	if err != nil {
@@ -916,7 +916,7 @@ func TeaUserInFromUserPendingTransferOutsCount(to_user_id int) (int, error) {
 	err := DB.QueryRow(`
 		SELECT COUNT(*) 
 		FROM tea.user_to_user_transfer_out 
-		WHERE to_user_id = $1 AND (status = $2 AND expires_at < NOW())`, to_user_id, TeaTransferStatusPendingReceipt).Scan(&count)
+		WHERE to_user_id = $1 AND (status = $2 AND expires_at > NOW())`, to_user_id, TeaTransferStatusPendingReceipt).Scan(&count)
 	if err != nil {
 		return 0, fmt.Errorf("查询用户星茶账户待处理用户对用户转账数量失败: %v", err)
 	}
@@ -1235,7 +1235,7 @@ func TeaUserFromUserExpiredTransferIns(user_id int, page, limit int) ([]TeaUserT
 // 获取用户来自团队已超时的转入记录（仅已超时状态）
 // 注意：根据转账流程，超时未接收的记录不会创建到 tea.user_from_team_transfer_in 表
 // 需要从 tea.team_to_user_transfer_out 表中查询，根据 to_user_id 和 status = expired 获取
-func TeaUserFromTeamExpiredTransferIns(user_id int, page, limit int) ([]TeaTeamToUserTransferOut, error) {
+func TeaUserFromTeamExpiredTransfers(user_id int, page, limit int) ([]TeaTeamToUserTransferOut, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, from_team_id, from_team_name, to_user_id, to_user_name,
 		       initiator_user_id, amount_milligrams, notes, is_only_one_member_team,
