@@ -2173,7 +2173,7 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对团队转出已完成记录
-	transfers, err := dao.TeaUserToTeamCompletedTransferOuts(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToTeamCompletedTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get completed transfer outs to team", err)
 		report(w, s_u, "获取用户对团队转出已完成记录失败。")

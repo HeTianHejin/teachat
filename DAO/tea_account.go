@@ -1599,8 +1599,8 @@ func TeaUserToUserCompletedTransferOuts(from_user_id int, page, limit int) ([]Te
 	return transfers, nil
 }
 
-// TeaUserToTeamCompletedTransferOuts 获取用户对团队转出已完成记录（仅已完成状态）
-func TeaUserToTeamCompletedTransferOuts(from_user_id int, page, limit int) ([]TeaUserToTeamTransferOut, error) {
+// TeaUserToTeamCompletedTransfers 获取用户对团队转出已完成记录（仅已完成状态）
+func TeaUserToTeamCompletedTransfers(from_user_id int, page, limit int) ([]TeaUserToTeamTransferOut, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, from_user_id, from_user_name, to_team_id, to_team_name,
 		       amount_milligrams, notes, status, balance_after_transfer,
