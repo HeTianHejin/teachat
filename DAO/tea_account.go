@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	util "teachat/Util"
@@ -865,8 +866,8 @@ func TeaUserInFromTeamPendingTransfers(to_user_id int, page, limit int) ([]TeaTe
 	return transfers, nil
 }
 
-// TeaUserInFromTeamPendingTransferOutsCount 获取用户星茶账户待处理状态,来自团队对用户转账数量
-func TeaUserInFromTeamPendingTransferOutsCount(to_user_id int) (int, error) {
+// TeaUserFromTeamPendingTransfersCount 获取用户星茶账户待处理状态,来自团队对用户转账数量
+func TeaUserFromTeamPendingTransfersCount(to_user_id int) (int, error) {
 	var count int
 	err := DB.QueryRow(`
 		SELECT COUNT(*) 
@@ -910,8 +911,8 @@ func TeaUserFromUserPendingTransfers(to_user_id int, page, limit int) ([]TeaUser
 	return transfers, nil
 }
 
-// TeaUserInFromUserPendingTransferOutsCount 获取用户星茶账户待处理状态,来自其他用户对用户转账数量
-func TeaUserInFromUserPendingTransferOutsCount(to_user_id int) (int, error) {
+// TeaUserFromUserPendingTransfersCount 获取用户星茶账户待处理状态,来自其他用户对用户转账数量
+func TeaUserFromUserPendingTransfersCount(to_user_id int) (int, error) {
 	var count int
 	err := DB.QueryRow(`
 		SELECT COUNT(*) 
@@ -1503,8 +1504,14 @@ func TeaUserRejectFromTeamTransferIn(transferUuid string, toUserId int, reason s
 }
 
 // 获取用户对用户转出已经过期记录
-func TeaUserToUserExpiredTransferOuts(user_id, page, limit int) ([]TeaUserToUserTransferOut, error) {
-	rows, err := DB.Query(`
+func TeaUserToUserExpiredTransfers(user_id, page, limit int, ctx context.Context) ([]TeaUserToUserTransferOut, error) {
+	//超时5秒取消
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("查询用户对用户已过期转出记录超时: %v", err)
+	}
+	rows, err := DB.QueryContext(ctx, `
 		SELECT id, uuid, from_user_id, from_user_name, to_user_id, to_user_name,
 		       amount_milligrams, notes, status, COALESCE(balance_after_transfer, 0),
 		       expires_at, created_at, payment_time, updated_at
@@ -1536,7 +1543,7 @@ func TeaUserToUserExpiredTransferOuts(user_id, page, limit int) ([]TeaUserToUser
 }
 
 // 获取用户对团队转出已经过期记录
-func TeaUserToTeamExpiredTransferOuts(user_id, page, limit int) ([]TeaUserToTeamTransferOut, error) {
+func TeaUserToTeamExpiredTransfers(user_id, page, limit int) ([]TeaUserToTeamTransferOut, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, from_user_id, from_user_name, to_team_id, to_team_name,
 		       amount_milligrams, notes, status, COALESCE(balance_after_transfer, 0),
@@ -1632,8 +1639,8 @@ func TeaUserToTeamCompletedTransfers(from_user_id int, page, limit int) ([]TeaUs
 	return transfers, nil
 }
 
-// TeaUserToUserRejectedTransferOuts 获取用户对用户转出已被拒绝
-func TeaUserToUserRejectedTransferOuts(from_user_id int, page, limit int) ([]TeaUserToUserTransferOut, error) {
+// TeaUserToUserRejectedTransfers 获取用户对用户转出已被拒绝
+func TeaUserToUserRejectedTransfers(from_user_id int, page, limit int) ([]TeaUserToUserTransferOut, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, from_user_id, from_user_name, to_user_id, to_user_name,
 		       amount_milligrams, notes, status, COALESCE(balance_after_transfer, 0),
@@ -1665,8 +1672,8 @@ func TeaUserToUserRejectedTransferOuts(from_user_id int, page, limit int) ([]Tea
 	return transfers, nil
 }
 
-// TeaUserToTeamRejectedTransferOuts 获取用户对团队转出已被拒绝记录
-func TeaUserToTeamRejectedTransferOuts(from_user_id int, page, limit int) ([]TeaUserToTeamTransferOut, error) {
+// TeaUserToTeamRejectedTransfers 获取用户对团队转出已被拒绝记录
+func TeaUserToTeamRejectedTransfers(from_user_id int, page, limit int) ([]TeaUserToTeamTransferOut, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, from_user_id, from_user_name, to_team_id, to_team_name,
 		       amount_milligrams, notes, status, COALESCE(balance_after_transfer, 0),

@@ -184,14 +184,14 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 获取用户待确认来自用户转账数量
-	pendingFromUserCount, err := dao.TeaUserInFromUserPendingTransferOutsCount(s_u.Id)
+	pendingFromUserCount, err := dao.TeaUserFromUserPendingTransfersCount(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get pending transfers count", err)
 		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
 		return
 	}
 	// 获取用户待确认来自团队转账数量
-	pendingFromTeamCount, err := dao.TeaUserInFromTeamPendingTransferOutsCount(s_u.Id)
+	pendingFromTeamCount, err := dao.TeaUserFromTeamPendingTransfersCount(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get pending team transfers count", err)
 		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
@@ -2197,14 +2197,14 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 
 	// 创建页面数据结构
 	var pageData struct {
-		SessUser             dao.User
-		BalanceMilligrams    int
+		SessUser                dao.User
+		BalanceMilligrams       int
 		LockedBalanceMilligrams int
-		AvailableBalance     int
-		Transfers            []EnhancedTransferOut
-		StatusDisplay        string
-		CurrentPage          int
-		Limit                int
+		AvailableBalance        int
+		Transfers               []EnhancedTransferOut
+		StatusDisplay           string
+		CurrentPage             int
+		Limit                   int
 	}
 
 	pageData.SessUser = s_u
@@ -2268,7 +2268,7 @@ func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对用户转出已超时记录
-	transfers, err := dao.TeaUserToUserExpiredTransferOuts(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToUserExpiredTransfers(s_u.Id, page, limit, r.Context())
 	if err != nil {
 		util.Debug("cannot get expired transfer outs", err)
 		report(w, s_u, "获取用户对用户转出已超时记录失败。")
@@ -2373,7 +2373,7 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对团队转出已超时记录
-	transfers, err := dao.TeaUserToTeamExpiredTransferOuts(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToTeamExpiredTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get expired transfer outs to team", err)
 		report(w, s_u, "获取用户对团队转出已超时记录失败。")
@@ -2384,7 +2384,6 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	type EnhancedTransferOut struct {
 		dao.TeaUserToTeamTransferOut
 		StatusDisplay string
-		AmountDisplay string
 	}
 
 	var enhancedTransfers []EnhancedTransferOut
@@ -2392,8 +2391,6 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 		enhanced := EnhancedTransferOut{
 			TeaUserToTeamTransferOut: transfer,
 		}
-
-		enhanced.AmountDisplay = fmt.Sprintf("%d", int(transfer.AmountMilligrams))
 
 		// 添加状态显示（只有已超时状态）
 		enhanced.StatusDisplay = "已超时"
@@ -2418,6 +2415,11 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	pageData.TeaAccount = account
 	pageData.Transfers = enhancedTransfers
 
+	availableBalance := account.BalanceMilligrams - account.LockedBalanceMilligrams
+	pageData.AvailableBalanceDisplay = fmt.Sprintf("%d", availableBalance)
+	pageData.BalanceDisplay = fmt.Sprintf("%d", account.BalanceMilligrams)
+	pageData.LockedBalanceDisplay = fmt.Sprintf("%d", account.LockedBalanceMilligrams)
+
 	// 状态显示
 	if account.Status == dao.TeaAccountStatus_Frozen {
 		if account.FrozenReason != "-" {
@@ -2432,7 +2434,7 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.expired_transfer_outs_to_team")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.user.to_team_expired_transfers")
 }
 
 // GetTeaUserToUserRejectedTransfers 获取用户对用户转出已被拒绝记录页面（已拒绝）
@@ -2469,7 +2471,7 @@ func GetTeaUserToUserRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对用户转出已被拒绝记录
-	transfers, err := dao.TeaUserToUserRejectedTransferOuts(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToUserRejectedTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get rejected transfer outs", err)
 		report(w, s_u, "获取用户对用户转出已被拒绝记录失败。")
@@ -2574,7 +2576,7 @@ func GetTeaUserToTeamRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	page, limit := getPaginationParams(r)
 
 	// 获取用户对团队转出已被拒绝记录
-	transfers, err := dao.TeaUserToTeamRejectedTransferOuts(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserToTeamRejectedTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get rejected transfer outs to team", err)
 		report(w, s_u, "获取用户对团队转出已被拒绝记录失败。")
