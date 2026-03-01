@@ -1119,7 +1119,7 @@ func TeaUserConfirmFromTeamTransferIn(transferUuid string, confirm_user_id int) 
 }
 
 // 获取用户来自用户已完成的转入记录（仅已完成状态）
-func TeaUserFromUserCompletedTransferIns(user_id int, page, limit int) ([]TeaUserFromUserTransferIn, error) {
+func TeaUserFromUserCompletedTransfers(user_id int, page, limit int) ([]TeaUserFromUserTransferIn, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name,
 		       amount_milligrams, notes, balance_after_receipt, status, is_confirmed, 
@@ -1157,7 +1157,7 @@ func TeaUserFromUserCompletedTransferIns(user_id int, page, limit int) ([]TeaUse
 }
 
 // 获取用户来自团队已完成的转入记录（仅已完成状态）
-func TeaUserFromTeamCompletedTransferIns(user_id int, page, limit int) ([]TeaUserFromTeamTransferIn, error) {
+func TeaUserFromTeamCompletedTransfers(user_id int, page, limit int) ([]TeaUserFromTeamTransferIn, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, team_to_user_transfer_out_id, to_user_id, to_user_name, from_team_id, from_team_name,
 		       amount_milligrams, notes, balance_after_receipt, status, is_confirmed, 
@@ -1198,7 +1198,7 @@ func TeaUserFromTeamCompletedTransferIns(user_id int, page, limit int) ([]TeaUse
 // 获取用户来自用户已超时的转入记录（仅已超时状态）
 // 注意：根据转账流程，超时未接收的记录不会创建到 tea.user_from_user_transfer_in 表
 // 需要从 tea.user_to_user_transfer_out 表中查询，根据 to_user_id 和 status = expired 获取
-func TeaUserFromUserExpiredTransferIns(user_id int, page, limit int) ([]TeaUserToUserTransferOut, error) {
+func TeaUserFromUserExpiredTransfers(user_id int, page, limit int) ([]TeaUserToUserTransferOut, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, from_user_id, from_user_name, to_user_id, to_user_name,
 		       amount_milligrams, notes, status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
@@ -1275,10 +1275,10 @@ func TeaUserFromTeamExpiredTransfers(user_id int, page, limit int) ([]TeaTeamToU
 }
 
 // 获取用户来自用户已被拒绝的转入记录（仅rejected状态）
-func TeaUserFromUserRejectedTransferIns(user_id int, page, limit int) ([]TeaUserFromUserTransferIn, error) {
+func TeaUserFromUserRejectedTransfers(user_id int, page, limit int) ([]TeaUserFromUserTransferIn, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, user_to_user_transfer_out_id, to_user_id, to_user_name, from_user_id, from_user_name,
-		       amount_milligrams, notes, balance_after_receipt, status, is_confirmed, 
+		       amount_milligrams, notes, status, is_confirmed, 
 		       operational_user_id, rejection_reason, expires_at, created_at
 		FROM tea.user_from_user_transfer_in
 		WHERE to_user_id = $1 AND status = $2
@@ -1295,7 +1295,6 @@ func TeaUserFromUserRejectedTransferIns(user_id int, page, limit int) ([]TeaUser
 		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.UserToUserTransferOutId,
 			&transfer.ToUserId, &transfer.ToUserName, &transfer.FromUserId, &transfer.FromUserName,
 			&transfer.AmountMilligrams, &transfer.Notes,
-			&transfer.BalanceAfterReceipt,
 			&transfer.Status,
 			&transfer.IsConfirmed,
 			&transfer.OperationalUserId,
@@ -1313,10 +1312,10 @@ func TeaUserFromUserRejectedTransferIns(user_id int, page, limit int) ([]TeaUser
 }
 
 // 获取用户来自团队已被拒绝的转入记录（仅rejected状态）
-func TeaUserFromTeamRejectedTransferIns(user_id int, page, limit int) ([]TeaUserFromTeamTransferIn, error) {
+func TeaUserFromTeamRejectedTransfers(user_id int, page, limit int) ([]TeaUserFromTeamTransferIn, error) {
 	rows, err := DB.Query(`
 		SELECT id, uuid, team_to_user_transfer_out_id, to_user_id, to_user_name, from_team_id, from_team_name,
-		       amount_milligrams, notes, balance_after_receipt, status, is_confirmed, 
+		       amount_milligrams, notes, status, is_confirmed, 
 		       rejection_reason, expires_at, created_at
 		FROM tea.user_from_team_transfer_in
 		WHERE to_user_id = $1 AND status = $2
@@ -1335,7 +1334,6 @@ func TeaUserFromTeamRejectedTransferIns(user_id int, page, limit int) ([]TeaUser
 			&transfer.ToUserId, &transfer.ToUserName,
 			&transfer.FromTeamId, &transfer.FromTeamName,
 			&transfer.AmountMilligrams, &transfer.Notes,
-			&transfer.BalanceAfterReceipt,
 			&transfer.Status,
 			&transfer.IsConfirmed,
 			&transfer.RejectionReason,

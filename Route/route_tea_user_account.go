@@ -856,7 +856,7 @@ func GetTeaUserFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自用户已完成的转入记录（仅已完成状态）
-	transfers, err := dao.TeaUserFromUserCompletedTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromUserCompletedTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get completed transfer ins", err)
 		report(w, s_u, "获取收入记录失败。")
@@ -966,7 +966,7 @@ func GetTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request
 	page, limit := getPaginationParams(r)
 
 	// 获取用户从团队转入已完成状态记录
-	transfers, err := dao.TeaUserFromTeamCompletedTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromTeamCompletedTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get transfer ins from team", err)
 		report(w, s_u, "获取用户从团队转入已完成状态转账记录失败。")
@@ -1091,7 +1091,7 @@ func GetTeaUserFromUserExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自用户已超时的转入记录（仅已超时状态）
-	transfers, err := dao.TeaUserFromUserExpiredTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromUserExpiredTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get expired transfer ins", err)
 		report(w, s_u, "获取已超时收入记录失败。")
@@ -1311,7 +1311,7 @@ func GetTeaUserFromUserRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自用户已被拒绝的转入记录（仅rejected状态）
-	transfers, err := dao.TeaUserFromUserRejectedTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromUserRejectedTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get rejected transfer ins", err)
 		report(w, s_u, "获取被拒绝收入记录失败。")
@@ -1423,7 +1423,7 @@ func GetTeaUserFromTeamRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	page, limit := getPaginationParams(r)
 
 	// 获取用户来自团队已被拒绝的转入记录（仅rejected状态）
-	transfers, err := dao.TeaUserFromTeamRejectedTransferIns(s_u.Id, page, limit)
+	transfers, err := dao.TeaUserFromTeamRejectedTransfers(s_u.Id, page, limit)
 	if err != nil {
 		util.Debug("cannot get rejected transfer ins from team", err)
 		report(w, s_u, "获取被拒绝收入记录失败。")
