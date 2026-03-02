@@ -45,8 +45,8 @@
     {{ end }}
     {{ end }}
 
-    <!-- 待确认接收，来自其他团队转账提示 -->
-    {{ if gt .PendingFromTeamCount 0 }}
+    <!-- 待确认接收，来自其他团队或者用户转账提示 -->
+    {{ if gt .PendingFromTeamAndUserCount 0 }}
     <div class="row">
         <div class="col-md-12">
             <div class="alert alert-warning alert-dismissible" role="alert">
@@ -55,38 +55,17 @@
                 </button>
                 <h4>
                     <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
-                    您有待确认的接收来自团队转账！
+                    有新的待确认接收转账！
                 </h4>
                 <p>
-                    您有 <strong>{{ .PendingFromTeamCount }}</strong> 笔待确认的接收记录，
+                    团队有 <strong>{{ .PendingFromTeamAndUserCount }}</strong> 笔待确认的接收记录，
                     请及时处理以免过期。
-                    <a href="/v1/tea/team/transfers/pending/page?team_id={{ .TeamAccount.TeamId }}" class="btn btn-warning btn-sm">立即查看</a>
                 </p>
             </div>
         </div>
     </div>
     {{ end }}
-    <!-- 待确认接收，来自其他用户转账提示 -->
-    {{ if gt .PendingFromUserCount 0 }}
-    <div class="row">
-        <div class="col-md-12">
-            <div class="alert alert-warning alert-dismissible" role="alert">
-                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-                <h4>
-                    <span class="glyphicon glyphicon-bell" aria-hidden="true"></span>
-                    您有待确认的接收来自茶友转账！
-                </h4>
-                <p>
-                    您有 <strong>{{ .PendingFromUserCount }}</strong> 笔待确认的接收记录，
-                    请及时处理以免过期。
-                    <a href="/v1/tea/team/transfers/pending/page?team_id={{ .TeamAccount.TeamId }}" class="btn btn-warning btn-sm">立即查看</a>
-                </p>
-            </div>
-        </div>
-    </div>
-    {{ end }}
+ 
 
     <div class="row">
         <!-- 团队星茶账户概览 -->

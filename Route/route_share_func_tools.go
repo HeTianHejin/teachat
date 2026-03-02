@@ -46,7 +46,7 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 		"mul": func(a, b int) int {
 			return a * b
 		},
-		"sub": func(a, b float64) float64 {
+		"sub": func(a, b int64) int64 {
 			return a - b
 		},
 		"subtract": func(a, b int) int {

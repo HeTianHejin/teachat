@@ -17,7 +17,7 @@
 
     <div class="panel-body">
 
-      <div class=" form-group">
+      <div class="form-group">
         <p><label for="public">选择您的茶团属性：</label></p>
         <label class="radio-inline">
           <input type="radio" name="class" id="public" value="10" required> 开放式-所有人均可申请加入
@@ -28,11 +28,13 @@
       </div>
 
       <div class="form-group">
-        <p><label for="is_private">隐私设置：</label></p>
-        <label class="checkbox">
-          <input type="checkbox" name="is_private" id="is_private" value="true" />
-          私密团队 - 不在公开列表中显示，但可以接收通知和作业进度
-        </label>
+        <label for="is_private">隐私设置：</label>
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" name="is_private" id="is_private" value="true" />
+            私密团队 - 不在公开列表中显示，但可以接收通知和作业进度
+          </label>
+        </div>
       </div>
 
       <div class="form-group">
@@ -55,7 +57,7 @@
       <div class="form-group">
         <label for="tags">分类标签（用逗号分隔）</label>
         <input type="text" class="form-control" name="tags" id="tags" 
-               placeholder="如：家电维修,上门服务" 
+               placeholder="如：家电维修,宠物服务" 
                maxlength="200" />
         <p class="help-block">标签帮助其他用户快速找到同行业的团队，建议3-5个标签。私密团队不会显示在公开列表中。</p>
       </div>

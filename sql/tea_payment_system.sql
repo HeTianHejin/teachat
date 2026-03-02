@@ -265,6 +265,7 @@ CREATE TABLE tea.team_from_user_transfer_in (
     amount_milligrams     INTEGER NOT NULL, -- 转账星茶数量(毫克)，整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL, -- 转入状态
+    balance_after_receipt INTEGER, -- 接收后帐户余额。（毫克） 
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
     rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因
@@ -292,6 +293,7 @@ CREATE TABLE tea.team_from_team_transfer_in (
     amount_milligrams     INTEGER NOT NULL, -- 转账星茶数量(毫克)，整数重量
     notes                 TEXT NOT NULL DEFAULT '-', -- 转账备注
     status                VARCHAR(20) NOT NULL, -- 转入状态
+    balance_after_receipt INTEGER, -- 接收后帐户余额。（毫克） 
     is_confirmed          BOOLEAN NOT NULL DEFAULT FALSE, -- 是否确认接收
     operational_user_id   INTEGER NOT NULL REFERENCES users(id), -- 操作用户id
     rejection_reason TEXT NOT NULL DEFAULT '-', -- 拒收原因

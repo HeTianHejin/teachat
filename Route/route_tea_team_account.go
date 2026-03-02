@@ -199,13 +199,14 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 		util.Debug("cannot check if user is core member", err)
 	}
 	var pageData struct {
-		SessUser             dao.User
-		Team                 *dao.Team
-		TeamAccount          TeaTeamAccountWithAvailable
-		UserIsCoreMember     bool
-		PendingFromTeamCount int
-		PendingFromUserCount int
-		PendingApprovalCount int
+		SessUser                    dao.User
+		Team                        *dao.Team
+		TeamAccount                 TeaTeamAccountWithAvailable
+		UserIsCoreMember            bool
+		PendingFromTeamCount        int
+		PendingFromUserCount        int
+		PendingFromTeamAndUserCount int
+		PendingApprovalCount        int
 	}
 	pageData.SessUser = s_u
 	pageData.Team = singleTeam
@@ -213,6 +214,7 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	pageData.UserIsCoreMember = isCoreMember
 	pageData.PendingFromTeamCount = pendingFromTeamCount
 	pageData.PendingFromUserCount = pendingFromUserCount
+	pageData.PendingFromTeamAndUserCount = pendingFromTeamCount + pendingFromUserCount
 	pageData.PendingApprovalCount = pendingApprovalCount
 
 	// 生成页面
@@ -987,7 +989,7 @@ func GetTeaTeamPendingApproveToTeamTransfers(w http.ResponseWriter, r *http.Requ
 	}
 
 	page, limit := getPaginationParams(r)
-	transfers, err := dao.TeaTeamPendingApprovalToTeamTransferOuts(teamId, page, limit, r.Context())
+	transfers, err := dao.TeaTeamPendingApprovalToTeamTransfers(teamId, page, limit, r.Context())
 	if err != nil {
 		util.Debug("cannot get pending approve team to team transfer outs", err)
 		respondWithError(w, http.StatusInternalServerError, "获取待审批转账记录失败")
@@ -1057,7 +1059,7 @@ func GetTeaTeamPendingApproveToTeamTransfers(w http.ResponseWriter, r *http.Requ
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_approve_to_team_transfers")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.to_team_pending_approve_transfers")
 
 }
 
@@ -1119,7 +1121,7 @@ func GetTeaTeamPendingApproveToUserTransfers(w http.ResponseWriter, r *http.Requ
 	}
 
 	page, limit := getPaginationParams(r)
-	transfers, err := dao.TeaTeamPendingApprovalToUserTransferOuts(teamId, page, limit, r.Context())
+	transfers, err := dao.TeaTeamPendingApprovalToUserTransfers(teamId, page, limit, r.Context())
 	if err != nil {
 		util.Debug("cannot get pending approve team to user transfer outs", err)
 		respondWithError(w, http.StatusInternalServerError, "获取待审批转账记录失败")
@@ -1189,7 +1191,7 @@ func GetTeaTeamPendingApproveToUserTransfers(w http.ResponseWriter, r *http.Requ
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_approve_to_user_transfers")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.to_user_pending_approve_transfers")
 }
 
 // GetTeaTeamToTeamCompletedTransfers 获取团队对团队转账已完成状态记录页面 0211
@@ -1251,7 +1253,7 @@ func GetTeaTeamToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	page, limit := getPaginationParams(r)
 
 	// 获取团队对团队已经完成状态交易记录
-	transfers, err := dao.TeaTeamToTeamCompletedTransferOuts(teamId, page, limit, r.Context())
+	transfers, err := dao.TeaTeamToTeamCompletedTransfers(teamId, page, limit, r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取团队对团队已完成状态转账纪录失败")
 		return
@@ -1337,7 +1339,7 @@ func GetTeaTeamToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	page, limit := getPaginationParams(r)
 
 	// 获取团队对用户已经完成状态交易记录
-	transfers, err := dao.TeaTeamToUserCompletedTransferOuts(teamId, page, limit, r.Context())
+	transfers, err := dao.TeaTeamToUserCompletedTransfers(teamId, page, limit, r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取团队对用户已完成状态转账纪录失败")
 		return
@@ -1416,7 +1418,7 @@ func GetTeaTeamToTeamOutstandingTransfers(w http.ResponseWriter, r *http.Request
 
 	page, limit := getPaginationParams(r)
 
-	transfers, err := dao.TeaTeamToTeamOutstandingTransferOuts(teamId, page, limit, r.Context())
+	transfers, err := dao.TeaTeamToTeamOutstandingTransfers(teamId, page, limit, r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取团队对团队未达成状态转账纪录失败")
 		return
@@ -1494,7 +1496,7 @@ func GetTeaTeamToUserOutstandingTransfers(w http.ResponseWriter, r *http.Request
 
 	page, limit := getPaginationParams(r)
 
-	transfers, err := dao.TeaTeamToUserOutstandingTransferOuts(teamId, page, limit, r.Context())
+	transfers, err := dao.TeaTeamToUserOutstandingTransfers(teamId, page, limit, r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "获取团队对用户未达成状态转账纪录失败")
 		return
@@ -1527,7 +1529,7 @@ func GetTeaTeamToUserOutstandingTransfers(w http.ResponseWriter, r *http.Request
 // ============================================
 // 团队转入页面路由处理函数(incoming transfer)
 // ============================================
-// GetTeaTeamPendingFromTeamTransfers 获取团队待确认（包含已经超时）转入转账页面 0223
+// GetTeaTeamPendingFromTeamTransfers() 获取团队待确认（包含已经超时）转入转账页面 0223
 func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -1604,7 +1606,7 @@ func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) 
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_from_team_transfers")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.from_team_pending_transfers")
 }
 
 // GetTeaTeamPendingFromUserTransfers 获取团队待确认（包含已经超时）转入用户转账页面 0224
@@ -1684,7 +1686,7 @@ func GetTeaTeamPendingFromUserTransfers(w http.ResponseWriter, r *http.Request) 
 	pageData.CurrentPage = page
 	pageData.Limit = limit
 
-	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.pending_from_user_transfers")
+	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.from_user_pending_transfers")
 }
 
 // GetTeaTeamFromTeamCompletedTransfers 获取团队接收团队转账已完成状态记录页面 0225

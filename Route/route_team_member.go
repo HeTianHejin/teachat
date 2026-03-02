@@ -1497,7 +1497,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 
 	i_word := r.PostFormValue("invite_word")
 	//检查一下茶友提交的string，即i_word是否不为空，中文长度小于239字符之间
-	if 1 > cnStrLen(i_word) || cnStrLen(i_word) > 239 {
+	if 3 > cnStrLen(i_word) || cnStrLen(i_word) > 456 {
 		util.Debug(" Cannot process invitation", err)
 		report(w, s_u, "你好，瞪大眼睛涨红了脸的茶博士，竟然强词夺理说，邀请的话太长了或者太短，只有外星人才接受呀，请确认再试。")
 		return

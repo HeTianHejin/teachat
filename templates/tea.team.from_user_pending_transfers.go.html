@@ -5,7 +5,7 @@
   <li><a href="/v1/teams/joined">团队事项</a></li>
   <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
   <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">团队星茶账户</a></li>
-  <li class="active">待确认接收的来自团队转入</li>
+  <li class="active">待确认接收的来自用户转入</li>
 </ol>
 
 <div class="container">
@@ -54,7 +54,7 @@
                         <table class="table table-striped table-hover">
                             <thead>
                                 <tr>
-                                    <th>发送团队</th>
+                                    <th>发送用户</th>
                                     <th>金额</th>
                                     <th>说明</th>
                                     <th>发起时间</th>
@@ -67,9 +67,9 @@
                                 {{ range $transfer := .Transfers }}
                                 <tr class="{{ if eq $transfer.Status "expired" }}danger{{ else }}warning{{ end }}">
                                     <td>
-                                        <span class="glyphicon glyphicon-tower" aria-hidden="true"></span>
-                                        <strong>{{ $transfer.FromTeamName }}</strong>
-                                        <br><small class="text-muted">团队ID: {{ $transfer.FromTeamId }}</small>
+                                        <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
+                                        <strong>{{ $transfer.FromUserName }}</strong>
+                                        <br><small class="text-muted">用户ID: {{ $transfer.FromUserId }}</small>
                                     </td>
                                     <td>
                                         <span class="label label-success">
@@ -99,12 +99,12 @@
                                     <td>
                                         {{ if eq $transfer.Status "pending_receipt" }}
                                         <button type="button" class="btn btn-success btn-sm" 
-                                                onclick="confirmTransfer('{{ $transfer.Uuid }}', '{{ $transfer.FromTeamName }}', '{{ $transfer.AmountMilligrams }}', {{ $.Team.Id }})">
+                                                onclick="confirmTransfer('{{ $transfer.Uuid }}', '{{ $transfer.FromUserName }}', '{{ $transfer.AmountMilligrams }}', {{ $.Team.Id }})">
                                             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
                                             确认
                                         </button>
                                         <button type="button" class="btn btn-danger btn-sm" 
-                                                onclick="rejectTransfer('{{ $transfer.Uuid }}', '{{ $transfer.FromTeamName }}', '{{ $transfer.AmountMilligrams }}', {{ $.Team.Id }})">
+                                                onclick="rejectTransfer('{{ $transfer.Uuid }}', '{{ $transfer.FromUserName }}', '{{ $transfer.AmountMilligrams }}', {{ $.Team.Id }})">
                                             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
                                             拒绝
                                         </button>
@@ -147,7 +147,7 @@
             <div class="modal-body">
                 <p>您确定要确认接收以下星茶转账吗？</p>
                 <ul class="list-unstyled">
-                    <li><strong>发送团队：</strong><span id="confirmFromTeam"></span></li>
+                    <li><strong>发送用户：</strong><span id="confirmFromUser"></span></li>
                     <li><strong>金额：</strong><span id="confirmAmount"></span> 毫克</li>
                 </ul>
                 <div class="alert alert-success">
@@ -179,7 +179,7 @@
             <div class="modal-body">
                 <p>您确定要拒绝接收以下星茶转账吗？</p>
                 <ul class="list-unstyled">
-                    <li><strong>发送团队：</strong><span id="rejectFromTeam"></span></li>
+                    <li><strong>发送用户：</strong><span id="rejectFromUser"></span></li>
                     <li><strong>金额：</strong><span id="rejectAmount"></span> 毫克</li>
                 </ul>
                 <div class="form-group">
@@ -206,25 +206,25 @@
 let currentTransferUuid = '';
 let currentTeamId = 0;
 
-function confirmTransfer(uuid, fromTeam, amount, teamId) {
+function confirmTransfer(uuid, fromUser, amount, teamId) {
     currentTransferUuid = uuid;
     currentTeamId = teamId;
-    document.getElementById('confirmFromTeam').textContent = fromTeam;
+    document.getElementById('confirmFromUser').textContent = fromUser;
     document.getElementById('confirmAmount').textContent = amount;
     $('#confirmTransferModal').modal('show');
 }
 
-function rejectTransfer(uuid, fromTeam, amount, teamId) {
+function rejectTransfer(uuid, fromUser, amount, teamId) {
     currentTransferUuid = uuid;
     currentTeamId = teamId;
-    document.getElementById('rejectFromTeam').textContent = fromTeam;
+    document.getElementById('rejectFromUser').textContent = fromUser;
     document.getElementById('rejectAmount').textContent = amount;
     document.getElementById('rejectReason').value = '';
     $('#rejectTransferModal').modal('show');
 }
 
 document.getElementById('confirmTransferBtn').addEventListener('click', function() {
-    fetch('/v1/tea/team/transfer/confirm/team_from_team', {
+    fetch('/v1/tea/team/transfer/confirm/team_from_user', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -253,7 +253,7 @@ document.getElementById('confirmTransferBtn').addEventListener('click', function
 document.getElementById('rejectTransferBtn').addEventListener('click', function() {
     const reason = document.getElementById('rejectReason').value;
     
-    fetch('/v1/tea/team/transfer/reject/team_from_team', {
+    fetch('/v1/tea/team/transfer/reject/team_from_user', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
