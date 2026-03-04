@@ -807,8 +807,20 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "无法转账,自由者团队")
 		return
 	}
-	// 检查帐户是否被冻结？
-	frozen, reason, err := dao.CheckTeaTeamAccountFrozen(req.FromTeamId)
+	fromTeam, err := dao.GetTeam(req.FromTeamId)
+	if err != nil {
+		util.Debug("cannot get team by id:", req.FromTeamId, err)
+		respondWithError(w, http.StatusBadRequest, "转出团队ID无效")
+		return
+	}
+	toTeam, err := dao.GetTeam(req.ToTeamId)
+	if err != nil {
+		util.Debug("cannot get team by id:", req.ToTeamId, err)
+		respondWithError(w, http.StatusBadRequest, "接收团队ID无效")
+		return
+	}
+	// 检查转出帐户是否被冻结？
+	frozen, reason, err := dao.CheckTeaTeamAccountFrozen(fromTeam.Id)
 	if err != nil {
 		util.Debug("check tea team account frozen error:", err)
 		respondWithError(w, http.StatusInternalServerError, "检查团队账户状态失败")
@@ -819,7 +831,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 检查接收方团队星茶帐户是否被冻结？
-	frozen, reason, err = dao.CheckTeaTeamAccountFrozen(req.ToTeamId)
+	frozen, reason, err = dao.CheckTeaTeamAccountFrozen(toTeam.Id)
 	if err != nil {
 		util.Debug("check tea team account frozen error:", err)
 		respondWithError(w, http.StatusInternalServerError, "检查接收团队账户状态失败")
@@ -838,7 +850,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建团队对团队转账
-	transfer, err := dao.CreateTeaTeamToTeamTransferOut(req.FromTeamId, user.Id, req.ToTeamId, req.AmountMilligrams, req.Notes, req.ExpireHours)
+	transfer, err := dao.CreateTeaTeamToTeamTransferOut(req.FromTeamId, user.Id, toTeam.Id, req.AmountMilligrams, req.Notes, fromTeam.Name, toTeam.Name, req.ExpireHours)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
@@ -891,6 +903,18 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "无法转账, 自由者团队")
 		return
 	}
+	fromTeam, err := dao.GetTeam(req.FromTeamId)
+	if err != nil {
+		util.Debug("cannot get team by id:", req.FromTeamId, err)
+		respondWithError(w, http.StatusBadRequest, "转出团队ID无效")
+		return
+	}
+	toUser, err := dao.GetUser(req.ToUserId)
+	if err != nil {
+		util.Debug("cannot get user by id:", req.ToUserId, err)
+		respondWithError(w, http.StatusBadRequest, "接收用户ID无效")
+		return
+	}
 	// 检查帐户是否被冻结？
 	frozen, reason, err := dao.CheckTeaTeamAccountFrozen(req.FromTeamId)
 	if err != nil {
@@ -922,7 +946,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 创建团队对用户转账
-	transfer, err := dao.CreateTeaTeamToUserTransferOut(req.FromTeamId, user.Id, req.ToUserId, req.AmountMilligrams, req.Notes, req.ExpireHours)
+	transfer, err := dao.CreateTeaTeamToUserTransferOut(req.FromTeamId, user.Id, req.ToUserId, req.AmountMilligrams, req.Notes, fromTeam.Name, toUser.Name, req.ExpireHours)
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return

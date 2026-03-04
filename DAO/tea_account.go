@@ -582,8 +582,12 @@ func CheckTeaUserAccountFrozen(userId int) (bool, string, error) {
 }
 
 // 创建用户对用户转账记录
-func CreateTeaUserToUserTransferOut(fromUserId int, fromUserName string, toUserId int, to_user_name string, amount_milligrams int64, notes string, expireHours int) (TeaUserToUserTransferOut, error) {
+func CreateTeaUserToUserTransferOut(fromUserId int, fromUserName string, toUserId int, toUserName string, amountMilligrams int64, notes string, expireHours int) (TeaUserToUserTransferOut, error) {
 	transfer := TeaUserToUserTransferOut{}
+
+	if amountMilligrams <= 0 {
+		return transfer, fmt.Errorf("转账金额必须大于0")
+	}
 
 	// 开始事务
 	tx, err := DB.Begin()
@@ -592,14 +596,15 @@ func CreateTeaUserToUserTransferOut(fromUserId int, fromUserName string, toUserI
 	}
 	defer tx.Rollback()
 
-	// 1. 锁定并检查转出用户账户余额
+	// 1. 锁定并检查转出用户账户余额和状态
 	var balance, lockedBalance int64
+	var status string
 	err = tx.QueryRow(`
-		SELECT balance_milligrams, locked_balance_milligrams 
+		SELECT balance_milligrams, locked_balance_milligrams, status 
 		FROM tea.user_accounts 
 		WHERE user_id = $1 
 		FOR UPDATE`,
-		fromUserId).Scan(&balance, &lockedBalance)
+		fromUserId).Scan(&balance, &lockedBalance, &status)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return transfer, fmt.Errorf("转出用户星茶账户不存在")
@@ -607,32 +612,35 @@ func CreateTeaUserToUserTransferOut(fromUserId int, fromUserName string, toUserI
 		return transfer, fmt.Errorf("查询转出用户账户失败: %v", err)
 	}
 
-	// 2. 检查可用余额是否足够
-	availableBalance := balance - lockedBalance
-	if availableBalance < amount_milligrams {
-		return transfer, fmt.Errorf("星茶余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amount_milligrams)
+	if status == TeaAccountStatus_Frozen {
+		return transfer, fmt.Errorf("用户账户已冻结")
 	}
 
-	// 3. 锁定转出金额（增加 locked_balance_milligrams）
+	// 2. 检查可用余额是否足够（与团队转账一致）
+	availableBalance := balance - lockedBalance
+	if availableBalance < amountMilligrams {
+		return transfer, fmt.Errorf("星茶可用余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amountMilligrams)
+	}
+
+	// 3. 锁定转出金额（增加 locked_balance_milligrams，与团队转账一致）
 	_, err = tx.Exec(`
 		UPDATE tea.user_accounts 
 		SET locked_balance_milligrams = locked_balance_milligrams + $1,
 		    updated_at = $2
 		WHERE user_id = $3`,
-		amount_milligrams, time.Now(), fromUserId)
+		amountMilligrams, time.Now(), fromUserId)
 	if err != nil {
 		return transfer, fmt.Errorf("锁定转出金额失败: %v", err)
 	}
 
 	// 4. 创建转账记录（使用 UTC 时间避免时区问题）
-	// 计算转出后的可用余额（锁定金额后的可用余额）
-	balanceAfterTransfer := availableBalance - amount_milligrams
+	balanceAfterTransfer := availableBalance - amountMilligrams
 	expiresAt := time.Now().UTC().Add(time.Duration(expireHours) * time.Hour)
 	err = tx.QueryRow(`
 		INSERT INTO tea.user_to_user_transfer_out (from_user_id, to_user_id, from_user_name, to_user_name, amount_milligrams, notes, status, balance_after_transfer, expires_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id, uuid, from_user_id, from_user_name, to_user_id, to_user_name, amount_milligrams, notes, status, balance_after_transfer, expires_at, created_at, updated_at`,
-		fromUserId, toUserId, fromUserName, to_user_name, amount_milligrams, notes, TeaTransferStatusPendingReceipt, balanceAfterTransfer, expiresAt).
+		fromUserId, toUserId, fromUserName, toUserName, amountMilligrams, notes, TeaTransferStatusPendingReceipt, balanceAfterTransfer, expiresAt).
 		Scan(&transfer.Id, &transfer.Uuid, &transfer.FromUserId, &transfer.FromUserName, &transfer.ToUserId, &transfer.ToUserName, &transfer.AmountMilligrams, &transfer.Notes, &transfer.Status, &transfer.BalanceAfterTransfer, &transfer.ExpiresAt, &transfer.CreatedAt, &transfer.UpdatedAt)
 	if err != nil {
 		return transfer, fmt.Errorf("创建用户间转账记录失败: %v", err)
