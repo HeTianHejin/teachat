@@ -177,7 +177,7 @@
                         <ul class="pagination pagination-sm">
                             {{ if gt .CurrentPage 0 }}
                             <li>
-                                <a href="?team_id={{ .Team.Id }}&page={{ sub .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="上一页">
+                                <a href="?team_id={{ .Team.Id }}&page={{ subtract .CurrentPage 1 }}&limit={{ .Limit }}" aria-label="上一页">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
