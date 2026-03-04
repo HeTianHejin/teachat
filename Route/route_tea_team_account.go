@@ -186,10 +186,14 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 		util.Debug("cannot get pending incoming user transfers count", err)
 	}
 
-	// 获取帐户转出，待审批操作数量
-	pendingApprovalCount, err := dao.CountTeaTeamPendingApprovals(team.Id)
+	// 获取帐户转出，待审批操作数量（分别统计两种类型）
+	pendingApprovalToTeamCount, err := dao.CountTeaTeamPendingApprovalToTeamTransfers(team.Id)
 	if err != nil {
-		util.Debug("cannot get pending approval operations count", err)
+		util.Debug("cannot get pending approval to team transfers count", err)
+	}
+	pendingApprovalToUserCount, err := dao.CountTeaTeamPendingApprovalToUserTransfers(team.Id)
+	if err != nil {
+		util.Debug("cannot get pending approval to user transfers count", err)
 	}
 
 	// 创建页面数据结构
@@ -199,14 +203,16 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 		util.Debug("cannot check if user is core member", err)
 	}
 	var pageData struct {
-		SessUser                    dao.User
-		Team                        *dao.Team
-		TeamAccount                 TeaTeamAccountWithAvailable
-		UserIsCoreMember            bool
-		PendingFromTeamCount        int
-		PendingFromUserCount        int
-		PendingFromTeamAndUserCount int
-		PendingApprovalCount        int
+		SessUser                       dao.User
+		Team                           *dao.Team
+		TeamAccount                    TeaTeamAccountWithAvailable
+		UserIsCoreMember               bool
+		PendingFromTeamCount           int
+		PendingFromUserCount           int
+		PendingFromTeamAndUserCount    int
+		PendingApprovalToTeamCount     int
+		PendingApprovalToUserCount     int
+		PendingApprovalCount           int
 	}
 	pageData.SessUser = s_u
 	pageData.Team = singleTeam
@@ -215,7 +221,9 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	pageData.PendingFromTeamCount = pendingFromTeamCount
 	pageData.PendingFromUserCount = pendingFromUserCount
 	pageData.PendingFromTeamAndUserCount = pendingFromTeamCount + pendingFromUserCount
-	pageData.PendingApprovalCount = pendingApprovalCount
+	pageData.PendingApprovalToTeamCount = pendingApprovalToTeamCount
+	pageData.PendingApprovalToUserCount = pendingApprovalToUserCount
+	pageData.PendingApprovalCount = pendingApprovalToTeamCount + pendingApprovalToUserCount
 
 	// 生成页面
 	generateHTML(w, &pageData, "layout", "navbar.private", "tea.team.account")

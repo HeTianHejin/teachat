@@ -624,6 +624,34 @@ func CountTeaTeamPendingApprovals(teamId int) (int, error) {
 	return count, nil
 }
 
+// CountTeaTeamPendingApprovalToTeamTransfers 统计团队对团队待审批的转出操作数量
+func CountTeaTeamPendingApprovalToTeamTransfers(teamId int) (int, error) {
+	var count int
+	err := DB.QueryRow(`
+		SELECT COUNT(*) 
+		FROM tea.team_to_team_transfer_out
+		WHERE from_team_id = $1 AND status = $2`,
+		teamId, TeaTransferStatusPendingApproval).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("查询团队对团队待审批操作数量失败: %v", err)
+	}
+	return count, nil
+}
+
+// CountTeaTeamPendingApprovalToUserTransfers 统计团队对用户待审批的转出操作数量
+func CountTeaTeamPendingApprovalToUserTransfers(teamId int) (int, error) {
+	var count int
+	err := DB.QueryRow(`
+		SELECT COUNT(*) 
+		FROM tea.team_to_user_transfer_out
+		WHERE from_team_id = $1 AND status = $2`,
+		teamId, TeaTransferStatusPendingApproval).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("查询团队对用户待审批操作数量失败: %v", err)
+	}
+	return count, nil
+}
+
 // TeaTeamPendingApprovalToTeamTransfers 获取团队对团队星茶转出，待审批状态记录 0211
 func TeaTeamPendingApprovalToTeamTransfers(teamId, page, limit int, ctx context.Context) ([]TeaTeamToTeamTransferOut, error) {
 	// 超时5秒取消
@@ -633,7 +661,7 @@ func TeaTeamPendingApprovalToTeamTransfers(teamId, page, limit int, ctx context.
 	rows, err := DB.QueryContext(ctx, `
 		SELECT id, uuid, from_team_id, from_team_name, to_team_id, to_team_name,
 		       initiator_user_id, amount_milligrams, notes, is_only_one_member_team,
-		       is_approved, approver_user_id, approval_rejection_reason, approved_at,
+		       is_approved,
 		       status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
 		FROM tea.team_to_team_transfer_out
 		WHERE from_team_id = $1 AND status = $2
@@ -649,7 +677,7 @@ func TeaTeamPendingApprovalToTeamTransfers(teamId, page, limit int, ctx context.
 		var transfer TeaTeamToTeamTransferOut
 		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.FromTeamId, &transfer.FromTeamName, &transfer.ToTeamId, &transfer.ToTeamName,
 			&transfer.InitiatorUserId, &transfer.AmountMilligrams, &transfer.Notes, &transfer.IsOnlyOneMemberTeam,
-			&transfer.IsApproved, &transfer.ApproverUserId, &transfer.ApprovalRejectionReason, &transfer.ApprovedAt,
+			&transfer.IsApproved,
 			&transfer.Status, &transfer.BalanceAfterTransfer, &transfer.CreatedAt, &transfer.ExpiresAt, &transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("扫描团队对团队待审批转出记录失败: %v", err)
 		}
@@ -667,7 +695,7 @@ func TeaTeamPendingApprovalToUserTransfers(teamId, page, limit int, ctx context.
 	rows, err := DB.QueryContext(ctx, `
 		SELECT id, uuid, from_team_id, from_team_name, to_user_id, to_user_name,
 		       initiator_user_id, amount_milligrams, notes, is_only_one_member_team,
-		       is_approved, approver_user_id, approval_rejection_reason, approved_at,
+		       is_approved,
 		       status, balance_after_transfer, created_at, expires_at, payment_time, updated_at
 		FROM tea.team_to_user_transfer_out
 		WHERE from_team_id = $1 AND status = $2
@@ -683,7 +711,7 @@ func TeaTeamPendingApprovalToUserTransfers(teamId, page, limit int, ctx context.
 		var transfer TeaTeamToUserTransferOut
 		if err := rows.Scan(&transfer.Id, &transfer.Uuid, &transfer.FromTeamId, &transfer.FromTeamName, &transfer.ToUserId, &transfer.ToUserName,
 			&transfer.InitiatorUserId, &transfer.AmountMilligrams, &transfer.Notes, &transfer.IsOnlyOneMemberTeam,
-			&transfer.IsApproved, &transfer.ApproverUserId, &transfer.ApprovalRejectionReason, &transfer.ApprovedAt,
+			&transfer.IsApproved,
 			&transfer.Status, &transfer.BalanceAfterTransfer, &transfer.CreatedAt, &transfer.ExpiresAt, &transfer.PaymentTime, &transfer.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("扫描团队对用户待审批转出记录失败: %v", err)
 		}
