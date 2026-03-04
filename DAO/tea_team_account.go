@@ -576,14 +576,15 @@ func CreateTeaTeamToTeamTransferOut(fromTeamId, initiatorUserId, toTeamId int, a
 	}
 
 	// 4. 创建转账记录（使用 UTC 时间避免时区问题）
+	balanceAfterTransfer := availableBalance - amountMilligrams
 	expiresAt := time.Now().UTC().Add(time.Duration(expireHours) * time.Hour)
 	err = tx.QueryRow(`
 		INSERT INTO tea.team_to_team_transfer_out 
-		(from_team_id, to_team_id, initiator_user_id, amount_milligrams, notes, from_team_name, to_team_name, status, expires_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		(from_team_id, to_team_id, initiator_user_id, amount_milligrams, notes, from_team_name, to_team_name, status, balance_after_transfer, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, uuid, created_at`,
 		fromTeamId, toTeamId, initiatorUserId, amountMilligrams, notes, fromTeamName, toTeamName,
-		TeaTransferStatusPendingApproval, expiresAt).
+		TeaTransferStatusPendingApproval, balanceAfterTransfer, expiresAt).
 		Scan(&transfer.Id, &transfer.Uuid, &transfer.CreatedAt)
 	if err != nil {
 		return transfer, fmt.Errorf("创建团队对团队转账失败: %v", err)
@@ -597,6 +598,7 @@ func CreateTeaTeamToTeamTransferOut(fromTeamId, initiatorUserId, toTeamId int, a
 	transfer.AmountMilligrams = amountMilligrams
 	transfer.Notes = notes
 	transfer.Status = TeaTransferStatusPendingApproval
+	transfer.BalanceAfterTransfer = balanceAfterTransfer
 	transfer.ExpiresAt = expiresAt
 
 	// 5. 提交事务
