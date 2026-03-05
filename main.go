@@ -376,6 +376,9 @@ func main() {
 	// 团队(in)转入已拒绝记录
 	mux.HandleFunc("/v1/tea/team/transfers/team_from_team/rejected/page", route.GetTeaTeamFromTeamRejectedTransfers) // 团队接收团队已拒绝记录页面
 	mux.HandleFunc("/v1/tea/team/transfers/team_from_user/rejected/page", route.GetTeaTeamFromUserRejectedTransfers) // 团队接收用户已拒绝记录页面
+	// 团队(in)转入已超时记录
+	mux.HandleFunc("/v1/tea/team/transfers/team_from_team/expired/page", route.GetTeaTeamFromTeamExpiredTransfers) // 团队接收团队转入已超时记录页面
+	mux.HandleFunc("/v1/tea/team/transfers/team_from_user/expired/page", route.GetTeaTeamFromUserExpiredTransfers) // 团队接收用户转入已超时记录页面
 	// TODO:团队查询特定转账记录
 	//mux.HandleFunc("/v1/tea/team/transactions/page", route.HandleTeaTeamTransactionHistory) // 团队交易流水页面路由
 	//mux.HandleFunc("/v1/tea/team/operations/history/page", route.HandleTeaTeamOperationsHistory) // 团队操作历史页面路由
