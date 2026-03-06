@@ -359,7 +359,7 @@ func main() {
 	// 团队(out)转出成功记录
 	mux.HandleFunc("/v1/tea/team/transfers/team_to_team/completed/page", route.GetTeaTeamToTeamCompletedTransfers) // 团队对团队转账已完成状态页面
 	mux.HandleFunc("/v1/tea/team/transfers/team_to_user/completed/page", route.GetTeaTeamToUserCompletedTransfers) // 团队对个人转账已完成状态页面
-	// 团队(out)转出支付未达成记录
+	// 团队(out)转出未达成记录
 	mux.HandleFunc("/v1/tea/team/transfers/team_to_team/Outstanding/page", route.GetTeaTeamToTeamOutstandingTransfers) // 团队对团队转账未达成页面（包含不批准、待接收、被拒绝、超时）
 	mux.HandleFunc("/v1/tea/team/transfers/team_to_user/Outstanding/page", route.GetTeaTeamToUserOutstandingTransfers) // 团队对个人转账未达成页面（包含不批准、待接收、被拒绝、超时）
 	// 团队(in)转入待确认(包含已超时)

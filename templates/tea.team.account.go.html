@@ -176,6 +176,20 @@
                             </h4>
                             <p class="list-group-item-text">查看所有已拒绝接收来自个人星茶转入的记录（已退回）</p>
                         </a>
+                        <a href="/v1/tea/team/transfers/team_from_team/expired/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                已超时接收来自团队
+                            </h4>
+                            <p class="list-group-item-text">查看所有已超时接收来自团队星茶转入的记录（已退回）</p>
+                        </a>
+                        <a href="/v1/tea/team/transfers/team_from_user/expired/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
+                            <h4 class="list-group-item-heading">
+                                <span class="glyphicon glyphicon-arrow-down" aria-hidden="true"></span>
+                                已超时接收来自个人
+                            </h4>
+                            <p class="list-group-item-text">查看所有已超时接收来自个人星茶转入的记录（已退回）</p>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -193,39 +207,38 @@
                     <div class="list-group">
                         <a href="#" onclick="showTransferModal()" class="list-group-item">
                             <h4 class="list-group-item-heading">
-                                <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
+                                <span class="glyphicon glyphicon-send" aria-hidden="true"></span>
                                 发起转账
                             </h4>
                             <p class="list-group-item-text">向其他团队或用户转账星茶</p>
                         </a>
-                       
-                        <a href="/v1/tea/team/transactions/page?team_id={{ .TeamAccount.TeamId }}&type=transfer_out" class="list-group-item">
+                        <a href="/v1/tea/team/transfers/team_to_team/completed/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 已成功对团队转账记录
                             </h4>
                             <p class="list-group-item-text">查看所有对团队转出已完成的记录（已成功到账）</p>
                         </a>
-                        <a href="/v1/tea/team/transactions/page?team_id={{ .TeamAccount.TeamId }}&type=transfer_out" class="list-group-item">
+                        <a href="/v1/tea/team/transfers/team_to_user/completed/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
                                 已成功对个人转账记录
                             </h4>
                             <p class="list-group-item-text">查看所有对个人转出已完成的记录（已成功到账）</p>
                         </a>
-                        <a href="/v1/tea/team/transfers/out/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
+                        <a href="/v1/tea/team/transfers/team_to_team/Outstanding/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
-                                对团队未完成记录
+                                对团队未达成记录
                             </h4>
-                            <p class="list-group-item-text">查看所有对团队转出星茶未成功的记录（包含待接收、被拒绝、超时）</p>
+                            <p class="list-group-item-text">查看所有对团队转出星茶未成功的记录（包含不批准、待接收、被拒绝、超时）</p>
                         </a>
-                        <a href="/v1/tea/team/transfers/out/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
+                        <a href="/v1/tea/team/transfers/team_to_user/Outstanding/page?team_id={{ .TeamAccount.TeamId }}" class="list-group-item">
                             <h4 class="list-group-item-heading">
                                 <span class="glyphicon glyphicon-arrow-up" aria-hidden="true"></span>
-                                对个人未完成记录
+                                对个人未达成记录
                             </h4>
-                            <p class="list-group-item-text">查看所有对个人转出星茶未成功的记录（包含待接收、被拒绝、超时）</p>
+                            <p class="list-group-item-text">查看所有对个人转出星茶未成功的记录（包含不批准、待接收、被拒绝、超时）</p>
                         </a>
                     </div>
                 </div>

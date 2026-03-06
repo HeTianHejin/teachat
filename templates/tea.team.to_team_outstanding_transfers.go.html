@@ -1,13 +1,13 @@
 {{ define "content" }}
 
-{{/* 团队对团队已完成转账记录页面 */}}
+{{/* 团队对团队未达成转账记录页面（包含不批准、待接收、被拒绝、超时） */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/teams/joined">团队事项</a></li>
   <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
   <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">#{{ .Team.Id }} 团队星茶账户</a></li>
-  <li class="active">团队对团队已完成转账记录</li>
+  <li class="active">团队对团队未达成转账记录</li>
 </ol>
 
 <div class="container">
@@ -15,7 +15,7 @@
         <div class="col-md-12">
             <div class="page-header">
                 <h3>{{ .Team.Name }}
-                    <small>团队对团队已完成转账记录</small>
+                    <small>团队对团队未达成转账记录</small>
                 </h3>
             </div>
         </div>
@@ -51,7 +51,7 @@
                         </div>
                         <div class="col-md-4">
                             <h4>显示记录: <strong>{{ len .Transfers }}</strong></h4>
-                            <p class="text-muted">当前页面已完成转账记录数</p>
+                            <p class="text-muted">当前页面未达成转账记录数</p>
                         </div>
                     </div>
                 </div>
@@ -66,7 +66,7 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
-                        团队对团队已完成转账记录
+                        团队对团队未达成转账记录
                     </h3>
                 </div>
                 <div class="panel-body">
@@ -82,14 +82,15 @@
                                     <th>金额</th>
                                     <th>说明</th>
                                     <th>状态</th>
+                                    <th>原因/备注</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {{ range $transfer := .Transfers }}
-                                <tr class="success">
+                                <tr class="{{ if eq $transfer.Status "已拒绝" }}danger{{ else if eq $transfer.Status "已过期" }}warning{{ else if eq $transfer.Status "待接收" }}info{{ else }}default{{ end }}">
                                     <td>{{ if $transfer.CreatedAt }}{{ $transfer.CreatedAt.Format "2006-01-02 15:04:05" }}{{ else }}-{{ end }}</td>
                                     <td>
-                                        <span class="label label-success">
+                                        <span class="label label-default">
                                             团队对团队转账
                                         </span>
                                     </td>
@@ -110,7 +111,30 @@
                                     <td>{{ $transfer.AmountMilligrams }} 毫克</td>
                                     <td><small class="text-muted">{{ $transfer.Notes }}</small></td>
                                     <td>
-                                        <span class="label label-success">已完成</span>
+                                        {{ if eq $transfer.Status "已拒绝" }}
+                                            <span class="label label-danger">审批未通过</span>
+                                        {{ else if eq $transfer.Status "已过期" }}
+                                            <span class="label label-warning">已超时</span>
+                                        {{ else if eq $transfer.Status "待接收" }}
+                                            <span class="label label-info">等待对方接收</span>
+                                        {{ else if eq $transfer.Status "已拒收" }}
+                                            <span class="label label-warning">被对方拒收</span>
+                                        {{ else }}
+                                            <span class="label label-default">{{ $transfer.Status }}</span>
+                                        {{ end }}
+                                    </td>
+                                    <td>
+                                        {{ if and (eq $transfer.Status "已拒绝") $transfer.ApprovalRejectionReason }}
+                                            <small class="text-danger">{{ $transfer.ApprovalRejectionReason }}</small>
+                                        {{ else if eq $transfer.Status "已过期" }}
+                                            <small class="text-muted">对方未在有效期内确认</small>
+                                        {{ else if eq $transfer.Status "已拒收" }}
+                                            <small class="text-muted">对方拒绝接收转账</small>
+                                        {{ else if $transfer.ExpiresAt }}
+                                            <small class="text-muted">过期时间: {{ $transfer.ExpiresAt.Format "01-02 15:04" }}</small>
+                                        {{ else }}
+                                            -
+                                        {{ end }}
                                     </td>
                                 </tr>
                                 {{ end }}
@@ -142,7 +166,7 @@
                     </nav>
                     {{ else }}
                     <div class="text-center">
-                        <p class="text-muted">暂无已完成转账记录</p>
+                        <p class="text-muted">暂无未达成转账记录</p>
                         <a href="/v1/tea/team/account?team_id={{ .Team.Id }}" class="btn btn-primary">
                             <span class="glyphicon glyphicon-arrow-left"></span> 返回团队账户
                         </a>

@@ -1,13 +1,13 @@
 {{ define "content" }}
 
-{{/* 团队对团队已完成转账记录页面 */}}
+{{/* 团队对个人已完成转账记录页面 */}}
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/teams/joined">团队事项</a></li>
   <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Abbreviation }}</a></li>
   <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">#{{ .Team.Id }} 团队星茶账户</a></li>
-  <li class="active">团队对团队已完成转账记录</li>
+  <li class="active">团队对个人已完成转账记录</li>
 </ol>
 
 <div class="container">
@@ -15,7 +15,7 @@
         <div class="col-md-12">
             <div class="page-header">
                 <h3>{{ .Team.Name }}
-                    <small>团队对团队已完成转账记录</small>
+                    <small>团队对个人已完成转账记录</small>
                 </h3>
             </div>
         </div>
@@ -66,7 +66,7 @@
                 <div class="panel-heading">
                     <h3 class="panel-title">
                         <span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span>
-                        团队对团队已完成转账记录
+                        团队对个人已完成转账记录
                     </h3>
                 </div>
                 <div class="panel-body">
@@ -78,7 +78,7 @@
                                     <th>时间</th>
                                     <th>类型</th>
                                     <th>转出团队</th>
-                                    <th>接收团队</th>
+                                    <th>接收用户</th>
                                     <th>金额</th>
                                     <th>说明</th>
                                     <th>状态</th>
@@ -90,7 +90,7 @@
                                     <td>{{ if $transfer.CreatedAt }}{{ $transfer.CreatedAt.Format "2006-01-02 15:04:05" }}{{ else }}-{{ end }}</td>
                                     <td>
                                         <span class="label label-success">
-                                            团队对团队转账
+                                            团队对个人转账
                                         </span>
                                     </td>
                                     <td>
@@ -101,10 +101,10 @@
                                         {{ end }}
                                     </td>
                                     <td>
-                                        {{ if $transfer.ToTeamName }}
-                                            {{ $transfer.ToTeamName }} (ID: {{ $transfer.ToTeamId }})
+                                        {{ if $transfer.ToUserName }}
+                                            {{ $transfer.ToUserName }} (ID: {{ $transfer.ToUserId }})
                                         {{ else }}
-                                            未知团队
+                                            未知用户
                                         {{ end }}
                                     </td>
                                     <td>{{ $transfer.AmountMilligrams }} 毫克</td>
