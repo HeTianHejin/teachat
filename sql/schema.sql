@@ -613,7 +613,7 @@ CREATE TABLE new_notification_counts (
 -- 成员管理表
 -- ============================================
 
--- 家庭成员签到表
+-- 家庭成员声明表
 CREATE TABLE family_member_sign_ins (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(255) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
@@ -627,7 +627,8 @@ CREATE TABLE family_member_sign_ins (
     status                INTEGER DEFAULT 0,
     is_adopted            BOOLEAN DEFAULT false,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMPTZ
+    updated_at            TIMESTAMPTZ,
+    author_user_id        INTEGER
 );
 
 -- 家庭成员签到回复表
