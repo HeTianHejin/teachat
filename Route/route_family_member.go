@@ -184,9 +184,9 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 		Role:     role_int,
 		FamilyId: t_family.Id,
 	}
-	//查看成员角色，分类处理：0、秘密，1、男主人，2、女主人，3、女儿， 4、儿子，5、宠物,
+	//查看成员角色，分类处理：0、秘密，1、男主人，2、女主人，3、女儿， 4、儿子，5、宠物，6、具身AI助理
 	switch role_int {
-	case dao.FamilyMemberRoleUnknown, dao.FamilyMemberRoleDaughter, dao.FamilyMemberRoleSon, dao.FamilyMemberRolePet:
+	case dao.FamilyMemberRoleUnknown, dao.FamilyMemberRoleDaughter, dao.FamilyMemberRoleSon, dao.FamilyMemberRolePet, dao.FamilyMemberRoleAIAssistant:
 		// ok，角色可以共用
 		break
 	case dao.FamilyMemberRoleHusband, dao.FamilyMemberRoleWife:

@@ -86,7 +86,7 @@ type FamilyMember struct {
 	Uuid             string
 	FamilyId         int        // 家庭id
 	UserId           int        // 茶友id
-	Role             int        // 家庭角色，0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物,
+	Role             int        // 家庭角色，0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物, 6、具身AI助理
 	IsAdult          bool       // 是否成年?
 	NickName         string     // 父母对孩童时期的昵称，例如：狗剩
 	IsAdopted        bool       // 是否被领养?例如：木偶人匹诺曹Pinocchio
@@ -99,12 +99,13 @@ type FamilyMember struct {
 
 // 家庭成员角色常量
 const (
-	FamilyMemberRoleUnknown  = iota // 0、秘密
-	FamilyMemberRoleHusband         // 1、男主人公
-	FamilyMemberRoleWife            // 2、女主人公
-	FamilyMemberRoleDaughter        // 3、女儿
-	FamilyMemberRoleSon             // 4、儿子
-	FamilyMemberRolePet             // 5、宠物
+	FamilyMemberRoleUnknown     = iota // 0、秘密
+	FamilyMemberRoleHusband            // 1、男主人公
+	FamilyMemberRoleWife               // 2、女主人公
+	FamilyMemberRoleDaughter           // 3、女儿
+	FamilyMemberRoleSon                // 4、儿子
+	FamilyMemberRolePet                // 5、宠物
+	FamilyMemberRoleAIAssistant        // 6、具身AI助理（Embodied AI Assistant）家庭机器人，未来家庭成员的新角色，既不是人类也不是宠物，而是具有一定智能和自主性的AI存在，可能在家庭中承担多种角色，例如：家庭秘书、教育辅导、情感陪伴、警卫等
 )
 
 // 成员声明状态常量
@@ -130,6 +131,8 @@ func (fm *FamilyMember) GetRole() string {
 		return "儿子"
 	case 5:
 		return "宠物"
+	case 6:
+		return "具身AI助理"
 
 	default:
 		return "未知"
@@ -142,7 +145,7 @@ type FamilyMemberSignIn struct {
 	Uuid         string
 	FamilyId     int    //“家庭茶团成员声明”所指向的&家庭茶团id
 	UserId       int    //被声明为新成员的茶友id
-	Role         int    // 家庭成员角色：0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物,
+	Role         int    // 家庭成员角色：0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物, 6、具身AI助理
 	IsAdult      bool   //是否成年
 	Title        string //标题
 	Content      string //声明内容
@@ -160,7 +163,7 @@ type FamilyMemberSignOut struct {
 	Uuid         string
 	FamilyId     int    //“家庭茶团成员声明”所指向的&家庭茶团id
 	UserId       int    //被声明为离开成员的茶友id
-	Role         int    //家庭成员角色：0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物,
+	Role         int    //家庭成员角色：0、秘密，1、男主人公，2、女主人公，3、女儿， 4、儿子，5、宠物, 6、具身AI助理
 	IsAdult      bool   //是否成年
 	Title        string //标题
 	Content      string //声明内容
