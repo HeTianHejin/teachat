@@ -34,6 +34,12 @@ INSERT INTO user_default_teams (user_id, team_id) VALUES
 (2, 3); -- 稻香老农默认团队为见证者茶团
 
 -- ============================================
+-- 预设地方数据 
+-- ============================================
+INSERT INTO places (id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at) VALUES
+(1, 'place-001-spaceship-teabar', '星际茶棚', 'Spaceship Teabar', '星际茶棚', 'spaceship-teabar', 1, 1, 4, 1, true, false, 1, '2025-05-07T17:17:07Z');
+
+-- ============================================
 -- 环境数据
 -- ============================================
 
@@ -105,3 +111,4 @@ SELECT setval('skills_id_seq', (SELECT MAX(id) FROM skills));
 SELECT setval('magics_id_seq', (SELECT MAX(id) FROM magics));
 SELECT setval('environments_id_seq', (SELECT MAX(id) FROM environments));
 SELECT setval('team_members_id_seq', (SELECT MAX(id) FROM team_members));
+
