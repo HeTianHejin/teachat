@@ -390,6 +390,7 @@ CREATE TABLE project_approved (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     user_id               INTEGER NOT NULL,
+    approve_user_id       INTEGER NOT NULL,
     project_id            INTEGER NOT NULL,
     objective_id          INTEGER NOT NULL,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -916,6 +917,7 @@ CREATE TABLE tea_orders (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     objective_id          INTEGER NOT NULL REFERENCES objectives(id),
     project_id            INTEGER NOT NULL REFERENCES projects(id),
+    user_id               INTEGER REFERENCES users(id), -- 茶围管理团队成员，选择入围操作者
     status                VARCHAR(64) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'pause', 'completed', 'cancelled')),
     verify_team_id        INTEGER REFERENCES teams(id),
     payer_team_id         INTEGER REFERENCES teams(id),

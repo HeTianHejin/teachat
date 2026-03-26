@@ -212,6 +212,18 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
 		return
 	}
+	// 检查是否已经入围？if true, report success and return,不需要重复入围了。
+	is_approved, err := pr.IsApproved()
+	if err != nil {
+		util.Debug(" Cannot check if project is approved", pr.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶台入围状态，请确认后再试。")
+		return
+	}
+	if is_approved {
+		report(w, s_u, "你好，茶博士微笑，该茶台已入围，请勿重复操作。")
+		return
+	}
+
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
@@ -268,17 +280,6 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士面无表情，说没有权限处理这个入围操作，请确认。")
 		return
 	}
-	// 准备记录入围的茶台
-	new_project_approved := dao.ProjectApproved{
-		ObjectiveId: ob.Id,
-		ProjectId:   pr.Id,
-		UserId:      s_u.Id,
-	}
-	// 检查是否已经入围过了
-	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
-		report(w, s_u, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
-		return
-	}
 
 	// 返回入围所需要确认的监护方选择页面：project.approve_step1
 	// 渲染选择页面，提供两个选项：
@@ -324,6 +325,17 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
 		return
 	}
+	// 检查是否已经入围？if true, report success and return,不需要重复入围了。
+	is_approved, err := pr.IsApproved()
+	if err != nil {
+		util.Debug(" Cannot check if project is approved", pr.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶台入围状态，请确认后再试。")
+		return
+	}
+	if is_approved {
+		report(w, s_u, "你好，茶博士微笑，该茶台已入围，请勿重复操作。")
+		return
+	}
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
@@ -365,22 +377,13 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士面无表情，说没有权限处理这个入围操作，请确认。")
 		return
 	}
-	// 准备记录入围的茶台
-	new_project_approved := dao.ProjectApproved{
-		ObjectiveId: ob.Id,
-		ProjectId:   pr.Id,
-		UserId:      s_u.Id,
-	}
-	// 检查是否已经入围过了
-	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
-		report(w, s_u, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
-		return
-	}
+
 	// 根据监护方选择，处理入围茶台
 	tea_order := dao.TeaOrder{}
 	family_care_team_id := 0
 	tea_order.ObjectiveId = ob.Id
 	tea_order.ProjectId = pr.Id
+	tea_order.UserId = s_u.Id
 	tea_order.Status = dao.TeaOrderStatusPending
 	tea_order.VerifyTeamId = dao.TeamIdVerifier
 	tea_order.PayeeTeamId = pr.TeamId
@@ -410,13 +413,13 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 记录tea_order
-	// TODO：在见证团队页面，设置“待审批新茶定单”(tea_order.status=TeaOrderStatusPending)作为徽章通知-功能入口，
-	// 等待见证者团队成员查看pending_tea_orders列表->审查（明确线下活动主题，道德合规。。。）
 	if err = tea_order.Create(r.Context()); err != nil {
 		util.Debug(" Cannot create tea order,ob.FamilyId:", ob.FamilyId, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建茶订单记录，请确认后再试。")
 		return
 	}
+	// 在见证团队页面，设置“待审批新茶定单”(tea_order.status=TeaOrderStatusPending)作为徽章通知-功能入口，
+	// 等待见证者团队成员查看pending_tea_orders列表->审查（明确线下活动主题，道德合规。。。）
 
 	// TODO：由系统自动匹配有相似解题技能的团队3个（如果有的话），让茶围归属管理方（出题方）选择1个作为监护方。
 }

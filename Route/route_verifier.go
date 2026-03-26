@@ -316,9 +316,10 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 
 	// 准备记录入围的茶台
 	new_project_approved := dao.ProjectApproved{
-		ObjectiveId: teaOrder.ObjectiveId,
-		ProjectId:   teaOrder.ProjectId,
-		UserId:      s_u.Id,
+		ObjectiveId:   teaOrder.ObjectiveId,
+		ProjectId:     teaOrder.ProjectId,
+		UserId:        s_u.Id,
+		ApproveUserId: s_u.Id,
 	}
 	// 检查是否已经存在入围记录，如果不存在则创建，如果存在则不重复创建
 	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
@@ -331,6 +332,26 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台。请稍后再试。")
 			return
 		}
+		// 填写入围茶台4或者2预设定茶议（步骤）曲
+		objective := &dao.Objective{Id: teaOrder.ObjectiveId}
+		if err = objective.Get(); err != nil {
+			util.Debug("Cannot get objective by id:", teaOrder.ObjectiveId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能获取茶围信息。请稍后再试。")
+			return
+		}
+		project := &dao.Project{Id: teaOrder.ProjectId}
+		if err = project.Get(); err != nil {
+			util.Debug("Cannot get project by id:", teaOrder.ProjectId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能获取茶台信息。请稍后再试。")
+			return
+		}
+		// 根据objective的step_count字段决定创建4步茶议
+		if err = dao.CreateRequiredThreads(objective, project, teaOrder.UserId, dao.Templates4step, r.Context()); err != nil {
+			util.Debug("Cannot create required threads for project approved", err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能创建茶议。请稍后再试。")
+			return
+		}
+
 	} else {
 		util.Debug("Cannot get project approved", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台。请稍后再试。")

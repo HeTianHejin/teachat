@@ -66,34 +66,36 @@ const (
 
 // 同意入围，许可某个茶台（项目）设立
 type ProjectApproved struct {
-	Id          int
-	UserId      int       //批准者id
-	ProjectId   int       //茶台id
-	ObjectiveId int       //茶围id
-	CreatedAt   time.Time //批准时间
+	Id            int
+	Uuid          string
+	UserId        int       //选择入围者id（茶围管理团队/家庭管理员选择的茶台入围者id）
+	ApproveUserId int       //批准人id（见证者团队成员，批准某个茶台入围，创建线下茶话会订单（teaOrder））
+	ProjectId     int       //茶台id
+	ObjectiveId   int       //茶围id
+	CreatedAt     time.Time //批准时间
 }
 
 // project_approved.Create()  ----【tencent AI协助】
 func (projectApproved *ProjectApproved) Create() (err error) {
-	statement := "INSERT INTO project_approved (user_id, project_id, objective_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id"
+	statement := "INSERT INTO project_approved (uuid, user_id, approve_user_id, project_id, objective_id, created_at) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(projectApproved.UserId, projectApproved.ProjectId, projectApproved.ObjectiveId, time.Now()).Scan(&projectApproved.Id)
+	err = stmt.QueryRow(Random_UUID(), projectApproved.UserId, projectApproved.ApproveUserId, projectApproved.ProjectId, projectApproved.ObjectiveId, time.Now()).Scan(&projectApproved.Id)
 	return
 }
 
 // project_approved.GetByProjectId() ----【tencent AI协助】
 func (projectApproved *ProjectApproved) GetByObjectiveIdProjectId() (err error) {
-	err = DB.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE objective_id=$1 and project_id = $2", projectApproved.ObjectiveId, projectApproved.ProjectId).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
+	err = DB.QueryRow("SELECT id, uuid, user_id, approve_user_id, project_id, objective_id, created_at FROM project_approved WHERE objective_id=$1 and project_id = $2", projectApproved.ObjectiveId, projectApproved.ProjectId).Scan(&projectApproved.Id, &projectApproved.Uuid, &projectApproved.UserId, &projectApproved.ApproveUserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
 	return
 }
 
 // project_approved.GetById() ----【tencent AI协助】
 func (projectApproved *ProjectApproved) GetById() (err error) {
-	err = DB.QueryRow("SELECT id, user_id, project_id, objective_id, created_at FROM project_approved WHERE id = $1", projectApproved.Id).Scan(&projectApproved.Id, &projectApproved.UserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
+	err = DB.QueryRow("SELECT id, uuid, user_id, approve_user_id, project_id, objective_id, created_at FROM project_approved WHERE id = $1", projectApproved.Id).Scan(&projectApproved.Id, &projectApproved.Uuid, &projectApproved.UserId, &projectApproved.ApproveUserId, &projectApproved.ProjectId, &projectApproved.ObjectiveId, &projectApproved.CreatedAt)
 	return
 }
 
