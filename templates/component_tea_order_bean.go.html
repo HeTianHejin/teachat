@@ -16,8 +16,16 @@
   <div class="panel-body">
     <div class="row">
       <div class="col-xs-6">
-        <p><strong>茶围主题：</strong>{{ .Objective.Title }}</p>
-        <p><strong>茶台名称：</strong>{{ .Project.Title }}</p>
+        <p><strong>茶围主题：</strong>
+          <a href="/v1/objective/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}" target="_blank">
+            {{ .ObjectiveBean.Objective.Title }}
+          </a>
+        </p>
+        <p><strong>茶台名称：</strong>
+          <a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}" target="_blank">
+            {{ .ProjectBean.Project.Title }}
+          </a>
+        </p>
         <p><strong>创建时间：</strong>{{ .TeaOrder.CreatedDateTime }}</p>
       </div>
       <div class="col-xs-6">

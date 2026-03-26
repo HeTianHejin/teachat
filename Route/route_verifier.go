@@ -286,7 +286,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 	// 更新订单状态
 	teaOrder.TeaTopic = teaTopic
 	teaOrder.IsApproved = true
-	teaOrder.ApproverUserId = s_u.Id
+	teaOrder.ApproverUserId = sql.NullInt64{Int64: int64(s_u.Id), Valid: true}
 	teaOrder.ApprovalRejectionReason = "-"
 	approvalTime := time.Now()
 	teaOrder.ApprovedAt = &approvalTime
@@ -311,6 +311,29 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 	if err = witnessLog.Create(r.Context()); err != nil {
 		util.Debug("Cannot create witness log", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建见证日志。请稍后再试。")
+		return
+	}
+
+	// 准备记录入围的茶台
+	new_project_approved := dao.ProjectApproved{
+		ObjectiveId: teaOrder.ObjectiveId,
+		ProjectId:   teaOrder.ProjectId,
+		UserId:      s_u.Id,
+	}
+	// 检查是否已经存在入围记录，如果不存在则创建，如果存在则不重复创建
+	if err = new_project_approved.GetByObjectiveIdProjectId(); err == nil {
+		report(w, s_u, "你好，茶博士微笑，已成功记录入围茶台，请勿重复操作。")
+		return
+	} else if err == sql.ErrNoRows {
+		err = new_project_approved.Create()
+		if err != nil {
+			util.Debug("Cannot create project approved", err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台。请稍后再试。")
+			return
+		}
+	} else {
+		util.Debug("Cannot get project approved", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台。请稍后再试。")
 		return
 	}
 
@@ -449,7 +472,7 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 
 	// 更新订单状态
 	teaOrder.IsApproved = false
-	teaOrder.ApproverUserId = s_u.Id
+	teaOrder.ApproverUserId = sql.NullInt64{Int64: int64(s_u.Id), Valid: true}
 	teaOrder.ApprovalRejectionReason = reason
 	teaOrder.Status = dao.TeaOrderStatusCancelled
 
@@ -882,7 +905,9 @@ func fetchTeaOrderBean(teaOrder dao.TeaOrder) (*dao.TeaOrderBean, error) {
 	if err := project.Get(); err != nil {
 		return nil, err
 	}
-	bean.ProjectBean = &dao.ProjectBean{}
+	bean.ProjectBean = &dao.ProjectBean{
+		Project: project,
+	}
 
 	// 获取需求方团队
 	if teaOrder.PayerTeamId > 0 {

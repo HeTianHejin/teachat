@@ -8,9 +8,9 @@ import (
 )
 
 /*
-在一个茶围objective目标里，某个项目project被选中“入围”之后，系统将询问围主是否需要启动线下作业服务以解决问题。
+在一个茶围objective目标里，某个项目project被选中"入围"之后，系统将询问围主是否需要启动线下作业服务以解决问题。
 -否，意味无需线下行动，没有TeaOrder启动，继续线上讨论即可；
--是，启动tea_order实例，这是一个类似”大观园的诗社活动“，有见证方verify team（主持&裁判），需求方payer team（出题），解题方payee team（作答），一个解题的过程是一个handicraft（手工艺），
+-是，启动tea_order实例，这是一个类似"大观园的诗社活动"，有见证方verify team（主持&裁判），需求方payer team（出题），解题方payee team（作答），一个解题的过程是一个handicraft（手工艺），
 可能需要多个handicraft才能完成work，为了慎独，另外引入监护方（care team）与解题方共同承担责任风险；
 --启动tea_order之后，系统会生成一个tea_order实体，记录该解题服务的相关信息；
 --一个tea_order可以包含多个handicraft，每个handicraft对应一个具体的解题任务(见handicraft.go文件)；
@@ -29,18 +29,18 @@ type TeaOrder struct {
 	CareTeamId   int    // 监护方团队ID
 
 	// 审批人（见证者）填写，必填
-	// 审批人角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判“违规”情形，将阻止贾宝玉作西厢记类那种“男女礼教脱轨诗”或者禁止薛蟠那种酒色情诗；
-	// 又或者是老师组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核，所以说“见证”记录事件发生的真实性、合规性。
+	// 审批人角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判"违规"情形，将阻止贾宝玉作西厢记类那种"男女礼教脱轨诗"或者禁止薛蟠那种酒色情诗；
+	// 又或者是老师组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核，所以说"见证"记录事件发生的真实性、合规性。
 	// 见证人也是活动进程主持人，类似教堂神父主持婚礼活动，发现不道德的欺瞒情况，例如新郎或者新娘竟然是重婚者之类不符合道德规范的活动将取消或者宣布无效。
-	TeaTopic                string     // 茶会主题，默认值'-'。审批时即使不批准也应当根据茶围出题内容提炼，例如：热水器维修，宠物狗口腔护理,等。
-	IsApproved              bool       // 是否批准，审批人填写（必填）,默认false
-	ApproverUserId          int        // 审批人ID，也是关联订单负责人，必须是见证者团队成员,如果是0代表待审批，
-	ApprovalRejectionReason string     // 审批意见，如果拒绝，填写原因,默认值:'-'
-	ApprovedAt              *time.Time // 审批时间
+	TeaTopic                string        // 茶会主题，默认值'-'。审批时即使不批准也应当根据茶围出题内容提炼，例如：热水器维修，宠物狗口腔护理,等。
+	IsApproved              bool          // 是否批准，审批人填写（必填）,默认false
+	ApproverUserId          sql.NullInt64 // 审批人ID，也是关联订单负责人，必须是见证者团队成员,如果Valid为false代表待审批
+	ApprovalRejectionReason string        // 审批意见，如果拒绝，填写原因,默认值:'-'
+	ApprovedAt              *time.Time    // 审批时间
 
 	FinalScore sql.NullInt64 // 根据另外的打分表计算后得到的最终的解题评分，NULL代表未评分，0代表得0分。
 	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	UpdatedAt  *time.Time
 	DeletedAt  *time.Time //软删除时间（未完成的tea_order可以被取消删除，已完成的tea_order不可删除）
 }
 
@@ -59,8 +59,8 @@ type WitnessLog struct {
 	TeaOrderId int
 	Action     string // "审批"/"暂停"/"恢复"/"终止"
 	Reason     string
-	WitnessId  int    // 见证人用户ID
-	EvidenceId int    // 证据材料 ->Evidence{}
+	WitnessId  int // 见证人用户ID
+	EvidenceId int // 证据材料 ->Evidence{}
 	WitnessAt  time.Time
 }
 
