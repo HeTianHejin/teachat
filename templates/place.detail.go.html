@@ -69,7 +69,7 @@
             </tr>
             <tr>
                 <td>更新日期</td>
-                <td>{{ .UpdatedAt.Format "2006-01-02 15:04:05" }}</td>
+                <td>{{ if .UpdatedAt }}{{ .UpdatedAt.Format "2006-01-02 15:04:05" }}{{ else }}-{{ end }}</td>
             </tr>
         </tbody>
     </table>

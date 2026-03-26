@@ -182,7 +182,7 @@ func (t *TeaOrder) Create(ctx context.Context) (err error) {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, t.ObjectiveId, t.ProjectId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId, t.TeaTopic, t.IsApproved, t.ApproverUserId, t.ApprovalRejectionReason)
+	_, err = stmt.ExecContext(ctx, t.ObjectiveId, t.ProjectId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId)
 	return err
 }
 

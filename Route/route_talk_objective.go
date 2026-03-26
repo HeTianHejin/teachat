@@ -563,13 +563,13 @@ func objectiveSupplementPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士扶起厚厚的眼镜，居然说陛下您补充的茶围目标内容太多了！请确认后再试。")
 		return
 	}
-	//当前"[中文时间字符 + 补充]" + body
+	//当前"[中文时间字符]" + body
 	//获取当前时间，格式化成中文时间字符
 	now := time.Now()
 	timeStr := now.Format("2006年1月2日 15:04:05")
 	name := s_u.Name
 	// 追加内容（另起一行）
-	t := "\n[" + timeStr + " " + name + " 补充] " + additional // 注意开头的 \n
+	t := "\n[" + timeStr + " " + name + "]" + additional // 注意开头的 \n
 	ob.Body += t
 	//更新茶围目标内容
 	if err = ob.Update(); err != nil {
