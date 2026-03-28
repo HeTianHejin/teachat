@@ -412,14 +412,30 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 检查Torder是否已经存在？如果已经存在相同project_id和objective_id的tea_order，并且状态是待审批或者已审批的，就不能重复创建了。
+	existing_order, err := dao.GetTeaOrderByProjectIdObjectiveId(r.Context(), pr.Id, ob.Id)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		util.Debug(" Cannot check existing tea order", pr.Id, ob.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶订单记录，请确认后再试。")
+		return
+	}
+	if existing_order != nil && (existing_order.Status == dao.TeaOrderStatusPending || existing_order.Status == dao.TeaOrderStatusActive || existing_order.Status == dao.TeaOrderStatusPause) {
+		report(w, s_u, "你好，茶博士失魂鱼，该茶台已存在，请勿重复创建。")
+		return
+	}
+
 	// 记录tea_order
 	if err = tea_order.Create(r.Context()); err != nil {
 		util.Debug(" Cannot create tea order,ob.FamilyId:", ob.FamilyId, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建茶订单记录，请确认后再试。")
 		return
 	}
+
+	//报告用户入围操作成功，请等待见证者审批
+	report(w, s_u, "你好，茶博士微笑，该茶台已入围操作成功！请耐心等待见证者审批。")
+
 	// 在见证团队页面，设置“待审批新茶定单”(tea_order.status=TeaOrderStatusPending)作为徽章通知-功能入口，
-	// 等待见证者团队成员查看pending_tea_orders列表->审查（明确线下活动主题，道德合规。。。）
+	// 等待见证者团队成员查看pending_tea_orders列表->审查（明确线下活动主题，道德合规。。。）->审批通过后，更新tea_order.status=TeaOrderStatusApproved,并记录审批人id和审批时间。
 
 	// TODO：由系统自动匹配有相似解题技能的团队3个（如果有的话），让茶围归属管理方（出题方）选择1个作为监护方。
 }

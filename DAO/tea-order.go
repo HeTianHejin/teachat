@@ -205,6 +205,24 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 	return err
 }
 
+// GetTeaOrderByProjectIdObjectiveId 根据项目ID和茶围目标ID获取茶订单记录
+func GetTeaOrderByProjectIdObjectiveId(ctx context.Context, projectId int, objectiveId int) (*TeaOrder, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE project_id = $1 AND objective_id = $2`
+	stmt, err := DB.PrepareContext(ctx, statement)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	teaOrder := &TeaOrder{}
+	err = stmt.QueryRowContext(ctx, projectId, objectiveId).Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
+	if err != nil {
+		return nil, err
+	}
+	return teaOrder, nil
+}
+
 // Update 更新茶订单记录
 func (t *TeaOrder) Update() error {
 	statement := `UPDATE tea_orders SET status = $2, tea_topic = $3, is_approved = $4, approver_user_id = $5,

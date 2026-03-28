@@ -318,7 +318,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 	new_project_approved := dao.ProjectApproved{
 		ObjectiveId:   teaOrder.ObjectiveId,
 		ProjectId:     teaOrder.ProjectId,
-		UserId:        s_u.Id,
+		UserId:        teaOrder.UserId,
 		ApproveUserId: s_u.Id,
 	}
 	// 检查是否已经存在入围记录，如果不存在则创建，如果存在则不重复创建
