@@ -20,6 +20,8 @@ type TeaOrderBean struct {
 	PayeeTeam        *Team
 	CareTeam         *Team
 	VerifyTeam       *Team  // 可选
-	StatusLabelClass string // 根据状态返回Bootstrap标签类，如"warning"、"success"等
-	CreatedDateTime  string // 格式化后的时间
+	OperatorUser     *User   // 入围操作人
+	ApproverUser     *User   // 见证批准人
+	StatusLabelClass string  // 根据状态返回Bootstrap标签类，如"warning"、"success"等
+	CreatedDateTime  string  // 格式化后的时间
 }

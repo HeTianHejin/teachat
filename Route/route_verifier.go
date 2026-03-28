@@ -972,6 +972,22 @@ func fetchTeaOrderBean(teaOrder dao.TeaOrder) (*dao.TeaOrderBean, error) {
 		bean.VerifyTeam = &verifyTeam
 	}
 
+	// 获取入围操作人
+	if teaOrder.UserId > 0 {
+		operatorUser, err := dao.GetUser(teaOrder.UserId)
+		if err == nil {
+			bean.OperatorUser = &operatorUser
+		}
+	}
+
+	// 获取见证批准人
+	if teaOrder.ApproverUserId.Valid && teaOrder.ApproverUserId.Int64 > 0 {
+		approverUser, err := dao.GetUser(int(teaOrder.ApproverUserId.Int64))
+		if err == nil {
+			bean.ApproverUser = &approverUser
+		}
+	}
+
 	return bean, nil
 }
 

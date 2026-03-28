@@ -32,6 +32,22 @@
         <p><strong>需求方（出题方）：</strong>{{ .PayerTeam.Name }}</p>
         <p><strong>解题方：</strong>{{ .PayeeTeam.Name }}</p>
         <p><strong>监护方：</strong>{{ .CareTeam.Name }}</p>
+        <p><strong>入围操作人：</strong>
+          {{ if .OperatorUser }}
+            <a href="/v1/user/biography?uuid={{ .OperatorUser.Uuid }}" target="_blank">{{ .OperatorUser.Name }} (ID:{{ .TeaOrder.UserId }})</a>
+          {{ else }}
+            ID:{{ .TeaOrder.UserId }}
+          {{ end }}
+        </p>
+        <p><strong>见证批准人：</strong>
+          {{ if .ApproverUser }}
+            <a href="/v1/user/biography?uuid={{ .ApproverUser.Uuid }}" target="_blank">{{ .ApproverUser.Name }} (ID:{{ .ApproverUser.Id }})</a>
+          {{ else if .TeaOrder.ApproverUserId.Valid }}
+            ID:{{ .TeaOrder.ApproverUserId.Int64 }}
+          {{ else }}
+            -
+          {{ end }}
+        </p>
       </div>
     </div>
     <div class="row">
