@@ -141,7 +141,7 @@ func avatarUploadUserPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 处理上传到图片
-	errAvatar := saveUploadAvatar(r, dao.Random_UUID(), "user")
+	errAvatar := saveUploadAvatar(r, s_u.Uuid, "user")
 	if errAvatar == nil {
 		s_u.Avatar = s_u.Uuid
 		if err = s_u.UpdateAvatar(); err != nil {

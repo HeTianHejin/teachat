@@ -608,9 +608,9 @@ type threadTemplate struct {
 }
 
 var Templates4step = []threadTemplate{
-	{"约茶", "在此记录具体的茶会时间、地址和出席人员", ThreadCategoryAppointment},
-	{"看看", "在此记录「看看」作业情况。", ThreadCategorySeeSeek},
-	{"脑火", "在此记录「脑火」作业情况。", ThreadCategoryBrainFire},
+	{"约茶", "在此记录线下茶会时间、地址和出席人员", ThreadCategoryAppointment},
+	{"看看", "在此记录线下茶会「看看」作业情况。", ThreadCategorySeeSeek},
+	{"脑火", "在此记录线下茶会「脑火」作业情况。", ThreadCategoryBrainFire},
 	{"建议", "在此记录根据「看看」的结果，提出对应建议。", ThreadCategorySuggestion},
 }
 
