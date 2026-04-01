@@ -144,7 +144,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检测一下title是否不为空，而且中文字数<24,topic不为空，而且中文字数<int(util.Config.ThreadMaxWord)
-	if !validateCnStrLen(title, 1, 36, "标题", w, s_u) {
+	if !validateCnStrLen(title, 1, 24, "标题", w, s_u) {
 		return
 	}
 	if !validateCnStrLen(body, int(util.Config.ThreadMinWord), int(util.Config.ThreadMaxWord), "内容", w, s_u) {

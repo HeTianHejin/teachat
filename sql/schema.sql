@@ -508,11 +508,12 @@ CREATE TABLE draft_posts (
 CREATE TABLE draft_threads (
     id                    SERIAL PRIMARY KEY,
     user_id               INTEGER NOT NULL,
+    type                  INTEGER DEFAULT 0,
     project_id            INTEGER NOT NULL,
     title                 VARCHAR(64),
     body                  TEXT,
     class                 INTEGER DEFAULT 0,
-    type                  INTEGER DEFAULT 0,
+    status                INTEGER DEFAULT 0,
     post_id               INTEGER DEFAULT 0,
     team_id               INTEGER NOT NULL DEFAULT 2,
     is_private            BOOLEAN DEFAULT false,

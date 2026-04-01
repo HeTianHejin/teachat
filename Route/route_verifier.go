@@ -346,7 +346,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 根据objective的step_count字段决定创建4步茶议
-		if err = dao.CreateRequiredThreads(objective, project, teaOrder.UserId, dao.Templates4step, r.Context()); err != nil {
+		if err = dao.CreateRequiredThreads(objective, project, s_u.Id, dao.Templates4step, r.Context()); err != nil {
 			util.Debug("Cannot create required threads for project approved", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能创建茶议。请稍后再试。")
 			return

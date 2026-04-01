@@ -105,6 +105,7 @@ INSERT INTO magics (uuid, user_id, name, nickname, description, intelligence_lev
 
 SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
 SELECT setval('teams_id_seq', (SELECT MAX(id) FROM teams));
+SELECT setval('places_id_seq', (SELECT MAX(id) FROM places));
 SELECT setval('hazards_id_seq', (SELECT MAX(id) FROM hazards));
 SELECT setval('risks_id_seq', (SELECT MAX(id) FROM risks));
 SELECT setval('skills_id_seq', (SELECT MAX(id) FROM skills));
