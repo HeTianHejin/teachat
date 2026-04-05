@@ -44,6 +44,11 @@ func fetchAppointmentBean(pA dao.ProjectAppointment) (pABean dao.ProjectAppointm
 		return pABean, fmt.Errorf("获取payee_team失败: %w", err)
 	}
 	pABean.PayeeTeam = payee_team
+	CareTeam, err := dao.GetTeam(pA.CareTeamId)
+	if err != nil {
+		return pABean, fmt.Errorf("获取CareTeam失败: %w", err)
+	}
+	pABean.CareTeam = CareTeam
 	verifier, err := dao.GetUser(pA.VerifierUserId)
 	if err != nil {
 		return pABean, fmt.Errorf("获取verifier失败: %w", err)

@@ -229,12 +229,12 @@
 
     <div class="form-group">
       <label>开始时间</label>
-      <p class="form-control-static">{{ .Appointment.StartTime.Format "2006-01-02 15:04" }}</p>
+      <p class="form-control-static utc-time" data-utc="{{ .Appointment.StartTime.Format "2006-01-02T15:04:00Z" }}">{{ .Appointment.StartTime.Format "2006-01-02 15:04" }}</p>
     </div>
 
     <div class="form-group">
       <label>结束时间</label>
-      <p class="form-control-static">{{ .Appointment.EndTime.Format "2006-01-02 15:04" }}</p>
+      <p class="form-control-static utc-time" data-utc="{{ .Appointment.EndTime.Format "2006-01-02T15:04:00Z" }}">{{ .Appointment.EndTime.Format "2006-01-02 15:04" }}</p>
     </div>
 
     <div class="form-group">
@@ -270,5 +270,25 @@
   <strong>烫手山芋!</strong> 约茶信息为空。
 </div>
 {{ end }}{{/* 约茶信息非空检查-结束 */}}
+
+<script>
+  // 将 UTC 时间转换为本地时间显示
+  function convertUTCToLocal() {
+    document.querySelectorAll('.utc-time').forEach(function(el) {
+      const utcStr = el.getAttribute('data-utc');
+      if (utcStr) {
+        const date = new Date(utcStr);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        el.textContent = `${year}-${month}-${day} ${hours}:${minutes}`;
+      }
+    });
+  }
+  // 页面加载时执行转换
+  document.addEventListener('DOMContentLoaded', convertUTCToLocal);
+</script>
 
 {{ end }}

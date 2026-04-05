@@ -413,7 +413,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查Torder是否已经存在？如果已经存在相同project_id和objective_id的tea_order，并且状态是待审批或者已审批的，就不能重复创建了。
-	existing_order, err := dao.GetTeaOrderByProjectIdObjectiveId(r.Context(), pr.Id, ob.Id)
+	existing_order, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), pr.Id, ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug(" Cannot check existing tea order", pr.Id, ob.Id, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶订单记录，请确认后再试。")

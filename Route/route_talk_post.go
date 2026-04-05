@@ -489,7 +489,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if ok {
 		//可以补充自己的表态内容
-		//当前“[中文时间字符 + 补充]” + body
+		//当前“[中文时间字符 + ]” + body
 		now := time.Now()
 		timeStr := now.Format("2006年1月2日 15:04:05")
 		name := s_u.Name

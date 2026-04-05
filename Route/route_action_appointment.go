@@ -22,7 +22,7 @@ func HandleNewAppointment(w http.ResponseWriter, r *http.Request) {
 }
 
 // GET /v1/appointment/new?uuid=xXx
-// NewAppointmentGet 函数用于获取新的预约
+// NewAppointmentGet 函数用于根据teaOrder创建新的预约
 func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	// 获取当前会话
 	sess, err := session(r)
@@ -67,29 +67,6 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	master, err := dao.GetUser(pr.UserId)
-	if err != nil {
-		// 如果用户获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get user", err)
-		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
-	// 获取项目所属的家族
-	master_family, err := dao.GetFamily(pr.FamilyId)
-	if err != nil {
-		// 如果家族获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get family", err)
-		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
-	// 获取项目所属的团队
-	master_team, err := dao.GetTeam(pr.TeamId)
-	if err != nil {
-		// 如果团队获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get team", err)
-		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
 	// 获取项目的目标
 	ob, err := pr.Objective()
 	if err != nil {
@@ -106,49 +83,56 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	admin, err := dao.GetUser(ob.UserId)
+
+	// 获取线下茶会的订单tea_order，根据project id和objective id获取预约记录，如果没有预约记录，则返回错误信息
+	teaOrder, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), pr.Id, ob.Id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			report(w, s_u, "这个茶台尚未约茶。")
+			return
+		}
+		util.Debug(" Cannot get tea order by project id and objective id", pr.Id, ob.Id, err)
+		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	// 获取预约记录的bean
+	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
+	if err != nil {
+		util.Debug(" Cannot get tea order bean", err)
+		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	master, err := dao.GetUser(pr.UserId)
 	if err != nil {
 		// 如果用户获取失败，则记录错误并返回错误信息
 		util.Debug(" Cannot get user", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	// 获取目标所属的家族
-	admin_family, err := dao.GetFamily(ob.FamilyId)
+
+	admin, err := dao.GetUser(teaOrderBean.OperatorUser.Id)
 	if err != nil {
-		// 如果家族获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get family", err)
+		// 如果用户获取失败，则记录错误并返回错误信息
+		util.Debug(" Cannot get user", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	// 获取目标所属的团队
-	admin_team, err := dao.GetTeam(ob.TeamId)
-	if err != nil {
-		// 如果团队获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get team", err)
-		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
-	// 获取验证者团队
-	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
-	if err != nil {
-		util.Debug(" Cannot get verifier team", err)
-		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-		return
-	}
+
 	// 创建项目预约的bean
-	p_a := dao.ProjectAppointmentBean{
+	newPAB := dao.ProjectAppointmentBean{
 		Appointment:    dao.ProjectAppointment{},
 		Project:        pr,
-		Payer:          master,
-		PayerFamily:    master_family,
-		PayerTeam:      master_team,
-		Payee:          admin,
-		PayeeFamily:    admin_family,
-		PayeeTeam:      admin_team,
+		Payer:          admin,
+		PayerFamily:    ob_bean.AuthorFamily,
+		PayerTeam:      ob_bean.AuthorTeam,
+		Payee:          master,
+		PayeeFamily:    pr_bean.AuthorFamily,
+		PayeeTeam:      pr_bean.AuthorTeam,
+		CareTeam:       *teaOrderBean.CareTeam,
 		Verifier:       s_u,
 		VerifierFamily: dao.FamilyUnknown,
-		VerifierTeam:   verifier_team,
+		VerifierTeam:   *teaOrderBean.VerifyTeam,
 	}
 	// 创建预约页面数据
 	pAD := dao.AppointmentTemplateData{
@@ -156,7 +140,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		IsVerifier:         true,
 		ProjectBean:        pr_bean,
 		QuoteObjectiveBean: ob_bean,
-		AppointmentBean:    p_a,
+		AppointmentBean:    newPAB,
 	}
 	// 渲染HTML页面
 	generateHTML(w, &pAD, "layout", "navbar.private", "action.appointment.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")
@@ -264,13 +248,25 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	// // 获取项目
-	// pr := dao.Project{Id: project_id}
-	// if err = pr.Get(); err != nil {
-	// 	util.Debug(" Cannot get project", err)
-	// 	report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
-	// 	return
-	// }
+	// 获取项目
+	pr := dao.Project{Id: project_id}
+	if err = pr.Get(); err != nil {
+		util.Debug(" Cannot get project", err)
+		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	ob, err := pr.Objective()
+	if err != nil {
+		util.Debug(" Cannot get objective", err)
+		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+	teaOrder, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), pr.Id, ob.Id)
+	if err != nil {
+		util.Debug(" Cannot get tea order by project id and objective id", pr.Id, ob.Id, err)
+		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
 	// if place_id != pr.PlaceId{
 	// 	report(w, s_u, "请选择正确的地点")
 	// 	return
@@ -288,6 +284,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 		PayeeUserId:      payee_user_id,
 		PayeeTeamId:      payee_team_id,
 		PayeeFamilyId:    payee_family_id,
+		CareTeamId:       teaOrder.CareTeamId,
 		VerifierUserId:   s_u.Id,
 		VerifierTeamId:   verifier_team_id,
 		VerifierFamilyId: verifier_family_id,
@@ -329,7 +326,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		report(w, s_u, "你好，茶博士看不懂陕下提交的UUID参数，请稍后再试。")
+		report(w, s_u, "你好，茶博士看不懂陛下提交的UUID参数，请稍后再试。")
 		return
 	}
 

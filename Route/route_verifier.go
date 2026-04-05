@@ -963,6 +963,17 @@ func fetchTeaOrderBean(teaOrder dao.TeaOrder) (*dao.TeaOrderBean, error) {
 		bean.CareTeam = &dao.Team{Name: "未指定"}
 	}
 
+	// 获取监护方团队
+	if teaOrder.CareTeamId > 0 {
+		careTeam, err := dao.GetTeam(teaOrder.CareTeamId)
+		if err != nil {
+			return nil, err
+		}
+		bean.CareTeam = &careTeam
+	} else {
+		bean.CareTeam = &dao.Team{Name: "未指定"}
+	}
+
 	// 获取见证方团队（可选）
 	if teaOrder.VerifyTeamId > 0 {
 		verifyTeam, err := dao.GetTeam(teaOrder.VerifyTeamId)

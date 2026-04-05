@@ -205,8 +205,8 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 	return err
 }
 
-// GetTeaOrderByProjectIdObjectiveId 根据项目ID和茶围目标ID获取茶订单记录
-func GetTeaOrderByProjectIdObjectiveId(ctx context.Context, projectId int, objectiveId int) (*TeaOrder, error) {
+// GetTeaOrderByProjectIdAndObjectiveId 根据项目ID和茶围目标ID获取茶订单记录
+func GetTeaOrderByProjectIdAndObjectiveId(ctx context.Context, projectId int, objectiveId int) (*TeaOrder, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE project_id = $1 AND objective_id = $2`

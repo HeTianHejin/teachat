@@ -25,6 +25,8 @@ type ProjectAppointmentBean struct {
 	PayeeFamily Family
 	PayeeTeam   Team
 
+	CareTeam Team // 监护方团队
+
 	Verifier       User
 	VerifierFamily Family
 	VerifierTeam   Team

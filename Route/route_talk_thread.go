@@ -961,13 +961,13 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	if ok = submitAdditionalContent(w, s_u, thread.Body, additional); !ok {
 		return
 	}
-	//当前“[中文时间字符 + 补充]” + body
+	//当前“[中文时间字符 + ]” + body
 	//获取当前时间，格式化成中文时间字符
 	now := time.Now()
 	timeStr := now.Format("2006年1月2日 15:04:05")
 	name := s_u.Name
 	// 追加内容（另起一行）
-	t := "\n[" + timeStr + " " + name + " 补充] " + additional // 注意开头的 \n
+	t := "\n[" + timeStr + " " + name + " ] " + additional // 注意开头的 \n
 	thread.Body += t
 	//更新茶议内容
 	if err = thread.UpdateBodyAndClass(thread.Body, thread.Class, r.Context()); err != nil {

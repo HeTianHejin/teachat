@@ -31,11 +31,11 @@
     <div class="panel-body">
       <!-- 参与方信息 -->
       <div class="panel panel-default">
-        <div class="panel-heading">出席双方信息</div>
+        <div class="panel-heading">确认出席双方信息</div>
         <div class="panel-body">
           <!-- 出星茶方选择 -->
           <div class="form-group">
-            <label>请确定出星茶方</label>
+            <label>出星茶方</label>
             <div class="radio">
               <label>
                 <input type="radio" name="tea_payer" value="original" checked>
@@ -132,6 +132,23 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 监护方信息 -->
+      <div class="form-group">
+        <label>监护方</label>
+        <div class="row">
+          <div class="col-sm-6">
+            <label for="care_team_id">团队ID</label>
+            <input type="number" class="form-control" name="care_team_id" id="care_team_id"
+              value="{{ .CareTeam.Id }}" required>
+          </div>
+          <div class="col-sm-6">
+            <label for="care_team_abbreviation">团队简称</label>
+            <input type="text" class="form-control" name="care_team_abbreviation" id="care_team_abbreviation"
+              value="{{ .CareTeam.Abbreviation }}" required>
           </div>
         </div>
       </div>
@@ -335,6 +352,18 @@
       swapPartyInfo(isSwap);
     });
   });
+  // 将本地时间转换为 UTC 时间字符串 (格式: YYYY-MM-DDTHH:mm)
+  function toUTCString(localDateTimeStr) {
+    if (!localDateTimeStr) return '';
+    const localDate = new Date(localDateTimeStr);
+    const utcYear = localDate.getUTCFullYear();
+    const utcMonth = String(localDate.getUTCMonth() + 1).padStart(2, '0');
+    const utcDay = String(localDate.getUTCDate()).padStart(2, '0');
+    const utcHours = String(localDate.getUTCHours()).padStart(2, '0');
+    const utcMinutes = String(localDate.getUTCMinutes()).padStart(2, '0');
+    return `${utcYear}-${utcMonth}-${utcDay}T${utcHours}:${utcMinutes}`;
+  }
+
   // 表单验证和提交处理
   document.querySelector('form').addEventListener('submit', function(e) {
     const payerTeamId = document.getElementById('payer_team_id').value;
@@ -346,25 +375,34 @@
     const verifierTeamId = document.getElementById('verifier_team_id').value;
     const verifierFamilyId = document.getElementById('verifier_family_id').value;
     const verifierUserId = document.getElementById('verifier_user_id').value;
-    const startTime = document.getElementById('start_time').value;
-    const endTime = document.getElementById('end_time').value;
+    const startTimeInput = document.getElementById('start_time');
+    const endTimeInput = document.getElementById('end_time');
     const placeId = document.getElementById('place_id').value;
+
+    // 转换为 UTC 时间
+    const startTimeUTC = toUTCString(startTimeInput.value);
+    const endTimeUTC = toUTCString(endTimeInput.value);
+
     // 确保所有必填字段都填写
     if (!payerTeamId || !payerFamilyId || !payerUserId ||
       !payeeTeamId || !payeeFamilyId || !payeeUserId ||
       !verifierTeamId || !verifierFamilyId || !verifierUserId ||
-      !startTime || !endTime || !placeId) {
+      !startTimeInput.value || !endTimeInput.value || !placeId) {
       alert('请填写所有必填信息');
       e.preventDefault();
       return false;
     }
-    
-    // 验证时间逻辑
-    if (new Date(startTime) >= new Date(endTime)) {
+
+    // 验证时间逻辑（使用 UTC 时间比较）
+    if (new Date(startTimeUTC) >= new Date(endTimeUTC)) {
       alert('结束时间必须晚于开始时间');
       e.preventDefault();
       return false;
     }
+
+    // 将 UTC 时间设置回表单字段提交
+    startTimeInput.value = startTimeUTC;
+    endTimeInput.value = endTimeUTC;
     // 验证ID是否相同
     if (payerTeamId === payeeTeamId ||
       payerFamilyId === payeeFamilyId ||
