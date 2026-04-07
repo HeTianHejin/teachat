@@ -4,8 +4,8 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a
-      href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{ .QuoteObjectiveBean.Objective.Title }}
+  <li><a href="/v1/objective/detail?uuid={{ .QuoteObjectiveBean.Objective.Uuid }}">{{
+      .QuoteObjectiveBean.Objective.Title }}
     </a>@茶围
   </li>
   <li><a href="/v1/project/detail?uuid={{ .ProjectBean.Project.Uuid }}">{{ .ProjectBean.Project.Title }}
@@ -34,10 +34,10 @@
 
             <span style="font-size: smaller;">
 
-              （<a
-                href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
-              <a
-                href="/v1/team/detail?uuid={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
+              （<a href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name
+                }}</a>，
+              <a href="/v1/team/detail?uuid={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation
+                }}</a>）
 
             </span>
           </div>
@@ -79,13 +79,13 @@
           </p>
           <footer>
             <cite>
-              <a href="/v1/user/biography?uuid={{ .QuoteObjectiveBean.Author.Uuid }}"
-                style="color: black;">{{ .QuoteObjectiveBean.Author.Name }}</a>
+              <a href="/v1/user/biography?uuid={{ .QuoteObjectiveBean.Author.Uuid }}" style="color: black;">{{
+                .QuoteObjectiveBean.Author.Name }}</a>
               <span style="margin-inline-end: 20px;">
-                （<a href="/v1/family/detail?id={{ .QuoteObjectiveBean.AuthorFamily.Uuid }}"
-                  style="color: black;">{{ .QuoteObjectiveBean.AuthorFamily.Name }}</a>，
-                <a href="/v1/team/detail?uuid={{ .QuoteObjectiveBean.AuthorTeam.Uuid }}"
-                  style="color: black;">{{ .QuoteObjectiveBean.AuthorTeam.Abbreviation }}</a>）
+                （<a href="/v1/family/detail?id={{ .QuoteObjectiveBean.AuthorFamily.Uuid }}" style="color: black;">{{
+                  .QuoteObjectiveBean.AuthorFamily.Name }}</a>，
+                <a href="/v1/team/detail?uuid={{ .QuoteObjectiveBean.AuthorTeam.Uuid }}" style="color: black;">{{
+                  .QuoteObjectiveBean.AuthorTeam.Abbreviation }}</a>）
               </span>
             </cite>
           </footer>
@@ -101,7 +101,7 @@
 
       </div>
 
-     
+
     </div>
 
   </div>
@@ -122,13 +122,13 @@
       <div class="panel-body">
         <div class="form-group">
           <h3 class="text-center">
-           
-              <span class="label label-info">{{ .Appointment.StatusString }}</span>
-            
+
+            <span class="label label-info">{{ .Appointment.StatusString }}</span>
+
           </h3>
         </div>
-        
-        {{ if $.IsVerifier }}    {{/* 只有见证人可以修改约茶状态 */}}
+
+        {{ if $.IsVerifier }} {{/* 只有见证人可以修改约茶状态 */}}
         <div class="form-group text-center">
           {{ if eq .Appointment.Status 1 }}
           <a href="/v1/appointment/accept?uuid={{ .Appointment.Uuid }}" class="btn btn-success">确认约茶</a>
@@ -152,7 +152,9 @@
           <div class="row">
             <div class="col-sm-6">
               <label>团队简称</label>
-              <p class="form-control-static">{{ .PayerTeam.Abbreviation }}</p>
+              <p class="form-control-static">
+                <a href="/v1/team/detail?uuid={{ .PayerTeam.Uuid }}">{{ .PayerTeam.Abbreviation }}</a>
+                </p>
             </div>
             <div class="col-sm-6">
               <label>家庭名称</label>
@@ -178,7 +180,9 @@
             <div class="row">
               <div class="col-sm-6">
                 <label>团队简称</label>
-                <p class="form-control-static">{{ .PayeeTeam.Abbreviation }}</p>
+                <p class="form-control-static">
+                  <a href="/v1/team/detail?uuid={{ .PayeeTeam.Uuid }}">{{ .PayeeTeam.Abbreviation }}</a>
+                </p>
               </div>
               <div class="col-sm-6">
                 <label>家庭名称</label>
@@ -200,22 +204,36 @@
       </div>
     </div>
 
+    <!-- 监护方 -->
+    <div class="form-group">
+      <label>监护方</label>
+      <div class="row">
+        <div class="col-sm-6">
+          <label>团队简称</label>
+          <p class="form-control-static">
+            <a href="/v1/team/detail?uuid={{ .CareTeam.Uuid }}">{{ .CareTeam.Abbreviation }}</a>
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
     <!-- 见证方 -->
     <div class="form-group">
       <label>见证方</label>
       <div class="row">
         <div class="col-sm-6">
           <label>团队简称</label>
-          <p class="form-control-static">{{ .VerifierTeam.Abbreviation }}</p>
+          <p class="form-control-static">
+            <a href="/v1/team/detail?uuid={{ .VerifierTeam.Uuid }}">{{ .VerifierTeam.Abbreviation }}</a>
+          </p>
         </div>
-        <div class="col-sm-6">
-          <label>家庭名称</label>
-          <p class="form-control-static">{{ .VerifierFamily.Name }}</p>
-        </div>
+        
       </div>
       <div class="row">
         <div class="col-sm-12">
-          <label>见证人姓名</label>
+          <label>见证人</label>
           <p class="form-control-static">{{ .Verifier.Name }}</p>
         </div>
       </div>
@@ -229,12 +247,12 @@
 
     <div class="form-group">
       <label>开始时间</label>
-      <p class="form-control-static utc-time" data-utc="{{ .Appointment.StartTime.Format "2006-01-02T15:04:00Z" }}">{{ .Appointment.StartTime.Format "2006-01-02 15:04" }}</p>
+      <p class="form-control-static utc-time" data-utc="{{ .Appointment.StartTime.UTC.Format "2006-01-02T15:04:05Z" }}">{{ .Appointment.StartTime.Format "2006-01-02 15:04" }}</p>
     </div>
 
     <div class="form-group">
       <label>结束时间</label>
-      <p class="form-control-static utc-time" data-utc="{{ .Appointment.EndTime.Format "2006-01-02T15:04:00Z" }}">{{ .Appointment.EndTime.Format "2006-01-02 15:04" }}</p>
+      <p class="form-control-static utc-time" data-utc="{{ .Appointment.EndTime.UTC.Format "2006-01-02T15:04:05Z" }}">{{ .Appointment.EndTime.Format "2006-01-02 15:04" }}</p>
     </div>
 
     <div class="form-group">
@@ -252,13 +270,13 @@
     <!-- 时间信息 -->
     <div class="form-group">
       <label>创建时间</label>
-      <p class="form-control-static">{{ .Appointment.CreatedAt.Format "2006-01-02 15:04"  }}</p>
+      <p class="form-control-static">{{ .Appointment.CreatedAt.Format "2006-01-02 15:04" }}</p>
     </div>
 
     {{ if .Appointment.UpdatedAt }}
     <div class="form-group">
       <label>更新时间</label>
-      <p class="form-control-static">{{ .Appointment.UpdatedAt.Format "2006-01-02 15:04"  }}</p>
+      <p class="form-control-static">{{ .Appointment.UpdatedAt.Format "2006-01-02 15:04" }}</p>
     </div>
     {{ end }}
 
@@ -274,7 +292,7 @@
 <script>
   // 将 UTC 时间转换为本地时间显示
   function convertUTCToLocal() {
-    document.querySelectorAll('.utc-time').forEach(function(el) {
+    document.querySelectorAll('.utc-time').forEach(function (el) {
       const utcStr = el.getAttribute('data-utc');
       if (utcStr) {
         const date = new Date(utcStr);
