@@ -951,20 +951,48 @@ func (team *Team) IsCoreMember(user_id int) (bool, error) {
 	return team_member.Role == RoleCEO || team_member.Role == RoleCTO || team_member.Role == RoleCMO || team_member.Role == RoleCFO, nil
 }
 
-// 查询一个$事业茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = 1，返回 (team_member TeamMember,err error)
-// AWS CodeWhisperer assist in writing
+// 查询一个$事业茶团team的担任CEO的成员资料，不是founder，是teamMember.Role = 1，
+// 因为$事业茶团创始人不一定担任CEO角色，CEO角色也不一定由创始人担任，所以需要单独查询担任CEO角色的成员资料,
+// 因为$事业茶团成员中可能存在CEO角色的成员被设置为离职状态，所以查询条件中需要加上status = 1（正常状态）
+// 因为$事业茶团成员中可能存在多个CEO角色的成员，所以查询条件中需要加上LIMIT 1，返回第一个满足条件的成员资料,
+// 因为$事业茶团成员中可能不存在CEO角色的成员，所以查询结果可能为空，需要处理sql.ErrNoRows的情况，
+// 排序：如果存在多个曾经担任CEO角色的成员，返回创建角色时间最晚的那个成员资料，
+// 返回 (team_member TeamMember,err error)
 func (team *Team) MemberCEO() (team_member TeamMember, err error) {
 	team_member = TeamMember{}
-	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, RoleCEO).
+	err = DB.QueryRow(`
+		SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at
+		FROM team_members
+		WHERE team_id = $1 AND role = $2 AND status = $3
+		ORDER BY created_at DESC
+		LIMIT 1`, team.Id, RoleCEO, TeamMemberStatusActive).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return TeamMember{}, nil
+		}
+		return TeamMember{}, err
+	}
 	return
 }
 
-// GetTeamMemberByRole() 根据角色查找$事业茶团成员资料。用于检查$事业茶团拟邀请的新成员角色是否已经被占用
+// GetTeamMemberByRole() 根据角色查找$事业茶团正常状态的成员资料（status=1），用于检查$事业茶团拟邀请的新成员角色是否已经被占用
+// 如果存在多个同角色的正常状态成员，返回创建时间最晚的那个
 func (team *Team) GetTeamMemberByRole(role int) (team_member TeamMember, err error) {
 	team_member = TeamMember{}
-	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND role = $2", team.Id, role).
+	err = DB.QueryRow(`
+		SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at
+		FROM team_members
+		WHERE team_id = $1 AND role = $2 AND status = $3
+		ORDER BY created_at DESC
+		LIMIT 1`, team.Id, role, TeamMemberStatusActive).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return TeamMember{}, nil
+		}
+		return TeamMember{}, err
+	}
 	return
 }
 
@@ -1455,4 +1483,27 @@ func IsTeamActiveMember(userId, teamId int) (bool, error) {
 	}
 
 	return count > 0, nil
+}
+
+// 根据团队创建人FounderId获取User信息
+// AWS CodeWhisperer assist in writing
+func (team *Team) Founder() (user User, err error) {
+	user = User{}
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	return
+}
+
+// team.CEO() 获取$事业茶团CEO成员资料（仅正常状态status=1），返回User结构体
+func (team *Team) CEO() (user User, err error) {
+	teamMember, err := team.GetTeamMemberByRole(RoleCEO)
+	if err != nil {
+		return user, err
+	}
+	if teamMember.UserId == 0 {
+		return user, fmt.Errorf("CEO not found for team id: %d", team.Id)
+	}
+	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", teamMember.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	return
 }

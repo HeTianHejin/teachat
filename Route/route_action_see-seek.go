@@ -206,20 +206,33 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//读取茶台的“约茶”资料
-	proj_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
-	if err != nil {
-		util.Debug(" Cannot get project appointment", t_proj.Id, err)
-		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
-		return
-	}
-	proj_appointment_bean, err := fetchAppointmentBean(proj_appointment)
-	if err != nil {
-		util.Debug(" Cannot get project appointment bean", err)
-		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
-		return
-	}
+	//读取茶围、茶台的资料
+	// proj_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
+	// if err != nil {
+	// 	util.Debug(" Cannot get project appointment", t_proj.Id, err)
+	// 	report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
+	// 	return
+	// }
+	// proj_appointment_bean, err := fetchAppointmentBean(proj_appointment)
+	// if err != nil {
+	// 	util.Debug(" Cannot get project appointment bean", err)
+	// 	report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
+	// 	return
+	// }
 
+	// 检查是否已存在当前project_id的see-seek记录
+	existingSeeSeek, err := dao.GetSeeSeekByProjectId(t_proj.Id, r.Context())
+	if err != nil && err != sql.ErrNoRows {
+		util.Debug(" Cannot get existing see-seek", err)
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+	if err == nil && existingSeeSeek.Id > 0 {
+		// 已存在看看记录,跳转到相应步骤
+		url := "/v1/see-seek/step" + strconv.Itoa((existingSeeSeek.Step)) + "?uuid=" + existingSeeSeek.Uuid
+		http.Redirect(w, r, url, http.StatusFound)
+		return
+	}
 	t_obje, err := t_proj.Objective()
 	if err != nil {
 		util.Debug(" Cannot get objective given proj_id", t_proj.Id, err)
@@ -238,17 +251,27 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
-	// 检查是否已存在当前project_id的see-seek记录
-	existingSeeSeek, err := dao.GetSeeSeekByProjectId(t_proj.Id, r.Context())
-	if err != nil && err != sql.ErrNoRows {
-		util.Debug(" Cannot get existing see-seek", err)
+
+	//如果没有现成的看看记录，继续往下走，准备创建看看记录的页面数据
+
+	//读取茶订单tea_order的资料
+	teaOrder, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), t_proj.Id, t_obje.Id)
+	if err != nil {
+		util.Debug(" Cannot get tea order", t_proj.Id, t_obje.Id, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
-	if err == nil && existingSeeSeek.Id > 0 {
-		// 已存在看看记录,跳转到相应步骤
-		url := "/v1/see-seek/step" + strconv.Itoa((existingSeeSeek.Step)) + "?uuid=" + existingSeeSeek.Uuid
-		http.Redirect(w, r, url, http.StatusFound)
+	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
+	if err != nil {
+		util.Debug(" Cannot get tea order bean", teaOrder.Id, err)
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+	mTeam := *teaOrderBean.PayeeTeam
+	master, err := mTeam.CEO()
+	if err != nil {
+		util.Debug(" Cannot get CEO of payee team", mTeam.Id, err)
+		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
@@ -267,18 +290,17 @@ func SeeSeekNewGet(w http.ResponseWriter, r *http.Request) {
 	sSDpD.IsVerifier = is_verifier
 
 	sSDpD.Verifier = s_u
-	sSDpD.VerifierFamily = proj_appointment_bean.VerifierFamily
-	sSDpD.VerifierTeam = proj_appointment_bean.VerifierTeam
-	sSDpD.Payer = proj_appointment_bean.Payer
-	sSDpD.PayerFamily = proj_appointment_bean.PayerFamily
-	sSDpD.PayerTeam = proj_appointment_bean.PayerTeam
-	sSDpD.Payee = proj_appointment_bean.Payee
-	sSDpD.PayeeFamily = proj_appointment_bean.PayeeFamily
-	sSDpD.PayeeTeam = proj_appointment_bean.PayeeTeam
+	sSDpD.VerifierTeam = *teaOrderBean.VerifyTeam
+	sSDpD.Payer = *teaOrderBean.OperatorUser
+	// sSDpD.PayerFamily = teaOrderBean.
+	sSDpD.PayerTeam = *teaOrderBean.PayerTeam
+	sSDpD.Payee = master
+	// sSDpD.PayeeFamily = teaOrderBean.PayeeFamily
+	sSDpD.PayeeTeam = *teaOrderBean.PayeeTeam
 
 	sSDpD.ProjectBean = projBean
 	sSDpD.QuoteObjectiveBean = objeBean
-	sSDpD.ProjectAppointment = proj_appointment_bean
+	sSDpD.TeaOrderBean = *teaOrderBean
 	sSDpD.Environments = environments
 
 	generateHTML(w, &sSDpD, "layout", "navbar.private", "action.see-seek.new", "component_project_simple_detail", "component_sess_capacity", "component_avatar_name_gender")

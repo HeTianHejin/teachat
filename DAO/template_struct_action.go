@@ -35,28 +35,31 @@ type ProjectAppointmentBean struct {
 // 新建“看看”，
 // “看看”详情页面数据
 type SeeSeekDetailTemplateData struct {
-	SessUser       User
-	IsVerifier     bool
-	IsAdmin        bool
-	IsMaster       bool
-	IsInvited      bool
-	SessUserFamily Family
-	SessUserTeam   Team
+	SessUser         User
+	IsVerifier       bool
+	IsAdmin          bool
+	IsMaster         bool
+	IsCareTeamMember bool
+	IsInvited        bool
 
-	Payer       User
-	PayerFamily Family
-	PayerTeam   Team
+	Payer User // 入围操作的发起者
+	//PayerFamily Family
+	PayerTeam Team
 
-	Payee       User
-	PayeeFamily Family
-	PayeeTeam   Team
+	Payee User // 收星茶的接受者
+	//PayeeFamily Family
+	PayeeTeam Team
 
-	Verifier       User
-	VerifierFamily Family
-	VerifierTeam   Team
+	CareTeam Team // 监护方团队
 
-	ProjectAppointment ProjectAppointmentBean //约茶预约资料夹
-	SeeSeekBean        SeeSeekBean
+	Verifier User
+	//VerifierFamily Family
+	VerifierTeam Team
+
+	TeaOrderBean TeaOrderBean //茶订单资料夹
+
+	//ProjectAppointment ProjectAppointmentBean //约茶预约资料夹
+	SeeSeekBean SeeSeekBean //看看资料夹
 
 	ProjectBean        ProjectBean
 	QuoteObjectiveBean ObjectiveBean

@@ -293,15 +293,6 @@ func (post *Post) Author() (user User, err error) {
 	return
 }
 
-// 根据团队创建人FounderId获取User信息
-// AWS CodeWhisperer assist in writing
-func (team *Team) Founder() (user User, err error) {
-	user = User{}
-	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
-	return
-}
-
 // UserCount（）获取注册用户数
 func UserCount() (count int) {
 	rows, err := DB.Query("SELECT count(*) FROM users")

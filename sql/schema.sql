@@ -1108,6 +1108,7 @@ CREATE TABLE environments (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     name                  VARCHAR(255),
     summary               TEXT,
+    user_id               INTEGER REFERENCES users(id),
     temperature           INTEGER,
     humidity              INTEGER,
     pm25                  INTEGER,
