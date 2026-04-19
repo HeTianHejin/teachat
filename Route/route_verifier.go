@@ -833,6 +833,22 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 需要记录入围茶台project状态为“茶凉”status=dao.ProjectStatusTeaCold
+	if teaOrder.Status == dao.TeaOrderStatusActive {
+		project := &dao.Project{Id: teaOrder.ProjectId}
+		if err = project.Get(); err != nil {
+			util.Debug("Cannot get project", err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能获取茶台信息。请稍后再试。")
+			return
+		}
+		project.Status = dao.ProjectStatusTeaCold
+		if err = project.Update(); err != nil {
+			util.Debug("Cannot update project", err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能更新茶台状态。请稍后再试。")
+			return
+		}
+	}
+
 	// 重定向到工作间
 	http.Redirect(w, r, "/v1/verifier/workspace", http.StatusFound)
 }
