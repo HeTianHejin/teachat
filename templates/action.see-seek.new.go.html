@@ -58,9 +58,7 @@
             <input type="text" class="form-control" name="payee_name" id="payee_name" value="{{ .Payee.Name }}" required />
             <input type="hidden" name="payee_id" value="{{ .Payee.Id }}" />
 
-            <label for="family_payee">家庭</label>
-            <input type="text" class="form-control" name="family_payee" id="family_payee" value="{{ .PayeeFamily.Name }}" required />
-            <input type="hidden" name="payee_family_id" value="{{ .PayeeFamily.Id }}" />
+
 
             <label for="team_payee">团队</label>
             <input type="text" class="form-control" name="team_payee" id="team_payee" value="{{ .PayeeTeam.Name }}" required />
@@ -74,9 +72,7 @@
             <input type="text" class="form-control" name="payer_name" id="payer_name" value="{{ .Payer.Name }}" required />
             <input type="hidden" name="payer_id" value="{{ .Payer.Id }}" />
 
-            <label for="family_payer">家庭</label>
-            <input type="text" class="form-control" name="family_payer" id="family_payer" value="{{ .PayerFamily.Name }}" required />
-            <input type="hidden" name="payer_family_id" value="{{ .PayerFamily.Id }}" />
+       
 
             <label for="team_payer">团队</label>
             <input type="text" class="form-control" name="team_payer" id="team_payer" value="{{ .PayerTeam.Name }}" required />
@@ -88,8 +84,7 @@
           <div class="form-group">
             <label for="verifier_name">见证人</label>
             <input type="text" class="form-control"  id="verifier_name" value="{{ .Verifier.Name }}" disabled />
-            <label for="verifier_family">家庭</label>
-            <input type="text" class="form-control"  id="verifier_family" value="{{ .VerifierFamily.Name }}" disabled />
+
             <label for="verifier_team">团队</label>
             <input type="text" class="form-control"  id="verifier_team" value="{{ .VerifierTeam.Name }}" disabled />
 
