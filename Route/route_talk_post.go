@@ -411,7 +411,7 @@ func HandleSupplementPost(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/post/supplement
-// 加水（补充）已经发布的post，规则是可以补充内容，不能覆载修改之前说的话，不能变更立场（从支持变反对）。
+// 加水（补充）已经发布的post，规则是可以补充内容，不能覆载修改之前说的话，不能变更立场（例如从支持变反对是不允许的）。
 func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
@@ -443,6 +443,13 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
+	t_thread, err := t_post.Thread()
+	if err != nil {
+		util.Debug(" Cannot get thread given post", err)
+		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
+		return
+	}
+
 	body_addi := r.PostFormValue("additional")
 	if body_addi != "" {
 		//检查补充内容是否有意义，字数>int(util.Config.ThreadMinWord),总的post字数<int(util.Config.ThreadMaxWord)
@@ -502,15 +509,12 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士失魂鱼，墨水中断未能补充品味。")
 			return
 		}
-		// thread, err := dao.GetThreadById(t_post.ThreadId)
-		// if err != nil {
-		// 	util.Debug(" Cannot read thread", err)
-		// 	Report(w, r, "身后有余忘缩手，眼前无路想回头，请稍后再试。")
-		// 	return
-		// }
-		url := fmt.Sprint("/v1/post/detail?uuid=", t_post.Uuid)
+
+		// 补充成功，跳转回茶议详情页
+		url := fmt.Sprint("/v1/thread/detail?uuid=", t_thread.Uuid)
 		http.Redirect(w, r, url, http.StatusFound)
 		return
+
 	} else {
 		//提示无权操作
 		report(w, s_u, "你好，陛下英明，请勿往陌生人的茶杯加水呢？")
