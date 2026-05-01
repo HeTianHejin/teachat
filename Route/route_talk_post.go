@@ -1,6 +1,7 @@
 package route
 
 import (
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -235,7 +236,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	post_attitude := r.PostFormValue("attitude") == "true"
 
 	body := r.PostFormValue("body")
-	//检查body的长度，规则是不能少于刘姥姥评价老君眉的品味字数
+	//检查body的长度
 	if cnStrLen(body) <= int(util.Config.PostMinWord) {
 		report(w, s_u, "你好，戴着厚厚眼镜片的茶博士居然说，请不要用隐形墨水来写品味内容。")
 		return
@@ -299,9 +300,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//确定品味发布者身份
-	is_admin := false
-
+	//确定品味发布者身份，是否是茶台管理员或者茶台主人，以决定后续流程
 	is_master, err := checkProjectMasterPermission(&t_proj, s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check project master permission", t_proj.Id, err)
@@ -315,6 +314,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取专属茶台资料。")
 		return
 	}
+	is_admin := false
 	if !is_master {
 		is_admin, err = checkObjectiveAdminPermission(&t_obje, s_u.Id)
 		if err != nil {
@@ -331,6 +331,102 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		is_private = t_proj.IsPrivate
 		family_id = t_proj.FamilyId
 		team_id = t_proj.TeamId
+	}
+
+	//检查thread的类型，分类处理
+	// 检查当前是哪一种类型茶议，如果是线下茶会，需要把团队id固定为订单中团队id
+	switch t_thread.Category {
+	case dao.ThreadCategoryNormal:
+		//普通茶议，无需额外检查
+		if t_thread.PostId != 0 {
+			util.Debug(" Invalid thread category and post_id not match", t_thread.Id, t_thread.Category, t_thread.PostId)
+			report(w, s_u, "你好，茶博士说，这个茶台状态异常无法使用。")
+			return
+		}
+
+	case dao.ThreadCategoryNested:
+		//针对某个post的议中议，检查是否有权限访问
+		if t_thread.PostId == 0 {
+			util.Debug(" Invalid thread category and post_id not match", t_thread.Id, t_thread.Category, t_thread.PostId)
+			report(w, s_u, "你好，茶博士说，这个茶台状态异常无法使用。")
+			return
+		}
+		//TODO:检查当前用户是否有权限访问该议中议
+
+	case dao.ThreadCategoryAppointment:
+		//检查是否已存在约茶记录
+		pr_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
+		if err != nil && err != sql.ErrNoRows {
+			util.Debug(" Cannot read appointment given project", err)
+			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
+			return
+		}
+		// 可能没有记录
+		if pr_appointment.Id > 0 {
+			// 约茶记录存在，检查当前用户是否其中某个参会团队的成员
+			is_member, err := dao.IsTeamActiveMember(pr_appointment.PayerTeamId, s_u.Id)
+			if err != nil {
+				util.Debug(" Cannot check team member given team id", pr_appointment.PayerTeamId, err)
+			}
+			if is_member {
+				team_id = pr_appointment.PayerTeamId
+			} else {
+				is_member, err = dao.IsTeamActiveMember(pr_appointment.PayeeTeamId, s_u.Id)
+				if err != nil {
+					util.Debug(" Cannot check team member given team id", pr_appointment.PayeeTeamId, err)
+				}
+				if is_member {
+					team_id = pr_appointment.PayeeTeamId
+				} else {
+					is_member, err = dao.IsTeamActiveMember(pr_appointment.CareTeamId, s_u.Id)
+					if err != nil {
+						util.Debug(" Cannot check team member given team id", pr_appointment.CareTeamId, err)
+					}
+					if is_member {
+						team_id = pr_appointment.CareTeamId
+					}
+				}
+			}
+
+		}
+	case dao.ThreadCategorySeeSeek, dao.ThreadCategoryBrainFire, dao.ThreadCategorySuggestion, dao.ThreadCategoryGoods, dao.ThreadCategoryHandcraft:
+		//检查teaOrder表中是否存在当前用户的订单记录，如果存在，获取订单对应的团队id，作为品味发布的团队id
+		order, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), t_proj.Id, t_obje.Id)
+		if err != nil && err != sql.ErrNoRows {
+			util.Debug(" Cannot read tea order given project id and objective id", err)
+			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
+			return
+		}
+		if order.Id > 0 {
+			is_member, err := dao.IsTeamActiveMember(order.PayerTeamId, s_u.Id)
+			if err != nil {
+				util.Debug(" Cannot check team member given team id", order.PayerTeamId, err)
+			}
+			if is_member {
+				team_id = order.PayerTeamId
+			} else {
+				is_member, err = dao.IsTeamActiveMember(order.PayeeTeamId, s_u.Id)
+				if err != nil {
+					util.Debug(" Cannot check team member given team id", order.PayeeTeamId, err)
+				}
+				if is_member {
+					team_id = order.PayeeTeamId
+				} else {
+					is_member, err = dao.IsTeamActiveMember(order.CareTeamId, s_u.Id)
+					if err != nil {
+						util.Debug(" Cannot check team member given team id", order.CareTeamId, err)
+					}
+					if is_member {
+						team_id = order.CareTeamId
+					}
+				}
+			}
+		}
+
+	default:
+		report(w, s_u, "你好，茶博士表示，陛下，奇怪的茶不能喝。")
+		return
+
 	}
 
 	//确定是哪一种级别发布
@@ -393,7 +489,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// 修改post的处理器
+// 追加（补充）post的处理器
 func HandleSupplementPost(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -418,7 +514,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	//从会话中读取陛下资料
+	//从会话中读取当前用户资料
 	s_u, err := sess.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)

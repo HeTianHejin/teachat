@@ -533,11 +533,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			tD.IsMaster, err = checkProjectMasterPermission(&project, s_u.Id)
-			if err != nil {
-				util.Debug(" Cannot check project master permission", project.Id, err)
-				report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
-				return
+			if !tD.IsAdmin {
+				tD.IsMaster, err = checkProjectMasterPermission(&project, s_u.Id)
+				if err != nil {
+					util.Debug(" Cannot check project master permission", project.Id, err)
+					report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
+					return
+				}
 			}
 
 			if !tD.IsAdmin && !tD.IsMaster {

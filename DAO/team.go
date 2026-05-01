@@ -131,7 +131,7 @@ type Team struct {
 	Name         string
 	Mission      string // 团队使命/目标
 	FounderId    int    // 团队发起人茶友id
-	Class        int    // 团队类型：0-系统团队，1-开放式，2-封闭式，10-开放式草团，20-封闭式草团，31-已婉拒开放式，32-已婉拒封闭式
+	Class        int    // 团队类型：0-系统团队，1-开放式，2-封闭式，3-线下茶会家庭临时监护团队，10-开放式草团，20-封闭式草团，31-已婉拒开放式，32-已婉拒封闭式
 	Abbreviation string // 队名简称
 	Logo         string // $事业茶团标志
 	Tags         string // 分类标签，逗号分隔，如"诗词书法,文化艺术"
@@ -145,6 +145,7 @@ const (
 	TeamClassSpaceship          = 0  //飞船茶棚团队，系统保留
 	TeamClassOpen               = 1  //开放式$事业茶团
 	TeamClassClose              = 2  // 封闭式$事业茶团
+	TeamClassOfflineFamily      = 3  //线下茶会家庭临时监护团队,特殊团队类型，主要用于线下茶会活动的家庭临时监护团队，
 	TeamClassOpenDraft          = 10 //开放式草团
 	TeamClassCloseDraft         = 20 // 封闭式草团
 	TeamClassRejectedOpenDraft  = 31 //已婉拒开放式草团
@@ -565,7 +566,7 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role int, err err
 }
 
 // SurvivalTeams() 获取用户当前所在的状态正常的全部$事业茶团
-// team.class = 0、1 or 2（团队类型：0-系统团队，1-开放式，2-封闭式）, team_members.status = 1（成员状态：1-正常（活跃成员））
+// team.class = 0、1 or 2（团队类型：0-系统团队，1-开放式，2-封闭式，3-线下茶会家庭临时监护团队）, team_members.status = 1（成员状态：1-正常（活跃成员））
 func GetUserSurvivalTeams(user_id int, ctx context.Context) ([]Team, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
@@ -1296,7 +1297,10 @@ func IsVerifier(userId int) bool {
 	return isTeamMember
 }
 
-// ConvertFamilyToObCareTeam 以家庭成员为基础，创建某个茶围的监护团队
+// ConvertFamilyToObCareTeam 以家庭成员为基础，创建某个茶台项目线下活动的特殊临时监护团队，
+// 类型为TeamClassOfflineFamily，团队名称格式为“家庭名称监护茶围团队”，团队使命格式为“由【家庭名称】家庭成员和亲友组成的监护团队，负责【茶围ID】号茶围监护事宜。”，
+// 团队简称格式为“茶围ID号监护”，团队标签固定为“家庭,监护,茶围”，团队Logo使用家庭Logo，团队成员包括CEO（家庭负责人）和CFO（配偶，如果存在且不是CEO本人）。
+// 如果该茶围已经存在监护团队，则直接返回现有团队ID，无需重复创建。
 // 返回新团队的ID
 func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, error) {
 	// 1. 参数验证
@@ -1324,7 +1328,7 @@ func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, e
 		Name:         fmt.Sprintf("%s监护%d号茶围团队", family.Name, ob.Id),
 		Mission:      fmt.Sprintf("由【%s】家庭成员和亲友组成的监护团队，负责【%d】号茶围监护事宜。", family.Name, ob.Id),
 		FounderId:    ceoUser.Id,
-		Class:        TeamClassOpen,
+		Class:        TeamClassOfflineFamily,
 		Abbreviation: fmt.Sprintf("%d茶围监护", ob.Id),
 		Logo:         family.Logo,
 		IsPrivate:    false,

@@ -74,7 +74,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查用户是否为团队成员
+	// 检查用户是否为团队核心成员
 	isMember := false
 	isCoreMember := false
 	teamCoreMembers, err := team.CoreMembers()

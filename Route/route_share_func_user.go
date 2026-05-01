@@ -92,7 +92,7 @@ func fetchUserDefaultDataBeanSlice(user_slice []dao.User) (userbean_slice []dao.
 	return
 }
 
-// Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队
+// Fetch and process user-related data,从会话查获当前浏览用户资料荚,包括默认团队，全部已经加入的状态正常团队（排除茶台特殊家庭临时监护团队）
 func fetchSessionUserRelatedData(sess dao.Session, ctx context.Context) (s_u dao.User, family dao.Family, families []dao.Family, team dao.Team, teams []dao.Team, place dao.Place, places []dao.Place, err error) {
 	// 读取已登陆用户资料
 	s_u, err = sess.User()
