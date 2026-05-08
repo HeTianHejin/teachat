@@ -59,7 +59,7 @@ type WitnessLog struct {
 	Id         int
 	Uuid       string
 	TeaOrderId int
-	Action     string // "审批"/"暂停"/"恢复"/"终止"
+	Action     string // "审批"/"暂停"/"恢复"/"终止"/"罚没"/"退款"
 	Reason     string
 	WitnessId  int // 见证人用户ID
 	EvidenceId int // 证据材料 ->Evidence{}
@@ -71,6 +71,8 @@ const (
 	WitnessActionPause   = "暂停"
 	WitnessActionResume  = "恢复"
 	WitnessActionCancel  = "终止"
+	WitnessActionReject  = "罚没" // 见证人对违规恶意/不道德行为的处罚，罚没星茶转入系统特殊团队“公共治理团队”
+	WitnessActionRefund  = "退款" // 见证人对无恶意但超出预设讨论范围的约茶的处理，退款星茶原路退回双方团队
 )
 
 // WitnessLog.Create() 创建见证日志

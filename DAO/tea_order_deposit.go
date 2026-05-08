@@ -36,8 +36,10 @@ const (
 	DepositStatusPaid                                         // 已支付,托管方已接收成功
 	DepositStatusReleasedToPayee                              // 已释放给解题方
 	DepositStatusRefundedToPayer                              // 已退款给需求方
+	DepositStatusRefundedToPayee                              // 已退款给解题方(见证人对无恶意但超出预设讨论范围的约茶的处理，退款星茶原路退回双方团队)
 	DepositStatusDisputed                                     // 争议中(解题方与需求方争议,需要仲裁)
 	DepositStatusCancelled                                    // 已取消(订单审批被撤销)
+	DepositStatusForfeited                                    // 已罚没(见证人对违规恶意/不道德行为的处罚，罚没星茶转入系统特殊团队“公共治理团队”)
 )
 
 type TeaOrderDepositType int
