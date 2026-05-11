@@ -445,13 +445,12 @@ func (p *Place) GetByUuid() (err error) {
 		return fmt.Errorf("invalid place UUID: %s", p.Uuid)
 	}
 	if p.Uuid == PlaceUuidSpaceshipTeabar {
-		place := Place{Id: PlaceIdSpaceshipTeabar}
-		err = place.Get()
+		p.Id = PlaceIdSpaceshipTeabar
+		err = p.Get()
 		if err != nil {
-			return fmt.Errorf("failed to get default place for user %d: ", err)
+			return fmt.Errorf("failed to get default place: %w", err)
 		}
 		return nil
-
 	}
 	err = DB.QueryRow("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE uuid = $1", p.Uuid).
 		Scan(&p.Id, &p.Uuid, &p.Name, &p.Nickname, &p.Description, &p.Icon, &p.OccupantUserId, &p.OwnerUserId, &p.Level, &p.Category, &p.IsPublic, &p.IsGovernment, &p.UserId, &p.CreatedAt, &p.UpdatedAt)
