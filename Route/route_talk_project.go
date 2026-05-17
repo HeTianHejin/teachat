@@ -290,6 +290,7 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/project/approve/step2
+// 第二步：GET 显示预备金确认页面
 func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -299,13 +300,13 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	s_u, err := s.User()
 	if err != nil {
 		util.Debug(" Cannot get user from session", err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取用户信息，请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
 		util.Debug("Cannot parse form", err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取表单数据，请稍后再试。")
 		return
 	}
 	uuid := r.PostFormValue("uuid")
@@ -318,6 +319,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台监护方，请确认后再试。")
 		return
 	}
+
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
@@ -325,7 +327,8 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
 		return
 	}
-	// 检查是否已经入围？if true, report success and return,不需要重复入围了。
+
+	// 检查是否已经入围
 	is_approved, err := pr.IsApproved()
 	if err != nil {
 		util.Debug(" Cannot check if project is approved", pr.Id, err)
@@ -336,6 +339,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士微笑，该茶台已入围，请勿重复操作。")
 		return
 	}
+
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
@@ -343,6 +347,218 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
+
+	//检查用户是否有权限处理这个请求
+	is_admin := false
+	var adminFamily dao.Family
+	var adminTeam dao.Team
+	if ob.IsPrivate {
+		adminFamily, err = dao.GetFamily(ob.FamilyId)
+		if err != nil {
+			util.Debug(" Cannot get family", ob.FamilyId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会举办方，请确认后再试。")
+			return
+		}
+		is_admin, err = adminFamily.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot get family member", ob.FamilyId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会管理成员，请确认后再试。")
+			return
+		}
+	} else {
+		adminTeam, err = dao.GetTeam(ob.TeamId)
+		if err != nil {
+			util.Debug(" Cannot get team", ob.TeamId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+			return
+		}
+		is_admin, err = adminTeam.IsMember(s_u.Id)
+		if err != nil {
+			util.Debug(" Cannot get team", ob.TeamId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+			return
+		}
+	}
+	if !is_admin {
+		report(w, s_u, "你好，茶博士面无表情，说没有权限处理这个入围操作，请确认。")
+		return
+	}
+
+	// 获取需求方团队信息
+	// 注意：需求方（Requester）是发起茶围需求的家庭/团队，监护方（Guardian）是负责监督项目执行的团队
+	// 当前实现中，需求方团队临时兼任监护方，理想情况下应由专业监护团队担任
+	var requesterTeamId int // 需求方团队ID
+
+	if ob.IsPrivate {
+		// 家庭管理的茶围：转换家庭为需求方团队（同时临时兼任监护方）
+		requesterTeamId, err = dao.ConvertFamilyToObCareTeam(ob.FamilyId, s_u, ob)
+		if err != nil {
+			util.Debug(" Cannot convert family to requester team", ob.FamilyId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能创建需求方团队，请确认后再试。")
+			return
+		}
+	} else {
+		// 团队管理的茶围：直接使用原团队作为需求方团队
+		requesterTeamId = ob.TeamId
+	}
+	payerTeam, err := dao.GetTeam(requesterTeamId)
+	if err != nil {
+		util.Debug(" Cannot get payer team", requesterTeamId, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取出题方团队信息，请确认后再试。")
+		return
+	}
+
+	// 获取解题方团队信息（提供解决方案的团队）
+	payeeTeam, err := dao.GetTeam(pr.TeamId)
+	if err != nil {
+		util.Debug(" Cannot get payee team", pr.TeamId, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取解题方团队信息，请确认后再试。")
+		return
+	}
+
+	// 预备金金额：10克 = 10000毫克
+	const preparationAmountMg = 10000
+
+	// 确保出题方团队有星茶账户
+	if err := dao.EnsureTeaTeamAccountExists(payerTeam.Id); err != nil {
+		util.Debug(" Cannot ensure payer team account exists", payerTeam.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能初始化出题方团队账户，请确认后再试。")
+		return
+	}
+
+	// 获取需求方（监护团队）账户余额
+	// 需要确保需求方（监护团队）有账户而且正常
+
+	payerAccount, err := dao.GetTeaTeamAccountByTeamId(payerTeam.Id)
+	if err != nil {
+		util.Debug(" Cannot get payer team account", payerTeam.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能查询出题方团队星茶账户，请确认后再试。")
+		return
+	}
+	payerAvailable := payerAccount.BalanceMilligrams - payerAccount.LockedBalanceMilligrams
+
+	// 确保解题团队有星茶账户
+	if err := dao.EnsureTeaTeamAccountExists(payeeTeam.Id); err != nil {
+		util.Debug(" Cannot ensure payee team account exists", payeeTeam.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能初始化解题方团队账户，请确认后再试。")
+		return
+	}
+
+	// 获取解题团队账户余额
+	payeeAccount, err := dao.GetTeaTeamAccountByTeamId(payeeTeam.Id)
+	if err != nil {
+		util.Debug(" Cannot get payee team account", payeeTeam.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能查询解题方团队星茶账户，请确认后再试。")
+		return
+	}
+	payeeAvailable := payeeAccount.BalanceMilligrams - payeeAccount.LockedBalanceMilligrams
+
+	// 获取见证者团队信息
+	verifierTeam, err := dao.GetTeam(dao.TeamIdVerifier)
+	if err != nil {
+		util.Debug(" Cannot get verifier team", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取见证者团队信息，请确认后再试。")
+		return
+	}
+
+	// 页面数据
+	type pageData struct {
+		SessUser       dao.User      `json:"sessUser"`
+		Objective      dao.Objective `json:"objective"`
+		Project        dao.Project   `json:"project"`
+		GuardianType   string        `json:"guardian_type"`
+		AdminFamily    dao.Family    `json:"admin_family"`
+		AdminTeam      dao.Team      `json:"admin_team"`
+		PayerTeam      dao.Team      `json:"payer_team"`       // 需求方/出题方团队
+		PayeeTeam      dao.Team      `json:"payee_team"`       // 解题方团队
+		VerifierTeam   dao.Team      `json:"verifier_team"`    // 见证者团队（托管方）
+		PayerBalanceMg int64         `json:"payer_balance_mg"` // 需求方可用的星茶余额
+		PayeeBalanceMg int64         `json:"payee_balance_mg"` // 解题方可用的星茶余额
+		PrepAmountMg   int64         `json:"prep_amount_mg"`   // 预备金金额（毫克）
+		PayerOk        bool          `json:"payer_ok"`         // 需求方余额是否充足
+		PayeeOk        bool          `json:"payee_ok"`         // 解题方余额是否充足
+	}
+	pD := pageData{
+		SessUser:       s_u,
+		Objective:      ob,
+		Project:        pr,
+		GuardianType:   guardian_type,
+		AdminFamily:    adminFamily,
+		AdminTeam:      adminTeam,
+		PayerTeam:      payerTeam,
+		PayeeTeam:      payeeTeam,
+		VerifierTeam:   verifierTeam,
+		PayerBalanceMg: payerAvailable,
+		PayeeBalanceMg: payeeAvailable,
+		PrepAmountMg:   preparationAmountMg,
+		PayerOk:        payerAvailable >= preparationAmountMg,
+		PayeeOk:        payeeAvailable >= preparationAmountMg,
+	}
+
+	// 渲染预备金确认页面
+	generateHTML(w, &pD, "layout", "navbar.private", "project.approve_step2", "component_avatar_name_gender")
+}
+
+// POST /v1/project/approve/step3
+// 第三步：提交预备金，创建 TeaOrder 和 TeaOrderDeposit 记录
+func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug(" Cannot get user from session", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取用户信息，请稍后再试。")
+		return
+	}
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能读取表单数据，请稍后再试。")
+		return
+	}
+
+	uuid := r.PostFormValue("uuid")
+	if uuid == "" {
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
+		return
+	}
+	guardian_type := r.PostFormValue("guardian_type")
+	if guardian_type == "" {
+		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台监护方，请确认后再试。")
+		return
+	}
+
+	//获取目标茶台
+	pr := dao.Project{Uuid: uuid}
+	if err = pr.GetByUuid(); err != nil {
+		util.Debug(" Cannot get project", uuid, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
+		return
+	}
+
+	// 检查是否已经入围
+	is_approved, err := pr.IsApproved()
+	if err != nil {
+		util.Debug(" Cannot check if project is approved", pr.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶台入围状态，请确认后再试。")
+		return
+	}
+	if is_approved {
+		report(w, s_u, "你好，茶博士微笑，该茶台已入围，请勿重复操作。")
+		return
+	}
+
+	//读取目标茶围
+	ob, err := pr.Objective()
+	if err != nil {
+		util.Debug(" Cannot get objective", ob.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+		return
+	}
+
 	//检查用户是否有权限处理这个请求
 	is_admin := false
 	if ob.IsPrivate {
@@ -373,46 +589,11 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if !is_admin {
-		//不是茶围管理员，无权处理
 		report(w, s_u, "你好，茶博士面无表情，说没有权限处理这个入围操作，请确认。")
 		return
 	}
 
-	// 根据监护方选择，处理入围茶台
-	tea_order := dao.TeaOrder{}
-	family_care_team_id := 0
-	tea_order.ObjectiveId = ob.Id
-	tea_order.ProjectId = pr.Id
-	tea_order.UserId = s_u.Id
-	tea_order.Status = dao.TeaOrderStatusPending
-	tea_order.VerifyTeamId = dao.TeamIdVerifier
-	tea_order.PayeeTeamId = pr.TeamId
-	// 以家庭父母成员担任CEO/CFO，创建监护团队，担任监护方团队。
-	family_care_team_id, err = dao.ConvertFamilyToObCareTeam(ob.FamilyId, s_u, ob)
-	if err != nil {
-		util.Debug(" Cannot convert family to ob care team", ob.FamilyId, err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会管理成员，请确认后再试。")
-		return
-	}
-	tea_order.PayerTeamId = family_care_team_id
-	switch strings.ToLower(guardian_type) {
-	case "self":
-		if ob.IsPrivate {
-			// -如果归属管理的是家庭，
-			tea_order.CareTeamId = family_care_team_id
-		} else {
-			// 直接登记为监护方团队
-			tea_order.CareTeamId = ob.TeamId
-		}
-	case "system":
-		tea_order.CareTeamId = dao.TeamIdNone //待后续选定
-	default:
-		// 提交了不能识别的参数
-		report(w, s_u, "你好，茶博士看不懂你的书法，未能记录入围茶台监护方，请确认后再试。")
-		return
-	}
-
-	// 检查Torder是否已经存在？如果已经存在相同project_id和objective_id的tea_order，并且状态是待审批或者已审批的，就不能重复创建了。
+	// 检查Torder是否已经存在
 	existing_order, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), pr.Id, ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug(" Cannot check existing tea order", pr.Id, ob.Id, err)
@@ -424,20 +605,203 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 获取需求方团队信息
+	// 注意：需求方（Requester）是发起茶围需求的家庭/团队，监护方（Guardian）是负责监督项目执行的团队
+	// 当前实现中，需求方团队临时兼任监护方，理想情况下应由专业监护团队担任
+	var requesterTeamId int // 需求方团队ID
+
+	if ob.IsPrivate {
+		// 家庭管理的茶围：转换家庭为需求方团队（同时临时兼任监护方）
+		requesterTeamId, err = dao.ConvertFamilyToObCareTeam(ob.FamilyId, s_u, ob)
+		if err != nil {
+			util.Debug(" Cannot convert family to requester team", ob.FamilyId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能创建需求方团队，请确认后再试。")
+			return
+		}
+	} else {
+		// 团队管理的茶围：直接使用原团队作为需求方团队
+		requesterTeamId = ob.TeamId
+	}
+
+	// 获取需求方和解题方团队信息
+	payerTeam, err := dao.GetTeam(requesterTeamId)
+	if err != nil {
+		util.Debug(" Cannot get payer team", requesterTeamId, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取出题方团队信息，请确认后再试。")
+		return
+	}
+	payeeTeam, err := dao.GetTeam(pr.TeamId)
+	if err != nil {
+		util.Debug(" Cannot get payee team", pr.TeamId, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取解题方团队信息，请确认后再试。")
+		return
+	}
+
+	// 预备金金额：10克 = 10000毫克
+	const preparationAmountMg = 10000
+
+	// 获取见证者团队信息（作为托管方）
+	verifierTeam, err := dao.GetTeam(dao.TeamIdVerifier)
+	if err != nil {
+		util.Debug(" Cannot get verifier team", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取见证者团队信息，请确认后再试。")
+		return
+	}
+
+	// 确保见证者团队有星茶账户
+	if err := dao.EnsureTeaTeamAccountExists(dao.TeamIdVerifier); err != nil {
+		util.Debug(" Cannot ensure verifier team account exists", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能初始化见证者团队账户，请确认后再试。")
+		return
+	}
+
+	// 确保出题方团队有星茶账户
+	if err := dao.EnsureTeaTeamAccountExists(payerTeam.Id); err != nil {
+		util.Debug(" Cannot ensure payer team account exists", payerTeam.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能初始化出题方团队账户，请确认后再试。")
+		return
+	}
+
+	// 检查需求方账户余额
+	payerAccount, err := dao.GetTeaTeamAccountByTeamId(payerTeam.Id)
+	if err != nil {
+		util.Debug(" Cannot get payer team account", payerTeam.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能查询出题方团队星茶账户，请确认后再试。")
+		return
+	}
+	payerAvailable := payerAccount.BalanceMilligrams - payerAccount.LockedBalanceMilligrams
+	if payerAvailable < preparationAmountMg {
+		report(w, s_u, fmt.Sprintf("你好，出题方团队 %s 星茶余额不足，需要 %d 毫克，当前可用 %d 毫克。", payerTeam.Name, preparationAmountMg, payerAvailable))
+		return
+	}
+
+	// 确保解题方团队有星茶账户
+	if err := dao.EnsureTeaTeamAccountExists(payeeTeam.Id); err != nil {
+		util.Debug(" Cannot ensure payee team account exists", payeeTeam.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能初始化解题方团队账户，请确认后再试。")
+		return
+	}
+
+	// 检查解题方账户余额
+	payeeAccount, err := dao.GetTeaTeamAccountByTeamId(payeeTeam.Id)
+	if err != nil {
+		util.Debug(" Cannot get payee team account", payeeTeam.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能查询解题方团队星茶账户，请确认后再试。")
+		return
+	}
+	payeeAvailable := payeeAccount.BalanceMilligrams - payeeAccount.LockedBalanceMilligrams
+	if payeeAvailable < preparationAmountMg {
+		report(w, s_u, fmt.Sprintf("你好，解题方团队 %s 星茶余额不足，需要 %d 毫克，当前可用 %d 毫克。", payeeTeam.Name, preparationAmountMg, payeeAvailable))
+		return
+	}
+
+	// 创建 TeaOrder
+	tea_order := dao.TeaOrder{}
+	tea_order.ObjectiveId = ob.Id
+	tea_order.ProjectId = pr.Id
+	tea_order.UserId = s_u.Id
+	tea_order.Status = dao.TeaOrderStatusPending
+	tea_order.VerifyTeamId = dao.TeamIdVerifier
+	tea_order.PayeeTeamId = pr.TeamId
+	tea_order.PayerTeamId = requesterTeamId // 需求方团队ID
+
+	// 设置监护方团队ID
+	// 注意：监护方（Guardian）负责监督项目执行，理想情况下应由专业监护团队担任
+	// 当前实现中，当 guardian_type 为 "self" 时，由需求方团队临时兼任监护方（妥协机制）
+	switch strings.ToLower(guardian_type) {
+	case "self":
+		// 需求方团队临时兼任监护方（当前妥协机制）
+		tea_order.CareTeamId = requesterTeamId
+	case "system":
+		// 系统托管（无特定监护方）
+		tea_order.CareTeamId = dao.TeamIdNone
+	default:
+		report(w, s_u, "你好，茶博士看不懂你的书法，未能记录入围茶台监护方，请确认后再试。")
+		return
+	}
+
 	// 记录tea_order
 	if err = tea_order.Create(r.Context()); err != nil {
-		util.Debug(" Cannot create tea order,ob.FamilyId:", ob.FamilyId, err)
+		util.Debug(" Cannot create tea order, ob.FamilyId:", ob.FamilyId, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建茶订单记录，请确认后再试。")
 		return
 	}
 
-	//报告用户入围操作成功，请等待见证者审批
-	report(w, s_u, "你好，茶博士微笑，该茶台已入围操作成功！请耐心等待见证者审批。")
+	// 创建需求方的预备金托管记录
+	payerDeposit := dao.TeaOrderDeposit{
+		TeaOrderId:       tea_order.Id,
+		Type:             dao.DepositTypePreparation,
+		PayerTeamId:      payerTeam.Id,
+		BankTeamId:       dao.TeamIdVerifier,
+		PayeeTeamId:      payeeTeam.Id,
+		AmountMilligrams: preparationAmountMg,
+		Status:           dao.DepositStatusPendingPayment,
+		Notes:            "入围预备金 - 需求方托管",
+	}
 
-	// 在见证团队页面，设置“待审批新茶定单”(tea_order.status=TeaOrderStatusPending)作为徽章通知-功能入口，
-	// 等待见证者团队成员查看pending_tea_orders列表->审查（明确线下活动主题，道德合规。。。）->审批通过后，更新tea_order.status=TeaOrderStatusApproved,并记录审批人id和审批时间。
+	// 创建解题方的预备金托管记录
+	payeeDeposit := dao.TeaOrderDeposit{
+		TeaOrderId:       tea_order.Id,
+		Type:             dao.DepositTypePreparation,
+		PayerTeamId:      payeeTeam.Id,
+		BankTeamId:       dao.TeamIdVerifier,
+		PayeeTeamId:      payerTeam.Id,
+		AmountMilligrams: preparationAmountMg,
+		Status:           dao.DepositStatusPendingPayment,
+		Notes:            "入围预备金 - 解题方托管",
+	}
 
-	// TODO：由系统自动匹配有相似解题技能的团队3个（如果有的话），让茶围归属管理方（出题方）选择1个作为监护方。
+	// 需求方转账到见证者团队（预备金托管）
+	notes := fmt.Sprintf("入围预备金托管，茶台：%s，茶围：%s", pr.Title, ob.Title)
+	payerTransfer, err := dao.CreateTeaTeamToTeamTransferOut(
+		payerTeam.Id,
+		s_u.Id,
+		dao.TeamIdVerifier,
+		preparationAmountMg,
+		notes,
+		payerTeam.Name,
+		verifierTeam.Name,
+		24, // 24小时过期
+	)
+	if err != nil {
+		util.Debug(" Cannot create payer transfer", err)
+		report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，需求方转账失败：%v，请确认后再试。", err))
+		return
+	}
+	payerDeposit.TransferOutId = payerTransfer.Id
+
+	// 解题方转账到见证者团队（预备金托管）
+	payeeTransfer, err := dao.CreateTeaTeamToTeamTransferOut(
+		payeeTeam.Id,
+		s_u.Id,
+		dao.TeamIdVerifier,
+		preparationAmountMg,
+		notes,
+		payeeTeam.Name,
+		verifierTeam.Name,
+		24,
+	)
+	if err != nil {
+		util.Debug(" Cannot create payee transfer", err)
+		report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，解题方转账失败：%v，请确认后再试。", err))
+		return
+	}
+	payeeDeposit.TransferOutId = payeeTransfer.Id
+
+	// 保存预备金托管记录
+	if err = payerDeposit.Create(); err != nil {
+		util.Debug(" Cannot create payer deposit", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能创建需求方预备金记录，请确认后再试。")
+		return
+	}
+	if err = payeeDeposit.Create(); err != nil {
+		util.Debug(" Cannot create payee deposit", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能创建解题方预备金记录，请确认后再试。")
+		return
+	}
+
+	// 报告用户入围操作成功，请等待见证者审批
+	report(w, s_u, fmt.Sprintf("你好，茶博士微笑，该茶台已入围操作成功！需求方和解题方各托管 %d 毫克预备金已锁定，请耐心等待见证者审批。", preparationAmountMg/1000))
 }
 
 // 处理新建茶台的操作处理器

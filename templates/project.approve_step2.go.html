@@ -1,0 +1,129 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/objective/detail?uuid={{ .Objective.Uuid }}">{{ .Objective.Title }}@茶围</a></li>
+  <li><a href="/v1/project/detail?uuid={{ .Project.Uuid }}">{{ .Project.Title }}@茶台</a></li>
+  <li class="active">预备金确认</li>
+</ol>
+
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <h4><i class="bi-shield-check" style="font-size: 1.5rem; color: #8B4513;"></i> 茶台入围确认 — 预备金托管</h4>
+  </div>
+  
+  <div class="panel-body">
+    <div class="alert alert-info">
+      <strong>茶博士提示：</strong>入围需要双方各托管 <strong>10克</strong> 预备金，见证者审批通过后归入下一流程（看看-建议）结算，多退少补。
+    </div>
+
+    <div class="media" style="margin-bottom: 20px;">
+      <div class="media-left">
+        {{ template "component_avatar_name_gender" .SessUser }}
+      </div>
+      <div class="media-body">
+        <h5>茶围信息</h5>
+        <p><strong>当前茶围：</strong>{{ .Objective.Title }}</p>
+        <h5>茶台信息</h5>
+        <p><strong>名称：</strong>{{ .Project.Title }}</p>
+        <p><strong>描述：</strong>{{ .Project.Body }}</p>
+        <h5>监护方式</h5>
+        <p><strong>类型：</strong>{{ if eq .GuardianType "self" }}自己监护{{ else }}茶棚推荐{{ end }}</p>
+      </div>
+    </div>
+
+    <div class="panel panel-warning">
+      <div class="panel-heading">
+        <h5><i class="bi-coin" style="font-size: 1.2rem;"></i> 预备金托管明细</h5>
+      </div>
+      <div class="panel-body">
+        <table class="table table-bordered">
+          <thead>
+            <tr class="active">
+              <th>参与方</th>
+              <th>团队名称</th>
+              <th>托管金额</th>
+              <th>当前可用余额</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>需求方（出题）</strong></td>
+              <td>{{ .PayerTeam.Name }}</td>
+              <td><span class="text-primary"><strong>10克</strong></span> (10,000毫克)</td>
+              <td><span class="text-info">{{ div $ .PayerBalanceMg 1000 }}克</span></td>
+              <td>
+                {{ if .PayerOk }}
+                <span class="label label-success"><i class="bi-check-circle"></i> 余额充足</span>
+                {{ else }}
+                <span class="label label-danger"><i class="bi-x-circle"></i> 余额不足</span>
+                {{ end }}
+              </td>
+            </tr>
+            <tr>
+              <td><strong>解题方（答题）</strong></td>
+              <td>{{ .PayeeTeam.Name }}</td>
+              <td><span class="text-primary"><strong>10克</strong></span> (10,000毫克)</td>
+              <td><span class="text-info">{{ div $ .PayeeBalanceMg 1000 }}克</span></td>
+              <td>
+                {{ if .PayeeOk }}
+                <span class="label label-success"><i class="bi-check-circle"></i> 余额充足</span>
+                {{ else }}
+                <span class="label label-danger"><i class="bi-x-circle"></i> 余额不足</span>
+                {{ end }}
+              </td>
+            </tr>
+            <tr class="active">
+              <td colspan="2"><strong>托管方（见证者）</strong></td>
+              <td colspan="3">{{ .VerifierTeam.Name }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="alert alert-warning">
+      <h5><i class="bi-info-circle"></i> 预备金托管说明</h5>
+      <ol>
+        <li>双方各托管 <strong>10克星茶</strong> 作为预备金，由见证者团队托管。</li>
+        <li>见证者审批通过后，预备金将归入下一流程（看看-建议）结束后一起结算，多退少补。</li>
+        <li>如见证者判定为<strong>恶意/不道德</strong>行为，预备金将被<strong>罚没</strong>，归入公共治理团队。</li>
+        <li>如无恶意但<strong>超出预设讨论范围</strong>，预备金将<strong>全额退回</strong>。</li>
+      </ol>
+    </div>
+
+    {{ if and .PayerOk .PayeeOk }}
+    <form action="/v1/project/approve/step3" method="post">
+      <input type="hidden" name="uuid" value="{{ .Project.Uuid }}" />
+      <input type="hidden" name="guardian_type" value="{{ .GuardianType }}" />
+      
+      <div class="form-group text-center">
+        <button type="submit" class="btn btn-warning btn-lg">
+          <i class="bi-check-lg"></i> 确认并提交入围
+        </button>
+        <a href="/v1/project/approve/step1" class="btn btn-default">
+          <i class="bi-arrow-left"></i> 返回修改监护方式
+        </a>
+      </div>
+    </form>
+    {{ else }}
+    <div class="alert alert-danger text-center">
+      <p><strong>余额不足，无法提交入围申请</strong></p>
+      <p>请确保双方团队都有足够的星茶余额（各需10克）后再试。</p>
+      <a href="/v1/project/detail?uuid={{ .Project.Uuid }}" class="btn btn-default">
+        <i class="bi-arrow-left"></i> 返回茶台
+      </a>
+    </div>
+    {{ end }}
+  </div>
+  
+  <div class="panel-footer">
+    <small class="text-muted">
+      <i class="bi-info-circle"></i> 
+      预备金托管是茶会活动的重要组成部分，用于确保双方诚意参与线下活动。
+    </small>
+  </div>
+</div>
+
+{{ end }}

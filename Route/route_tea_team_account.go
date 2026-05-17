@@ -276,6 +276,12 @@ func FreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 确保团队有星茶账户
+	if err := dao.EnsureTeaTeamAccountExists(req.TeamId); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取团队账户失败")
+		return
+	}
+
 	// 获取账户并冻结
 	account, err := dao.GetTeaTeamAccountByTeamId(req.TeamId)
 	if err != nil {
@@ -326,6 +332,12 @@ func UnfreezeTeaTeamAccountAPI(w http.ResponseWriter, r *http.Request) {
 	canFreeze, err := dao.IsTeamActiveMember(user.Id, dao.TeamIdSpaceshipCrew)
 	if err != nil || !canFreeze {
 		respondWithError(w, http.StatusForbidden, "您没有权限冻结团队账户")
+		return
+	}
+
+	// 确保团队有星茶账户
+	if err := dao.EnsureTeaTeamAccountExists(req.TeamId); err != nil {
+		respondWithError(w, http.StatusInternalServerError, "获取团队账户失败")
 		return
 	}
 
