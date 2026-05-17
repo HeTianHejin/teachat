@@ -113,12 +113,12 @@ func fetchSessionUserRelatedData(sess dao.Session, ctx context.Context) (s_u dao
 		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get all families for user %s: %w", s_u.Email, err)
 	}
 	//remove member_default_family from member_all_families
-	for i, family := range member_all_families {
-		if family.Id == member_default_family.Id {
-			member_all_families = append(member_all_families[:i], member_all_families[i+1:]...)
-			break
-		}
-	}
+	// for i, family := range member_all_families {
+	// 	if family.Id == member_default_family.Id {
+	// 		member_all_families = append(member_all_families[:i], member_all_families[i+1:]...)
+	// 		break
+	// 	}
+	// }
 	// 把系统默认的“未知”家庭资料加入families
 	member_all_families = append(member_all_families, dao.FamilyUnknown)
 	defaultTeam, err := s_u.GetLastDefaultTeam()
@@ -130,12 +130,12 @@ func fetchSessionUserRelatedData(sess dao.Session, ctx context.Context) (s_u dao
 	if err != nil {
 		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get survival teams for user %s: %w", s_u.Email, err)
 	}
-	for i, team := range survivalTeams {
-		if team.Id == defaultTeam.Id {
-			survivalTeams = append(survivalTeams[:i], survivalTeams[i+1:]...)
-			break
-		}
-	}
+	// for i, team := range survivalTeams {
+	// 	if team.Id == defaultTeam.Id {
+	// 		survivalTeams = append(survivalTeams[:i], survivalTeams[i+1:]...)
+	// 		break
+	// 	}
+	// }
 
 	default_place, err := s_u.GetLastDefaultPlace()
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
@@ -146,15 +146,15 @@ func fetchSessionUserRelatedData(sess dao.Session, ctx context.Context) (s_u dao
 	if err != nil {
 		return s_u, family, families, team, teams, place, places, fmt.Errorf("failed to get all bind places for user %s: %w", s_u.Email, err)
 	}
-	if len(places) > 0 {
-		//移除默认地方
-		for i, place := range places {
-			if place.Id == default_place.Id {
-				places = append(places[:i], places[i+1:]...)
-				break
-			}
-		}
-	}
+	// if len(places) > 0 {
+	// 	//移除默认地方
+	// 	for i, place := range places {
+	// 		if place.Id == default_place.Id {
+	// 			places = append(places[:i], places[i+1:]...)
+	// 			break
+	// 		}
+	// 	}
+	// }
 
 	return s_u, member_default_family, member_all_families, defaultTeam, survivalTeams, default_place, places, nil
 }
