@@ -1710,3 +1710,101 @@ func TeaUserToTeamRejectedTransfers(from_user_id int, page, limit int) ([]TeaUse
 	}
 	return transfers, nil
 }
+
+// TransferUserToTeamDirectly 直接从用户星茶账户转账到团队星茶账户（无需确认）
+// 此函数用于特殊场景，如家庭转需求方团队时，自动从CEO个人账户转入入围预备金
+// 参数：
+//   - fromUserId: 转出用户ID（CEO）
+//   - toTeamId: 接收团队ID
+//   - amountMg: 转账金额（毫克）
+//   - notes: 转账备注
+// 返回：错误信息
+func TransferUserToTeamDirectly(fromUserId, toTeamId int, amountMg int64, notes string) error {
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 1. 锁定并检查转出用户账户余额
+	var fromUserName string
+	var balance, lockedBalance int64
+	err = tx.QueryRow(`
+		SELECT u.name, ua.balance_milligrams, ua.locked_balance_milligrams 
+		FROM tea.user_accounts ua
+		JOIN tea.users u ON ua.user_id = u.id
+		WHERE ua.user_id = $1 
+		FOR UPDATE`,
+		fromUserId).Scan(&fromUserName, &balance, &lockedBalance)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("转出用户星茶账户不存在")
+		}
+		return fmt.Errorf("查询转出用户账户失败: %v", err)
+	}
+
+	// 2. 检查可用余额是否足够
+	availableBalance := balance - lockedBalance
+	if availableBalance < amountMg {
+		return fmt.Errorf("星茶余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amountMg)
+	}
+
+	// 3. 扣除转出用户账户余额
+	var balanceAfterTransfer int64
+	err = tx.QueryRow(`
+		UPDATE tea.user_accounts 
+		SET balance_milligrams = balance_milligrams - $1,
+		    updated_at = $2
+		WHERE user_id = $3
+		RETURNING balance_milligrams`,
+		amountMg, time.Now(), fromUserId).Scan(&balanceAfterTransfer)
+	if err != nil {
+		return fmt.Errorf("扣除转出用户账户余额失败: %v", err)
+	}
+
+	// 4. 获取接收团队信息
+	var toTeamName string
+	err = tx.QueryRow(`SELECT name FROM tea.teams WHERE id = $1`, toTeamId).Scan(&toTeamName)
+	if err != nil {
+		return fmt.Errorf("查询接收团队信息失败: %v", err)
+	}
+
+	// 5. 确保接收团队有星茶账户
+	err = EnsureTeaTeamAccountExists(toTeamId)
+	if err != nil {
+		return fmt.Errorf("确保接收团队星茶账户存在失败: %v", err)
+	}
+
+	// 6. 增加接收团队账户余额
+	err = tx.QueryRow(`
+		UPDATE tea.team_accounts 
+		SET balance_milligrams = balance_milligrams + $1,
+		    updated_at = $2
+		WHERE team_id = $3
+		RETURNING balance_milligrams`,
+		amountMg, time.Now(), toTeamId).Scan(&balanceAfterTransfer)
+	if err != nil {
+		return fmt.Errorf("增加接收团队账户余额失败: %v", err)
+	}
+
+	// 7. 创建转账记录（状态为已完成）
+	now := time.Now().UTC()
+	_, err = tx.Exec(`
+		INSERT INTO tea.user_to_team_transfer_out 
+		(from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, status, balance_after_transfer, expires_at, payment_time, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+		fromUserId, fromUserName, toTeamId, toTeamName, amountMg, notes,
+		TeaTransferStatusCompleted, balanceAfterTransfer, now, now, now, now)
+	if err != nil {
+		return fmt.Errorf("创建转账记录失败: %v", err)
+	}
+
+	// 8. 提交事务
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	util.Debug("直接转账成功: 用户%d -> 团队%d, 金额%d毫克", fromUserId, toTeamId, amountMg)
+	return nil
+}

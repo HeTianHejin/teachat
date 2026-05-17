@@ -67,12 +67,12 @@ type WitnessLog struct {
 }
 
 const (
-	WitnessActionApprove = "审批"
-	WitnessActionPause   = "暂停"
-	WitnessActionResume  = "恢复"
-	WitnessActionCancel  = "终止"
-	WitnessActionReject  = "罚没" // 见证人对违规恶意/不道德行为的处罚，罚没星茶转入系统特殊团队“公共治理团队”
-	WitnessActionRefund  = "退款" // 见证人对无恶意但超出预设讨论范围的约茶的处理，退款星茶原路退回双方团队
+	WitnessActionApprove  = "审批"
+	WitnessActionPause    = "暂停"
+	WitnessActionResume   = "恢复"
+	WitnessActionCancel   = "终止"
+	WitnessActionForfeit  = "罚没" // 见证人对违规恶意/不道德行为的处罚，罚没星茶转入系统特殊团队"公共治理团队"
+	WitnessActionRefund   = "退回" // 见证人对无恶意但超出预设讨论范围的约茶的处理，退款星茶原路退回双方团队
 )
 
 // WitnessLog.Create() 创建见证日志
