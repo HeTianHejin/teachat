@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -188,10 +189,16 @@ func CanUserManageTeamAccount(userId, teamId int) (bool, error) {
 
 // GetTeaTeamAccountByTeamId 根据团队ID获取星茶账户
 func GetTeaTeamAccountByTeamId(teamId int) (TeaTeamAccount, error) {
+	account := TeaTeamAccount{}
+	if teamId == TeamIdNone {
+		// 无效id,返回id错误
+		return account, fmt.Errorf("团队id不能为0，请输入有效id")
+	}
+
 	// 自由人团队没有星茶资产，返回特殊的冻结账户
 	if teamId == TeamIdFreelancer {
 		reason := "自由人团队不支持星茶资产"
-		account := TeaTeamAccount{
+		account = TeaTeamAccount{
 			TeamId:            TeamIdFreelancer,
 			BalanceMilligrams: 0,
 			Status:            TeaTeamAccountStatus_Frozen,
@@ -200,12 +207,20 @@ func GetTeaTeamAccountByTeamId(teamId int) (TeaTeamAccount, error) {
 		return account, nil
 	}
 
-	account := TeaTeamAccount{}
 	err := DB.QueryRow("SELECT id, uuid, team_id, balance_milligrams, locked_balance_milligrams, status, frozen_reason, created_at, updated_at FROM tea.team_accounts WHERE team_id = $1", teamId).
 		Scan(&account.Id, &account.Uuid, &account.TeamId, &account.BalanceMilligrams, &account.LockedBalanceMilligrams, &account.Status, &account.FrozenReason, &account.CreatedAt, &account.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return account, fmt.Errorf("团队星茶账户不存在")
+			// 对于所有有效团队，自动创建账户
+			newAccount := &TeaTeamAccount{
+				TeamId:            teamId,
+				BalanceMilligrams: 0,
+				Status:            TeaTeamAccountStatus_Normal,
+			}
+			if createErr := newAccount.Create(); createErr != nil {
+				return account, fmt.Errorf("创建团队星茶账户失败: %v", createErr)
+			}
+			return *newAccount, nil
 		}
 		return account, fmt.Errorf("查询团队星茶账户失败: %v", err)
 	}
@@ -262,13 +277,23 @@ func EnsureTeaTeamAccountExists(teamId int) error {
 		return fmt.Errorf("检查团队账户存在性失败: %v", err)
 	}
 
+	// 查存在性，不存在则创建（对所有非自由人团队都生效）
 	if !exists {
+		// 公共治理团队需要正常的星茶账户来接收罚没星茶
 		account := &TeaTeamAccount{
 			TeamId:            teamId,
 			BalanceMilligrams: 0,
 			Status:            TeaTeamAccountStatus_Normal,
 		}
-		return account.Create()
+		createErr := account.Create()
+		if createErr != nil {
+			// 捕获唯一约束冲突（高并发下可能出现）
+			if strings.Contains(createErr.Error(), "23505") || strings.Contains(createErr.Error(), "duplicate key") {
+				// 冲突说明另一个请求已创建账户，直接返回成功
+				return nil
+			}
+			return createErr
+		}
 	}
 
 	return nil

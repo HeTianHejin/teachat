@@ -52,11 +52,11 @@ const (
 )
 
 var (
-	TeamUUIDSpaceshipCrew    = "dcbe3046-b192-44b6-7afb-bc55817c13a9"
-	TeamUUIDFreelancer       = "72c06442-2b60-418a-6493-a91bd03ae4k8"
-	TeamUUIDVerifier         = "38be3046-b192-44b6-7afb-bc55817c13c4"
-	TeamUUIDEscrow           = "center-escrow-team-uuid"     // 托管“星茶”团队UUID，预留
-	TeamUUIDPublicGovernance = "public-governance-team-uuid" // 公共治理团队UUID，预留
+	TeamUUIDSpaceshipCrew    = "dcbe3046-b192-44b6-7afb-bc55817c13a9" // 飞船茶棚团队UUID，预留
+	TeamUUIDFreelancer       = "72c06442-2b60-418a-6493-a91bd03ae4k8" // 自由人团队UUID，预留
+	TeamUUIDVerifier         = "38be3046-b192-44b6-7afb-bc55817c13c4" // 见证者团队UUID，预留
+	TeamUUIDEscrow           = "center-escrow-team-uuid"              // 托管"星茶"团队UUID，预留
+	TeamUUIDPublicGovernance = "public-governance-team-uuid"          // 公共治理团队UUID，预留
 )
 
 // 从数据库查询获取团队
@@ -1299,10 +1299,22 @@ func IsVerifier(userId int) bool {
 	return isTeamMember
 }
 
-// ConvertFamilyToObCareTeam 以家庭成员为基础，创建某个茶台项目线下活动的特殊临时监护团队，
-// 类型为TeamClassOfflineFamily，团队名称格式为“家庭名称监护茶围团队”，团队使命格式为“由【家庭名称】家庭成员和亲友组成的监护团队，负责【茶围ID】号茶围监护事宜。”，
-// 团队简称格式为“茶围ID号监护”，团队标签固定为“家庭,监护,茶围”，团队Logo使用家庭Logo，团队成员包括CEO（家庭负责人）和CFO（配偶，如果存在且不是CEO本人）。
-// 如果该茶围已经存在监护团队，则直接返回现有团队ID，无需重复创建。
+// ConvertFamilyToObCareTeam 以家庭成员为基础，创建某个茶台项目线下活动的需求方团队（临时兼任监护方）
+// 类型: TeamClassOfflineFamily
+// 团队名称格式: "家庭名称监护茶围团队"
+// 团队使命格式: "由【家庭名称】家庭成员和亲友组成的监护团队，负责【茶围ID】号茶围监护事宜。"
+// 团队简称格式: "茶围ID号监护"
+// 团队标签: "家庭,监护,茶围"
+// 团队Logo: 使用家庭Logo
+// 团队成员: CEO（家庭负责人）和CFO（配偶，如果存在且不是CEO本人）
+//
+// 注意：此函数创建的是需求方团队（Requester Team），当前实现中临时兼任监护方（Guardian Team）
+// 理想情况下，监护方应由专业监护团队担任，而非需求方团队本身
+// TODO: 未来应支持选择独立的专业监护团队
+//
+// 功能：创建团队后立即创建星茶账户，并从CEO个人账户转入10000毫克作为入围预备金
+//
+// 如果该茶围已经存在监护团队，则直接返回现有团队ID，无需重复创建
 // 返回新团队的ID
 func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, error) {
 	// 1. 参数验证
@@ -1374,9 +1386,121 @@ func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, e
 		return 0, txErr
 	}
 
-	// 10. 返回团队ID
+	// 9. 立即为团队创建星茶账户（用于接收入围预备金）
+	if txErr = createTeamAccountWithinTx(tx, team.Id); txErr != nil {
+		return 0, fmt.Errorf("failed to create team star tea account: %v", txErr)
+	}
+
+	// 10. 从CEO个人账户转入入围预备金（10000毫克 = 10克）
+	const preparationAmountMg int64 = 10000
+	if txErr = transferUserToTeamWithinTx(tx, ceoUser.Id, team.Id, preparationAmountMg, 
+		fmt.Sprintf("家庭转需求方团队预备金：%s", team.Name)); txErr != nil {
+		return 0, fmt.Errorf("failed to transfer preparation amount: %v", txErr)
+	}
+
+	// 11. 返回团队ID
 	return team.Id, nil
 }
+
+// createTeamAccountWithinTx 在事务内为团队创建星茶账户
+func createTeamAccountWithinTx(tx *sql.Tx, teamId int) error {
+	// 检查账户是否已存在
+	var exists bool
+	err := tx.QueryRow("SELECT EXISTS(SELECT 1 FROM tea.team_accounts WHERE team_id = $1)", teamId).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("检查团队星茶账户存在性失败: %v", err)
+	}
+
+	if !exists {
+		// 创建星茶账户（余额初始化为0）
+		now := time.Now()
+		err = tx.QueryRow(`
+			INSERT INTO tea.team_accounts (team_id, balance_milligrams, status, created_at, updated_at)
+			VALUES ($1, 0, 'normal', $2, $3)
+			RETURNING id`,
+			teamId, now, now).Scan(new(int))
+		if err != nil {
+			return fmt.Errorf("创建团队星茶账户失败: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// transferUserToTeamWithinTx 在事务内从用户个人账户转账到团队账户（无需确认）
+func transferUserToTeamWithinTx(tx *sql.Tx, fromUserId, toTeamId int, amountMg int64, notes string) error {
+	// 1. 锁定并检查转出用户账户余额
+	var fromUserName string
+	var balance, lockedBalance int64
+	err := tx.QueryRow(`
+		SELECT u.name, ua.balance_milligrams, ua.locked_balance_milligrams 
+		FROM tea.user_accounts ua
+		JOIN tea.users u ON ua.user_id = u.id
+		WHERE ua.user_id = $1 
+		FOR UPDATE`,
+		fromUserId).Scan(&fromUserName, &balance, &lockedBalance)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return fmt.Errorf("转出用户星茶账户不存在")
+		}
+		return fmt.Errorf("查询转出用户账户失败: %v", err)
+	}
+
+	// 2. 检查可用余额是否足够
+	availableBalance := balance - lockedBalance
+	if availableBalance < amountMg {
+		return fmt.Errorf("星茶余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amountMg)
+	}
+
+	// 3. 扣除转出用户账户余额
+	var balanceAfterTransfer int64
+	err = tx.QueryRow(`
+		UPDATE tea.user_accounts 
+		SET balance_milligrams = balance_milligrams - $1,
+		    updated_at = $2
+		WHERE user_id = $3
+		RETURNING balance_milligrams`,
+		amountMg, time.Now(), fromUserId).Scan(&balanceAfterTransfer)
+	if err != nil {
+		return fmt.Errorf("扣除转出用户账户余额失败: %v", err)
+	}
+
+	// 4. 获取接收团队信息
+	var toTeamName string
+	err = tx.QueryRow(`SELECT name FROM tea.teams WHERE id = $1`, toTeamId).Scan(&toTeamName)
+	if err != nil {
+		return fmt.Errorf("查询接收团队信息失败: %v", err)
+	}
+
+	// 5. 增加接收团队账户余额
+	err = tx.QueryRow(`
+		UPDATE tea.team_accounts 
+		SET balance_milligrams = balance_milligrams + $1,
+		    updated_at = $2
+		WHERE team_id = $3
+		RETURNING balance_milligrams`,
+		amountMg, time.Now(), toTeamId).Scan(&balanceAfterTransfer)
+	if err != nil {
+		return fmt.Errorf("增加接收团队账户余额失败: %v", err)
+	}
+
+	// 6. 创建转账记录（状态为已完成）
+	now := time.Now().UTC()
+	_, err = tx.Exec(`
+		INSERT INTO tea.user_to_team_transfer_out 
+		(from_user_id, from_user_name, to_team_id, to_team_name, amount_milligrams, notes, status, balance_after_transfer, expires_at, payment_time, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
+		fromUserId, fromUserName, toTeamId, toTeamName, amountMg, notes,
+		TeaTransferStatusCompleted, balanceAfterTransfer, now, now, now, now)
+	if err != nil {
+		return fmt.Errorf("创建转账记录失败: %v", err)
+	}
+
+	util.Debug("事务内直接转账成功: 用户%d -> 团队%d, 金额%d毫克", fromUserId, toTeamId, amountMg)
+	return nil
+}
+
+// addSpouseAsCFO 添加配偶作为CFO成员
 
 // addSpouseAsCFO 添加配偶作为CFO成员
 func addSpouseAsCFO(tx *sql.Tx, family Family, ceoUser User, teamId int) error {
