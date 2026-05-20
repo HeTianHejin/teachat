@@ -390,11 +390,11 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	var requesterTeamId int // 需求方团队ID
 
 	if ob.IsPrivate {
-		// 家庭管理的茶围：转换家庭为需求方团队（同时临时兼任监护方）
-		requesterTeamId, err = dao.ConvertFamilyToObCareTeam(ob.FamilyId, s_u, ob)
+		// 家庭管理的茶围：转换家庭为亲友团（需求方团队，临时兼任监护方）
+		requesterTeamId, err = dao.ConvertFamilyToFriendTeam(ob.FamilyId, s_u)
 		if err != nil {
-			util.Debug(" Cannot convert family to requester team", ob.FamilyId, err)
-			report(w, s_u, "你好，茶博士失魂鱼，未能创建需求方团队，请确认后再试。")
+			util.Debug(" Cannot convert family to friend team", ob.FamilyId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能创建亲友团，请确认后再试。")
 			return
 		}
 	} else {
@@ -621,11 +621,11 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	var requesterTeamId int // 需求方团队ID
 
 	if ob.IsPrivate {
-		// 家庭管理的茶围：转换家庭为需求方团队（同时临时兼任监护方）
-		requesterTeamId, err = dao.ConvertFamilyToObCareTeam(ob.FamilyId, s_u, ob)
+		// 家庭管理的茶围：转换家庭为亲友团（需求方团队，临时兼任监护方）
+		requesterTeamId, err = dao.ConvertFamilyToFriendTeam(ob.FamilyId, s_u)
 		if err != nil {
-			util.Debug(" Cannot convert family to requester team", ob.FamilyId, err)
-			report(w, s_u, "你好，茶博士失魂鱼，未能创建需求方团队，请确认后再试。")
+			util.Debug(" Cannot convert family to friend team", ob.FamilyId, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能创建亲友团，请确认后再试。")
 			return
 		}
 	} else {

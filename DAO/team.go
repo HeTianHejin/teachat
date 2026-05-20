@@ -1299,13 +1299,14 @@ func IsVerifier(userId int) bool {
 	return isTeamMember
 }
 
-// ConvertFamilyToObCareTeam 以家庭成员为基础，创建某个茶台项目线下活动的需求方团队（临时兼任监护方），
-// 亲友可以加入该团队协助监护，但不强制要求必须加入，团队成员的核心职责是由CEO（家庭负责人）和CFO（配偶，如果存在且不是CEO本人）担任，其他家庭成员和亲友可以根据需要加入团队协助监护工作
+// ConvertFamilyToFriendTeam 以家庭成员为基础，创建家庭的亲友团（需求方团队），
+// 亲友可以加入该团队协助，但不强制要求必须加入，团队成员的核心职责是由CEO（家庭负责人）和CFO（配偶，如果存在且不是CEO本人）担任，其他家庭成员和亲友可以根据需要加入团队协助工作。
+// 一个家庭只创建一个亲友团，可服务多个茶围，无需为每个茶围重复创建。
 // 类型: TeamClassOfflineFamily
-// 团队名称格式: "家庭名称监护茶围团队"
-// 团队使命格式: "由【家庭名称】家庭成员和亲友组成的监护团队，负责【茶围ID】号茶围监护事宜。"
-// 团队简称格式: "茶围ID号监护"
-// 团队标签: "家庭,监护,茶围"
+// 团队名称格式: "CEO名字家的亲友团"
+// 团队使命格式: "由【CEO名字】发起的亲友团，协助家庭管理茶围活动事宜。"
+// 团队简称格式: "familyId亲友团"（用于查重）
+// 团队标签: "家庭,亲友团"
 // 团队Logo: 使用家庭Logo
 // 团队成员: CEO（家庭负责人）和CFO（配偶，如果存在且不是CEO本人）
 //
@@ -1313,21 +1314,21 @@ func IsVerifier(userId int) bool {
 // 理想情况下，监护方应由专业监护团队担任，而非需求方团队本身
 // TODO: 未来应支持选择独立的专业监护团队
 //
-// 功能：创建团队后立即创建星茶账户，并从CEO个人账户转入10000毫克作为入围预备金
+// 功能：创建团队后立即创建星茶账户（余额为0），预备金在入围时按需转入
 //
-// 如果该茶围已经存在监护团队，则直接返回现有团队ID，无需重复创建
-// 返回新团队的ID
-func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, error) {
+// 如果该家庭已经存在亲友团，则直接返回现有团队ID，无需重复创建
+// 返回亲友团的ID
+func ConvertFamilyToFriendTeam(familyId int, ceoUser User) (int, error) {
 	// 1. 参数验证
-	if familyId == FamilyIdUnknown || ceoUser.Id == 0 || ob.Id == 0 {
-		return 0, fmt.Errorf("invalid familyId or ceoUserId or obId")
+	if familyId == FamilyIdUnknown || ceoUser.Id == 0 {
+		return 0, fmt.Errorf("invalid familyId or ceoUserId")
 	}
 
-	// 2. 检查在这个茶围，家庭监护团队是否已被创建
-	teamExist := Team{Abbreviation: fmt.Sprintf("%d茶围监护", ob.Id)}
+	// 2. 检查该家庭是否已有亲友团（按 familyId + Class 查重）
+	teamExist := Team{Abbreviation: fmt.Sprintf("%d亲友团", familyId)}
 	err := teamExist.GetByAbbreviation()
 	if err == nil && teamExist.Id != 0 {
-		return teamExist.Id, nil // 团队已存在，直接返回ID
+		return teamExist.Id, nil // 亲友团已存在，直接返回ID
 	} else if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return 0, fmt.Errorf("failed to check existing team: %v", err)
 	}
@@ -1338,16 +1339,16 @@ func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, e
 		return 0, fmt.Errorf("failed to get family info: %v", err)
 	}
 
-	// 4. 准备团队信息
+	// 4. 准备亲友团信息
 	team := &Team{
-		Name:         fmt.Sprintf("%s监护%d号茶围团队", family.Name, ob.Id),
-		Mission:      fmt.Sprintf("由【%s】家庭成员和亲友组成的监护团队，负责【%d】号茶围监护事宜。", family.Name, ob.Id),
+		Name:         fmt.Sprintf("%s家的亲友团", ceoUser.Name),
+		Mission:      fmt.Sprintf("由【%s】发起的亲友团，协助家庭管理茶围活动事宜。", ceoUser.Name),
 		FounderId:    ceoUser.Id,
 		Class:        TeamClassOfflineFamily,
-		Abbreviation: fmt.Sprintf("%d茶围监护", ob.Id),
+		Abbreviation: fmt.Sprintf("%d亲友团", familyId),
 		Logo:         family.Logo,
 		IsPrivate:    false,
-		Tags:         "家庭,监护,茶围",
+		Tags:         "家庭,亲友团",
 	}
 
 	// 5. 开始事务
@@ -1387,19 +1388,12 @@ func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, e
 		return 0, txErr
 	}
 
-	// 9. 立即为团队创建星茶账户（用于接收入围预备金）
+	// 9. 为亲友团创建星茶账户（余额初始化为0，预备金在入围时按需转入）
 	if txErr = createTeamAccountWithinTx(tx, team.Id); txErr != nil {
 		return 0, fmt.Errorf("failed to create team star tea account: %v", txErr)
 	}
 
-	// 10. 从CEO个人账户转入入围预备金（10000毫克 = 10克）
-	const preparationAmountMg int64 = 10000
-	if txErr = transferUserToTeamWithinTx(tx, ceoUser.Id, team.Id, preparationAmountMg,
-		fmt.Sprintf("家庭转需求方团队预备金：%s", team.Name)); txErr != nil {
-		return 0, fmt.Errorf("failed to transfer preparation amount: %v", txErr)
-	}
-
-	// 11. 返回团队ID
+	// 10. 返回亲友团ID
 	return team.Id, nil
 }
 
