@@ -453,11 +453,19 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	}
 	payeeAvailable := payeeAccount.BalanceMilligrams - payeeAccount.LockedBalanceMilligrams
 
-	// 获取见证者团队信息
+	// 获取见证者团队信息（批准、许可方）
 	verifierTeam, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
 		util.Debug(" Cannot get verifier team", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取见证者团队信息，请确认后再试。")
+		return
+	}
+
+	// 获取茶庄托管团队信息（预备金托管方）
+	escrowTeam, err := dao.GetTeam(dao.TeamIdEscrow)
+	if err != nil {
+		util.Debug(" Cannot get escrow team", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取茶庄托管团队信息，请确认后再试。")
 		return
 	}
 
@@ -471,7 +479,8 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		AdminTeam      dao.Team      `json:"admin_team"`
 		PayerTeam      dao.Team      `json:"payer_team"`       // 需求方/出题方团队
 		PayeeTeam      dao.Team      `json:"payee_team"`       // 解题方团队
-		VerifierTeam   dao.Team      `json:"verifier_team"`    // 见证者团队（托管方）
+		VerifierTeam   dao.Team      `json:"verifier_team"`    // 见证者团队（批准、许可方）
+		EscrowTeam     dao.Team      `json:"escrow_team"`      // 茶庄托管团队（预备金托管方）
 		PayerBalanceMg int64         `json:"payer_balance_mg"` // 需求方可用的星茶余额
 		PayeeBalanceMg int64         `json:"payee_balance_mg"` // 解题方可用的星茶余额
 		PrepAmountMg   int64         `json:"prep_amount_mg"`   // 预备金金额（毫克）
@@ -488,6 +497,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		PayerTeam:      payerTeam,
 		PayeeTeam:      payeeTeam,
 		VerifierTeam:   verifierTeam,
+		EscrowTeam:     escrowTeam,
 		PayerBalanceMg: payerAvailable,
 		PayeeBalanceMg: payeeAvailable,
 		PrepAmountMg:   preparationAmountMg,
@@ -640,18 +650,18 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	// 预备金金额：10克 = 10000毫克
 	const preparationAmountMg = 10000
 
-	// 获取见证者团队信息（作为托管方）
-	verifierTeam, err := dao.GetTeam(dao.TeamIdVerifier)
+	// 获取茶庄托管团队信息（预备金托管方）
+	escrowTeam, err := dao.GetTeam(dao.TeamIdEscrow)
 	if err != nil {
-		util.Debug(" Cannot get verifier team", err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能获取见证者团队信息，请确认后再试。")
+		util.Debug(" Cannot get escrow team", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取茶庄托管团队信息，请确认后再试。")
 		return
 	}
 
-	// 确保见证者团队有星茶账户
-	if err := dao.EnsureTeaTeamAccountExists(dao.TeamIdVerifier); err != nil {
-		util.Debug(" Cannot ensure verifier team account exists", err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能初始化见证者团队账户，请确认后再试。")
+	// 确保茶庄托管团队有星茶账户（预备金托管方需要账户）
+	if err := dao.EnsureTeaTeamAccountExists(dao.TeamIdEscrow); err != nil {
+		util.Debug(" Cannot ensure escrow team account exists", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能初始化茶庄托管团队账户，请确认后再试。")
 		return
 	}
 
@@ -732,7 +742,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		TeaOrderId:       tea_order.Id,
 		Type:             dao.DepositTypePreparation,
 		PayerTeamId:      payerTeam.Id,
-		BankTeamId:       dao.TeamIdVerifier,
+		BankTeamId:       dao.TeamIdEscrow,
 		PayeeTeamId:      payeeTeam.Id,
 		AmountMilligrams: preparationAmountMg,
 		Status:           dao.DepositStatusPendingPayment,
@@ -744,23 +754,23 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		TeaOrderId:       tea_order.Id,
 		Type:             dao.DepositTypePreparation,
 		PayerTeamId:      payeeTeam.Id,
-		BankTeamId:       dao.TeamIdVerifier,
+		BankTeamId:       dao.TeamIdEscrow,
 		PayeeTeamId:      payerTeam.Id,
 		AmountMilligrams: preparationAmountMg,
 		Status:           dao.DepositStatusPendingPayment,
 		Notes:            "入围预备金 - 解题方托管",
 	}
 
-	// 需求方转账到见证者团队（预备金托管）
+	// 需求方转账到茶庄托管团队（预备金托管）
 	notes := fmt.Sprintf("入围预备金托管，茶台：%s，茶围：%s", pr.Title, ob.Title)
 	payerTransfer, err := dao.CreateTeaTeamToTeamTransferOut(
 		payerTeam.Id,
 		s_u.Id,
-		dao.TeamIdVerifier,
+		dao.TeamIdEscrow,
 		preparationAmountMg,
 		notes,
 		payerTeam.Name,
-		verifierTeam.Name,
+		escrowTeam.Name,
 		24, // 24小时过期
 	)
 	if err != nil {
@@ -770,15 +780,15 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	}
 	payerDeposit.TransferOutId = payerTransfer.Id
 
-	// 解题方转账到见证者团队（预备金托管）
+	// 解题方转账到茶庄托管团队（预备金托管）
 	payeeTransfer, err := dao.CreateTeaTeamToTeamTransferOut(
 		payeeTeam.Id,
 		s_u.Id,
-		dao.TeamIdVerifier,
+		dao.TeamIdEscrow,
 		preparationAmountMg,
 		notes,
 		payeeTeam.Name,
-		verifierTeam.Name,
+		escrowTeam.Name,
 		24,
 	)
 	if err != nil {

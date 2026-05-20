@@ -583,6 +583,71 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================
+-- 第三部分补充：茶订单预备金托管表
+-- ============================================
+
+-- 茶订单预备金托管表（完全匹配TeaOrderDeposit结构体）
+CREATE TABLE tea.tea_order_deposits (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  UUID UNIQUE NOT NULL DEFAULT gen_random_uuid(),
+    tea_order_id          INTEGER NOT NULL, -- 茶围订单ID
+    type                  INTEGER NOT NULL, -- 款项类型：1：约茶，2：探茶，3：看看，4：验茶，5：脑火,6：手工艺，7：预备金，8：其他
+    payer_team_id         INTEGER NOT NULL REFERENCES teams(id), -- 支付团队ID，款项来源方
+    bank_team_id          INTEGER NOT NULL REFERENCES teams(id), -- 托管团队ID，款项托管方
+    payee_team_id         INTEGER NOT NULL REFERENCES teams(id), -- 解题团队ID，款项最终接收方
+    amount_milligrams     BIGINT NOT NULL, -- 托管星茶数量，以毫克（0.001克）为单位
+    transfer_out_id       INTEGER REFERENCES tea.team_to_team_transfer_out(id), -- 支付方→托管的转出记录
+    transfer_in_id        INTEGER, -- 托管方的接收记录
+    status                INTEGER NOT NULL DEFAULT 0, -- 托管状态
+    notes                 TEXT NOT NULL DEFAULT '-', -- 备注说明
+    has_dispute           BOOLEAN NOT NULL DEFAULT FALSE, -- 是否存在争议
+    expired_at            TIMESTAMPTZ, -- 支付过期时间
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    deleted_at            TIMESTAMPTZ -- 软删除时间
+);
+
+-- 创建索引
+CREATE INDEX idx_tea_order_deposits_tea_order_id ON tea.tea_order_deposits(tea_order_id);
+CREATE INDEX idx_tea_order_deposits_payer_team_id ON tea.tea_order_deposits(payer_team_id);
+CREATE INDEX idx_tea_order_deposits_bank_team_id ON tea.tea_order_deposits(bank_team_id);
+CREATE INDEX idx_tea_order_deposits_payee_team_id ON tea.tea_order_deposits(payee_team_id);
+CREATE INDEX idx_tea_order_deposits_status ON tea.tea_order_deposits(status);
+CREATE INDEX idx_tea_order_deposits_type ON tea.tea_order_deposits(type);
+CREATE INDEX idx_tea_order_deposits_deleted_at ON tea.tea_order_deposits(deleted_at);
+
+-- 添加表注释
+COMMENT ON TABLE tea.tea_order_deposits IS '茶订单预备金托管表（匹配TeaOrderDeposit结构体）。用于托管茶订单中的星茶预备金';
+COMMENT ON COLUMN tea.tea_order_deposits.tea_order_id IS '茶围订单ID';
+COMMENT ON COLUMN tea.tea_order_deposits.type IS '款项类型: 1-约茶, 2-探茶, 3-看看, 4-验茶, 5-脑火, 6-手工艺, 7-预备金, 8-其他';
+COMMENT ON COLUMN tea.tea_order_deposits.payer_team_id IS '支付团队ID，款项来源方';
+COMMENT ON COLUMN tea.tea_order_deposits.bank_team_id IS '托管团队ID，款项托管方';
+COMMENT ON COLUMN tea.tea_order_deposits.payee_team_id IS '解题团队ID，款项最终接收方';
+COMMENT ON COLUMN tea.tea_order_deposits.amount_milligrams IS '托管星茶数量，以毫克（0.001克）为单位';
+COMMENT ON COLUMN tea.tea_order_deposits.transfer_out_id IS '支付方→托管的转出记录，引用tea.team_to_team_transfer_out(id)';
+COMMENT ON COLUMN tea.tea_order_deposits.transfer_in_id IS '托管方的接收记录';
+COMMENT ON COLUMN tea.tea_order_deposits.status IS '托管状态: 0-待支付处理, 1-待托管处理, 2-已支付托管中, 3-已释放给解题方, 4-已退款给需求方, 5-已退款给解题方, 6-争议中, 7-已取消, 8-已罚没';
+COMMENT ON COLUMN tea.tea_order_deposits.has_dispute IS '是否存在争议（快速查询标识）';
+COMMENT ON COLUMN tea.tea_order_deposits.expired_at IS '支付过期时间（超时自动取消）';
+
+-- 托管状态枚举约束
+ALTER TABLE tea.tea_order_deposits ADD CONSTRAINT check_tea_order_deposits_status 
+    CHECK (status IN (0, 1, 2, 3, 4, 5, 6, 7, 8));
+
+-- 款项类型枚举约束
+ALTER TABLE tea.tea_order_deposits ADD CONSTRAINT check_tea_order_deposits_type 
+    CHECK (type IN (1, 2, 3, 4, 5, 6, 7, 8));
+
+-- 金额必须大于0
+ALTER TABLE tea.tea_order_deposits ADD CONSTRAINT check_tea_order_deposits_amount_positive 
+    CHECK (amount_milligrams > 0);
+
+-- 更新时间触发器
+CREATE TRIGGER tea_order_deposits_updated_at_trigger
+    BEFORE UPDATE ON tea.tea_order_deposits
+    FOR EACH ROW EXECUTE FUNCTION update_tea_updated_at();
+
+-- ============================================
 -- 第六部分：初始化数据
 -- ============================================
 

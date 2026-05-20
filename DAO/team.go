@@ -46,9 +46,9 @@ const (
 	// 见证者角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判"违规"情形，将阻止贾宝玉作西厢记类那种"男女礼教脱轨诗"或者禁止薛蟠那种酒色情诗；
 	// 又或者是社团组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核和评分，所以说"见证"记录事件发生的真实性、合规性。
 	// 见证人也是活动进程主持人，类似教堂神父主持婚礼活动，发现不道德的欺瞒情况，例如新郎或者新娘竟然是重婚者之类不符合道德规范的活动将取消或者宣布无效。
-	TeamIdVerifier         = 3 // 3 见证者团队，系统预设
-	TeamIdEscrow           = 4 // 4 托管团队，系统预设，预留
-	TeamIdPublicGovernance = 5 // 5 公共治理团队，系统预设，预留
+	TeamIdVerifier         = 3 // 3 见证者团队，系统预设，负责批准、许可、见证，不参与资金托管
+	TeamIdEscrow           = 4 // 4 托管团队（茶庄），系统预设，负责发行兑换星茶和托管预备金
+	TeamIdPublicGovernance = 5 // 5 公共治理团队，系统预设，负责接收罚没星茶
 )
 
 var (
@@ -1299,7 +1299,8 @@ func IsVerifier(userId int) bool {
 	return isTeamMember
 }
 
-// ConvertFamilyToObCareTeam 以家庭成员为基础，创建某个茶台项目线下活动的需求方团队（临时兼任监护方）
+// ConvertFamilyToObCareTeam 以家庭成员为基础，创建某个茶台项目线下活动的需求方团队（临时兼任监护方），
+// 亲友可以加入该团队协助监护，但不强制要求必须加入，团队成员的核心职责是由CEO（家庭负责人）和CFO（配偶，如果存在且不是CEO本人）担任，其他家庭成员和亲友可以根据需要加入团队协助监护工作
 // 类型: TeamClassOfflineFamily
 // 团队名称格式: "家庭名称监护茶围团队"
 // 团队使命格式: "由【家庭名称】家庭成员和亲友组成的监护团队，负责【茶围ID】号茶围监护事宜。"
@@ -1393,7 +1394,7 @@ func ConvertFamilyToObCareTeam(familyId int, ceoUser User, ob Objective) (int, e
 
 	// 10. 从CEO个人账户转入入围预备金（10000毫克 = 10克）
 	const preparationAmountMg int64 = 10000
-	if txErr = transferUserToTeamWithinTx(tx, ceoUser.Id, team.Id, preparationAmountMg, 
+	if txErr = transferUserToTeamWithinTx(tx, ceoUser.Id, team.Id, preparationAmountMg,
 		fmt.Sprintf("家庭转需求方团队预备金：%s", team.Name)); txErr != nil {
 		return 0, fmt.Errorf("failed to transfer preparation amount: %v", txErr)
 	}

@@ -2,6 +2,7 @@ package dao
 
 import "time"
 
+// TeaOrderDeposit 代表茶订单中的预备金（星茶）托管记录
 type TeaOrderDeposit struct {
 	Id               int
 	Uuid             string
@@ -52,7 +53,7 @@ const (
 	DepositTypeTeaExamine                // 验茶
 	DepositTypeBrainFire                 // 脑火
 	DepositTypeHandicraft                // 手工艺
-	DepositTypePreparation                // 预备金（入围阶段双方各托管的星茶，审批通过后归入下一流程结算）
+	DepositTypePreparation               // 预备金（入围阶段双方各托管的星茶，审批通过后归入下一流程结算）
 	DepositTypeOther                     // 其他
 )
 
@@ -114,7 +115,7 @@ func (tod *TeaOrderDeposit) AmountGrams() float64 {
 // Create 创建新的预备金托管记录
 func (tod *TeaOrderDeposit) Create() error {
 	now := time.Now()
-	statement := `INSERT INTO tea_order_deposits
+	statement := `INSERT INTO tea.tea_order_deposits
 		(uuid, tea_order_id, type, payer_team_id, bank_team_id, payee_team_id, amount_milligrams,
 		transfer_out_id, transfer_in_id, status, notes, has_dispute, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`
@@ -140,7 +141,7 @@ func GetTeaOrderDepositsByTeaOrderId(teaOrderId int) ([]*TeaOrderDeposit, error)
 	statement := `SELECT id, uuid, tea_order_id, type, payer_team_id, bank_team_id, payee_team_id,
 		amount_milligrams, transfer_out_id, transfer_in_id, status, notes, has_dispute,
 		expired_at, created_at, updated_at, deleted_at
-		FROM tea_order_deposits WHERE tea_order_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
+		FROM tea.tea_order_deposits WHERE tea_order_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
 	rows, err := DB.Query(statement, teaOrderId)
 	if err != nil {
 		return nil, err
@@ -168,7 +169,7 @@ func GetTeaOrderDepositById(id int) (*TeaOrderDeposit, error) {
 	statement := `SELECT id, uuid, tea_order_id, type, payer_team_id, bank_team_id, payee_team_id,
 		amount_milligrams, transfer_out_id, transfer_in_id, status, notes, has_dispute,
 		expired_at, created_at, updated_at, deleted_at
-		FROM tea_order_deposits WHERE id = $1 AND deleted_at IS NULL`
+		FROM tea.tea_order_deposits WHERE id = $1 AND deleted_at IS NULL`
 	d := &TeaOrderDeposit{}
 	err := DB.QueryRow(statement, id).Scan(
 		&d.Id, &d.Uuid, &d.TeaOrderId, &d.Type, &d.PayerTeamId, &d.BankTeamId, &d.PayeeTeamId,
@@ -184,7 +185,7 @@ func GetTeaOrderDepositById(id int) (*TeaOrderDeposit, error) {
 // UpdateStatus 更新预备金托管状态
 func (tod *TeaOrderDeposit) UpdateStatus(status TeaOrderDepositStatus) error {
 	now := time.Now()
-	statement := `UPDATE tea_order_deposits SET status = $2, updated_at = $3 WHERE id = $1`
+	statement := `UPDATE tea.tea_order_deposits SET status = $2, updated_at = $3 WHERE id = $1`
 	_, err := DB.Exec(statement, tod.Id, status, now)
 	if err != nil {
 		return err
@@ -197,7 +198,7 @@ func (tod *TeaOrderDeposit) UpdateStatus(status TeaOrderDepositStatus) error {
 // UpdateTransferIds 更新关联的转账记录ID
 func (tod *TeaOrderDeposit) UpdateTransferIds(transferOutId, transferInId int) error {
 	now := time.Now()
-	statement := `UPDATE tea_order_deposits SET transfer_out_id = $2, transfer_in_id = $3, updated_at = $4 WHERE id = $1`
+	statement := `UPDATE tea.tea_order_deposits SET transfer_out_id = $2, transfer_in_id = $3, updated_at = $4 WHERE id = $1`
 	_, err := DB.Exec(statement, tod.Id, transferOutId, transferInId, now)
 	if err != nil {
 		return err
@@ -242,7 +243,7 @@ func (tod *TeaOrderDeposit) Forfeit() error {
 
 	// 更新托管状态为已罚没
 	_, err = tx.Exec(`
-		UPDATE tea_order_deposits SET status = $2, updated_at = $3 WHERE id = $1`,
+		UPDATE tea.tea_order_deposits SET status = $2, updated_at = $3 WHERE id = $1`,
 		tod.Id, DepositStatusForfeited, time.Now())
 	if err != nil {
 		return err
@@ -289,7 +290,7 @@ func (tod *TeaOrderDeposit) Refund() error {
 
 	// 更新托管状态为已退款给需求方
 	_, err = tx.Exec(`
-		UPDATE tea_order_deposits SET status = $2, updated_at = $3 WHERE id = $1`,
+		UPDATE tea.tea_order_deposits SET status = $2, updated_at = $3 WHERE id = $1`,
 		tod.Id, DepositStatusRefundedToPayer, time.Now())
 	if err != nil {
 		return err

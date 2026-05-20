@@ -4,17 +4,17 @@
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/objective/detail?uuid={{ .Objective.Uuid }}">{{ .Objective.Title }}@茶围</a></li>
   <li><a href="/v1/project/detail?uuid={{ .Project.Uuid }}">{{ .Project.Title }}@茶台</a></li>
-  <li class="active">预备金确认</li>
+  <li class="active">预备星茶确认</li>
 </ol>
 
 <div class="panel panel-default">
   <div class="panel-heading">
-    <h4><i class="bi-shield-check" style="font-size: 1.5rem; color: #8B4513;"></i> 茶台入围确认 — 预备金托管</h4>
+    <h4><i class="bi-shield-check" style="font-size: 1.5rem; color: #8B4513;"></i> 茶台入围确认 — 预备星茶托管</h4>
   </div>
   
   <div class="panel-body">
     <div class="alert alert-info">
-      <strong>茶博士提示：</strong>入围需要双方各托管 <strong>10克</strong> 预备金，见证者审批通过后归入下一流程（看看-建议）结算，多退少补。
+      <strong>茶博士提示：</strong>入围需要双方各托管 <strong>10000毫克</strong> 预备金，由茶庄托管，见证者审批通过后归入下一流程（看看-建议）结算，多退少补。
     </div>
 
     <div class="media" style="margin-bottom: 20px;">
@@ -51,8 +51,8 @@
             <tr>
               <td><strong>需求方（出题）</strong></td>
               <td>{{ .PayerTeam.Name }}</td>
-              <td><span class="text-primary"><strong>10克</strong></span> (10,000毫克)</td>
-              <td><span class="text-info">{{ div $ .PayerBalanceMg 1000 }}克</span></td>
+              <td><span class="text-primary"><strong>10,000毫克</strong></span></td>
+              <td><span class="text-info">{{ .PayerBalanceMg }}毫克</span></td>
               <td>
                 {{ if .PayerOk }}
                 <span class="label label-success"><i class="bi-check-circle"></i> 余额充足</span>
@@ -64,8 +64,8 @@
             <tr>
               <td><strong>解题方（答题）</strong></td>
               <td>{{ .PayeeTeam.Name }}</td>
-              <td><span class="text-primary"><strong>10克</strong></span> (10,000毫克)</td>
-              <td><span class="text-info">{{ div $ .PayeeBalanceMg 1000 }}克</span></td>
+              <td><span class="text-primary"><strong>10,000毫克</strong></span></td>
+              <td><span class="text-info">{{ .PayeeBalanceMg }}毫克</span></td>
               <td>
                 {{ if .PayeeOk }}
                 <span class="label label-success"><i class="bi-check-circle"></i> 余额充足</span>
@@ -75,8 +75,12 @@
               </td>
             </tr>
             <tr class="active">
-              <td colspan="2"><strong>托管方（见证者）</strong></td>
-              <td colspan="3">{{ .VerifierTeam.Name }}</td>
+              <td><strong>托管方（茶庄）</strong></td>
+              <td colspan="4">{{ .EscrowTeam.Name }}</td>
+            </tr>
+            <tr class="info">
+              <td><strong>批准方（见证者）</strong></td>
+              <td colspan="4">{{ .VerifierTeam.Name }}</td>
             </tr>
           </tbody>
         </table>
@@ -86,7 +90,7 @@
     <div class="alert alert-warning">
       <h5><i class="bi-info-circle"></i> 预备金托管说明</h5>
       <ol>
-        <li>双方各托管 <strong>10克星茶</strong> 作为预备金，由见证者团队托管。</li>
+        <li>双方各托管 <strong>10000毫克星茶</strong> 作为预备金，由茶庄托管团队托管。</li>
         <li>见证者审批通过后，预备金将归入下一流程（看看-建议）结束后一起结算，多退少补。</li>
         <li>如见证者判定为<strong>恶意/不道德</strong>行为，预备金将被<strong>罚没</strong>，归入公共治理团队。</li>
         <li>如无恶意但<strong>超出预设讨论范围</strong>，预备金将<strong>全额退回</strong>。</li>
@@ -110,7 +114,7 @@
     {{ else }}
     <div class="alert alert-danger text-center">
       <p><strong>余额不足，无法提交入围申请</strong></p>
-      <p>请确保双方团队都有足够的星茶余额（各需10克）后再试。</p>
+      <p>请确保双方团队都有足够的星茶余额（各需10000毫克）后再试。</p>
       <a href="/v1/project/detail?uuid={{ .Project.Uuid }}" class="btn btn-default">
         <i class="bi-arrow-left"></i> 返回茶台
       </a>
