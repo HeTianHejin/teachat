@@ -739,6 +739,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 
 	// 创建需求方的预备金托管记录
 	payerDeposit := dao.TeaOrderDeposit{
+		Uuid:             dao.Random_UUID(),
 		TeaOrderId:       tea_order.Id,
 		Type:             dao.DepositTypePreparation,
 		PayerTeamId:      payerTeam.Id,
@@ -751,6 +752,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 
 	// 创建解题方的预备金托管记录
 	payeeDeposit := dao.TeaOrderDeposit{
+		Uuid:             dao.Random_UUID(),
 		TeaOrderId:       tea_order.Id,
 		Type:             dao.DepositTypePreparation,
 		PayerTeamId:      payeeTeam.Id,
