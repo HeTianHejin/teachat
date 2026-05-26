@@ -588,13 +588,13 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		admin_team, err := dao.GetTeam(ob.TeamId)
 		if err != nil {
 			util.Debug(" Cannot get team", ob.TeamId, err)
-			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会负责团队，请确认后再试。")
 			return
 		}
 		is_admin, err = admin_team.IsMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot get team", ob.TeamId, err)
-			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
+			report(w, s_u, "你好，茶博士未能确认茶话会负责团队成员身份，请确认后再试。")
 			return
 		}
 	}
@@ -603,7 +603,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查Torder是否已经存在
+	// 检查TeaOrder是否已经存在
 	existing_order, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), pr.Id, ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		util.Debug(" Cannot check existing tea order", pr.Id, ob.Id, err)
@@ -611,13 +611,13 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existing_order != nil && (existing_order.Status == dao.TeaOrderStatusPending || existing_order.Status == dao.TeaOrderStatusActive || existing_order.Status == dao.TeaOrderStatusPause) {
-		report(w, s_u, "你好，茶博士失魂鱼，该茶台已存在，请勿重复创建。")
+		report(w, s_u, "你好，茶博士失魂鱼，该茶台已存在入围申请记录，请勿重复创建。")
 		return
 	}
 
 	// 获取需求方团队信息
 	// 注意：需求方（Requester）是发起茶围需求的家庭/团队，监护方（Guardian）是负责监督项目执行的团队
-	// 当前实现中，需求方团队临时兼任监护方，理想情况下应由专业监护团队担任
+	// 当前实现中，需求方团队临时兼任监护方（妥协方案），理想情况下应由专业监护团队担任
 	var requesterTeamId int // 需求方团队ID
 
 	if ob.IsPrivate {

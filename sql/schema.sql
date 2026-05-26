@@ -936,6 +936,11 @@ CREATE TABLE tea_orders (
     deleted_at            TIMESTAMPTZ
 );
 
+-- 部分唯一索引：同一茶围下同一茶台最多只能有一条未完成的茶订单（pending/active/pause）
+CREATE UNIQUE INDEX idx_tea_orders_unique_active
+    ON tea_orders(project_id, objective_id)
+    WHERE deleted_at IS NULL AND status IN ('pending', 'active', 'pause');
+
 -- 见证日志表
 CREATE TABLE witness_logs (
     id            SERIAL PRIMARY KEY,

@@ -197,7 +197,7 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 	if t.Id <= 0 && t.Uuid == "" {
 		return errors.New("invalid TeaOrder ID or UUID")
 	}
-	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE id = $1 OR uuid = $2`
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE (id = $1 OR uuid = $2) AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
@@ -211,7 +211,7 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 func GetTeaOrderByProjectIdAndObjectiveId(ctx context.Context, projectId int, objectiveId int) (*TeaOrder, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE project_id = $1 AND objective_id = $2`
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE project_id = $1 AND objective_id = $2 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return nil, err
