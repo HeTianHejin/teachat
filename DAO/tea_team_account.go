@@ -634,6 +634,146 @@ func CreateTeaTeamToTeamTransferOut(fromTeamId, initiatorUserId, toTeamId int, a
 	return transfer, nil
 }
 
+// CreateEscrowTransferOut 创建团队向茶庄托管团队的直接转账（无需审批，直达完成）
+// 专用于入围预备金托管等系统流程，toTeamId 固定为 TeamIdEscrow，跳过 pending_approval → pending_receipt 审批链
+func CreateEscrowTransferOut(fromTeamId, initiatorUserId int, amountMilligrams int64, notes, fromTeamName string, expireHours int) (TeaTeamToTeamTransferOut, error) {
+	var transfer TeaTeamToTeamTransferOut
+	toTeamId := TeamIdEscrow
+
+	if fromTeamId == TeamIdFreelancer {
+		return transfer, fmt.Errorf("自由人团队不支持星茶转账")
+	}
+
+	if fromTeamId == toTeamId {
+		return transfer, fmt.Errorf("茶庄托管团队不能向自身转账")
+	}
+
+	if amountMilligrams <= 0 {
+		return transfer, fmt.Errorf("转账金额必须大于0")
+	}
+
+	// 获取茶庄托管团队名称
+	escrowTeam, err := GetTeam(toTeamId)
+	if err != nil {
+		return transfer, fmt.Errorf("获取茶庄托管团队信息失败: %v", err)
+	}
+	toTeamName := escrowTeam.Name
+
+	// 开始事务
+	tx, err := DB.Begin()
+	if err != nil {
+		return transfer, fmt.Errorf("开始事务失败: %v", err)
+	}
+	defer tx.Rollback()
+
+	// 1. 锁定并检查转出团队账户余额
+	var balance, lockedBalance int64
+	var status string
+	err = tx.QueryRow(`
+		SELECT balance_milligrams, locked_balance_milligrams, status 
+		FROM tea.team_accounts 
+		WHERE team_id = $1 
+		FOR UPDATE`,
+		fromTeamId).Scan(&balance, &lockedBalance, &status)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return transfer, fmt.Errorf("转出团队星茶账户不存在")
+		}
+		return transfer, fmt.Errorf("查询转出团队账户失败: %v", err)
+	}
+
+	if status == TeaTeamAccountStatus_Frozen {
+		return transfer, fmt.Errorf("团队账户已冻结")
+	}
+
+	availableBalance := balance - lockedBalance
+	if availableBalance < amountMilligrams {
+		return transfer, fmt.Errorf("团队星茶可用余额不足，可用余额: %d 毫克，需要: %d 毫克", availableBalance, amountMilligrams)
+	}
+
+	// 2. 确保茶庄托管团队有星茶账户
+	_, err = tx.Exec(`
+		INSERT INTO tea.team_accounts (team_id, balance_milligrams, locked_balance_milligrams, status, created_at, updated_at)
+		VALUES ($1, 0, 0, $2, $3, $3)
+		ON CONFLICT (team_id) DO NOTHING`,
+		toTeamId, TeaTeamAccountStatus_Normal, time.Now())
+	if err != nil {
+		return transfer, fmt.Errorf("确保茶庄托管团队账户存在失败: %v", err)
+	}
+
+	// 3. 直接扣减转出团队余额（跳过锁定→审批→确认流程，直达完成）
+	balanceAfterTransfer := availableBalance - amountMilligrams
+	_, err = tx.Exec(`
+		UPDATE tea.team_accounts 
+		SET balance_milligrams = balance_milligrams - $1,
+		    updated_at = $2
+		WHERE team_id = $3
+		AND (balance_milligrams - locked_balance_milligrams) >= $1`,
+		amountMilligrams, time.Now(), fromTeamId)
+	if err != nil {
+		return transfer, fmt.Errorf("扣减转出团队余额失败: %v", err)
+	}
+
+	// 4. 增加茶庄托管团队余额
+	var escrowBalanceAfter int64
+	err = tx.QueryRow(`
+		UPDATE tea.team_accounts 
+		SET balance_milligrams = balance_milligrams + $1,
+		    updated_at = $2
+		WHERE team_id = $3
+		RETURNING balance_milligrams`,
+		amountMilligrams, time.Now(), toTeamId).Scan(&escrowBalanceAfter)
+	if err != nil {
+		return transfer, fmt.Errorf("增加茶庄托管团队余额失败: %v", err)
+	}
+
+	// 5. 创建转出记录（状态直接为 completed，附审批人为发起人自己）
+	expiresAt := time.Now().UTC().Add(time.Duration(expireHours) * time.Hour)
+	err = tx.QueryRow(`
+		INSERT INTO tea.team_to_team_transfer_out 
+		(from_team_id, to_team_id, initiator_user_id, amount_milligrams, notes, from_team_name, to_team_name, status, balance_after_transfer, expires_at, is_approved, approver_user_id, approved_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, $3, $11)
+		RETURNING id, uuid, created_at`,
+		fromTeamId, toTeamId, initiatorUserId, amountMilligrams, notes, fromTeamName, toTeamName,
+		TeaTransferStatusCompleted, balanceAfterTransfer, expiresAt, time.Now()).
+		Scan(&transfer.Id, &transfer.Uuid, &transfer.CreatedAt)
+	if err != nil {
+		return transfer, fmt.Errorf("创建团队对茶庄托管转账记录失败: %v", err)
+	}
+
+	transfer.FromTeamId = fromTeamId
+	transfer.FromTeamName = fromTeamName
+	transfer.ToTeamId = toTeamId
+	transfer.ToTeamName = toTeamName
+	transfer.InitiatorUserId = initiatorUserId
+	transfer.AmountMilligrams = amountMilligrams
+	transfer.Notes = notes
+	transfer.Status = TeaTransferStatusCompleted
+	transfer.BalanceAfterTransfer = balanceAfterTransfer
+	transfer.ExpiresAt = expiresAt
+
+	// 6. 创建茶庄托管团队的接收记录
+	_, err = tx.Exec(`
+		INSERT INTO tea.team_from_team_transfer_in (
+			team_to_team_transfer_out_id, to_team_id, to_team_name, 
+			from_team_id, from_team_name, amount_milligrams, notes, 
+			balance_after_receipt, status, is_confirmed, operational_user_id, created_at, expires_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+		transfer.Id, toTeamId, toTeamName, fromTeamId, fromTeamName,
+		amountMilligrams, notes, escrowBalanceAfter, TeaTransferStatusCompleted,
+		true, initiatorUserId, time.Now(), expiresAt)
+	if err != nil {
+		return transfer, fmt.Errorf("创建茶庄托管团队接收记录失败: %v", err)
+	}
+
+	// 7. 提交事务
+	if err = tx.Commit(); err != nil {
+		return transfer, fmt.Errorf("提交事务失败: %v", err)
+	}
+
+	return transfer, nil
+}
+
 // CountTeaTeamPendingApprovals 统计团队待审批的转出操作数量（包括团队对用户和团队对团队两种转出类型）
 func CountTeaTeamPendingApprovals(teamId int) (int, error) {
 	var count int

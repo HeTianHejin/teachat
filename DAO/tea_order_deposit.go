@@ -118,7 +118,8 @@ func (tod *TeaOrderDeposit) Create() error {
 	statement := `INSERT INTO tea.tea_order_deposits
 		(uuid, tea_order_id, type, payer_team_id, bank_team_id, payee_team_id, amount_milligrams,
 		transfer_out_id, transfer_in_id, status, notes, has_dispute, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)`
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+		RETURNING id, uuid`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err

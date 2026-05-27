@@ -650,14 +650,6 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	// 预备金金额：10克 = 10000毫克
 	const preparationAmountMg = 10000
 
-	// 获取茶庄托管团队信息（预备金托管方）
-	escrowTeam, err := dao.GetTeam(dao.TeamIdEscrow)
-	if err != nil {
-		util.Debug(" Cannot get escrow team", err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能获取茶庄托管团队信息，请确认后再试。")
-		return
-	}
-
 	// 确保茶庄托管团队有星茶账户（预备金托管方需要账户）
 	if err := dao.EnsureTeaTeamAccountExists(dao.TeamIdEscrow); err != nil {
 		util.Debug(" Cannot ensure escrow team account exists", err)
@@ -763,16 +755,14 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		Notes:            "入围预备金 - 解题方托管",
 	}
 
-	// 需求方转账到茶庄托管团队（预备金托管）
+	// 需求方转账到茶庄托管团队（预备金托管，直达完成无需审批）
 	notes := fmt.Sprintf("入围预备金托管，茶台：%s，茶围：%s", pr.Title, ob.Title)
-	payerTransfer, err := dao.CreateTeaTeamToTeamTransferOut(
+	payerTransfer, err := dao.CreateEscrowTransferOut(
 		payerTeam.Id,
 		s_u.Id,
-		dao.TeamIdEscrow,
 		preparationAmountMg,
 		notes,
 		payerTeam.Name,
-		escrowTeam.Name,
 		24, // 24小时过期
 	)
 	if err != nil {
@@ -782,15 +772,13 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	}
 	payerDeposit.TransferOutId = payerTransfer.Id
 
-	// 解题方转账到茶庄托管团队（预备金托管）
-	payeeTransfer, err := dao.CreateTeaTeamToTeamTransferOut(
+	// 解题方转账到茶庄托管团队（预备金托管，直达完成无需审批）
+	payeeTransfer, err := dao.CreateEscrowTransferOut(
 		payeeTeam.Id,
 		s_u.Id,
-		dao.TeamIdEscrow,
 		preparationAmountMg,
 		notes,
 		payeeTeam.Name,
-		escrowTeam.Name,
 		24,
 	)
 	if err != nil {
