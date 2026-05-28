@@ -1208,6 +1208,14 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pD.IsApproved = pD.ProjectBean.IsApproved
 
+	// 检查是否已提交入围TeaOrder（等待见证者审批中）
+	if !pD.IsApproved {
+		teaOrder, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), pr.Id, pr.ObjectiveId)
+		if err == nil && (teaOrder.Status == dao.TeaOrderStatusPending || teaOrder.Status == dao.TeaOrderStatusActive || teaOrder.Status == dao.TeaOrderStatusPause) {
+			pD.IsTeaOrderSubmitted = true
+		}
+	}
+
 	//如果入围，读取入围必备6threads
 	if pD.IsApproved {
 

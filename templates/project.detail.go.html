@@ -94,10 +94,16 @@
         <div style="text-align: center; margin-top: 10px;">
           {{/* 先检查是否茶围管理员，如果是，继续检查是否为未入围，否则显示入围按钮图标 */}}
           {{ if and .IsAdmin (not .IsApproved) }}
-          <form class="form-inline" action="/v1/project/approve/step1" method="post">
-            <input type="hidden" name="uuid" value="{{ .ProjectBean.Project.Uuid }}" />
-            <button type="submit" class="btn btn-default btn-sm">入围（启动线下茶会）</button>
-          </form>
+            {{ if .IsTeaOrderSubmitted }}
+            <span style="color: #f0ad4e; font-size: 0.9rem;">
+              <i class="bi-hourglass-split"></i> 已提交入围申请，等待见证者审批
+            </span>
+            {{ else }}
+            <form class="form-inline" action="/v1/project/approve/step1" method="post">
+              <input type="hidden" name="uuid" value="{{ .ProjectBean.Project.Uuid }}" />
+              <button type="submit" class="btn btn-default btn-sm">入围（启动线下茶会）</button>
+            </form>
+            {{ end }}
           {{ end }}
         </div>
       </div>

@@ -91,6 +91,7 @@ type ProjectDetail struct {
 
 	ProjectBean      ProjectBean             //当前浏览茶台资料夹
 	IsApproved       bool                    //是否入围
+	IsTeaOrderSubmitted bool                //是否已有提交的入围TeaOrder等待审批
 	Approved6Threads ProjectApproved6Threads //入围茶台预设6茶议
 
 	IsEdited bool
