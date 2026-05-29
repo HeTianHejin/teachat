@@ -180,13 +180,9 @@ func (t *TeaOrder) Create(ctx context.Context) (err error) {
 	defer cancel()
 
 	statement := `INSERT INTO tea_orders (objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
-	stmt, err := DB.PrepareContext(ctx, statement)
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-	_, err = stmt.ExecContext(ctx, t.ObjectiveId, t.ProjectId, t.UserId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id`
+	err = DB.QueryRowContext(ctx, statement, t.ObjectiveId, t.ProjectId, t.UserId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId).Scan(&t.Id)
 	return err
 }
 

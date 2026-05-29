@@ -1,6 +1,9 @@
 package dao
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 // TeaOrderDeposit 代表茶订单中的预备金（星茶）托管记录
 type TeaOrderDeposit struct {
@@ -258,9 +261,13 @@ func (tod *TeaOrderDeposit) Forfeit() error {
 }
 
 // Refund 退回预备金：将托管的星茶退回给原支付方
-func (tod *TeaOrderDeposit) Refund() error {
+// initiatorUserId：执行退款操作的用户ID（见证者），用于创建转账记录
+// 注意：对于见证者拒绝场景，有两个 deposit 记录（需求方和解题方各一个），
+// 每个 deposit 的 PayerTeamId 分别是其各自的团队 ID，因此两次 Refund 调用
+// 会将星茶分别退回双方团队账户，并创建对称的转账记录。
+func (tod *TeaOrderDeposit) Refund(initiatorUserId int) error {
 	if tod.Status != DepositStatusPaid {
-		return nil
+		return fmt.Errorf("退款失败：托管记录(id=%d)状态不是已支付，当前状态=%d", tod.Id, tod.Status)
 	}
 
 	tx, err := DB.Begin()
@@ -269,8 +276,19 @@ func (tod *TeaOrderDeposit) Refund() error {
 	}
 	defer tx.Rollback()
 
-	// 从托管团队账户扣除星茶
-	_, err = tx.Exec(`
+	// 获取托管团队（茶庄）和原支付方的团队名称，用于转账记录
+	var bankTeamName, payerTeamName string
+	err = tx.QueryRow(`SELECT name FROM teams WHERE id = $1`, tod.BankTeamId).Scan(&bankTeamName)
+	if err != nil {
+		return fmt.Errorf("退款失败：查询托管团队名称失败: %v", err)
+	}
+	err = tx.QueryRow(`SELECT name FROM teams WHERE id = $1`, tod.PayerTeamId).Scan(&payerTeamName)
+	if err != nil {
+		return fmt.Errorf("退款失败：查询原支付方团队名称失败: %v", err)
+	}
+
+	// 从托管团队账户扣除星茶，检查受影响行数确保余额充足
+	result, err := tx.Exec(`
 		UPDATE tea.team_accounts
 		SET balance_milligrams = balance_milligrams - $1, updated_at = $2
 		WHERE team_id = $3 AND balance_milligrams >= $1`,
@@ -278,9 +296,23 @@ func (tod *TeaOrderDeposit) Refund() error {
 	if err != nil {
 		return err
 	}
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("退款失败：查询托管团队扣款影响行数出错: %v", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("退款失败：托管团队(team_id=%d)星茶余额不足，需要 %d 毫克", tod.BankTeamId, tod.AmountMilligrams)
+	}
+
+	// 查询托管团队扣款后的余额
+	var bankBalanceAfter int64
+	err = tx.QueryRow(`SELECT balance_milligrams FROM tea.team_accounts WHERE team_id = $1`, tod.BankTeamId).Scan(&bankBalanceAfter)
+	if err != nil {
+		return fmt.Errorf("退款失败：查询托管团队余额失败: %v", err)
+	}
 
 	// 退回给原支付方
-	_, err = tx.Exec(`
+	result, err = tx.Exec(`
 		UPDATE tea.team_accounts
 		SET balance_milligrams = balance_milligrams + $1, updated_at = $2
 		WHERE team_id = $3`,
@@ -288,11 +320,61 @@ func (tod *TeaOrderDeposit) Refund() error {
 	if err != nil {
 		return err
 	}
+	rows, err = result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("退款失败：查询原支付方加款影响行数出错: %v", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("退款失败：原支付方团队(team_id=%d)账户不存在", tod.PayerTeamId)
+	}
+
+	// 查询原支付方加款后的余额
+	var payerBalanceAfter int64
+	err = tx.QueryRow(`SELECT balance_milligrams FROM tea.team_accounts WHERE team_id = $1`, tod.PayerTeamId).Scan(&payerBalanceAfter)
+	if err != nil {
+		return fmt.Errorf("退款失败：查询原支付方余额失败: %v", err)
+	}
+
+	// 创建托管团队→原支付方的转出记录（状态直接为 completed）
+	refundNotes := fmt.Sprintf("退款：%s", tod.Notes)
+	now := time.Now()
+	var transferOutId int
+	var transferOutUuid string
+	err = tx.QueryRow(`
+		INSERT INTO tea.team_to_team_transfer_out 
+		(from_team_id, to_team_id, initiator_user_id, amount_milligrams, notes, 
+		 from_team_name, to_team_name, status, balance_after_transfer, 
+		 expires_at, is_approved, approver_user_id, approved_at, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, $3, $11, $11)
+		RETURNING id, uuid`,
+		tod.BankTeamId, tod.PayerTeamId, initiatorUserId, tod.AmountMilligrams, refundNotes,
+		bankTeamName, payerTeamName,
+		TeaTransferStatusCompleted, bankBalanceAfter,
+		now.Add(24*time.Hour), now).Scan(&transferOutId, &transferOutUuid)
+	if err != nil {
+		return fmt.Errorf("退款失败：创建托管团队转出记录失败: %v", err)
+	}
+
+	// 创建原支付方的接收记录（状态直接为 completed）
+	_, err = tx.Exec(`
+		INSERT INTO tea.team_from_team_transfer_in (
+			team_to_team_transfer_out_id, to_team_id, to_team_name,
+			from_team_id, from_team_name, amount_milligrams, notes,
+			balance_after_receipt, status, is_confirmed, operational_user_id, created_at, expires_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
+		transferOutId, tod.PayerTeamId, payerTeamName,
+		tod.BankTeamId, bankTeamName,
+		tod.AmountMilligrams, refundNotes,
+		payerBalanceAfter, TeaTransferStatusCompleted,
+		true, initiatorUserId, now, now.Add(24*time.Hour))
+	if err != nil {
+		return fmt.Errorf("退款失败：创建原支付方接收记录失败: %v", err)
+	}
 
 	// 更新托管状态为已退款给需求方
 	_, err = tx.Exec(`
 		UPDATE tea.tea_order_deposits SET status = $2, updated_at = $3 WHERE id = $1`,
-		tod.Id, DepositStatusRefundedToPayer, time.Now())
+		tod.Id, DepositStatusRefundedToPayer, now)
 	if err != nil {
 		return err
 	}

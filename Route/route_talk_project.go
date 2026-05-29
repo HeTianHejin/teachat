@@ -800,6 +800,18 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 更新托管记录状态为已支付（转账已在 CreateEscrowTransferOut 中完成）
+	if err = payerDeposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
+		util.Debug(" Cannot update payer deposit status to paid", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能更新需求方托管状态，请确认后再试。")
+		return
+	}
+	if err = payeeDeposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
+		util.Debug(" Cannot update payee deposit status to paid", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能更新解题方托管状态，请确认后再试。")
+		return
+	}
+
 	// 报告用户入围操作成功，请等待见证者审批
 	report(w, s_u, fmt.Sprintf("你好，茶博士微笑，该茶台已入围操作成功！需求方和解题方各托管 %d 毫克预备金已锁定，请耐心等待见证者审批。", preparationAmountMg/1000))
 }
@@ -995,7 +1007,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士惊讶地说，不是此茶话会邀请团队成员不能开新茶台，请确认。")
 			return
 		}
-		// 当前用户是茶话会邀请团队成员，可以新开茶台
+		// 当前用户是茶围邀请团队成员，可以新开茶台
 		if class == dao.ObClassOpenDraft {
 			report(w, s_u, "你好，封闭式茶话会内不能开启开放式茶台，请确认后再试。")
 			return

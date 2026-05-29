@@ -519,6 +519,29 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 退回托管预备金：获取所有托管记录，将星茶原路退回需求方和解题方团队
+	deposits, depositErr := dao.GetTeaOrderDepositsByTeaOrderId(teaOrder.Id)
+	if depositErr != nil {
+		util.Debug("Cannot get deposits for tea order", teaOrder.Id, depositErr)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取托管记录。请稍后再试。")
+		return
+	}
+	for _, deposit := range deposits {
+		// 托管金转账已完成但记录状态可能未更新，先确保状态为已支付
+		if deposit.Status == dao.DepositStatusPendingPayment {
+			if err = deposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
+				util.Debug("Cannot update deposit status to paid before refund", deposit.Id, err)
+				report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能更新托管状态(id=%d)，请稍后再试。", deposit.Id))
+				return
+			}
+		}
+		if err = deposit.Refund(s_u.Id); err != nil {
+			util.Debug("Cannot refund deposit", deposit.Id, err)
+			report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能退回托管预备金(id=%d)：%v", deposit.Id, err))
+			return
+		}
+	}
+
 	// 重定向到工作间
 	http.Redirect(w, r, "/v1/verifier/workspace", http.StatusFound)
 }
@@ -674,6 +697,29 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 		util.Debug("Cannot create witness log", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建见证日志。请稍后再试。")
 		return
+	}
+
+	// 退回托管预备金：获取所有托管记录，将星茶原路退回需求方和解题方团队
+	deposits, depositErr := dao.GetTeaOrderDepositsByTeaOrderId(teaOrder.Id)
+	if depositErr != nil {
+		util.Debug("Cannot get deposits for tea order", teaOrder.Id, depositErr)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取托管记录。请稍后再试。")
+		return
+	}
+	for _, deposit := range deposits {
+		// 托管金转账已完成但记录状态可能未更新，先确保状态为已支付
+		if deposit.Status == dao.DepositStatusPendingPayment {
+			if err = deposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
+				util.Debug("Cannot update deposit status to paid before refund", deposit.Id, err)
+				report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能更新托管状态(id=%d)，请稍后再试。", deposit.Id))
+				return
+			}
+		}
+		if err = deposit.Refund(s_u.Id); err != nil {
+			util.Debug("Cannot refund deposit", deposit.Id, err)
+			report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能退回托管预备金(id=%d)：%v", deposit.Id, err))
+			return
+		}
 	}
 
 	// 重定向到工作间
@@ -833,7 +879,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 需要记录入围茶台project状态为“茶凉”status=dao.ProjectStatusTeaCold
+	// 需要记录入围茶台project状态为"茶凉"status=dao.ProjectStatusTeaCold
 	if teaOrder.Status == dao.TeaOrderStatusActive {
 		project := &dao.Project{Id: teaOrder.ProjectId}
 		if err = project.Get(); err != nil {
@@ -845,6 +891,29 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 		if err = project.Update(); err != nil {
 			util.Debug("Cannot update project", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能更新茶台状态。请稍后再试。")
+			return
+		}
+	}
+
+	// 退回托管预备金：获取所有托管记录，将星茶原路退回需求方和解题方团队
+	deposits, depositErr := dao.GetTeaOrderDepositsByTeaOrderId(teaOrder.Id)
+	if depositErr != nil {
+		util.Debug("Cannot get deposits for tea order", teaOrder.Id, depositErr)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取托管记录。请稍后再试。")
+		return
+	}
+	for _, deposit := range deposits {
+		// 托管金转账已完成但记录状态可能未更新，先确保状态为已支付
+		if deposit.Status == dao.DepositStatusPendingPayment {
+			if err = deposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
+				util.Debug("Cannot update deposit status to paid before refund", deposit.Id, err)
+				report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能更新托管状态(id=%d)，请稍后再试。", deposit.Id))
+				return
+			}
+		}
+		if err = deposit.Refund(s_u.Id); err != nil {
+			util.Debug("Cannot refund deposit", deposit.Id, err)
+			report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能退回托管预备金(id=%d)：%v", deposit.Id, err))
 			return
 		}
 	}
