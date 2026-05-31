@@ -922,6 +922,215 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/v1/verifier/workspace", http.StatusFound)
 }
 
+// HandleVerifierOrderForfeit 处理罚没茶订单路由
+func HandleVerifierOrderForfeit(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		VerifierOrderForfeitGet(w, r)
+	case http.MethodPost:
+		VerifierOrderForfeitPost(w, r)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GET /v1/verifier/order/forfeit?uuid=xxx
+// 罚没茶订单表单页面（针对恶意/不道德内容）
+func VerifierOrderForfeitGet(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	// 检查用户是否为见证者
+	if !dao.IsVerifier(s_u.Id) {
+		report(w, s_u, "你好，您没有权限执行罚没操作。")
+		return
+	}
+
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。")
+		return
+	}
+
+	// 获取茶订单
+	teaOrder := &dao.TeaOrder{Uuid: uuid}
+	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug("Cannot get tea order", uuid, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
+		return
+	}
+
+	// 罚没操作允许的订单状态：pending / active / pause
+	if teaOrder.Status != dao.TeaOrderStatusPending &&
+		teaOrder.Status != dao.TeaOrderStatusActive &&
+		teaOrder.Status != dao.TeaOrderStatusPause {
+		report(w, s_u, "你好，该订单状态不允许罚没操作。")
+		return
+	}
+
+	// 获取茶订单Bean
+	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
+	if err != nil {
+		util.Debug("Cannot convert tea order to bean", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能准备茶订单数据。请稍后再试。")
+		return
+	}
+
+	// 准备页面数据
+	type ForfeitPageData struct {
+		SessUser     dao.User
+		TeaOrderBean *dao.TeaOrderBean
+	}
+	pageData := ForfeitPageData{
+		SessUser:     s_u,
+		TeaOrderBean: teaOrderBean,
+	}
+
+	// 渲染罚没表单页面
+	generateHTML(w, &pageData, "layout", "navbar.private", "verifier.order.forfeit", "component_tea_order_bean", "component_sess_capacity")
+}
+
+// POST /v1/verifier/order/forfeit
+// 处理罚没茶订单：没收双方预备金，归入公共治理团队
+func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := sess.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	// 检查用户是否为见证者
+	if !dao.IsVerifier(s_u.Id) {
+		report(w, s_u, "你好，您没有权限执行罚没操作。")
+		return
+	}
+
+	err = r.ParseForm()
+	if err != nil {
+		util.Debug("Cannot parse form", err)
+		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		return
+	}
+
+	uuid := r.PostFormValue("uuid")
+	if uuid == "" {
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。")
+		return
+	}
+
+	reason := r.PostFormValue("reason")
+	if reason == "" {
+		report(w, s_u, "你好，茶博士失魂鱼，请填写罚没原因。")
+		return
+	}
+
+	// 获取茶订单
+	teaOrder := &dao.TeaOrder{Uuid: uuid}
+	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
+		util.Debug("Cannot get tea order", uuid, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
+		return
+	}
+
+	// 罚没操作允许的订单状态：pending / active / pause
+	if teaOrder.Status != dao.TeaOrderStatusPending &&
+		teaOrder.Status != dao.TeaOrderStatusActive &&
+		teaOrder.Status != dao.TeaOrderStatusPause {
+		report(w, s_u, "你好，该订单状态不允许罚没操作。")
+		return
+	}
+
+	// 更新订单状态为已取消
+	teaOrder.ApprovalRejectionReason = fmt.Sprintf("罚没原因：%s", reason)
+	teaOrder.ApproverUserId = sql.NullInt64{Int64: int64(s_u.Id), Valid: true}
+	forfeitTime := time.Now()
+	teaOrder.ApprovedAt = &forfeitTime
+	teaOrder.Status = dao.TeaOrderStatusCancelled
+
+	if err = teaOrder.Update(); err != nil {
+		util.Debug("Cannot update tea order", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能更新茶订单。请稍后再试。")
+		return
+	}
+
+	// 创建见证日志（罚没记录）
+	witnessLog := &dao.WitnessLog{
+		Uuid:       dao.Random_UUID(),
+		TeaOrderId: teaOrder.Id,
+		Action:     dao.WitnessActionForfeit,
+		Reason:     fmt.Sprintf("罚没原因：%s。双方预备金已没收，归入公共治理团队。", reason),
+		WitnessId:  s_u.Id,
+		EvidenceId: 0,
+		WitnessAt:  forfeitTime,
+	}
+	if err = witnessLog.Create(r.Context()); err != nil {
+		util.Debug("Cannot create witness log", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能创建见证日志。请稍后再试。")
+		return
+	}
+
+	// 需要记录入围茶台project状态为"茶凉"
+	if teaOrder.Status == dao.TeaOrderStatusActive || teaOrder.Status == dao.TeaOrderStatusPause {
+		project := &dao.Project{Id: teaOrder.ProjectId}
+		if err = project.Get(); err != nil {
+			util.Debug("Cannot get project", err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能获取茶台信息。请稍后再试。")
+			return
+		}
+		// 只有在当前不是茶凉状态时才更新
+		if project.Status != dao.ProjectStatusTeaCold {
+			project.Status = dao.ProjectStatusTeaCold
+			if err = project.Update(); err != nil {
+				util.Debug("Cannot update project", err)
+				report(w, s_u, "你好，茶博士失魂鱼，未能更新茶台状态。请稍后再试。")
+				return
+			}
+		}
+	}
+
+	// 罚没托管预备金：获取所有托管记录，将双方预备金罚没转入公共治理团队
+	deposits, depositErr := dao.GetTeaOrderDepositsByTeaOrderId(teaOrder.Id)
+	if depositErr != nil {
+		util.Debug("Cannot get deposits for tea order", teaOrder.Id, depositErr)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取托管记录。请稍后再试。")
+		return
+	}
+	for _, deposit := range deposits {
+		// 确保托管状态已支付（有些托管金可能转账已完成但记录未更新）
+		if deposit.Status == dao.DepositStatusPendingPayment {
+			if err = deposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
+				util.Debug("Cannot update deposit status to paid before forfeit", deposit.Id, err)
+				report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能更新托管状态(id=%d)，请稍后再试。", deposit.Id))
+				return
+			}
+		}
+		// 调用罚没方法：将星茶从托管方转入公共治理团队
+		if err = deposit.Forfeit(); err != nil {
+			util.Debug("Cannot forfeit deposit", deposit.Id, err)
+			report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能罚没托管预备金(id=%d)：%v", deposit.Id, err))
+			return
+		}
+	}
+
+	// 重定向到工作间
+	http.Redirect(w, r, "/v1/verifier/workspace", http.StatusFound)
+}
+
 // HandleVerifierOrderDetail 处理查看茶订单详情路由
 func HandleVerifierOrderDetail(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)

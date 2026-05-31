@@ -301,12 +301,13 @@ func main() {
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
 
 	// 见证者工作间路由
-	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace)        // 见证者工作间页面
-	mux.HandleFunc("/v1/verifier/order/approve", route.HandleVerifierOrderApprove) // 审批茶订单
-	mux.HandleFunc("/v1/verifier/order/reject", route.HandleVerifierOrderReject)   // 拒绝茶订单
-	mux.HandleFunc("/v1/verifier/order/pause", route.HandleVerifierOrderPause)     // 暂停茶订单
-	mux.HandleFunc("/v1/verifier/order/cancel", route.HandleVerifierOrderCancel)   // 终止茶订单
-	mux.HandleFunc("/v1/verifier/order/detail", route.HandleVerifierOrderDetail)   // 茶订单详情
+	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace)         // 见证者工作间页面
+	mux.HandleFunc("/v1/verifier/order/approve", route.HandleVerifierOrderApprove)  // 审批茶订单
+	mux.HandleFunc("/v1/verifier/order/reject", route.HandleVerifierOrderReject)    // 拒绝茶订单
+	mux.HandleFunc("/v1/verifier/order/forfeit", route.HandleVerifierOrderForfeit)  // 罚没茶订单（恶意/不道德内容）
+	mux.HandleFunc("/v1/verifier/order/pause", route.HandleVerifierOrderPause)      // 暂停茶订单
+	mux.HandleFunc("/v1/verifier/order/cancel", route.HandleVerifierOrderCancel)    // 终止茶订单
+	mux.HandleFunc("/v1/verifier/order/detail", route.HandleVerifierOrderDetail)    // 茶订单详情
 
 	// 用户星茶账户系统路由
 	mux.HandleFunc("/v1/tea/user/account/page", route.HandleTeaUserAccount)          //用户星茶账户入口页面

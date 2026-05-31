@@ -60,6 +60,9 @@
           <a href="/v1/verifier/order/reject?uuid={{ .TeaOrder.Uuid }}" class="btn btn-danger btn-sm">
             <i class="bi-x-circle"></i> 拒绝
           </a>
+          <a href="/v1/verifier/order/forfeit?uuid={{ .TeaOrder.Uuid }}" class="btn btn-danger btn-sm">
+            <i class="bi-shield-exclamation"></i> 罚没
+          </a>
           {{ end }}
           {{ if eq .TeaOrder.Status "active" }}
           <a href="/v1/verifier/order/pause?uuid={{ .TeaOrder.Uuid }}" class="btn btn-warning btn-sm">
@@ -67,6 +70,14 @@
           </a>
           <a href="/v1/verifier/order/cancel?uuid={{ .TeaOrder.Uuid }}" class="btn btn-danger btn-sm">
             <i class="bi-x-circle"></i> 终止
+          </a>
+          <a href="/v1/verifier/order/forfeit?uuid={{ .TeaOrder.Uuid }}" class="btn btn-danger btn-sm">
+            <i class="bi-shield-exclamation"></i> 罚没
+          </a>
+          {{ end }}
+          {{ if eq .TeaOrder.Status "pause" }}
+          <a href="/v1/verifier/order/forfeit?uuid={{ .TeaOrder.Uuid }}" class="btn btn-danger btn-sm">
+            <i class="bi-shield-exclamation"></i> 罚没
           </a>
           {{ end }}
           <a href="/v1/verifier/order/detail?uuid={{ .TeaOrder.Uuid }}" class="btn btn-info btn-sm">

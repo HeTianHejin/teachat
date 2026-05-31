@@ -1,0 +1,125 @@
+{{ define "content" }}
+
+{{/* 罚没茶订单表单页面 - 针对恶意/不道德内容（人身攻击、色情等） */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/verifier/workspace">见证工作间</a></li>
+  <li class="active">罚没茶订单</li>
+</ol>
+
+<div class="page-header">
+  <h1><i class="bi-exclamation-triangle"></i> 罚没茶订单</h1>
+  <p class="lead">罚没操作将没收需求方和解题方双方的预备金，归入公共治理团队。此操作针对恶意/不道德行为（人身攻击、色情等内容），不可撤销！</p>
+</div>
+
+{{ template "component_tea_order_bean" .TeaOrderBean }}
+
+<div class="alert alert-danger">
+  <strong><i class="bi-exclamation-triangle"></i> 严重警告：</strong>
+  罚没操作将导致：
+  <ul>
+    <li><strong>没收需求方和解题方双方的预备金</strong>，星茶归入<strong>公共治理团队</strong></li>
+    <li>订单被永久取消，所有相关活动将停止</li>
+    <li>此操作不可撤销，请务必确认违规行为属实后再执行！</li>
+  </ul>
+</div>
+
+<div class="panel panel-danger">
+  <div class="panel-heading">
+    <h3 class="panel-title"><i class="bi-shield-exclamation"></i> 填写罚没原因</h3>
+  </div>
+  <div class="panel-body">
+    <form method="POST" action="/v1/verifier/order/forfeit">
+      <input type="hidden" name="uuid" value="{{ .TeaOrderBean.TeaOrder.Uuid }}">
+
+      <div class="form-group">
+        <label for="reason">罚没原因 <span class="text-danger">*</span></label>
+        <p class="help-block">请详细说明判定为恶意/不道德行为的具体依据，这将作为罚没的正式记录。</p>
+        <textarea class="form-control" id="reason" name="reason" rows="6" 
+                  placeholder="请输入罚没原因（7-456字），例如：茶围内容涉及人身攻击/色情等不道德信息。" required 
+                  minlength="7" maxlength="456"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label for="reason_template">常用罚没原因模板：</label>
+        <select class="form-control" id="reason_template" onchange="fillReason()">
+          <option value="">-- 选择罚没原因 --</option>
+          <option value="茶围出题内容涉及人身攻击，违反平台道德规范。">人身攻击内容</option>
+          <option value="茶围出题内容涉及色情信息，严重违反平台规则。">色情内容</option>
+          <option value="解题方案涉及恶意欺骗或欺诈行为，损害平台信任。">恶意欺诈行为</option>
+          <option value="茶围内容涉及政治敏感或违法信息，必须立即处理。">违法信息</option>
+          <option value="参与方涉嫌恶意串通，利用平台从事不道德交易。">恶意串通</option>
+          <option value="茶围内容涉及暴力、恐怖等危害公共安全的信息。">暴力恐怖内容</option>
+          <option value="其他严重违反平台道德规范和公序良俗的行为。">其他严重违规</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>罚没确认信息：</label>
+        <div class="well">
+          <dl class="dl-horizontal">
+            <dt>见证人：</dt>
+            <dd>{{ .SessUser.Name }}</dd>
+            <dt>罚没时间：</dt>
+            <dd>提交后自动记录</dd>
+            <dt>订单状态变更：</dt>
+            <dd><strong>{{ .TeaOrderBean.TeaOrder.Status }}</strong> &rarr; <strong class="text-danger">已取消</strong></dd>
+            <dt>预备金去向：</dt>
+            <dd><strong class="text-danger">双方预备金没收，归入公共治理团队</strong></dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="confirmViolation" required>
+            我确认该订单存在恶意/不道德行为（人身攻击、色情等），符合罚没条件。
+          </label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="checkbox">
+          <label>
+            <input type="checkbox" id="understandForfeit" required>
+            我了解罚没操作将没收双方预备金并归入公共治理团队，此操作不可撤销。
+          </label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-danger btn-lg">
+        <i class="bi-shield-exclamation"></i> 确认罚没
+      </button>
+      <a href="/v1/verifier/workspace" class="btn btn-default btn-lg">
+        <i class="bi-arrow-left"></i> 返回工作间
+      </a>
+    </form>
+  </div>
+</div>
+
+<script>
+function fillReason() {
+  var template = document.getElementById('reason_template').value;
+  if (template) {
+    document.getElementById('reason').value = template;
+  }
+}
+
+$(document).ready(function() {
+  $('form').on('submit', function() {
+    if (!$('#confirmViolation').prop('checked')) {
+      alert('请确认该订单存在恶意/不道德行为！');
+      return false;
+    }
+    if (!$('#understandForfeit').prop('checked')) {
+      alert('请确认您了解罚没的后果！');
+      return false;
+    }
+    return true;
+  });
+});
+</script>
+
+{{ end }}
