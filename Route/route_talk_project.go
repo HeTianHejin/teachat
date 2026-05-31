@@ -739,7 +739,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		PayeeTeamId:      payeeTeam.Id,
 		AmountMilligrams: preparationAmountMg,
 		Status:           dao.DepositStatusPendingPayment,
-		Notes:            "入围预备金 - 需求方托管",
+		Notes:            fmt.Sprintf("入围预备金 - 需求方托管（茶围订单 #%d）", tea_order.Id),
 	}
 
 	// 创建解题方的预备金托管记录
@@ -752,11 +752,11 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		PayeeTeamId:      payerTeam.Id,
 		AmountMilligrams: preparationAmountMg,
 		Status:           dao.DepositStatusPendingPayment,
-		Notes:            "入围预备金 - 解题方托管",
+		Notes:            fmt.Sprintf("入围预备金 - 解题方托管（茶围订单 #%d）", tea_order.Id),
 	}
 
 	// 需求方转账到茶庄托管团队（预备金托管，直达完成无需审批）
-	notes := fmt.Sprintf("入围预备金托管，茶台：%s，茶围：%s", pr.Title, ob.Title)
+	notes := fmt.Sprintf("入围预备金托管，茶台：%s，茶围：%s（茶围订单 #%d）", pr.Title, ob.Title, tea_order.Id)
 	payerTransfer, err := dao.CreateEscrowTransferOut(
 		payerTeam.Id,
 		s_u.Id,
