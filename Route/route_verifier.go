@@ -854,6 +854,9 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 在状态变更前保存原始状态，用于后续判断
+	originalStatus := teaOrder.Status
+
 	// 更新订单状态
 	teaOrder.Status = dao.TeaOrderStatusCancelled
 
@@ -880,7 +883,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 需要记录入围茶台project状态为"茶凉"status=dao.ProjectStatusTeaCold
-	if teaOrder.Status == dao.TeaOrderStatusActive {
+	if originalStatus == dao.TeaOrderStatusActive {
 		project := &dao.Project{Id: teaOrder.ProjectId}
 		if err = project.Get(); err != nil {
 			util.Debug("Cannot get project", err)
@@ -1055,6 +1058,9 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 在状态变更前保存原始状态，用于后续判断
+	originalStatus := teaOrder.Status
+
 	// 更新订单状态为已取消
 	teaOrder.ApprovalRejectionReason = fmt.Sprintf("罚没原因：%s", reason)
 	teaOrder.ApproverUserId = sql.NullInt64{Int64: int64(s_u.Id), Valid: true}
@@ -1085,7 +1091,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 需要记录入围茶台project状态为"茶凉"
-	if teaOrder.Status == dao.TeaOrderStatusActive || teaOrder.Status == dao.TeaOrderStatusPause {
+	if originalStatus == dao.TeaOrderStatusActive || originalStatus == dao.TeaOrderStatusPause {
 		project := &dao.Project{Id: teaOrder.ProjectId}
 		if err = project.Get(); err != nil {
 			util.Debug("Cannot get project", err)
