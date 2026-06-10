@@ -252,6 +252,90 @@ func (t *TeaOrder) Delete() error {
 	return err
 }
 
+// GetTeaOrdersByPayerTeamId 查询某团队作为需求方（出题方）的茶订单，按创建时间倒序，分页
+func GetTeaOrdersByPayerTeamId(ctx context.Context, teamId int, page int, pageSize int) ([]*TeaOrder, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE payer_team_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	stmt, err := DB.PrepareContext(ctx, statement)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	rows, err := stmt.QueryContext(ctx, teamId, pageSize, page*pageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	teaOrders := make([]*TeaOrder, 0)
+	for rows.Next() {
+		teaOrder := &TeaOrder{}
+		err := rows.Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		teaOrders = append(teaOrders, teaOrder)
+	}
+	return teaOrders, nil
+}
+
+// GetTeaOrdersByPayeeTeamId 查询某团队作为解题方的茶订单，按创建时间倒序，分页
+func GetTeaOrdersByPayeeTeamId(ctx context.Context, teamId int, page int, pageSize int) ([]*TeaOrder, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE payee_team_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	stmt, err := DB.PrepareContext(ctx, statement)
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+	rows, err := stmt.QueryContext(ctx, teamId, pageSize, page*pageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	teaOrders := make([]*TeaOrder, 0)
+	for rows.Next() {
+		teaOrder := &TeaOrder{}
+		err := rows.Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
+		if err != nil {
+			return nil, err
+		}
+		teaOrders = append(teaOrders, teaOrder)
+	}
+	return teaOrders, nil
+}
+
+// GetTeaOrderCountByPayerTeamId 统计某团队作为需求方（出题方）的茶订单数量
+func GetTeaOrderCountByPayerTeamId(ctx context.Context, teamId int) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT COUNT(*) FROM tea_orders WHERE payer_team_id = $1 AND deleted_at IS NULL`
+	stmt, err := DB.PrepareContext(ctx, statement)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	var count int
+	err = stmt.QueryRowContext(ctx, teamId).Scan(&count)
+	return count, err
+}
+
+// GetTeaOrderCountByPayeeTeamId 统计某团队作为解题方的茶订单数量
+func GetTeaOrderCountByPayeeTeamId(ctx context.Context, teamId int) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT COUNT(*) FROM tea_orders WHERE payee_team_id = $1 AND deleted_at IS NULL`
+	stmt, err := DB.PrepareContext(ctx, statement)
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+	var count int
+	err = stmt.QueryRowContext(ctx, teamId).Scan(&count)
+	return count, err
+}
+
 // CreatedDateTime 格式化创建时间
 func (t *TeaOrder) CreatedDateTime() string {
 	return t.CreatedAt.Format(FMT_DATE_TIME_CN)

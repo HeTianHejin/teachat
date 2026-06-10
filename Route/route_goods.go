@@ -65,7 +65,7 @@ func GoodsTeamUpdatePost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	is_member, err := team.IsMember(s_u.Id)
+	is_member, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get team member from database", err)
 		report(w, s_u, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
@@ -394,7 +394,7 @@ func GoodsTeamUpdate(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	is_member, err := team.IsMember(s_u.Id)
+	is_member, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get team member from database", err)
 		report(w, s_u, "茶博士耸耸肩说，今天不可以查看物资的资料，请确认后再试一次。")
@@ -555,7 +555,7 @@ func GoodsTeamDetail(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的物资资料，请确认后再试一次。")
 		return
 	}
-	is_member, err := team.IsMember(s_u.Id)
+	is_member, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		report(w, s_u, "茶博士耸耸肩说，你无权查看物资的资料，请确认后再试一次。")
 		return
@@ -620,7 +620,7 @@ func GoodsTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	is_member, err := team.IsMember(s_u.Id)
+	is_member, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get team member from database", err)
 		report(w, s_u, "茶博士耸耸肩说，成员资格检查未通过，请确认后再试一次。")
@@ -1087,7 +1087,7 @@ func GoodsTeamNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//check team member
-	is_member, err := team.IsMember(s_u.Id)
+	is_member, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get team member from database", err)
 		report(w, s_u, "你好，茶博士表示无法理解你的团队，请确认后再试。")
@@ -1425,7 +1425,7 @@ func GoodsTeamNewGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//check if user is member of the team
-	is_member, err := team.IsMember(s_u.Id)
+	is_member, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug("cannot get team member from database", err)
 		report(w, s_u, "茶博士耸耸肩说，你无权处理茶团物资的资料，请确认后再试一次。")

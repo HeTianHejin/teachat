@@ -877,8 +877,9 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 	return
 }
 
-// GetAllMemberUserIdsByTeamId() 从TeamMember获取某个茶团，全部状态正常的成员User_ids，返回 []user_id, err
-func GetAllMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
+// GetActiveMemberUserIdsByTeamId() 从TeamMember获取某个茶团，全部状态正常的成员User_ids，返回 []user_id, err
+// 因为$事业茶团成员中可能存在多种状态的成员，所以查询条件中需要加上status = 1（正常状态）
+func GetActiveMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
 	if team_id == TeamIdNone {
 		return nil, fmt.Errorf("team not found with id: %d", team_id)
 	}
@@ -901,6 +902,8 @@ func GetAllMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
 }
 
 // 根据用户id，检查当前用户是否$事业茶团成员；team中是否存在某个teamMember
+// 包含所有状态成员，因为$事业茶团成员中可能存在多种状态的成员，所以查询条件中不加上status条件，查询全部成员记录，再根据返回结果判断成员状态
+// 如果是返回teamMember，否则返回错误
 func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err error) {
 	team_member = TeamMember{}
 	if team_id == TeamIdNone {
@@ -914,15 +917,32 @@ func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err 
 	return
 }
 
-// team *Team.IsMember() 检查当前用户是否$事业茶团成员；team中是否存在某个teamMember,如果是返回true，否则返回false
-func (team *Team) IsMember(user_id int) (is_member bool, err error) {
+// GetActiveMemberByUserIdAndTeamId() 从TeamMember获取某个茶团，
+// 状态正常的成员User_id，返回 teamMember, err
+// 因为$事业茶团成员中可能存在多种状态的成员，所以查询条件中需要加上status = 1（正常状态），查询状态正常的成员记录，再根据返回结果判断成员状态
+func GetActiveMemberByUserIdAndTeamId(user_id, team_id int) (team_member TeamMember, err error) {
+	team_member = TeamMember{}
+	if team_id == TeamIdNone {
+		return team_member, fmt.Errorf("team not found with id: %d", team_id)
+	}
+	if team_id == TeamIdFreelancer {
+		return team_member, fmt.Errorf("team member cannot find with id: %d", team_id)
+	}
+	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND user_id = $2 AND status = $3", team_id, user_id, TeamMemberStatusActive).
+		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
+	return
+}
+
+// team *Team.IsActiveMember() 检查当前用户是否$事业茶团正常状态成员；
+// team中是否存在某个teamMember,如果是返回true，否则返回false
+func (team *Team) IsActiveMember(user_id int) (is_member bool, err error) {
 	if team.Id == TeamIdNone {
 		return false, fmt.Errorf("team not found with id: %d", team.Id)
 	}
 	if team.Id == TeamIdFreelancer {
 		return true, nil
 	}
-	team_member, err := GetMemberByTeamIdUserId(team.Id, user_id)
+	team_member, err := GetActiveMemberByUserIdAndTeamId(user_id, team.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 没有找到团队记录,不可能是成员 --[DeepSeek said]

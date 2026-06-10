@@ -153,7 +153,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	if !pD.IsAdmin && !pD.IsMaster {
 		veri_team := dao.Team{Id: dao.TeamIdVerifier}
-		is_member, err := veri_team.IsMember(s_u.Id)
+		is_member, err := veri_team.IsActiveMember(s_u.Id)
 		if err != nil {
 			util.Debug("Cannot check verifier team member", err)
 			report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
@@ -580,7 +580,7 @@ func SupplementPostPost(w http.ResponseWriter, r *http.Request) {
 		} else {
 			//检查是否是品味发布者所在团队成员
 			team := dao.Team{Id: t_post.TeamId}
-			if is_member, err := team.IsMember(s_u.Id); err != nil || !is_member {
+			if is_member, err := team.IsActiveMember(s_u.Id); err != nil || !is_member {
 				util.Debug(" Cannot check team member", err)
 				report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 				return
@@ -662,7 +662,7 @@ func SupplementPostGet(w http.ResponseWriter, r *http.Request) {
 		} else {
 			//检查是否是品味发布者所在团队成员
 			team := dao.Team{Id: t_post.TeamId}
-			if is_member, err := team.IsMember(s_u.Id); err != nil || !is_member {
+			if is_member, err := team.IsActiveMember(s_u.Id); err != nil || !is_member {
 				util.Debug(" Cannot check team member", err)
 				report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 				return

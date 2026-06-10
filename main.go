@@ -307,7 +307,12 @@ func main() {
 	mux.HandleFunc("/v1/verifier/order/forfeit", route.HandleVerifierOrderForfeit)  // 罚没茶订单（恶意/不道德内容）
 	mux.HandleFunc("/v1/verifier/order/pause", route.HandleVerifierOrderPause)      // 暂停茶订单
 	mux.HandleFunc("/v1/verifier/order/cancel", route.HandleVerifierOrderCancel)    // 终止茶订单
-	mux.HandleFunc("/v1/verifier/order/detail", route.HandleVerifierOrderDetail)    // 茶订单详情
+
+	// 茶订单详情路由（见证者及参与团队均可查看）
+	mux.HandleFunc("/v1/tea-order/detail", route.HandleTeaOrderDetail)
+
+	// 团队工作台路由 —— 茶订单跟踪入口
+	mux.HandleFunc("/v1/work-desk", route.HandleWorkDesk)
 
 	// 用户星茶账户系统路由
 	mux.HandleFunc("/v1/tea/user/account/page", route.HandleTeaUserAccount)          //用户星茶账户入口页面

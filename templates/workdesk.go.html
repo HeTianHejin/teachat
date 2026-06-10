@@ -1,0 +1,172 @@
+{{ define "content"}}
+
+{{/* 团队工作台页面 —— 茶订单跟踪入口 */}}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/teams/joined">团队事项</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+  <li class="active">工作台 · 茶订单跟踪</li>
+</ol>
+
+<div class="page-header">
+  <h1><i class="bi bi-pc-display-horizontal"></i> 工作台</h1>
+  <p class="lead">{{ .Team.Name }} 参与的茶订单跟踪，按角色区分需求方与解题方。</p>
+</div>
+
+<!-- 导航标签页 -->
+<ul class="nav nav-tabs" id="orderTabs">
+  <li {{ if eq .ActiveTab "payer" }}class="active"{{ end }}>
+    <a href="#payer" data-toggle="tab">
+      <i class="bi bi-question-circle"></i> 需求方（出题方）
+      {{ if gt .PayerOrderCount 0 }}
+      <span class="badge">{{ .PayerOrderCount }}</span>
+      {{ end }}
+    </a>
+  </li>
+  <li {{ if eq .ActiveTab "payee" }}class="active"{{ end }}>
+    <a href="#payee" data-toggle="tab">
+      <i class="bi bi-check-circle"></i> 解题方
+      {{ if gt .PayeeOrderCount 0 }}
+      <span class="badge">{{ .PayeeOrderCount }}</span>
+      {{ end }}
+    </a>
+  </li>
+</ul>
+
+<!-- 标签页内容 -->
+<div class="tab-content">
+  <!-- 需求方（出题方）订单 -->
+  <div class="tab-pane {{ if eq .ActiveTab "payer" }}active{{ end }}" id="payer">
+    {{ if .PayerOrders }}
+      {{ range .PayerOrders }}
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <div class="row">
+            <div class="col-xs-8">
+              <h4 class="panel-title" style="font-size: 15px;">
+                <i class="bi-cup-straw"></i> {{ .TeaOrder.TeaTopic }}
+              </h4>
+            </div>
+            <div class="col-xs-4 text-right">
+              <span class="label label-{{ .StatusLabelClass }}">{{ .TeaOrder.Status }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel-body" style="padding: 10px;">
+          <div class="row">
+            <div class="col-xs-6">
+              <p style="margin-bottom: 4px;"><strong>解题方：</strong>{{ .PayeeTeam.Name }}</p>
+              <p style="margin-bottom: 4px;"><strong>监护方：</strong>{{ .CareTeam.Name }}</p>
+              {{ if .VerifyTeam }}
+              <p style="margin-bottom: 4px;"><strong>见证方：</strong>{{ .VerifyTeam.Name }}</p>
+              {{ end }}
+            </div>
+            <div class="col-xs-6">
+              <p style="margin-bottom: 4px;">
+                <strong>茶围：</strong>
+                <a href="/v1/objective/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}" target="_blank">
+                  {{ .ObjectiveBean.Objective.Title }}
+                </a>
+              </p>
+              <p style="margin-bottom: 4px;"><strong>创建时间：</strong>{{ .TeaOrder.CreatedDateTime }}</p>
+              {{ if .ApproverUser }}
+              <p style="margin-bottom: 4px;"><strong>见证人：</strong>{{ .ApproverUser.Name }}</p>
+              {{ end }}
+            </div>
+          </div>
+          <div class="text-right" style="margin-top: 8px;">
+            <a href="/v1/tea-order/detail?uuid={{ .TeaOrder.Uuid }}&amp;from=workdesk&amp;team_id={{ $.Team.Uuid }}" class="btn btn-info btn-sm">
+              <i class="bi-eye"></i> 跟踪详情
+            </a>
+          </div>
+        </div>
+      </div>
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info">
+        <i class="bi-info-circle"></i> 暂无作为需求方的茶订单。
+      </div>
+    {{ end }}
+  </div>
+
+  <!-- 解题方订单 -->
+  <div class="tab-pane {{ if eq .ActiveTab "payee" }}active{{ end }}" id="payee">
+    {{ if .PayeeOrders }}
+      {{ range .PayeeOrders }}
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          <div class="row">
+            <div class="col-xs-8">
+              <h4 class="panel-title" style="font-size: 15px;">
+                <i class="bi-cup-straw"></i> {{ .TeaOrder.TeaTopic }}
+              </h4>
+            </div>
+            <div class="col-xs-4 text-right">
+              <span class="label label-{{ .StatusLabelClass }}">{{ .TeaOrder.Status }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="panel-body" style="padding: 10px;">
+          <div class="row">
+            <div class="col-xs-6">
+              <p style="margin-bottom: 4px;"><strong>需求方：</strong>{{ .PayerTeam.Name }}</p>
+              <p style="margin-bottom: 4px;"><strong>监护方：</strong>{{ .CareTeam.Name }}</p>
+              {{ if .VerifyTeam }}
+              <p style="margin-bottom: 4px;"><strong>见证方：</strong>{{ .VerifyTeam.Name }}</p>
+              {{ end }}
+            </div>
+            <div class="col-xs-6">
+              <p style="margin-bottom: 4px;">
+                <strong>茶围：</strong>
+                <a href="/v1/objective/detail?uuid={{ .ObjectiveBean.Objective.Uuid }}" target="_blank">
+                  {{ .ObjectiveBean.Objective.Title }}
+                </a>
+              </p>
+              <p style="margin-bottom: 4px;"><strong>创建时间：</strong>{{ .TeaOrder.CreatedDateTime }}</p>
+              {{ if .ApproverUser }}
+              <p style="margin-bottom: 4px;"><strong>见证人：</strong>{{ .ApproverUser.Name }}</p>
+              {{ end }}
+            </div>
+          </div>
+          <div class="text-right" style="margin-top: 8px;">
+            <a href="/v1/tea-order/detail?uuid={{ .TeaOrder.Uuid }}&amp;from=workdesk&amp;team_id={{ $.Team.Uuid }}" class="btn btn-info btn-sm">
+              <i class="bi-eye"></i> 跟踪详情
+            </a>
+          </div>
+        </div>
+      </div>
+      {{ end }}
+    {{ else }}
+      <div class="alert alert-info">
+        <i class="bi-info-circle"></i> 暂无作为解题方的茶订单。
+      </div>
+    {{ end }}
+  </div>
+</div>
+
+{{ if $.IsVerifier }}
+<hr />
+<div class="text-right">
+  <a href="/v1/verifier/workspace" class="btn btn-warning btn-sm">
+    <i class="bi-clipboard-check"></i> 前往见证工作间
+  </a>
+</div>
+{{ end }}
+
+<script>
+$(document).ready(function() {
+  // 根据URL hash激活对应的标签页
+  var hash = window.location.hash;
+  if (hash) {
+    $('#orderTabs a[href="' + hash + '"]').tab('show');
+  }
+
+  // 标签页切换时更新URL hash
+  $('#orderTabs a').on('shown.bs.tab', function(e) {
+    window.location.hash = $(e.target).attr('href');
+  });
+});
+</script>
+
+{{ end }}

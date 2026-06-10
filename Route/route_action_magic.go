@@ -164,7 +164,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			continue
 		}
-		isMember, err := team.IsMember(s_u.Id)
+		isMember, err := team.IsActiveMember(s_u.Id)
 		if err != nil || !isMember {
 			continue
 		}

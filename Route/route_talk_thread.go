@@ -677,7 +677,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//检查是否支持team成员
-	is_admin, err := admin_team.IsMember(s_u.Id)
+	is_admin, err := admin_team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug(admin_team.Id, " Cannot check team membership")
 		report(w, s_u, "你好，闪电茶博士极速服务中，未能读取团队资料，请稍后再试。")
@@ -904,7 +904,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	}
 	//检查用户身份，是否具有完善操作权限
 	verifier_team := dao.Team{Id: dao.TeamIdVerifier}
-	ok, err := verifier_team.IsMember(s_u.Id)
+	ok, err := verifier_team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check team membership", verifier_team.Id, err)
 		report(w, s_u, "你好，茶博士扶起厚厚的眼镜，居然说陛下您没有权限补充该茶议。")

@@ -30,7 +30,7 @@ func checkObjectiveAdminPermission(ob *dao.Objective, userID int) (bool, error) 
 	}
 
 	team := dao.Team{Id: ob.TeamId}
-	return team.IsMember(userID)
+	return team.IsActiveMember(userID)
 }
 
 // 检查茶台项目管理权限，即用户是否茶台项目归属团队有权成员
@@ -51,7 +51,7 @@ func checkProjectMasterPermission(pr *dao.Project, user_id int) (bool, error) {
 	}
 
 	pr_team := dao.Team{Id: pr.TeamId}
-	return pr_team.IsMember(user_id)
+	return pr_team.IsActiveMember(user_id)
 }
 
 // 检查茶台创建权限

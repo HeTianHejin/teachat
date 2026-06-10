@@ -587,7 +587,7 @@ func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, s_
 		// if err := team.Get(); err != nil {
 		// 	return false, err // 数据库错误，返回error
 		// }
-		is_member, err := team.IsMember(s_u.Id)
+		is_member, err := team.IsActiveMember(s_u.Id)
 		if err != nil {
 			return false, err // 数据库错误，返回error
 		}

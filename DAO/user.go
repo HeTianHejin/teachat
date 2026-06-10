@@ -578,7 +578,7 @@ func (user *User) InvitationRejectedCount() (count int) {
 // isUserInAnyTeam() 检查用户是否在特定一团队中
 func isUserInAnyTeam(user_id int, team_ids []int) (bool, error) {
 	for _, team_id := range team_ids {
-		members, err := GetAllMemberUserIdsByTeamId(team_id)
+		members, err := GetActiveMemberUserIdsByTeamId(team_id)
 		if err != nil {
 			return false, fmt.Errorf("获取团队 #%d 全部成员失败: %v", team_id, err)
 		}

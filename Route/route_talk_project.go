@@ -266,7 +266,7 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 			return
 		}
-		is_admin, err = admin_team.IsMember(s_u.Id)
+		is_admin, err = admin_team.IsActiveMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot get team", ob.TeamId, err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
@@ -372,7 +372,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 			return
 		}
-		is_admin, err = adminTeam.IsMember(s_u.Id)
+		is_admin, err = adminTeam.IsActiveMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot get team", ob.TeamId, err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
@@ -591,7 +591,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会负责团队，请确认后再试。")
 			return
 		}
-		is_admin, err = admin_team.IsMember(s_u.Id)
+		is_admin, err = admin_team.IsActiveMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot get team", ob.TeamId, err)
 			report(w, s_u, "你好，茶博士未能确认茶话会负责团队成员身份，请确认后再试。")

@@ -1191,7 +1191,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查这个茶团是否已经存在该茶友
-	ok, err := team.IsMember(s_u.Id)
+	ok, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot check team member", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1308,7 +1308,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查这个茶团是否已经存在该茶友了
-	is_member, err := team.IsMember(invi_user.Id)
+	is_member, err := team.IsActiveMember(invi_user.Id)
 	if err != nil {
 		util.Debug(" when checking team_member", err)
 		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")

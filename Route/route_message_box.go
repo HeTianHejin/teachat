@@ -433,7 +433,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否为团队成员
-	isMember, err := team.IsMember(s_u.Id)
+	isMember, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check team member", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
@@ -454,7 +454,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查接收者是否为团队成员
-	isReceiverMember, err := team.IsMember(receiver_id)
+	isReceiverMember, err := team.IsActiveMember(receiver_id)
 	if err != nil {
 		util.Debug(" Cannot check receiver member", err)
 		report(w, s_u, "你好，茶博士未能获取接收者信息，请稍后再试。")
@@ -530,13 +530,13 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查发送和接收者是否为团队成员
-	isMemberS, err := team.IsMember(s_u.Id)
+	isMemberS, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check team member", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 		return
 	}
-	isMemberR, err := team.IsMember(receiver_id)
+	isMemberR, err := team.IsActiveMember(receiver_id)
 	if err != nil {
 		util.Debug(" Cannot check receiver member", err)
 		report(w, s_u, "你好，茶博士未能获取接收者信息，请稍后再试。")
@@ -634,7 +634,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否为团队成员（团队成员不需要通过这个页面发送布告，他们有其他方式）
-	isMember, err := team.IsMember(s_u.Id)
+	isMember, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check team member", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
@@ -727,7 +727,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 检查用户是否为团队成员
-	isMember, err := team.IsMember(s_u.Id)
+	isMember, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug(" Cannot check team member", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")

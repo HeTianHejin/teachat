@@ -66,7 +66,7 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//检查用户是否茶团成员，非成员不能设置默认茶团
-	ok, err := t_team.IsMember(s_u.Id)
+	ok, err := t_team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot check user is member of team", t_team.Id, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取茶团，请稍后再试。")
@@ -523,7 +523,7 @@ func TeamDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	// 检查团队是否公开可访问
 	if team.IsPrivate {
-		isMember, err := team.IsMember(s_u.Id)
+		isMember, err := team.IsActiveMember(s_u.Id)
 		if err != nil {
 			util.Debug(" Cannot check if user is member of team", err)
 			report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")

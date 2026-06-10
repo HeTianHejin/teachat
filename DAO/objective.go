@@ -259,7 +259,7 @@ func (ob *Objective) IsInvitedMember(user_id int) (ok bool, err error) {
 		// 迭代team_ids,用dao.GetMemberUserIdsByTeamId()获取全部user_ids；
 		// 以UserId == u.Id？检查当前用户是否是茶话会邀请团队成员
 		for _, team_id := range team_ids {
-			user_ids, _ := GetAllMemberUserIdsByTeamId(team_id)
+			user_ids, _ := GetActiveMemberUserIdsByTeamId(team_id)
 			for _, u_id := range user_ids {
 				if u_id == user_id {
 					return true, nil
