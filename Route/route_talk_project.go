@@ -72,10 +72,10 @@ func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
-	//检查提交的place_id是否合法
-	if place_id_int < 1 || place_id_int > 1000000000 {
+	//检查提交的place_id是否已登记
+	if _, err := dao.GetPlace(place_id_int); err != nil {
 		util.Debug(" Invalid place_id", place_id, err)
-		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		report(w, s_u, "你好，请选择有效的地点！请确认后再试。")
 		return
 	}
 	old_place_id, err := pr.PlaceId()
