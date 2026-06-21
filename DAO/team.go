@@ -46,9 +46,11 @@ const (
 	// 见证者角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判"违规"情形，将阻止贾宝玉作西厢记类那种"男女礼教脱轨诗"或者禁止薛蟠那种酒色情诗；
 	// 又或者是社团组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核和评分，所以说"见证"记录事件发生的真实性、合规性。
 	// 见证人也是活动进程主持人，类似教堂神父主持婚礼活动，发现不道德的欺瞒情况，例如新郎或者新娘竟然是重婚者之类不符合道德规范的活动将取消或者宣布无效。
-	TeamIdVerifier         = 3 // 3 见证者团队，系统预设，负责批准、许可、见证，不参与资金托管
+	TeamIdVerifier         = 3 // 3 见证者集团第一团队，系统预设，负责批准、许可、见证，不参与资金托管
 	TeamIdEscrow           = 4 // 4 托管团队（茶庄），系统预设，负责发行兑换星茶和托管预备金
 	TeamIdPublicGovernance = 5 // 5 公共治理团队，系统预设，负责接收罚没星茶
+
+	GroupIdVerifier = 1 // 见证者集团ID，系统预设，由覆盖高中低收入家庭的基础教育工作者团队组成
 )
 
 var (
@@ -1309,14 +1311,27 @@ func GetResignedMembersByTeamId(teamId int) ([]TeamMember, error) {
 	return members, rows.Err()
 }
 
-// IsVerifier 检查用户是否为见证者
+// IsVerifier 检查用户是否为见证者集团中任一活跃团队的活跃成员
+// 原逻辑：检查用户是否属于 TeamId=3（见证者茶团）
+// 新逻辑：检查用户是否属于 GroupId=1（见证者集团）的任意活跃团队
+// 所有见证者集团成员（含 FirstTeam 和后续加入的成员团队）均具有同等见证者资格
 func IsVerifier(userId int) bool {
-	isTeamMember, err := IsTeamActiveMember(userId, TeamIdVerifier)
+	var count int
+	query := `SELECT COUNT(*) FROM team_members tm
+		INNER JOIN group_members gm ON tm.team_id = gm.team_id
+		WHERE gm.group_id = $1
+			AND tm.user_id = $2
+			AND tm.status = $3
+			AND gm.status = $4
+			AND tm.deleted_at IS NULL
+			AND gm.deleted_at IS NULL`
+	err := DB.QueryRow(query, GroupIdVerifier, userId,
+		TeamMemberStatusActive, GroupMemberStatusActive).Scan(&count)
 	if err != nil {
-		util.Debug(" Cannot check team member", err)
+		util.Debug(" Cannot check verifier group membership", err)
 		return false
 	}
-	return isTeamMember
+	return count > 0
 }
 
 // ConvertFamilyToFriendTeam 以家庭成员为基础，创建家庭的亲友团（需求方团队），

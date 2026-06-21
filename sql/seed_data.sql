@@ -102,6 +102,36 @@ INSERT INTO magics (uuid, user_id, name, nickname, description, intelligence_lev
 ('magic-006-aesthetic', 1, '审美', '美感', '感受和欣赏美的能力，包括对艺术、自然等的审美判断', 3, 3, 2, 1);
 
 -- ============================================
+-- 预设集团数据 —— 见证者集团（系统预设）
+-- ============================================
+
+INSERT INTO groups (id, uuid, name, abbreviation, mission, founder_id, first_team_id, class, logo, tags)
+VALUES (
+    1,
+    'verifier-group-system-uuid',
+    '见证者集团',
+    '见证集团',
+    '系统预设见证者集团。由覆盖高中低收入家庭的基础教育工作者团队组成，负责见证茶会活动的合规记录与公平裁判。集团为开放式，符合条件的基础教育工作者团队可申请加入。',
+    1,  -- 创始人为太空船长（captain Role）
+    3,  -- FirstTeam 为id=3的『见证者茶团』
+    1,  -- 开放式集团（GroupClassOpen）
+    'groupLogo',
+    '见证者集团,系统'
+);
+
+-- 将现有『见证者茶团』(id=3) 加入见证者集团为第一团队（最高管理团队）
+INSERT INTO group_members (uuid, group_id, team_id, level, role, status, user_id)
+VALUES (
+    'verifier-group-member-first-team',
+    1,  -- 见证者集团
+    3,  -- 见证者茶团
+    1,  -- 最高等级
+    1,  -- 最高管理团队（GroupRoleTopManagement）
+    1,  -- 活跃状态（GroupMemberStatusActive）
+    1   -- 操作用户：太空船长
+);
+
+-- ============================================
 -- 修复序列
 -- ============================================
 
@@ -114,4 +144,6 @@ SELECT setval('skills_id_seq', (SELECT MAX(id) FROM skills));
 SELECT setval('magics_id_seq', (SELECT MAX(id) FROM magics));
 SELECT setval('environments_id_seq', (SELECT MAX(id) FROM environments));
 SELECT setval('team_members_id_seq', (SELECT MAX(id) FROM team_members));
+SELECT setval('groups_id_seq', (SELECT MAX(id) FROM groups));
+SELECT setval('group_members_id_seq', (SELECT MAX(id) FROM group_members));
 
