@@ -218,6 +218,9 @@ func GetUserFamilyMessagePreferences(userId int) ([]FamilyMessagePreference, err
 		}
 		preferences = append(preferences, pref)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return preferences, rows.Err()
 }

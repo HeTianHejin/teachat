@@ -149,6 +149,9 @@ func (objective *Objective) GetByUserId() (objectives []Objective, err error) {
 		}
 		objectives = append(objectives, objective)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return
 }
 
@@ -181,6 +184,9 @@ func (objective *Objective) NumReplies() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 
 	return
@@ -200,6 +206,9 @@ func (objective *Objective) GetByTitle() (objectives []Objective, err error) {
 			return
 		}
 		objectives = append(objectives, objective)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return
 }
@@ -228,6 +237,9 @@ func (objective *Objective) InvitedTeamIds() (team_id_slice []int, err error) {
 			return
 		}
 		team_id_slice = append(team_id_slice, team_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -349,6 +361,9 @@ func GetPublicObjectives(limit int) (objectives []Objective, err error) {
 		}
 		objectives = append(objectives, objective)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return
 }
 
@@ -406,6 +421,9 @@ func SearchObjectiveByTitle(keyword string, limit int, ctx context.Context) (obj
 			return
 		}
 		objectives = append(objectives, objective)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return
 }

@@ -156,6 +156,9 @@ func (h *Hazard) GetSafetyMeasures() ([]SafetyMeasure, error) {
 		}
 		measures = append(measures, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return measures, nil
 }
 
@@ -283,6 +286,9 @@ func GetAllHazards() ([]Hazard, error) {
 		}
 		hazards = append(hazards, h)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return hazards, nil
 }
 
@@ -303,6 +309,9 @@ func SearchHazardByName(keyword string, limit int, ctx context.Context) ([]Hazar
 		}
 		hazards = append(hazards, h)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return hazards, nil
 }
 
@@ -322,6 +331,9 @@ func GetDefaultHazards(ctx context.Context) ([]Hazard, error) {
 			return nil, err
 		}
 		hazards = append(hazards, h)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return hazards, nil
 }

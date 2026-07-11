@@ -37,7 +37,7 @@ func (footprint *Footprint) Create() (err error) {
 
 // Footprint.GetByUserIdAndTeamId()
 func (footprint *Footprint) GetByUserIdAndTeamId() (err error) {
-	statement := `SELECT * FROM footprints WHERE user_id = $1 AND team_id = $2`
+	statement := `SELECT id, uuid, user_id, team_id, team_name, team_type, content, content_id, created_at FROM footprints WHERE user_id = $1 AND team_id = $2`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return

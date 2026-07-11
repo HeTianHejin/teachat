@@ -91,13 +91,13 @@ func (a *AcceptNotification) GetAccNotiByUIdAndAOIdWithContext(user_id, accept_o
 		return errors.New("database connection is nil")
 	}
 
-	err = DB.QueryRowContext(ctx, "SELECT * FROM accept_notifications WHERE to_user_id = $1 AND accept_object_id = $2", user_id, accept_object_id).Scan(&a.Id, &a.Uuid, &a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, &a.CreatedAt, &a.UpdatedAt)
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, from_user_id, to_user_id, title, content, accept_object_id, class, created_at, updated_at FROM accept_notifications WHERE to_user_id = $1 AND accept_object_id = $2", user_id, accept_object_id).Scan(&a.Id, &a.Uuid, &a.FromUserId, &a.ToUserId, &a.Title, &a.Content, &a.AcceptObjectId, &a.Class, &a.CreatedAt, &a.UpdatedAt)
 	return
 }
 
 // 根据ToUserId，获取受邀请用户全部的acceptNotification
 func (u *User) AcceptNotifications() (acceptNotifications []AcceptNotification, err error) {
-	rows, err := DB.Query("SELECT * FROM accept_notifications where to_user_id = $1", u.Id)
+	rows, err := DB.Query("SELECT id, from_user_id, to_user_id, title, content, accept_object_id, class, created_at, updated_at FROM accept_notifications where to_user_id = $1", u.Id)
 	if err != nil {
 		return
 	}
@@ -107,6 +107,9 @@ func (u *User) AcceptNotifications() (acceptNotifications []AcceptNotification, 
 			return
 		}
 		acceptNotifications = append(acceptNotifications, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -114,7 +117,7 @@ func (u *User) AcceptNotifications() (acceptNotifications []AcceptNotification, 
 
 // 根据ToUserId,获取用户全部未读的class=0的acceptNotification
 func (u *User) UnreadAcceptNotifications() (acceptNotifications []AcceptNotification, err error) {
-	rows, err := DB.Query("SELECT * FROM accept_notifications where to_user_id = $1 and class = $2", u.Id, NotificationStatusUnread)
+	rows, err := DB.Query("SELECT id, from_user_id, to_user_id, title, content, accept_object_id, class, created_at, updated_at FROM accept_notifications where to_user_id = $1 and class = $2", u.Id, NotificationStatusUnread)
 	if err != nil {
 		return
 	}
@@ -124,6 +127,9 @@ func (u *User) UnreadAcceptNotifications() (acceptNotifications []AcceptNotifica
 			return
 		}
 		acceptNotifications = append(acceptNotifications, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -146,7 +152,7 @@ func (u *User) AllAcceptNotificationCount() (count int) {
 
 // 根据ToUserId,获取全部已读的class=1的acceptNotification
 func (u *User) ReadAcceptNotifications() (acceptNotifications []AcceptNotification, err error) {
-	rows, err := DB.Query("SELECT * FROM accept_notifications where to_user_id = $1 and class = $2", u.Id, NotificationStatusRead)
+	rows, err := DB.Query("SELECT id, from_user_id, to_user_id, title, content, accept_object_id, class, created_at, updated_at FROM accept_notifications where to_user_id = $1 and class = $2", u.Id, NotificationStatusRead)
 	if err != nil {
 		return
 	}
@@ -156,6 +162,9 @@ func (u *User) ReadAcceptNotifications() (acceptNotifications []AcceptNotificati
 			return
 		}
 		acceptNotifications = append(acceptNotifications, a)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return

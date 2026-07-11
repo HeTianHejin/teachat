@@ -316,6 +316,9 @@ func fetchDefaultEnvs(ctx context.Context) ([]Environment, error) {
 		}
 		environments = append(environments, env)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows error: %w", err)
@@ -377,6 +380,9 @@ func SearchEnvironmentByName(keyword string, limit int, ctx context.Context) ([]
 			return nil, fmt.Errorf("scan environment row: %w", err)
 		}
 		environments = append(environments, env)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if err := rows.Err(); err != nil {

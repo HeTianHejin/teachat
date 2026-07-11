@@ -218,6 +218,9 @@ func GetGoodsByRecorderUserId(recorderUserId int, ctx context.Context) ([]Goods,
 		}
 		goodsSlice = append(goodsSlice, g)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -439,6 +442,9 @@ func GetGoodsByFamilyId(familyId int, ctx context.Context) ([]Goods, []GoodsAvai
 		goodsList = append(goodsList, g)
 		availabilities = append(availabilities, availability)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, nil, err
+	}
 
 	if err = rows.Err(); err != nil {
 		return nil, nil, err
@@ -480,6 +486,9 @@ func GetAvailabilityGoodsByFamilyId(familyId int, ctx context.Context) ([]Goods,
 			return nil, err
 		}
 		goodsList = append(goodsList, g)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if err = rows.Err(); err != nil {
@@ -540,6 +549,9 @@ func GetGoodsByTeamId(teamId int, ctx context.Context) ([]Goods, []GoodsAvailabi
 		goodsList = append(goodsList, g)
 		availabilities = append(availabilities, availability)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, nil, err
+	}
 
 	if err = rows.Err(); err != nil {
 		return nil, nil, err
@@ -581,6 +593,9 @@ func GetAvailabilityGoodsByTeamId(team_id int, ctx context.Context) ([]Goods, er
 		}
 		goodsList = append(goodsList, g)
 
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -767,6 +782,9 @@ func (ug *GoodsUser) GetAllByUserId() (goodsUserSlice []GoodsUser, err error) {
 		}
 		goodsUserSlice = append(goodsUserSlice, goodsUser)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return
 }
 
@@ -802,6 +820,9 @@ func (gu *GoodsUser) GetGoodsByUserId() ([]Goods, error) {
 			return nil, fmt.Errorf("scan row failed: %w", err)
 		}
 		goodsSlice = append(goodsSlice, goods)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if err := rows.Err(); err != nil {
@@ -847,6 +868,9 @@ func SearchGoodsByName(keyword string, limit int, ctx context.Context) ([]Goods,
 			return nil, err
 		}
 		goodsSlice = append(goodsSlice, g)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if err := rows.Err(); err != nil {
@@ -1015,6 +1039,9 @@ func GetGoodsProjectByProjectId(projectId int, ctx context.Context) ([]GoodsProj
 			return nil, err
 		}
 		projectGoods = append(projectGoods, gp)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if err = rows.Err(); err != nil {

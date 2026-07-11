@@ -65,7 +65,7 @@ const (
 
 // 根据给出的关键词（keyword），查询相似的place.name，返回 []place, err
 func FindPlaceByName(keyword string) (places []Place, err error) {
-	rows, err := DB.Query("SELECT * FROM places WHERE name LIKE $1 OR nickname LIKE $1 LIMIT 24", "%"+keyword+"%")
+	rows, err := DB.Query("SELECT id, uuid, name, nickname, description, icon, occupant_user_id, owner_user_id, level, category, is_public, is_government, user_id, created_at, updated_at FROM places WHERE name LIKE $1 OR nickname LIKE $1 LIMIT 24", "%"+keyword+"%")
 	if err != nil {
 		return
 	}
@@ -76,6 +76,9 @@ func FindPlaceByName(keyword string) (places []Place, err error) {
 			return
 		}
 		places = append(places, place)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -158,6 +161,9 @@ func (up *UserPlace) GetByUserId() (userPlaces []UserPlace, err error) {
 		}
 		userPlaces = append(userPlaces, userPlace)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -193,6 +199,9 @@ func (up *UserPlace) Count() (count int) {
 		if err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0
 	}
 	rows.Close()
 	return
@@ -284,6 +293,9 @@ func (ua *UserAddress) GetByUserId() (userAddresses []UserAddress, err error) {
 			return
 		}
 		userAddresses = append(userAddresses, userAddress)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -407,6 +419,9 @@ func (lh *LocationHistory) GetLocationHistoryByPlaceId() (locationHistory []Loca
 		}
 		locationHistory = append(locationHistory, lh)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	err = rows.Err()
 	return
 }
@@ -470,6 +485,9 @@ func (u *User) GetAllRecordPlaces() (places []Place, err error) {
 			return
 		}
 		places = append(places, place)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return

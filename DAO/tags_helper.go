@@ -118,6 +118,9 @@ func SearchTeamsByTag(tag string) ([]Team, error) {
 		}
 		teams = append(teams, team)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return teams, rows.Err()
 }
 
@@ -145,6 +148,9 @@ func SearchGroupsByTag(tag string) ([]Group, error) {
 			return nil, err
 		}
 		groups = append(groups, group)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return groups, rows.Err()
 }

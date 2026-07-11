@@ -330,6 +330,9 @@ func GetMagicsByCategory(category MagicCategory, ctx context.Context) ([]Magic, 
 		}
 		magics = append(magics, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return magics, nil
 }
 
@@ -356,6 +359,9 @@ func GetMagicsByDifficultyLevel(difficultyLevel DifficultyLevel, ctx context.Con
 		}
 		magics = append(magics, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return magics, nil
 }
 
@@ -381,6 +387,9 @@ func GetAllMagics(ctx context.Context) ([]Magic, error) {
 			return nil, err
 		}
 		magics = append(magics, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return magics, nil
 }
@@ -478,6 +487,9 @@ func GetUserMagics(userId int, ctx context.Context) ([]MagicUser, error) {
 			return nil, err
 		}
 		userMagics = append(userMagics, mu)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return userMagics, nil
 }
@@ -590,6 +602,9 @@ func GetTeamMagics(teamId int, ctx context.Context) ([]MagicTeam, error) {
 		}
 		teamMagics = append(teamMagics, mt)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return teamMagics, nil
 }
 
@@ -645,6 +660,9 @@ func SearchMagicByName(keyword string, limit int, ctx context.Context) ([]Magic,
 			return nil, err
 		}
 		magics = append(magics, magic)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return magics, nil
@@ -735,6 +753,9 @@ func GetMagicsByMagicUsers(magicUsers []MagicUser, ctx context.Context) ([]Magic
 		}
 		magics = append(magics, m)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return magics, nil
 }
 
@@ -778,6 +799,9 @@ func GetMagicsByMagicTeams(magicTeams []MagicTeam, ctx context.Context) ([]Magic
 			return nil, err
 		}
 		magics = append(magics, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return magics, nil
 }

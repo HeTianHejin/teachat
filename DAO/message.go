@@ -112,7 +112,7 @@ func (m *Message) GetMessageByIdWithContext(id int, ctx context.Context) (err er
 		return errors.New("database connection is nil")
 	}
 
-	err = DB.QueryRowContext(ctx, "SELECT * FROM messages WHERE id = $1 AND deleted_at IS NULL", id).Scan(&m.Id, &m.Uuid, &m.MessageBoxId, &m.SenderType, &m.SenderObjectId, &m.ReceiverType, &m.ReceiverId, &m.Content, &m.IsRead, &m.CreatedAt, &m.UpdatedAt, &m.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, message_box_id, sender_type, sender_object_id, receiver_type, receiver_id, content, is_read, created_at, updated_at, deleted_at FROM messages WHERE id = $1 AND deleted_at IS NULL", id).Scan(&m.Id, &m.Uuid, &m.MessageBoxId, &m.SenderType, &m.SenderObjectId, &m.ReceiverType, &m.ReceiverId, &m.Content, &m.IsRead, &m.CreatedAt, &m.UpdatedAt, &m.DeletedAt)
 	return
 }
 
@@ -290,7 +290,7 @@ func (mb *MessageBox) GetMessageBoxByTypeAndObjectIdWithContext(msg_type, object
 		return errors.New("database connection is nil")
 	}
 
-	err = DB.QueryRowContext(ctx, "SELECT * FROM message_boxes WHERE type = $1 AND object_id = $2 AND deleted_at IS NULL", msg_type, object_id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.Count, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, type, object_id, count, max_count, created_at, updated_at, deleted_at FROM message_boxes WHERE type = $1 AND object_id = $2 AND deleted_at IS NULL", msg_type, object_id).Scan(&mb.Id, &mb.Uuid, &mb.Type, &mb.ObjectId, &mb.Count, &mb.MaxCount, &mb.CreatedAt, &mb.UpdatedAt, &mb.DeletedAt)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			// 记录不存在时返回特定的错误，让调用者能够区分
@@ -345,7 +345,7 @@ func (mb *MessageBox) MessagesWithContext(ctx context.Context) (messages []Messa
 		return nil, errors.New("database connection is nil")
 	}
 
-	rows, err := DB.QueryContext(ctx, "SELECT * FROM messages WHERE message_box_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC", mb.Id)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, message_box_id, sender_type, sender_object_id, receiver_type, receiver_id, content, is_read, created_at, updated_at, deleted_at FROM messages WHERE message_box_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC", mb.Id)
 	if err != nil {
 		return
 	}
@@ -357,6 +357,9 @@ func (mb *MessageBox) MessagesWithContext(ctx context.Context) (messages []Messa
 			return
 		}
 		messages = append(messages, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return
 }
@@ -378,7 +381,7 @@ func (mb *MessageBox) UnreadMessagesWithContext(ctx context.Context) (messages [
 		return nil, errors.New("database connection is nil")
 	}
 
-	rows, err := DB.QueryContext(ctx, "SELECT * FROM messages WHERE message_box_id = $1 AND is_read = $2 AND deleted_at IS NULL ORDER BY created_at DESC", mb.Id, false)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, message_box_id, sender_type, sender_object_id, receiver_type, receiver_id, content, is_read, created_at, updated_at, deleted_at FROM messages WHERE message_box_id = $1 AND is_read = $2 AND deleted_at IS NULL ORDER BY created_at DESC", mb.Id, false)
 	if err != nil {
 		return
 	}
@@ -390,6 +393,9 @@ func (mb *MessageBox) UnreadMessagesWithContext(ctx context.Context) (messages [
 			return
 		}
 		messages = append(messages, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return
 }
@@ -503,6 +509,9 @@ func (u *User) MessageBoxesWithContext(ctx context.Context) (messageBoxes []Mess
 		}
 		messageBoxes = append(messageBoxes, mb)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return
 }
 
@@ -541,6 +550,9 @@ func (u *User) MessagesByMessageBoxWithContext(messageBoxId int, ctx context.Con
 			return
 		}
 		messages = append(messages, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return
 }
@@ -652,7 +664,7 @@ func (mb *MessageBox) GetMessagesWithContext(ctx context.Context) (messages []Me
 		return nil, errors.New("database connection is nil")
 	}
 
-	query := "SELECT * FROM messages WHERE message_box_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC"
+	query := "SELECT id, uuid, message_box_id, sender_type, sender_object_id, receiver_type, receiver_id, content, is_read, created_at, updated_at, deleted_at FROM messages WHERE message_box_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC"
 	rows, err := DB.QueryContext(ctx, query, mb.Id)
 	if err != nil {
 		return
@@ -666,6 +678,9 @@ func (mb *MessageBox) GetMessagesWithContext(ctx context.Context) (messages []Me
 			return
 		}
 		messages = append(messages, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return
@@ -690,7 +705,7 @@ func (mb *MessageBox) GetMessagesForUserWithContext(userId int, ctx context.Cont
 
 	// 权限控制：发送给"全体"的消息所有人可见，发送给"成员"的消息仅指定成员可见
 	query := `
-		SELECT * FROM messages 
+		SELECT id, uuid, message_box_id, sender_type, sender_object_id, receiver_type, receiver_id, content, is_read, created_at, updated_at, deleted_at FROM messages 
 		WHERE message_box_id = $1 AND deleted_at IS NULL 
 		AND (receiver_type = $2 OR (receiver_type = $3 AND receiver_id = $4))
 		ORDER BY created_at DESC
@@ -708,6 +723,9 @@ func (mb *MessageBox) GetMessagesForUserWithContext(userId int, ctx context.Cont
 			return
 		}
 		messages = append(messages, m)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return

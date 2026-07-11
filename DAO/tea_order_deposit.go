@@ -165,6 +165,9 @@ func GetTeaOrderDepositsByTeaOrderId(teaOrderId int) ([]*TeaOrderDeposit, error)
 		}
 		deposits = append(deposits, d)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return deposits, nil
 }
 

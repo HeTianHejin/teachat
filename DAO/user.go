@@ -95,6 +95,9 @@ func SearchUserByNameKeyword(keyword string, limit int, ctx context.Context) ([]
 		}
 		users = append(users, user)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return users, nil
 }
 
@@ -304,6 +307,9 @@ func UserCount() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 	return
 }
@@ -387,12 +393,16 @@ func Get2RandomSUserIdExceptId(id int) (user_ids []int, err error) {
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var user_id int
 		if err = rows.Scan(&user_id); err != nil {
 			return
 		}
 		user_ids = append(user_ids, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return
 }
@@ -410,6 +420,7 @@ func Get2RandomUserExceptId(id int) (users []User, err error) {
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var user_id int
 		if err = rows.Scan(&user_id); err != nil {
@@ -421,6 +432,9 @@ func Get2RandomUserExceptId(id int) (users []User, err error) {
 			return
 		}
 		users = append(users, user_online)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return
 
@@ -439,12 +453,16 @@ func Get2RandomUserId() (user_ids []int, err error) {
 	if err != nil {
 		return
 	}
+	defer rows.Close()
 	for rows.Next() {
 		var user_id int
 		if err = rows.Scan(&user_id); err != nil {
 			return
 		}
 		user_ids = append(user_ids, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return
 }
@@ -507,6 +525,9 @@ func (user *User) InvitationsCount() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 	return
 }
@@ -522,6 +543,9 @@ func (user *User) InvitationUnviewedCount() (count int) {
 		if err = rows.Scan(&count); err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0
 	}
 	rows.Close()
 	return
@@ -539,6 +563,9 @@ func (user *User) InvitationViewedCount() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 	return
 }
@@ -555,6 +582,9 @@ func (user *User) InvitationAcceptedCount() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 	return
 }
@@ -570,6 +600,9 @@ func (user *User) InvitationRejectedCount() (count int) {
 		if err = rows.Scan(&count); err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0
 	}
 	rows.Close()
 	return

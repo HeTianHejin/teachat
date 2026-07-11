@@ -412,6 +412,9 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 		}
 		handicrafts = append(handicrafts, h)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return handicrafts, nil
 }
 
@@ -502,6 +505,9 @@ func (h *Handicraft) GetContributors() ([]HandicraftContributor, error) {
 			return nil, err
 		}
 		contributors = append(contributors, hc)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return contributors, nil
 }
@@ -608,6 +614,9 @@ func GetInaugurationsByHandicraftId(handicraftId int) ([]Inauguration, error) {
 		}
 		inaugurations = append(inaugurations, i)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return inaugurations, nil
 }
 
@@ -627,6 +636,9 @@ func GetProcessRecordsByHandicraftId(handicraftId int) ([]ProcessRecord, error) 
 			return nil, err
 		}
 		records = append(records, p)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return records, nil
 }
@@ -648,6 +660,9 @@ func GetEndingsByHandicraftId(handicraftId int) ([]Ending, error) {
 		}
 		endings = append(endings, e)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return endings, nil
 }
 
@@ -667,6 +682,9 @@ func GetHandicraftSkills(handicraftId int) ([]HandicraftSkill, error) {
 			return nil, err
 		}
 		skills = append(skills, hs)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return skills, nil
 }
@@ -688,6 +706,9 @@ func GetHandicraftMagics(handicraftId int) ([]HandicraftMagic, error) {
 		}
 		magics = append(magics, hm)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return magics, nil
 }
 
@@ -707,6 +728,9 @@ func GetInaugurationsByEvidenceId(evidenceId int) ([]Inauguration, error) {
 			return nil, err
 		}
 		inaugurations = append(inaugurations, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return inaugurations, nil
 }
@@ -728,6 +752,9 @@ func GetProcessRecordsByEvidenceId(evidenceId int) ([]ProcessRecord, error) {
 		}
 		records = append(records, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return records, nil
 }
 
@@ -747,6 +774,9 @@ func GetEndingsByEvidenceId(evidenceId int) ([]Ending, error) {
 			return nil, err
 		}
 		endings = append(endings, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return endings, nil
 }
@@ -775,6 +805,9 @@ func GetEvidencesByHandicraftId(handicraftId int) ([]Evidence, error) {
 			return nil, err
 		}
 		evidences = append(evidences, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return evidences, nil
 }

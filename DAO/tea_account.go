@@ -420,6 +420,9 @@ func TeaUserProcessToUserExpiredTransfers() error {
 		}
 		expiredTransfers = append(expiredTransfers, et)
 	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
 
 	if len(expiredTransfers) == 0 {
 		return nil // 没有过期转账需要处理
@@ -501,6 +504,9 @@ func TeaUserProcessToTeamExpiredTransfers() error {
 			return fmt.Errorf("扫描过期转账失败: %v", err)
 		}
 		expiredTransfers = append(expiredTransfers, et)
+	}
+	if err := rows.Err(); err != nil {
+		return err
 	}
 
 	if len(expiredTransfers) == 0 {
@@ -807,6 +813,9 @@ func TeaUserOutToUserPendingTransfers(from_user_id int, page, limit int) ([]TeaU
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户发起的，用户对用户,待处理状态转账记录失败: %v", err)
 	}
@@ -839,6 +848,9 @@ func TeaUserOutToTeamPendingTransfers(from_user_id int, page, limit int) ([]TeaU
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户发起的，用户对团队,待处理状态转账记录失败: %v", err)
 	}
@@ -870,6 +882,9 @@ func TeaUserInFromTeamPendingTransfers(to_user_id int, page, limit int) ([]TeaTe
 			return nil, fmt.Errorf("扫描用户待确认状态，来自团队转账记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return transfers, nil
 }
@@ -912,6 +927,9 @@ func TeaUserFromUserPendingTransfers(to_user_id int, page, limit int) ([]TeaUser
 			return nil, fmt.Errorf("扫描用户星茶账户待接收状态，来自其他用户转账记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户星茶账户待接收状态，来自其他用户转账记录失败: %v", err)
@@ -1158,6 +1176,9 @@ func TeaUserFromUserCompletedTransfers(user_id int, page, limit int) ([]TeaUserF
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户来自用户已完成转入记录失败: %v", err)
 	}
@@ -1197,6 +1218,9 @@ func TeaUserFromTeamCompletedTransfers(user_id int, page, limit int) ([]TeaUserF
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户来自团队已完成转入记录失败: %v", err)
 	}
@@ -1234,6 +1258,9 @@ func TeaUserFromUserExpiredTransfers(user_id int, page, limit int) ([]TeaUserToU
 			return nil, fmt.Errorf("扫描用户来自用户已超时转入记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户来自用户已超时转入记录失败: %v", err)
@@ -1276,6 +1303,9 @@ func TeaUserFromTeamExpiredTransfers(user_id int, page, limit int) ([]TeaTeamToU
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户来自团队已超时转入记录失败: %v", err)
 	}
@@ -1312,6 +1342,9 @@ func TeaUserFromUserRejectedTransfers(user_id int, page, limit int) ([]TeaUserFr
 			return nil, fmt.Errorf("扫描用户来自用户已被拒绝转入记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户来自用户已被拒绝转入记录失败: %v", err)
@@ -1350,6 +1383,9 @@ func TeaUserFromTeamRejectedTransfers(user_id int, page, limit int) ([]TeaUserFr
 			return nil, fmt.Errorf("扫描用户来自团队已被拒绝转入记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户来自团队已被拒绝转入记录失败: %v", err)
@@ -1542,6 +1578,9 @@ func TeaUserToUserExpiredTransfers(user_id, page, limit int, ctx context.Context
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户对用户已过期转出记录失败: %v", err)
 	}
@@ -1575,6 +1614,9 @@ func TeaUserToTeamExpiredTransfers(user_id, page, limit int) ([]TeaUserToTeamTra
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户对团队已过期转出记录失败: %v", err)
 	}
@@ -1607,6 +1649,9 @@ func TeaUserToUserCompletedTransfers(from_user_id int, page, limit int) ([]TeaUs
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户对用户转出已完成记录失败: %v", err)
 	}
@@ -1638,6 +1683,9 @@ func TeaUserToTeamCompletedTransfers(from_user_id int, page, limit int) ([]TeaUs
 			return nil, fmt.Errorf("扫描用户对团队转出已完成记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户对团队转出已完成记录失败: %v", err)
@@ -1672,6 +1720,9 @@ func TeaUserToUserRejectedTransfers(from_user_id int, page, limit int) ([]TeaUse
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户对用户转出已被拒绝记录失败: %v", err)
 	}
@@ -1705,6 +1756,9 @@ func TeaUserToTeamRejectedTransfers(from_user_id int, page, limit int) ([]TeaUse
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("遍历用户对团队转出已被拒绝记录失败: %v", err)
 	}
@@ -1718,6 +1772,7 @@ func TeaUserToTeamRejectedTransfers(from_user_id int, page, limit int) ([]TeaUse
 //   - toTeamId: 接收团队ID
 //   - amountMg: 转账金额（毫克）
 //   - notes: 转账备注
+//
 // 返回：错误信息
 func TransferUserToTeamDirectly(fromUserId, toTeamId int, amountMg int64, notes string) error {
 	// 开始事务

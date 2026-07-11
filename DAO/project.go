@@ -186,6 +186,9 @@ func (project *Project) InvitedTeamIds() (team_id_slice []int, err error) {
 		}
 		team_id_slice = append(team_id_slice, team_id)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -296,6 +299,9 @@ func (project *Project) NumReplies() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 
 	return
@@ -314,6 +320,9 @@ func (objective *Objective) Projects() (projects []Project, err error) {
 		}
 		projects = append(projects, project)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -330,6 +339,9 @@ func (objective *Objective) GetPublicProjects() (projects []Project, err error) 
 			return
 		}
 		projects = append(projects, project)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -406,6 +418,9 @@ func SearchProjectByTitle(keyword string, limit int, ctx context.Context) (proje
 			return
 		}
 		projects = append(projects, project)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return

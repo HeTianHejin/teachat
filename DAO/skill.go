@@ -273,6 +273,9 @@ func GetSkillsByCategory(category SkillCategory, ctx context.Context) ([]Skill, 
 		}
 		skills = append(skills, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return skills, nil
 }
 
@@ -298,6 +301,9 @@ func GetSkillsByStrengthLevel(strengthLevel StrengthLevel, ctx context.Context) 
 			return nil, err
 		}
 		skills = append(skills, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return skills, nil
 }
@@ -325,6 +331,9 @@ func GetSkillsByDifficultyLevel(difficultyLevel DifficultyLevel, ctx context.Con
 		}
 		skills = append(skills, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return skills, nil
 }
 
@@ -350,6 +359,9 @@ func GetSkillsByRecordUserId(userId int, ctx context.Context) ([]Skill, error) {
 			return nil, err
 		}
 		skills = append(skills, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return skills, nil
 }
@@ -461,6 +473,9 @@ func GetUserSkills(userId int, ctx context.Context) ([]SkillUser, error) {
 		}
 		userSkills = append(userSkills, su)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return userSkills, nil
 }
 
@@ -553,6 +568,9 @@ func GetSkillsBySkillUsers(skillUsers []SkillUser, ctx context.Context) ([]Skill
 		}
 		skills = append(skills, s)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return skills, nil
 }
 
@@ -580,6 +598,9 @@ func (u *User) LoadAllSkills(ctx context.Context) ([]Skill, error) {
 			return nil, err
 		}
 		skills = append(skills, s)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return skills, nil
 }
@@ -723,6 +744,9 @@ func GetTeamSkills(teamId int, ctx context.Context) ([]SkillTeam, error) {
 		}
 		teamSkills = append(teamSkills, st)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return teamSkills, nil
 }
 
@@ -779,6 +803,9 @@ func SearchSkillByName(keyword string, limit int, ctx context.Context) ([]Skill,
 		}
 		skills = append(skills, skill)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	return skills, nil
 }
@@ -807,6 +834,9 @@ func GetAllSkills(ctx context.Context) ([]Skill, error) {
 			return nil, err
 		}
 		skills = append(skills, skill)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return skills, nil

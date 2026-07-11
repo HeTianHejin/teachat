@@ -34,7 +34,7 @@ var MemberApplicationStatus = map[int]string{
 
 // 根据team_id,查询全部加盟申请书，[]MemberApplication，error
 func GetMemberApplicationByTeamId(team_id int) (member_application_slice []MemberApplication, err error) {
-	rows, err := DB.Query("SELECT * FROM member_applications WHERE team_id = $1", team_id)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, content, status, created_at, updated_at FROM member_applications WHERE team_id = $1", team_id)
 	if err != nil {
 		return
 	}
@@ -45,6 +45,9 @@ func GetMemberApplicationByTeamId(team_id int) (member_application_slice []Membe
 			return
 		}
 		member_application_slice = append(member_application_slice, memberApplication)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -52,7 +55,7 @@ func GetMemberApplicationByTeamId(team_id int) (member_application_slice []Membe
 
 // 根据team_id,status <= 1, 查询全部加盟申请书中需要处理的申请书,[]MemberApplication，error
 func GetMemberApplicationByTeamIdAndStatus(team_id int) (member_application_slice []MemberApplication, err error) {
-	rows, err := DB.Query("SELECT * FROM member_applications WHERE team_id = $1 AND status <= 1", team_id)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, content, status, created_at, updated_at FROM member_applications WHERE team_id = $1 AND status <= 1", team_id)
 	if err != nil {
 		return
 	}
@@ -63,6 +66,9 @@ func GetMemberApplicationByTeamIdAndStatus(team_id int) (member_application_slic
 			return
 		}
 		member_application_slice = append(member_application_slice, memberApplication)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -79,7 +85,7 @@ func GetMemberApplicationByTeamIdAndStatusCount(team_id int) (count int, err err
 
 // 检测当前用户是否向指定茶团，已经提交过加盟申请？而且申请书状态为<=指定状态
 func CheckMemberApplicationByTeamIdAndUserId(team_id int, user_id int, status int) (member_application MemberApplication, err error) {
-	err = DB.QueryRow("SELECT * FROM member_applications WHERE team_id = $1 AND user_id = $2 AND status <= $3", team_id, user_id, status).Scan(&member_application.Id, &member_application.Uuid, &member_application.TeamId, &member_application.UserId, &member_application.Content, &member_application.Status, &member_application.CreatedAt, &member_application.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, content, status, created_at, updated_at FROM member_applications WHERE team_id = $1 AND user_id = $2 AND status <= $3", team_id, user_id, status).Scan(&member_application.Id, &member_application.Uuid, &member_application.TeamId, &member_application.UserId, &member_application.Content, &member_application.Status, &member_application.CreatedAt, &member_application.UpdatedAt)
 	if err != nil {
 		return
 	}
@@ -88,7 +94,7 @@ func CheckMemberApplicationByTeamIdAndUserId(team_id int, user_id int, status in
 
 // 根据user_id，查询用户全部加盟申请书 []MemberApplication，error
 func GetMemberApplies(user_id int) (member_application_slice []MemberApplication, err error) {
-	rows, err := DB.Query("SELECT * FROM member_applications WHERE user_id = $1", user_id)
+	rows, err := DB.Query("SELECT id, uuid, team_id, user_id, content, status, created_at, updated_at FROM member_applications WHERE user_id = $1", user_id)
 	if err != nil {
 		return
 	}
@@ -99,6 +105,9 @@ func GetMemberApplies(user_id int) (member_application_slice []MemberApplication
 			return
 		}
 		member_application_slice = append(member_application_slice, memberApplication)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -117,6 +126,9 @@ func GetApplyTeamIdsByUserId(user_id int) (teamIds []int, err error) {
 			return
 		}
 		teamIds = append(teamIds, teamId)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -205,7 +217,7 @@ func (memberApplication *MemberApplication) Create() (err error) {
 
 // 根据id获取一个加盟申请书
 func (memberApplication *MemberApplication) Get() (err error) {
-	statement := `SELECT * FROM member_applications WHERE id = $1`
+	statement := `SELECT id, uuid, team_id, user_id, content, status, created_at, updated_at FROM member_applications WHERE id = $1`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
@@ -225,7 +237,7 @@ func (memberApplication *MemberApplication) Get() (err error) {
 
 // MemberApplication.GetByUuid()
 func (memberApplication *MemberApplication) GetByUuid() (err error) {
-	statement := `SELECT * FROM member_applications WHERE uuid = $1`
+	statement := `SELECT id, uuid, team_id, user_id, content, status, created_at, updated_at FROM member_applications WHERE uuid = $1`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
@@ -283,7 +295,7 @@ func (memberApplicationReply *MemberApplicationReply) Create() (err error) {
 
 // GetById() MemberApplicationReply
 func (memberApplicationReply *MemberApplicationReply) Get() (err error) {
-	statement := `SELECT * FROM member_application_replies WHERE id = $1`
+	statement := `SELECT id, uuid, team_id, user_id, reply_content, status, created_at, updated_at FROM member_application_replies WHERE id = $1`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return

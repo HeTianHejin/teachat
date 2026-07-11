@@ -46,9 +46,9 @@ const (
 
 // 集团成员角色
 const (
-	GroupRoleUnknown        = 0 // 未知
-	GroupRoleTopManagement  = 1 // 最高管理团队
-	GroupRoleMember         = 2 // 成员团队
+	GroupRoleUnknown       = 0 // 未知
+	GroupRoleTopManagement = 1 // 最高管理团队
+	GroupRoleMember        = 2 // 成员团队
 )
 
 // 集团成员角色名称映射
@@ -289,6 +289,9 @@ func GetMembersByGroupId(groupId int) ([]GroupMember, error) {
 		}
 		members = append(members, gm)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return members, rows.Err()
 }
 
@@ -316,6 +319,9 @@ func GetTeamsByGroupId(groupId int) ([]Team, error) {
 		}
 		teams = append(teams, team)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return teams, rows.Err()
 }
 
@@ -342,6 +348,9 @@ func GetGroupsByTeamId(teamId int) ([]Group, error) {
 			return nil, err
 		}
 		groups = append(groups, group)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return groups, rows.Err()
 }
@@ -621,6 +630,9 @@ func GetInvitationsByGroupId(groupId int) ([]GroupInvitation, error) {
 		}
 		invitations = append(invitations, gi)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return invitations, rows.Err()
 }
 
@@ -644,6 +656,9 @@ func GetInvitationsByTeamId(teamId int) ([]GroupInvitation, error) {
 			return nil, err
 		}
 		invitations = append(invitations, gi)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return invitations, rows.Err()
 }
@@ -671,6 +686,9 @@ func GetGroupInvitationsByUserId(userId int) ([]GroupInvitation, error) {
 			return nil, err
 		}
 		invitations = append(invitations, gi)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return invitations, rows.Err()
 }

@@ -137,6 +137,9 @@ func (post *Post) Threads() (threads []Thread, err error) {
 		}
 		threads = append(threads, thread)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -187,6 +190,9 @@ func (t *Thread) NumReplies() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 	return
 }
@@ -201,6 +207,9 @@ func (t *Thread) NumSupport() (count int) {
 		if err = rows.Scan(&count); err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0
 	}
 	rows.Close()
 	return
@@ -217,6 +226,9 @@ func (t *Thread) NumOppose() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 	return
 }
@@ -231,6 +243,9 @@ func (thread *Thread) NumReads() (count int) {
 		if err = rows.Scan(&count); err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0
 	}
 	rows.Close()
 	return
@@ -369,6 +384,9 @@ func HotThreads(limit int, ctx context.Context) (threads []Thread, err error) {
 		}
 		threads = append(threads, thread)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -447,6 +465,9 @@ func (project *Project) ThreadsNormal(ctx context.Context) ([]Thread, error) {
 		}
 		threads = append(threads, thread)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	// 检查遍历过程中是否出错
 	if err = rows.Err(); err != nil {
@@ -484,6 +505,9 @@ func (project *Project) ThreadsSeeSeek(ctx context.Context) (threads []Thread, e
 		}
 		threads = append(threads, thread)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -509,6 +533,9 @@ func (project *Project) ThreadsBrainFire(ctx context.Context) (threads []Thread,
 			return nil, err
 		}
 		threads = append(threads, thread)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if err = rows.Err(); err != nil {
@@ -536,6 +563,9 @@ func (project *Project) ThreadsSuggestion(ctx context.Context) (threads []Thread
 		}
 		threads = append(threads, thread)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -562,6 +592,9 @@ func (project *Project) ThreadsGoods(ctx context.Context) (threads []Thread, err
 		}
 		threads = append(threads, thread)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -587,6 +620,9 @@ func (project *Project) ThreadsHandicraft(ctx context.Context) (threads []Thread
 			return nil, err
 		}
 		threads = append(threads, thread)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	if err = rows.Err(); err != nil {
@@ -692,6 +728,9 @@ func SearchThreadByTitle(keyword string, limit int, ctx context.Context) (thread
 			return
 		}
 		threads = append(threads, thread)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return

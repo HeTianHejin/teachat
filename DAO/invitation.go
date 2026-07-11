@@ -96,6 +96,9 @@ func (team *Team) Invitations() (invitations []Invitation, err error) {
 		}
 		invitations = append(invitations, invitation)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -114,6 +117,9 @@ func (user *User) Invitations() (invitations []Invitation, err error) {
 		}
 		invitations = append(invitations, invitation)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -125,6 +131,9 @@ func (team *Team) NumInvitations() (count int) {
 		if err := rows.Scan(&count); err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0
 	}
 	rows.Close()
 	return

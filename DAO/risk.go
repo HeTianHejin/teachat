@@ -152,6 +152,9 @@ func (r *Risk) GetSafetyProtections() ([]SafetyProtection, error) {
 		}
 		protections = append(protections, p)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return protections, nil
 }
 
@@ -231,6 +234,9 @@ func GetDefaultRisks(ctx context.Context) ([]Risk, error) {
 		}
 		risks = append(risks, r)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return risks, nil
 }
 
@@ -250,6 +256,9 @@ func SearchRiskByName(keyword string, limit int, ctx context.Context) ([]Risk, e
 			return nil, err
 		}
 		risks = append(risks, r)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return risks, nil
 }

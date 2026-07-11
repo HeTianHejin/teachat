@@ -218,6 +218,9 @@ func GetThreeGenerationUsers(userId int, ctx context.Context) ([]int, error) {
 					userIdMap[childUserId] = true
 				}
 			}
+			if err := rows.Err(); err != nil {
+				return nil, err
+			}
 			rows.Close()
 		}
 	}

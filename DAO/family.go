@@ -764,6 +764,9 @@ func (f *Family) AllMembers() (members []FamilyMember, err error) {
 		}
 		members = append(members, member)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -784,6 +787,9 @@ func GetAllMembersUserIdsByFamilyId(family_id int) (userIds []int, err error) {
 			return
 		}
 		userIds = append(userIds, userId)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -864,6 +870,9 @@ func (f *Family) ParentMembers() (parent_members []FamilyMember, err error) {
 		}
 		parent_members = append(parent_members, parentMember)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -882,6 +891,9 @@ func (f *Family) ChildMembers() (child_members []FamilyMember, err error) {
 		}
 		child_members = append(child_members, childMember)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -899,6 +911,9 @@ func (f *Family) OtherMembers() (other_members []FamilyMember, err error) {
 			return
 		}
 		other_members = append(other_members, otherMember)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return

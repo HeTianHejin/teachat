@@ -117,6 +117,9 @@ func GetHandicraftEvidencesByHandicraftId(handicraftId int) ([]HandicraftEvidenc
 		}
 		evidences = append(evidences, he)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return evidences, nil
 }
 
@@ -287,6 +290,9 @@ func GetEvidencesByUser(userId int, limit int, ctx context.Context) ([]Evidence,
 		}
 		evidences = append(evidences, e)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return evidences, nil
 }
 
@@ -312,6 +318,9 @@ func GetEvidencesByCategory(category EvidenceCategory, limit int, ctx context.Co
 			return nil, err
 		}
 		evidences = append(evidences, e)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return evidences, nil
 }
@@ -359,6 +368,9 @@ func GetSeeSeekEvidencesBySeeSeekId(seeSeekId int) ([]SeeSeekLookEvidence, error
 			return nil, err
 		}
 		evidences = append(evidences, ssle)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return evidences, nil
 }

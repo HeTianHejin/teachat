@@ -357,6 +357,9 @@ func processExpiredTransfers(tableName string) error {
 		}
 		pendingApprovalExpired = append(pendingApprovalExpired, et)
 	}
+	if err := rows1.Err(); err != nil {
+		return err
+	}
 	rows1.Close()
 
 	// 处理 PendingReceipt 状态的过期（释放锁定）
@@ -382,6 +385,9 @@ func processExpiredTransfers(tableName string) error {
 			return fmt.Errorf("扫描待接收过期转账失败: %v", err)
 		}
 		pendingReceiptExpired = append(pendingReceiptExpired, et)
+	}
+	if err := rows2.Err(); err != nil {
+		return err
 	}
 	rows2.Close()
 
@@ -848,6 +854,9 @@ func TeaTeamPendingApprovalToTeamTransfers(teamId, page, limit int, ctx context.
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return transfers, nil
 }
 
@@ -881,6 +890,9 @@ func TeaTeamPendingApprovalToUserTransfers(teamId, page, limit int, ctx context.
 			return nil, fmt.Errorf("扫描团队对用户待审批转出记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return transfers, nil
 }
@@ -1192,6 +1204,9 @@ func TeaTeamToTeamCompletedTransfers(team_id, page, limit int, ctx context.Conte
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return transfers, nil
 }
 
@@ -1243,6 +1258,9 @@ func TeaTeamToUserCompletedTransfers(teamId, page, limit int, ctx context.Contex
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return transfers, nil
 }
 
@@ -1284,6 +1302,9 @@ func TeaTeamToTeamOutstandingTransfers(teamId, page, limit int, ctx context.Cont
 			return nil, fmt.Errorf("扫描团队对团队未成功转出记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队对团队未成功转出记录失败: %v", err)
@@ -1338,6 +1359,9 @@ func TeaTeamToUserOutstandingTransfers(teamId, page, limit int, ctx context.Cont
 			return nil, fmt.Errorf("扫描团队对用户未成功转出记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队对用户未成功转出记录失败: %v", err)
@@ -1410,6 +1434,9 @@ func TeaTeamPendingFromTeamTransfers(teamId, page, limit int, ctx context.Contex
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队待接收的来自团队转账记录失败: %v", err)
 	}
@@ -1448,6 +1475,9 @@ func TeaTeamPendingFromUserTransfers(teamId, page, limit int, ctx context.Contex
 			return nil, fmt.Errorf("扫描团队待接收的来自用户转账记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队待接收的来自用户转账记录失败: %v", err)
@@ -1839,6 +1869,9 @@ func TeaTeamFromTeamCompletedTransfers(teamId, page, limit int, ctx context.Cont
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队作为接收方的来自其他团队的已完成转账记录失败: %v", err)
 	}
@@ -1880,6 +1913,9 @@ func TeaTeamFromUserCompletedTransfers(teamId, page, limit int, ctx context.Cont
 			return nil, fmt.Errorf("扫描团队作为接收方的来自用户的已完成转账记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队作为接收方的来自用户的已完成转账记录失败: %v", err)
@@ -1923,6 +1959,9 @@ func TeaTeamFromTeamRejectedTransfers(teamId, page, limit int, ctx context.Conte
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队作为接收方已拒绝来自其他团队转账记录失败: %v", err)
 	}
@@ -1963,6 +2002,9 @@ func TeaTeamFromUserRejectedTransfers(teamId, page, limit int, ctx context.Conte
 			return nil, fmt.Errorf("扫描团队作为接收方已拒绝来自用户转账记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队作为接收方已拒绝来自用户转账记录失败: %v", err)
@@ -2005,6 +2047,9 @@ func TeaTeamFromTeamExpiredTransfers(teamId, page, limit int, ctx context.Contex
 		}
 		transfers = append(transfers, transfer)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队作为接收方的已过期来自其他团队转账记录失败: %v", err)
 	}
@@ -2042,6 +2087,9 @@ func TeaTeamFromUserExpiredTransfers(teamId, page, limit int, ctx context.Contex
 			return nil, fmt.Errorf("扫描团队作为接收方的已过期来自用户转账记录失败: %v", err)
 		}
 		transfers = append(transfers, transfer)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("迭代团队作为接收方的已过期来自用户转账记录失败: %v", err)

@@ -163,6 +163,9 @@ func (t *Thread) Posts() (posts []Post, err error) {
 		}
 		posts = append(posts, post)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -181,6 +184,9 @@ func (t *Thread) PostsAdmin() (posts []Post, err error) {
 			return
 		}
 		posts = append(posts, post)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return

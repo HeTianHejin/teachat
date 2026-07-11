@@ -118,6 +118,9 @@ func GetTeamsByIds(teamIDs []int) ([]Team, error) {
 		}
 		teams = append(teams, team)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -321,7 +324,7 @@ func (resignation *TeamMemberResignation) CreatedAtDate() string {
 
 // TeamMemberResignation.Get()
 func (resignation *TeamMemberResignation) Get() (err error) {
-	statement := "SELECT * FROM team_member_resignations WHERE id = $1"
+	statement := "SELECT id, uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status, created_at, updated_at FROM team_member_resignations WHERE id = $1"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
@@ -333,7 +336,7 @@ func (resignation *TeamMemberResignation) Get() (err error) {
 
 // TeamMemberResignation.GetByUuid()
 func (resignation *TeamMemberResignation) GetByUuid() (err error) {
-	statement := "SELECT * FROM team_member_resignations WHERE uuid = $1"
+	statement := "SELECT id, uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status, created_at, updated_at FROM team_member_resignations WHERE uuid = $1"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
@@ -357,7 +360,7 @@ func (resignation *TeamMemberResignation) UpdateCeoUserIdCoreMemberUserIdStatus(
 
 // TeamMemberResignations.GetByUserIdAndTeamId()  获取某个用户在某个$事业茶团的全部"退出$事业茶团声明书"
 func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []TeamMemberResignation, err error) {
-	rows, err := DB.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 AND team_id = $2", user_id, team_id)
+	rows, err := DB.Query("SELECT id, uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status, created_at, updated_at FROM team_member_resignations WHERE member_user_id = $1 AND team_id = $2", user_id, team_id)
 	if err != nil {
 		return
 	}
@@ -367,6 +370,9 @@ func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []Team
 			return
 		}
 		resignations = append(resignations, resignation)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -374,7 +380,7 @@ func GetResignationsByUserIdAndTeamId(user_id, team_id int) (resignations []Team
 
 // TeamMemberResignations.GetByTeamId() 获取某个$事业茶团的全部"退出$事业茶团声明书"
 func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation, err error) {
-	rows, err := DB.Query("SELECT * FROM team_member_resignations WHERE team_id = $1 ORDER BY created_at DESC", team_id)
+	rows, err := DB.Query("SELECT id, uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status, created_at, updated_at FROM team_member_resignations WHERE team_id = $1 ORDER BY created_at DESC", team_id)
 	if err != nil {
 		return
 	}
@@ -384,6 +390,9 @@ func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation,
 			return
 		}
 		resignations = append(resignations, resignation)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -391,7 +400,7 @@ func GetResignationsByTeamId(team_id int) (resignations []TeamMemberResignation,
 
 // GetResignationsByUserId() 获取某个用户的全部"退出$事业茶团声明书"
 func GetResignationsByUserId(user_id int) (resignations []TeamMemberResignation, err error) {
-	rows, err := DB.Query("SELECT * FROM team_member_resignations WHERE member_user_id = $1 ORDER BY created_at DESC", user_id)
+	rows, err := DB.Query("SELECT id, uuid, team_id, ceo_user_id, core_member_user_id, member_id, member_user_id, member_current_role, title, content, status, created_at, updated_at FROM team_member_resignations WHERE member_user_id = $1 ORDER BY created_at DESC", user_id)
 	if err != nil {
 		return
 	}
@@ -401,6 +410,9 @@ func GetResignationsByUserId(user_id int) (resignations []TeamMemberResignation,
 			return
 		}
 		resignations = append(resignations, resignation)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -450,7 +462,7 @@ func (notice *TeamMemberRoleNotice) Create() (err error) {
 
 // TeamMemberRoleNotice.Get()
 func (notice *TeamMemberRoleNotice) Get() (err error) {
-	statement := "SELECT * FROM team_member_role_notices WHERE id = $1"
+	statement := "SELECT id, uuid, team_id, ceo_id, member_id, member_current_role, new_role, title, content, status, created_at, updated_at FROM team_member_role_notices WHERE id = $1"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
@@ -462,7 +474,7 @@ func (notice *TeamMemberRoleNotice) Get() (err error) {
 
 // TeamMemberRoleNotice.GetByTeamId()
 func GetMemberRoleNoticesByTeamId(team_id int) (notices []TeamMemberRoleNotice, err error) {
-	rows, err := DB.Query("SELECT * FROM team_member_role_notices WHERE team_id = $1", team_id)
+	rows, err := DB.Query("SELECT id, uuid, team_id, ceo_id, member_id, member_current_role, new_role, title, content, status, created_at, updated_at FROM team_member_role_notices WHERE team_id = $1", team_id)
 	if err != nil {
 		return
 	}
@@ -472,6 +484,9 @@ func GetMemberRoleNoticesByTeamId(team_id int) (notices []TeamMemberRoleNotice, 
 			return
 		}
 		notices = append(notices, notice)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -539,6 +554,9 @@ func SearchTeamByAbbreviation(keyword string, limit int, ctx context.Context) ([
 			return teams, err
 		}
 		teams = append(teams, team)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return teams, nil
@@ -609,6 +627,9 @@ func GetUserSurvivalTeams(user_id int, ctx context.Context) ([]Team, error) {
 		}
 		teams = append(teams, team)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 
 	if err = rows.Err(); err != nil {
 		return nil, err
@@ -644,6 +665,9 @@ func (user *User) HoldTeams() (teams []Team, err error) {
 		}
 		teams = append(teams, team)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -662,6 +686,9 @@ func (user *User) CeoTeams() (teams []Team, err error) {
 		}
 		teams = append(teams, team)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -678,6 +705,9 @@ func (usre *User) FounderTeams() (teams []Team, err error) {
 			return
 		}
 		teams = append(teams, team)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -698,6 +728,9 @@ func (user *User) CoreExecTeams() (teams []Team, err error) {
 		}
 		teams = append(teams, team)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -715,6 +748,9 @@ func (user *User) NormalExecTeams() (teams []Team, err error) {
 			return
 		}
 		teams = append(teams, team)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -756,6 +792,9 @@ func GetNumAllTeams() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 	return
 }
@@ -768,6 +807,9 @@ func (team *Team) NumMembers() (count int) {
 		if err := rows.Scan(&count); err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0
 	}
 	rows.Close()
 	return
@@ -783,6 +825,9 @@ func (user *User) CountTeamsByFounderId() (count int, err error) {
 		if err = rows.Scan(&count); err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0, err
 	}
 	rows.Close()
 	return
@@ -847,6 +892,9 @@ func (team *Team) NormalMembers() (team_members []TeamMember, err error) {
 		}
 		team_members = append(team_members, teamMember)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -875,6 +923,9 @@ func (team *Team) CoreMembers() (team_members []TeamMember, err error) {
 		}
 		team_members = append(team_members, teamMember)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -898,6 +949,9 @@ func GetActiveMemberUserIdsByTeamId(team_id int) (user_ids []int, err error) {
 			return
 		}
 		user_ids = append(user_ids, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	rows.Close()
 	return
@@ -1137,6 +1191,9 @@ func (project *Project) InvitedTeams() (teams []Team, err error) {
 		}
 		teams = append(teams, team)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	rows.Close()
 	return
 }
@@ -1167,6 +1224,9 @@ func OpenTeamCount() (count int) {
 			return
 		}
 	}
+	if err := rows.Err(); err != nil {
+		return 0
+	}
 	rows.Close()
 	return
 }
@@ -1181,6 +1241,9 @@ func ClosedTeamCount() (count int) {
 		if err = rows.Scan(&count); err != nil {
 			return
 		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0
 	}
 	rows.Close()
 	return
@@ -1307,6 +1370,9 @@ func GetResignedMembersByTeamId(teamId int) ([]TeamMember, error) {
 			return nil, err
 		}
 		members = append(members, member)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return members, rows.Err()
 }

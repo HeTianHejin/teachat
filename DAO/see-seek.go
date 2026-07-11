@@ -518,6 +518,9 @@ func (s *SeeSeek) GetEnvironments() ([]SeeSeekEnvironment, error) {
 		}
 		envs = append(envs, env)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return envs, nil
 }
 
@@ -537,6 +540,9 @@ func (s *SeeSeek) GetHazards() ([]SeeSeekHazard, error) {
 			return nil, err
 		}
 		hazards = append(hazards, hazard)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return hazards, nil
 }
@@ -558,6 +564,9 @@ func (s *SeeSeek) GetRisks() ([]SeeSeekRisk, error) {
 		}
 		risks = append(risks, risk)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return risks, nil
 }
 
@@ -577,6 +586,9 @@ func (s *SeeSeek) GetLooks() ([]SeeSeekLook, error) {
 			return nil, err
 		}
 		looks = append(looks, look)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return looks, nil
 }
@@ -598,6 +610,9 @@ func (s *SeeSeek) GetListens() ([]SeeSeekListen, error) {
 		}
 		listens = append(listens, listen)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return listens, nil
 }
 
@@ -617,6 +632,9 @@ func (s *SeeSeek) GetSmells() ([]SeeSeekSmell, error) {
 			return nil, err
 		}
 		smells = append(smells, smell)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return smells, nil
 }
@@ -638,6 +656,9 @@ func (s *SeeSeek) GetTouches() ([]SeeSeekTouch, error) {
 		}
 		touches = append(touches, touch)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return touches, nil
 }
 
@@ -657,6 +678,9 @@ func (s *SeeSeek) GetExaminationReports() ([]SeeSeekExaminationReport, error) {
 			return nil, err
 		}
 		reports = append(reports, report)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return reports, nil
 }
