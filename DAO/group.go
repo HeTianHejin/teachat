@@ -16,6 +16,7 @@ type Group struct {
 	FounderId    int    // 集团创建者用户ID
 	FirstTeamId  int    // 最高管理团队ID
 	Class        int    // 集团类型：1-开放式，2-封闭式，10-开放式草集团，20-封闭式草集团
+	Nature       int    // 集团性质：0-未知/特殊，1-职业，2-业余
 	Logo         string // 集团标志
 	Tags         string // 分类标签，逗号分隔，如"诗词书法,文化艺术"
 	CreatedAt    time.Time
@@ -31,6 +32,13 @@ const (
 	GroupClassCloseDraft         = 20 // 封闭式草集团
 	GroupClassRejectedOpenDraft  = 31 // 已婉拒开放式草集团
 	GroupClassRejectedCloseDraft = 32 // 已婉拒封闭式草集团
+)
+
+// Group 性质常量
+const (
+	GroupNatureUnknown      = 0 // 未知/特殊
+	GroupNatureProfessional = 1 // 职业集团：只接受职业团队
+	GroupNatureAmateur      = 2 // 业余集团：只接受业余团队
 )
 
 // GroupMemberStatus 集团成员状态类型
@@ -140,6 +148,45 @@ func (group *Group) IsDeleted() bool {
 	return group.DeletedAt != nil
 }
 
+// IsProfessional 判断是否为职业集团
+func (group *Group) IsProfessional() bool {
+	return group.Nature == GroupNatureProfessional
+}
+
+// IsAmateur 判断是否为业余集团
+func (group *Group) IsAmateur() bool {
+	return group.Nature == GroupNatureAmateur
+}
+
+// IsNatureUnknown 判断集团性质是否未分类
+func (group *Group) IsNatureUnknown() bool {
+	return group.Nature == GroupNatureUnknown
+}
+
+// NatureName 返回集团性质的中文描述
+func (group *Group) NatureName() string {
+	switch group.Nature {
+	case GroupNatureUnknown:
+		return "系统/特殊"
+	case GroupNatureProfessional:
+		return "职业集团"
+	case GroupNatureAmateur:
+		return "业余集团"
+	default:
+		return "未知"
+	}
+}
+
+// CanIncludeTeam 判断该集团是否允许包含指定性质的团队
+func (group *Group) CanIncludeTeam(teamNature int) bool {
+	return group.Nature == teamNature
+}
+
+// GetTags 返回集团标签切片（用于模板展示）
+func (group *Group) GetTags() []string {
+	return SplitTags(group.Tags)
+}
+
 // SoftDelete 软删除集团
 func (group *Group) SoftDelete() error {
 	now := time.Now()
@@ -171,16 +218,16 @@ func (group *Group) Restore() error {
 // Create 创建集团
 func (group *Group) Create() error {
 	statement := `INSERT INTO groups (name, abbreviation, mission, founder_id, 
-	              first_team_id, class, logo, tags, created_at) 
-	              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-	              RETURNING id, uuid, created_at`
+              first_team_id, class, nature, logo, tags, created_at) 
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+              RETURNING id, uuid, created_at`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 	err = stmt.QueryRow(group.Name, group.Abbreviation, group.Mission,
-		group.FounderId, group.FirstTeamId, group.Class, group.Logo, group.Tags, time.Now()).Scan(
+		group.FounderId, group.FirstTeamId, group.Class, group.Nature, group.Logo, group.Tags, time.Now()).Scan(
 		&group.Id, &group.Uuid, &group.CreatedAt)
 	return err
 }
@@ -188,8 +235,8 @@ func (group *Group) Create() error {
 // Get 根据ID获取集团
 func (group *Group) Get() error {
 	statement := `SELECT id, uuid, name, abbreviation, mission, founder_id, 
-	              first_team_id, class, logo, tags, created_at, updated_at, deleted_at 
-	              FROM groups WHERE id = $1`
+              first_team_id, class, nature, logo, tags, created_at, updated_at, deleted_at 
+              FROM groups WHERE id = $1`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
@@ -197,7 +244,7 @@ func (group *Group) Get() error {
 	defer stmt.Close()
 	err = stmt.QueryRow(group.Id).Scan(&group.Id, &group.Uuid, &group.Name,
 		&group.Abbreviation, &group.Mission, &group.FounderId, &group.FirstTeamId,
-		&group.Class, &group.Logo, &group.Tags, &group.CreatedAt, &group.UpdatedAt, &group.DeletedAt)
+		&group.Class, &group.Nature, &group.Logo, &group.Tags, &group.CreatedAt, &group.UpdatedAt, &group.DeletedAt)
 	return err
 }
 
@@ -205,8 +252,8 @@ func (group *Group) Get() error {
 func GetGroupByUUID(uuid string) (Group, error) {
 	var group Group
 	statement := `SELECT id, uuid, name, abbreviation, mission, founder_id, 
-	              first_team_id, class, logo, tags, created_at, updated_at, deleted_at 
-	              FROM groups WHERE uuid = $1`
+              first_team_id, class, nature, logo, tags, created_at, updated_at, deleted_at 
+              FROM groups WHERE uuid = $1`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return group, err
@@ -214,7 +261,7 @@ func GetGroupByUUID(uuid string) (Group, error) {
 	defer stmt.Close()
 	err = stmt.QueryRow(uuid).Scan(&group.Id, &group.Uuid, &group.Name,
 		&group.Abbreviation, &group.Mission, &group.FounderId, &group.FirstTeamId,
-		&group.Class, &group.Logo, &group.Tags, &group.CreatedAt, &group.UpdatedAt, &group.DeletedAt)
+		&group.Class, &group.Nature, &group.Logo, &group.Tags, &group.CreatedAt, &group.UpdatedAt, &group.DeletedAt)
 	return group, err
 }
 
@@ -223,15 +270,15 @@ func (group *Group) Update() error {
 	now := time.Now()
 	group.UpdatedAt = &now
 	statement := `UPDATE groups SET name = $1, abbreviation = $2, mission = $3, 
-	              first_team_id = $4, class = $5, logo = $6, updated_at = $7 
-	              WHERE id = $8`
+              first_team_id = $4, class = $5, nature = $6, logo = $7, updated_at = $8 
+              WHERE id = $9`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(group.Name, group.Abbreviation, group.Mission,
-		group.FirstTeamId, group.Class, group.Logo, now, group.Id)
+		group.FirstTeamId, group.Class, group.Nature, group.Logo, now, group.Id)
 	return err
 }
 
@@ -298,11 +345,11 @@ func GetMembersByGroupId(groupId int) ([]GroupMember, error) {
 // GetTeamsByGroupId 获取集团的所有团队
 func GetTeamsByGroupId(groupId int) ([]Team, error) {
 	query := `SELECT t.id, t.uuid, t.name, t.mission, t.founder_id, t.created_at, 
-	          t.class, t.abbreviation, t.logo, t.updated_at, t.deleted_at 
-	          FROM teams t 
-	          INNER JOIN group_members gm ON t.id = gm.team_id 
-	          WHERE gm.group_id = $1 AND gm.deleted_at IS NULL AND t.deleted_at IS NULL 
-	          ORDER BY gm.level ASC, gm.created_at ASC`
+          t.class, t.nature, t.abbreviation, t.logo, t.updated_at, t.deleted_at 
+          FROM teams t 
+          INNER JOIN group_members gm ON t.id = gm.team_id 
+          WHERE gm.group_id = $1 AND gm.deleted_at IS NULL AND t.deleted_at IS NULL 
+          ORDER BY gm.level ASC, gm.created_at ASC`
 	rows, err := DB.Query(query, groupId)
 	if err != nil {
 		return nil, err
@@ -313,7 +360,7 @@ func GetTeamsByGroupId(groupId int) ([]Team, error) {
 	for rows.Next() {
 		var team Team
 		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission,
-			&team.FounderId, &team.CreatedAt, &team.Class, &team.Abbreviation,
+			&team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation,
 			&team.Logo, &team.UpdatedAt, &team.DeletedAt); err != nil {
 			return nil, err
 		}
@@ -328,11 +375,11 @@ func GetTeamsByGroupId(groupId int) ([]Team, error) {
 // GetGroupsByTeamId 获取团队所属的所有集团
 func GetGroupsByTeamId(teamId int) ([]Group, error) {
 	query := `SELECT g.id, g.uuid, g.name, g.abbreviation, g.mission, g.founder_id, 
-	          g.first_team_id, g.class, g.logo, g.tags, g.created_at, g.updated_at, g.deleted_at 
-	          FROM groups g 
-	          INNER JOIN group_members gm ON g.id = gm.group_id 
-	          WHERE gm.team_id = $1 AND gm.deleted_at IS NULL AND g.deleted_at IS NULL 
-	          ORDER BY gm.created_at DESC`
+          g.first_team_id, g.class, g.nature, g.logo, g.tags, g.created_at, g.updated_at, g.deleted_at 
+          FROM groups g 
+          INNER JOIN group_members gm ON g.id = gm.group_id 
+          WHERE gm.team_id = $1 AND gm.deleted_at IS NULL AND g.deleted_at IS NULL 
+          ORDER BY gm.created_at DESC`
 	rows, err := DB.Query(query, teamId)
 	if err != nil {
 		return nil, err
@@ -343,7 +390,7 @@ func GetGroupsByTeamId(teamId int) ([]Group, error) {
 	for rows.Next() {
 		var group Group
 		if err = rows.Scan(&group.Id, &group.Uuid, &group.Name, &group.Abbreviation,
-			&group.Mission, &group.FounderId, &group.FirstTeamId, &group.Class,
+			&group.Mission, &group.FounderId, &group.FirstTeamId, &group.Class, &group.Nature,
 			&group.Logo, &group.Tags, &group.CreatedAt, &group.UpdatedAt, &group.DeletedAt); err != nil {
 			return nil, err
 		}
@@ -359,9 +406,25 @@ func GetGroupsByTeamId(teamId int) ([]Group, error) {
 func (group *Group) CountGroupMembers() (int, error) {
 	var count int
 	query := `SELECT COUNT(*) FROM group_members 
-	          WHERE group_id = $1 AND deleted_at IS NULL AND status = $2`
+          WHERE group_id = $1 AND deleted_at IS NULL AND status = $2`
 	err := DB.QueryRow(query, group.Id, GroupMemberStatusActive).Scan(&count)
 	return count, err
+}
+
+// CountTeamsByNature 统计集团中指定性质的团队数量
+func (group *Group) CountTeamsByNature(nature int) (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM teams t
+          INNER JOIN group_members gm ON t.id = gm.team_id
+          WHERE gm.group_id = $1 AND gm.deleted_at IS NULL AND t.deleted_at IS NULL AND t.nature = $2`
+	err := DB.QueryRow(query, group.Id, nature).Scan(&count)
+	return count, err
+}
+
+// HasProfessionalTeam 判断集团中是否至少包含一个职业团队
+func (group *Group) HasProfessionalTeam() (bool, error) {
+	count, err := group.CountTeamsByNature(TeamNatureProfessional)
+	return count > 0, err
 }
 
 // IsFounder 检查用户是否为集团创建者
@@ -437,16 +500,16 @@ func (group *Group) CanDelete(userId int) bool {
 // GetGroupByTeamId 获取团队所属的第一个集团（如果有）
 func GetGroupByTeamId(teamId int) (*Group, error) {
 	query := `SELECT g.id, g.uuid, g.name, g.abbreviation, g.mission, g.founder_id, 
-	          g.first_team_id, g.class, g.logo, g.created_at, g.updated_at, g.deleted_at 
-	          FROM groups g 
-	          INNER JOIN group_members gm ON g.id = gm.group_id 
-	          WHERE gm.team_id = $1 AND gm.deleted_at IS NULL AND g.deleted_at IS NULL 
-	          ORDER BY gm.created_at ASC LIMIT 1`
+          g.first_team_id, g.class, g.nature, g.logo, g.created_at, g.updated_at, g.deleted_at 
+          FROM groups g 
+          INNER JOIN group_members gm ON g.id = gm.group_id 
+          WHERE gm.team_id = $1 AND gm.deleted_at IS NULL AND g.deleted_at IS NULL 
+          ORDER BY gm.created_at ASC LIMIT 1`
 
 	var group Group
 	err := DB.QueryRow(query, teamId).Scan(
 		&group.Id, &group.Uuid, &group.Name, &group.Abbreviation,
-		&group.Mission, &group.FounderId, &group.FirstTeamId, &group.Class,
+		&group.Mission, &group.FounderId, &group.FirstTeamId, &group.Class, &group.Nature,
 		&group.Logo, &group.CreatedAt, &group.UpdatedAt, &group.DeletedAt)
 
 	if err != nil {
@@ -706,7 +769,7 @@ func CountGroupInvitationsByUserIdAndStatus(userId int, status int) (int, error)
 
 // CreateWithTx 在事务中创建集团
 func (group *Group) CreateWithTx(tx *sql.Tx) error {
-	err := tx.QueryRow(`INSERT INTO groups (uuid, name, abbreviation, mission, founder_id, first_team_id, class, logo, tags, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id, uuid, created_at`, Random_UUID(), group.Name, group.Abbreviation, group.Mission, group.FounderId, group.FirstTeamId, group.Class, group.Logo, group.Tags, time.Now()).Scan(&group.Id, &group.Uuid, &group.CreatedAt)
+	err := tx.QueryRow(`INSERT INTO groups (uuid, name, abbreviation, mission, founder_id, first_team_id, class, nature, logo, tags, created_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid, created_at`, Random_UUID(), group.Name, group.Abbreviation, group.Mission, group.FounderId, group.FirstTeamId, group.Class, group.Nature, group.Logo, group.Tags, time.Now()).Scan(&group.Id, &group.Uuid, &group.CreatedAt)
 	return err
 }
 

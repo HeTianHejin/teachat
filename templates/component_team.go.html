@@ -22,6 +22,7 @@
           </div>
 
           <div class="col-xs-4 text-center">
+            <span class="label {{ if .Team.IsProfessional }}label-info{{ else if .Team.IsAmateur }}label-warning{{ else }}label-default{{ end }}">{{ .Team.NatureName }}</span>
             {{ if .Team.IsOpen }}
             <span class="label label-success">{{ .Team.TeamProperty }}</span>
             {{ else }}
@@ -46,6 +47,14 @@
 
       <div class="panel-body">
         {{ .Team.Mission }} ...
+        {{ if .Team.Tags }}
+        <div style="margin-top: 6px;">
+          <i class="glyphicon glyphicon-tags"></i>
+          {{ range .Team.GetTags }}
+          <span class="label label-default" style="margin-right: 5px;">{{ . }}</span>
+          {{ end }}
+        </div>
+        {{ end }}
       </div>
 
       <div class="panel-footer">

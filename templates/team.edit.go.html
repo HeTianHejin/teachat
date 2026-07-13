@@ -45,6 +45,28 @@
   </div>
 
   <div class="form-group">
+    <p><label>茶团性质：</label></p>
+    <label class="radio-inline">
+      <input type="radio" name="nature" value="1" {{ if eq .Team.Nature 1 }}checked{{ end }} required> 职业团队 - 可承接茶订单，标签需选自行业白名单
+    </label>
+    <label class="radio-inline">
+      <input type="radio" name="nature" value="2" {{ if eq .Team.Nature 2 }}checked{{ end }} required> 业余团队 - 兴趣爱好，标签可自由填写
+    </label>
+  </div>
+
+  <div class="form-group">
+    <label for="tags">分类标签（用逗号分隔）</label>
+    <input type="text" class="form-control" id="tags" name="tags" value="{{ .Team.Tags }}" list="industry-tag-list"
+           placeholder="如：信息传输、软件和信息技术服务业" maxlength="200" />
+    <datalist id="industry-tag-list">
+      {{ range .IndustryTags }}
+      <option value="{{ .Name }}">{{ .Name }}</option>
+      {{ end }}
+    </datalist>
+    <p class="help-block">职业团队请从行业白名单中选择标签，用逗号分隔；业余团队可自由填写。</p>
+  </div>
+
+  <div class="form-group">
     <button type="submit" class="btn btn-primary">保存修改</button>
     <a href="/v1/team/manage?uuid={{ .Team.Uuid }}" class="btn btn-default">取消</a>
   </div>

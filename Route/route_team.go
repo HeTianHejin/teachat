@@ -106,9 +106,15 @@ func NewTeamGet(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
-	var tSPD dao.TeamSquare
-	tSPD.SessUser = s_u
-	generateHTML(w, &tSPD, "layout", "navbar.private", "team.new")
+	industryTags, err := dao.GetAllIndustryTags()
+	if err != nil {
+		util.Debug("Cannot get industry tags", err)
+	}
+	type pageData struct {
+		SessUser     dao.User
+		IndustryTags []dao.IndustryTag
+	}
+	generateHTML(w, &pageData{SessUser: s_u, IndustryTags: industryTags}, "layout", "navbar.private", "team.new")
 }
 
 // POST /v1/team/create
@@ -181,6 +187,30 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士摸摸头，竟然说茶团类别太多或者太少，未能创建新茶团。")
 		return
 	}
+
+	// 读取并校验团队性质
+	nature, err := strconv.Atoi(r.PostFormValue("nature"))
+	if err != nil {
+		util.Debug(" Cannot convert nature to int", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能创建新茶团，请稍后再试。")
+		return
+	}
+	switch nature {
+	case dao.TeamNatureProfessional, dao.TeamNatureAmateur:
+	default:
+		report(w, s_u, "你好，茶博士摸摸头，竟然说茶团性质不合适，未能创建新茶团。")
+		return
+	}
+
+	// 规范化标签；职业团队必须选择行业白名单标签
+	tags := dao.NormalizeTags(r.PostFormValue("tags"))
+	if nature == dao.TeamNatureProfessional {
+		if err := dao.ValidateProfessionalTags(tags); err != nil {
+			report(w, s_u, "你好，"+err.Error())
+			return
+		}
+	}
+
 	//检测同名的team是否已经存在，团队不允许同名
 	old_team := dao.Team{Name: new_name}
 
@@ -215,8 +245,9 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		Mission:      mission,
 		Logo:         logo,
 		Class:        class,
+		Nature:       nature,
 		FounderId:    s_u.Id,
-		Tags:         r.PostFormValue("tags"),
+		Tags:         tags,
 		IsPrivate:    isPrivate,
 	}
 	// 使用事务创建团队并添加创建人为第一个成员
@@ -1395,12 +1426,18 @@ func EditTeamGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	industryTags, err := dao.GetAllIndustryTags()
+	if err != nil {
+		util.Debug("Cannot get industry tags", err)
+	}
 	var pageData struct {
-		SessUser dao.User
-		Team     dao.Team
+		SessUser     dao.User
+		Team         dao.Team
+		IndustryTags []dao.IndustryTag
 	}
 	pageData.SessUser = s_u
 	pageData.Team = team
+	pageData.IndustryTags = industryTags
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "team.edit")
 }
@@ -1496,6 +1533,35 @@ func EditTeamPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 读取并校验团队性质
+	nature, err := strconv.Atoi(r.PostFormValue("nature"))
+	if err != nil {
+		report(w, s_u, "你好，茶团性质无效。")
+		return
+	}
+	switch nature {
+	case dao.TeamNatureProfessional, dao.TeamNatureAmateur:
+	default:
+		report(w, s_u, "你好，茶团性质无效。")
+		return
+	}
+
+	// 规范化标签并校验职业团队白名单
+	tags := dao.NormalizeTags(r.PostFormValue("tags"))
+	if nature == dao.TeamNatureProfessional {
+		if err := dao.ValidateProfessionalTags(tags); err != nil {
+			report(w, s_u, "你好，"+err.Error())
+			return
+		}
+	}
+
+	// 若茶团已加入集团，修改后的性质必须与集团一致
+	group, err := dao.GetGroupByTeamId(team.Id)
+	if err == nil && group != nil && !group.CanIncludeTeam(nature) {
+		report(w, s_u, fmt.Sprintf("你好，该茶团已加入 %s，不能修改为 %s。", group.NatureName(), (&dao.Team{Nature: nature}).NatureName()))
+		return
+	}
+
 	// 检查名称是否与其他茶团重复（排除自己）
 	if name != team.Name {
 		existingTeam := dao.Team{Name: name}
@@ -1521,6 +1587,8 @@ func EditTeamPost(w http.ResponseWriter, r *http.Request) {
 	team.Name = name
 	team.Abbreviation = abbreviation
 	team.Mission = mission
+	team.Nature = nature
+	team.Tags = tags
 
 	if err := team.Update(); err != nil {
 		util.Debug("Cannot update team", err)

@@ -369,6 +369,12 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 校验被邀请团队性质是否与集团一致
+	if !group.CanIncludeTeam(team.Nature) {
+		report(w, s_u, fmt.Sprintf("你好，%s 属于 %s，不能加入 %s。", team.Name, team.NatureName(), group.NatureName()))
+		return
+	}
+
 	switch replyClass {
 	case 1:
 		// 接受邀请

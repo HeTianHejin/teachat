@@ -16,6 +16,16 @@
 
     <div class="panel-body">
 
+      <div class="form-group">
+        <p><label>选择集团性质：</label></p>
+        <label class="radio-inline">
+          <input type="radio" name="nature" value="1" required> 职业集团 - 必须包含职业团队，标签需选自行业白名单
+        </label>
+        <label class="radio-inline">
+          <input type="radio" name="nature" value="2" required> 业余集团 - 只能包含业余团队，标签可自由填写
+        </label>
+      </div>
+
       <div class=" form-group">
         <p><label for="public">选择您的集团属性：</label></p>
         <label class="radio-inline">
@@ -46,10 +56,14 @@
 
       <div class="form-group">
         <label for="tags">分类标签（用逗号分隔）</label>
-        <input type="text" class="form-control" name="tags" id="tags" 
-               placeholder="如：诗词书法,文化艺术" 
-               maxlength="200" />
-        <p class="help-block">标签帮助其他用户快速找到同行业的集团，建议3-5个标签</p>
+        <input type="text" class="form-control" name="tags" id="tags" list="industry-tag-list"
+               placeholder="如：信息传输、软件和信息技术服务业" maxlength="200" />
+        <datalist id="industry-tag-list">
+          {{ range .IndustryTags }}
+          <option value="{{ .Name }}">{{ .Name }}</option>
+          {{ end }}
+        </datalist>
+        <p class="help-block">职业集团请从行业白名单中选择标签；业余集团可自由填写，标签帮助其他用户快速找到同性质集团。</p>
       </div>
 
       <div class="form-group">

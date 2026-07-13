@@ -55,14 +55,21 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 		util.Debug("Cannot get user teams", err)
 	}
 
+	industryTags, err := dao.GetAllIndustryTags()
+	if err != nil {
+		util.Debug("Cannot get industry tags", err)
+	}
+
 	var pageData struct {
 		SessUser        dao.User
 		Teams           []dao.Team
 		PreSelectedTeam string // 预选的团队UUID
+		IndustryTags    []dao.IndustryTag
 	}
 	pageData.SessUser = s_u
 	pageData.Teams = teams
 	pageData.PreSelectedTeam = teamId
+	pageData.IndustryTags = industryTags
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "group.new")
 }
@@ -93,6 +100,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 	mission := r.PostFormValue("mission")
 	firstTeamIdStr := r.PostFormValue("first_team_id")
 	classStr := r.PostFormValue("class")
+	natureStr := r.PostFormValue("nature")
 
 	// 转换团队ID
 	firstTeamId, err := strconv.Atoi(firstTeamIdStr)
@@ -159,6 +167,31 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 读取并校验集团性质，必须与最高管理团队性质保持一致
+	nature, err := strconv.Atoi(natureStr)
+	if err != nil {
+		report(w, s_u, "你好，请选择集团性质。")
+		return
+	}
+	switch nature {
+	case dao.GroupNatureProfessional, dao.GroupNatureAmateur:
+	default:
+		report(w, s_u, "你好，集团性质不合适，未能创建新集团。")
+		return
+	}
+	if team.Nature != nature {
+		report(w, s_u, "你好，集团性质必须与最高管理团队保持一致。")
+		return
+	}
+	groupNature := nature
+	tags := dao.NormalizeTags(r.PostFormValue("tags"))
+	if groupNature == dao.GroupNatureProfessional {
+		if err := dao.ValidateProfessionalTags(tags); err != nil {
+			report(w, s_u, "你好，"+err.Error())
+			return
+		}
+	}
+
 	// 使用事务创建集团并添加第一团队为成员
 	group := dao.Group{
 		Name:         name,
@@ -167,8 +200,9 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 		FounderId:    s_u.Id,
 		FirstTeamId:  firstTeamId,
 		Class:        class,
+		Nature:       groupNature,
 		Logo:         "groupLogo",
-		Tags:         r.PostFormValue("tags"),
+		Tags:         tags,
 	}
 
 	if err := createGroupWithFirstMember(&group, firstTeamId, s_u.Id); err != nil {
@@ -375,6 +409,18 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 	teamId, err := strconv.Atoi(teamIdStr)
 	if err != nil {
 		report(w, s_u, "你好，团队ID无效。")
+		return
+	}
+
+	// 校验被添加团队性质是否与集团一致
+	addTeam, err := dao.GetTeam(teamId)
+	if err != nil {
+		util.Debug("Cannot get team", err)
+		report(w, s_u, "你好，未能找到指定的团队。")
+		return
+	}
+	if !group.CanIncludeTeam(addTeam.Nature) {
+		report(w, s_u, fmt.Sprintf("你好，%s 属于 %s，不能加入 %s。", addTeam.Name, addTeam.NatureName(), group.NatureName()))
 		return
 	}
 

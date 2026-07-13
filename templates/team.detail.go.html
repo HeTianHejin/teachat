@@ -51,6 +51,7 @@
             {{ if .Team.IsPrivate }}
             <span class="label label-danger">私密</span>
             {{ end }}
+            <span class="label {{ if .Team.IsProfessional }}label-info{{ else if .Team.IsAmateur }}label-warning{{ else }}label-default{{ end }}">{{ .Team.NatureName }}</span>
             {{ if .Team.IsOpen }}
             <i class="bi-people" style="font-size: 2rem;"></i>
 

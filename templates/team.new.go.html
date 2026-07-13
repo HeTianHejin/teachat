@@ -18,6 +18,16 @@
     <div class="panel-body">
 
       <div class="form-group">
+        <p><label>选择茶团性质：</label></p>
+        <label class="radio-inline">
+          <input type="radio" name="nature" id="nature-professional" value="1" required> 职业团队 - 可承接茶订单，标签需选自行业白名单
+        </label>
+        <label class="radio-inline">
+          <input type="radio" name="nature" id="nature-amateur" value="2" required> 业余团队 - 兴趣爱好，标签可自由填写
+        </label>
+      </div>
+
+      <div class="form-group">
         <p><label for="public">选择您的茶团属性：</label></p>
         <label class="radio-inline">
           <input type="radio" name="class" id="public" value="10" required> 开放式-所有人均可申请加入
@@ -56,10 +66,15 @@
 
       <div class="form-group">
         <label for="tags">分类标签（用逗号分隔）</label>
-        <input type="text" class="form-control" name="tags" id="tags" 
-               placeholder="如：家电维修,宠物服务" 
+        <input type="text" class="form-control" name="tags" id="tags" list="industry-tag-list"
+               placeholder="如：信息传输、软件和信息技术服务业" 
                maxlength="200" />
-        <p class="help-block">标签帮助其他用户快速找到同行业的团队，建议3-5个标签。私密团队不会显示在公开列表中。</p>
+        <datalist id="industry-tag-list">
+          {{ range .IndustryTags }}
+          <option value="{{ .Name }}">{{ .Name }}</option>
+          {{ end }}
+        </datalist>
+        <p class="help-block" id="tags-help">职业团队请从行业白名单中选择标签，用逗号分隔；业余团队可自由填写。私密团队不会显示在公开列表中。</p>
       </div>
 
       <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
