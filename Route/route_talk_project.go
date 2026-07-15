@@ -416,17 +416,18 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 如果是紧急/人道主义/救援/慈善等茶台，则不校验出题方团队是否具备入围资格（职业团队）
 	// 校验解题方团队是否具备入围资格（职业团队）
-	eligible, err := dao.IsTeamEligibleForShortlist(payeeTeam.Id)
-	if err != nil {
-		util.Debug(" Cannot check team eligible for shortlist", payeeTeam.Id, err)
-		report(w, s_u, "你好，茶博士失魂鱼，未能校验解题方团队入围资格，请确认后再试。")
-		return
-	}
-	if !eligible {
-		report(w, s_u, fmt.Sprintf("你好，解题方团队 %s 不是职业团队，暂不能入围。", payeeTeam.Name))
-		return
-	}
+	// eligible, err := dao.IsTeamEligibleForShortlist(payeeTeam.Id)
+	// if err != nil {
+	// 	util.Debug(" Cannot check team eligible for shortlist", payeeTeam.Id, err)
+	// 	report(w, s_u, "你好，茶博士失魂鱼，未能校验解题方团队入围资格，请确认后再试。")
+	// 	return
+	// }
+	// if !eligible {
+	// 	report(w, s_u, fmt.Sprintf("你好，解题方团队 %s 不是职业团队，暂不能入围。", payeeTeam.Name))
+	// 	return
+	// }
 
 	// 预备金金额：10克 = 10000毫克
 	const preparationAmountMg = 10000
