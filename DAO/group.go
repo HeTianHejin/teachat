@@ -7,6 +7,8 @@ import (
 
 // Group 集团，n个茶团集合，构成一个大组织。 group = team set
 // 用于支持多团队协作的复杂项目场景
+// 集团的成员是团队，而不是个人。
+// 一个团队仅可以加入一个集团一次，已加入的团队不能再加入其他集团。
 type Group struct {
 	Id           int
 	Uuid         string

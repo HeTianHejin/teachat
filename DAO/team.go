@@ -119,8 +119,8 @@ func GetTeamsByIds(teamIDs []int) ([]Team, error) {
 	for rows.Next() {
 		var team Team
 		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission,
-		&team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation,
-		&team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags); err != nil {
+			&team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation,
+			&team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags); err != nil {
 			return nil, err
 		}
 		teams = append(teams, team)
@@ -136,9 +136,20 @@ func GetTeamsByIds(teamIDs []int) ([]Team, error) {
 	return teams, nil
 }
 
+const (
+	TeamClassSpaceship          = 0  //飞船茶棚团队，系统保留
+	TeamClassOpen               = 1  //开放式$事业茶团
+	TeamClassClose              = 2  // 封闭式$事业茶团
+	TeamClassOfflineFamily      = 3  //线下茶会家庭临时监护团队,特殊团队类型，主要用于线下茶会活动的家庭临时监护团队，
+	TeamClassOpenDraft          = 10 //开放式草团
+	TeamClassCloseDraft         = 20 // 封闭式草团
+	TeamClassRejectedOpenDraft  = 31 //已婉拒开放式草团
+	TeamClassRejectedCloseDraft = 32 // 已婉拒封闭式草团
+)
+
 // Team $事业茶团=同事团队
-// 拥有共同目标，或者兴趣爱好/信仰/利益的成员间非血缘关系团队
-// 层级关系通过Group结构管理
+// 拥有共同目标，或者兴趣爱好/信仰/利益的成员
+// 层级关系通过Group结构管理，一个团队仅可以加入一个集团一次，已加入的团队不能再加入其他集团。
 type Team struct {
 	Id           int
 	Uuid         string
@@ -156,16 +167,41 @@ type Team struct {
 	DeletedAt    *time.Time // 软删除时间戳，NULL表示未删除
 }
 
-const (
-	TeamClassSpaceship          = 0  //飞船茶棚团队，系统保留
-	TeamClassOpen               = 1  //开放式$事业茶团
-	TeamClassClose              = 2  // 封闭式$事业茶团
-	TeamClassOfflineFamily      = 3  //线下茶会家庭临时监护团队,特殊团队类型，主要用于线下茶会活动的家庭临时监护团队，
-	TeamClassOpenDraft          = 10 //开放式草团
-	TeamClassCloseDraft         = 20 // 封闭式草团
-	TeamClassRejectedOpenDraft  = 31 //已婉拒开放式草团
-	TeamClassRejectedCloseDraft = 32 // 已婉拒封闭式草团
-)
+// 某个team加入某个group记录
+// 注意：一个team只能加入一个group一次，已加入的team不能再加入其他group
+type TeamGroupMembership struct {
+	Id        int
+	Uuid      string
+	GroupId   int
+	TeamId    int // 团队id,唯一约束，用于限制一个团队只能加入一个集团一次
+	CreatedAt time.Time
+}
+
+// TeamGroupMembership.Create() 创建团队加入集团的记录
+func (membership *TeamGroupMembership) Create() (err error) {
+	statement := "INSERT INTO team_group_memberships (uuid, group_id, team_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id"
+	err = DB.QueryRow(statement, membership.Uuid, membership.GroupId, membership.TeamId, membership.CreatedAt).Scan(&membership.Id)
+	return err
+}
+
+// TeamGroupMembership.GetByTeamId() 根据team_id获取团队加入集团的记录
+func GetTeamGroupMembershipByTeamId(teamId int) (membership TeamGroupMembership, err error) {
+	statement := "SELECT id, uuid, group_id, team_id, created_at FROM team_group_memberships WHERE team_id = $1"
+	err = DB.QueryRow(statement, teamId).Scan(&membership.Id, &membership.Uuid, &membership.GroupId, &membership.TeamId, &membership.CreatedAt)
+	return
+}
+
+// 判断team是否曾经加入过group，返回true，否则返回false
+// 存在记录即可判定曾经加入过
+func HasEverJoinedGroup(teamId int) (bool, error) {
+	statement := "SELECT COUNT(*) FROM team_group_memberships WHERE team_id = $1"
+	var count int
+	err := DB.QueryRow(statement, teamId).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
 
 // TeamMemberStatus 团队成员状态类型
 type TeamMemberStatus int
@@ -638,17 +674,6 @@ func GetTeamMemberRoleByTeamIdAndUserId(team_id, user_id int) (role int, err err
 func GetUserSurvivalTeams(user_id int, ctx context.Context) ([]Team, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	// count, err := GetUserSurvivalTeamsCount(user_id)
-	// if err != nil || count == 0 {
-	// 	return []Team{}, err
-	// }
-	// if count == 1 {
-	// 	team, err := GetFreelancerTeam(ctx)
-	// 	if err != nil {
-	// 		return []Team{}, err
-	// 	}
-	// 	return []Team{team}, nil
-	// }
 
 	query := `
         SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags
@@ -694,6 +719,19 @@ func GetUserSurvivalTeamsCount(user_id int) (count int, err error) {
 
 	err = DB.QueryRow(query, user_id, TeamMemberStatusActive).Scan(&count)
 
+	return
+}
+
+// 获取用户全部$事业团队id，排除无事业意义自由人团队id
+// 包含曾经已经退出的团队id，
+// 包含已经被删除的团队id，
+func GetUserAllTeamsId(user_id int) (team_ids []int, err error) {
+	query := `
+		SELECT teams.id
+		FROM teams
+		JOIN team_members ON teams.id = team_members.team_id
+		WHERE team_members.user_id = $1 AND team.id != $2`
+	err = DB.QueryRow(query, user_id, TeamIdFreelancer).Scan(&team_ids)
 	return
 }
 
@@ -1725,4 +1763,27 @@ func (team *Team) CEO() (user User, err error) {
 	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", teamMember.UserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	return
+}
+
+// GetGroupIdByTeamId 根据团队id获取团队所加入的集团id,
+// 因为一个团队限制只能加入一个集团或者没有加入集团，所以需要先检查团队是否曾经加入过集团
+func GetGroupIdByTeamId(teamId int) (groupId int, err error) {
+	// 检查团队是否存在加入集团记录
+	// ok, err := HasEverJoinedGroup(teamId)
+	// if err != nil {
+	// 	return 0, err
+	// }
+	// if !ok {
+	// 	return 0, fmt.Errorf("team %d has not joined any group", teamId)
+	// }
+	// 获取团队所属的集团ID
+	err = DB.QueryRow("SELECT group_id FROM group_members WHERE team_id = $1 AND status = $2", teamId, GroupMemberStatusActive).Scan(&groupId)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, fmt.Errorf("team %d has not joined any group", teamId)
+		}
+		return 0, fmt.Errorf("failed to query group ID for team %d: %w", teamId, err)
+	}
+
+	return groupId, nil
 }

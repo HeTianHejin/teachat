@@ -115,6 +115,16 @@ CREATE INDEX IF NOT EXISTS idx_teams_class_private_deleted ON teams(class, is_pr
 CREATE INDEX IF NOT EXISTS idx_teams_nature ON teams(nature);
 CREATE INDEX IF NOT EXISTS idx_teams_nature_class ON teams(nature, class);
 
+-- 某个team加入某个group记录
+-- 注意：一个team只能加入一个group一次，已加入的team不能再加入其他group
+CREATE TABLE team_group_memberships (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    group_id              INTEGER REFERENCES groups(id),
+    team_id               INTEGER REFERENCES teams(id) UNIQUE,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
 -- 集团表
 -- 用于管理多个团队的集合，支持复杂的多团队协作场景
 CREATE TABLE groups (

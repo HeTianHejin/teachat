@@ -3,6 +3,7 @@ package dao
 import (
 	"context"
 	"fmt"
+	"strconv"
 )
 
 // AreUsersPeers 判断两个用户是否同行（同专业）
@@ -101,14 +102,74 @@ func GetPeerTagsBetweenUsers(userAId, userBId int) ([]string, error) {
 	return common, nil
 }
 
-// IsTeamEligibleForShortlist 判断团队是否具备入围资格（职业团队）
-func IsTeamEligibleForShortlist(teamId int) (bool, error) {
-	if teamId == TeamIdNone {
-		return false, nil
+// 判断两个人是否同事
+// 同一集团或者团队
+// 同一集团，则不考虑团队
+// 同一团队，则不考虑集团
+// 如果不是同事，返回"No"
+// 如果是团队同事，返回“Team+id”
+// 如果集团同事，返回集团“Group+id”
+func IsUsersColleagues(userAId, userBId int, ctx context.Context) (string, error) {
+	if userAId <= 0 || userBId <= 0 {
+		return "No", fmt.Errorf("invalid user id: %d, %d", userAId, userBId)
 	}
-	team, err := GetTeam(teamId)
+	if userAId == userBId {
+		return "No", fmt.Errorf("same user id: %d, %d", userAId, userBId)
+	}
+
+	//是否在同一团队
+	//获取用户A的所有团队ID
+	teamIdsA, err := GetUserAllTeamsId(userAId)
 	if err != nil {
-		return false, err
+		return "No", err
 	}
-	return team.IsProfessional() && !team.IsDeleted(), nil
+	//获取用户B的所有团队ID
+	teamIdsB, err := GetUserAllTeamsId(userBId)
+	if err != nil {
+		return "No", err
+	}
+	//检查是否存在交集
+	for _, teamIdA := range teamIdsA {
+		if contains(teamIdsB, teamIdA) {
+			return "Team+" + strconv.Itoa(teamIdA), nil
+		}
+	}
+
+	// 检查用户A、B是否在同一集团
+	// 获取用户A的所有集团ID，因为一个团队限制只能加入一个集团，所以用户A的所有团队的集团ID是唯一的，如果所在团队没有加入集团，则不存在集团ID
+	// 判断团队是否加入集团,如果有，添加到groupsAId切片，迭代获取全部groupsAid，然后同样获取用户B的所有集团ID，判断是否存在交集
+	groupIdsA := []int{len(teamIdsA)}
+	for _, teamIdA := range teamIdsA {
+		if yes, err := HasEverJoinedGroup(teamIdA); err != nil {
+			return "No", err
+		} else if yes {
+			groupIdA, err := GetGroupIdByTeamId(teamIdA)
+			if err != nil {
+				return "No", err
+			}
+			groupIdsA = append(groupIdsA, groupIdA)
+		}
+	}
+
+	//根据用户teamsIds获取所有集团ID
+	groupIdsB := []int{len(teamIdsB)}
+	for _, teamIdB := range teamIdsB {
+		if yes, err := HasEverJoinedGroup(teamIdB); err != nil {
+			return "No", err
+		} else if yes {
+			groupIdB, err := GetGroupIdByTeamId(teamIdB)
+			if err != nil {
+				return "No", err
+			}
+			groupIdsB = append(groupIdsB, groupIdB)
+		}
+	}
+	// 检查两个用户是否在同一集团
+	for _, groupIdA := range groupIdsA {
+		if contains(groupIdsB, groupIdA) {
+			return "Group+" + strconv.Itoa(groupIdA), nil
+		}
+	}
+
+	return "No", nil
 }
