@@ -56,8 +56,8 @@ const (
 
 const (
 	TeamNatureUnknown      = 0 // 未知/特殊，系统预设团队默认使用
-	TeamNatureProfessional = 1 // 职业团队：按行业分类指引填写标签，可承接茶订单
-	TeamNatureAmateur      = 2 // 业余团队：兴趣爱好，标签可自由填写
+	TeamNatureProfessional = 1 // 职业团队：按行业分类指引填写标签，可承接普通茶订单
+	TeamNatureAmateur      = 2 // 业余团队：兴趣爱好，标签可自由填写，可以承接慈善、人道主义、紧急救援等茶订单
 )
 
 var (
@@ -733,6 +733,36 @@ func GetUserAllTeamsId(user_id int) (team_ids []int, err error) {
 		WHERE team_members.user_id = $1 AND team.id != $2`
 	err = DB.QueryRow(query, user_id, TeamIdFreelancer).Scan(&team_ids)
 	return
+}
+
+// 获取全部用户职业团队id
+// 包括已经退出的团队id，
+// 包括已经被删除的团队id，
+func GetUserAllProfessionalTeamsId(user_id int) (team_ids []int, err error) {
+	query := `
+		SELECT teams.id
+		FROM teams
+		JOIN team_members ON teams.id = team_members.team_id
+		WHERE team_members.user_id = $1 AND teams.nature = $2`
+	rows, err := DB.Query(query, user_id, TeamNatureProfessional)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var teamId int
+		if err := rows.Scan(&teamId); err != nil {
+			return nil, err
+		}
+		team_ids = append(team_ids, teamId)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return team_ids, nil
 }
 
 // 获取用户创建的全部$事业茶团，FounderId = UserId

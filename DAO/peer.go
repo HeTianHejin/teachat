@@ -102,9 +102,8 @@ func GetPeerTagsBetweenUsers(userAId, userBId int) ([]string, error) {
 	return common, nil
 }
 
-// 判断两个人是否同事
-// 同一集团或者团队
-// 同一集团，则不考虑团队
+// 判断两个人是否同事（yes/no）
+// 同一职业集团或者职业团队，业余团队不算同事
 // 同一团队，则不考虑集团
 // 如果不是同事，返回"No"
 // 如果是团队同事，返回“Team+id”
@@ -118,13 +117,13 @@ func IsUsersColleagues(userAId, userBId int, ctx context.Context) (string, error
 	}
 
 	//是否在同一团队
-	//获取用户A的所有团队ID
-	teamIdsA, err := GetUserAllTeamsId(userAId)
+	//获取用户A的所有职业团队ID
+	teamIdsA, err := GetUserAllProfessionalTeamsId(userAId)
 	if err != nil {
 		return "No", err
 	}
-	//获取用户B的所有团队ID
-	teamIdsB, err := GetUserAllTeamsId(userBId)
+	//获取用户B的所有职业团队ID
+	teamIdsB, err := GetUserAllProfessionalTeamsId(userBId)
 	if err != nil {
 		return "No", err
 	}
@@ -135,8 +134,8 @@ func IsUsersColleagues(userAId, userBId int, ctx context.Context) (string, error
 		}
 	}
 
-	// 检查用户A、B是否在同一集团
-	// 获取用户A的所有集团ID，因为一个团队限制只能加入一个集团，所以用户A的所有团队的集团ID是唯一的，如果所在团队没有加入集团，则不存在集团ID
+	// 检查用户A、B是否在同一职业集团
+	// 获取用户A的所有职业集团ID，因为一个团队限制只能加入一个集团，所以用户A的所有团队的集团ID是唯一的，如果所在团队没有加入集团，则不存在集团ID
 	// 判断团队是否加入集团,如果有，添加到groupsAId切片，迭代获取全部groupsAid，然后同样获取用户B的所有集团ID，判断是否存在交集
 	groupIdsA := []int{len(teamIdsA)}
 	for _, teamIdA := range teamIdsA {
@@ -151,7 +150,7 @@ func IsUsersColleagues(userAId, userBId int, ctx context.Context) (string, error
 		}
 	}
 
-	//根据用户teamsIds获取所有集团ID
+	//根据用户teamsIds获取所有职业集团ID
 	groupIdsB := []int{len(teamIdsB)}
 	for _, teamIdB := range teamIdsB {
 		if yes, err := HasEverJoinedGroup(teamIdB); err != nil {
@@ -164,7 +163,7 @@ func IsUsersColleagues(userAId, userBId int, ctx context.Context) (string, error
 			groupIdsB = append(groupIdsB, groupIdB)
 		}
 	}
-	// 检查两个用户是否在同一集团
+	// 检查两个用户是否在同一职业集团
 	for _, groupIdA := range groupIdsA {
 		if contains(groupIdsB, groupIdA) {
 			return "Group+" + strconv.Itoa(groupIdA), nil
