@@ -118,33 +118,33 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查是否已经存在相同名字的茶话会
-	obj := dao.Objective{
-		Title: title,
-	}
-	t_ob, err := obj.GetByTitle()
-	if err != nil {
-		util.Debug("查询茶话会失败", err)
-		report(w, s_u, "查询茶话会失败")
-		return
-	}
-	if len(t_ob) > 0 {
-		report(w, s_u, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复哦，请确认后再试。")
-		return
-	}
+	// 检查是否已经存在相同名字的茶话会（2026/07/23 允许同名茶会，不再做重名限制）
+	// obj := dao.Objective{
+	// 	Title: title,
+	// }
+	// t_ob, err := obj.GetByTitle()
+	// if err != nil {
+	// 	util.Debug("查询茶话会失败", err)
+	// 	report(w, s_u, "查询茶话会失败")
+	// 	return
+	// }
+	// if len(t_ob) > 0 {
+	// 	report(w, s_u, "你好，编新不如述旧，刻古终胜雕今。茶话会名字重复哦，请确认后再试。")
+	// 	return
+	// }
 
-	countObj := dao.Objective{TeamId: team_id}
-	count_team, err := countObj.CountByTeamId()
-	if err != nil {
-		util.Debug(" cannot get count given objective team_id", err)
-		report(w, s_u, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
-		return
-	}
+	//countObj := dao.Objective{TeamId: team_id}
+	// count_team, err := countObj.CountByTeamId()
+	// if err != nil {
+	// 	util.Debug(" cannot get count given objective team_id", err)
+	// 	report(w, s_u, "你好，游丝软系飘春榭，落絮轻沾扑绣帘。请确认后再试。")
+	// 	return
+	// }
 	// 最大团队可以创建 茶话会 数量
-	if count_team > int(util.Config.MaxInviteTeams) {
-		report(w, s_u, "你好，编新不如述旧，一个茶团最多可以开的茶话会数量是有限的，请确认后再试。")
-		return
-	}
+	// if count_team > int(util.Config.MaxInviteTeams) {
+	// 	report(w, s_u, "你好，编新不如述旧，一个茶团最多可以开的茶话会数量是有限的，请确认后再试。")
+	// 	return
+	// }
 
 	// 检测一下name是否>2中文字，body是否在min_word-int(util.Config.ThreadMaxWord)中文字，
 	// 如果不是，返回错误信息

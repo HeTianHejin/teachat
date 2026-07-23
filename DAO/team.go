@@ -140,7 +140,7 @@ const (
 	TeamClassSpaceship          = 0  //飞船茶棚团队，系统保留
 	TeamClassOpen               = 1  //开放式$事业茶团
 	TeamClassClose              = 2  // 封闭式$事业茶团
-	TeamClassOfflineFamily      = 3  //线下茶会家庭临时监护团队,特殊团队类型，主要用于线下茶会活动的家庭临时监护团队，
+	TeamClassOfflineFamily      = 3  // 亲友团，线下茶会家庭亲友构成监护团队,特殊团队类型，主要用于线下茶会活动的家庭活动监护团队，
 	TeamClassOpenDraft          = 10 //开放式草团
 	TeamClassCloseDraft         = 20 // 封闭式草团
 	TeamClassRejectedOpenDraft  = 31 //已婉拒开放式草团
@@ -150,6 +150,9 @@ const (
 // Team $事业茶团=同事团队
 // 拥有共同目标，或者兴趣爱好/信仰/利益的成员
 // 层级关系通过Group结构管理，一个团队仅可以加入一个集团一次，已加入的团队不能再加入其他集团。
+// 团队成员通过TeamMember结构管理，团队成员可以是CEO、CTO、CMO、CFO、品茶师等角色，团队成员状态可以是正常、暂停、退出、待审核等状态。
+// 唯一活动主体，承担发起、协作、茶会、活动、通知、讨论、任务、消息，都由团队承接。个人、家庭仅是背景上下文关系基础。
+// 团队之间可以相互关注，传递消息。团队与个人/家庭之间不能相互关注，直接传递消息，个人/家庭也不能被直接关注。
 type Team struct {
 	Id           int
 	Uuid         string
@@ -1796,16 +1799,16 @@ func (team *Team) CEO() (user User, err error) {
 }
 
 // GetGroupIdByTeamId 根据团队id获取团队所加入的集团id,
-// 因为一个团队限制只能加入一个集团或者没有加入集团，所以需要先检查团队是否曾经加入过集团
+// 因为一个团队限制只能加入一个集团，所以当前团队可能或者没有加入某个集团，如果没有，返回空记录错误
 func GetGroupIdByTeamId(teamId int) (groupId int, err error) {
 	// 检查团队是否存在加入集团记录
-	// ok, err := HasEverJoinedGroup(teamId)
-	// if err != nil {
-	// 	return 0, err
-	// }
-	// if !ok {
-	// 	return 0, fmt.Errorf("team %d has not joined any group", teamId)
-	// }
+	ok, err := HasEverJoinedGroup(teamId)
+	if err != nil {
+		return 0, err
+	}
+	if !ok {
+		return 0, fmt.Errorf("team %d has not joined any group", teamId)
+	}
 	// 获取团队所属的集团ID
 	err = DB.QueryRow("SELECT group_id FROM group_members WHERE team_id = $1 AND status = $2", teamId, GroupMemberStatusActive).Scan(&groupId)
 	if err != nil {
