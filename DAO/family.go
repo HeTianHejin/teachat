@@ -33,8 +33,8 @@ type Family struct {
 	PerspectiveUserId   int        // 视角所属用户ID，表示这是谁眼中的家庭，等于AuthorId
 }
 
-// 未明确家庭资料的茶友，其家庭资料统一虚拟为"四海为家",id=0
-// 任何生物人均是来自某个家庭，但是单独的个体，即使成年，属于一个未来家庭的成员之一，不能视为一个家庭。
+// 未明确家庭资料的茶友，其家庭名称统一虚拟为"四海为家",id=0
+// 任何一个用户均是某个家庭成员，家庭关系未知的，均属于“四海为家”这个特殊“家庭”。
 var FamilyUnknown = Family{
 	Id:           FamilyIdUnknown,
 	Uuid:         FamilyUuidUnknown,
