@@ -28,9 +28,9 @@
 
             <span style="font-size: smaller;">
 
-              （<a
+              （关联家庭：<a
                 href="/v1/family/detail?id={{ .ProjectBean.AuthorFamily.Uuid }}">{{ .ProjectBean.AuthorFamily.Name }}</a>，
-              <a
+              管理团队：<a
                 href="/v1/team/detail?uuid={{ .ProjectBean.AuthorTeam.Uuid }}">{{ .ProjectBean.AuthorTeam.Abbreviation }}</a>）
 
             </span>
@@ -63,6 +63,9 @@
         </h4>
         <p style="white-space: pre-wrap;">
           {{ .ProjectBean.Project.Body }}
+        </p>
+        <p class="help-block" style="margin-top: 10px; font-size: smaller; color: #666;">
+          此家庭为关联背景资料公开展示，茶台的实际管理权由所选台主团队承担。
         </p>
 
         <blockquote style="font-size: xx-small;">

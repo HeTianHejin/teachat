@@ -51,37 +51,7 @@
       </div>
 
       <div class="form-group">
-        <fieldset>
-          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <div class="radio">
-              <label id="team_member">
-                <input type="radio" name="is_private" value="false" checked required />
-                以团队成员身份
-              </label>
-            </div>
-            <div class="radio">
-              <label id="family_member">
-                <input type="radio" name="is_private" value="true" required />
-                以家庭成员身份
-              </label>
-            </div>
-          </div>
-        </fieldset>
-      </div>
-
-      <div class="form-group">
-        <label for="description">选择围主团队</label>
-        <select name="team_id" class="form-control" id="team_id" required>
-          <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
-          </option>
-          {{ range .SessUserSurvivalTeams }}
-          <option value="{{ .Id }}">{{ .Name }}</option>
-          {{ end }}
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label for="description">选择围主家庭</label>
+        <label for="family_id">选择关联家庭（仅作背景展示）</label>
         <select name="family_id" class="form-control" id="family_id" required>
           <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
           </option>
@@ -89,6 +59,19 @@
           <option value="{{ .Id }}">{{ .Name }}</option>
           {{ end }}
         </select>
+        <p class="help-block">该家庭仅作为茶围的关联背景资料公开展示，不参与管理权属。</p>
+      </div>
+
+      <div class="form-group">
+        <label for="team_id">选择围主团队</label>
+        <select name="team_id" class="form-control" id="team_id" required>
+          <option value="{{ .SessUserDefaultTeam.Id }}">{{ .SessUserDefaultTeam.Name }}
+          </option>
+          {{ range .SessUserSurvivalTeams }}
+          <option value="{{ .Id }}">{{ .Name }}</option>
+          {{ end }}
+        </select>
+        <p class="help-block">茶围的管理权将归属所选围主团队；家庭仅作为关联背景，不承担直接管理权。</p>
       </div>
 
       <div class="col-xs-offset-5 col-xs-2 col-sm-2 col-md-2 col-lg-2">
@@ -98,7 +81,7 @@
   </div>
 
   <div class="panel-footer">
-    茶博士：您知道吗？船长非常迷信月光之神，说月圆月缺一轮回，才能拓摆一围茶，开新茶会。
+    茶博士：您知道吗？船长非常固执，要求每个茶围都必须有明确的管理团队，所以，您可能需要先加入一个团队或者创建一个团队。
   </div>
 
 </div>

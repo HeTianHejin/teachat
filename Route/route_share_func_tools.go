@@ -518,84 +518,62 @@ func moveDefaultTeamToFront(teamSlice []dao.TeamBean, defaultTeamID int) ([]dao.
 	return append([]dao.TeamBean{*defaultTeam}, newSlice...), nil
 }
 
-// validateTeamAndFamilyParams 验证团队和家庭ID参数的合法性
-// 返回: (是否有效, 错误) ---deepseek协助优化
+// validateRelatedFamilyReference 验证关联家庭选择，仅用于背景展示和公开信息，不授予管理权。
+func validateRelatedFamilyReference(family_id int, s_u dao.User, w http.ResponseWriter) (bool, error) {
+	if family_id == dao.FamilyIdUnknown {
+		report(w, s_u, "请选择一个关联家庭。")
+		return false, nil
+	}
+	if family_id < 0 {
+		report(w, s_u, "关联家庭ID不合法。")
+		return false, nil
+	}
+
+	family := dao.Family{Id: family_id}
+	is_member, err := family.IsMember(s_u.Id)
+	if err != nil {
+		return false, err
+	}
+	if !is_member {
+		report(w, s_u, "关联家庭资格检查失败，请确认后再试。")
+		return false, nil
+	}
+
+	return true, nil
+}
+
+// validateTeamAndFamilyParams 为旧入口保留兼容签名，统一按围主团队资格校验。
 func validateTeamAndFamilyParams(is_private bool, team_id int, family_id int, s_u dao.User, w http.ResponseWriter) (bool, error) {
+	_ = is_private
+	_ = family_id
+	return validateObjectiveCreateParams(team_id, s_u, w)
+}
 
-	// 基本参数检查（这些检查不涉及数据库操作）
-	//非法id组合
-	if family_id == dao.FamilyIdUnknown && team_id == dao.TeamIdNone {
-		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
-		return false, nil
-	}
+// validateObjectiveCreateParams 验证茶围创建时的围主团队资格
+func validateObjectiveCreateParams(team_id int, s_u dao.User, w http.ResponseWriter) (bool, error) {
 	if team_id == dao.TeamIdNone || team_id == dao.TeamIdSpaceshipCrew {
-		report(w, s_u, "指定的团队编号是保留编号，不能使用。")
-		return false, nil
+		report(w, s_u, "你好，特殊团队今天还不能创建茶话会，请稍后再试。")
+		return false, fmt.Errorf("special team #%d cannot do this", team_id)
 	}
 
-	if team_id < 0 || family_id < 0 {
+	if team_id < 0 {
 		report(w, s_u, "团队ID不合法。")
 		return false, nil
 	}
 
-	// 茶语管理权限归属是.IsPrivate 属性声明的，
-	//所以可以同时指定两者,符合任何人必然有某个家庭，但不一定有事业团队背景的实际情况
-	if is_private {
-		// 管理权属于家庭
-		if family_id == dao.FamilyIdUnknown {
-			report(w, s_u, "你好，四海为家者今天不能发布新茶语，请明天再试。")
-			return false, fmt.Errorf("unknown family #%d cannot do this", family_id)
-		}
-		family := dao.Family{Id: family_id}
-		// if err := family.Get(); err != nil {
-		// 	return false, err // 数据库错误，返回error
-		// }
-		isOnlyOne, err := family.IsOnlyOneMember()
-		if err != nil {
-			util.Debug("Cannot count family member given id", family.Id, err)
-			report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
-			return false, err
-		}
-		if isOnlyOne {
-			report(w, s_u, "根据“慎独”约定，单独成员家庭目前暂时不能品茶噢，请向船长抗议。")
-			return false, fmt.Errorf("onlyone member family #%d cannot do this", family_id)
-		}
+	if team_id == dao.TeamIdFreelancer {
+		report(w, s_u, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜发表茶话。")
+		return false, nil
+	}
 
-		is_member, err := family.IsMember(s_u.Id)
-		if err != nil {
-			return false, err // 数据库错误，返回error
-		}
-		if !is_member {
-			report(w, s_u, "你好，家庭成员资格检查失败，请确认后再试。")
-			return false, fmt.Errorf(" team %d id_member check failed", team_id)
-		}
-	} else {
-		// 管理权属于团队
-		if team_id == dao.TeamIdNone || team_id == dao.TeamIdSpaceshipCrew {
-			report(w, s_u, "你好，特殊团队今天还不能创建茶话会，请稍后再试。")
-			return false, fmt.Errorf("special team #%d cannot do this", team_id)
-		}
-		//声明是四海为家【与家庭背景（责任）无关】
-		if team_id == dao.TeamIdFreelancer {
-			//既隐藏家庭背景，也不声明团队的“独狼”
-			// 违背了“慎独”原则
-			report(w, s_u, "你好，茶博士查阅了天书黄页，四海为家的自由人，今天不适宜发表茶话。")
-			return false, nil
-		}
-
-		team := dao.Team{Id: team_id}
-		// if err := team.Get(); err != nil {
-		// 	return false, err // 数据库错误，返回error
-		// }
-		is_member, err := team.IsActiveMember(s_u.Id)
-		if err != nil {
-			return false, err // 数据库错误，返回error
-		}
-		if !is_member {
-			report(w, s_u, "你好，眼前无路想回头，您是什么团成员？什么茶话会？请稍后再试。")
-			return false, nil
-		}
-
+	team := dao.Team{Id: team_id}
+	is_member, err := team.IsActiveMember(s_u.Id)
+	if err != nil {
+		return false, err
+	}
+	if !is_member {
+		report(w, s_u, "你好，眼前无路想回头，您是什么团成员？什么茶话会？请稍后再试。")
+		return false, nil
 	}
 
 	return true, nil

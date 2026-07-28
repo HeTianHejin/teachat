@@ -884,17 +884,23 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//读取提交的is_private bool参数
-	is_private := r.PostFormValue("is_private") == "true"
-
-	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u, w)
+	valid, err := validateObjectiveCreateParams(team_id, s_u, w)
 	if !valid && err == nil {
-		return // 参数不合法，已经处理了错误
+		return
 	}
 	if err != nil {
-		// 处理数据库错误
-		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+		util.Debug("验证提交的台主团队资格出现数据库错误", team_id, err)
 		report(w, s_u, "你好，成员资格检查失败，请确认后再试。")
+		return
+	}
+
+	valid, err = validateRelatedFamilyReference(family_id, s_u, w)
+	if !valid && err == nil {
+		return
+	}
+	if err != nil {
+		util.Debug("验证提交的关联家庭资格出现数据库错误", family_id, err)
+		report(w, s_u, "你好，关联家庭资格检查失败，请确认后再试。")
 		return
 	}
 	//获取目标茶话会
@@ -951,7 +957,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		Class:       class,
 		TeamId:      team_id,
 		FamilyId:    family_id,
-		IsPrivate:   is_private,
+		IsPrivate:   false,
 		Cover:       "default-pr-cover",
 	}
 

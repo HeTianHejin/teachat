@@ -13,20 +13,8 @@ import (
 
 // 检查茶围目标管理权限，即用户是否属于茶围归属团队有效成员
 func checkObjectiveAdminPermission(ob *dao.Objective, userID int) (bool, error) {
-
-	//家庭管理的
-	if ob.IsPrivate {
-		if ob.FamilyId == dao.FamilyIdUnknown {
-			return false, fmt.Errorf("checkObjectiveAdminPermission()-> invalid family id %d", ob.FamilyId)
-		}
-
-		family := dao.Family{Id: ob.FamilyId}
-		return family.IsParentMember(userID)
-	}
-
-	// 团队管理的茶围
 	if ob.TeamId == dao.TeamIdNone || ob.TeamId == dao.TeamIdFreelancer || ob.TeamId == dao.TeamIdSpaceshipCrew {
-		return false, fmt.Errorf("checkProjectMasterPermission()-> invalid team id %d", ob.TeamId)
+		return false, fmt.Errorf("checkObjectiveAdminPermission()-> invalid team id %d", ob.TeamId)
 	}
 
 	team := dao.Team{Id: ob.TeamId}
@@ -35,17 +23,6 @@ func checkObjectiveAdminPermission(ob *dao.Objective, userID int) (bool, error) 
 
 // 检查茶台项目管理权限，即用户是否茶台项目归属团队有权成员
 func checkProjectMasterPermission(pr *dao.Project, user_id int) (bool, error) {
-
-	if pr.IsPrivate {
-		if pr.FamilyId == dao.FamilyIdUnknown {
-			return false, fmt.Errorf("checkProjectMasterPermission()-> invalid family id %d", pr.FamilyId)
-		}
-
-		pr_family := dao.Family{Id: pr.FamilyId}
-		return pr_family.IsParentMember(user_id)
-	}
-
-	// 团队管理的
 	if pr.TeamId == dao.TeamIdNone || pr.TeamId == dao.TeamIdFreelancer || pr.TeamId == dao.TeamIdSpaceshipCrew {
 		return false, fmt.Errorf("checkProjectMasterPermission()-> invalid team id %d", pr.TeamId)
 	}

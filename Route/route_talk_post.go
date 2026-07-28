@@ -269,6 +269,18 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	is_private := r.PostFormValue("is_private") == "true"
 
+	if team_id != 0 {
+		valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u, w)
+		if !valid && err == nil {
+			return
+		}
+		if err != nil {
+			util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+			report(w, s_u, "你好，茶团成员资格检查未通过，请确认后再试。")
+			return
+		}
+	}
+
 	// 茶议所在的茶台
 	t_proj, err := t_thread.Project()
 	if err != nil {
@@ -331,6 +343,18 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 		is_private = t_proj.IsPrivate
 		family_id = t_proj.FamilyId
 		team_id = t_proj.TeamId
+	}
+
+	if team_id != 0 {
+		valid, err := validateObjectiveCreateParams(team_id, s_u, w)
+		if !valid && err == nil {
+			return
+		}
+		if err != nil {
+			util.Debug("验证最终品味发布团队资格出现数据库错误", team_id, err)
+			report(w, s_u, "你好，茶团成员资格检查未通过，请确认后再试。")
+			return
+		}
 	}
 
 	//检查thread的类型，分类处理

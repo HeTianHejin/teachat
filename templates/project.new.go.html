@@ -117,22 +117,15 @@
       </div>
 
       <div class="form-group">
-        <fieldset>
-          <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-            <div class="radio">
-              <label>
-                <input type="radio" name="is_private" id="is_private" value="false" checked required />
-                以团队成员身份
-              </label>
-            </div>
-            <div class="radio">
-              <label>
-                <input type="radio" name="is_private" id="is_private" value="true" required />
-                以家庭成员身份
-              </label>
-            </div>
-          </div>
-        </fieldset>
+        <label for="family_id">选择关联家庭（仅作背景展示）</label>
+        <select name="family_id" class="form-control" id="family_id" required>
+          <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
+          </option>
+          {{ range .SessUserSurvivalFamilies }}
+          <option value="{{ .Id }}">{{ .Name }}</option>
+          {{ end }}
+        </select>
+        <p class="help-block">该家庭仅作为茶台的关联背景资料公开展示，不参与管理权属。</p>
       </div>
 
       <div class="form-group">
@@ -144,17 +137,7 @@
           <option value="{{ .Id }}">{{ .Name }}</option>
           {{ end }}
         </select>
-      </div>
-
-      <div class="form-group">
-        <label for="description">选择台主家庭</label>
-        <select name="family_id" class="form-control" id="family_id" required>
-          <option value="{{ .SessUserDefaultFamily.Id }}">{{ .SessUserDefaultFamily.Name }}
-          </option>
-          {{ range .SessUserSurvivalFamilies }}
-          <option value="{{ .Id }}">{{ .Name }}</option>
-          {{ end }}
-        </select>
+        <p class="help-block">茶台的管理权将归属所选台主团队；家庭仅作为关联背景，不承担直接管理权。</p>
       </div>
 
       <input type="hidden" name="ob_uuid" id="ob_uuid" value="{{ .ObjectiveBean.Objective.Uuid }}">

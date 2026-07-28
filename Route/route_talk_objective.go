@@ -92,29 +92,36 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//读取提交的is_private bool参数
-	is_private := r.PostFormValue("is_private") == "true"
+	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
+	if err != nil {
+		util.Debug("Failed to convert team_id to int", err)
+		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
+		return
+	}
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
 		util.Debug("Failed to convert family_id to int", err)
 		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
 		return
 	}
-	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
-	if err != nil {
-		util.Debug("Failed to convert class to int", err)
-		report(w, s_u, "你好，茶博士迷糊了，笔没有墨水未能创建茶话会，请稍后再试。")
-		return
-	}
 
-	valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u, w)
+	valid, err := validateObjectiveCreateParams(team_id, s_u, w)
 	if !valid && err == nil {
 		return // 参数不合法，已经处理了错误
 	}
 	if err != nil {
-		// 处理数据库错误
-		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+		util.Debug("验证提交的围主团队资格出现数据库错误", team_id, err)
 		report(w, s_u, "你好，成员资格检查失败，请确认后再试。")
+		return
+	}
+
+	valid, err = validateRelatedFamilyReference(family_id, s_u, w)
+	if !valid && err == nil {
+		return
+	}
+	if err != nil {
+		util.Debug("验证提交的关联家庭资格出现数据库错误", family_id, err)
+		report(w, s_u, "你好，关联家庭资格检查失败，请确认后再试。")
 		return
 	}
 
@@ -165,7 +172,7 @@ func NewObjectivePost(w http.ResponseWriter, r *http.Request) {
 		Class:     class,
 		FamilyId:  family_id,
 		TeamId:    team_id,
-		IsPrivate: is_private,
+		IsPrivate: false,
 	}
 
 	switch class {

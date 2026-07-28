@@ -23,10 +23,8 @@
       <div class="panel-heading">
         <div class="row">
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="font-size: smaller;">
-            （<a href="/v1/family/detail?id={{ .ObjectiveBean.AuthorFamily.Uuid }}">
-              {{ .ObjectiveBean.AuthorFamily.Name }}</a>，
-            <a href="/v1/team/detail?uuid={{ .ObjectiveBean.AuthorTeam.Uuid }}">
-              {{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a>）
+            （关联家庭：<a href="/v1/family/detail?id={{ .ObjectiveBean.AuthorFamily.Uuid }}">{{ .ObjectiveBean.AuthorFamily.Name }}</a>，
+            管理团队：<a href="/v1/team/detail?uuid={{ .ObjectiveBean.AuthorTeam.Uuid }}">{{ .ObjectiveBean.AuthorTeam.Abbreviation }}</a>）
           </div>
           <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6" style="font-size: smaller;">
             {{ if .ObjectiveBean.Open }}
@@ -48,6 +46,9 @@
 
         <p style="white-space: pre-wrap;">
           {{ .ObjectiveBean.Objective.Body }}
+        </p>
+        <p class="help-block" style="margin-top: 10px; font-size: smaller; color: #666;">
+          此家庭为关联背景资料公开展示，茶围的实际管理权由所选管理团队承担。
         </p>
         <p>
           {{ if .IsAdmin }}
