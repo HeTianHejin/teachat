@@ -141,6 +141,7 @@ func main() {
 	mux.HandleFunc("/v1/family/detail", route.FamilyDetail)
 	mux.HandleFunc("/v1/family/edit", route.HandleEditFamily)
 	mux.HandleFunc("/v1/family/default", route.SetDefaultFamily)
+	mux.HandleFunc("/v1/family/friend_team_create", route.HandleFamilyFriendTeamCreate)
 
 	mux.HandleFunc("/v1/family/home", route.HomeFamilies)
 	mux.HandleFunc("/v1/family/home/private", route.HomePrivateFamilies)
@@ -301,12 +302,12 @@ func main() {
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
 
 	// 见证者工作间路由
-	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace)         // 见证者工作间页面
-	mux.HandleFunc("/v1/verifier/order/approve", route.HandleVerifierOrderApprove)  // 审批茶订单
-	mux.HandleFunc("/v1/verifier/order/reject", route.HandleVerifierOrderReject)    // 拒绝茶订单
-	mux.HandleFunc("/v1/verifier/order/forfeit", route.HandleVerifierOrderForfeit)  // 罚没茶订单（恶意/不道德内容）
-	mux.HandleFunc("/v1/verifier/order/pause", route.HandleVerifierOrderPause)      // 暂停茶订单
-	mux.HandleFunc("/v1/verifier/order/cancel", route.HandleVerifierOrderCancel)    // 终止茶订单
+	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace)        // 见证者工作间页面
+	mux.HandleFunc("/v1/verifier/order/approve", route.HandleVerifierOrderApprove) // 审批茶订单
+	mux.HandleFunc("/v1/verifier/order/reject", route.HandleVerifierOrderReject)   // 拒绝茶订单
+	mux.HandleFunc("/v1/verifier/order/forfeit", route.HandleVerifierOrderForfeit) // 罚没茶订单（恶意/不道德内容）
+	mux.HandleFunc("/v1/verifier/order/pause", route.HandleVerifierOrderPause)     // 暂停茶订单
+	mux.HandleFunc("/v1/verifier/order/cancel", route.HandleVerifierOrderCancel)   // 终止茶订单
 
 	// 茶订单详情路由（见证者及参与团队均可查看）
 	mux.HandleFunc("/v1/tea-order/detail", route.HandleTeaOrderDetail)

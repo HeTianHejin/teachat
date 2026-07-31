@@ -1130,6 +1130,57 @@ func EditFamilyPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/v1/family/detail?id="+family.Uuid, http.StatusFound)
 }
 
+// GET /v1/family/friend_team_create?uuid=
+// 以家庭成员为基础创建亲友团，仅允许家庭的男主人或女主人发起
+func HandleFamilyFriendTeamCreate(w http.ResponseWriter, r *http.Request) {
+	s, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	s_u, err := s.User()
+	if err != nil {
+		util.Debug("Cannot get user from session", err)
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+
+	familyUUID := r.URL.Query().Get("uuid")
+	if familyUUID == "" {
+		report(w, s_u, "你好，缺少家庭标识。")
+		return
+	}
+
+	family := dao.Family{Uuid: familyUUID}
+	if err = family.GetByUuid(); err != nil {
+		util.Debug("Cannot get family by uuid", err)
+		report(w, s_u, "你好，未能找到该家庭。")
+		return
+	}
+
+	isParent, _ := family.IsParentMember(s_u.Id)
+	if !isParent {
+		report(w, s_u, "你好，只有该家庭的男主人或女主人可以发起亲友团创建。")
+		return
+	}
+
+	teamID, err := dao.ConvertFamilyToFriendTeam(family.Id, s_u)
+	if err != nil {
+		util.Debug("Cannot convert family to friend team", family.Id, err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能创建亲友团，请稍后再试。")
+		return
+	}
+
+	team, err := dao.GetTeam(teamID)
+	if err != nil {
+		util.Debug("Cannot get created friend team", teamID, err)
+		report(w, s_u, "你好，茶博士失魂鱼，亲友团已创建，但未能跳转到详情页，请稍后再试。")
+		return
+	}
+
+	http.Redirect(w, r, "/v1/team/detail?uuid="+team.Uuid, http.StatusFound)
+}
+
 // GET /v1/family/member_add?uuid=
 // 显示家庭搜索用户页面，--Claude sonnet4.5按要求协助创建
 func FamilyMemberAddGet(w http.ResponseWriter, r *http.Request) {

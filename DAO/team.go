@@ -1538,7 +1538,7 @@ func IsVerifier(userId int) bool {
 	return count > 0
 }
 
-// ConvertFamilyToFriendTeam 以家庭成员为基础，创建家庭的亲友团（需求方团队），
+// ConvertFamilyToFriendTeam 以家庭成员为基础，创建家庭的亲友团（团队），
 // 亲友可以加入该团队协助，但不强制要求必须加入，团队成员的核心职责是由CEO（家庭负责人）和CFO（配偶，如果存在且不是CEO本人）担任，其他家庭成员和亲友可以根据需要加入团队协助工作。
 // 一个家庭只创建一个亲友团，可服务多个茶围，无需为每个茶围重复创建。
 // 类型: TeamClassOfflineFamily

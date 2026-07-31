@@ -28,6 +28,10 @@
   <a class="btn btn-default" href="/v1/family/member_add?uuid={{ .FamilyBean.Family.Uuid }}" role="button" style="margin-inline-start: 2rem;">
     <i class="bi-pencil-square" style="font-size: 1.2rem; color: green;"></i>
     添加成员</a>
+  {{/* 显示以家庭成员为基础创建亲友团队的功能按钮  */}}
+  <a class="btn btn-default" href="/v1/family/friend_team_create?uuid={{ .FamilyBean.Family.Uuid }}" role="button" style="margin-inline-start: 2rem;">
+    <i class="bi-people" style="font-size: 1.2rem; color: #010101;"></i>
+    创建亲友团</a>
 </div>
 
 {{ end }}{{/* 检查是否家庭&团队管理员(父母角色)-结束  */}}
