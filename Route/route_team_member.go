@@ -1319,6 +1319,17 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 检查团队活跃状态成员数是否已经达到上限
+	active_member_count, err := team.NumActiveMembers()
+	if err != nil {
+		util.Debug(" Cannot get active member count", err)
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	if active_member_count >= int(util.Config.MaxTeamMembers) {
+		report(w, s_u, "你好，该团队成员数量已达上限，请确认后再试。")
+		return
+	}
 	if reply_class_int == 1 {
 		//接受加盟邀请!
 
@@ -1559,6 +1570,29 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士未能找到这个团队，请确认后再试。")
 		return
 	}
+	// 检查团队活跃状态成员数是否已经达到上限
+	active_member_count, err := team.NumActiveMembers()
+	if err != nil {
+		util.Debug(" Cannot get active member count", err)
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	if active_member_count >= int(util.Config.MaxTeamMembers) {
+		report(w, s_u, "你好，该团队成员数量已达上限，请确认后再试。")
+		return
+	}
+	// 检查目标用户是否已经是该团队的成员
+	is_member, err := team.IsActiveMember(invite_user.Id)
+	if err != nil {
+		util.Debug(" when checking team_member", err)
+		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+		return
+	}
+	if is_member {
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，目标茶友已经是茶团成员，请确认后再试。")
+		return
+	}
+
 	//检查当前茶友是否团队的Ceo或者founder，是否有权限邀请新成员
 
 	ceo_member, err := team.MemberCEO()
@@ -1697,6 +1731,29 @@ func InviteMemberGet(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		util.Debug(" Cannot get team given uuid", err)
 		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
+		return
+	}
+	//检查目标茶友是否已经是该团队的成员
+	is_member, err := team.IsActiveMember(invi_user.Id)
+	if err != nil {
+		util.Debug(" when checking team_member", err)
+		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+		return
+	}
+	if is_member {
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，目标茶友已经是茶团成员，请确认后再试。")
+		return
+	}
+
+	//统计团队活跃状态成员数量，不允许超过MaxTeamMembers
+	memberCount, err := team.NumActiveMembers()
+	if err != nil {
+		util.Debug(" Cannot get team member count", err)
+		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
+		return
+	}
+	if memberCount >= int(util.Config.MaxTeamMembers) {
+		report(w, s_u, "你好，该茶团成员已满，无法邀请更多成员。")
 		return
 	}
 
@@ -2098,8 +2155,13 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查团队成员数量
-	memberCount := team.NumMembers()
+	// 检查团队活跃状态成员数量
+	memberCount, err := team.NumActiveMembers()
+	if err != nil {
+		util.Debug(" Cannot get team member count", err)
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
 
 	// 获取CEO
 	ceoMember, err := team.MemberCEO()
@@ -2240,8 +2302,13 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 检查团队成员数量
-	memberCount := team.NumMembers()
+	// 检查团队活跃状态成员数量
+	memberCount, err := team.NumActiveMembers()
+	if err != nil {
+		util.Debug("Cannot get team member count", err)
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
 
 	// 获取CEO
 	ceoMember, err := team.MemberCEO()

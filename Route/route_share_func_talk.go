@@ -133,7 +133,11 @@ func fetchThreadBean(thread dao.Thread, r *http.Request) (tB dao.ThreadBean, err
 		tB.StatsSet.MemberCount = p_f_count
 		tB.StatsSet.FamilyCount = 1
 	} else {
-		teamMembersCount := tB.AuthorTeam.NumMembers()
+		teamMembersCount, err := tB.AuthorTeam.NumActiveMembers()
+		if err != nil {
+			util.Debug(fmt.Sprintf("Failed to count team members for team ID %d: %v", tB.AuthorTeam.Id, err))
+			return tB, fmt.Errorf("failed to count team members: %w", err)
+		}
 		tB.StatsSet.MemberCount = teamMembersCount
 	}
 

@@ -205,7 +205,12 @@ func fetchTeamBean(team dao.Team) (TeamBean dao.TeamBean, err error) {
 		return
 	}
 
-	TeamBean.MembersCount = team.NumMembers()
+	activeMemberCount, err := team.NumActiveMembers()
+	if err != nil {
+		util.Debug(" Cannot read team active member count", err)
+		return
+	}
+	TeamBean.MembersCount = activeMemberCount
 
 	if team.Id == dao.TeamIdFreelancer {
 		//茶友的默认团队还是“自由人”的情况

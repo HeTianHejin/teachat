@@ -290,7 +290,8 @@ CREATE TABLE team_members (
     role                  INTEGER DEFAULT 0,
     status                INTEGER DEFAULT 1,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMPTZ
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
 );
 
 -- 用户默认家庭表

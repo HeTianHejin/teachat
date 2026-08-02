@@ -148,7 +148,7 @@ const (
 )
 
 // Team $事业茶团=同事团队
-// 拥有共同目标，或者兴趣爱好/信仰/利益的成员
+// 拥有共同目标，或者兴趣爱好/信仰/利益的成员，一个团队最多可以有10个成员。
 // 层级关系通过Group结构管理，一个团队仅可以加入一个集团一次，已加入的团队不能再加入其他集团。
 // 团队成员通过TeamMember结构管理，团队成员可以是CEO、CTO、CMO、CFO、品茶师等角色，团队成员状态可以是正常、暂停、退出、待审核等状态。
 // 唯一活动主体，承担发起、协作、茶会、活动、通知、讨论、任务、消息，都由团队承接。个人、家庭仅是背景上下文关系基础。
@@ -918,15 +918,30 @@ func GetNumAllTeams() (count int) {
 
 // 统计某个$事业茶团的成员数
 // AWS CodeWhisperer assist in writing
-func (team *Team) NumMembers() (count int) {
+func (team *Team) NumMembers() (count int, err error) {
 	rows, _ := DB.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND status < $2", team.Id, TeamMemberStatusResigned)
 	for rows.Next() {
 		if err := rows.Scan(&count); err != nil {
-			return
+			return 0, err
 		}
 	}
 	if err := rows.Err(); err != nil {
-		return 0
+		return 0, err
+	}
+	rows.Close()
+	return
+}
+
+// 统计某个$事业茶团活跃状态成员数，不包括已经退出的成员
+func (team *Team) NumActiveMembers() (count int, err error) {
+	rows, _ := DB.Query("SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND status = $2", team.Id, TeamMemberStatusActive)
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			return 0, err
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return 0, err
 	}
 	rows.Close()
 	return
