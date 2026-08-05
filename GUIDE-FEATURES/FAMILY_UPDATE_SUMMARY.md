@@ -141,7 +141,7 @@ psql -d teachat -f sql/add_perspective_and_message_prefs.sql
    - 验证错误提示
 
 4. **不同家庭状态**
-   - 测试单身、同居、已婚等状态
+   - 测试单身、携手、已婚等状态
    - 验证状态正确保存
 
 ## 兼容性

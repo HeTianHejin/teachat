@@ -27,7 +27,7 @@ INSERT INTO teams (id, uuid, name, mission, founder_id, class, nature, abbreviat
 INSERT INTO team_members (id, uuid, team_id, user_id, role, status) VALUES
 (1, 'member-001-captain-team1', 1, 1, 1, 1),   -- 太空船长加入自由人团队
 (2, 'member-001-captain-team2', 2, 1, 1, 1),  -- 太空船长加入茶棚服务团队
-(3, 'member-002-verifier-team2', 1, 2, 5, 1), -- 稻香老农加入自由人团队
+(3, 'member-002-verifier-team1', 1, 2, 5, 1), -- 稻香老农加入自由人团队
 (4, 'member-001-verifier-team3', 3, 2, 1, 1), -- 稻香老农加入见证者团队
 (5, 'member-001-escrow-team4', 4, 1, 1, 1), -- 太空船长加入茶庄服务中心
 (6, 'member-001-public-governance-team5', 5, 1, 1, 1); -- 太空船长加入公共治理团队

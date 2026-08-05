@@ -24,7 +24,7 @@ type Family struct {
 	HasChild            bool   // 这个家庭是否有子女（包括领养的）？
 	HusbandFromFamilyId int    // 丈夫来自的家庭id，如果是0表示未登记,parents' home
 	WifeFromFamilyId    int    // 妻子来自的家庭id，in-laws,如果是0表示未登记
-	Status              int    // 状态指数，0、保密，1、单身，2、同居，3、已婚，4、分居，5、离婚，其他、未知
+	Status              int    // 状态指数，0、保密，1、单身，2、携手，3、已婚，4、分居，5、离婚，其他、未知
 	CreatedAt           time.Time
 	UpdatedAt           *time.Time
 	Logo                string     // 家庭标志图片名
@@ -51,7 +51,7 @@ const FamilyUuidUnknown = "x" //代表未知数
 const (
 	FamilyStatusSecret   = 0 // 保密
 	FamilyStatusSingle   = 1 // 单身
-	FamilyStatusLivingIn = 2 // 同居
+	FamilyStatusLivingIn = 2 // 携手
 	FamilyStatusMarried  = 3 // 已婚
 	FamilyStatusSeparate = 4 // 分居
 	FamilyStatusDivorced = 5 // 离婚
@@ -65,7 +65,7 @@ func (f *Family) GetStatus() string {
 	case FamilyStatusSingle:
 		return "单身"
 	case FamilyStatusLivingIn:
-		return "同居"
+		return "携手"
 	case FamilyStatusMarried:
 		return "已婚"
 	case FamilyStatusSeparate:

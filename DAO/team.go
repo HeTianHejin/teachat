@@ -1601,7 +1601,7 @@ func ConvertFamilyToFriendTeam(familyId int, ceoUser User) (int, error) {
 		Class:        TeamClassOfflineFamily,
 		Nature:       TeamNatureAmateur,
 		Abbreviation: fmt.Sprintf("%d亲友团", familyId),
-		Logo:         family.Logo,
+		Logo:         "teamLogo",
 		IsPrivate:    false,
 		Tags:         "家庭,亲友团",
 	}

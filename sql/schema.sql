@@ -39,7 +39,7 @@ CREATE TABLE families (
     husband_from_family_id INTEGER DEFAULT 0,
     wife_from_family_id   INTEGER DEFAULT 0,
     status                INTEGER DEFAULT 1,
-    logo                  VARCHAR(255),
+    logo                  VARCHAR(255) DEFAULT 'familyLogo',
     is_open               BOOLEAN DEFAULT true,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMPTZ,
@@ -95,7 +95,7 @@ CREATE TABLE teams (
     class                 INTEGER,
     nature                INTEGER DEFAULT 0,
     abbreviation          VARCHAR(255),
-    logo                  VARCHAR(255),
+    logo                  VARCHAR(255) DEFAULT 'teamLogo',
     tags                  VARCHAR(500),
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMPTZ,
@@ -114,6 +114,19 @@ CREATE INDEX IF NOT EXISTS idx_teams_class_private_deleted ON teams(class, is_pr
 -- nature字段索引
 CREATE INDEX IF NOT EXISTS idx_teams_nature ON teams(nature);
 CREATE INDEX IF NOT EXISTS idx_teams_nature_class ON teams(nature, class);
+
+-- 团队成员表
+CREATE TABLE team_members (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    team_id               INTEGER REFERENCES teams(id),
+    user_id               INTEGER REFERENCES users(id),
+    role                  INTEGER DEFAULT 0,
+    status                INTEGER DEFAULT 1,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
+);
 
 -- 某个team加入某个group记录
 -- 注意：一个team只能加入一个group一次，已加入的team不能再加入其他group
@@ -280,19 +293,6 @@ COMMENT ON TABLE family_members IS '家庭成员表';
 COMMENT ON COLUMN family_members.role IS '0-秘密, 1-男主人, 2-女主人, 3-女儿, 4-儿子, 5-宠物';
 COMMENT ON COLUMN family_members.is_adopted IS '是否被领养';
 COMMENT ON COLUMN family_members.order_of_seniority IS '家中排行老几，孩子的年长先后顺序，1、2、3...，0表示未知';
-
--- 团队成员表
-CREATE TABLE team_members (
-    id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-    team_id               INTEGER REFERENCES teams(id),
-    user_id               INTEGER REFERENCES users(id),
-    role                  INTEGER DEFAULT 0,
-    status                INTEGER DEFAULT 1,
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMPTZ,
-    deleted_at            TIMESTAMPTZ
-);
 
 -- 用户默认家庭表
 CREATE TABLE user_default_families (
