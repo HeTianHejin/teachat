@@ -144,7 +144,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	if count > int(util.Config.MaxTeamsCount) {
+	if count >= int(util.Config.MaxTeamsCount) {
 		report(w, s_u, "你好，三月香巢已垒成，梁间燕子太无情。开团数量太多了，未能创建新茶团。")
 		return
 	}

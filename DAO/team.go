@@ -614,9 +614,9 @@ func (notice *TeamMemberRoleNotice) Update() (err error) {
 }
 
 var TeamProperty = map[int]string{
-	0:  "茶棚$事业茶团",
-	1:  "开放式$事业茶团",
-	2:  "封闭式$事业茶团",
+	0:  "星际茶棚$",
+	1:  "开放式$",
+	2:  "封闭式$",
 	10: "开放式草团",
 	20: "封闭式草团",
 	31: "已接纳开团",
@@ -1102,6 +1102,13 @@ func GetMemberByTeamIdUserId(team_id, user_id int) (team_member TeamMember, err 
 	}
 	err = DB.QueryRow("SELECT id, uuid, team_id, user_id, role, created_at, status, updated_at FROM team_members WHERE team_id = $1 AND user_id = $2", team_id, user_id).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
+	// if err != nil {
+	// 	if errors.Is(err, sql.ErrNoRows) {
+	// 		return team_member, fmt.Errorf("team member not found with team_id: %d and user_id: %d", team_id, user_id)
+	// 	}
+	// 	return team_member, err
+	// }
+
 	return
 }
 
@@ -1199,9 +1206,9 @@ func (team *Team) GetTeamMemberByRole(role int) (team_member TeamMember, err err
 		LIMIT 1`, team.Id, role, TeamMemberStatusActive).
 		Scan(&team_member.Id, &team_member.Uuid, &team_member.TeamId, &team_member.UserId, &team_member.Role, &team_member.CreatedAt, &team_member.Status, &team_member.UpdatedAt)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return TeamMember{}, nil
-		}
+		// if errors.Is(err, sql.ErrNoRows) {
+		// 	return TeamMember{}, nil
+		// }
 		return TeamMember{}, err
 	}
 	return
@@ -1302,15 +1309,34 @@ func (teamMember *TeamMember) UpdateRoleStatus() (err error) {
 	return
 }
 
-// 更换$事业茶团默认CEO的方法，Update team_members记录中role=1的行 user_id 为当前user_id
-func (teamMember *TeamMember) UpdateFirstCEO(user_id int) (err error) {
-	statement := `UPDATE team_members SET user_id = $1, updated_at = $2 WHERE team_id = $3 AND role = $4`
+// 更换$事业茶团CEO的方法，
+// 团队不能空缺CEO角色，founder是默认第一个CEO，指定其他人担任CEO角色，founder的团队成员状态更新为“退出”，原角色不变成为历史
+// 1、Update team_members记录中role=1的成员状态，
+// 2、插入新的team_members记录，role=1，status=1，user_id为新CEO的user_id
+func (teamMember *TeamMember) UpdateFirstCEO(founder_id, new_ceo_user_id int) (err error) {
+	statement := `UPDATE team_members SET status = $1, updated_at = $2 WHERE team_id = $3 AND role = $4 AND founder_id = $5`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(user_id, time.Now(), teamMember.TeamId, RoleCEO)
+	_, err = stmt.Exec(TeamMemberStatusResigned, time.Now(), teamMember.TeamId, RoleCEO, founder_id)
+	if err != nil {
+		return fmt.Errorf("team %d failed to update team member status: %w", teamMember.TeamId, err)
+	}
+	// 插入新的team_members记录，role=1，status=1，user_id为新CEO的user_id
+	newTeamMember := &TeamMember{
+		Uuid:      Random_UUID(),
+		TeamId:    teamMember.TeamId,
+		UserId:    new_ceo_user_id,
+		Role:      RoleCEO,
+		Status:    TeamMemberStatusActive,
+		CreatedAt: time.Now(),
+	}
+	if err = newTeamMember.Create(); err != nil {
+		return fmt.Errorf("team %d failed to create new CEO team member: %w", teamMember.TeamId, err)
+	}
+
 	return
 }
 

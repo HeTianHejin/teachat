@@ -97,49 +97,60 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
-	// 检查提交人是否为茶团成员
+	// 检查提交人是否为茶团成员，
 	t_member, err := dao.GetMemberByTeamIdUserId(t_team.Id, t_user.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			report(w, s_u, "你好，你不是茶团成员，不接受退出声明噢。")
 			return
 		} else {
-			util.Debug(t_team.Id, t_user.Id, "Cannot get team member by team id and user id", err)
+			util.Debug("Cannot get team member by team_id %d and user_id %d", t_team.Id, t_user.Id, err)
 			report(w, s_u, "你好，未能获取拟退出的茶团资料，请稍后再试。")
 			return
 		}
 	}
+	// 检查成员是否正常状态，其他状态成员不能声明退出
+	if t_member.Status != dao.TeamMemberStatusActive {
+		report(w, s_u, "你好，你不是茶团活跃成员，无法提交退出声明。")
+		return
+	}
 
-	// //查看成员角色，分类处理：1、CEO，2、核心成员：CTO、CFO、CMO，3、普通成员：taster
-	// switch t_member.Role {
-	// case "taster":
-	// 	break
-	// case "CTO", RoleCFO, RoleCMO:
-	// 	report(w, s_u, "你好，请先联系CEO，将你目前角色核心成员调整为普通成员品茶师，然后再声明退出。")
-	// 	return
-	// case RoleCEO:
-	// 	report(w, s_u, "你好，请先联系茶团创建人，将你目前角色调整为普通成员品茶师，然后再声明退出。")
-	// 	return
-	// default:
-	// 	report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶友角色，请确认后再试。")
-	// 	return
-	// }
+	//查看成员角色，分类处理：1、CEO，2、核心成员：CTO、CFO、CMO，3、普通成员：taster
+	switch t_member.Role {
+	case dao.RoleTaster:
+		break
+	case dao.RoleCTO, dao.RoleCFO, dao.RoleCMO:
+		break
+	case dao.RoleCEO:
+		report(w, s_u, "你好，请先联系茶团创建人，将你目前角色调整为普通成员品茶师，然后再声明退出。")
+		return
+	default:
+		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶团角色，请确认后再试。")
+		return
+	}
 
 	// 检查是否为核心成员（非CEO），如果是则先降级为普通成员
-	if t_member.Role != dao.RoleCEO && t_member.Role != dao.RoleTaster {
-		// 是核心成员（CTO/CFO/CMO），先降级为普通成员
-		t_member.Role = dao.RoleTaster
-		if err := t_member.UpdateRoleStatus(); err != nil {
-			util.Debug("Cannot update member role to taster", err)
-			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
-			return
-		}
+	// if t_member.Role != dao.RoleCEO && t_member.Role != dao.RoleTaster {
+	// 	// 是核心成员（CTO/CFO/CMO），先降级为普通成员
+	// 	t_member.Role = dao.RoleTaster
+	// 	if err := t_member.UpdateRoleStatus(); err != nil {
+	// 		util.Debug("Cannot update member role to taster", err)
+	// 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+	// 		return
+	// 	}
+	// }
+
+	CeoUser, err := t_team.CEO()
+	if err != nil {
+		util.Debug("Cannot get CEO user", err)
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+		return
 	}
 
 	//声明一份茶团成员退出声明书
 	tmqD := dao.TeamMemberResignation{
 		TeamId:            t_team.Id,
-		CeoUserId:         dao.UserId_None,
+		CeoUserId:         CeoUser.Id,
 		CoreMemberUserId:  dao.UserId_None,
 		MemberId:          t_member.Id,
 		MemberUserId:      t_user.Id,
@@ -157,11 +168,11 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//返回成功保存声明的报告
-	if t_member.Role == dao.RoleTaster && tmqD.MemberCurrentRole != dao.RoleTaster {
-		report(w, s_u, "你好，作为核心成员，你的角色已自动调整为普通成员，退出声明已提交，请等待管理员审批。")
-	} else {
-		report(w, s_u, "你好，茶博士已经保存了你的退出声明，请等待管理员答复。")
-	}
+	// if t_member.Role == dao.RoleTaster && tmqD.MemberCurrentRole != dao.RoleTaster {
+	// 	report(w, s_u, "你好，作为核心成员，你的角色已自动调整为普通成员，退出声明已提交，请等待管理员审批。")
+	// } else {
+	report(w, s_u, "你好，茶博士已经保存了你的退出声明，请等待管理员答复。")
+	//}
 
 	//返回茶团主页
 	//http.Redirect(w, r, fmt.Sprintf("/v1/team?uuid=%s", t_team.Uuid), http.StatusFound)
@@ -197,17 +208,16 @@ func MemberResignGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//检查目标茶友是否茶团成员
-	_, err = dao.GetMemberByTeamIdUserId(t_team.Id, s_u.Id)
+	//检查目标茶友是否茶团活跃状态成员
+	isActiveMember, err := dao.IsTeamActiveMember(s_u.Id, t_team.Id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			report(w, s_u, "你好，您不是本茶团的成员，稍后再试。")
-			return
-		} else {
-			util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
-			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
-			return
-		}
+		util.Debug(s_u.Id, t_team.Id, "Cannot check if user is active member of team", err)
+		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+		return
+	}
+	if !isActiveMember {
+		report(w, s_u, "你好，你不是本茶团的活跃成员，稍后再试。")
+		return
 	}
 
 	var tmqPD dao.TeamMemberResign
@@ -376,7 +386,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 		// 如果会话用户是CEO，可以调整目标成员角色
 		is_manager = true
 		tmrcnP.IsCEO = true
-		// 然后检查目标茶友和目标茶团CEO身份，CEO不能自己调整自己的角色，（WHY？）
+		// 然后检查目标茶友和目标茶团CEO身份，CEO不能自己调整自己的角色
 		if member_ceo.UserId == t_member.Id {
 			is_manager = false
 		}
@@ -416,7 +426,12 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 }
 
 // POST /v1/team_member/role
-// 提交一个成员新的团队角色任命书答复
+// founder或者CEO提交一个成员新的团队角色任命书答复（调整成员角色）
+// 创建人可以兼任CEO出现在团队成员里，也可以退居幕后不担任团队成员角色
+// 仅团队创建人可调整CEO角色，调整期间如果CEO空缺，则创建人默认担任CEO角色
+// CEO不允许自己调整自己的CEO角色（卸任CEO）
+// 核心成员角色CEO、CTO、CMO、CFO仅允许不相同的一人担任，同一个人不得兼任核心成员和普通成员
+// CTO、CMO、CFO角色允许空缺
 func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := session(r)
@@ -473,12 +488,20 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		new_role = dao.RoleCMO
 	case "CFO":
 		new_role = dao.RoleCFO
-		//需要检查目标角色是否空缺
+
+	default:
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你提交的角色不在茶团角色列表中，请确认后再提交。")
+		return
+	}
+	//普通RoleTaster，无需检查，直接跳整
+	//如果是拟任核心角色，需要检查当前是否空缺
+	if new_role == dao.RoleCEO || new_role == dao.RoleCTO || new_role == dao.RoleCMO || new_role == dao.RoleCFO {
+
 		_, err = t_team.GetTeamMemberByRole(new_role)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
 				//目标角色空缺,可以调整
-				break
+
 			} else {
 				util.Debug(t_team.Id, new_role, "Cannot get team member by role", err)
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -488,39 +511,44 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士摸摸头嘀咕说，你提交的角色已经有人担任了，请确认后再提交。")
 			return
 		}
-
-	default:
-		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你提交的角色不在茶团角色列表中，请确认后再提交。")
-		return
 	}
 
 	//目标茶友
-	t_member, err := dao.GetUserByEmail(m_email, r.Context())
+	t_user, err := dao.GetUserByEmail(m_email, r.Context())
 	if err != nil {
 		util.Debug(m_email, "Cannot get user by email", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
-	//检查目标茶友是否茶团成员
-	member, err := dao.GetMemberByTeamIdUserId(t_team.Id, t_member.Id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			report(w, s_u, "你好，茶博士摸摸头嘀咕说，这个茶友不是茶团成员，无法调整角色。")
-			return
-		} else {
-			util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
-			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
-			return
-		}
-	}
+
 	//检查提交者是否在尝试调整自己的角色，不合规
-	if member.UserId == s_u.Id {
-		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你不能调整自己的角色。")
+	if t_user.Id == s_u.Id {
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，不能自己调整自己的角色哦。")
 		return
+	}
+
+	//检查目标茶友是否茶团活跃成员
+	isActiveMember, err := dao.IsTeamActiveMember(t_user.Id, t_team.Id)
+	if err != nil {
+		util.Debug(t_user.Id, t_team.Id, "Cannot check if user is active member of team", err)
+		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+		return
+	}
+	if !isActiveMember {
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，这个茶友不是茶团活跃成员，无法调整角色。")
+		return
+	}
+	// 查看目标用户当前角色
+	member, err := dao.GetMemberByTeamIdUserId(t_team.Id, t_user.Id)
+	if err != nil {
+		util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
+		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
+		return
+
 	}
 	//Role no change
 	if new_role == member.Role {
-		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你没有调整角色，无需提交。")
+		report(w, s_u, "你好，茶博士摸摸头嘀咕说，角色无变动，无需提交调整资料。")
 		return
 	}
 
@@ -606,13 +634,28 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
+		// 如果调整的是CEO角色，需要将创建人（默认的CEO）的团队成员状态更新为正常
+		if new_role == dao.RoleCEO {
+			founder_member, err := dao.GetMemberByTeamIdUserId(t_team.Id, t_founder.Id)
+			if err != nil {
+				util.Debug(t_team.Id, t_founder.Id, "Cannot get founder member given team and user id", err)
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+			founder_member.Status = dao.TeamMemberStatusActive
+			if err = founder_member.UpdateRoleStatus(); err != nil {
+				util.Debug(founder_member, "Cannot update founder member", err)
+				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
+				return
+			}
+		}
 	} else {
 		report(w, s_u, "你好，茶博士摸摸头嘀咕说，你不是这个茶团的管理者，无权调整角色噢。")
 		return
 	}
 
 	//报告调整角色成功消息
-	report(w, s_u, "你好，茶博士摸摸头说，已经调整了 "+t_member.Name+" 的角色为 "+dao.TeamMemberRoleName(new_role)+" 。")
+	report(w, s_u, "你好，茶博士摸摸头说，已经调整了 "+t_user.Name+" 的角色为 "+dao.TeamMemberRoleName(new_role)+" 。")
 }
 
 // /v1/team_member/invite
@@ -1274,6 +1317,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，这个邀请函已经答复或者已过期。")
 		return
 	}
+	// 读取邀请函的目标茶友资料，检查是否和会话茶友一致
 	invi_user, err := dao.GetUserByEmail(invitation.InviteEmail, r.Context())
 	if err != nil {
 		util.Debug(" Cannot get invited user given invitation's email", err)
@@ -1409,7 +1453,7 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 
 		// 如果team_member.Role == "CEO",采取更换CEO方法
 		if team_member.Role == dao.RoleCEO {
-			if err = team_member.UpdateFirstCEO(reply_user.Id); err != nil {
+			if err = team_member.UpdateFirstCEO(team.FounderId, invi_user.Id); err != nil {
 				util.Debug(s_u.Email, " Cannot update team_member CEO", err)
 				report(w, s_u, "你好，幽情欲向嫦娥诉，无奈虚廊夜色昏。请稍后再试。")
 				return
@@ -1689,8 +1733,8 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		util.Debug("error for Search teamMember given teamId and userId", err)
 		return
 	}
-	//如果err为nil，说明茶友已经在茶团中，无需邀请
-	report(w, s_u, "你好，该茶友已经在茶团中，无需邀请。")
+	//如果err为nil，说明茶友已经在茶团中，无需邀请，可能是非正常状态
+	report(w, s_u, "你好，该茶友已经在茶团中，无需邀请，请尝试检查成员状态。")
 
 }
 
