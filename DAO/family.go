@@ -707,8 +707,9 @@ func (f *Family) GetByUuid() (err error) {
 
 // Family.Founder() 获取家庭登记者
 func (f *Family) Founder() (user User, err error) {
-	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", f.AuthorId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", f.AuthorId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	user.NormalizeNameFields()
 	return
 }
 

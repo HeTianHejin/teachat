@@ -896,8 +896,13 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 家庭名称规则：丈夫&妻子，
 	// 使用占位符*生成家庭名称，防止冒用他人姓名
-	new_family.Name = s_u.Name + "&*"
+	if s_u.Gender == dao.User_Gender_Male {
+		new_family.Name = s_u.FullName() + "&*"
+	} else {
+		new_family.Name = "*&" + s_u.FullName()
+	}
 	new_family.AuthorId = s_u.Id
 	new_family.PerspectiveUserId = s_u.Id // 视角所属用户，默认等于AuthorId
 	new_family.Introduction = introduction

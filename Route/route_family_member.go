@@ -409,7 +409,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		//如果role==1，2，表示家庭成员是家庭的父母角色，那么需要更新家庭的名称
-		if family_member.Role == 1 || family_member.Role == 2 {
+		if family_member.Role == dao.FamilyMemberRoleHusband || family_member.Role == dao.FamilyMemberRoleWife {
 			family := dao.Family{
 				Id: family_member.FamilyId,
 			}

@@ -38,13 +38,13 @@ func (f *Family) UpdateFamilyNameWithSpouse(spouseUserId int) error {
 	var newName string
 	if husband != nil && wife != nil {
 		// 有男女主人，使用"男主人&女主人"格式
-		newName = husband.Name + "&" + wife.Name
+		newName = husband.FullName() + "&" + wife.FullName()
 	} else if husband != nil {
 		// 只有男主人
-		newName = husband.Name + "&*"
+		newName = husband.FullName() + "&*"
 	} else if wife != nil {
 		// 只有女主人
-		newName = wife.Name + "&*"
+		newName = wife.FullName() + "&*"
 	} else {
 		// 没有父母成员，保持原名
 		return nil
