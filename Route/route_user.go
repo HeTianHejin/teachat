@@ -2,6 +2,7 @@ package route
 
 import (
 	"net/http"
+	"strings"
 	dao "teachat/DAO"
 	util "teachat/Util"
 )
@@ -82,32 +83,41 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "茶博士失魂鱼，读取表单出现意外故事。")
 	}
 
-	//测试时期暂时不允许改名字
-	// name := r.PostFormValue("name")
-	// len_name := cnStrLen(name)
-	// if len_name < 2 || len_name > 16 {
-	// 	report(w, s_u, "茶博士彬彬有礼的说：名字太短不够帅，太长了墨水都不够用噢。")
-	// 	return
-	// }
-	// if isValidUserName(name) {
-	// 	report(w, s_u, "你好，请勿使用特殊字符作为名称呢，将来登机称帝，都不知道如何高呼陛下万岁。")
-	// 	return
-	// }
-	// newName := name
+	familyName := strings.TrimSpace(r.PostFormValue("family_name"))
+	givenName := strings.TrimSpace(r.PostFormValue("given_name"))
+	aliasName := strings.TrimSpace(r.PostFormValue("alias_name"))
+	for _, value := range []string{familyName, givenName, aliasName} {
+		if value == "" {
+			continue
+		}
+		if ok_name := isValidUserName(value); !ok_name {
+			report(w, s_u, "你好，请确认姓名字段是否只包含字母、数字、下划线或中文字符。")
+			return
+		}
+	}
 
-	biog := r.PostFormValue("biography")
-	len_biog := cnStrLen(biog)
-	if len_biog < 2 || len_biog > int(util.Config.ThreadMaxWord) {
-		report(w, s_u, "茶博士彬彬有礼的说：简介不能为空, 云空未必空，欲洁何曾洁噢。")
+	s_u.FamilyName = familyName
+	s_u.GivenName = givenName
+	s_u.AliasName = aliasName
+	if err = s_u.UpdateNameFields(); err != nil {
+		util.Debug(" 更新用户姓名字段错误！", err)
+		report(w, s_u, "茶博士失魂鱼，请问你刚刚说的花名或者姓名是什么来着？")
 		return
 	}
-	newBiography := biog
 
-	err = dao.UserUpdateBiography(s_u.Id, newBiography)
-	if err != nil {
-		util.Debug(" 更新用户信息错误！", err)
-		report(w, s_u, "茶博士失魂鱼，请问你刚刚说的花名或者简介是什么来着？")
-		return
+	biog := strings.TrimSpace(r.PostFormValue("biography"))
+	if biog != "" {
+		len_biog := cnStrLen(biog)
+		if len_biog < 2 || len_biog > int(util.Config.ThreadMaxWord) {
+			report(w, s_u, "茶博士彬彬有礼的说：简介长度不对，云空未必空，欲洁何曾洁噢。")
+			return
+		}
+		newBiography := biog
+		if err = dao.UserUpdateBiography(s_u.Id, newBiography); err != nil {
+			util.Debug(" 更新用户简介错误！", err)
+			report(w, s_u, "茶博士失魂鱼，请问你刚刚说的简介是什么来着？")
+			return
+		}
 	}
 
 	http.Redirect(w, r, "/v1/user/biography?uuid="+s_u.Uuid, http.StatusFound)

@@ -21,7 +21,7 @@
       <div class="media-body">
             <div class="panel panel-default">
                   <div class="panel-heading">
-                      <span class="lead">{{ .SessUser.Name }}</span>
+                      <span class="lead">{{ UserDisplayName .SessUser }}</span>
                       {{if .SessUser.Gender }}
                       <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
                       {{ else }}
@@ -48,9 +48,19 @@
 
 <form role="form" action="/v1/user/edit" method="post">
 
-    <label for="name">您的花名:</label>
-    <input id="name" type="text"  class="form-control" value="{{ .SessUser.Name }}" readonly />
+    <label for="alias_name">花名 / 字号（可选）</label>
+    <input id="alias_name" type="text" name="alias_name" class="form-control" value="{{ .SessUser.AliasName }}" maxlength="24" />
     <br />
+
+    <label for="family_name">姓 / 家族名（可选）</label>
+    <input id="family_name" type="text" name="family_name" class="form-control" value="{{ .SessUser.FamilyName }}" maxlength="24" />
+    <br />
+
+    <label for="given_name">名（可选）</label>
+    <input id="given_name" type="text" name="given_name" class="form-control" value="{{ .SessUser.GivenName }}" maxlength="24" />
+    <br />
+
+    <div class="text-muted" style="margin-bottom: 10px;">未填写时将自动使用“茶友”作为展示名；完整姓名仅用于构造家庭名称。</div>
 
     <label for="biography">请输入您的新简介:</label>
     <textarea name="biography" id="biography"  type="text" class="form-control" rows="3" cols="33" minlength="2" maxlength="567" autofocus>{{ .SessUser.Biography }}</textarea>

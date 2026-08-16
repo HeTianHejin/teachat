@@ -40,7 +40,7 @@
                 <li>
                     <a href="/v1/user/biography?uuid={{ .Uuid }}">
                         <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-                        {{ .Name }}
+                        {{ UserDisplayName . }}
                         {{if .Gender }}
                         <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
                         {{ else }}

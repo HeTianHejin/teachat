@@ -46,7 +46,7 @@
 
   <div class="well">
      说明：CEO仅能由茶团创建人指定和撤销；CEO可以指定和撤销CTO，CMO，CFO，每个核心角色只能指定一人担任，
-     品茶师调整为核心成员之前需要先将该角色留空;如果CEO角色出现空缺，默认创建人自动成为临时CEO。
+     品茶师调整为核心成员之前需要先将该角色留空;如果CEO角色出现空缺，默认创建人自动恢复正常状态成员成为CEO。
   </div>
 
   {{ if .IsFounder }}{{/*  这是茶团创建人可见页面 开始 */}}
@@ -59,7 +59,7 @@
     </div>
     <div class="media-body">
 
-      {{ .Member.Name }}
+      {{ UserDisplayName .Member }}
       <span  style="font-size: small;">
         {{if .Member.Gender }}
           <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
@@ -102,7 +102,7 @@
     </div>
     <div class="media-body">
 
-      {{ .Member.Name }}
+      {{ UserDisplayName .Member }}
       <span  style="font-size: small;">
         {{if .Member.Gender }}
           <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
@@ -149,7 +149,7 @@
       </a>
     </div>
     <div class="media-body">
-      {{ .Member.Name }}
+      {{ UserDisplayName .Member }}
       <span  style="font-size: small;">
         {{if .Member.Gender }}
         <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>

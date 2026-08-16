@@ -87,6 +87,21 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 		"trim": func(s string) string {
 			return strings.TrimSpace(s)
 		},
+		"UserDisplayName": func(user any) string {
+			switch v := user.(type) {
+			case dao.User:
+				return v.DisplayName()
+			case *dao.User:
+				if v == nil {
+					return ""
+				}
+				return v.DisplayName()
+			case nil:
+				return ""
+			default:
+				return fmt.Sprint(user)
+			}
+		},
 		"RoleName":      dao.TeamMemberRoleName,
 		"GroupRoleName": dao.GroupRoleName,
 		"FormatFloat":   util.FormatFloat,

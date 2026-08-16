@@ -4,27 +4,77 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 )
 
 // 已激活账号用户
 type User struct {
-	Id        int
-	Uuid      string
-	Name      string
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	Biography string
-	Role      string
-	Gender    int // 0: "女",1: "男",
-	Avatar    string
-	UpdatedAt *time.Time
+	Id         int
+	Uuid       string
+	Name       string // 兼容旧字段，保留为显示名/别名
+	FamilyName string // 家族姓
+	GivenName  string // 名字
+	AliasName  string // 花名/字号/别名，优先显示
+	Email      string
+	Password   string
+	CreatedAt  time.Time
+	Biography  string
+	Role       string
+	Gender     int // 0: "女",1: "男",
+	Avatar     string
+	UpdatedAt  *time.Time
 
 	//Footprint 浏览页面足迹，不保存到数据库，
 	//用于临时记录点击‘登录’按钮时页面，以便登船成功后返回同一页面，
 	Footprint string
 	Query     string //查询参数
+}
+
+// FullName 返回完整姓名，优先使用姓+名组合，用于构造家庭名称。
+func (u User) FullName() string {
+	familyName := strings.TrimSpace(u.FamilyName)
+	givenName := strings.TrimSpace(u.GivenName)
+	if familyName != "" || givenName != "" {
+		return familyName + givenName
+	}
+	return strings.TrimSpace(u.Name)
+}
+
+// DisplayName 返回常规展示名，优先使用花名/字号，其次完整姓名，最后回退到旧的 Name 字段。
+func (u User) DisplayName() string {
+	if alias := strings.TrimSpace(u.AliasName); alias != "" {
+		return alias
+	}
+	if fullName := u.FullName(); fullName != "" {
+		return fullName
+	}
+	return strings.TrimSpace(u.Name)
+}
+
+// NormalizeNameFields 将姓名字段归一化，保证历史数据仍可兼容展示。
+func (u *User) NormalizeNameFields() {
+	u.FamilyName = strings.TrimSpace(u.FamilyName)
+	u.GivenName = strings.TrimSpace(u.GivenName)
+	u.AliasName = strings.TrimSpace(u.AliasName)
+	u.Name = strings.TrimSpace(u.Name)
+
+	if u.AliasName == "" {
+		if u.Name != "" {
+			u.AliasName = u.Name
+		} else if fullName := strings.TrimSpace(u.FullName()); fullName != "" {
+			u.AliasName = fullName
+		} else {
+			u.AliasName = "茶友"
+		}
+	}
+	if u.Name == "" {
+		if fullName := strings.TrimSpace(u.FullName()); fullName != "" {
+			u.Name = fullName
+		} else {
+			u.Name = u.AliasName
+		}
+	}
 }
 
 // 系统预设用户ID常量
@@ -75,12 +125,12 @@ const (
 	User_Gender_Male   = 1 // 男
 )
 
-// SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users.name模糊查询用户，WHERE column ILIKE '%keyword%',返回[]User,err
+// SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users的姓名字段中模糊查询用户，返回[]User,err
 // limit int 表示查询结果数量，5秒超时取消
 func SearchUserByNameKeyword(keyword string, limit int, ctx context.Context) ([]User, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE name ILIKE $1 LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, name, family_name, given_name, alias_name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE name ILIKE $1 OR family_name ILIKE $1 OR given_name ILIKE $1 OR alias_name ILIKE $1 LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return nil, err
 	}
@@ -88,10 +138,11 @@ func SearchUserByNameKeyword(keyword string, limit int, ctx context.Context) ([]
 	var users []User
 	for rows.Next() {
 		var user User
-		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
+		user.NormalizeNameFields()
 		users = append(users, user)
 	}
 	if err := rows.Err(); err != nil {
@@ -102,16 +153,19 @@ func SearchUserByNameKeyword(keyword string, limit int, ctx context.Context) ([]
 
 // 未激活账号用户
 type UserUnactivated struct {
-	Id        int
-	Uuid      string
-	Name      string
-	Email     string
-	Password  string
-	CreatedAt time.Time
-	Biography string
-	Role      string
-	Gender    int
-	Avatar    string
+	Id         int
+	Uuid       string
+	Name       string
+	FamilyName string
+	GivenName  string
+	AliasName  string
+	Email      string
+	Password   string
+	CreatedAt  time.Time
+	Biography  string
+	Role       string
+	Gender     int
+	Avatar     string
 }
 
 // follow 关注的
@@ -159,11 +213,12 @@ type UserStar struct {
 
 // Create a new user, save user info into the database
 func (user *User) Create() (err error) {
+	user.NormalizeNameFields()
 	// Postgres does not automatically return the last insert id, because it would be wrong to assume
 	// you're always using a sequence.You need to use the RETURNING keyword in your insert to get this
 	// information from postgres.
 
-	statement := "INSERT INTO users (uuid, name, email, password, created_at, biography, role, gender, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id, uuid"
+	statement := "INSERT INTO users (uuid, name, family_name, given_name, alias_name, email, password, created_at, biography, role, gender, avatar) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING id, uuid"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
@@ -171,7 +226,7 @@ func (user *User) Create() (err error) {
 	defer stmt.Close()
 
 	// use QueryRow to return a row and scan the returned id into the User struct
-	err = stmt.QueryRow(Random_UUID(), user.Name, user.Email, Encrypt(user.Password), time.Now(), user.Biography, user.Role, user.Gender, user.Avatar).Scan(&user.Id, &user.Uuid)
+	err = stmt.QueryRow(Random_UUID(), user.Name, user.FamilyName, user.GivenName, user.AliasName, user.Email, Encrypt(user.Password), time.Now(), user.Biography, user.Role, user.Gender, user.Avatar).Scan(&user.Id, &user.Uuid)
 	return
 }
 
@@ -214,13 +269,31 @@ func (user *User) UpdateAvatar() (err error) {
 	return
 }
 
+// UpdateNameFields 更新用户姓名字段。
+func (user *User) UpdateNameFields() (err error) {
+	user.NormalizeNameFields()
+	statement := "UPDATE users SET name = $2, family_name = $3, given_name = $4, alias_name = $5, updated_at = $6 WHERE id = $1"
+	stmt, err := DB.Prepare(statement)
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(user.Id, user.Name, user.FamilyName, user.GivenName, user.AliasName, time.Now())
+	return
+}
+
 // Get a single user given the email，limit - 限制查询结果数量,5秒超时就取消
 func GetUserByEmail(email string, ctx context.Context) (user User, err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	user = User{}
-	err = DB.QueryRowContext(ctx, "SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", email).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRowContext(ctx, "SELECT id, uuid, name, family_name, given_name, alias_name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", email).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err != nil {
+		return
+	}
+	user.NormalizeNameFields()
 	return
 }
 
@@ -247,16 +320,20 @@ func GetUserByID(uuid string) (user User, err error) {
 	}
 	// 先以uuid查询，如果不存在，再以id查询
 	user = User{}
-	err = DB.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE uuid = $1", uuid).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE uuid = $1", uuid).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = DB.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", uuid).
-				Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+			err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", uuid).
+				Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
 		} else {
 			return user, fmt.Errorf("查询用户失败:参数: %s, %v", uuid, err)
 		}
 	}
+	if err != nil {
+		return
+	}
+	user.NormalizeNameFields()
 	return
 }
 
@@ -264,8 +341,12 @@ func GetUserByID(uuid string) (user User, err error) {
 // 获取创建茶话会的用户，茶围作者（撰写人），目标主理人
 func (o *Objective) Admin() (user User, err error) {
 	user = User{}
-	DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", o.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", o.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err != nil {
+		return
+	}
+	user.NormalizeNameFields()
 	return
 }
 
@@ -273,25 +354,36 @@ func (o *Objective) Admin() (user User, err error) {
 // 获取创建该茶台（项目）的用户（撰写人），即项目主理人
 func (project *Project) Master() (user User, err error) {
 	user = User{}
-	DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", project.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
-
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", project.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err != nil {
+		return
+	}
+	user.NormalizeNameFields()
 	return
 }
 
 // Get the user who created the thread
 func (t *Thread) Author() (user User, err error) {
 	user = User{}
-	DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", t.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", t.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err != nil {
+		return
+	}
+	user.NormalizeNameFields()
 	return
 }
 
 // Get the user who wrote the post
 func (post *Post) Author() (user User, err error) {
 	user = User{}
-	DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", post.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", post.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err != nil {
+		return
+	}
+	user.NormalizeNameFields()
 	return
 }
 
@@ -469,8 +561,11 @@ func Get2RandomUserId() (user_ids []int, err error) {
 // GetUser() Get a single user given the id
 func GetUser(id int) (user User, err error) {
 	user = User{}
-	err = DB.QueryRow("SELECT id, uuid, name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", id).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, password, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", id).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.Password, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err == nil {
+		user.NormalizeNameFields()
+	}
 	return
 }
 
@@ -478,8 +573,11 @@ func GetUser(id int) (user User, err error) {
 // 根据邀请函的邮箱获取受邀请人资料
 func (invitation *Invitation) ToUser() (user User, err error) {
 	user = User{}
-	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", invitation.InviteEmail).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE email = $1", invitation.InviteEmail).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err == nil {
+		user.NormalizeNameFields()
+	}
 	return
 }
 
@@ -487,8 +585,11 @@ func (invitation *Invitation) ToUser() (user User, err error) {
 // AWS CodeWhisperer assist in writing
 func (team_member *TeamMember) User() (user User, err error) {
 	user = User{}
-	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team_member.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team_member.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err == nil {
+		user.NormalizeNameFields()
+	}
 	return
 }
 
@@ -499,16 +600,22 @@ func (invitation *Invitation) TeamFounder() (user User, err error) {
 	if err != nil {
 		return
 	}
-	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err == nil {
+		user.NormalizeNameFields()
+	}
 	return
 }
 
 // 获取撰写邀请函的茶团时任CEO（原撰写人），可能不是现任CEO
 func (invitation *Invitation) Author() (user User, err error) {
 	user = User{}
-	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", invitation.AuthorUserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", invitation.AuthorUserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	if err == nil {
+		user.NormalizeNameFields()
+	}
 	return
 }
 

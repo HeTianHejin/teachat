@@ -27,7 +27,7 @@
       </div>
       <div class="media-body">
         <h4>
-          {{ .User.Name }}
+          {{ UserDisplayName .User }}
           {{ if .User.Gender }}
           <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
           {{ else }}

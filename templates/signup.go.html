@@ -13,7 +13,12 @@
   <div class="panel-body">
     <form class="form-signin" role="form" action="/v1/signup_account" method="post">
 
-      <input id="name" type="text" name="name" class="form-control" placeholder="花名" required autofocus>
+      <label for="alias_name">花名 / 字号（可选）</label>
+      <input id="alias_name" type="text" name="alias_name" class="form-control" placeholder="例如：阿四、老农、青禾" maxlength="24" autofocus>
+      <label for="family_name">姓 / 家族名（可选）</label>
+      <input id="family_name" type="text" name="family_name" class="form-control" placeholder="例如：李" maxlength="24">
+      <label for="given_name">名（可选）</label>
+      <input id="given_name" type="text" name="given_name" class="form-control" placeholder="例如：四" maxlength="24">
       <input id="email" type="email" name="email" class="form-control" placeholder="电子邮箱" required pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$">
       <label for="password">至少6个字符，建议8个字母、数字和英文标点组合</label>
       <input id="password" type="password" name="password" class="form-control" placeholder="密码" minlength="6"

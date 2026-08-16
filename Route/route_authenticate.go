@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	dao "teachat/DAO"
 	util "teachat/Util"
 )
@@ -61,22 +62,31 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
-	name := r.PostFormValue("name")
-	//检查用户名称，不允许使用特殊字符，&,$,$,@...
-	if ok_name := isValidUserName(name); !ok_name {
-		report(w, s_u, "你好，请确认用户名是否只包含字母、数字、下划线或中文字符。")
-		return
+	aliasName := strings.TrimSpace(r.PostFormValue("alias_name"))
+	familyName := strings.TrimSpace(r.PostFormValue("family_name"))
+	givenName := strings.TrimSpace(r.PostFormValue("given_name"))
+	for _, value := range []string{aliasName, familyName, givenName} {
+		if value == "" {
+			continue
+		}
+		if ok_name := isValidUserName(value); !ok_name {
+			report(w, s_u, "你好，请确认姓名字段是否只包含字母、数字、下划线或中文字符。")
+			return
+		}
 	}
 
 	// 根据用户提交的资料填写新用户表格
 	newU := dao.User{
-		Name:      name,
-		Email:     email,
-		Password:  dao.Encrypt(password),
-		Biography: biography,
-		Role:      "traveller",
-		Gender:    gender,
-		Avatar:    "teaSet",
+		Name:       aliasName,
+		FamilyName: familyName,
+		GivenName:  givenName,
+		AliasName:  aliasName,
+		Email:      email,
+		Password:   dao.Encrypt(password),
+		Biography:  biography,
+		Role:       "traveller",
+		Gender:     gender,
+		Avatar:     "teaSet",
 	}
 	// 用正则表达式匹配一下提交的邮箱格式是否正确
 	if ok_email := isEmail(newU.Email); !ok_email {
@@ -134,10 +144,11 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	util.Debug(newU.Email, "注册新账号ok")
 
 	t := ""
+	displayName := newU.DisplayName()
 	if newU.Gender == dao.User_Gender_Female {
-		t = fmt.Sprintf("%s 女士，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
+		t = fmt.Sprintf("%s 女士，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", displayName)
 	} else {
-		t = fmt.Sprintf("%s 先生，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", newU.Name)
+		t = fmt.Sprintf("%s 先生，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", displayName)
 	}
 	report(w, newU, t)
 

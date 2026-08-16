@@ -5,7 +5,7 @@
     <li>大堂</li>
     <li>茶友名片</li>
     <li class="active">
-        {{ .User.Name }}
+        {{ .User.DisplayName }}
         <span style="font-style: italic;">@洞天福地</span>
     </li>
 </ol>
@@ -19,7 +19,7 @@
     <div class="media-body">
         <div class="panel panel-default">
             <div class="panel-heading">
-                {{ .User.Name }}
+                {{ .User.DisplayName }}
                 <span class="pull-right" style="font-style: italic;"> {{ .User.Email }}</span>
             </div>
             <div class="panel-body">

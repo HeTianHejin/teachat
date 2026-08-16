@@ -1820,8 +1820,9 @@ func IsTeamActiveMember(userId, teamId int) (bool, error) {
 // AWS CodeWhisperer assist in writing
 func (team *Team) Founder() (user User, err error) {
 	user = User{}
-	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", team.FounderId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	user.NormalizeNameFields()
 	return
 }
 
@@ -1834,8 +1835,9 @@ func (team *Team) CEO() (user User, err error) {
 	if teamMember.UserId == 0 {
 		return user, fmt.Errorf("CEO not found for team id: %d", team.Id)
 	}
-	err = DB.QueryRow("SELECT id, uuid, name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", teamMember.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	err = DB.QueryRow("SELECT id, uuid, name, family_name, given_name, alias_name, email, created_at, biography, role, gender, avatar, updated_at FROM users WHERE id = $1", teamMember.UserId).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.FamilyName, &user.GivenName, &user.AliasName, &user.Email, &user.CreatedAt, &user.Biography, &user.Role, &user.Gender, &user.Avatar, &user.UpdatedAt)
+	user.NormalizeNameFields()
 	return
 }
 
