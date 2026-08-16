@@ -282,6 +282,15 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func buildTeamRoleAdjustedMessage(team dao.Team, user dao.User, newRole int) string {
+	return fmt.Sprintf(
+		"你好，已经成功调整了 %s 的角色为 %s 。<br><a href=\"/v1/team/detail?uuid=%s\">返回团队详情</a>",
+		user.FullName(),
+		dao.TeamMemberRoleName(newRole),
+		team.Uuid,
+	)
+}
+
 // Handle() /v1/team_member/role
 // 调整茶团成员角色管理窗口
 func HandleMemberRole(w http.ResponseWriter, r *http.Request) {
@@ -655,7 +664,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//报告调整角色成功消息
-	report(w, s_u, "你好，茶博士摸摸头说，已经调整了 "+t_user.Name+" 的角色为 "+dao.TeamMemberRoleName(new_role)+" 。")
+	report(w, s_u, buildTeamRoleAdjustedMessage(t_team, t_user, new_role))
 }
 
 // /v1/team_member/invite
@@ -1601,12 +1610,12 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//检查茶友是否自己邀请自己？
-	//也许是可以的?创始人当然可以批准加入自己创建的茶团喝茶？？
-	// if s_u.Email == email {
-	// 	report(w, s_u, "你好，请不要邀请自己加入茶团哈。")
-	// 	return
-	// }
+	//检查是否自己邀请自己？
+	//创建人是成员，角色默认CEO（退居幕后）状态，不能再次加入团队成为成员
+	if s_u.Email == email {
+		report(w, s_u, "你好，请不要邀请自己加入茶团哈。")
+		return
+	}
 	//根据茶友提交的teamId，检查是否存在该team
 	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
