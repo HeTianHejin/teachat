@@ -168,49 +168,6 @@ type UserUnactivated struct {
 	Avatar     string
 }
 
-// follow 关注的
-type Follow struct {
-	Id                int
-	Uuid              string
-	UserId            int
-	FollowUserId      int
-	Nickname          string //绰号，备注名
-	Note              string //备注事项
-	RelationshipLevel int    //熟悉程度，0：刚见面的，1:见过几面，3:了解一些背景，4：比较熟，5，非常熟识，6：无所不谈，7:志同道合，8:
-	IsDisdain         bool   //是否鄙视，蔑视
-	CreatedAt         time.Time
-	UpdatedAt         *time.Time
-}
-
-// 用户的星标本（收藏夹），收藏的茶议=3或者茶话会=1/茶台=2/茶团=5，甚至是品味post=4
-// 宝贝=6，魔法=7，宝物=8，
-type UserStar struct {
-	Id        int
-	Uuid      string
-	UserId    int
-	Type      int
-	ObjectId  int
-	CreatedAt time.Time
-	UpdatedAt *time.Time
-}
-
-// 根据UserStar.Type int反射object对象名称string,
-// 茶议=3或者茶话会=1,茶台=2,茶团=5，品味post=4， 好东西=6，魔法=7，宝物=8，
-// 未知=9=？
-// var ObjectName = map[int]string{
-// 	1:  "objective",
-// 	2:  "project",
-// 	3:  "thread",
-// 	4:  "post",
-// 	5:  "team",
-// 	6:  "goods",
-// 	7:  "magic",
-// 	8:  "skill",
-// 	9:  "family",
-// 	10: "user",
-// 	//...
-// }
-
 // Create a new user, save user info into the database
 func (user *User) Create() (err error) {
 	user.NormalizeNameFields()
