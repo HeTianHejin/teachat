@@ -30,9 +30,15 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 	uuid := r.URL.Query().Get("uuid")
 
 	//检查是否将特殊茶团作为默认茶团
-	if uuid == dao.TeamUUIDFreelancer || uuid == dao.TeamUUIDSpaceshipCrew {
+	switch uuid {
+	case dao.TeamUUIDFreelancer:
 		report(w, s_u, "你好，茶博士竟然说，陛下你不能将特殊茶团作为默认茶团，请确认。")
 		return
+	case dao.TeamUUIDSpaceshipCrew:
+		if s_u.Role != "captain" && s_u.Role != "teaoffice" {
+			report(w, s_u, "你好，不是飞船服务团队成员不能将此团队作为默认茶团，请确认。")
+			return
+		}
 	}
 	//查询目标茶团是否存在
 	t_team, err := dao.GetTeamByUUID(uuid)
@@ -42,10 +48,6 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if t_team.Id == dao.TeamIdFreelancer {
-		report(w, s_u, "你好，茶博士竟然说，陛下你不能将特殊茶团作为默认茶团，请确认。")
-		return
-	}
 	if t_team.IsPrivate {
 		report(w, s_u, "你好，茶博士竟然说，陛下你不能将私密茶团作为默认茶团，请确认。")
 		return
@@ -65,7 +67,7 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//检查用户是否茶团成员，非成员不能设置默认茶团
+	//检查用户是否茶团状态正常成员，非成员或者异常状态成员不能设置默认茶团
 	ok, err := t_team.IsActiveMember(s_u.Id)
 	if err != nil {
 		util.Debug("Cannot check user is member of team", t_team.Id, err)
@@ -73,11 +75,11 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !ok {
-		report(w, s_u, "你好，茶博士竟然说，陛下你似乎不是这个茶团成员，请确认。")
+		report(w, s_u, "你好，茶博士竟然说，陛下你似乎不是这个茶团成员或者状态异常，请确认。")
 		return
 	}
 
-	//设置默认茶团
+	//可以重新设置默认茶团
 	new_default_team := dao.UserDefaultTeam{
 		UserId: s_u.Id,
 		TeamId: t_team.Id,

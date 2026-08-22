@@ -197,7 +197,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 		}
 	} else {
 		// 预填充物资、手艺 2部曲
-		if err = dao.CreateRequiredThreads(&ob, &t_proj, dao.UserId_Verifier, dao.Templates2step, r.Context()); err != nil {
+		if err = dao.CreateRequiredThreads(&ob, &t_proj, dao.UserId_CEO_Verifier, dao.Templates2step, r.Context()); err != nil {
 			util.Debug(" Cannot create required 2-threads", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 			return

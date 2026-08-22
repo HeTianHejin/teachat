@@ -81,22 +81,18 @@ func (u *User) NormalizeNameFields() {
 const (
 	UserId_None              = 0 //
 	UserId_Captain_Spaceship = 1 // 太空船长
-	UserId_Verifier          = 2 // 见证集团第一团队CEO id
+	UserId_CEO_Verifier      = 2 // 见证集团第一团队CEO id
 )
+
+// 系统预设用户UUID常量
+const UserUUIDUnknown = "x"
 
 // 系统预设“游客”用户
 var UserUnknown = User{
 	Id:   UserId_None,
-	Uuid: "x",
+	Uuid: UserUUIDUnknown,
 	Name: "游客",
 }
-
-// 系统预设用户UUID常量
-const (
-	UserUUIDCaptain  = "396d7fac-2f29-44a7-7f77-63cbaf423438"
-	UserUUIDVerifier = "070a7e98-d5ab-4506-4e59-093a053bc32b"
-	UserUUIDUnknown  = "x"
-)
 
 var UserRole = map[string]string{
 	"captain": "太空船长",
