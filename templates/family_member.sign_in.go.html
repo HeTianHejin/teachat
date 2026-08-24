@@ -35,7 +35,7 @@
         </div>
          <input type="hidden" name="family_uuid" value="{{ .Family.Uuid }}" />
         <div class="form-group">
-            <label for="family_name" control-label> &家庭茶团：</label>
+            <label for="family_name" control-label> 家庭茶团：</label>
             <input type="text" class="form-control" id="family_name" value="{{ .Family.Name }}" readonly />
         </div>
 
@@ -58,7 +58,7 @@
             <label for="content" control-label>声明内容：</label>
             <div>
                 <textarea class="form-control" name="content" id="content" rows="3" minlength="3" maxlength="567"
-                    required>声明，{{ .Name }} 是 {{ $.SessUser.Name }}&家庭茶团 的成员.</textarea>
+                    required>声明，{{ .Name }} 是 {{ $.Family.Name }} 家庭成员</textarea>
             </div>
         </div>
 

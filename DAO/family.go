@@ -18,7 +18,7 @@ type Family struct {
 	Id                  int
 	Uuid                string
 	AuthorId            int    // 创建者茶友id，权限必须是男主人或者女主人角色
-	Name                string // 家庭名称，默认是“丈夫&妻子”联合名字组合，例如：比尔及梅琳达·盖茨（Bill & Melinda Gates)基金会（Foundation)【命名方法】
+	Name                string // 家庭名称，命名方法：默认是“丈夫&妻子”联名组合而成
 	Introduction        string // 家庭简介
 	IsMarried           bool   // 是否已结婚？（法律上的领取结婚证）
 	HasChild            bool   // 这个家庭是否有子女（包括领养的）？
@@ -1062,8 +1062,8 @@ func GetFamilyIncludingDeleted(family_id int) (family Family, err error) {
 	return family, nil
 }
 
-// SearchFamilyByName 根据家庭名称关键词搜索公开的家庭
-func SearchFamilyByName(keyword string, limit int, ctx context.Context) ([]Family, error) {
+// SearchOpenFamilyByName 根据家庭名称关键词搜索公开的家庭
+func SearchOpenFamilyByName(keyword string, limit int, ctx context.Context) ([]Family, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -1076,4 +1076,38 @@ func SearchFamilyByName(keyword string, limit int, ctx context.Context) ([]Famil
 		return nil, wrapError("SearchFamilyByName", err)
 	}
 	return scanFamilies(rows)
+}
+
+// 根据被声明为新成员的user_id,从“家庭成员增加声明”查找家庭（用于新成员加入私密家庭用途）
+// 状态为0表示未处理，1表示已读但未处理
+// FindFamilyAnnouncementByMemberId(s_u.Id, r.Context()) family_announcement_slice，err
+func FindFamilyAnnouncementByMemberId(user_id int, ctx context.Context) (family_announcement_slice []FamilyMemberSignIn, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	query := `SELECT id, uuid, family_id, user_id, role, is_adult, title, content, place_id, status, created_at, updated_at, is_adopted, author_user_id 
+		FROM family_member_sign_ins WHERE user_id = $1 AND status in(0, 1) ORDER BY created_at DESC`
+
+	rows, err := DB.QueryContext(ctx, query, user_id)
+	if err != nil {
+		return nil, wrapError("FindFamilyAnnouncementByMemberId", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var fms FamilyMemberSignIn
+		err = rows.Scan(&fms.Id, &fms.Uuid, &fms.FamilyId, &fms.UserId, &fms.Role, &fms.IsAdult,
+			&fms.Title, &fms.Content, &fms.PlaceId, &fms.Status,
+			&fms.CreatedAt, &fms.UpdatedAt, &fms.IsAdopted, &fms.AuthorUserId)
+		if err != nil {
+			return nil, wrapError("FindFamilyAnnouncementByMemberId", err)
+		}
+		family_announcement_slice = append(family_announcement_slice, fms)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, wrapError("FindFamilyAnnouncementByMemberId", err)
+	}
+
+	return family_announcement_slice, nil
 }

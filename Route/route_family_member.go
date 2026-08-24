@@ -249,12 +249,12 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	// 保存新声明
 	if err = new_family_member_sign_in.Create(); err != nil {
 		util.Debug("Cannot create family member sign in", err)
-		report(w, s_u, "你好，满头大汗的茶博士说，因为眼镜太模糊导致增加成员的声明保存失败，请确认后再试。")
+		report(w, s_u, "你好，茶博士遗憾地说，增加成员的声明保存失败，请稍后再试。")
 		return
 	}
 
 	//报告声明保存成功
-	rt := fmt.Sprintf("你好，%s 已经保存成功。请自行联系你的家人，查找访问你的家庭详情，阅读声明并确认后生效。", title)
+	rt := fmt.Sprintf("你好，%s 已经保存成功。为了避免某些意外或者骚扰声明，系统将不会发送任何通知给新成员。请你自行联系家人，登船后根据名称查找并访问家庭详情，阅读声明并确认后方可加入家庭。", title)
 	report(w, s_u, rt)
 
 }

@@ -339,8 +339,8 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		return
 
 	case dao.SearchTypeFamilyName:
-		//查询公开家庭
-		family_slice, err := dao.SearchFamilyByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
+		//首先查询公开家庭
+		family_slice, err := dao.SearchOpenFamilyByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
 			util.Debug(" failed to search family by keyword", err)
 		}
@@ -355,6 +355,42 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			fPD.FamilyBeanSlice = family_bean_slice
 			fPD.IsEmpty = false
 		}
+
+		//如果找不到公开家庭，用户可能是被声明为某个私密家庭新成员，通过查找该家庭来加入，
+		//先尝试查找该用户被声明为家庭成员的某个家庭新声明，被声明者可以查看私密家庭以便加入
+		//未登陆的游客不允许查找私密家庭
+		if fPD.IsEmpty && s_u.Id > dao.UserId_None {
+			family_announcement_slice, err := dao.FindFamilyAnnouncementByMemberId(s_u.Id, r.Context())
+			if err != nil {
+				util.Debug(" failed to find family announcement by member id", err)
+			}
+			if len(family_announcement_slice) >= 1 {
+				var private_family_list []dao.Family
+				for _, fa := range family_announcement_slice {
+					family, err := dao.GetFamily(fa.FamilyId)
+					if err != nil {
+						util.Debug(" failed to get family by family id", fa.FamilyId, err)
+						continue
+					}
+					if family.Id > 0 {
+						private_family_list = append(private_family_list, family)
+					}
+				}
+				if len(private_family_list) >= 1 {
+					private_family_bean_slice, err := fetchFamilyBeanSlice(private_family_list)
+					if err != nil {
+						util.Debug(" Cannot fetch private family bean slice", err)
+					} else {
+						fPD.Count += len(private_family_bean_slice)
+						fPD.FamilyBeanSlice = append(fPD.FamilyBeanSlice, private_family_bean_slice...)
+						if fPD.IsEmpty {
+							fPD.IsEmpty = false
+						}
+					}
+				}
+			}
+		}
+
 		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_family")
 		return
 
