@@ -1062,20 +1062,24 @@ func GetFamilyIncludingDeleted(family_id int) (family Family, err error) {
 	return family, nil
 }
 
-// SearchOpenFamilyByName 根据家庭名称关键词搜索公开的家庭
-func SearchOpenFamilyByName(keyword string, limit int, ctx context.Context) ([]Family, error) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
+// 避免私密家庭复杂处理逻辑，仅支持按ID查询
+// SearchFamilyById 根据家庭ID搜索家庭
+func SearchFamilyById(family_id int) (family Family, err error) {
+	if family_id == 0 {
+		return FamilyUnknown, nil
+	}
 
 	query := `SELECT id, uuid, author_id, name, introduction, is_married, has_child, 
 		husband_from_family_id, wife_from_family_id, status, created_at, updated_at, logo, is_open, deleted_at, perspective_user_id 
-		FROM families WHERE name LIKE $1 AND deleted_at IS NULL AND is_open = true LIMIT $2`
+		FROM families WHERE id = $1 AND deleted_at IS NULL`
 
-	rows, err := DB.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	err = DB.QueryRow(query, family_id).Scan(&family.Id, &family.Uuid, &family.AuthorId, &family.Name, &family.Introduction,
+		&family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId,
+		&family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen, &family.DeletedAt, &family.PerspectiveUserId)
 	if err != nil {
-		return nil, wrapError("SearchFamilyByName", err)
+		return Family{}, wrapError("SearchFamilyById", err)
 	}
-	return scanFamilies(rows)
+	return family, nil
 }
 
 // 根据被声明为新成员的user_id,从“家庭成员增加声明”查找家庭（用于新成员加入私密家庭用途）

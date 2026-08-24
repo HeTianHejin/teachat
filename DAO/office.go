@@ -334,7 +334,7 @@ func SubtractUserNotificationCount(user_id int) error {
 
 // 查询类型常量
 const (
-	SearchTypeUserNameOrEmail = 0  // 按用户名查询
+	SearchTypeUserNameOrEmail = 0  // 按用户名或者邮箱查询
 	SearchTypeTeamAbbr        = 1  // 按团队简称查询
 	SearchTypeThreadTitle     = 2  // 按茶议标题查询
 	SearchTypeObjectiveTitle  = 3  // 按茶围名称查询
@@ -347,5 +347,5 @@ const (
 	SearchTypeUserId          = 10 // 按用户id查询
 	SearchTypeSkill           = 11 // 按技能名称查询
 	SearchTypeMagic           = 12 // 按法力名称查询
-	SearchTypeFamilyName      = 13 // 按家庭名称查询
+	SearchTypeFamilyId        = 13 // 按家庭ID查询
 )

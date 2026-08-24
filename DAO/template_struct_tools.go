@@ -8,7 +8,7 @@ type SearchPageData struct {
 	Count   int  //查询结果个数
 
 	UserDefaultDataBeanSlice []UserDefaultDataBean //茶友（用户）资料夹队列
-	FamilyBeanSlice          []FamilyBean          //家庭资料夹队列
+	Family                   Family                //家庭资料夹队列
 	TeamBeanSlice            []TeamBean            //茶团资料夹队列
 	ThreadBeanSlice          []ThreadBean
 	ProjectBeanSlice         []ProjectBean
