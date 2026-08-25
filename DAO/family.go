@@ -1077,7 +1077,7 @@ func SearchFamilyById(family_id int) (family Family, err error) {
 		&family.IsMarried, &family.HasChild, &family.HusbandFromFamilyId, &family.WifeFromFamilyId,
 		&family.Status, &family.CreatedAt, &family.UpdatedAt, &family.Logo, &family.IsOpen, &family.DeletedAt, &family.PerspectiveUserId)
 	if err != nil {
-		return Family{}, wrapError("SearchFamilyById", err)
+		return Family{}, err
 	}
 	return family, nil
 }

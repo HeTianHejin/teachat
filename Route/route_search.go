@@ -348,8 +348,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 		family, err := dao.SearchFamilyById(familyID)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				fPD.IsEmpty = true
+				generateHTML(w, &fPD, "layout", "navbar.private", "search")
+				return
+			}
 			util.Debug("failed to search family by id: ", familyID, err)
-			report(w, s_u, "你好，请输入有效的家庭号，仅支持正整数。")
+			report(w, s_u, "你好，开水太烫不好泡茶，请稍后再试。")
 			return
 		}
 
@@ -362,8 +367,8 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 		familyBean, err := fetchFamilyBean(family)
 		if err != nil {
-			util.Debug("failed to fetch family bean", err)
-			report(w, s_u, "你好，请输入有效的家庭号，仅支持正整数。")
+			util.Debug("failed to fetch family bean by id: ", familyID, err)
+			report(w, s_u, "你好，开水太烫不好泡茶，请稍后再试。")
 			return
 		}
 
