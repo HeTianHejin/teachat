@@ -1,6 +1,7 @@
 package route
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"net/http"
@@ -314,7 +315,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询技能 skill
 		skill_slice, err := dao.SearchSkillByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search skill by keyword", err)
+			util.Debug(" failed to search skill by keyword: ", keyword, err)
 		}
 		if len(skill_slice) >= 1 {
 			fPD.Count = len(skill_slice)
@@ -328,7 +329,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询法力 magic
 		magic_slice, err := dao.SearchMagicByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search magic by keyword", err)
+			util.Debug(" failed to search magic by keyword: ", keyword, err)
 		}
 		if len(magic_slice) >= 1 {
 			fPD.Count = len(magic_slice)
@@ -339,46 +340,38 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		return
 
 	case dao.SearchTypeFamilyId:
-		keyword_int, err := strconv.Atoi(keyword)
-		if err != nil || keyword_int <= 0 {
+		familyID, err := strconv.Atoi(keyword)
+		if err != nil || familyID <= 0 {
 			report(w, s_u, "家庭号必须是正整数")
 			return
 		}
-		family, err := dao.SearchFamilyById(keyword_int)
+
+		family, err := dao.SearchFamilyById(familyID)
 		if err != nil {
-			util.Debug(" failed to search family by keyword", err)
+			util.Debug("failed to search family by id: ", familyID, err)
 			report(w, s_u, "你好，请输入有效的家庭号，仅支持正整数。")
 			return
 		}
-		if family.Id > 0 {
-			fPD.Count = 1
-			fPD.Family = family
-			fPD.IsEmpty = false
-		} else {
+
+		// 检查用户是否有权限查看该家庭
+		if !canViewFamily(&family, &s_u, r.Context()) {
 			fPD.IsEmpty = true
+			generateHTML(w, &fPD, "layout", "navbar.private", "search")
+			return
 		}
 
-		//如果是公开属性家庭，直接展示，如果是私密属性家庭，只有被声明为新成员的用户才能看到
-		if family.IsOpen {
-			generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_family")
-			return
-		} else {
-			//私密家庭，检查用户是否被声明为新成员
-			if s_u.Id > dao.UserId_None {
-				family_announcement_slice, err := dao.FindFamilyAnnouncementByMemberId(s_u.Id, r.Context())
-				if err != nil {
-					util.Debug(" failed to find family announcement by member id", err)
-				}
-				for _, fa := range family_announcement_slice {
-					if fa.FamilyId == family.Id {
-						generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_family")
-						return
-					}
-				}
-			}
-			report(w, s_u, "你好，茶博士摸摸头，说该家庭是私密家庭，你没有权限查看，请确认后再试。")
+		familyBean, err := fetchFamilyBean(family)
+		if err != nil {
+			util.Debug("failed to fetch family bean", err)
+			report(w, s_u, "你好，请输入有效的家庭号，仅支持正整数。")
 			return
 		}
+
+		fPD.FamilyBeanSlice = append(fPD.FamilyBeanSlice, familyBean)
+		fPD.Count = 1
+		fPD.IsEmpty = false
+		generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_family")
+		return
 
 	default:
 		report(w, s_u, "你好，茶博士摸摸头，还没有开放这种类型的查询功能，请换个查询类型再试。")
@@ -406,4 +399,33 @@ func SearchGet(w http.ResponseWriter, r *http.Request) {
 
 	// 打开查询页面
 	generateHTML(w, &f, "layout", "navbar.private", "search")
+}
+
+// canViewFamily 判断用户是否有权限查看家庭信息
+// 公开家庭：所有人可见
+// 私密家庭：仅被声明为新成员的用户可见
+func canViewFamily(family *dao.Family, user *dao.User, ctx context.Context) bool {
+	if family == nil {
+		return false
+	}
+	if family.IsOpen {
+		return true
+	}
+	// 未登录用户无法查看私密家庭
+	if user == nil || user.Id <= dao.UserId_None {
+		return false
+	}
+
+	announcements, err := dao.FindFamilyAnnouncementByMemberId(user.Id, ctx)
+	if err != nil {
+		util.Debug("failed to find family announcement by member id: ", user.Id, err)
+		return false
+	}
+
+	for _, fa := range announcements {
+		if fa.FamilyId == family.Id {
+			return true
+		}
+	}
+	return false
 }
