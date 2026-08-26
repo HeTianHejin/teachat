@@ -4,9 +4,9 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/family/home">家庭事项</a></li>
-  <li><a>{{ .FamilyBean.Family.Name }}家庭茶团</a></li>
-  <li class="=active">详情</li>
+  <li><a href="/v1/family/home">家庭首页</a></li>
+  <li><a>#{{ .FamilyBean.Family.Id }} 家庭</a></li>
+  <li class="=active">{{ .FamilyBean.Family.Name }}</li>
 </ol>
 
 {{ if .IsNewMember }}{{/* 检查是否新家庭成员声明提及的茶友 -开始 */}}

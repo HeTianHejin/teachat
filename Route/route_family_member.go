@@ -254,7 +254,7 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//报告声明保存成功
-	rt := fmt.Sprintf("你好，%s 已经保存成功。为了避免某些意外或者骚扰声明，系统将不会发送任何通知给新成员。请你自行联系家人，登船后根据名称查找并访问家庭详情，阅读声明并确认后方可加入家庭。", title)
+	rt := fmt.Sprintf("你好，%s 已经保存成功。为了避免某些意外或者骚扰声明，系统将不会发送任何通知给新成员。请你自行联系家人，登船后查找访问 %d 号家庭详情，阅读声明并确认后即可加入家庭。", title, t_family.Id)
 	report(w, s_u, rt)
 
 }
