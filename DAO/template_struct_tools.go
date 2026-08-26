@@ -22,7 +22,7 @@ type SearchPageData struct {
 	MagicSlice               []Magic       // 法力集合
 }
 
-// 我的地盘我做主
+// 地盘列表
 type PlaceSlice struct {
 	SessUser   User
 	PlaceSlice []Place

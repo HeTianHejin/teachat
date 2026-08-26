@@ -400,8 +400,7 @@ func TestThread_IsApproved(t *testing.T) {
 func BenchmarkThread_TypeString(b *testing.B) {
 	thread := Thread{Type: ThreadTypeIthink}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = thread.TypeString()
 	}
 }
@@ -411,8 +410,7 @@ func BenchmarkThread_IsEdited(b *testing.B) {
 	later := now.Add(time.Hour)
 	thread := Thread{CreatedAt: now, EditAt: &later}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_ = thread.IsEdited()
 	}
 }
@@ -420,8 +418,7 @@ func BenchmarkThread_IsEdited(b *testing.B) {
 func BenchmarkHotThreads(b *testing.B) {
 	ctx := context.Background()
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		_, _ = HotThreads(10, ctx)
 	}
 }

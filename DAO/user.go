@@ -179,7 +179,7 @@ func (user *User) Create() (err error) {
 	defer stmt.Close()
 
 	// use QueryRow to return a row and scan the returned id into the User struct
-	err = stmt.QueryRow(Random_UUID(), user.Name, user.FamilyName, user.GivenName, user.AliasName, user.Email, Encrypt(user.Password), time.Now(), user.Biography, user.Role, user.Gender, user.Avatar).Scan(&user.Id, &user.Uuid)
+	err = stmt.QueryRow(Random_UUID(), user.Name, user.FamilyName, user.GivenName, user.AliasName, user.Email, user.Password, time.Now(), user.Biography, user.Role, user.Gender, user.Avatar).Scan(&user.Id, &user.Uuid)
 	return
 }
 

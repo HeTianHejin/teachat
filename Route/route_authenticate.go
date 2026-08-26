@@ -1,7 +1,6 @@
 package route
 
 import (
-	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -9,6 +8,8 @@ import (
 	"strings"
 	dao "teachat/DAO"
 	util "teachat/Util"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // GET /LoginGet?footprint=xxx&query=xxx
@@ -74,7 +75,13 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-
+	// 注册时生成哈希(bcrypt)密码，而不是存储明文密码(kimi推荐)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		util.Debug(" Cannot hash password", err)
+		report(w, s_u, "你好，茶博士因找不到笔导致注册失败，请确认情况后重试。")
+		return
+	}
 	// 根据用户提交的资料填写新用户表格
 	newU := dao.User{
 		Name:       aliasName,
@@ -82,7 +89,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		GivenName:  givenName,
 		AliasName:  aliasName,
 		Email:      email,
-		Password:   dao.Encrypt(password),
+		Password:   string(hashedPassword),
 		Biography:  biography,
 		Role:       "traveller",
 		Gender:     gender,
@@ -194,8 +201,10 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		encryptedPw := dao.Encrypt(pw)
-		if subtle.ConstantTimeCompare([]byte(s_u.Password), []byte(encryptedPw)) == 1 {
+		err := bcrypt.CompareHashAndPassword([]byte(s_u.Password), []byte(pw))
+		if err == nil {
+			// 密码正确
+
 			// 创建新的会话
 			session, err := s_u.CreateSession()
 			if err != nil {
@@ -231,9 +240,9 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			// 密码不匹配
-			util.Debug(s_u.Email, "密码和用户名不匹配。")
+			util.Debug("failed to authenticate user", "userID", s_u.Id, "email", s_u.Email, "error", err)
 			s_u = dao.UserUnknown
-			report(w, s_u, "无所事事的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
+			report(w, s_u, "闷头喝茶的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 			return
 		}
 
