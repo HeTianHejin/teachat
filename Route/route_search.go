@@ -35,13 +35,13 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能理解你的话语，请稍后再试。")
 		return
 	}
@@ -51,7 +51,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 	//转换class_str为int
 	class_int, err := strconv.Atoi(class_str)
 	if err != nil {
-		util.Debug("Cannot convert class_str to int", err)
+		util.Debug("Cannot convert class_str to int %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，说茶语本上落了片白茫茫大地真干净，请稍后再试。")
 		return
 	}
@@ -87,7 +87,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			if user.Id > 0 {
 				user_bean, err := fetchUserDefaultBean(user)
 				if err != nil {
-					util.Debug("cannot get user-bean given user", err)
+					util.Debug("cannot get user-bean given user %v", err)
 					report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 					return
 				} else {
@@ -98,7 +98,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		} else {
 			user_slice, err := dao.SearchUserByNameKeyword(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 			if err != nil {
-				util.Debug(" Cannot search user by keyword", err)
+				util.Debug(" Cannot search user by keyword %v", err)
 				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
@@ -106,7 +106,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			if len(user_slice) >= 1 {
 				fPD.UserDefaultDataBeanSlice, err = fetchUserDefaultDataBeanSlice(user_slice)
 				if err != nil {
-					util.Debug(" Cannot fetch user bean slice given user_slice", err)
+					util.Debug(" Cannot fetch user bean slice given user_slice %v", err)
 					report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 					return
 				}
@@ -131,7 +131,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_avatar_name_gender")
 				return
 			} else {
-				util.Debug("failed to get user given user_id: ", keyword_int, err)
+				util.Debug("failed to get user given user_id:  %v", err)
 				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
@@ -141,7 +141,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if user.Id > 0 {
 			userbean, err := fetchUserDefaultBean(user)
 			if err != nil {
-				util.Debug("cannot get user-bean given user", err)
+				util.Debug("cannot get user-bean given user %v", err)
 				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			} else {
@@ -155,7 +155,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询，茶团简称，team.abbreviation
 		team_slice, err := dao.SearchTeamByAbbreviation(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" Cannot search team by abbreviation", err)
+			util.Debug(" Cannot search team by abbreviation %v", err)
 			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 			return
 		}
@@ -163,7 +163,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		if len(team_slice) >= 1 {
 			t_b_slice, err := fetchTeamBeanSlice(team_slice)
 			if err != nil {
-				util.Debug(" Cannot fetch team bean slice given team_slice", err)
+				util.Debug(" Cannot fetch team bean slice given team_slice %v", err)
 				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
@@ -180,14 +180,14 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询，茶议标题，thread.title
 		thread_slice, err := dao.SearchThreadByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" Cannot search thread by title", err)
+			util.Debug(" Cannot search thread by title %v", err)
 			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 			return
 		}
 		if len(thread_slice) >= 1 {
 			thread_bean_slice, err := fetchThreadBeanSlice(thread_slice, r)
 			if err != nil {
-				util.Debug(" Cannot fetch thread bean slice given thread_slice", err)
+				util.Debug(" Cannot fetch thread bean slice given thread_slice %v", err)
 				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
@@ -202,14 +202,14 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询，茶会标题，objective.title
 		objective_slice, err := dao.SearchObjectiveByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" Cannot search objective by title", err)
+			util.Debug(" Cannot search objective by title %v", err)
 			report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 			return
 		}
 		if len(objective_slice) >= 1 {
 			objective_bean_slice, err := FetchObjectiveBeanSlice(objective_slice)
 			if err != nil {
-				util.Debug(" Cannot fetch objective bean slice given objective_slice", err)
+				util.Debug(" Cannot fetch objective bean slice given objective_slice %v", err)
 				report(w, s_u, "你好，茶博士摸摸头，说搜索关键词无效，请确认后再试。")
 				return
 			}
@@ -224,7 +224,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//按茶台标题查询
 		project_slice, err := dao.SearchProjectByTitle(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search project by title", err)
+			util.Debug(" failed to search project by title %v", err)
 			fPD.IsEmpty = true
 			generateHTML(w, &fPD, "layout", "navbar.private", "search", "component_project_bean", "component_avatar_name_gender")
 			return
@@ -232,7 +232,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 			if len(project_slice) >= 1 {
 				project_bean_slice, err := fetchProjectBeanSlice(project_slice)
 				if err != nil {
-					util.Debug(" Cannot fetch project bean slice given project_slice", err)
+					util.Debug(" Cannot fetch project bean slice given project_slice %v", err)
 				}
 				fPD.Count = len(project_slice)
 				fPD.ProjectBeanSlice = project_bean_slice
@@ -245,7 +245,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询品茶地点 place
 		place_slice, err := dao.FindPlaceByName(keyword)
 		if err != nil {
-			util.Debug(" failed to search place by keyword", err)
+			util.Debug(" failed to search place by keyword %v", err)
 		}
 		if len(place_slice) >= 1 {
 			fPD.Count = len(place_slice)
@@ -259,7 +259,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询环境条件 environment
 		environment_slice, err := dao.SearchEnvironmentByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search environment by keyword", err)
+			util.Debug(" failed to search environment by keyword %v", err)
 		}
 		if len(environment_slice) >= 1 {
 			fPD.Count = len(environment_slice)
@@ -273,7 +273,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询隐患 hazard
 		hazard_slice, err := dao.SearchHazardByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search hazard by keyword", err)
+			util.Debug(" failed to search hazard by keyword %v", err)
 		}
 		if len(hazard_slice) >= 1 {
 			fPD.Count = len(hazard_slice)
@@ -287,7 +287,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		// 查询物资（goods）
 		goods_slice, err := dao.SearchGoodsByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search goods by keyword", err)
+			util.Debug(" failed to search goods by keyword %v", err)
 		}
 		if len(goods_slice) >= 1 {
 			fPD.Count = len(goods_slice)
@@ -301,7 +301,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询风险 risk
 		risk_slice, err := dao.SearchRiskByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search risk by keyword", err)
+			util.Debug(" failed to search risk by keyword %v", err)
 		}
 		if len(risk_slice) >= 1 {
 			fPD.Count = len(risk_slice)
@@ -315,7 +315,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询技能 skill
 		skill_slice, err := dao.SearchSkillByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search skill by keyword: ", keyword, err)
+			util.Debug(" failed to search skill by keyword:  %v", err)
 		}
 		if len(skill_slice) >= 1 {
 			fPD.Count = len(skill_slice)
@@ -329,7 +329,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 		//查询法力 magic
 		magic_slice, err := dao.SearchMagicByName(keyword, int(util.Config.DefaultSearchResultNum), r.Context())
 		if err != nil {
-			util.Debug(" failed to search magic by keyword: ", keyword, err)
+			util.Debug(" failed to search magic by keyword:  %v", err)
 		}
 		if len(magic_slice) >= 1 {
 			fPD.Count = len(magic_slice)
@@ -353,7 +353,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 				generateHTML(w, &fPD, "layout", "navbar.private", "search")
 				return
 			}
-			util.Debug("failed to search family by id: ", familyID, err)
+			util.Debug("failed to search family by id:  %v", err)
 			report(w, s_u, "你好，开水太烫不好泡茶，请稍后再试。")
 			return
 		}
@@ -367,7 +367,7 @@ func SearchPost(w http.ResponseWriter, r *http.Request) {
 
 		familyBean, err := fetchFamilyBean(family)
 		if err != nil {
-			util.Debug("failed to fetch family bean by id: ", familyID, err)
+			util.Debug("failed to fetch family bean by id:  %v", err)
 			report(w, s_u, "你好，开水太烫不好泡茶，请稍后再试。")
 			return
 		}
@@ -395,7 +395,7 @@ func SearchGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -423,7 +423,7 @@ func canViewFamily(family *dao.Family, user *dao.User, ctx context.Context) bool
 
 	announcements, err := dao.FindFamilyAnnouncementByMemberId(user.Id, ctx)
 	if err != nil {
-		util.Debug("failed to find family announcement by member id: ", user.Id, err)
+		util.Debug("failed to find family announcement by member id:  %v", err)
 		return false
 	}
 

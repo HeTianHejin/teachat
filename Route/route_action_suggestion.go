@@ -29,7 +29,7 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -43,14 +43,14 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 	vals := r.URL.Query()
 	uuid := vals.Get("uuid")
 	if uuid == "" {
-		util.Debug(" No uuid provided in query", err)
+		util.Debug(" No uuid provided in query %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	t_proj := dao.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project by uuid", uuid, err)
+		util.Debug(" Cannot get project by uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -58,7 +58,7 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 	// 检查是否已存在当前project_id的suggestion记录
 	existingSuggestion, err := dao.GetSuggestionByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug(" Cannot get existing suggestion", err)
+		util.Debug(" Cannot get existing suggestion %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -70,21 +70,21 @@ func SuggestionNewGet(w http.ResponseWriter, r *http.Request) {
 
 	t_obje, err := t_proj.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective given proj_id", t_proj.Id, err)
+		util.Debug(" Cannot get objective given proj_id %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	projBean, err := fetchProjectBean(t_proj)
 	if err != nil {
-		util.Debug(" Cannot get projBean", err)
+		util.Debug(" Cannot get projBean %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	objeBean, err := fetchObjectiveBean(t_obje)
 	if err != nil {
-		util.Debug(" Cannot get objeBean", err)
+		util.Debug(" Cannot get objeBean %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -107,7 +107,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -118,7 +118,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 解析表单数据
 	if err := r.ParseForm(); err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "表单数据解析失败")
 		return
 	}
@@ -132,13 +132,13 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 
 	t_proj := dao.Project{Uuid: projectUuid}
 	if err := t_proj.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project by uuid", projectUuid, err)
+		util.Debug(" Cannot get project by uuid %v", err)
 		report(w, s_u, "项目不存在")
 		return
 	}
 	ob, err := t_proj.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective given proj_id", t_proj.Id, err)
+		util.Debug(" Cannot get objective given proj_id %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -146,7 +146,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 	// 检查是否已存在当前project_id的suggestion记录
 	existingSuggestion, err := dao.GetSuggestionByProjectId(t_proj.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug(" Cannot get existing suggestion", err)
+		util.Debug(" Cannot get existing suggestion %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -183,7 +183,7 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := suggestion.Create(r.Context()); err != nil {
-		util.Debug(" Cannot create suggestion", err)
+		util.Debug(" Cannot create suggestion %v", err)
 		report(w, s_u, "创建建议记录失败")
 		return
 	}
@@ -191,14 +191,14 @@ func SuggestionNewPost(w http.ResponseWriter, r *http.Request) {
 	if !resolution {
 		t_proj.Status = int(dao.ProjectStatusTeaCold)
 		if err := t_proj.Update(); err != nil {
-			util.Debug(" Cannot update project status to TeaCold", err)
+			util.Debug(" Cannot update project status to TeaCold %v", err)
 			report(w, s_u, "更新项目状态失败")
 			return
 		}
 	} else {
 		// 预填充物资、手艺 2部曲
 		if err = dao.CreateRequiredThreads(&ob, &t_proj, dao.UserId_CEO_Verifier, dao.Templates2step, r.Context()); err != nil {
-			util.Debug(" Cannot create required 2-threads", err)
+			util.Debug(" Cannot create required 2-threads %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能预填充约茶5部曲，请稍后再试。")
 			return
 		}
@@ -217,7 +217,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -235,7 +235,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 			// 尝试project的uuid
 			project := dao.Project{Uuid: uuid}
 			if err := project.GetByUuid(); err != nil {
-				util.Debug("Cannot get project by uuid", uuid, err)
+				util.Debug("Cannot get project by uuid %v", err)
 				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
@@ -245,12 +245,12 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 					report(w, s_u, "该项目还没有建议记录")
 					return
 				}
-				util.Debug("Cannot get Suggestion by project_id", project.Id, err)
+				util.Debug("Cannot get Suggestion by project_id %v", err)
 				report(w, s_u, "该项目的建议记录似乎被茶水泡糊了")
 				return
 			}
 		} else {
-			util.Debug("Cannot get Suggestion by uuid", uuid, err)
+			util.Debug("Cannot get Suggestion by uuid %v", err)
 			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
@@ -259,7 +259,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取项目信息
 	pr := dao.Project{Id: suggestion.ProjectId}
 	if err := pr.Get(); err != nil {
-		util.Debug("Cannot get project", err)
+		util.Debug("Cannot get project %v", err)
 		report(w, s_u, "获取项目信息失败")
 		return
 	}
@@ -267,7 +267,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取目标信息
 	ob, err := pr.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective", err)
+		util.Debug("Cannot get objective %v", err)
 		report(w, s_u, "获取目标信息失败")
 		return
 	}
@@ -275,21 +275,21 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取完整的SuggestionBean
 	suggestionBean, err := fetchSuggestionBean(suggestion)
 	if err != nil {
-		util.Debug("Cannot fetch Suggestion bean", err)
+		util.Debug("Cannot fetch Suggestion bean %v", err)
 		report(w, s_u, "获取建议记录详情失败")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(pr)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(ob)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败")
 		return
 	}
@@ -305,7 +305,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	// 权限检查
 	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
 	if err != nil {
-		util.Debug("Admin permission check failed", "userId", s_u.Id, "objectiveId", ob.Id, "error", err)
+		util.Debug("Admin permission check failed %v", err)
 		report(w, s_u, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
@@ -314,7 +314,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	if !is_admin {
 		is_master, err := checkProjectMasterPermission(&pr, s_u.Id)
 		if err != nil {
-			util.Debug("Permission check failed", "user_id:", s_u.Id, "error:", err)
+			util.Debug("Permission check failed %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 			return
 		}
@@ -330,7 +330,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 
 		is_invited, err := ob.IsInvitedMember(s_u.Id)
 		if err != nil {
-			util.Debug("Cannot check if user is invited to objective", err)
+			util.Debug("Cannot check if user is invited to objective %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 			return
 		}
@@ -340,7 +340,7 @@ func SuggestionDetail(w http.ResponseWriter, r *http.Request) {
 	// 检测私密建议的访问权限
 	if suggestion.Id > 0 && suggestion.Category == int(dao.SuggestionCategoryPrivate) {
 		if !is_admin && !templateData.IsMaster && !templateData.IsVerifier && !templateData.IsInvited {
-			util.Debug("User has no access to this private suggestion", "user_id:", s_u.Id, "suggestion_id:", suggestion.Id)
+			util.Debug("User has no access to this private suggestion %v", err)
 			report(w, s_u, "你没有权限查看此私密建议记录")
 			return
 		}

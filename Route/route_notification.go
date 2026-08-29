@@ -11,13 +11,13 @@ import (
 func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
-		util.Debug("Cannot get session", err)
+		util.Debug("Cannot get session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user", err)
+		util.Debug("Cannot get user %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -25,7 +25,7 @@ func InvitationGroup(w http.ResponseWriter, r *http.Request) {
 	// 获取用户所在的担任CEO的团队收到的所有集团邀请函
 	invitations, err := dao.GetGroupInvitationsByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot get group invitations", err)
+		util.Debug("Cannot get group invitations %v", err)
 		report(w, s_u, "你好，茶博士在努力查找您的邀请函中，请稍后再试。")
 		return
 	}
@@ -86,13 +86,13 @@ func TeamNotificationInvitations(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	s, err := session(r)
 	if err != nil {
-		util.Debug(" Cannot get session", err)
+		util.Debug(" Cannot get session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user", err)
+		util.Debug(" Cannot get user %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -126,13 +126,13 @@ func AcceptNotifications(w http.ResponseWriter, r *http.Request) {
 	//获取session
 	sess, err := session(r)
 	if err != nil {
-		util.Debug(" Cannot get session", err)
+		util.Debug(" Cannot get session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user", err)
+		util.Debug(" Cannot get user %v", err)
 		report(w, s_u, "你好，满头大汗的茶博士在努力中，请稍后再试。")
 		return
 	}

@@ -117,7 +117,7 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -139,7 +139,7 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	// 获取指定团队信息
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
@@ -156,7 +156,7 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	// 确保团队有星茶账户
 	err = dao.EnsureTeaTeamAccountExists(team.Id)
 	if err != nil {
-		util.Debug("cannot ensure team tea account exists", err)
+		util.Debug("cannot ensure team tea account exists %v", err)
 		report(w, s_u, "获取团队星茶账户失败。")
 		return
 	}
@@ -164,7 +164,7 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	// 获取团队星茶账户
 	teaTeamAccount, err := dao.GetTeaTeamAccountByTeamId(team.Id)
 	if err != nil {
-		util.Debug("cannot get team tea account", err)
+		util.Debug("cannot get team tea account %v", err)
 		report(w, s_u, "获取团队星茶账户失败。")
 		return
 	}
@@ -178,29 +178,29 @@ func TeaTeamAccountGet(w http.ResponseWriter, r *http.Request) {
 	// 获取待确认接收来自团队转账操作数量
 	pendingFromTeamCount, err := dao.TeaTeamCountPendingFromTeamReceipts(team.Id)
 	if err != nil {
-		util.Debug("cannot get pending incoming transfers count", err)
+		util.Debug("cannot get pending incoming transfers count %v", err)
 	}
 	// 获取待确认接收来自用户转账操作数量
 	pendingFromUserCount, err := dao.TeaTeamCountPendingFromUserReceipts(team.Id)
 	if err != nil {
-		util.Debug("cannot get pending incoming user transfers count", err)
+		util.Debug("cannot get pending incoming user transfers count %v", err)
 	}
 
 	// 获取帐户转出，待审批操作数量（分别统计两种类型）
 	pendingApprovalToTeamCount, err := dao.CountTeaTeamPendingApprovalToTeamTransfers(team.Id)
 	if err != nil {
-		util.Debug("cannot get pending approval to team transfers count", err)
+		util.Debug("cannot get pending approval to team transfers count %v", err)
 	}
 	pendingApprovalToUserCount, err := dao.CountTeaTeamPendingApprovalToUserTransfers(team.Id)
 	if err != nil {
-		util.Debug("cannot get pending approval to user transfers count", err)
+		util.Debug("cannot get pending approval to user transfers count %v", err)
 	}
 
 	// 创建页面数据结构
 	// 判断是否核心成员
 	isCoreMember, err := dao.CanUserManageTeamAccount(s_u.Id, team.Id)
 	if err != nil {
-		util.Debug("cannot check if user is core member", err)
+		util.Debug("cannot check if user is core member %v", err)
 	}
 	var pageData struct {
 		SessUser                    dao.User
@@ -829,20 +829,20 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	fromTeam, err := dao.GetTeam(req.FromTeamId)
 	if err != nil {
-		util.Debug("cannot get team by id:", req.FromTeamId, err)
+		util.Debug("cannot get team by id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "转出团队ID无效")
 		return
 	}
 	toTeam, err := dao.GetTeam(req.ToTeamId)
 	if err != nil {
-		util.Debug("cannot get team by id:", req.ToTeamId, err)
+		util.Debug("cannot get team by id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "接收团队ID无效")
 		return
 	}
 	// 检查转出帐户是否被冻结？
 	frozen, reason, err := dao.CheckTeaTeamAccountFrozen(fromTeam.Id)
 	if err != nil {
-		util.Debug("check tea team account frozen error:", err)
+		util.Debug("check tea team account frozen error: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "检查团队账户状态失败")
 		return
 	}
@@ -853,7 +853,7 @@ func CreateTeaTeamToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查接收方团队星茶帐户是否被冻结？
 	frozen, reason, err = dao.CheckTeaTeamAccountFrozen(toTeam.Id)
 	if err != nil {
-		util.Debug("check tea team account frozen error:", err)
+		util.Debug("check tea team account frozen error: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "检查接收团队账户状态失败")
 		return
 	}
@@ -925,20 +925,20 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	fromTeam, err := dao.GetTeam(req.FromTeamId)
 	if err != nil {
-		util.Debug("cannot get team by id:", req.FromTeamId, err)
+		util.Debug("cannot get team by id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "转出团队ID无效")
 		return
 	}
 	toUser, err := dao.GetUser(req.ToUserId)
 	if err != nil {
-		util.Debug("cannot get user by id:", req.ToUserId, err)
+		util.Debug("cannot get user by id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "接收用户ID无效")
 		return
 	}
 	// 检查帐户是否被冻结？
 	frozen, reason, err := dao.CheckTeaTeamAccountFrozen(req.FromTeamId)
 	if err != nil {
-		util.Debug("check tea team account frozen error:", err)
+		util.Debug("check tea team account frozen error: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "检查团队账户状态失败")
 		return
 	}
@@ -949,7 +949,7 @@ func CreateTeaTeamToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查接收方用户星茶帐户是否被冻结？
 	frozen, reason, err = dao.CheckTeaUserAccountFrozen(req.ToUserId)
 	if err != nil {
-		util.Debug("check tea user account frozen error:", err)
+		util.Debug("check tea user account frozen error: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "检查接收方账户状态失败")
 		return
 	}
@@ -996,7 +996,7 @@ func GetTeaTeamPendingApproveToTeamTransfers(w http.ResponseWriter, r *http.Requ
 	}
 	team, err := dao.GetTeamByID(teamIdStr)
 	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
+		util.Debug("cannot get team by id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "团队ID无效")
 		return
 	}
@@ -1010,20 +1010,20 @@ func GetTeaTeamPendingApproveToTeamTransfers(w http.ResponseWriter, r *http.Requ
 	//检查用户是否核心成员（审批）
 	isCoreMember, err := team.IsCoreMember(user.Id)
 	if err != nil {
-		util.Debug("cannot check if user is core member", err)
+		util.Debug("cannot check if user is core member %v", err)
 	}
 
 	// 确保团队有星茶账户
 	err = dao.EnsureTeaTeamAccountExists(teamId)
 	if err != nil {
-		util.Debug("cannot ensure tea team account exists", err)
+		util.Debug("cannot ensure tea team account exists %v", err)
 		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
 		return
 	}
 	// 获取团队星茶账户
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get tea team account", err)
+		util.Debug("cannot get tea team account %v", err)
 		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
 		return
 	}
@@ -1035,7 +1035,7 @@ func GetTeaTeamPendingApproveToTeamTransfers(w http.ResponseWriter, r *http.Requ
 	page, limit := getPaginationParams(r)
 	transfers, err := dao.TeaTeamPendingApprovalToTeamTransfers(teamId, page, limit, r.Context())
 	if err != nil {
-		util.Debug("cannot get pending approve team to team transfer outs", err)
+		util.Debug("cannot get pending approve team to team transfer outs %v", err)
 		respondWithError(w, http.StatusInternalServerError, "获取待审批转账记录失败")
 		return
 	}
@@ -1128,7 +1128,7 @@ func GetTeaTeamPendingApproveToUserTransfers(w http.ResponseWriter, r *http.Requ
 	}
 	team, err := dao.GetTeamByID(teamIdStr)
 	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
+		util.Debug("cannot get team by id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "团队ID无效")
 		return
 	}
@@ -1142,20 +1142,20 @@ func GetTeaTeamPendingApproveToUserTransfers(w http.ResponseWriter, r *http.Requ
 	//检查用户是否核心成员（审批）
 	isCoreMember, err := team.IsCoreMember(user.Id)
 	if err != nil {
-		util.Debug("cannot check if user is core member", err)
+		util.Debug("cannot check if user is core member %v", err)
 	}
 
 	// 确保团队有星茶账户
 	err = dao.EnsureTeaTeamAccountExists(teamId)
 	if err != nil {
-		util.Debug("cannot ensure tea team account exists", err)
+		util.Debug("cannot ensure tea team account exists %v", err)
 		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
 		return
 	}
 	// 获取团队星茶账户
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get tea team account", err)
+		util.Debug("cannot get tea team account %v", err)
 		respondWithError(w, http.StatusInternalServerError, "获取团队星茶账户失败")
 		return
 	}
@@ -1167,7 +1167,7 @@ func GetTeaTeamPendingApproveToUserTransfers(w http.ResponseWriter, r *http.Requ
 	page, limit := getPaginationParams(r)
 	transfers, err := dao.TeaTeamPendingApprovalToUserTransfers(teamId, page, limit, r.Context())
 	if err != nil {
-		util.Debug("cannot get pending approve team to user transfer outs", err)
+		util.Debug("cannot get pending approve team to user transfer outs %v", err)
 		respondWithError(w, http.StatusInternalServerError, "获取待审批转账记录失败")
 		return
 	}
@@ -1274,14 +1274,14 @@ func GetTeaTeamToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	team, err := dao.GetTeamByID(teamIdStr)
 	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
+		util.Debug("cannot get team by id: %v", err)
 		report(w, user, "团队资料缺失")
 		return
 	}
 	// 获取团队帐户
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get tea team account by id", err)
+		util.Debug("cannot get tea team account by id %v", err)
 		report(w, user, "团队帐户资料失踪")
 		return
 	}
@@ -1360,14 +1360,14 @@ func GetTeaTeamToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	team, err := dao.GetTeamByID(teamIdStr)
 	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
+		util.Debug("cannot get team by id: %v", err)
 		report(w, s_u, "团队资料缺失")
 		return
 	}
 	// 获取团队帐户
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get tea team account by id", err)
+		util.Debug("cannot get tea team account by id %v", err)
 		report(w, s_u, "团队帐户资料失踪")
 		return
 	}
@@ -1443,13 +1443,13 @@ func GetTeaTeamToTeamOutstandingTransfers(w http.ResponseWriter, r *http.Request
 	}
 	team, err := dao.GetTeamByID(teamIdStr)
 	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
+		util.Debug("cannot get team by id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "团队ID无效")
 		return
 	}
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get tea team account by id", err)
+		util.Debug("cannot get tea team account by id %v", err)
 		respondWithError(w, http.StatusInternalServerError, "获取团队帐户失败")
 		return
 	}
@@ -1521,13 +1521,13 @@ func GetTeaTeamToUserOutstandingTransfers(w http.ResponseWriter, r *http.Request
 	}
 	team, err := dao.GetTeamByID(teamIdStr)
 	if err != nil {
-		util.Debug("cannot get team by id:", teamIdStr, err)
+		util.Debug("cannot get team by id: %v", err)
 		respondWithError(w, http.StatusBadRequest, "团队ID无效")
 		return
 	}
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get tea team account by id", err)
+		util.Debug("cannot get tea team account by id %v", err)
 		respondWithError(w, http.StatusInternalServerError, "获取团队帐户失败")
 		return
 	}
@@ -1602,7 +1602,7 @@ func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取团队信息
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
@@ -1617,7 +1617,7 @@ func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取团队星茶账户
 	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get team tea account", err)
+		util.Debug("cannot get team tea account %v", err)
 		report(w, s_u, "获取团队星茶账户失败。")
 		return
 	}
@@ -1628,7 +1628,7 @@ func GetTeaTeamPendingFromTeamTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取待确认转入转账
 	transfers, err := dao.TeaTeamPendingFromTeamTransfers(teamId, page, limit, r.Context())
 	if err != nil {
-		util.Debug("cannot get pending incoming transfers", err)
+		util.Debug("cannot get pending incoming transfers %v", err)
 		report(w, s_u, "获取待确认转账失败。")
 		return
 	}
@@ -1682,7 +1682,7 @@ func GetTeaTeamPendingFromUserTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取团队信息
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
@@ -1697,7 +1697,7 @@ func GetTeaTeamPendingFromUserTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取团队星茶账户
 	teamAccount, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get team tea account", err)
+		util.Debug("cannot get team tea account %v", err)
 		report(w, s_u, "获取团队星茶账户失败。")
 		return
 	}
@@ -1708,7 +1708,7 @@ func GetTeaTeamPendingFromUserTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取待确认转入转账
 	transfers, err := dao.TeaTeamPendingFromUserTransfers(teamId, page, limit, r.Context())
 	if err != nil {
-		util.Debug("cannot get pending from user transfers", err)
+		util.Debug("cannot get pending from user transfers %v", err)
 		report(w, s_u, "获取待确认转账失败。")
 		return
 	}
@@ -1763,13 +1763,13 @@ func GetTeaTeamFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request
 	}
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get team tea account by id", err)
+		util.Debug("cannot get team tea account by id %v", err)
 		report(w, s_u, "获取团队帐户失败。")
 		return
 	}
@@ -1842,13 +1842,13 @@ func GetTeaTeamFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request
 	}
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get team tea account by id", err)
+		util.Debug("cannot get team tea account by id %v", err)
 		report(w, s_u, "获取团队帐户失败。")
 		return
 	}
@@ -1921,20 +1921,20 @@ func GetTeaTeamFromTeamRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	}
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get team tea account by id", err)
+		util.Debug("cannot get team tea account by id %v", err)
 		report(w, s_u, "获取团队帐户失败。")
 		return
 	}
 
 	isMember, err := dao.IsTeamActiveMember(s_u.Id, teamId)
 	if err != nil || !isMember {
-		util.Debug("check user is team member error:", err)
+		util.Debug("check user is team member error: %v", err)
 		report(w, s_u, "您不是该团队成员，无法查看团队转账纪录。")
 		return
 	}
@@ -1943,7 +1943,7 @@ func GetTeaTeamFromTeamRejectedTransfers(w http.ResponseWriter, r *http.Request)
 
 	transfers, err := dao.TeaTeamFromTeamRejectedTransfers(teamId, page, limit, r.Context())
 	if err != nil {
-		util.Debug("cannot get team from team rejected transfers", err)
+		util.Debug("cannot get team from team rejected transfers %v", err)
 		report(w, s_u, "获取团队接收团队已拒绝状态转账纪录失败。")
 		return
 	}
@@ -2002,13 +2002,13 @@ func GetTeaTeamFromUserRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	}
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get team tea account by id", err)
+		util.Debug("cannot get team tea account by id %v", err)
 		report(w, s_u, "获取团队帐户失败。")
 		return
 	}
@@ -2081,13 +2081,13 @@ func GetTeaTeamFromTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get team tea account by id", err)
+		util.Debug("cannot get team tea account by id %v", err)
 		report(w, s_u, "获取团队帐户失败。")
 		return
 	}
@@ -2102,7 +2102,7 @@ func GetTeaTeamFromTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 
 	transfers, err := dao.TeaTeamFromTeamExpiredTransfers(teamId, page, limit, r.Context())
 	if err != nil {
-		util.Debug("cannot get team from team expired transfers", err)
+		util.Debug("cannot get team from team expired transfers %v", err)
 		report(w, s_u, "获取团队接收团队已过期状态转账纪录失败。")
 		return
 	}
@@ -2161,13 +2161,13 @@ func GetTeaTeamFromUserExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	team, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("cannot get team by id", teamId, err)
+		util.Debug("cannot get team by id %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
 	account, err := dao.GetTeaTeamAccountByTeamId(teamId)
 	if err != nil {
-		util.Debug("cannot get team tea account by id", err)
+		util.Debug("cannot get team tea account by id %v", err)
 		report(w, s_u, "获取团队帐户失败。")
 		return
 	}
@@ -2182,7 +2182,7 @@ func GetTeaTeamFromUserExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 
 	transfers, err := dao.TeaTeamFromUserExpiredTransfers(teamId, page, limit, r.Context())
 	if err != nil {
-		util.Debug("can not get team from user expired transfers", err)
+		util.Debug("can not get team from user expired transfers %v", err)
 		report(w, s_u, "获取团队接收用户已过期状态转账纪录失败。")
 		return
 	}

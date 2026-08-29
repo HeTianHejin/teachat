@@ -18,7 +18,7 @@ func HandleGoodsProjectNew(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -48,7 +48,7 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	}
 	project_id, err := strconv.Atoi(project_id_str)
 	if err != nil {
-		util.Debug("cannot convert project_id to int", err)
+		util.Debug("cannot convert project_id to int %v", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
@@ -56,14 +56,14 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	// 验证项目是否存在
 	project := dao.Project{Id: project_id}
 	if err := project.Get(); err != nil {
-		util.Debug("cannot get project from database", err)
+		util.Debug("cannot get project from database %v", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
 	// 读取“约茶”资料以查询出星茶方和收星茶方
 	p_a, err := dao.GetAppointmentByProjectId(project_id, r.Context())
 	if err != nil {
-		util.Debug("cannot get project appointment from database given pr_id", project_id, err)
+		util.Debug("cannot get project appointment from database given pr_id %d: %v", project_id, err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目资料，请确认后再试一次。")
 		return
 	}
@@ -77,13 +77,13 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 		f_id = p_a.PayerFamilyId
 		goods_slice_t, err := dao.GetAvailabilityGoodsByTeamId(t_id, r.Context())
 		if err != nil {
-			util.Debug("cannot get goods from database given team_id", t_id, err)
+			util.Debug("cannot get goods from database given team_id %d: %v", t_id, err)
 			report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
 		goods_slice_f, err := dao.GetAvailabilityGoodsByFamilyId(f_id, r.Context())
 		if err != nil {
-			util.Debug("cannot get goods from database given family_id", f_id, err)
+			util.Debug("cannot get goods from database given family_id %d: %v", f_id, err)
 			report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
@@ -95,13 +95,13 @@ func GoodsProjectNewGet(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 		t_s_id = p_a.PayeeTeamId
 		goods_slice_t, err := dao.GetAvailabilityGoodsByTeamId(t_id, r.Context())
 		if err != nil {
-			util.Debug("cannot get goods from database given team_id", project.TeamId, err)
+			util.Debug("cannot get goods from database given team_id %d: %v", t_id, err)
 			report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
 		goods_slice_t_s, err := dao.GetAvailabilityGoodsByTeamId(t_s_id, r.Context())
 		if err != nil {
-			util.Debug("cannot get goods from database given team_id", project.TeamId, err)
+			util.Debug("cannot get goods from database given team_id %d: %v", t_s_id, err)
 			report(w, s_u, "一脸蒙的茶博士，表示看不懂你的项目物资资料，请确认后再试一次。")
 			return
 		}
@@ -125,7 +125,7 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	// 解析表单
 	err := r.ParseForm()
 	if err != nil {
-		util.Debug("cannot parse form data", err)
+		util.Debug("cannot parse form data %v", err)
 		report(w, s_u, "一脸蒙的茶博士，表示看不懂你提交的项目物资资料，请确认后再试一次。")
 		return
 	}
@@ -145,7 +145,7 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	// 验证项目存在
 	project := dao.Project{Id: project_id}
 	if err := project.Get(); err != nil {
-		util.Debug("cannot get project from database", err)
+		util.Debug("cannot get project from database %v", err)
 		report(w, s_u, "你好，茶博士表示无法理解项目，请确认后再试。")
 		return
 	}
@@ -237,7 +237,7 @@ func GoodsProjectNewPost(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	}
 
 	if err := goods_project.Create(r.Context()); err != nil {
-		util.Debug("cannot create project goods", err)
+		util.Debug("cannot create project goods %v", err)
 		report(w, s_u, "一脸蒙的茶博士，表示无法创建项目物资，请确认后再试一次。")
 		return
 	}
@@ -254,7 +254,7 @@ func HandleGoodsProjectDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -273,7 +273,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 
 	uuid := r.URL.Query().Get("uuid")
 	if uuid == "" {
-		util.Debug("Project UUID is empty", err)
+		util.Debug("Project UUID is empty %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -281,7 +281,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	// 获取项目信息
 	project := dao.Project{Uuid: uuid}
 	if err = project.GetByUuid(); err != nil {
-		util.Debug("Cannot get project by uuid", uuid, err)
+		util.Debug("Cannot get project by uuid %s: %v", uuid, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -289,7 +289,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	// 获取目标信息
 	ob, err := project.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective", err)
+		util.Debug("Cannot get objective %v", err)
 		report(w, s_u, "获取目标信息失败")
 		return
 	}
@@ -297,7 +297,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	// 获取项目物资列表
 	goodsProjectList, err := dao.GetGoodsProjectByProjectId(project.Id, r.Context())
 	if err != nil {
-		util.Debug("Cannot get goods by project id", project.Id, err)
+		util.Debug("Cannot get goods by project id %d: %v", project.Id, err)
 		report(w, s_u, "获取项目物资列表失败")
 		return
 	}
@@ -307,7 +307,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	var hasReadinessRecord bool
 	if readiness, err := dao.GetGoodsProjectReadinessByProjectId(project.Id, r.Context()); err != nil {
 		if err != sql.ErrNoRows {
-			util.Debug("Cannot get goods readiness by project id", project.Id, err)
+			util.Debug("Cannot get goods readiness by project id %d: %v", project.Id, err)
 		}
 		hasReadinessRecord = false
 	} else {
@@ -320,7 +320,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	for _, gp := range goodsProjectList {
 		goods := dao.Goods{Id: gp.GoodsId}
 		if err := goods.GetByIdOrUUID(r.Context()); err != nil {
-			util.Debug("Cannot get goods by id", gp.GoodsId, err)
+			util.Debug("Cannot get goods by id %d: %v", gp.GoodsId, err)
 			continue
 		}
 		goodsList = append(goodsList, goods)
@@ -329,14 +329,14 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	// 获取ProjectBean和ObjectiveBean
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(ob)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败")
 		return
 	}
@@ -355,7 +355,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	// 权限检查
 	is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
 	if err != nil {
-		util.Debug("Admin permission check failed", "userId", s_u.Id, "objectiveId", ob.Id, "error", err)
+		util.Debug("Admin permission check failed %v", err)
 		report(w, s_u, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 		return
 	}
@@ -364,7 +364,7 @@ func GoodsProjectDetail(w http.ResponseWriter, r *http.Request, s_u dao.User) {
 	if !is_admin {
 		is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 		if err != nil {
-			util.Debug("Permission check failed", "user_id:", s_u.Id, "error:", err)
+			util.Debug("Permission check failed %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 			return
 		}
@@ -385,26 +385,26 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 
 	s, err := session(r)
 	if err != nil {
-		util.Debug("Session error:", err)
+		util.Debug("Session error: %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	if !dao.IsVerifier(s_u.Id) {
-		util.Debug("User is not a verifier:", err)
+		util.Debug("User is not a verifier: %v", err)
 		report(w, s_u, "只有见证员才可以设置物资准备状态。")
 		return
 	}
 
 	// 解析表单
 	if err := r.ParseForm(); err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "表单数据解析失败")
 		return
 	}
@@ -412,14 +412,14 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 	// 获取项目信息
 	projectUuid := r.FormValue("project_uuid")
 	if projectUuid == "" {
-		util.Debug("Project UUID is empty", err)
+		util.Debug("Project UUID is empty %v", err)
 		report(w, s_u, "项目信息缺失")
 		return
 	}
 
 	project := dao.Project{Uuid: projectUuid}
 	if err := project.GetByUuid(); err != nil {
-		util.Debug("Cannot get project by uuid", projectUuid, err)
+		util.Debug("Cannot get project by uuid %v", err)
 		report(w, s_u, "项目不存在")
 		return
 	}
@@ -430,7 +430,7 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 
 	// 验证必填字段
 	if isReadyStr == "" {
-		util.Debug("is_ready field is empty", err)
+		util.Debug("is_ready field is empty %v", err)
 		report(w, s_u, "请选择准备状态")
 		return
 	}
@@ -446,7 +446,7 @@ func HandleGoodsProjectReadiness(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := readiness.CreateOrUpdate(r.Context()); err != nil {
-		util.Debug("Cannot create or update goods readiness", err)
+		util.Debug("Cannot create or update goods readiness %v", err)
 		report(w, s_u, "设置物资准备状态失败")
 		return
 	}

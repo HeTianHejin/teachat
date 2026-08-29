@@ -29,7 +29,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -47,28 +47,28 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 
 	t_proj := dao.Project{Uuid: uuid}
 	if err := t_proj.GetByUuid(); err != nil {
-		util.Debug("Cannot get project by uuid", uuid, err)
+		util.Debug("Cannot get project by uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	t_obje, err := t_proj.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective given proj_id", t_proj.Id, err)
+		util.Debug("Cannot get objective given proj_id %d: %v", t_proj.Id, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	projBean, err := fetchProjectBean(t_proj)
 	if err != nil {
-		util.Debug("Cannot get projBean", err)
+		util.Debug("Cannot get projBean %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	objeBean, err := fetchObjectiveBean(t_obje)
 	if err != nil {
-		util.Debug("Cannot get objeBean", err)
+		util.Debug("Cannot get objeBean %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -85,7 +85,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	// 读取茶围的约茶记录，确定收星茶方团队
 	project_appointment, err := dao.GetAppointmentByProjectId(t_proj.Id, r.Context())
 	if err != nil {
-		util.Debug("Cannot get project appointment by project id", t_proj.Id, err)
+		util.Debug("Cannot get project appointment by project id %d: %v", t_proj.Id, err)
 		report(w, s_u, "获取约茶记录失败")
 	}
 	teamId := 0
@@ -94,7 +94,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	} else if project_appointment.PayeeFamilyId > 0 {
 		family, err := dao.GetFamily(project_appointment.PayeeFamilyId)
 		if err != nil {
-			util.Debug("Cannot get family by id", project_appointment.PayeeFamilyId, err)
+			util.Debug("Cannot get family by id %d: %v", project_appointment.PayeeFamilyId, err)
 			report(w, s_u, "获取家庭信息失败")
 			return
 		}
@@ -102,13 +102,13 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 		// 这里假设使用家庭创建者的默认团队
 		founder_family, err := dao.GetUser(family.AuthorId)
 		if err != nil {
-			util.Debug("Cannot get family founder", family.AuthorId, err)
+			util.Debug("Cannot get family founder %d: %v", family.AuthorId, err)
 			report(w, s_u, "获取家庭创建者信息失败")
 			return
 		}
 		defaultTeam, err := founder_family.GetLastDefaultTeam()
 		if err != nil {
-			util.Debug("Cannot get founder default team", err)
+			util.Debug("Cannot get founder default team %v", err)
 			report(w, s_u, "获取默认团队信息失败")
 			return
 		}
@@ -122,13 +122,13 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	// 获取团队CEO作为默认策动人
 	team := dao.Team{Id: teamId}
 	if err := team.Get(); err != nil {
-		util.Debug("Cannot get team", teamId, err)
+		util.Debug("Cannot get team  %d: %v", teamId, err)
 		report(w, s_u, "获取收星茶方团队信息失败")
 		return
 	}
 	teamCEO, err := team.MemberCEO()
 	if err != nil || teamCEO.UserId <= 0 {
-		util.Debug("Cannot get team CEO", teamId, err)
+		util.Debug("Cannot get team CEO %d: %v", teamId, err)
 		report(w, s_u, "获取收星茶方团队CEO失败，无法确定策动人")
 		return
 	}
@@ -137,7 +137,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	// 获取团队技能
 	skillTeams, err := dao.GetTeamSkills(teamId, r.Context())
 	if err != nil {
-		util.Debug("Cannot get team skills", teamId, err)
+		util.Debug("Cannot get team skills %d: %v", teamId, err)
 		skillTeams = []dao.SkillTeam{}
 	}
 	// 获取公开的技能详情
@@ -152,7 +152,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 	// 获取团队公开登记的法力列表
 	magicTeams, err := dao.GetTeamMagics(teamId, r.Context())
 	if err != nil {
-		util.Debug("Cannot get team magics", teamId, err)
+		util.Debug("Cannot get team magics %d: %v", teamId, err)
 		magicTeams = []dao.MagicTeam{}
 	}
 	// 获取公开的法力详情
@@ -167,7 +167,7 @@ func HandicraftNewGet(w http.ResponseWriter, r *http.Request) {
 
 	is_master, err := checkProjectMasterPermission(&t_proj, s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check project master permission", err)
+		util.Debug(" Cannot check project master permission %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -207,7 +207,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -218,7 +218,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := r.ParseForm(); err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "表单数据解析失败")
 		return
 	}
@@ -231,7 +231,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 
 	t_proj := dao.Project{Uuid: projectUuid}
 	if err := t_proj.GetByUuid(); err != nil {
-		util.Debug("Cannot get project by uuid", projectUuid, err)
+		util.Debug("Cannot get project by uuid %v", err)
 		report(w, s_u, "项目不存在")
 		return
 	}
@@ -287,7 +287,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := handicraft.Create(r.Context()); err != nil {
-		util.Debug("Cannot create handicraft", err)
+		util.Debug("Cannot create handicraft %v", err)
 		report(w, s_u, "创建手工艺记录失败")
 		return
 	}
@@ -305,7 +305,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 				ContributionRate: contribRate,
 			}
 			if err := contributor.Create(); err != nil {
-				util.Debug("Cannot create handicraft contributor", err)
+				util.Debug("Cannot create handicraft contributor %v", err)
 				report(w, s_u, "创建协助者失败")
 				return
 			}
@@ -322,7 +322,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 				HandicraftId: handicraft.Id,
 			}
 			if err := handicraftSkill.Create(); err != nil {
-				util.Debug("Cannot create skill handicraft relation", err)
+				util.Debug("Cannot create skill handicraft relation %v", err)
 			}
 		}
 	}
@@ -337,7 +337,7 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 				HandicraftId: handicraft.Id,
 			}
 			if err := handicraftMagic.Create(); err != nil {
-				util.Debug("Cannot create magic handicraft relation", err)
+				util.Debug("Cannot create magic handicraft relation %v", err)
 			}
 		}
 	}
@@ -363,7 +363,7 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -388,55 +388,55 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "手工艺记录或项目不存在")
 			return
 		}
-		util.Debug("Cannot get handicraft by uuid", uuid, err)
+		util.Debug("Cannot get handicraft by uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	project := dao.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
-		util.Debug("Cannot get project", err)
+		util.Debug("Cannot get project %v", err)
 		report(w, s_u, "获取项目信息失败")
 		return
 	}
 
 	objective, err := project.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective", err)
+		util.Debug("Cannot get objective %v", err)
 		report(w, s_u, "获取目标信息失败")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败")
 		return
 	}
 
 	handicraft_bean, err := fetchHandicraftBean(handicraft)
 	if err != nil {
-		util.Debug("Cannot fetch handicraft bean", err)
+		util.Debug("Cannot fetch handicraft bean %v", err)
 		report(w, s_u, "获取手工艺详情失败")
 		return
 	}
 
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check project master permission", err)
+		util.Debug("Cannot check project master permission %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 	is_admin, err := checkObjectiveAdminPermission(&objective, s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check objective admin permission", err)
+		util.Debug("Cannot check objective admin permission %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -446,7 +446,7 @@ func HandicraftDetailGet(w http.ResponseWriter, r *http.Request) {
 		if !is_master && !is_admin && !is_invited {
 			is_invited, err = objective.IsInvitedMember(s_u.Id)
 			if err != nil {
-				util.Debug("Cannot check objective invited member", err)
+				util.Debug("Cannot check objective invited member %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
@@ -523,7 +523,7 @@ func HandicraftListGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -536,28 +536,28 @@ func HandicraftListGet(w http.ResponseWriter, r *http.Request) {
 
 	project := dao.Project{Uuid: projectUuid}
 	if err := project.GetByUuid(); err != nil {
-		util.Debug("Cannot get project by uuid", projectUuid, err)
+		util.Debug("Cannot get project by uuid %v", err)
 		report(w, s_u, "项目不存在")
 		return
 	}
 
 	objective, err := project.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective", err)
+		util.Debug("Cannot get objective %v", err)
 		report(w, s_u, "获取目标信息失败")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败")
 		return
 	}
@@ -565,7 +565,7 @@ func HandicraftListGet(w http.ResponseWriter, r *http.Request) {
 	// 获取项目的所有手工艺记录
 	handicrafts, err := dao.GetHandicraftsByProjectId(project.Id, r.Context())
 	if err != nil {
-		util.Debug("Cannot get handicrafts by project id", project.Id, err)
+		util.Debug("Cannot get handicrafts by project id %d: %v", project.Id, err)
 		handicrafts = []dao.Handicraft{}
 	}
 
@@ -574,7 +574,7 @@ func HandicraftListGet(w http.ResponseWriter, r *http.Request) {
 	for _, h := range handicrafts {
 		bean, err := fetchHandicraftBean(h)
 		if err != nil {
-			util.Debug("Cannot fetch handicraft bean", err)
+			util.Debug("Cannot fetch handicraft bean %v", err)
 			continue
 		}
 		handicraftBeans = append(handicraftBeans, bean)

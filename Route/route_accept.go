@@ -34,13 +34,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user given session", err)
+		util.Debug("Cannot get user given session %v", err)
 		report(w, s_u, "你好，(摸摸头想了又想), 陛下能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，(摸摸头想了又想),电脑去热带海岛度假了。")
 		return
 	}
@@ -48,14 +48,14 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	care := r.PostFormValue("care")
 	id_str := r.PostFormValue("id")
 	if id_str == "" {
-		util.Debug(" Cannot get id", err)
+		util.Debug(" Cannot get id %v", err)
 		report(w, s_u, "你好，(摸摸头想了又想), 陛下能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
 		return
 	}
 	// 把准备审核的对象茶语id_str转成id_int
 	ao_id_int, err := strconv.Atoi(id_str)
 	if err != nil {
-		util.Debug(" Cannot get id", err)
+		util.Debug(" Cannot get id %v", err)
 		report(w, s_u, "你好，(摸摸头想了又想), 陛下能否再给一次提示，这次该押阿根廷还是英格兰赢球？")
 		return
 	}
@@ -65,7 +65,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	case "yes", "no":
 		break
 	default:
-		util.Debug(" Cannot get form value civilizer", err)
+		util.Debug(" Cannot get form value civilizer %v", err)
 		report(w, s_u, "你好，(茶博士摸摸头想了又想),喝茶文化真是博大精深。")
 		return
 	}
@@ -73,7 +73,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	case "yes", "no":
 		break
 	default:
-		util.Debug(" Cannot get form value care", err)
+		util.Debug(" Cannot get form value care %v", err)
 		report(w, s_u, "你好，(摸摸头想了又想),陛下，请问这是火星文吗？")
 		return
 	}
@@ -90,12 +90,12 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	// 权限检查。。。
 	ok, err := s_u.CheckHasReadAcceptNotification(ao_id_int, r.Context())
 	if err != nil {
-		util.Debug("Cannot check acceptance", err)
+		util.Debug("Cannot check acceptance %v", err)
 		report(w, s_u, "你好，(茶博士摸摸头想了又想), 茴香豆的茴字真的有四种写法吗？")
 		return
 	}
 	if !ok {
-		util.Debug(" Cannot check acceptance by ao_id", err)
+		util.Debug(" Cannot check acceptance by ao_id %v", err)
 		report(w, s_u, "你好，(茶博士摸摸头想了又想), 这里真的可以接受无票喝茶吗？")
 		return
 	}
@@ -113,7 +113,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 创建初记录
 			if err = newAcceptance.Create(); err != nil {
-				util.Debug(" Cannot create acceptance first", err)
+				util.Debug(" Cannot create acceptance first %v", err)
 				report(w, s_u, "你好，(摸摸头想了又想), 茴香豆的茴字真的有四种写法吗？")
 				return
 			}
@@ -121,7 +121,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "好茶香护有缘人，感谢你出手维护文明秩序！")
 			return
 		} else {
-			util.Debug(" Cannot check acceptance by ao_id", err)
+			util.Debug(" Cannot check acceptance by ao_id %v", err)
 			report(w, s_u, "你好，(摸摸头想了又想)，去年今日此门中，人面桃花相映红。")
 			return
 		}
@@ -140,7 +140,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	oldAcceptance.YAcceptedAt = &now_time
 
 	if err = oldAcceptance.Update(); err != nil {
-		util.Debug(" Cannot update acceptance", err)
+		util.Debug(" Cannot update acceptance %v", err)
 		report(w, s_u, "你好，(摸摸头想了又想),隔岸花分一脉香。")
 		return
 	}
@@ -153,7 +153,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 读取这个审核对象（根据审核对象id）
 	if err = ao.Get(); err != nil {
-		util.Debug("Cannot get accept-object", err)
+		util.Debug("Cannot get accept-object %v", err)
 		report(w, s_u, "你好，(茶博士摸摸头想了又想),居然说，得道多茶，失道寡茶。")
 		return
 	}
@@ -167,7 +167,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			ob := dao.Objective{
 				Id: ao.ObjectId}
 			if err = ob.Get(); err != nil {
-				util.Debug("Cannot get objective", err)
+				util.Debug("Cannot get objective %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，竟然说没有找到新茶茶叶的资料未必是怪事。")
 				return
 			}
@@ -179,7 +179,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新茶话会，友邻蒙评未通过！
 			if err = ob.UpdateClass(); err != nil {
-				util.Debug("Cannot update ob class", err)
+				util.Debug("Cannot update ob class %v", err)
 				report(w, s_u, "你好，(摸摸头想了又想), 为什么踢足球的人都说临门一脚最麻烦呢？")
 				return
 			}
@@ -188,7 +188,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId,
 			}
 			if err = pr.Get(); err != nil {
-				util.Debug("Cannot get project", err)
+				util.Debug("Cannot get project %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 				return
 			}
@@ -200,7 +200,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 			// 更新茶台属性，
 			if err = pr.UpdateClass(); err != nil {
-				util.Debug("Cannot update pr class", err)
+				util.Debug("Cannot update pr class %v", err)
 				report(w, s_u, "你好，一畦春韭绿，十里稻花香。")
 				return
 			}
@@ -210,13 +210,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err = dThread.Get(); err != nil {
-				util.Debug("Cannot get dfart-thread", err)
+				util.Debug("Cannot get dfart-thread %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候找茶叶需要的不是技术,而是耐心。")
 				return
 			}
 			// 更新茶议属性，友邻蒙评 已拒绝公开发布
 			if err = dThread.UpdateStatus(dao.DraftThreadStatusRejected); err != nil {
-				util.Debug("Cannot update thread class", err)
+				util.Debug("Cannot update thread class %v", err)
 				report(w, s_u, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
 				return
 			}
@@ -225,19 +225,19 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Id: ao.ObjectId,
 			}
 			if err = dPost.Get(); err != nil {
-				util.Debug("Cannot get draft-post", err)
+				util.Debug("Cannot get draft-post %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候 弄丢草稿的人不一定是诗人？")
 				return
 			}
 			if err = dPost.UpdateClass(dao.DraftPostClassRejectedByNeighbor); err != nil {
-				util.Debug("Cannot update draft-post class", err)
+				util.Debug("Cannot update draft-post class %v", err)
 				report(w, s_u, "你好，宝鼎茶闲烟尚绿，幽窗棋罢指犹凉。")
 				return
 			}
 		case dao.AcceptObjectTypeTeam:
 			team, err := dao.GetTeam(ao.ObjectId)
 			if err != nil {
-				util.Debug("Cannot get team", err)
+				util.Debug("Cannot get team %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚比刻苦奋斗更有用？")
 				return
 			}
@@ -248,7 +248,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				team.Class = dao.TeamClassRejectedCloseDraft
 			}
 			if err = team.UpdateClass(); err != nil {
-				util.Debug("Cannot update team class", err)
+				util.Debug("Cannot update team class %v", err)
 				report(w, s_u, "你好，（摸摸头）考一考你，错里错以错劝哥哥是什么茶品种？")
 				return
 			}
@@ -276,16 +276,16 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				switch {
 				case strings.Contains(err.Error(), "获取茶议草稿失败"):
-					util.Debug("Cannot get draft-thread", err)
+					util.Debug("Cannot get draft-thread %v", err)
 					report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
 				case strings.Contains(err.Error(), "更新茶议草稿状态失败"):
-					util.Debug("Cannot update draft-thread status", err)
+					util.Debug("Cannot update draft-thread status %v", err)
 					report(w, s_u, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
 				case strings.Contains(err.Error(), "创建新茶议失败"):
-					util.Debug("Cannot save thread", err)
+					util.Debug("Cannot save thread %v", err)
 					report(w, s_u, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 				default:
-					util.Debug("未知错误", err)
+					util.Debug("未知错误 %v", err)
 					report(w, s_u, "世事洞明皆学问，人情练达即文章。")
 				}
 				return
@@ -295,13 +295,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				switch {
 				case strings.Contains(err.Error(), "获取品味草稿失败"):
-					util.Debug("Cannot get draft-post", err)
+					util.Debug("Cannot get draft-post %v", err)
 					report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
 				case strings.Contains(err.Error(), "创建新品味失败"):
-					util.Debug("Cannot save post", err)
+					util.Debug("Cannot save post %v", err)
 					report(w, s_u, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 				default:
-					util.Debug("处理接纳新品味时发生未知错误", err)
+					util.Debug("处理接纳新品味时发生未知错误 %v", err)
 					report(w, s_u, "世事洞明皆学问，人情练达即文章。")
 				}
 				return
@@ -311,7 +311,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			//把草团转为正式$事业茶团
 			team, err := acceptNewTeam(ao.ObjectId)
 			if err != nil {
-				util.Debug("Cannot accept new team", err)
+				util.Debug("Cannot accept new team %v", err)
 				report(w, s_u, "盛世无饥馑，何须耕织忙？不急不急。")
 				return
 			}
@@ -324,7 +324,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 				Status: dao.TeamMemberStatusActive,
 			}
 			if err = teamMember.Create(); err != nil {
-				util.Debug("Cannot create team-member", err)
+				util.Debug("Cannot create team-member %v", err)
 				report(w, s_u, "你好，花因喜洁难寻偶，人为悲秋易断魂。")
 				return
 			}
@@ -332,7 +332,7 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			//如果还没有，把这个新茶团设置为默认$茶团
 			t_founder, err := dao.GetUser(team.FounderId)
 			if err != nil {
-				util.Debug("Cannot get team founder", err)
+				util.Debug("Cannot get team founder %v", err)
 				report(w, s_u, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。请稍后再试。")
 				return
 			}
@@ -344,12 +344,12 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 			// 接纳新集团
 			_, err := acceptNewGroup(ao.ObjectId)
 			if err != nil {
-				util.Debug("Cannot accept new team", err)
+				util.Debug("Cannot accept new team %v", err)
 				report(w, s_u, "盛世无饥馑，何须耕织忙？不急不急。")
 			}
 
 		default:
-			util.Debug("Cannot get object", err)
+			util.Debug("Cannot get object %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候喝茶比做傻事强？")
 			return
 		}
@@ -365,13 +365,13 @@ func PolitePost(w http.ResponseWriter, r *http.Request) {
 func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
-		util.Debug(" Cannot get session given session id", sess.Id)
+		util.Debug(" Cannot get session given session id %v", sess.Id)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get session given session id", sess.Id)
+		util.Debug("Cannot get session given session id %v", sess.Id)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -384,7 +384,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	// 换成int
 	ob_id, err := strconv.Atoi(ob_id_str)
 	if err != nil {
-		util.Debug("Cannot convert id to integer", err)
+		util.Debug("Cannot convert id to integer %v", err)
 		report(w, s_u, "你好，转换编号失败，茶博士找不到茶叶的资料")
 		return
 	}
@@ -394,7 +394,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	// 友邻蒙评对象
 	ao := dao.AcceptObject{Id: ob_id}
 	if err = ao.Get(); err != nil {
-		util.Debug("Cannot get object", err)
+		util.Debug("Cannot get object %v", err)
 		report(w, s_u, "你好，茶博士都糊涂了，竟然唱问世间情为何物，直教人找不到对象？")
 		return
 	}
@@ -402,7 +402,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	//读取友邻蒙评邀请函
 	var acceptNotification dao.AcceptNotification
 	if err = acceptNotification.GetAccNotiByUIdAndAOId(s_u.Id, ao.Id); err != nil {
-		util.Debug("Cannot get accept-notification invitation", err)
+		util.Debug("Cannot get accept-notification invitation %v", err)
 		report(w, s_u, "你好，茶博士莫名其妙，竟然说没有机票也登船有时候是合情合理的。")
 		return
 	}
@@ -411,7 +411,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 	ok := false
 	ok, err = s_u.CheckHasAcceptNotification(ao.Id)
 	if err != nil {
-		util.Debug("CheckHasAcceptNotification failed given accept-object id", ao.Id)
+		util.Debug("CheckHasAcceptNotification failed given accept-object id %v", ao.Id)
 		report(w, s_u, "你好，茶博士莫名其妙，竟然说没有机票也可以登船有时候是合情合理的。")
 		return
 	}
@@ -425,7 +425,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		ob := dao.Objective{
 			Id: ao.ObjectId}
 		if err = ob.Get(); err != nil {
-			util.Debug("Cannot get objective", err)
+			util.Debug("Cannot get objective %v", err)
 			report(w, s_u, "你好，有时候找不到新茶茶叶的资料未必是外星人闹事。")
 			return
 		}
@@ -433,14 +433,14 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		aopd.Body = ob.Title + "." + ob.Body
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update ob accept-notification class", err)
+			util.Debug("Cannot update ob accept-notification class %v", err)
 		}
 	case dao.AcceptObjectTypeProject:
 		pr := dao.Project{
 			Id: ao.ObjectId,
 		}
 		if err = pr.Get(); err != nil {
-			util.Debug("Cannot get project", err)
+			util.Debug("Cannot get project %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修心养性的过程。")
 			return
 		}
@@ -448,21 +448,21 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		aopd.Body = pr.Title + "." + pr.Body
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update pr accept-notification class", err)
+			util.Debug("Cannot update pr accept-notification class %v", err)
 		}
 	case dao.AcceptObjectTypeThread:
 		dThread := dao.DraftThread{
 			Id: ao.ObjectId,
 		}
 		if err = dThread.Get(); err != nil {
-			util.Debug("Cannot get dfart-thread", err)
+			util.Debug("Cannot get dfart-thread %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候找茶叶需要的不是技术而是耐心。")
 			return
 		}
 
 		aopd.Body = dThread.Title + "." + dThread.Body
 		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update draft-thread accept-notification class", err)
+			util.Debug("Cannot update draft-thread accept-notification class %v", err)
 		}
 		// 更新友邻蒙评邀请函class为已读
 		acceptNotification.Update(s_u.Id, dThread.Id)
@@ -472,20 +472,20 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 			Id: ao.ObjectId,
 		}
 		if err = dPost.Get(); err != nil {
-			util.Debug("Cannot get post", err)
+			util.Debug("Cannot get post %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候找茶叶的人也会迷路。")
 			return
 		}
 		aopd.Body = dPost.Body
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update po accept-notification class", err)
+			util.Debug("Cannot update po accept-notification class %v", err)
 		}
 
 	case dao.AcceptObjectTypeTeam:
 		team, err := dao.GetTeam(ao.ObjectId)
 		if err != nil {
-			util.Debug("Cannot get team", err)
+			util.Debug("Cannot get team %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候临急抱佛脚比刻苦奋斗更有用？")
 			return
 		}
@@ -493,26 +493,26 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 		aopd.Body = team.Name + " " + team.Mission
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update team accept-notification class", err)
+			util.Debug("Cannot update team accept-notification class %v", err)
 			return
 		}
 
 	case dao.AcceptObjectTypeGroup:
 		group := dao.Group{Id: ao.ObjectId}
 		if err = group.Get(); err != nil {
-			util.Debug("Cannot get group", err)
+			util.Debug("Cannot get group %v", err)
 			report(w, s_u, "你好，满头大汗的茶博士请教你，乌龙茶是什么茶品种？")
 			return
 		}
 		aopd.Body = group.Name + " " + group.Mission
 		// 更新友邻蒙评邀请函class为已读
 		if err = acceptNotification.Update(s_u.Id, ao.Id); err != nil {
-			util.Debug("Cannot update group accept-notification class", err)
+			util.Debug("Cannot update group accept-notification class %v", err)
 			return
 		}
 
 	default:
-		util.Debug("Cannot get object", err)
+		util.Debug("Cannot get object %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候喝茶比什么都不做好？")
 		return
 	}
@@ -522,7 +522,7 @@ func PoliteGet(w http.ResponseWriter, r *http.Request) {
 
 	// 减少1新通知小黑板用户通知记录
 	if err = dao.SubtractUserNotificationCount(s_u.Id); err != nil {
-		util.Debug("Cannot subtract 1 user notification", err)
+		util.Debug("Cannot subtract 1 user notification %v", err)
 	}
 
 	generateHTML(w, &aopd, "layout", "navbar.private", "accept.watch_your_language")

@@ -34,13 +34,13 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", sess.Email, err)
+		util.Debug(" Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
@@ -48,7 +48,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	//读取茶议表达
 	thre_type, err := strconv.Atoi(r.PostFormValue("type"))
 	if err != nil || (thre_type != dao.ThreadTypeIthink && thre_type != dao.ThreadTypeIdea) {
-		util.Debug("Invalid thread type value", thre_type, err)
+		util.Debug("Invalid thread type value %v", err)
 		report(w, s_u, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
@@ -58,7 +58,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	case dao.ThreadTypeIthink, dao.ThreadTypeIdea:
 		break
 	default:
-		util.Debug("Invalid thread type value", err)
+		util.Debug("Invalid thread type value %v", err)
 		report(w, s_u, "你好，闺中女儿惜春暮，愁绪满怀无释处。")
 		return
 	}
@@ -66,13 +66,13 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	title := r.PostFormValue("title")
 	project_id, err := strconv.Atoi(r.PostFormValue("project_id"))
 	if err != nil {
-		util.Debug("Failed to convert project_id to int", project_id, err)
+		util.Debug("Failed to convert project_id to int %v", err)
 		report(w, s_u, "你好，闪电茶博士极速查找茶台中，请确认后再试。")
 		return
 	}
 	post_id, err := strconv.Atoi(r.PostFormValue("post_id"))
 	if err != nil {
-		util.Error("Failed to convert post_id to int", err)
+		util.Error("Failed to convert post_id to int %v", err)
 		report(w, s_u, "你好，闪电茶博士极速服务，任然无法识别提交的品味资料，请确认后再试。")
 		return
 	}
@@ -81,12 +81,12 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	proj := dao.Project{Id: project_id}
 	//检查该茶台是否存在，而且状态不是待友邻蒙评审查草台状态
 	if err = proj.Get(); err != nil {
-		util.Error("Cannot get project by id %d: %v", project_id, err)
+		util.Error("Cannot get project %d: %v", project_id, err)
 		report(w, s_u, "你好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
 		return
 	}
 	if proj.Class != dao.PrClassOpen && proj.Class != dao.PrClassClose {
-		//util.Debug("试图访问未蒙评审核的茶台被阻止。", s_u.Email, err)
+		//util.Debug("试图访问未蒙评审核的茶台被阻止。 %v", err)
 		report(w, s_u, "你好，茶博士竟然说该茶台尚未启用，请确认后再试一次。")
 		return
 	}
@@ -98,7 +98,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		}
 		test_proj, err := post.Project()
 		if err != nil {
-			util.Error("Cannot get project given post %d: %v", post.Id, err)
+			util.Error("Cannot get project given post %d: %v", post_id, err)
 			report(w, s_u, "你好，闪电茶博士极速服务，然而无法识别提交的品味资料，请确认后再试。")
 			return
 		}
@@ -121,13 +121,13 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
-		util.Debug("Failed to convert class to int", err)
+		util.Debug("Failed to convert class to int %v", err)
 		report(w, s_u, "你好，此地无这个茶团，请确认后再试。")
 		return
 	}
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
-		util.Debug("Failed to convert class to int", err)
+		util.Debug("Failed to convert class to int %v", err)
 		report(w, s_u, "你好，此地无这个茶团，请确认后再试。")
 		return
 	}
@@ -138,7 +138,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		// 处理数据库错误
-		util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+		util.Debug("验证提交的团队和家庭id出现数据库错误 %v", err)
 		report(w, s_u, "你好，茶团成员资格检查未通过，请确认后再试。")
 		return
 	}
@@ -169,7 +169,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		draft_thread.Category = dao.ThreadCategoryNested
 	}
 	if err = draft_thread.Create(); err != nil {
-		util.Debug(" Cannot create thread draft", err)
+		util.Debug(" Cannot create thread draft %v", err)
 		report(w, s_u, "你好，茶博士没有墨水了，未能保存新茶议草稿。")
 		return
 	}
@@ -194,16 +194,16 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			switch {
 			case strings.Contains(err.Error(), "获取茶议草稿失败"):
-				util.Debug("Cannot get draft-thread", err)
+				util.Debug("Cannot get draft-thread %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，竟然说有时候泡一壶好茶的关键，需要的不是技术而是耐心。")
 			case strings.Contains(err.Error(), "更新茶议草稿状态失败"):
-				util.Debug("Cannot update draft-thread status", err)
+				util.Debug("Cannot update draft-thread status %v", err)
 				report(w, s_u, "你好，睿藻仙才盈彩笔，自惭何敢再为辞。")
 			case strings.Contains(err.Error(), "创建新茶议失败"):
-				util.Debug("Cannot save thread", err)
+				util.Debug("Cannot save thread %v", err)
 				report(w, s_u, "你好，吟成荳蔻才犹艳，睡足酴醾梦也香。")
 			default:
-				util.Debug("未知错误", err)
+				util.Debug("未知错误 %v", err)
 				report(w, s_u, "世事洞明皆学问，人情练达即文章。")
 			}
 			return
@@ -233,7 +233,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士竟然说该茶议不存在，请确认后再试一次。")
 			return
 		}
-		util.Debug(" Cannot read thread given uuid", uuid, err)
+		util.Debug(" Cannot read thread given uuid %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，嘀咕无为有处有还无？")
 		return
 	}
@@ -241,18 +241,18 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	//读取所在的茶台资料
 	project, err := thread.Project()
 	if err != nil {
-		util.Debug(" Cannot read project given thread", err)
+		util.Debug(" Cannot read project given thread %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，嘀咕无为有处有还无？")
 		return
 	}
 	tD.QuoteProjectBean, err = fetchProjectBean(project)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			//	util.Debug(" Cannot read project given uuid", uuid)
+			//	util.Debug(" Cannot read project given uuid %v", uuid)
 			report(w, s_u, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个茶台不存在。")
 			return
 		}
-		util.Debug(" Cannot read project", err)
+		util.Debug(" Cannot read project %v", err)
 		report(w, s_u, "你好，枕上轻寒窗外雨，眼前春色梦中人？")
 		return
 	}
@@ -260,13 +260,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	//读取茶围资料
 	objective, err := project.Objective()
 	if err != nil {
-		util.Debug(" Cannot read objective given project", err)
+		util.Debug(" Cannot read objective given project %v", err)
 		report(w, s_u, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
 	tD.QuoteObjectiveBean, err = fetchObjectiveBean(objective)
 	if err != nil {
-		util.Debug(" Cannot read objective given project", project.Id, err)
+		util.Debug(" Cannot read objective given project %v", err)
 		report(w, s_u, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
@@ -276,13 +276,13 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		// 说明这是一个附加类型的,针对某个post发表的茶议(comment-in-thread，讲开又讲，延伸话题)
 		post := dao.Post{Id: thread.PostId}
 		if err = post.Get(); err != nil {
-			util.Debug(" Cannot read post given post_id", err)
+			util.Debug(" Cannot read post given post_id %v", err)
 			report(w, s_u, "你好，枕上轻寒窗外雨，眼前春色梦中人。未能读取品味资料。")
 			return
 		}
 		tD.QuotePostBean, err = fetchPostBean(post)
 		if err != nil {
-			util.Debug(" Cannot fetch postBean given post", post.Id, err)
+			util.Debug(" Cannot fetch postBean given post %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能读取品味资料。")
 			return
 		}
@@ -300,7 +300,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取茶议资料荚
 	tD.ThreadBean, err = fetchThreadBean(thread, r)
 	if err != nil {
-		util.Debug(" Cannot read threadBean", err)
+		util.Debug(" Cannot read threadBean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取茶议资料荚。")
 		return
 	}
@@ -322,7 +322,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 	post_admin_slice, err := tD.ThreadBean.Thread.PostsAdmin()
 	if err != nil {
-		util.Debug(" Cannot read admin posts", err)
+		util.Debug(" Cannot read admin posts %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
@@ -349,7 +349,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 	tD.PostBeanAdminSlice, err = fetchPostBeanSlice(post_admin_slice)
 	if err != nil {
-		util.Debug(" Cannot read admin postbean", err)
+		util.Debug(" Cannot read admin postbean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
@@ -357,7 +357,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取全部普通回复帖子（品味）
 	post_n_slice, err := tD.ThreadBean.Thread.Posts()
 	if err != nil {
-		util.Debug(" Cannot read posts", err)
+		util.Debug(" Cannot read posts %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
@@ -381,7 +381,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 	tD.PostBeanSlice, err = fetchPostBeanSlice(post_n_slice)
 	if err != nil {
-		util.Debug(" Cannot read posts", err)
+		util.Debug(" Cannot read posts %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，嘀咕无为有处有还无？。")
 		return
 	}
@@ -417,7 +417,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		//用户是登录状态
 		s_u, err = s.User()
 		if err != nil {
-			util.Debug(" Cannot read session user", err)
+			util.Debug(" Cannot read session user %v", err)
 			report(w, s_u, "你好，茶博士说，这个状态异常无法使用。")
 			return
 		}
@@ -426,7 +426,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		case dao.ThreadCategoryNormal:
 			//普通茶议，无需额外检查
 			if thread.PostId != 0 {
-				util.Debug(" Invalid thread category and post_id not match", thread.Id, thread.Category, thread.PostId)
+				util.Debug(" Invalid thread category and post_id not match %d %d %d", thread.Id, thread.Category, thread.PostId)
 				report(w, s_u, "你好，茶博士说，这个茶台状态异常无法使用。")
 				return
 			}
@@ -434,7 +434,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		case dao.ThreadCategoryNested:
 			//针对某个post的议中议，检查是否有权限访问
 			if thread.PostId == 0 {
-				util.Debug(" Invalid thread category and post_id not match", thread.Id, thread.Category, thread.PostId)
+				util.Debug(" Invalid thread category and post_id not match %d %d %d", thread.Id, thread.Category, thread.PostId)
 				report(w, s_u, "你好，茶博士说，这个茶台状态异常无法使用。")
 				return
 			}
@@ -444,7 +444,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			//检查是否已存在约茶记录
 			pr_appointment, err := dao.GetAppointmentByProjectId(project.Id, r.Context())
 			if err != nil && err != sql.ErrNoRows {
-				util.Debug(" Cannot read appointment given project", err)
+				util.Debug(" Cannot read appointment given project %d: %v", project.Id, err)
 				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
@@ -456,7 +456,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			//检查see-seek是否存在记录？
 			see_seek, err := dao.GetSeeSeekByProjectId(project.Id, r.Context())
 			if err != nil && err != sql.ErrNoRows {
-				util.Debug(" Cannot read see-seek given project", err)
+				util.Debug(" Cannot read see-seek given project %d: %v", project.Id, err)
 				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
@@ -468,7 +468,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			// 检查BrainFire是否存在记录
 			brain_fire, err := dao.GetBrainFireByProjectId(project.Id, r.Context())
 			if err != nil && err != sql.ErrNoRows {
-				util.Debug(" Cannot read brain-fire given project_id:", project.Id, err)
+				util.Debug(" Cannot read brain-fire given project_id: %v", err)
 				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
@@ -479,7 +479,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			// 检查Suggestion是否存在记录
 			suggestion, err := dao.GetSuggestionByProjectId(project.Id, r.Context())
 			if err != nil && err != sql.ErrNoRows {
-				util.Debug("cannot read suggestion given project_id:", project.Id, err)
+				util.Debug("cannot read suggestion given project_id: %v", err)
 				report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 				return
 			}
@@ -493,7 +493,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 		case dao.ThreadCategoryHandcraft:
 			all_done, err := dao.IsAllHandicraftsCompleted(project.Id, r.Context())
 			if err != nil && err != sql.ErrNoRows {
-				util.Debug("Handicraft check failed", "error:", err)
+				util.Debug("Handicraft check failed %v", err)
 				report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 				return
 			}
@@ -509,7 +509,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			//从会话查获当前浏览用户资料荚
 			s_u, s_d_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s, r.Context())
 			if err != nil {
-				util.Debug(" Cannot get user-related data from session", s_u.Id)
+				util.Debug(" Cannot get user-related data from session %v", s_u.Id)
 				report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
@@ -528,7 +528,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 
 			tD.IsAdmin, err = checkObjectiveAdminPermission(&objective, s_u.Id)
 			if err != nil {
-				util.Debug(" Cannot check objective admin permission", objective.Id, err)
+				util.Debug(" Cannot check objective admin permission %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 				return
 			}
@@ -536,7 +536,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 			if !tD.IsAdmin {
 				tD.IsMaster, err = checkProjectMasterPermission(&project, s_u.Id)
 				if err != nil {
-					util.Debug(" Cannot check project master permission", project.Id, err)
+					util.Debug(" Cannot check project master permission %v", err)
 					report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 					return
 				}
@@ -584,7 +584,7 @@ func ThreadDetail(w http.ResponseWriter, r *http.Request) {
 					//是封闭式茶台，需要检查当前用户身份是否受邀请茶团的成员，以决定是否允许发言
 					ok, err := tD.QuoteProjectBean.Project.IsInvitedMember(s_u.Id)
 					if err != nil {
-						util.Debug(" Cannot check project invited member", err)
+						util.Debug(" Cannot check project invited member %v", err)
 						report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 						return
 					}
@@ -634,13 +634,13 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，闪电茶博士为了提高服务速度而迷路了，未能找到你想要的茶台。")
 		return
 	}
@@ -652,7 +652,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 
 	thread, err := dao.GetThreadByUUID(uuid)
 	if err != nil {
-		util.Debug(" Cannot read thread given uuid", uuid)
+		util.Debug(" Cannot read thread given uuid %v", uuid)
 		report(w, s_u, "你好，闪电茶博士极速服务中，未能读取茶议资料，请稍后再试。")
 		return
 	}
@@ -735,7 +735,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", sess.Email, err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -754,7 +754,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士竟然说该茶议不存在，请确认后再试一次。")
 			return
 		}
-		util.Debug(" Cannot read thread given uuid", uuid, err)
+		util.Debug(" Cannot read thread given uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -770,25 +770,25 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	// 读取茶议资料荚
 	threSupp.ThreadBean, err = fetchThreadBean(thread, r)
 	if err != nil {
-		util.Debug(" Cannot read threadBean", err)
+		util.Debug(" Cannot read threadBean %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	//读取所在的茶台资料
 	project, err := thread.Project()
 	if err != nil {
-		util.Debug(" Cannot read project given thread", err)
+		util.Debug(" Cannot read project given thread %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	threSupp.QuoteProjectBean, err = fetchProjectBean(project)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			//	util.Debug(" Cannot read project given uuid", uuid)
+			//	util.Debug(" Cannot read project given uuid %v", uuid)
 			report(w, s_u, "你好，茶博士扶起厚厚的眼镜，居然说您提及的这个茶台不存在。")
 			return
 		}
-		util.Debug(" Cannot read project bean given project", project.Id, err)
+		util.Debug(" Cannot read project bean given project %v", err)
 		report(w, s_u, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
@@ -796,25 +796,25 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 	//读取茶围资料
 	objective, err := project.Objective()
 	if err != nil {
-		util.Debug(" Cannot read objective given project", err)
+		util.Debug(" Cannot read objective given project %v", err)
 		report(w, s_u, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
 	threSupp.QuoteObjectiveBean, err = fetchObjectiveBean(objective)
 	if err != nil {
-		util.Debug(" Cannot read objective given project", project.Id, err)
+		util.Debug(" Cannot read objective given project %v", err)
 		report(w, s_u, "你好，枕上轻寒窗外雨，眼前春色梦中人。")
 		return
 	}
 	post_admin_slice, err := threSupp.ThreadBean.Thread.PostsAdmin()
 	if err != nil {
-		util.Debug(" Cannot read admin posts", err)
+		util.Debug(" Cannot read admin posts %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	threSupp.PostBeanAdminSlice, err = fetchPostBeanSlice(post_admin_slice)
 	if err != nil {
-		util.Debug(" Cannot read admin postbean", err)
+		util.Debug(" Cannot read admin postbean %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -824,7 +824,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		//检查是否已存在约茶记录
 		pr_appointment, err := dao.GetAppointmentByProjectId(project.Id, ctx)
 		if err != nil && err != sql.ErrNoRows {
-			util.Debug(" Cannot read appointment given project", err)
+			util.Debug(" Cannot read appointment given project %v", err)
 			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
@@ -834,7 +834,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		//检查see-seek是否存在记录？
 		see_seek, err := dao.GetSeeSeekByProjectId(project.Id, ctx)
 		if err != nil && err != sql.ErrNoRows {
-			util.Debug(" Cannot read see-seek given project", err)
+			util.Debug(" Cannot read see-seek given project %v", err)
 			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
@@ -844,7 +844,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		// 检查脑火是否已存在记录
 		brain_fire, err := dao.GetBrainFireByProjectId(project.Id, ctx)
 		if err != nil && err != sql.ErrNoRows {
-			util.Debug(" Cannot read brain fire given project", err)
+			util.Debug(" Cannot read brain fire given project %v", err)
 			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
@@ -854,7 +854,7 @@ func threadSupplementGet(w http.ResponseWriter, r *http.Request) {
 		// 检查Suggestion是否存在记录
 		suggestion, err := dao.GetSuggestionByProjectId(project.Id, r.Context())
 		if err != nil && err != sql.ErrNoRows {
-			util.Debug("cannot read suggestion given project_id:", project.Id, err)
+			util.Debug("cannot read suggestion given project_id: %v", err)
 			report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 			return
 		}
@@ -898,7 +898,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", sess.Email, err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -906,7 +906,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	verifier_team := dao.Team{Id: dao.TeamIdVerifier}
 	ok, err := verifier_team.IsActiveMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check team membership", verifier_team.Id, err)
+		util.Debug(" Cannot check team membership %v", err)
 		report(w, s_u, "你好，茶博士扶起厚厚的眼镜，居然说陛下您没有权限补充该茶议。")
 		return
 	}
@@ -917,7 +917,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	//获取post方法提交的表单
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -936,7 +936,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士竟然说该茶议不存在，请确认后再试一次。")
 			return
 		}
-		util.Debug(" Cannot read thread given uuid", t_uuid, err)
+		util.Debug(" Cannot read thread given uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -973,7 +973,7 @@ func threadSupplementPost(w http.ResponseWriter, r *http.Request) {
 	thread.Body += t
 	//更新茶议内容
 	if err = thread.UpdateBodyAndClass(thread.Body, thread.Class, r.Context()); err != nil {
-		util.Debug(" Cannot update thread", err)
+		util.Debug(" Cannot update thread %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，墨水中断未能补充茶议。")
 		return
 	}

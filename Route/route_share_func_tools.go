@@ -413,14 +413,14 @@ func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	}
 	// 确保目录存在
 	if err := os.MkdirAll(saveDir, 0755); err != nil {
-		util.Debug("fail to create avatar directory", err)
+		util.Debug("fail to create avatar directory %v", err)
 		return errors.New("创建头像目录失败，请稍后再试。")
 	}
 	// 创建新文件，无需切换目录，直接使用完整路径，减少安全风险
 	newFilePath := saveDir + uuid + util.Config.ImageExt
 	newFile, err := os.Create(newFilePath)
 	if err != nil {
-		util.Debug("fail to create avatar image", err)
+		util.Debug("fail to create avatar image %v", err)
 		return errors.New("创建头像文件失败，请稍后再试。")
 	}
 	// 确保文件在函数执行完毕后关闭
@@ -428,7 +428,7 @@ func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 
 	// 直接写入文件，参考 saveUploadedFile 的简洁实现
 	if _, err = newFile.Write(fileBytes); err != nil {
-		util.Debug("fail to write avatar image", err)
+		util.Debug("fail to write avatar image %v", err)
 		return errors.New("创建头像文件失败，请稍后再试。")
 	}
 

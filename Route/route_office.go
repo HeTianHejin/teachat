@@ -43,24 +43,24 @@ func TwoAcceptNotificationsSendExceptUserId(u_id int, mess dao.AcceptNotificatio
 	// 	} else {
 	if user_ids, err = dao.Get2RandomUserId(); err != nil {
 		//test status
-		util.Debug(" Cannot get 2 random user id", err)
+		util.Debug(" Cannot get 2 random user id %v", err)
 		return err
 	}
 	// 	}
 	// }
 	if len(user_ids) != 2 {
-		util.Debug(" Cannot get 2 random-user-ids", err)
+		util.Debug(" Cannot get 2 random-user-ids %v", err)
 		return err
 	}
 	// 发送“是否接纳”通知
 	if err = mess.SendWithContext(user_ids, ctx); err != nil {
-		util.Debug(" Cannot send accept notification", err)
+		util.Debug(" Cannot send accept notification %v", err)
 		return err
 	}
 	// 记录用户有1新通知
 	for _, u_id := range user_ids {
 		if err = dao.AddUserNotificationCount(u_id); err != nil {
-			util.Debug(" Cannot add random user new-notification-count", err)
+			util.Debug(" Cannot add random user new-notification-count %v", err)
 			return err
 		}
 	}
@@ -72,12 +72,12 @@ func AcceptNotificationSend(u_id int, mess dao.AcceptNotification, ctx context.C
 
 	// 发送友评邻蒙结果通知通知
 	if err := mess.SendWithContext([]int{u_id}, ctx); err != nil {
-		util.Debug(" Cannot send accept notification", err)
+		util.Debug(" Cannot send accept notification %v", err)
 		return err
 	}
 	// 记录用户有1新通知
 	if err := dao.AddUserNotificationCount(u_id); err != nil {
-		util.Debug(" Cannot add user new-notification-count", err)
+		util.Debug(" Cannot add user new-notification-count %v", err)
 		return err
 	}
 	return nil

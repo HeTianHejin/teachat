@@ -21,7 +21,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -37,7 +37,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	}
 	//fetch family
 	if err = t_family.GetByUuid(); err != nil {
-		util.Debug("Cannot get family by uuid", err)
+		util.Debug("Cannot get family by uuid %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
 		return
 	}
@@ -49,7 +49,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	//check user is family member
 	ok, err := t_family.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check user is family member", err)
+		util.Debug("Cannot check user is family member %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个家庭茶团不存在。")
 		return
 	}
@@ -63,7 +63,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 	//fetch user default family
 	lastDefaultFamily, err := s_u.GetLastDefaultFamily()
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		util.Debug("Cannot get user's last default family", err)
+		util.Debug("Cannot get user's last default family %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
 		return
 	} else if errors.Is(err, sql.ErrNoRows) || lastDefaultFamily.Id > dao.FamilyIdUnknown {
@@ -81,7 +81,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 		FamilyId: t_family.Id,
 	}
 	if err = new_user_default_family.Create(); err != nil {
-		util.Debug("Cannot create user default family", err)
+		util.Debug("Cannot create user default family %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说墨水用完了，设置默认家庭茶团失败。")
 		return
 	}
@@ -101,7 +101,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -178,7 +178,7 @@ func FamilyTree(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -191,14 +191,14 @@ func FamilyTree(w http.ResponseWriter, r *http.Request) {
 
 	family := dao.Family{Uuid: family_uuid}
 	if err = family.GetByUuid(); err != nil {
-		util.Debug("Cannot get family by uuid", err)
+		util.Debug("Cannot get family by uuid %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记。")
 		return
 	}
 
 	isMember, err := family.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check user is family member", err)
+		util.Debug("Cannot check user is family member %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说查询出错了。")
 		return
 	}
@@ -229,7 +229,7 @@ func ParentFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -270,7 +270,7 @@ func ChildFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -323,7 +323,7 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -391,7 +391,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -444,7 +444,7 @@ func HomePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -484,7 +484,7 @@ func ParentPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -532,7 +532,7 @@ func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -605,7 +605,7 @@ func GonePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -664,7 +664,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -685,7 +685,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		Uuid: family_uuid,
 	}
 	if err = family.GetByUuid(); err != nil {
-		util.Debug("Cannot get family by UUID", err)
+		util.Debug("Cannot get family by UUID %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
@@ -845,7 +845,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
 		return
 	}
@@ -988,7 +988,7 @@ func NewFamilyGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1127,7 +1127,7 @@ func EditFamilyPost(w http.ResponseWriter, r *http.Request) {
 	family.IsOpen = r.PostFormValue("is_open") == "on"
 
 	if err = family.Update(); err != nil {
-		util.Debug("更新家庭资料失败", err)
+		util.Debug("更新家庭资料失败 %v", err)
 		report(w, s_u, "保存失败，请稍后再试")
 		return
 	}
@@ -1145,7 +1145,7 @@ func HandleFamilyFriendTeamCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1158,7 +1158,7 @@ func HandleFamilyFriendTeamCreate(w http.ResponseWriter, r *http.Request) {
 
 	family := dao.Family{Uuid: familyUUID}
 	if err = family.GetByUuid(); err != nil {
-		util.Debug("Cannot get family by uuid", err)
+		util.Debug("Cannot get family by uuid %v", err)
 		report(w, s_u, "你好，未能找到该家庭。")
 		return
 	}
@@ -1171,14 +1171,14 @@ func HandleFamilyFriendTeamCreate(w http.ResponseWriter, r *http.Request) {
 
 	teamID, err := dao.ConvertFamilyToFriendTeam(family.Id, s_u)
 	if err != nil {
-		util.Debug("Cannot convert family to friend team", family.Id, err)
+		util.Debug("Cannot convert family to friend team %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建亲友团，请稍后再试。")
 		return
 	}
 
 	team, err := dao.GetTeam(teamID)
 	if err != nil {
-		util.Debug("Cannot get created friend team", teamID, err)
+		util.Debug("Cannot get created friend team %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，亲友团已创建，但未能跳转到详情页，请稍后再试。")
 		return
 	}
@@ -1196,7 +1196,7 @@ func FamilyMemberAddGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -1209,7 +1209,7 @@ func FamilyMemberAddGet(w http.ResponseWriter, r *http.Request) {
 
 	family := dao.Family{Uuid: uuid}
 	if err = family.GetByUuid(); err != nil {
-		util.Debug("Cannot get family by uuid", err)
+		util.Debug("Cannot get family by uuid %v", err)
 		report(w, s_u, "你好，未能找到该家庭。")
 		return
 	}
@@ -1242,13 +1242,13 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能开新茶团，请稍后再试。")
 		return
 	}
@@ -1265,7 +1265,7 @@ func HandleFamilySearchUser(w http.ResponseWriter, r *http.Request) {
 	// 获取家庭信息
 	family := dao.Family{Uuid: familyUuid}
 	if err = family.GetByUuid(); err != nil {
-		util.Debug("Cannot get family by uuid", err)
+		util.Debug("Cannot get family by uuid %v", err)
 		report(w, s_u, "你好，未能找到该家庭。")
 		return
 	}

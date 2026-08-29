@@ -20,7 +20,7 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -30,7 +30,7 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 	if teamId != "" {
 		team, err := dao.GetTeamByUUID(teamId)
 		if err != nil {
-			util.Debug("Cannot get team by uuid", err)
+			util.Debug("Cannot get team by uuid %v", err)
 			report(w, s_u, "你好，未能找到指定的团队。")
 			return
 		}
@@ -52,12 +52,12 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 	// 获取用户的团队列表，用于选择最高管理团队
 	teams, err := dao.GetUserSurvivalTeams(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug("Cannot get user teams", err)
+		util.Debug("Cannot get user teams %v", err)
 	}
 
 	industryTags, err := dao.GetAllIndustryTags()
 	if err != nil {
-		util.Debug("Cannot get industry tags", err)
+		util.Debug("Cannot get industry tags %v", err)
 	}
 
 	var pageData struct {
@@ -90,7 +90,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 		return
 	}
@@ -112,7 +112,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 	// 检查权限：用户必须是该团队的创建人或CEO
 	team, err := dao.GetTeam(firstTeamId)
 	if err != nil {
-		util.Debug("Cannot get team", err)
+		util.Debug("Cannot get team %v", err)
 		report(w, s_u, "你好，未能找到指定的团队。")
 		return
 	}
@@ -153,7 +153,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 	// 转换类型
 	class, err := strconv.Atoi(classStr)
 	if err != nil {
-		util.Debug("Cannot convert class to int", err)
+		util.Debug("Cannot convert class to int %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 		return
 	}
@@ -206,7 +206,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := createGroupWithFirstMember(&group, firstTeamId, s_u.Id); err != nil {
-		util.Debug("Cannot create group with first member", err)
+		util.Debug("Cannot create group with first member %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 		return
 	}
@@ -238,7 +238,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 			group.Class = dao.GroupClassClose
 		}
 		if err := group.Update(); err != nil {
-			util.Debug("Cannot update group class", err)
+			util.Debug("Cannot update group class %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 			return
 		}
@@ -258,7 +258,7 @@ func GroupsGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -286,13 +286,13 @@ func GroupReadGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 		return
 	}
@@ -304,7 +304,7 @@ func GroupReadGet(w http.ResponseWriter, r *http.Request) {
 
 	group, err := dao.GetGroupByUUID(uuid)
 	if err != nil {
-		util.Debug("Cannot get group by uuid", err)
+		util.Debug("Cannot get group by uuid %v", err)
 		report(w, s_u, "你好，未能找到该集团。")
 		return
 	}
@@ -312,13 +312,13 @@ func GroupReadGet(w http.ResponseWriter, r *http.Request) {
 	// 获取集团的所有团队
 	teams, err := dao.GetTeamsByGroupId(group.Id)
 	if err != nil {
-		util.Debug("Cannot get teams by group id", err)
+		util.Debug("Cannot get teams by group id %v", err)
 	}
 
 	// 检查用户权限
 	canManage, err := group.CanManage(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check manage permission", err)
+		util.Debug("Cannot check manage permission %v", err)
 		canManage = false
 	}
 
@@ -372,7 +372,7 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 		return
 	}
@@ -390,14 +390,14 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 	// 检查权限
 	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
-		util.Debug("Cannot get group", err)
+		util.Debug("Cannot get group %v", err)
 		report(w, s_u, "你好，未找到该集团。")
 		return
 	}
 
 	canAdd, err := checkGroupPermission(&group, s_u.Id, "add_team")
 	if err != nil {
-		util.Debug("Cannot check permission", err)
+		util.Debug("Cannot check permission %v", err)
 		report(w, s_u, "你好，权限检查失败。")
 		return
 	}
@@ -415,7 +415,7 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 	// 校验被添加团队性质是否与集团一致
 	addTeam, err := dao.GetTeam(teamId)
 	if err != nil {
-		util.Debug("Cannot get team", err)
+		util.Debug("Cannot get team %v", err)
 		report(w, s_u, "你好，未能找到指定的团队。")
 		return
 	}
@@ -447,7 +447,7 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := member.Create(); err != nil {
-		util.Debug("Cannot create group member", err)
+		util.Debug("Cannot create group member %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能添加团队到集团。")
 		return
 	}
@@ -465,7 +465,7 @@ func EditGroupGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -478,7 +478,7 @@ func EditGroupGet(w http.ResponseWriter, r *http.Request) {
 
 	group, err := dao.GetGroupByUUID(id)
 	if err != nil {
-		util.Debug("Cannot get group by uuid", err)
+		util.Debug("Cannot get group by uuid %v", err)
 		report(w, s_u, "你好，未能找到该集团。")
 		return
 	}
@@ -529,7 +529,7 @@ func EditGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 		return
 	}
@@ -543,14 +543,14 @@ func EditGroupPost(w http.ResponseWriter, r *http.Request) {
 	// 获取集团并检查权限
 	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
-		util.Debug("Cannot get group", err)
+		util.Debug("Cannot get group %v", err)
 		report(w, s_u, "你好，未找到该集团。")
 		return
 	}
 
 	canEdit, err := checkGroupPermission(&group, s_u.Id, "edit")
 	if err != nil {
-		util.Debug("Cannot check permission", err)
+		util.Debug("Cannot check permission %v", err)
 		report(w, s_u, "你好，权限检查失败。")
 		return
 	}
@@ -565,7 +565,7 @@ func EditGroupPost(w http.ResponseWriter, r *http.Request) {
 	group.Mission = r.PostFormValue("mission")
 
 	if err := group.Update(); err != nil {
-		util.Debug("Cannot update group", err)
+		util.Debug("Cannot update group %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能更新集团信息。")
 		return
 	}
@@ -583,7 +583,7 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -610,7 +610,7 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 		// 尝试作为集团UUID查询
 		groupData, err := dao.GetGroupByUUID(id)
 		if err != nil {
-			util.Debug("Cannot get group by uuid", err)
+			util.Debug("Cannot get group by uuid %v", err)
 			report(w, s_u, "你好，未能找到该集团或团队。")
 			return
 		}
@@ -620,26 +620,26 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	// 获取集团的所有团队
 	teams, err := dao.GetTeamsByGroupId(group.Id)
 	if err != nil {
-		util.Debug("Cannot get teams by group id", err)
+		util.Debug("Cannot get teams by group id %v", err)
 	}
 
 	// 获取集团创建者
 	founder, err := dao.GetUser(group.FounderId)
 	if err != nil {
-		util.Debug("Cannot get group founder", err)
+		util.Debug("Cannot get group founder %v", err)
 	}
 
 	// 检查用户权限
 	canManage, err := group.CanManage(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check manage permission", err)
+		util.Debug("Cannot check manage permission %v", err)
 		canManage = false
 	}
 
 	// 获取创建者的默认团队
 	founderTeam, err := founder.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug("Cannot get founder default team", err)
+		util.Debug("Cannot get founder default team %v", err)
 		founderTeam = dao.Team{Id: dao.TeamIdNone}
 	}
 
@@ -663,7 +663,7 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	// 	if err == nil {
 	// 		pageData.FirstTeamBean, err = fetchTeamBean(firstTeam)
 	// 		if err != nil {
-	// 			util.Debug("Cannot fetch first team bean", err)
+	// 			util.Debug("Cannot fetch first team bean %v", err)
 	// 		}
 	// 	}
 	// }
@@ -695,7 +695,7 @@ func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -708,7 +708,7 @@ func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 
 	group, err := dao.GetGroupByUUID(id)
 	if err != nil {
-		util.Debug("Cannot get group by uuid", err)
+		util.Debug("Cannot get group by uuid %v", err)
 		report(w, s_u, "你好，未能找到该集团。")
 		return
 	}
@@ -716,7 +716,7 @@ func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 	// 检查管理权限
 	canManage, err := group.CanManage(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check manage permission", err)
+		util.Debug("Cannot check manage permission %v", err)
 		canManage = false
 	}
 	if !canManage {
@@ -727,7 +727,7 @@ func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 	// 获取集团的所有团队
 	teams, err := dao.GetTeamsByGroupId(group.Id)
 	if err != nil {
-		util.Debug("Cannot get teams by group id", err)
+		util.Debug("Cannot get teams by group id %v", err)
 	}
 
 	// 准备页面数据
@@ -767,7 +767,7 @@ func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -780,7 +780,7 @@ func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
 
 	group, err := dao.GetGroupByUUID(id)
 	if err != nil {
-		util.Debug("Cannot get group by uuid", err)
+		util.Debug("Cannot get group by uuid %v", err)
 		report(w, s_u, "你好，未能找到该集团。")
 		return
 	}
@@ -795,7 +795,7 @@ func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
 	// 获取集团发出的所有邀请函
 	invitations, err := dao.GetInvitationsByGroupId(group.Id)
 	if err != nil {
-		util.Debug("Cannot get group invitations", err)
+		util.Debug("Cannot get group invitations %v", err)
 	}
 
 	// 构建邀请函Bean列表
@@ -862,7 +862,7 @@ func DeleteGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建新集团，请稍后再试。")
 		return
 	}
@@ -876,14 +876,14 @@ func DeleteGroupPost(w http.ResponseWriter, r *http.Request) {
 	// 获取集团并检查权限
 	group := dao.Group{Id: groupId}
 	if err := group.Get(); err != nil {
-		util.Debug("Cannot get group", err)
+		util.Debug("Cannot get group %v", err)
 		report(w, s_u, "你好，未找到该集团。")
 		return
 	}
 
 	canDelete, err := checkGroupPermission(&group, s_u.Id, "delete")
 	if err != nil {
-		util.Debug("Cannot check permission", err)
+		util.Debug("Cannot check permission %v", err)
 		report(w, s_u, "你好，权限检查失败。")
 		return
 	}
@@ -893,7 +893,7 @@ func DeleteGroupPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := group.SoftDelete(); err != nil {
-		util.Debug("Cannot delete group", err)
+		util.Debug("Cannot delete group %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能删除集团。")
 		return
 	}

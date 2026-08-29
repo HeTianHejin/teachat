@@ -20,7 +20,7 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" 根据会话未能读取用户信息", err)
+		util.Debug(" 根据会话未能读取用户信息 %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
@@ -36,13 +36,13 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	//有uuid参数，读取指定用户资料
 	user, err := dao.GetUserByID(uuid)
 	if err != nil {
-		util.Debug("Cannot get user given uuid", uuid, err)
+		util.Debug("Cannot get user given uuid %v", err)
 		report(w, s_u, "报告，大王，未能找到茶友的资料！")
 		return
 	}
 	uB, err = fetchUserDefaultDataBeanForBiography(user)
 	if err != nil {
-		util.Debug("Cannot get user Bean given uuid", user.Uuid, err)
+		util.Debug("Cannot get user Bean given uuid %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息.")
 		return
 	}
@@ -73,13 +73,13 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("fail to fetch user by session", err)
+		util.Debug("fail to fetch user by session %v", err)
 		report(w, s_u, "读取用户资料出现意外故事，请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("fail parse form", err)
+		util.Debug("fail parse form %v", err)
 		report(w, s_u, "茶博士失魂鱼，读取表单出现意外故事。")
 	}
 
@@ -100,7 +100,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 	s_u.GivenName = givenName
 	s_u.AliasName = aliasName
 	if err = s_u.UpdateNameFields(); err != nil {
-		util.Debug(" 更新用户姓名字段错误！", err)
+		util.Debug(" 更新用户姓名字段错误！ %v", err)
 		report(w, s_u, "茶博士失魂鱼，请问你刚刚说的花名或者姓名是什么来着？")
 		return
 	}
@@ -114,7 +114,7 @@ func EditIntroAndName(w http.ResponseWriter, r *http.Request) {
 		}
 		newBiography := biog
 		if err = dao.UserUpdateBiography(s_u.Id, newBiography); err != nil {
-			util.Debug(" 更新用户简介错误！", err)
+			util.Debug(" 更新用户简介错误！ %v", err)
 			report(w, s_u, "茶博士失魂鱼，请问你刚刚说的简介是什么来着？")
 			return
 		}
@@ -146,7 +146,7 @@ func avatarUploadUserPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" 获取用户信息错误！", err)
+		util.Debug(" 获取用户信息错误！ %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}
@@ -155,7 +155,7 @@ func avatarUploadUserPost(w http.ResponseWriter, r *http.Request) {
 	if errAvatar == nil {
 		s_u.Avatar = s_u.Uuid
 		if err = s_u.UpdateAvatar(); err != nil {
-			util.Debug("fail to update user avatar", err)
+			util.Debug("fail to update user avatar %v", err)
 			report(w, s_u, "您好，请问你刚刚说的喜欢什么类型的音乐，就为你播放？")
 			return
 		}
@@ -178,7 +178,7 @@ func avatarUploadUserGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" 获取用户信息错误！", err)
+		util.Debug(" 获取用户信息错误！ %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取用户信息！")
 		return
 	}

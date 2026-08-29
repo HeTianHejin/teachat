@@ -35,7 +35,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	s_u, err := sess.User()
 	if err != nil {
 		// 如果用户获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -55,7 +55,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
 		// 如果项目获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get project", uuid, err)
+		util.Debug(" Cannot get project uuid %s: %v", uuid, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -63,7 +63,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	pr_bean, err := fetchProjectBean(pr)
 	if err != nil {
 		// 如果项目bean获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get project bean", err)
+		util.Debug(" Cannot get project bean %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -71,7 +71,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	ob, err := pr.Objective()
 	if err != nil {
 		// 如果目标获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get objective", err)
+		util.Debug(" Cannot get objective %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -79,7 +79,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	ob_bean, err := fetchObjectiveBean(ob)
 	if err != nil {
 		// 如果目标bean获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get objective bean", err)
+		util.Debug(" Cannot get objective bean %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -91,14 +91,14 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "这个茶台尚未约茶。")
 			return
 		}
-		util.Debug(" Cannot get tea order by project id and objective id", pr.Id, ob.Id, err)
+		util.Debug(" Cannot get tea order by project id and objective id %d and %d: %v", pr.Id, ob.Id, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	// 获取预约记录的bean
 	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
 	if err != nil {
-		util.Debug(" Cannot get tea order bean", err)
+		util.Debug(" Cannot get tea order bean %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -106,7 +106,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	master, err := dao.GetUser(pr.UserId)
 	if err != nil {
 		// 如果用户获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get user", err)
+		util.Debug(" Cannot get user %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -114,7 +114,7 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 	admin, err := dao.GetUser(teaOrderBean.OperatorUser.Id)
 	if err != nil {
 		// 如果用户获取失败，则记录错误并返回错误信息
-		util.Debug(" Cannot get user", err)
+		util.Debug(" Cannot get user %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -159,7 +159,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 	// 获取当前用户
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 	}
 	// 如果当前用户不是验证者，则返回错误信息
@@ -169,101 +169,101 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 获取表单数据
 	if err := r.ParseForm(); err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	place_id_string := r.PostFormValue("place_id")
 	if place_id_string == "" {
-		util.Debug(" Cannot get place_id", err)
+		util.Debug(" Cannot get place_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	place_id, err := strconv.Atoi(place_id_string)
 	if err != nil {
-		util.Debug(" Cannot convert place_id", err)
+		util.Debug(" Cannot convert place_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	start_time_string := r.PostFormValue("start_time")
 	start_time, err := time.Parse("2006-01-02T15:04", start_time_string)
 	if err != nil {
-		util.Debug(" Cannot parse start_time", err)
+		util.Debug(" Cannot parse start_time %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	end_time_string := r.PostFormValue("end_time")
 	end_time, err := time.Parse("2006-01-02T15:04", end_time_string)
 	if err != nil {
-		util.Debug(" Cannot parse end_time", err)
+		util.Debug(" Cannot parse end_time %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	payer_user_id_string := r.PostFormValue("payer_user_id")
 	payer_user_id, err := strconv.Atoi(payer_user_id_string)
 	if err != nil {
-		util.Debug(" Cannot convert payer_user_id", err)
+		util.Debug(" Cannot convert payer_user_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	payer_team_id_string := r.PostFormValue("payer_team_id")
 	payer_team_id, err := strconv.Atoi(payer_team_id_string)
 	if err != nil {
-		util.Debug(" Cannot convert payer_team_id", err)
+		util.Debug(" Cannot convert payer_team_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	payer_family_id_string := r.PostFormValue("payer_family_id")
 	payer_family_id, err := strconv.Atoi(payer_family_id_string)
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	payee_user_id_string := r.PostFormValue("payee_user_id")
 	payee_user_id, err := strconv.Atoi(payee_user_id_string)
 	if err != nil {
-		util.Debug(" Cannot convert payee_user_id", err)
+		util.Debug(" Cannot convert payee_user_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	payee_team_id_string := r.PostFormValue("payee_team_id")
 	payee_team_id, err := strconv.Atoi(payee_team_id_string)
 	if err != nil {
-		util.Debug(" Cannot convert payee_team_id", err)
+		util.Debug(" Cannot convert payee_team_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	payee_family_id_string := r.PostFormValue("payee_family_id")
 	payee_family_id, err := strconv.Atoi(payee_family_id_string)
 	if err != nil {
-		util.Debug(" Cannot convert payee_family_id", err)
+		util.Debug(" Cannot convert payee_family_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 	}
 	note := r.PostFormValue("note")
 	project_id_string := r.PostFormValue("project_id")
 	project_id, err := strconv.Atoi(project_id_string)
 	if err != nil {
-		util.Debug(" Cannot convert project_id", err)
+		util.Debug(" Cannot convert project_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	// 获取项目
 	pr := dao.Project{Id: project_id}
 	if err = pr.Get(); err != nil {
-		util.Debug(" Cannot get project", err)
+		util.Debug(" Cannot get project %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	ob, err := pr.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective", err)
+		util.Debug(" Cannot get objective %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	teaOrder, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), pr.Id, ob.Id)
 	if err != nil {
-		util.Debug(" Cannot get tea order by project id and objective id", pr.Id, ob.Id, err)
+		util.Debug(" Cannot get tea order by project id and objective id %d and %d: %v", pr.Id, ob.Id, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -300,7 +300,7 @@ func NewAppointmentPost(w http.ResponseWriter, r *http.Request) {
 	// 保存预约记录
 	err = new_p_a.Create(r.Context())
 	if err != nil {
-		util.Debug(" Cannot save project appointment", err)
+		util.Debug(" Cannot save project appointment %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -319,7 +319,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user", err)
+		util.Debug(" Cannot get user %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -338,7 +338,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 			// 如果找不到预约记录，尝试用project uuid查找
 			pr = dao.Project{Uuid: uuid}
 			if err = pr.GetByUuid(); err != nil {
-				util.Debug(" Cannot get project by uuid", uuid, err)
+				util.Debug(" Cannot get project by uuid %s: %v", uuid, err)
 				report(w, s_u, "你好，茶博士找不到指定的茶台或预约记录。")
 				return
 			}
@@ -349,12 +349,12 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 					report(w, s_u, "这个茶台尚未约茶。")
 					return
 				}
-				util.Debug(" Cannot get appointment by project id", pr.Id, err)
+				util.Debug(" Cannot get appointment by project id %d: %v", pr.Id, err)
 				report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 				return
 			}
 		} else {
-			util.Debug(" Cannot get appointment by uuid", uuid, err)
+			util.Debug(" Cannot get appointment by uuid %s: %v", uuid, err)
 			report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 			return
 		}
@@ -364,7 +364,7 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 		// 获取项目信息
 		pr = dao.Project{Id: pr_appointment.ProjectId}
 		if err = pr.Get(); err != nil {
-			util.Debug(" Cannot get project", pr_appointment.ProjectId, err)
+			util.Debug(" Cannot get project %d: %v", pr_appointment.ProjectId, err)
 			report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 			return
 		}
@@ -372,14 +372,14 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 
 	pr_bean, err := fetchProjectBean(pr)
 	if err != nil {
-		util.Debug(" Cannot get project bean", err)
+		util.Debug(" Cannot get project bean %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 
 	p_a_bean, err := fetchAppointmentBean(pr_appointment)
 	if err != nil {
-		util.Debug(" Cannot fetch appointment bean", err)
+		util.Debug(" Cannot fetch appointment bean %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -387,13 +387,13 @@ func AppointmentDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取目标
 	ob, err := pr.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective", err)
+		util.Debug(" Cannot get objective %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	ob_bean, err := fetchObjectiveBean(ob)
 	if err != nil {
-		util.Debug(" Cannot get objective bean", err)
+		util.Debug(" Cannot get objective bean %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -418,7 +418,7 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user", err)
+		util.Debug(" Cannot get user %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -436,7 +436,7 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士找不到指定的预约记录。")
 			return
 		}
-		util.Debug(" Cannot get appointment", uuid, err)
+		util.Debug(" Cannot get appointment uuid %s: %v", uuid, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -465,21 +465,21 @@ func AppointmentAccept(w http.ResponseWriter, r *http.Request) {
 	pr_appointment.UpdatedAt = now
 
 	if err = pr_appointment.Update(r.Context()); err != nil {
-		util.Debug(" Cannot update appointment status", err)
+		util.Debug(" Cannot update appointment status %v", err)
 		report(w, s_u, "你好，茶博士墨水不够，未能确认约茶。")
 		return
 	}
 	// 更新项目状态为已约茶
 	pr := dao.Project{Id: pr_appointment.ProjectId}
 	if err = pr.Get(); err != nil {
-		util.Debug(" Cannot get project", pr_appointment.ProjectId, err)
+		util.Debug(" Cannot get project %d: %v", pr_appointment.ProjectId, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	} else {
 		pr.Status = dao.ProjectStatusHotTea
 
 		if err = pr.Update(); err != nil {
-			util.Debug(" Cannot update project status", err)
+			util.Debug(" Cannot update project status %v", err)
 			report(w, s_u, "你好，茶博士墨水不够，未能确认约茶。")
 			return
 		}
@@ -499,7 +499,7 @@ func AppointmentReject(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user", err)
+		util.Debug(" Cannot get user %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -517,7 +517,7 @@ func AppointmentReject(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士找不到指定的预约记录。")
 			return
 		}
-		util.Debug(" Cannot get appointment", uuid, err)
+		util.Debug(" Cannot get appointment uuid %s: %v", uuid, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -540,7 +540,7 @@ func AppointmentReject(w http.ResponseWriter, r *http.Request) {
 	pr_appointment.UpdatedAt = now
 
 	if err = pr_appointment.Update(r.Context()); err != nil {
-		util.Debug(" Cannot update appointment status", err)
+		util.Debug(" Cannot update appointment status %v", err)
 		report(w, s_u, "你好，茶博士墨水不够，未能拒绝约茶。")
 		return
 	}

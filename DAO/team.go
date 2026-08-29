@@ -1573,7 +1573,7 @@ func IsVerifier(userId int) bool {
 	err := DB.QueryRow(query, GroupIdVerifier, userId,
 		TeamMemberStatusActive, GroupMemberStatusActive).Scan(&count)
 	if err != nil {
-		util.Debug(" Cannot check verifier group membership", err)
+		util.Debug(" Cannot check verifier group membership %v", err)
 		return false
 	}
 	return count > 0

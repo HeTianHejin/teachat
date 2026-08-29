@@ -16,7 +16,7 @@ func createAndSendAcceptNotification(objectId int, objectType int, excludeUserId
 		ObjectType: objectType,
 	}
 	if err := aO.Create(); err != nil {
-		util.Debug("Cannot create accept_object given objectId", objectId)
+		util.Debug("Cannot create accept_object given objectId %v", objectId)
 		return fmt.Errorf("创建AcceptObject失败: %w", err)
 	}
 
@@ -43,7 +43,7 @@ func acceptNewObjective(objectId int) (*dao.Objective, error) {
 		Id: objectId,
 	}
 	if err := ob.Get(); err != nil {
-		util.Debug("Cannot get objective", objectId, err)
+		util.Debug("Cannot get objective %v", err)
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说没有找到新茶茶叶的资料未必是怪事。")
 	}
 	// 检查当前茶围的状态
@@ -57,7 +57,7 @@ func acceptNewObjective(objectId int) (*dao.Objective, error) {
 	}
 
 	if err := ob.UpdateClass(); err != nil {
-		util.Debug("Cannot update ob class", objectId, err)
+		util.Debug("Cannot update ob class %v", err)
 		return nil, errors.New("你好，一畦春韭绿，十里稻花香。")
 	}
 	return &ob, nil
@@ -69,7 +69,7 @@ func acceptNewProject(objectId int) error {
 		Id: objectId,
 	}
 	if err := pr.Get(); err != nil {
-		util.Debug("Cannot get project", objectId, err)
+		util.Debug("Cannot get project %v", err)
 		return errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 	}
 
@@ -83,7 +83,7 @@ func acceptNewProject(objectId int) error {
 	}
 
 	if err := pr.UpdateClass(); err != nil {
-		util.Debug("Cannot update pr class", objectId, err)
+		util.Debug("Cannot update pr class %v", err)
 		return errors.New("你好，一畦春韭绿，十里稻花香。")
 	}
 	return nil
@@ -147,7 +147,7 @@ func acceptNewDraftPost(objectId int) (*dao.Post, error) {
 func acceptNewTeam(objectId int) (*dao.Team, error) {
 	t := dao.Team{Id: objectId}
 	if err := t.Get(); err != nil {
-		util.Debug("Cannot get team", objectId, err)
+		util.Debug("Cannot get team %v", err)
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说没有找到新茶茶叶的资料未必是怪事。")
 	}
 	switch t.Class {
@@ -159,13 +159,13 @@ func acceptNewTeam(objectId int) (*dao.Team, error) {
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 	}
 	if err := t.UpdateClass(); err != nil {
-		util.Debug("Cannot update t class", objectId, err)
+		util.Debug("Cannot update t class %v", err)
 		return nil, errors.New("你好，一畦春韭绿，十里稻花香。")
 	}
 
 	// 确保团队茶叶账户存在
 	if err := dao.EnsureTeaTeamAccountExists(t.Id); err != nil {
-		util.Debug("Cannot ensure team tea account exists", objectId, err)
+		util.Debug("Cannot ensure team tea account exists %v", err)
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说团队茶叶账户准备失败。")
 	}
 
@@ -176,7 +176,7 @@ func acceptNewTeam(objectId int) (*dao.Team, error) {
 func acceptNewGroup(objectId int) (*dao.Group, error) {
 	g := dao.Group{Id: objectId}
 	if err := g.Get(); err != nil {
-		util.Debug("Cannot get group", objectId, err)
+		util.Debug("Cannot get group %v", err)
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说没有找到新茶茶叶的资料未必是怪事。")
 	}
 	switch g.Class {
@@ -188,9 +188,7 @@ func acceptNewGroup(objectId int) (*dao.Group, error) {
 		return nil, errors.New("你好，茶博士失魂鱼，竟然说有时找茶叶也是一种修养的过程。")
 	}
 	if err := g.Update(); err != nil {
-		util.Debug("Cannot update g class", objectId,
-
-			err)
+		util.Debug("Cannot update g class %v", err)
 		return nil, errors.New("你好，一畦春韭绿，十里稻花香。")
 	}
 	return &g, nil

@@ -19,7 +19,7 @@ func LoginGet(w http.ResponseWriter, r *http.Request) {
 
 	err := r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 	}
 	// 读取用户提交的，点击‘登船’时所在页面资料，以便checkin成功时回到原页面，改善体验
 	footprint := r.FormValue("footprint")
@@ -47,7 +47,7 @@ func SignupGet(w http.ResponseWriter, r *http.Request) {
 func SignupPost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 	}
 	s_u := dao.UserUnknown
 	// 读取用户提交的资料
@@ -78,7 +78,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	// 注册时生成哈希(bcrypt)密码，而不是存储明文密码(kimi推荐)
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
-		util.Debug(" Cannot hash password", err)
+		util.Debug(" Cannot hash password %v", err)
 		report(w, s_u, "你好，茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -114,7 +114,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	}
 	// 存储新用户（测试时不作邮箱有效性检查，直接激活账户）
 	if err := newU.Create(); err != nil {
-		util.Error(" Cannot create user id %d", newU.Id, err)
+		util.Error(" Cannot create user id %v", err)
 		report(w, s_u, "你好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -126,7 +126,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		Status: dao.TeamMemberStatusActive,
 	}
 	if err = team_member.Create(); err != nil {
-		util.Debug(" Cannot create default_free team_member", err)
+		util.Debug(" Cannot create default_free team_member %v", err)
 		report(w, s_u, "你好，满头大汗的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -136,14 +136,14 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		TeamId: dao.TeamIdFreelancer,
 	}
 	if err = udt.Create(); err != nil {
-		util.Debug(" Cannot create default team", err)
+		util.Debug(" Cannot create default team %v", err)
 		report(w, s_u, "你好，茶博士因摸不到超高度近视眼镜，导致注册失败，请确认情况后重试。")
 		return
 	}
 
 	// 自动创建用户星茶账户
 	if err := dao.TeaUserEnsureAccountExists(newU.Id); err != nil {
-		util.Debug(" Cannot create tea account for user", err)
+		util.Debug(" Cannot create tea account for user %v", err)
 		report(w, newU, "你好，茶博士因找不到星茶账户登记本，导致注册失败，请确认情况后重试。")
 		return
 	}
@@ -168,7 +168,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 	s_u := dao.UserUnknown
 	err := r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士正在为你服务的路上努力，请稍安勿躁。")
 		return
 	}
@@ -208,7 +208,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 			// 创建新的会话
 			session, err := s_u.CreateSession()
 			if err != nil {
-				util.Debug(" Cannot create session", err)
+				util.Debug(" Cannot create session %v", err)
 				report(w, s_u, "你好，茶博士因找不到笔导致登船验证失败，请确认情况后重试。")
 				return
 			}
@@ -240,7 +240,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			// 密码不匹配
-			util.Debug("failed to authenticate user", "userID", s_u.Id, "email", s_u.Email, "error", err)
+			util.Debug("failed to authenticate user %v", err)
 			s_u = dao.UserUnknown
 			report(w, s_u, "闷头喝茶的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 			return
@@ -265,7 +265,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("_cookie")
 	if err != nil {
 		if err != http.ErrNoCookie {
-			util.Debug(operation, "获取Cookie失败", err)
+			util.Debug(operation+"获取Cookie失败 %v", err)
 		}
 		// 无Cookie直接重定向
 		http.Redirect(w, r, "/v1/", http.StatusFound)
@@ -273,7 +273,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if cookie.Value == "" {
-		util.Warning(operation, "空Cookie值")
+		util.Warning(operation + "空Cookie值")
 		http.Redirect(w, r, "/v1/", http.StatusFound)
 		return
 	}
@@ -282,13 +282,13 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	sess := dao.Session{Uuid: cookie.Value}
 	valid, err := sess.Check()
 	if err != nil {
-		util.Debug(operation, "检查会话失败", "uuid", cookie.Value, "error", err)
+		util.Debug(operation+"检查会话失败 %v", err)
 		report(w, dao.UserUnknown, "你好，茶博士因找不到资料导致登出失败，请确认情况后重试。")
 		return
 	}
 
 	if !valid {
-		util.Warning(operation, "无效会话", "uuid", cookie.Value)
+		util.Warning(operation + "无效会话")
 		clearSessionCookie(w)
 		http.Redirect(w, r, "/v1/", http.StatusFound)
 		return
@@ -296,7 +296,7 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 	// 3. 删除会话
 	if err := sess.Delete(); err != nil {
-		util.Debug(operation, "删除会话失败", "uuid", cookie.Value, "error", err)
+		util.Debug(operation+"删除会话失败 %v", err)
 		report(w, dao.UserUnknown, "你好，茶博士因找不到笔导致登出失败，请确认情况后重试。")
 		return
 	}

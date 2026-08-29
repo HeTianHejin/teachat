@@ -20,7 +20,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
@@ -36,7 +36,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		// 通过消息盒子UUID获取
 		err = messageBox.GetMessageBoxByUUID(uuid)
 		if err != nil {
-			util.Debug(" Cannot get message box by uuid", err)
+			util.Debug(" Cannot get message box by uuid %v", err)
 			report(w, s_u, "你好，茶博士未能找到这个消息盒子，请稍后再试。")
 			return
 		}
@@ -45,7 +45,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		if messageBox.Type == dao.MessageBoxTypeTeam {
 			team, err = dao.GetTeam(messageBox.ObjectId)
 			if err != nil {
-				util.Debug(" Cannot get team by id", err)
+				util.Debug(" Cannot get team by id %v", err)
 				report(w, s_u, "你好，茶博士未能找到关联的团队，请稍后再试。")
 				return
 			}
@@ -57,7 +57,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		// 通过团队UUID获取
 		team, err = dao.GetTeamByUUID(team_uuid)
 		if err != nil {
-			util.Debug(" Cannot get team by uuid", err)
+			util.Debug(" Cannot get team by uuid %v", err)
 			report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
 			return
 		}
@@ -65,7 +65,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		// 获取或创建团队消息盒子（使用安全方法防止并发重复）
 		err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 		if err != nil {
-			util.Debug(" Cannot get or create message box", err)
+			util.Debug(" Cannot get or create message box %v", err)
 			report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
 			return
 		}
@@ -79,7 +79,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 	isCoreMember := false
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.Debug(" Cannot get team core members", err)
+		util.Debug(" Cannot get team core members %v", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 		return
 	}
@@ -96,7 +96,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 		// 检查普通成员
 		teamNormalMembers, err := team.NormalMembers()
 		if err != nil {
-			util.Debug(" Cannot get team normal members", err)
+			util.Debug(" Cannot get team normal members %v", err)
 			report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 			return
 		}
@@ -118,7 +118,7 @@ func MessageBoxDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取消息列表（根据用户权限过滤）
 	messages, err := messageBox.GetMessagesForUser(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot get messages", err)
+		util.Debug(" Cannot get messages %v", err)
 		report(w, s_u, "你好，茶博士未能获取消息列表，请稍后再试。")
 		return
 	}
@@ -154,7 +154,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
@@ -175,7 +175,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 	var message dao.Message
 	err = message.GetMessageById(id)
 	if err != nil {
-		util.Debug(" Cannot get message by id", err)
+		util.Debug(" Cannot get message by id %v", err)
 		report(w, s_u, "你好，茶博士未能找到这条消息，请稍后再试。")
 		return
 	}
@@ -184,7 +184,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 	var messageBox dao.MessageBox
 	err = messageBox.GetMessageBoxById(message.MessageBoxId)
 	if err != nil {
-		util.Debug(" Cannot get message box", err)
+		util.Debug(" Cannot get message box %v", err)
 		report(w, s_u, "你好，茶博士未能找到消息盒子，请稍后再试。")
 		return
 	}
@@ -193,7 +193,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 	if messageBox.Type == dao.MessageBoxTypeTeam {
 		team, err = dao.GetTeam(messageBox.ObjectId)
 		if err != nil {
-			util.Debug(" Cannot get team by id", err)
+			util.Debug(" Cannot get team by id %v", err)
 			report(w, s_u, "你好，茶博士未能找到关联的团队，请稍后再试。")
 			return
 		}
@@ -207,7 +207,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 	isCoreMember := false
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.Debug(" Cannot get team core members", err)
+		util.Debug(" Cannot get team core members %v", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 		return
 	}
@@ -224,7 +224,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 		// 检查普通成员
 		teamNormalMembers, err := team.NormalMembers()
 		if err != nil {
-			util.Debug(" Cannot get team normal members", err)
+			util.Debug(" Cannot get team normal members %v", err)
 			report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 			return
 		}
@@ -259,7 +259,7 @@ func MessageDelete(w http.ResponseWriter, r *http.Request) {
 	// 删除消息
 	err = message.SoftDelete()
 	if err != nil {
-		util.Debug(" Cannot delete message", err)
+		util.Debug(" Cannot delete message %v", err)
 		report(w, s_u, "你好，茶博士未能删除消息，请稍后再试。")
 		return
 	}
@@ -279,7 +279,7 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
@@ -300,7 +300,7 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 	var message dao.Message
 	err = message.GetMessageById(id)
 	if err != nil {
-		util.Debug(" Cannot get message by id", err)
+		util.Debug(" Cannot get message by id %v", err)
 		report(w, s_u, "你好，茶博士未能找到这条消息，请稍后再试。")
 		return
 	}
@@ -316,7 +316,7 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 	var messageBox dao.MessageBox
 	err = messageBox.GetMessageBoxById(message.MessageBoxId)
 	if err != nil {
-		util.Debug(" Cannot get message box", err)
+		util.Debug(" Cannot get message box %v", err)
 		report(w, s_u, "你好，茶博士未能找到消息盒子，请稍后再试。")
 		return
 	}
@@ -325,7 +325,7 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 	if messageBox.Type == dao.MessageBoxTypeTeam {
 		team, err := dao.GetTeam(messageBox.ObjectId)
 		if err != nil {
-			util.Debug(" Cannot get team", err)
+			util.Debug(" Cannot get team %v", err)
 			report(w, s_u, "你好，茶博士未能找到关联的团队，请稍后再试。")
 			return
 		}
@@ -362,7 +362,7 @@ func MessageRead(w http.ResponseWriter, r *http.Request) {
 	// 标记消息为已读
 	err = message.UpdateRead()
 	if err != nil {
-		util.Debug(" Cannot update message read status", err)
+		util.Debug(" Cannot update message read status %v", err)
 		report(w, s_u, "你好，茶博士未能更新消息状态，请稍后再试。")
 		return
 	}
@@ -399,7 +399,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
@@ -427,7 +427,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	// 获取团队信息
 	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(" Cannot get team by uuid", err)
+		util.Debug(" Cannot get team by uuid %v", err)
 		report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
 		return
 	}
@@ -435,7 +435,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	// 检查用户是否为团队成员
 	isMember, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check team member", err)
+		util.Debug(" Cannot check team member %v", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 		return
 	}
@@ -448,7 +448,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	// 获取接收者用户信息
 	receiver, err := dao.GetUser(receiver_id)
 	if err != nil {
-		util.Debug(" Cannot get receiver by id", err)
+		util.Debug(" Cannot get receiver by id %v", err)
 		report(w, s_u, "你好，茶博士未能找到接收者，请稍后再试。")
 		return
 	}
@@ -456,7 +456,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	// 检查接收者是否为团队成员
 	isReceiverMember, err := team.IsActiveMember(receiver_id)
 	if err != nil {
-		util.Debug(" Cannot check receiver member", err)
+		util.Debug(" Cannot check receiver member %v", err)
 		report(w, s_u, "你好，茶博士未能获取接收者信息，请稍后再试。")
 		return
 	}
@@ -470,7 +470,7 @@ func messageTeamSendPage(w http.ResponseWriter, r *http.Request) {
 	var messageBox dao.MessageBox
 	err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 	if err != nil {
-		util.Debug(" Cannot get or create message box", err)
+		util.Debug(" Cannot get or create message box %v", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
 		return
 	}
@@ -500,7 +500,7 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
@@ -524,7 +524,7 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	// 获取团队信息
 	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(" Cannot get team by uuid", err)
+		util.Debug(" Cannot get team by uuid %v", err)
 		report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
 		return
 	}
@@ -532,13 +532,13 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	// 检查发送和接收者是否为团队成员
 	isMemberS, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check team member", err)
+		util.Debug(" Cannot check team member %v", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 		return
 	}
 	isMemberR, err := team.IsActiveMember(receiver_id)
 	if err != nil {
-		util.Debug(" Cannot check receiver member", err)
+		util.Debug(" Cannot check receiver member %v", err)
 		report(w, s_u, "你好，茶博士未能获取接收者信息，请稍后再试。")
 		return
 	}
@@ -552,7 +552,7 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 	var messageBox dao.MessageBox
 	err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 	if err != nil {
-		util.Debug(" Cannot get or create message box", err)
+		util.Debug(" Cannot get or create message box %v", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
 		return
 	}
@@ -571,7 +571,7 @@ func messageTeamSendPost(w http.ResponseWriter, r *http.Request) {
 
 	err = message.Create()
 	if err != nil {
-		util.Debug(" Cannot create message", err)
+		util.Debug(" Cannot create message %v", err)
 		report(w, s_u, "你好，茶博士未能发送纸条，请稍后再试。")
 		return
 	}
@@ -606,7 +606,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
@@ -622,7 +622,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	// 获取团队信息
 	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(" Cannot get team by uuid", err)
+		util.Debug(" Cannot get team by uuid %v", err)
 		report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
 		return
 	}
@@ -636,7 +636,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	// 检查用户是否为团队成员（团队成员不需要通过这个页面发送布告，他们有其他方式）
 	isMember, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check team member", err)
+		util.Debug(" Cannot check team member %v", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 		return
 	}
@@ -651,7 +651,7 @@ func messageAnnouncementSendPage(w http.ResponseWriter, r *http.Request) {
 	var messageBox dao.MessageBox
 	err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 	if err != nil {
-		util.Debug(" Cannot get or create message box", err)
+		util.Debug(" Cannot get or create message box %v", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
 		return
 	}
@@ -686,7 +686,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士说久仰大名，请问大名是谁？")
 		return
 	}
@@ -715,7 +715,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	// 获取团队信息
 	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(" Cannot get team by uuid", err)
+		util.Debug(" Cannot get team by uuid %v", err)
 		report(w, s_u, "你好，茶博士未能找到这个团队，请稍后再试。")
 		return
 	}
@@ -729,7 +729,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	// 检查用户是否为团队成员
 	isMember, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check team member", err)
+		util.Debug(" Cannot check team member %v", err)
 		report(w, s_u, "你好，茶博士未能获取团队成员信息，请稍后再试。")
 		return
 	}
@@ -744,7 +744,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	var messageBox dao.MessageBox
 	err = messageBox.GetOrCreateMessageBoxWithContext(dao.MessageBoxTypeTeam, team.Id, r.Context())
 	if err != nil {
-		util.Debug(" Cannot get or create message box", err)
+		util.Debug(" Cannot get or create message box %v", err)
 		report(w, s_u, "你好，茶博士未能获取或创建消息盒子，请稍后再试。")
 		return
 	}
@@ -770,7 +770,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 
 	err = message.Create()
 	if err != nil {
-		util.Debug(" Cannot create announcement message", err)
+		util.Debug(" Cannot create announcement message %v", err)
 		report(w, s_u, "你好，茶博士未能发送布告，请稍后再试。")
 		return
 	}
@@ -779,7 +779,7 @@ func messageAnnouncementSendPost(w http.ResponseWriter, r *http.Request) {
 	messageBox.Count++
 	err = messageBox.Update()
 	if err != nil {
-		util.Debug(" Cannot update message box", err)
+		util.Debug(" Cannot update message box %v", err)
 	}
 
 	// 显示成功消息并重定向

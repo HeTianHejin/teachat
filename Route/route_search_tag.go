@@ -45,7 +45,7 @@ func SearchByTag(w http.ResponseWriter, r *http.Request) {
 		// 搜索集团
 		groups, err := dao.SearchGroupsByTag(tag)
 		if err != nil {
-			util.Debug("Cannot search groups by tag", err)
+			util.Debug("Cannot search groups by tag %v", err)
 		}
 		// 转换为GroupBean
 		groupBeans := make([]dao.GroupBean, 0, len(groups))
@@ -63,12 +63,12 @@ func SearchByTag(w http.ResponseWriter, r *http.Request) {
 		// 默认搜索团队
 		teams, err := dao.SearchTeamsByTag(tag)
 		if err != nil {
-			util.Debug("Cannot search teams by tag", err)
+			util.Debug("Cannot search teams by tag %v", err)
 		}
 		// 转换为TeamBean
 		teamBeans, err := fetchTeamBeanSlice(teams)
 		if err != nil {
-			util.Debug("Cannot fetch team bean slice", err)
+			util.Debug("Cannot fetch team bean slice %v", err)
 		}
 		pageData.TeamBeanSlice = teamBeans
 	}

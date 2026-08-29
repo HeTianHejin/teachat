@@ -28,7 +28,7 @@ func EvidenceNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -51,7 +51,7 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -62,7 +62,7 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		util.Debug("Cannot parse multipart form", err)
+		util.Debug("Cannot parse multipart form %v", err)
 		report(w, s_u, "表单数据解析失败")
 		return
 	}
@@ -98,7 +98,7 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 		// 保存文件
 		filePath, fileSize, err := saveUploadedFile(file, header, s_u.Id)
 		if err != nil {
-			util.Debug("Cannot save uploaded file", err)
+			util.Debug("Cannot save uploaded file %v", err)
 			report(w, s_u, "文件上传失败")
 			return
 		}
@@ -113,7 +113,7 @@ func EvidenceNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := evidence.Create(r.Context()); err != nil {
-		util.Debug("Cannot create evidence", err)
+		util.Debug("Cannot create evidence %v", err)
 		report(w, s_u, "创建证据记录失败")
 		return
 	}
@@ -141,7 +141,7 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -160,7 +160,7 @@ func EvidenceDetailGet(w http.ResponseWriter, r *http.Request) {
 
 	evidence := dao.Evidence{Id: id}
 	if err := evidence.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get evidence by id", id, err)
+		util.Debug("Cannot get evidence by id %v", err)
 		report(w, s_u, "凭证不存在")
 		return
 	}

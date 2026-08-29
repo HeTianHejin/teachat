@@ -18,7 +18,7 @@ func HandleNewSkill(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get s_u from session", err)
+		util.Debug("cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -45,7 +45,7 @@ func HandleSkillDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get s_u from session", err)
+		util.Debug("cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -65,7 +65,7 @@ func HandleSkillsUserList(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get s_u from session", err)
+		util.Debug("cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -77,7 +77,7 @@ func SkillNewGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取用户所在的团队
 	userTeams, err := dao.GetUserSurvivalTeams(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug("cannot get s_u teams", err)
+		util.Debug("cannot get s_u teams %v", err)
 		userTeams = []dao.Team{} // 如果获取失败，使用空列表
 	}
 
@@ -142,7 +142,7 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := skill.Create(r.Context()); err != nil {
-		util.Debug("cannot create skill", err)
+		util.Debug("cannot create skill %v", err)
 		report(w, s_u, "创建技能记录失败，请重试。")
 		return
 	}
@@ -157,7 +157,7 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 			Status:  dao.NormalSkillUserStatus, // 默认中能状态
 		}
 		if err := skillUser.Create(r.Context()); err != nil {
-			util.Debug("cannot create skill s_u record", err)
+			util.Debug("cannot create skill s_u record %v", err)
 			// 不阻止流程，仅记录错误
 		}
 	}
@@ -186,7 +186,7 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 			Status:  dao.NormalSkillTeamStatus, // 默认正常状态
 		}
 		if err := skillTeam.Create(r.Context()); err != nil {
-			util.Debug("cannot create skill team record", err)
+			util.Debug("cannot create skill team record %v", err)
 			// 不阻止流程，仅记录错误
 		}
 	}
@@ -234,7 +234,7 @@ func SkillDetailGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := skill.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("cannot get skill by id/uuid", skill.Id, skill.Uuid, err)
+		util.Debug("cannot get skill by id/uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -254,13 +254,13 @@ func SkillsUserListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 
 	// 确保用户拥有默认技能
 	if err := dao.EnsureDefaultSkills(s_u.Id, r.Context()); err != nil {
-		util.Debug("cannot ensure default skills for s_u:", s_u.Id, err)
+		util.Debug("cannot ensure default skills for s_u: %v", err)
 	}
 
 	// 获取SkillUserBean
 	skillUserBean, err := fetchSkillUserBean(s_u, r.Context())
 	if err != nil {
-		util.Debug("cannot fetch skill s_u bean:", s_u.Id, err)
+		util.Debug("cannot fetch skill s_u bean: %v", err)
 		report(w, s_u, "获取茶友技能列表失败，请重试。")
 		return
 	}
@@ -322,7 +322,7 @@ func HandleSkillUserEdit(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get s_u from session", err)
+		util.Debug("cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -353,7 +353,7 @@ func SkillUserEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取技能用户记录
 	var skillUser dao.SkillUser
 	if err := skillUser.GetById(id, r.Context()); err != nil {
-		util.Debug("cannot get skill s_u by id", id, err)
+		util.Debug("cannot get skill s_u by id %v", err)
 		report(w, s_u, "技能记录不存在。")
 		return
 	}
@@ -385,7 +385,7 @@ func SkillUserEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	var skill dao.Skill
 	skill.Id = skillUser.SkillId
 	if err := skill.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("cannot get skill by id", skillUser.SkillId, err)
+		util.Debug("cannot get skill by id %v", err)
 		report(w, s_u, "技能信息获取失败。")
 		return
 	}
@@ -421,7 +421,7 @@ func SkillUserEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取原始技能用户记录
 	var skillUser dao.SkillUser
 	if err := skillUser.GetById(id, r.Context()); err != nil {
-		util.Debug("cannot get skill s_u by id", id, err)
+		util.Debug("cannot get skill s_u by id %v", err)
 		report(w, s_u, "技能记录不存在。")
 		return
 	}
@@ -465,7 +465,7 @@ func SkillUserEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	skillUser.Status = dao.SkillUserStatus(status)
 
 	if err := skillUser.Update(); err != nil {
-		util.Debug("cannot update skill s_u", err)
+		util.Debug("cannot update skill s_u %v", err)
 		report(w, s_u, "更新技能记录失败，请重试。")
 		return
 	}
@@ -491,7 +491,7 @@ func HandleSkillsTeamList(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get s_u from session", err)
+		util.Debug("cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -509,7 +509,7 @@ func SkillsTeamListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取团队信息
 	team, err := dao.GetTeamByUUID(uuidStr)
 	if err != nil {
-		util.Debug("cannot get team by uuid", uuidStr, err)
+		util.Debug("cannot get team by uuid %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
@@ -524,7 +524,7 @@ func SkillsTeamListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取SkillTeamBean
 	skillTeamBean, err := fetchSkillTeamBean(team, r.Context())
 	if err != nil {
-		util.Debug("cannot fetch skill team bean:", team.Id, err)
+		util.Debug("cannot fetch skill team bean: %v", err)
 		report(w, s_u, "获取团队技能列表失败，请重试。")
 		return
 	}
@@ -588,7 +588,7 @@ func HandleSkillTeamEdit(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get s_u from session", err)
+		util.Debug("cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -619,7 +619,7 @@ func SkillTeamEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取团队技能记录
 	var skillTeam dao.SkillTeam
 	if err := skillTeam.GetById(id, r.Context()); err != nil {
-		util.Debug("cannot get skill team by id", id, err)
+		util.Debug("cannot get skill team by id %v", err)
 		report(w, s_u, "技能记录不存在。")
 		return
 	}
@@ -642,7 +642,7 @@ func SkillTeamEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	var skill dao.Skill
 	skill.Id = skillTeam.SkillId
 	if err := skill.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("cannot get skill by id", skillTeam.SkillId, err)
+		util.Debug("cannot get skill by id %v", err)
 		report(w, s_u, "技能信息获取失败。")
 		return
 	}
@@ -680,7 +680,7 @@ func SkillTeamEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取原始团队技能记录
 	var skillTeam dao.SkillTeam
 	if err := skillTeam.GetById(id, r.Context()); err != nil {
-		util.Debug("cannot get skill team by id", id, err)
+		util.Debug("cannot get skill team by id %v", err)
 		report(w, s_u, "技能记录不存在。")
 		return
 	}
@@ -716,7 +716,7 @@ func SkillTeamEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	skillTeam.Status = dao.SkillTeamStatus(status)
 
 	if err := skillTeam.Update(); err != nil {
-		util.Debug("cannot update skill team", err)
+		util.Debug("cannot update skill team %v", err)
 		report(w, s_u, "更新技能记录失败，请重试。")
 		return
 	}

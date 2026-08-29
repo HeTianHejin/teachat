@@ -29,7 +29,7 @@ func VerifierWorkspaceGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -45,35 +45,35 @@ func VerifierWorkspaceGet(w http.ResponseWriter, r *http.Request) {
 	// 获取各状态的茶订单数量
 	pendingCount, err := dao.GetTeaOrderCountByStatus(ctx, dao.TeaOrderStatusPending)
 	if err != nil {
-		util.Debug("Cannot get pending tea order count", err)
+		util.Debug("Cannot get pending tea order count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取待审批订单数量。请稍后再试。")
 		return
 	}
 
 	activeCount, err := dao.GetTeaOrderCountByStatus(ctx, dao.TeaOrderStatusActive)
 	if err != nil {
-		util.Debug("Cannot get active tea order count", err)
+		util.Debug("Cannot get active tea order count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取进行中订单数量。请稍后再试。")
 		return
 	}
 
 	pauseCount, err := dao.GetTeaOrderCountByStatus(ctx, dao.TeaOrderStatusPause)
 	if err != nil {
-		util.Debug("Cannot get pause tea order count", err)
+		util.Debug("Cannot get pause tea order count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取暂停订单数量。请稍后再试。")
 		return
 	}
 
 	cancelledCount, err := dao.GetTeaOrderCountByStatus(ctx, dao.TeaOrderStatusCancelled)
 	if err != nil {
-		util.Debug("Cannot get cancelled tea order count", err)
+		util.Debug("Cannot get cancelled tea order count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取已取消订单数量。请稍后再试。")
 		return
 	}
 
 	completedCount, err := dao.GetTeaOrderCountByStatus(ctx, dao.TeaOrderStatusCompleted)
 	if err != nil {
-		util.Debug("Cannot get completed tea order count", err)
+		util.Debug("Cannot get completed tea order count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取已完成订单数量。请稍后再试。")
 		return
 	}
@@ -81,28 +81,28 @@ func VerifierWorkspaceGet(w http.ResponseWriter, r *http.Request) {
 	// 获取各状态的茶订单列表（每页20条）
 	pendingOrders, err := dao.GetTeaOrdersByStatus(ctx, dao.TeaOrderStatusPending, 0, 20)
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Cannot get pending tea orders", err)
+		util.Debug("Cannot get pending tea orders %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取待审批订单。请稍后再试。")
 		return
 	}
 
 	activeOrders, err := dao.GetTeaOrdersByStatus(ctx, dao.TeaOrderStatusActive, 0, 20)
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Cannot get active tea orders", err)
+		util.Debug("Cannot get active tea orders %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取进行中订单。请稍后再试。")
 		return
 	}
 
 	cancelledOrders, err := dao.GetTeaOrdersByStatus(ctx, dao.TeaOrderStatusCancelled, 0, 20)
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Cannot get cancelled tea orders", err)
+		util.Debug("Cannot get cancelled tea orders %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取异常订单。请稍后再试。")
 		return
 	}
 
 	completedOrders, err := dao.GetTeaOrdersByStatus(ctx, dao.TeaOrderStatusCompleted, 0, 20)
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Cannot get completed tea orders", err)
+		util.Debug("Cannot get completed tea orders %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取已完成订单。请稍后再试。")
 		return
 	}
@@ -110,28 +110,28 @@ func VerifierWorkspaceGet(w http.ResponseWriter, r *http.Request) {
 	// 转换为TeaOrderBean
 	pendingOrderBeans, err := fetchTeaOrderBeanSlice(pendingOrders)
 	if err != nil {
-		util.Debug("Cannot convert pending orders to beans", err)
+		util.Debug("Cannot convert pending orders to beans %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备待审批订单数据。请稍后再试。")
 		return
 	}
 
 	activeOrderBeans, err := fetchTeaOrderBeanSlice(activeOrders)
 	if err != nil {
-		util.Debug("Cannot convert active orders to beans", err)
+		util.Debug("Cannot convert active orders to beans %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备进行中订单数据。请稍后再试。")
 		return
 	}
 
 	cancelledOrderBeans, err := fetchTeaOrderBeanSlice(cancelledOrders)
 	if err != nil {
-		util.Debug("Cannot convert cancelled orders to beans", err)
+		util.Debug("Cannot convert cancelled orders to beans %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备异常订单数据。请稍后再试。")
 		return
 	}
 
 	completedOrderBeans, err := fetchTeaOrderBeanSlice(completedOrders)
 	if err != nil {
-		util.Debug("Cannot convert completed orders to beans", err)
+		util.Debug("Cannot convert completed orders to beans %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备已完成订单数据。请稍后再试。")
 		return
 	}
@@ -176,7 +176,7 @@ func VerifierOrderApproveGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -196,7 +196,7 @@ func VerifierOrderApproveGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -210,7 +210,7 @@ func VerifierOrderApproveGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单Bean
 	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
 	if err != nil {
-		util.Debug("Cannot convert tea order to bean", err)
+		util.Debug("Cannot convert tea order to bean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备茶订单数据。请稍后再试。")
 		return
 	}
@@ -239,7 +239,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -252,7 +252,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -272,7 +272,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -293,7 +293,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 	teaOrder.Status = dao.TeaOrderStatusActive
 
 	if err = teaOrder.Update(); err != nil {
-		util.Debug("Cannot update tea order", err)
+		util.Debug("Cannot update tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能更新茶订单。请稍后再试。")
 		return
 	}
@@ -309,7 +309,7 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 		WitnessAt:  approvalTime,
 	}
 	if err = witnessLog.Create(r.Context()); err != nil {
-		util.Debug("Cannot create witness log", err)
+		util.Debug("Cannot create witness log %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建见证日志。请稍后再试。")
 		return
 	}
@@ -328,32 +328,32 @@ func VerifierOrderApprovePost(w http.ResponseWriter, r *http.Request) {
 	} else if err == sql.ErrNoRows {
 		err = new_project_approved.Create()
 		if err != nil {
-			util.Debug("Cannot create project approved", err)
+			util.Debug("Cannot create project approved %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台。请稍后再试。")
 			return
 		}
 		// 填写入围茶台4或者2预设定茶议（步骤）曲
 		objective := &dao.Objective{Id: teaOrder.ObjectiveId}
 		if err = objective.Get(); err != nil {
-			util.Debug("Cannot get objective by id:", teaOrder.ObjectiveId, err)
+			util.Debug("Cannot get objective by id: %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能获取茶围信息。请稍后再试。")
 			return
 		}
 		project := &dao.Project{Id: teaOrder.ProjectId}
 		if err = project.Get(); err != nil {
-			util.Debug("Cannot get project by id:", teaOrder.ProjectId, err)
+			util.Debug("Cannot get project by id: %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能获取茶台信息。请稍后再试。")
 			return
 		}
 		// 根据objective的step_count字段决定创建4步茶议
 		if err = dao.CreateRequiredThreads(objective, project, s_u.Id, dao.Templates4step, r.Context()); err != nil {
-			util.Debug("Cannot create required threads for project approved", err)
+			util.Debug("Cannot create required threads for project approved %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能创建茶议。请稍后再试。")
 			return
 		}
 
 	} else {
-		util.Debug("Cannot get project approved", err)
+		util.Debug("Cannot get project approved %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台。请稍后再试。")
 		return
 	}
@@ -384,7 +384,7 @@ func VerifierOrderRejectGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -404,7 +404,7 @@ func VerifierOrderRejectGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -418,7 +418,7 @@ func VerifierOrderRejectGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单Bean
 	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
 	if err != nil {
-		util.Debug("Cannot convert tea order to bean", err)
+		util.Debug("Cannot convert tea order to bean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备茶订单数据。请稍后再试。")
 		return
 	}
@@ -447,7 +447,7 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -460,7 +460,7 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -480,7 +480,7 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -498,7 +498,7 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 	teaOrder.Status = dao.TeaOrderStatusCancelled
 
 	if err = teaOrder.Update(); err != nil {
-		util.Debug("Cannot update tea order", err)
+		util.Debug("Cannot update tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能更新茶订单。请稍后再试。")
 		return
 	}
@@ -514,7 +514,7 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 		WitnessAt:  time.Now(),
 	}
 	if err = witnessLog.Create(r.Context()); err != nil {
-		util.Debug("Cannot create witness log", err)
+		util.Debug("Cannot create witness log %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建见证日志。请稍后再试。")
 		return
 	}
@@ -522,7 +522,7 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 	// 退回托管预备金：获取所有托管记录，将星茶原路退回需求方和解题方团队
 	deposits, depositErr := dao.GetTeaOrderDepositsByTeaOrderId(teaOrder.Id)
 	if depositErr != nil {
-		util.Debug("Cannot get deposits for tea order", teaOrder.Id, depositErr)
+		util.Debug("Cannot get deposits for tea order id %d: %v", teaOrder.Id, depositErr)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取托管记录。请稍后再试。")
 		return
 	}
@@ -530,14 +530,14 @@ func VerifierOrderRejectPost(w http.ResponseWriter, r *http.Request) {
 		// 托管金转账已完成但记录状态可能未更新，先确保状态为已支付
 		if deposit.Status == dao.DepositStatusPendingPayment {
 			if err = deposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
-				util.Debug("Cannot update deposit status to paid before refund", deposit.Id, err)
+				util.Debug("Cannot update deposit status to paid before refund %v", err)
 				report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能更新托管状态(id=%d)，请稍后再试。", deposit.Id))
 				return
 			}
 		}
 		if err = deposit.Refund(s_u.Id); err != nil {
-			util.Debug("Cannot refund deposit", deposit.Id, err)
-			report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能退回托管预备金(id=%d)：%v", deposit.Id, err))
+			util.Debug("Cannot refund deposit id %d: %v", deposit.Id, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能退回托管预备金(id=%d): %v", deposit.Id, err)
 			return
 		}
 	}
@@ -568,7 +568,7 @@ func VerifierOrderPauseGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -588,7 +588,7 @@ func VerifierOrderPauseGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -602,7 +602,7 @@ func VerifierOrderPauseGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单Bean
 	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
 	if err != nil {
-		util.Debug("Cannot convert tea order to bean", err)
+		util.Debug("Cannot convert tea order to bean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备茶订单数据。请稍后再试。")
 		return
 	}
@@ -631,7 +631,7 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -644,7 +644,7 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -663,7 +663,7 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -678,7 +678,7 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 	teaOrder.Status = dao.TeaOrderStatusPause
 
 	if err = teaOrder.Update(); err != nil {
-		util.Debug("Cannot update tea order", err)
+		util.Debug("Cannot update tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能更新茶订单。请稍后再试。")
 		return
 	}
@@ -694,7 +694,7 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 		WitnessAt:  time.Now(),
 	}
 	if err = witnessLog.Create(r.Context()); err != nil {
-		util.Debug("Cannot create witness log", err)
+		util.Debug("Cannot create witness log %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建见证日志。请稍后再试。")
 		return
 	}
@@ -702,7 +702,7 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 	// 退回托管预备金：获取所有托管记录，将星茶原路退回需求方和解题方团队
 	deposits, depositErr := dao.GetTeaOrderDepositsByTeaOrderId(teaOrder.Id)
 	if depositErr != nil {
-		util.Debug("Cannot get deposits for tea order", teaOrder.Id, depositErr)
+		util.Debug("Cannot get deposits for tea order id %d: %v", teaOrder.Id, depositErr)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取托管记录。请稍后再试。")
 		return
 	}
@@ -710,14 +710,14 @@ func VerifierOrderPausePost(w http.ResponseWriter, r *http.Request) {
 		// 托管金转账已完成但记录状态可能未更新，先确保状态为已支付
 		if deposit.Status == dao.DepositStatusPendingPayment {
 			if err = deposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
-				util.Debug("Cannot update deposit status to paid before refund", deposit.Id, err)
+				util.Debug("Cannot update deposit status to paid before refund %v", err)
 				report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能更新托管状态(id=%d)，请稍后再试。", deposit.Id))
 				return
 			}
 		}
 		if err = deposit.Refund(s_u.Id); err != nil {
-			util.Debug("Cannot refund deposit", deposit.Id, err)
-			report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能退回托管预备金(id=%d)：%v", deposit.Id, err))
+			util.Debug("Cannot refund deposit id %d: %v", deposit.Id, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能退回托管预备金(id=%d): %v", deposit.Id, err)
 			return
 		}
 	}
@@ -748,7 +748,7 @@ func VerifierOrderCancelGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -768,7 +768,7 @@ func VerifierOrderCancelGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -782,7 +782,7 @@ func VerifierOrderCancelGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单Bean
 	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
 	if err != nil {
-		util.Debug("Cannot convert tea order to bean", err)
+		util.Debug("Cannot convert tea order to bean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备茶订单数据。请稍后再试。")
 		return
 	}
@@ -811,7 +811,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -824,7 +824,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -843,7 +843,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -861,7 +861,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 	teaOrder.Status = dao.TeaOrderStatusCancelled
 
 	if err = teaOrder.Update(); err != nil {
-		util.Debug("Cannot update tea order", err)
+		util.Debug("Cannot update tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能更新茶订单。请稍后再试。")
 		return
 	}
@@ -877,7 +877,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 		WitnessAt:  time.Now(),
 	}
 	if err = witnessLog.Create(r.Context()); err != nil {
-		util.Debug("Cannot create witness log", err)
+		util.Debug("Cannot create witness log %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建见证日志。请稍后再试。")
 		return
 	}
@@ -886,13 +886,13 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 	if originalStatus == dao.TeaOrderStatusActive {
 		project := &dao.Project{Id: teaOrder.ProjectId}
 		if err = project.Get(); err != nil {
-			util.Debug("Cannot get project", err)
+			util.Debug("Cannot get project %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能获取茶台信息。请稍后再试。")
 			return
 		}
 		project.Status = dao.ProjectStatusTeaCold
 		if err = project.Update(); err != nil {
-			util.Debug("Cannot update project", err)
+			util.Debug("Cannot update project %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能更新茶台状态。请稍后再试。")
 			return
 		}
@@ -901,7 +901,7 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 	// 退回托管预备金：获取所有托管记录，将星茶原路退回需求方和解题方团队
 	deposits, depositErr := dao.GetTeaOrderDepositsByTeaOrderId(teaOrder.Id)
 	if depositErr != nil {
-		util.Debug("Cannot get deposits for tea order", teaOrder.Id, depositErr)
+		util.Debug("Cannot get deposits for tea order id %d: %v", teaOrder.Id, depositErr)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取托管记录。请稍后再试。")
 		return
 	}
@@ -909,14 +909,14 @@ func VerifierOrderCancelPost(w http.ResponseWriter, r *http.Request) {
 		// 托管金转账已完成但记录状态可能未更新，先确保状态为已支付
 		if deposit.Status == dao.DepositStatusPendingPayment {
 			if err = deposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
-				util.Debug("Cannot update deposit status to paid before refund", deposit.Id, err)
+				util.Debug("Cannot update deposit status to paid before refund %v", err)
 				report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能更新托管状态(id=%d)，请稍后再试。", deposit.Id))
 				return
 			}
 		}
 		if err = deposit.Refund(s_u.Id); err != nil {
-			util.Debug("Cannot refund deposit", deposit.Id, err)
-			report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能退回托管预备金(id=%d)：%v", deposit.Id, err))
+			util.Debug("Cannot refund deposit id %d: %v", deposit.Id, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能退回托管预备金(id=%d): %v", deposit.Id, err)
 			return
 		}
 	}
@@ -947,7 +947,7 @@ func VerifierOrderForfeitGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -967,7 +967,7 @@ func VerifierOrderForfeitGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -983,7 +983,7 @@ func VerifierOrderForfeitGet(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单Bean
 	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
 	if err != nil {
-		util.Debug("Cannot convert tea order to bean", err)
+		util.Debug("Cannot convert tea order to bean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备茶订单数据。请稍后再试。")
 		return
 	}
@@ -1012,7 +1012,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -1025,7 +1025,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -1045,7 +1045,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -1069,7 +1069,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 	teaOrder.Status = dao.TeaOrderStatusCancelled
 
 	if err = teaOrder.Update(); err != nil {
-		util.Debug("Cannot update tea order", err)
+		util.Debug("Cannot update tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能更新茶订单。请稍后再试。")
 		return
 	}
@@ -1085,7 +1085,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 		WitnessAt:  forfeitTime,
 	}
 	if err = witnessLog.Create(r.Context()); err != nil {
-		util.Debug("Cannot create witness log", err)
+		util.Debug("Cannot create witness log %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建见证日志。请稍后再试。")
 		return
 	}
@@ -1094,7 +1094,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 	if originalStatus == dao.TeaOrderStatusActive || originalStatus == dao.TeaOrderStatusPause {
 		project := &dao.Project{Id: teaOrder.ProjectId}
 		if err = project.Get(); err != nil {
-			util.Debug("Cannot get project", err)
+			util.Debug("Cannot get project %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能获取茶台信息。请稍后再试。")
 			return
 		}
@@ -1102,7 +1102,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 		if project.Status != dao.ProjectStatusTeaCold {
 			project.Status = dao.ProjectStatusTeaCold
 			if err = project.Update(); err != nil {
-				util.Debug("Cannot update project", err)
+				util.Debug("Cannot update project %v", err)
 				report(w, s_u, "你好，茶博士失魂鱼，未能更新茶台状态。请稍后再试。")
 				return
 			}
@@ -1112,7 +1112,7 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 	// 罚没托管预备金：获取所有托管记录，将双方预备金罚没转入公共治理团队
 	deposits, depositErr := dao.GetTeaOrderDepositsByTeaOrderId(teaOrder.Id)
 	if depositErr != nil {
-		util.Debug("Cannot get deposits for tea order", teaOrder.Id, depositErr)
+		util.Debug("Cannot get deposits for tea order id %d: %v", teaOrder.Id, depositErr)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取托管记录。请稍后再试。")
 		return
 	}
@@ -1120,15 +1120,15 @@ func VerifierOrderForfeitPost(w http.ResponseWriter, r *http.Request) {
 		// 确保托管状态已支付（有些托管金可能转账已完成但记录未更新）
 		if deposit.Status == dao.DepositStatusPendingPayment {
 			if err = deposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
-				util.Debug("Cannot update deposit status to paid before forfeit", deposit.Id, err)
+				util.Debug("Cannot update deposit status to paid before forfeit %v", err)
 				report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能更新托管状态(id=%d)，请稍后再试。", deposit.Id))
 				return
 			}
 		}
 		// 调用罚没方法：将星茶从托管方转入公共治理团队
 		if err = deposit.Forfeit(); err != nil {
-			util.Debug("Cannot forfeit deposit", deposit.Id, err)
-			report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，未能罚没托管预备金(id=%d)：%v", deposit.Id, err))
+			util.Debug("Cannot forfeit deposit id %d: %v", deposit.Id, err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能罚没托管预备金(id=%d): %v", deposit.Id, err)
 			return
 		}
 	}
@@ -1146,7 +1146,7 @@ func HandleVerifierOrderDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -1166,7 +1166,7 @@ func HandleVerifierOrderDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -1174,7 +1174,7 @@ func HandleVerifierOrderDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单Bean
 	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
 	if err != nil {
-		util.Debug("Cannot convert tea order to bean", err)
+		util.Debug("Cannot convert tea order to bean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备茶订单数据。请稍后再试。")
 		return
 	}
@@ -1183,7 +1183,7 @@ func HandleVerifierOrderDetail(w http.ResponseWriter, r *http.Request) {
 	witnessLog := &dao.WitnessLog{TeaOrderId: teaOrder.Id}
 	witnessLogs, err := witnessLog.GetByTeaOrderId(r.Context())
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Cannot get witness logs", err)
+		util.Debug("Cannot get witness logs %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取见证日志。请稍后再试。")
 		return
 	}

@@ -51,7 +51,7 @@ func init() {
 		dbhost, dbport, dbuser, dbpassword, dbname, dbsslmode, dbTimeZone)
 	DB, err = sql.Open(dbdriver, psqlInfo)
 	if err != nil {
-		util.Panic("星际迷失->茶棚数据库打开时：", err)
+		util.Panic("星际迷失->茶棚数据库打开时：%v", err)
 	}
 	// 配置连接池
 	//DB.SetMaxOpenConns(25)
@@ -60,7 +60,7 @@ func init() {
 
 	//测试数据库连接是否成功
 	if err = DB.Ping(); err != nil {
-		util.Panic("ping teachat database failure - 测试链接茶话会数据库失败", err)
+		util.Panic("ping teachat database failure - 测试链接茶话会数据库失败：%v", err)
 	}
 
 	//ok

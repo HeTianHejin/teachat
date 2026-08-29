@@ -157,7 +157,7 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -165,7 +165,7 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		// 不阻止流程，即使账户创建失败也显示页面
 	}
 
@@ -186,14 +186,14 @@ func TeaUserAcountGet(w http.ResponseWriter, r *http.Request) {
 	// 获取用户待确认来自用户转账数量
 	pendingFromUserCount, err := dao.TeaUserFromUserPendingTransfersCount(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get pending transfers count", err)
+		util.Debug("cannot get pending transfers count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
 		return
 	}
 	// 获取用户待确认来自团队转账数量
 	pendingFromTeamCount, err := dao.TeaUserFromTeamPendingTransfersCount(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get pending team transfers count", err)
+		util.Debug("cannot get pending team transfers count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，获取您的待确认星茶转账记录失败。")
 		return
 	}
@@ -413,7 +413,7 @@ func CreateTeaUserToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查账户是否被冻结
 	frozen, reason, err := dao.CheckTeaUserAccountFrozen(user.Id)
 	if err != nil {
-		util.Debug("CheckTeaUserAccountFrozen error:", err)
+		util.Debug("CheckTeaUserAccountFrozen error: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "检查账户状态失败")
 		return
 	}
@@ -423,7 +423,7 @@ func CreateTeaUserToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	toUser, err := dao.GetUser(req.ToUserId)
 	if err != nil {
-		util.Debug("GetUser error:", err)
+		util.Debug("GetUser error: %v", err)
 		respondWithError(w, http.StatusBadRequest, "接收方用户不存在")
 		return
 	}
@@ -434,7 +434,7 @@ func CreateTeaUserToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查接收方用户账户是否被冻结
 	frozen, reason, err = dao.CheckTeaUserAccountFrozen(toUser.Id)
 	if err != nil {
-		util.Debug("CheckTeaUserAccountFrozen error:", err)
+		util.Debug("CheckTeaUserAccountFrozen error: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "检查接收方账户状态失败")
 		return
 	}
@@ -446,7 +446,7 @@ func CreateTeaUserToUserTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 创建转出方用户对用户转账OUT记录
 	transfer, err := dao.CreateTeaUserToUserTransferOut(user.Id, user.Name, toUser.Id, toUser.Name, req.AmountMilligrams, req.Notes, req.ExpireHours)
 	if err != nil {
-		util.Debug("CreateTeaUserToUserTransferOut error:", err)
+		util.Debug("CreateTeaUserToUserTransferOut error: %v", err)
 		respondWithError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -517,7 +517,7 @@ func CreateTeaUserToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	// 检查账户是否被冻结
 	frozen, reason, err := dao.CheckTeaUserAccountFrozen(user.Id)
 	if err != nil {
-		util.Debug("CheckTeaUserAccountFrozen error:", err)
+		util.Debug("CheckTeaUserAccountFrozen error: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "检查账户状态失败")
 		return
 	}
@@ -527,14 +527,14 @@ func CreateTeaUserToTeamTransferAPI(w http.ResponseWriter, r *http.Request) {
 	}
 	toTeam, err := dao.GetTeam(req.ToTeamId)
 	if err != nil {
-		util.Debug("GetTeam error:", err)
+		util.Debug("GetTeam error: %v", err)
 		respondWithError(w, http.StatusBadRequest, "接收方团队不存在")
 		return
 	}
 	// 检查接收方团队账户是否被冻结
 	frozen, reason, err = dao.CheckTeaTeamAccountFrozen(toTeam.Id)
 	if err != nil {
-		util.Debug("CheckTeaTeamAccountFrozen error:", err)
+		util.Debug("CheckTeaTeamAccountFrozen error: %v", err)
 		respondWithError(w, http.StatusInternalServerError, "检查接收方团队账户状态失败")
 		return
 	}
@@ -575,7 +575,7 @@ func GetTeaUserFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -583,7 +583,7 @@ func GetTeaUserFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -591,7 +591,7 @@ func GetTeaUserFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -602,7 +602,7 @@ func GetTeaUserFromUserPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户待确认状态来自用户转账记录
 	transfers, err := dao.TeaUserFromUserPendingTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get transfer ins", err)
+		util.Debug("cannot get transfer ins %v", err)
 		report(w, s_u, "获取用户对用户待确认状态转账记录失败。")
 		return
 	}
@@ -711,7 +711,7 @@ func GetTeaUserFromTeamPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -719,7 +719,7 @@ func GetTeaUserFromTeamPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -727,7 +727,7 @@ func GetTeaUserFromTeamPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -738,7 +738,7 @@ func GetTeaUserFromTeamPendingTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户待确认状态来自团队转账记录
 	transfers, err := dao.TeaUserInFromTeamPendingTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get transfer ins", err)
+		util.Debug("cannot get transfer ins %v", err)
 		report(w, s_u, "获取团队对用户待确认状态转账记录失败。")
 		return
 	}
@@ -831,7 +831,7 @@ func GetTeaUserFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -839,7 +839,7 @@ func GetTeaUserFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -847,7 +847,7 @@ func GetTeaUserFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -858,7 +858,7 @@ func GetTeaUserFromUserCompletedTransfers(w http.ResponseWriter, r *http.Request
 	// 获取用户来自用户已完成的转入记录（仅已完成状态）
 	transfers, err := dao.TeaUserFromUserCompletedTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get completed transfer ins", err)
+		util.Debug("cannot get completed transfer ins %v", err)
 		report(w, s_u, "获取收入记录失败。")
 		return
 	}
@@ -941,7 +941,7 @@ func GetTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -949,7 +949,7 @@ func GetTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -957,7 +957,7 @@ func GetTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -968,7 +968,7 @@ func GetTeaUserFromTeamCompletedTransfers(w http.ResponseWriter, r *http.Request
 	// 获取用户从团队转入已完成状态记录
 	transfers, err := dao.TeaUserFromTeamCompletedTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get transfer ins from team", err)
+		util.Debug("cannot get transfer ins from team %v", err)
 		report(w, s_u, "获取用户从团队转入已完成状态转账记录失败。")
 		return
 	}
@@ -1066,7 +1066,7 @@ func GetTeaUserFromUserExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -1074,7 +1074,7 @@ func GetTeaUserFromUserExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1082,7 +1082,7 @@ func GetTeaUserFromUserExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1093,7 +1093,7 @@ func GetTeaUserFromUserExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户来自用户已超时的转入记录（仅已超时状态）
 	transfers, err := dao.TeaUserFromUserExpiredTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get expired transfer ins", err)
+		util.Debug("cannot get expired transfer ins %v", err)
 		report(w, s_u, "获取已超时收入记录失败。")
 		return
 	}
@@ -1176,7 +1176,7 @@ func GetTeaUserFromTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -1184,7 +1184,7 @@ func GetTeaUserFromTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1192,7 +1192,7 @@ func GetTeaUserFromTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1203,7 +1203,7 @@ func GetTeaUserFromTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户来自团队已超时的转入记录（仅已超时状态）
 	transfers, err := dao.TeaUserFromTeamExpiredTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get expired transfer ins from team", err)
+		util.Debug("cannot get expired transfer ins from team %v", err)
 		report(w, s_u, "获取已超时收入记录失败。")
 		return
 	}
@@ -1286,7 +1286,7 @@ func GetTeaUserFromUserRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -1294,7 +1294,7 @@ func GetTeaUserFromUserRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1302,7 +1302,7 @@ func GetTeaUserFromUserRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1313,7 +1313,7 @@ func GetTeaUserFromUserRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	// 获取用户来自用户已被拒绝的转入记录（仅rejected状态）
 	transfers, err := dao.TeaUserFromUserRejectedTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get rejected transfer ins", err)
+		util.Debug("cannot get rejected transfer ins %v", err)
 		report(w, s_u, "获取被拒绝收入记录失败。")
 		return
 	}
@@ -1398,7 +1398,7 @@ func GetTeaUserFromTeamRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -1406,7 +1406,7 @@ func GetTeaUserFromTeamRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1414,7 +1414,7 @@ func GetTeaUserFromTeamRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1425,7 +1425,7 @@ func GetTeaUserFromTeamRejectedTransfers(w http.ResponseWriter, r *http.Request)
 	// 获取用户来自团队已被拒绝的转入记录（仅rejected状态）
 	transfers, err := dao.TeaUserFromTeamRejectedTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get rejected transfer ins from team", err)
+		util.Debug("cannot get rejected transfer ins from team %v", err)
 		report(w, s_u, "获取被拒绝收入记录失败。")
 		return
 	}
@@ -1767,7 +1767,7 @@ func GetTeaUserToUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -1775,7 +1775,7 @@ func GetTeaUserToUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	// 确保当前用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1783,7 +1783,7 @@ func GetTeaUserToUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取当前用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1794,7 +1794,7 @@ func GetTeaUserToUserPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取待对方确认用户对用户转账
 	transfers, err := dao.TeaUserOutToUserPendingTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get pending transfers", err)
+		util.Debug("cannot get pending transfers %v", err)
 		report(w, s_u, "获取待确认用户对用户转账失败。")
 		return
 	}
@@ -1898,7 +1898,7 @@ func GetTeaUserToTeamPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -1906,7 +1906,7 @@ func GetTeaUserToTeamPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1914,7 +1914,7 @@ func GetTeaUserToTeamPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -1925,7 +1925,7 @@ func GetTeaUserToTeamPendingTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取待确认,用户对团队转账
 	transfers, err := dao.TeaUserOutToTeamPendingTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get pending transfers", err)
+		util.Debug("cannot get pending transfers %v", err)
 		report(w, s_u, "获取用户发起,待对方团体确认转账失败。")
 		return
 	}
@@ -2026,7 +2026,7 @@ func GetTeaUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -2034,7 +2034,7 @@ func GetTeaUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2042,7 +2042,7 @@ func GetTeaUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2053,7 +2053,7 @@ func GetTeaUserToUserCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户对用户转出已完成记录
 	transfers, err := dao.TeaUserToUserCompletedTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get completed transfer outs", err)
+		util.Debug("cannot get completed transfer outs %v", err)
 		report(w, s_u, "获取用户对用户转出已完成记录失败。")
 		return
 	}
@@ -2148,7 +2148,7 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -2156,7 +2156,7 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2164,7 +2164,7 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2175,7 +2175,7 @@ func GetTeaUserToTeamCompletedTransfers(w http.ResponseWriter, r *http.Request) 
 	// 获取用户对团队转出已完成记录
 	transfers, err := dao.TeaUserToTeamCompletedTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get completed transfer outs to team", err)
+		util.Debug("cannot get completed transfer outs to team %v", err)
 		report(w, s_u, "获取用户对团队转出已完成记录失败。")
 		return
 	}
@@ -2243,7 +2243,7 @@ func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -2251,7 +2251,7 @@ func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2259,7 +2259,7 @@ func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2270,7 +2270,7 @@ func GetTeaUserToUserExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户对用户转出已超时记录
 	transfers, err := dao.TeaUserToUserExpiredTransfers(s_u.Id, page, limit, r.Context())
 	if err != nil {
-		util.Debug("cannot get expired transfer outs", err)
+		util.Debug("cannot get expired transfer outs %v", err)
 		report(w, s_u, "获取用户对用户转出已超时记录失败。")
 		return
 	}
@@ -2348,7 +2348,7 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -2356,7 +2356,7 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2364,7 +2364,7 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2375,7 +2375,7 @@ func GetTeaUserToTeamExpiredTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户对团队转出已超时记录
 	transfers, err := dao.TeaUserToTeamExpiredTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get expired transfer outs to team", err)
+		util.Debug("cannot get expired transfer outs to team %v", err)
 		report(w, s_u, "获取用户对团队转出已超时记录失败。")
 		return
 	}
@@ -2446,7 +2446,7 @@ func GetTeaUserToUserRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -2454,7 +2454,7 @@ func GetTeaUserToUserRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2462,7 +2462,7 @@ func GetTeaUserToUserRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2473,7 +2473,7 @@ func GetTeaUserToUserRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户对用户转出已被拒绝记录
 	transfers, err := dao.TeaUserToUserRejectedTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get rejected transfer outs", err)
+		util.Debug("cannot get rejected transfer outs %v", err)
 		report(w, s_u, "获取用户对用户转出已被拒绝记录失败。")
 		return
 	}
@@ -2551,7 +2551,7 @@ func GetTeaUserToTeamRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -2559,7 +2559,7 @@ func GetTeaUserToTeamRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	// 确保用户有星茶账户
 	err = dao.TeaUserEnsureAccountExists(s_u.Id)
 	if err != nil {
-		util.Debug("cannot ensure tea account exists", err)
+		util.Debug("cannot ensure tea account exists %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2567,7 +2567,7 @@ func GetTeaUserToTeamRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户星茶账户
 	account, err := dao.GetTeaAccountByUserId(s_u.Id)
 	if err != nil {
-		util.Debug("cannot get tea account", err)
+		util.Debug("cannot get tea account %v", err)
 		report(w, s_u, "获取星茶账户失败。")
 		return
 	}
@@ -2578,7 +2578,7 @@ func GetTeaUserToTeamRejectedTransfers(w http.ResponseWriter, r *http.Request) {
 	// 获取用户对团队转出已被拒绝记录
 	transfers, err := dao.TeaUserToTeamRejectedTransfers(s_u.Id, page, limit)
 	if err != nil {
-		util.Debug("cannot get rejected transfer outs to team", err)
+		util.Debug("cannot get rejected transfer outs to team %v", err)
 		report(w, s_u, "获取用户对团队转出已被拒绝记录失败。")
 		return
 	}

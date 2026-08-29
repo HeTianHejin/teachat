@@ -30,7 +30,7 @@ func HandicraftStep2Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -52,41 +52,41 @@ func HandicraftStep2Get(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "手工艺记录不存在")
 			return
 		}
-		util.Debug("Cannot get handicraft by uuid", err)
+		util.Debug("Cannot get handicraft by uuid %v", err)
 		report(w, s_u, "处理手工艺记录时发生错误")
 		return
 	}
 
 	project := dao.Project{Id: handicraft.ProjectId}
 	if err := project.Get(); err != nil {
-		util.Debug("Cannot get project", err)
+		util.Debug("Cannot get project %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	objective, err := project.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective", err)
+		util.Debug("Cannot get objective %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	projectBean, err := fetchProjectBean(project)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败")
 		return
 	}
 
 	objectiveBean, err := fetchObjectiveBean(objective)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败")
 		return
 	}
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check project master permission", err)
+		util.Debug(" Cannot check project master permission %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -121,7 +121,7 @@ func HandicraftStep2Post(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -154,7 +154,7 @@ func HandicraftStep2Post(w http.ResponseWriter, r *http.Request) {
 	handicraft.MagicDifficulty = magicDifficulty
 
 	if err := handicraft.Update(); err != nil {
-		util.Debug("Cannot update handicraft", err)
+		util.Debug("Cannot update handicraft %v", err)
 		report(w, s_u, "保存难度信息失败")
 		return
 	}
@@ -183,7 +183,7 @@ func HandicraftStep3Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -226,7 +226,7 @@ func HandicraftStep3Get(w http.ResponseWriter, r *http.Request) {
 
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check project master permission", err)
+		util.Debug("Cannot check project master permission %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -288,7 +288,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 			Status:         1,
 		}
 		if err := inauguration.Create(); err != nil {
-			util.Debug("Cannot create inauguration", err)
+			util.Debug("Cannot create inauguration %v", err)
 			report(w, s_u, "保存开工仪式记录失败")
 			return
 		}
@@ -296,7 +296,7 @@ func HandicraftStep3Post(w http.ResponseWriter, r *http.Request) {
 
 	handicraft.Status = dao.InProgress
 	if err := handicraft.Update(); err != nil {
-		util.Debug("Cannot update handicraft status", err)
+		util.Debug("Cannot update handicraft status %v", err)
 		report(w, s_u, "更新状态失败")
 		return
 	}
@@ -367,7 +367,7 @@ func HandicraftStep4Get(w http.ResponseWriter, r *http.Request) {
 
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check project master permission", err)
+		util.Debug("Cannot check project master permission %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -429,7 +429,7 @@ func HandicraftStep4Post(w http.ResponseWriter, r *http.Request) {
 			Status:         1,
 		}
 		if err := processRecord.Create(); err != nil {
-			util.Debug("Cannot create process record", err)
+			util.Debug("Cannot create process record %v", err)
 			report(w, s_u, "保存过程记录失败")
 			return
 		}
@@ -501,7 +501,7 @@ func HandicraftStep5Get(w http.ResponseWriter, r *http.Request) {
 
 	is_master, err := checkProjectMasterPermission(&project, s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check project master permission", err)
+		util.Debug("Cannot check project master permission %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -564,7 +564,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 			Status:         1,
 		}
 		if err := ending.Create(); err != nil {
-			util.Debug("Cannot create ending", err)
+			util.Debug("Cannot create ending %v", err)
 			report(w, s_u, "保存结束仪式记录失败")
 			return
 		}
@@ -577,7 +577,7 @@ func HandicraftStep5Post(w http.ResponseWriter, r *http.Request) {
 	handicraft.Status = dao.HandicraftStatus(status)
 
 	if err := handicraft.Update(); err != nil {
-		util.Debug("Cannot update handicraft", err)
+		util.Debug("Cannot update handicraft %v", err)
 		report(w, s_u, "更新手工艺状态失败")
 		return
 	}

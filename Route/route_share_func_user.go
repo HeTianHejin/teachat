@@ -188,26 +188,26 @@ func fetchTeamBean(team dao.Team) (TeamBean dao.TeamBean, err error) {
 
 	founder, err := team.Founder()
 	if err != nil {
-		util.Debug(" Cannot read team founder", err)
+		util.Debug(" Cannot read team founder %v", err)
 		return
 	}
 	TeamBean.Founder = founder
 
 	TeamBean.FounderDefaultFamily, err = getLastDefaultFamilyByUserId(founder.Id)
 	if err != nil {
-		util.Debug(" Cannot read team founder default family", err)
+		util.Debug(" Cannot read team founder default family %v", err)
 		return
 	}
 
 	TeamBean.FounderTeam, err = founder.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(" Cannot read team founder default team", err)
+		util.Debug(" Cannot read team founder default team %v", err)
 		return
 	}
 
 	activeMemberCount, err := team.NumActiveMembers()
 	if err != nil {
-		util.Debug(" Cannot read team active member count", err)
+		util.Debug(" Cannot read team active member count %v", err)
 		return
 	}
 	TeamBean.MembersCount = activeMemberCount
@@ -222,23 +222,23 @@ func fetchTeamBean(team dao.Team) (TeamBean dao.TeamBean, err error) {
 
 	member_ceo, err := team.MemberCEO()
 	if err != nil {
-		util.Debug(" Cannot read team member ceo given team_id: ", team.Id, err)
+		util.Debug(" Cannot read team member ceo given team_id:  %v", err)
 		return
 	}
 	ceo, err := dao.GetUser(member_ceo.UserId)
 	if err != nil {
-		util.Debug(" Cannot read team ceo given team_id: ", team.Id, err)
+		util.Debug(" Cannot read team ceo given team_id:  %v", err)
 		return
 	}
 	TeamBean.CEO = ceo
 	TeamBean.CEOTeam, err = ceo.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(" Cannot read team ceo default team", ceo.Id, err)
+		util.Debug(" Cannot read team ceo default team %v", err)
 		return
 	}
 	TeamBean.CEODefaultFamily, err = getLastDefaultFamilyByUserId(ceo.Id)
 	if err != nil {
-		util.Debug(" Cannot read team ceo default family", ceo.Id, err)
+		util.Debug(" Cannot read team ceo default family %v", err)
 		return
 	}
 
@@ -301,13 +301,13 @@ func fetchFamilyMemberBean(fm dao.FamilyMember) (FMB dao.FamilyMemberBean, err e
 
 	u, err := dao.GetUser(fm.UserId)
 	if err != nil {
-		util.Debug(" Cannot read user given FamilyMember", err)
+		util.Debug(" Cannot read user given FamilyMember %v", err)
 		return FMB, err
 	}
 	FMB.Member = u
 	default_team, err := u.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(" Cannot read user given FamilyMember", err)
+		util.Debug(" Cannot read user given FamilyMember %v", err)
 		return FMB, err
 	}
 	FMB.MemberDefaultTeam = default_team
@@ -317,7 +317,7 @@ func fetchFamilyMemberBean(fm dao.FamilyMember) (FMB dao.FamilyMemberBean, err e
 	//读取茶团的parent_members
 	family_parent_members, err := f.ParentMembers()
 	if err != nil {
-		util.Debug(" Cannot get family core member FetchFamilyMemberBean()", err)
+		util.Debug(" Cannot get family core member FetchFamilyMemberBean() %v", err)
 		return
 	}
 	FMB.IsParent = false
@@ -337,7 +337,7 @@ func fetchFamilyMemberBean(fm dao.FamilyMember) (FMB dao.FamilyMemberBean, err e
 
 	member_default_family, err := getLastDefaultFamilyByUserId(fm.UserId)
 	if err != nil {
-		util.Debug(" Cannot get GetLastDefaultFamily FetchFamilyMemberBean()", err)
+		util.Debug(" Cannot get GetLastDefaultFamily FetchFamilyMemberBean() %v", err)
 		return
 	}
 	FMB.MemberDefaultFamily = member_default_family
@@ -369,26 +369,26 @@ func fetchFamilyMemberSignInBean(fmsi dao.FamilyMemberSignIn) (FMSIB dao.FamilyM
 
 	family := dao.Family{Id: fmsi.FamilyId}
 	if err = family.Get(); err != nil {
-		util.Debug(" Cannot read family given FamilyMemberSignIn", err)
+		util.Debug(" Cannot read family given FamilyMemberSignIn %v", err)
 		return FMSIB, err
 	}
 	FMSIB.Family = family
 
 	FMSIB.NewMember, err = dao.GetUser(fmsi.UserId)
 	if err != nil {
-		util.Debug(" Cannot read new member given FamilyMemberSignIn", err)
+		util.Debug(" Cannot read new member given FamilyMemberSignIn %v", err)
 		return FMSIB, err
 	}
 
 	FMSIB.Author, err = dao.GetUser(fmsi.AuthorUserId)
 	if err != nil {
-		util.Debug(" Cannot read author given FamilyMemberSignIn", err)
+		util.Debug(" Cannot read author given FamilyMemberSignIn %v", err)
 		return FMSIB, err
 	}
 
 	place := dao.Place{Id: fmsi.PlaceId}
 	if err = place.Get(); err != nil {
-		util.Debug(" Cannot read place given FamilyMemberSignIn", err)
+		util.Debug(" Cannot read place given FamilyMemberSignIn %v", err)
 		return FMSIB, err
 	}
 	FMSIB.Place = place
@@ -412,14 +412,14 @@ func fetchFamilyMemberSignInBean(fmsi dao.FamilyMemberSignIn) (FMSIB dao.FamilyM
 func fetchTeamMemberBean(tm dao.TeamMember) (TMB dao.TeamMemberBean, err error) {
 	u, err := dao.GetUser(tm.UserId)
 	if err != nil {
-		util.Debug(" Cannot read user given TeamMember", err)
+		util.Debug(" Cannot read user given TeamMember %v", err)
 		return TMB, err
 	}
 	TMB.Member = u
 
 	team, err := dao.GetTeam(tm.TeamId)
 	if err != nil {
-		util.Debug(" Cannot read team given team member", err)
+		util.Debug(" Cannot read team given team member %v", err)
 		return TMB, err
 	}
 
@@ -444,7 +444,7 @@ func fetchTeamMemberBean(tm dao.TeamMember) (TMB dao.TeamMemberBean, err error) 
 
 	teamCoreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.Debug(" Cannot get team core member FetchTeamMemberBean()", err)
+		util.Debug(" Cannot get team core member FetchTeamMemberBean() %v", err)
 		return
 	}
 	for _, coreMember := range teamCoreMembers {
@@ -456,7 +456,7 @@ func fetchTeamMemberBean(tm dao.TeamMember) (TMB dao.TeamMemberBean, err error) 
 
 	member_default_team, err := u.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(" Cannot get GetLastDefaultTeam FetchTeamMemberBean()", err)
+		util.Debug(" Cannot get GetLastDefaultTeam FetchTeamMemberBean() %v", err)
 		return
 	}
 	TMB.MemberDefaultTeam = member_default_team
@@ -487,7 +487,7 @@ func fetchMemberApplicationBean(ma dao.MemberApplication) (MemberApplicationBean
 
 	team, err := dao.GetTeam(ma.TeamId)
 	if err != nil {
-		util.Debug(" Cannot read team given author", err)
+		util.Debug(" Cannot read team given author %v", err)
 		return MemberApplicationBean, err
 	}
 
@@ -495,12 +495,12 @@ func fetchMemberApplicationBean(ma dao.MemberApplication) (MemberApplicationBean
 
 	MemberApplicationBean.Author, err = dao.GetUser(ma.UserId)
 	if err != nil {
-		util.Debug(" Cannot read member application author", err)
+		util.Debug(" Cannot read member application author %v", err)
 		return MemberApplicationBean, err
 	}
 	MemberApplicationBean.AuthorTeam, err = MemberApplicationBean.Author.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(" Cannot read member application author default team", err)
+		util.Debug(" Cannot read member application author default team %v", err)
 		return MemberApplicationBean, err
 	}
 
@@ -524,19 +524,19 @@ func fetchInvitationBean(i dao.Invitation) (I_B dao.InvitationBean, err error) {
 
 	I_B.Team, err = i.Team()
 	if err != nil {
-		util.Debug(" Cannot read invitation default team", err)
+		util.Debug(" Cannot read invitation default team %v", err)
 		return I_B, err
 	}
 
 	I_B.Author, err = i.Author()
 	if err != nil {
-		util.Debug(" Cannot fetch team CEO given invitation", err)
+		util.Debug(" Cannot fetch team CEO given invitation %v", err)
 		return I_B, err
 	}
 
 	I_B.InviteUser, err = i.ToUser()
 	if err != nil {
-		util.Debug(" Cannot read invitation invite user", err)
+		util.Debug(" Cannot read invitation invite user %v", err)
 		return I_B, err
 	}
 
@@ -562,29 +562,29 @@ func fetchTeamMemberRoleNoticeBean(tmrn dao.TeamMemberRoleNotice) (tmrnBean dao.
 
 	tmrnBean.Team, err = dao.GetTeam(tmrn.TeamId)
 	if err != nil {
-		util.Debug(" Cannot read team given team member role notice", err)
+		util.Debug(" Cannot read team given team member role notice %v", err)
 		return tmrnBean, err
 	}
 
 	tmrnBean.CEO, err = dao.GetUser(tmrn.CeoId)
 	if err != nil {
-		util.Debug(" Cannot read ceo given team member role notice", err)
+		util.Debug(" Cannot read ceo given team member role notice %v", err)
 		return tmrnBean, err
 	}
 
 	tm := dao.TeamMember{Id: tmrn.MemberId}
 	if err = tm.Get(); err != nil {
-		util.Debug(" Cannot read team member given team member role notice", err)
+		util.Debug(" Cannot read team member given team member role notice %v", err)
 		return tmrnBean, err
 	}
 	tmrnBean.Member, err = dao.GetUser(tm.UserId)
 	if err != nil {
-		util.Debug(" Cannot read member given team member role notice", err)
+		util.Debug(" Cannot read member given team member role notice %v", err)
 		return tmrnBean, err
 	}
 	tmrnBean.MemberDefaultTeam, err = tmrnBean.Member.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(" Cannot read member default team given team member role notice", err)
+		util.Debug(" Cannot read member default team given team member role notice %v", err)
 		return tmrnBean, err
 	}
 

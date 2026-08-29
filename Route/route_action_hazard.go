@@ -39,7 +39,7 @@ func HazardNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -63,7 +63,7 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -104,7 +104,7 @@ func HazardNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := hazard.Create(); err != nil {
-		util.Debug("Cannot create hazard", err)
+		util.Debug("Cannot create hazard %v", err)
 		report(w, s_u, "创建隐患记录失败，请重试。")
 		return
 	}
@@ -138,7 +138,7 @@ func HazardDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -157,7 +157,7 @@ func HazardDetailGet(w http.ResponseWriter, r *http.Request) {
 
 	hazard := dao.Hazard{Id: id}
 	if err := hazard.GetByIdOrUUID(); err != nil {
-		util.Debug("Cannot get hazard by id", id, err)
+		util.Debug("Cannot get hazard by id %d: %v", id, err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -165,7 +165,7 @@ func HazardDetailGet(w http.ResponseWriter, r *http.Request) {
 	// 获取记录者信息
 	recorder, err := dao.GetUser(hazard.UserId)
 	if err != nil {
-		util.Debug("Cannot get recorder user", hazard.UserId, err)
+		util.Debug("Cannot get recorder user %d: %v", hazard.UserId, err)
 		// 如果获取记录者失败，使用默认值
 		recorder = dao.User{Id: 0, Name: "未知用户"}
 	}

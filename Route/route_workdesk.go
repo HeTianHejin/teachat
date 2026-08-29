@@ -28,7 +28,7 @@ func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -42,7 +42,7 @@ func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 	// 查询团队
 	team, err := dao.GetTeamByUUID(teamUuid)
 	if err != nil {
-		util.Debug("Cannot get team by uuid:", teamUuid, err)
+		util.Debug("Cannot get team by uuid: %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的团队。请确认后再试。")
 		return
 	}
@@ -50,7 +50,7 @@ func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 	// 检查当前用户是否为团队正常状态成员（限制非成员、非正常状态成员访问）
 	isMember, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check team membership", err)
+		util.Debug("Cannot check team membership %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能验证团队身份。请稍后再试。")
 		return
 	}
@@ -79,7 +79,7 @@ func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 	// 获取团队作为需求方（出题方）的茶订单
 	payerOrders, err := dao.GetTeaOrdersByPayerTeamId(ctx, team.Id, page, pageSize)
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Cannot get payer tea orders", err)
+		util.Debug("Cannot get payer tea orders %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取需求方订单。请稍后再试。")
 		return
 	}
@@ -87,7 +87,7 @@ func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 	// 获取团队作为解题方的茶订单
 	payeeOrders, err := dao.GetTeaOrdersByPayeeTeamId(ctx, team.Id, page, pageSize)
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Cannot get payee tea orders", err)
+		util.Debug("Cannot get payee tea orders %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取解题方订单。请稍后再试。")
 		return
 	}
@@ -95,14 +95,14 @@ func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 	// 获取各角色订单数量
 	payerCount, err := dao.GetTeaOrderCountByPayerTeamId(ctx, team.Id)
 	if err != nil {
-		util.Debug("Cannot get payer tea order count", err)
+		util.Debug("Cannot get payer tea order count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取需求方订单数量。请稍后再试。")
 		return
 	}
 
 	payeeCount, err := dao.GetTeaOrderCountByPayeeTeamId(ctx, team.Id)
 	if err != nil {
-		util.Debug("Cannot get payee tea order count", err)
+		util.Debug("Cannot get payee tea order count %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取解题方订单数量。请稍后再试。")
 		return
 	}
@@ -110,14 +110,14 @@ func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 	// 转换为TeaOrderBean
 	payerOrderBeans, err := fetchTeaOrderBeanSlice(payerOrders)
 	if err != nil {
-		util.Debug("Cannot convert payer orders to beans", err)
+		util.Debug("Cannot convert payer orders to beans %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备需求方订单数据。请稍后再试。")
 		return
 	}
 
 	payeeOrderBeans, err := fetchTeaOrderBeanSlice(payeeOrders)
 	if err != nil {
-		util.Debug("Cannot convert payee orders to beans", err)
+		util.Debug("Cannot convert payee orders to beans %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备解题方订单数据。请稍后再试。")
 		return
 	}
@@ -163,7 +163,7 @@ func HandleTeaOrderDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -177,7 +177,7 @@ func HandleTeaOrderDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单
 	teaOrder := &dao.TeaOrder{Uuid: uuid}
 	if err = teaOrder.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get tea order", uuid, err)
+		util.Debug("Cannot get tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶订单。请确认后再试。")
 		return
 	}
@@ -228,7 +228,7 @@ func HandleTeaOrderDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取茶订单Bean
 	teaOrderBean, err := fetchTeaOrderBean(*teaOrder)
 	if err != nil {
-		util.Debug("Cannot convert tea order to bean", err)
+		util.Debug("Cannot convert tea order to bean %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能准备茶订单数据。请稍后再试。")
 		return
 	}
@@ -237,7 +237,7 @@ func HandleTeaOrderDetail(w http.ResponseWriter, r *http.Request) {
 	witnessLog := &dao.WitnessLog{TeaOrderId: teaOrder.Id}
 	witnessLogs, err := witnessLog.GetByTeaOrderId(r.Context())
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Cannot get witness logs", err)
+		util.Debug("Cannot get witness logs %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取见证日志。请稍后再试。")
 		return
 	}

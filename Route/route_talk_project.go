@@ -31,13 +31,13 @@ func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -55,7 +55,7 @@ func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project", uuid, err)
+		util.Debug(" Cannot get project %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -68,19 +68,19 @@ func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
 	//检查提交的place_id是否合法,是否正整数
 	place_id_int, err := strconv.Atoi(place_id)
 	if err != nil {
-		util.Debug(" Cannot convert place_id to int", place_id, err)
+		util.Debug(" Cannot convert place_id to int %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	//检查提交的place_id是否已登记
 	if _, err := dao.GetPlace(place_id_int); err != nil {
-		util.Debug(" Invalid place_id", place_id, err)
+		util.Debug(" Invalid place_id %v", err)
 		report(w, s_u, "你好，请选择有效的地点！请确认后再试。")
 		return
 	}
 	old_place_id, err := pr.PlaceId()
 	if err != nil {
-		util.Debug(" Cannot get place_id", place_id, err)
+		util.Debug(" Cannot get place_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -96,7 +96,7 @@ func ProjectPlacePost(w http.ResponseWriter, r *http.Request) {
 		UserId:    s_u.Id,
 	}
 	if err = pp.Create(); err != nil {
-		util.Debug(" Cannot update place_id", place_id, err)
+		util.Debug(" Cannot update place_id %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -115,13 +115,13 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -139,33 +139,33 @@ func ProjectPlaceGet(w http.ResponseWriter, r *http.Request) {
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project", uuid, err)
+		util.Debug(" Cannot get project %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	//读取目标茶台地点
 	place := dao.ProjectPlace{ProjectId: pr.Id}
 	if err = place.GetByProjectId(); err != nil {
-		util.Debug(" Cannot get project place", uuid, err)
+		util.Debug(" Cannot get project place %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	prBean, err := fetchProjectBean(pr)
 	if err != nil {
-		util.Debug(" Cannot get project bean", uuid, err)
+		util.Debug(" Cannot get project bean %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective", ob.Id, err)
+		util.Debug(" Cannot get objective %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	obBean, err := fetchObjectiveBean(ob)
 	if err != nil {
-		util.Debug(" Cannot get objective bean", uuid, err)
+		util.Debug(" Cannot get objective bean %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -189,13 +189,13 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台，请稍后再试。")
 		return
 	}
@@ -208,14 +208,14 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project", uuid, err)
+		util.Debug(" Cannot get project %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
 		return
 	}
 	// 检查是否已经入围？if true, report success and return,不需要重复入围了。
 	is_approved, err := pr.IsApproved()
 	if err != nil {
-		util.Debug(" Cannot check if project is approved", pr.Id, err)
+		util.Debug(" Cannot check if project is approved %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶台入围状态，请确认后再试。")
 		return
 	}
@@ -227,7 +227,7 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective", ob.Id, err)
+		util.Debug(" Cannot get objective %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
@@ -248,13 +248,13 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 	if ob.IsPrivate {
 		admin_family, err := dao.GetFamily(ob.FamilyId)
 		if err != nil {
-			util.Debug(" Cannot get family", ob.FamilyId, err)
+			util.Debug(" Cannot get family %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会举办方，请确认后再试。")
 			return
 		}
 		is_admin, err = admin_family.IsMember(s_u.Id)
 		if err != nil {
-			util.Debug(" Cannot get family member", ob.FamilyId, err)
+			util.Debug(" Cannot get family member %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会管理成员，请确认后再试。")
 			return
 		}
@@ -262,13 +262,13 @@ func ProjectApproveStep1(w http.ResponseWriter, r *http.Request) {
 	} else {
 		admin_team, err := dao.GetTeam(ob.TeamId)
 		if err != nil {
-			util.Debug(" Cannot get team", ob.TeamId, err)
+			util.Debug(" Cannot get team %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 			return
 		}
 		is_admin, err = admin_team.IsActiveMember(s_u.Id)
 		if err != nil {
-			util.Debug(" Cannot get team", ob.TeamId, err)
+			util.Debug(" Cannot get team %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 			return
 		}
@@ -299,13 +299,13 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取用户信息，请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取表单数据，请稍后再试。")
 		return
 	}
@@ -323,7 +323,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project", uuid, err)
+		util.Debug(" Cannot get project %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
 		return
 	}
@@ -331,7 +331,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	// 检查是否已经入围
 	is_approved, err := pr.IsApproved()
 	if err != nil {
-		util.Debug(" Cannot check if project is approved", pr.Id, err)
+		util.Debug(" Cannot check if project is approved %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶台入围状态，请确认后再试。")
 		return
 	}
@@ -343,7 +343,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective", ob.Id, err)
+		util.Debug(" Cannot get objective %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
@@ -355,26 +355,26 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	if ob.IsPrivate {
 		adminFamily, err = dao.GetFamily(ob.FamilyId)
 		if err != nil {
-			util.Debug(" Cannot get family", ob.FamilyId, err)
+			util.Debug(" Cannot get family %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会举办方，请确认后再试。")
 			return
 		}
 		is_admin, err = adminFamily.IsMember(s_u.Id)
 		if err != nil {
-			util.Debug(" Cannot get family member", ob.FamilyId, err)
+			util.Debug(" Cannot get family member %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会管理成员，请确认后再试。")
 			return
 		}
 	} else {
 		adminTeam, err = dao.GetTeam(ob.TeamId)
 		if err != nil {
-			util.Debug(" Cannot get team", ob.TeamId, err)
+			util.Debug(" Cannot get team %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 			return
 		}
 		is_admin, err = adminTeam.IsActiveMember(s_u.Id)
 		if err != nil {
-			util.Debug(" Cannot get team", ob.TeamId, err)
+			util.Debug(" Cannot get team %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 			return
 		}
@@ -393,7 +393,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		// 家庭管理的茶围：转换家庭为亲友团（需求方团队，临时兼任监护方）
 		requesterTeamId, err = dao.ConvertFamilyToFriendTeam(ob.FamilyId, s_u)
 		if err != nil {
-			util.Debug(" Cannot convert family to friend team", ob.FamilyId, err)
+			util.Debug(" Cannot convert family to friend team %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能创建亲友团，请确认后再试。")
 			return
 		}
@@ -403,7 +403,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	}
 	payerTeam, err := dao.GetTeam(requesterTeamId)
 	if err != nil {
-		util.Debug(" Cannot get payer team", requesterTeamId, err)
+		util.Debug(" Cannot get payer team %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取出题方团队信息，请确认后再试。")
 		return
 	}
@@ -411,7 +411,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	// 获取解题方团队信息（提供解决方案的团队）
 	payeeTeam, err := dao.GetTeam(pr.TeamId)
 	if err != nil {
-		util.Debug(" Cannot get payee team", pr.TeamId, err)
+		util.Debug(" Cannot get payee team %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取解题方团队信息，请确认后再试。")
 		return
 	}
@@ -420,7 +420,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	// 校验解题方团队是否具备入围资格（职业团队）
 	// eligible, err := dao.IsTeamEligibleForShortlist(payeeTeam.Id)
 	// if err != nil {
-	// 	util.Debug(" Cannot check team eligible for shortlist", payeeTeam.Id, err)
+	// 	util.Debug(" Cannot check team eligible for shortlist %v", err)
 	// 	report(w, s_u, "你好，茶博士失魂鱼，未能校验解题方团队入围资格，请确认后再试。")
 	// 	return
 	// }
@@ -434,7 +434,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 
 	// 确保出题方团队有星茶账户
 	if err := dao.EnsureTeaTeamAccountExists(payerTeam.Id); err != nil {
-		util.Debug(" Cannot ensure payer team account exists", payerTeam.Id, err)
+		util.Debug(" Cannot ensure payer team account exists %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能初始化出题方团队账户，请确认后再试。")
 		return
 	}
@@ -444,7 +444,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 
 	payerAccount, err := dao.GetTeaTeamAccountByTeamId(payerTeam.Id)
 	if err != nil {
-		util.Debug(" Cannot get payer team account", payerTeam.Id, err)
+		util.Debug(" Cannot get payer team account %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询出题方团队星茶账户，请确认后再试。")
 		return
 	}
@@ -452,7 +452,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 
 	// 确保解题团队有星茶账户
 	if err := dao.EnsureTeaTeamAccountExists(payeeTeam.Id); err != nil {
-		util.Debug(" Cannot ensure payee team account exists", payeeTeam.Id, err)
+		util.Debug(" Cannot ensure payee team account exists %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能初始化解题方团队账户，请确认后再试。")
 		return
 	}
@@ -460,7 +460,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	// 获取解题团队账户余额
 	payeeAccount, err := dao.GetTeaTeamAccountByTeamId(payeeTeam.Id)
 	if err != nil {
-		util.Debug(" Cannot get payee team account", payeeTeam.Id, err)
+		util.Debug(" Cannot get payee team account %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询解题方团队星茶账户，请确认后再试。")
 		return
 	}
@@ -469,7 +469,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	// 获取见证者团队信息（批准、许可方）
 	verifierTeam, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
-		util.Debug(" Cannot get verifier team", err)
+		util.Debug(" Cannot get verifier team %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取见证者团队信息，请确认后再试。")
 		return
 	}
@@ -477,7 +477,7 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 	// 获取茶庄托管团队信息（预备金托管方）
 	escrowTeam, err := dao.GetTeam(dao.TeamIdEscrow)
 	if err != nil {
-		util.Debug(" Cannot get escrow team", err)
+		util.Debug(" Cannot get escrow team %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取茶庄托管团队信息，请确认后再试。")
 		return
 	}
@@ -532,13 +532,13 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取用户信息，请稍后再试。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug("Cannot parse form", err)
+		util.Debug("Cannot parse form %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能读取表单数据，请稍后再试。")
 		return
 	}
@@ -557,7 +557,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
-		util.Debug(" Cannot get project", uuid, err)
+		util.Debug(" Cannot get project %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶台，请确认后再试。")
 		return
 	}
@@ -565,7 +565,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	// 检查是否已经入围
 	is_approved, err := pr.IsApproved()
 	if err != nil {
-		util.Debug(" Cannot check if project is approved", pr.Id, err)
+		util.Debug(" Cannot check if project is approved %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶台入围状态，请确认后再试。")
 		return
 	}
@@ -577,7 +577,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	//读取目标茶围
 	ob, err := pr.Objective()
 	if err != nil {
-		util.Debug(" Cannot get objective", ob.Id, err)
+		util.Debug(" Cannot get objective %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		return
 	}
@@ -587,26 +587,26 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	if ob.IsPrivate {
 		admin_family, err := dao.GetFamily(ob.FamilyId)
 		if err != nil {
-			util.Debug(" Cannot get family", ob.FamilyId, err)
+			util.Debug(" Cannot get family %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会举办方，请确认后再试。")
 			return
 		}
 		is_admin, err = admin_family.IsMember(s_u.Id)
 		if err != nil {
-			util.Debug(" Cannot get family member", ob.FamilyId, err)
+			util.Debug(" Cannot get family member %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到茶话会管理成员，请确认后再试。")
 			return
 		}
 	} else {
 		admin_team, err := dao.GetTeam(ob.TeamId)
 		if err != nil {
-			util.Debug(" Cannot get team", ob.TeamId, err)
+			util.Debug(" Cannot get team %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会负责团队，请确认后再试。")
 			return
 		}
 		is_admin, err = admin_team.IsActiveMember(s_u.Id)
 		if err != nil {
-			util.Debug(" Cannot get team", ob.TeamId, err)
+			util.Debug(" Cannot get team %v", err)
 			report(w, s_u, "你好，茶博士未能确认茶话会负责团队成员身份，请确认后再试。")
 			return
 		}
@@ -619,7 +619,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	// 检查TeaOrder是否已经存在
 	existing_order, err := dao.GetTeaOrderByProjectIdAndObjectiveId(r.Context(), pr.Id, ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		util.Debug(" Cannot check existing tea order", pr.Id, ob.Id, err)
+		util.Debug(" Cannot check existing tea order %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询茶订单记录，请确认后再试。")
 		return
 	}
@@ -637,7 +637,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		// 家庭管理的茶围：转换家庭为亲友团（需求方团队，临时兼任监护方）
 		requesterTeamId, err = dao.ConvertFamilyToFriendTeam(ob.FamilyId, s_u)
 		if err != nil {
-			util.Debug(" Cannot convert family to friend team", ob.FamilyId, err)
+			util.Debug(" Cannot convert family to friend team %v", err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能创建亲友团，请确认后再试。")
 			return
 		}
@@ -649,13 +649,13 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	// 获取需求方和解题方团队信息
 	payerTeam, err := dao.GetTeam(requesterTeamId)
 	if err != nil {
-		util.Debug(" Cannot get payer team", requesterTeamId, err)
+		util.Debug(" Cannot get payer team %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取出题方团队信息，请确认后再试。")
 		return
 	}
 	payeeTeam, err := dao.GetTeam(pr.TeamId)
 	if err != nil {
-		util.Debug(" Cannot get payee team", pr.TeamId, err)
+		util.Debug(" Cannot get payee team %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取解题方团队信息，请确认后再试。")
 		return
 	}
@@ -665,14 +665,14 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 
 	// 确保茶庄托管团队有星茶账户（预备金托管方需要账户）
 	if err := dao.EnsureTeaTeamAccountExists(dao.TeamIdEscrow); err != nil {
-		util.Debug(" Cannot ensure escrow team account exists", err)
+		util.Debug(" Cannot ensure escrow team account exists %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能初始化茶庄托管团队账户，请确认后再试。")
 		return
 	}
 
 	// 确保出题方团队有星茶账户
 	if err := dao.EnsureTeaTeamAccountExists(payerTeam.Id); err != nil {
-		util.Debug(" Cannot ensure payer team account exists", payerTeam.Id, err)
+		util.Debug(" Cannot ensure payer team account exists %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能初始化出题方团队账户，请确认后再试。")
 		return
 	}
@@ -680,7 +680,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	// 检查需求方账户余额
 	payerAccount, err := dao.GetTeaTeamAccountByTeamId(payerTeam.Id)
 	if err != nil {
-		util.Debug(" Cannot get payer team account", payerTeam.Id, err)
+		util.Debug(" Cannot get payer team account %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询出题方团队星茶账户，请确认后再试。")
 		return
 	}
@@ -692,7 +692,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 
 	// 确保解题方团队有星茶账户
 	if err := dao.EnsureTeaTeamAccountExists(payeeTeam.Id); err != nil {
-		util.Debug(" Cannot ensure payee team account exists", payeeTeam.Id, err)
+		util.Debug(" Cannot ensure payee team account exists %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能初始化解题方团队账户，请确认后再试。")
 		return
 	}
@@ -700,7 +700,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	// 检查解题方账户余额
 	payeeAccount, err := dao.GetTeaTeamAccountByTeamId(payeeTeam.Id)
 	if err != nil {
-		util.Debug(" Cannot get payee team account", payeeTeam.Id, err)
+		util.Debug(" Cannot get payee team account %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能查询解题方团队星茶账户，请确认后再试。")
 		return
 	}
@@ -737,7 +737,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 
 	// 记录tea_order
 	if err = tea_order.Create(r.Context()); err != nil {
-		util.Debug(" Cannot create tea order, ob.FamilyId:", ob.FamilyId, err)
+		util.Debug(" Cannot create tea order, ob.FamilyId: %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建茶订单记录，请确认后再试。")
 		return
 	}
@@ -779,7 +779,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		24, // 24小时过期
 	)
 	if err != nil {
-		util.Debug(" Cannot create payer transfer", err)
+		util.Debug(" Cannot create payer transfer %v", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，需求方转账失败：%v，请确认后再试。", err))
 		return
 	}
@@ -795,7 +795,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 		24,
 	)
 	if err != nil {
-		util.Debug(" Cannot create payee transfer", err)
+		util.Debug(" Cannot create payee transfer %v", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士失魂鱼，解题方转账失败：%v，请确认后再试。", err))
 		return
 	}
@@ -803,24 +803,24 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 
 	// 保存预备金托管记录
 	if err = payerDeposit.Create(); err != nil {
-		util.Debug(" Cannot create payer deposit", err)
+		util.Debug(" Cannot create payer deposit %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建需求方预备金记录，请确认后再试。")
 		return
 	}
 	if err = payeeDeposit.Create(); err != nil {
-		util.Debug(" Cannot create payee deposit", err)
+		util.Debug(" Cannot create payee deposit %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能创建解题方预备金记录，请确认后再试。")
 		return
 	}
 
 	// 更新托管记录状态为已支付（转账已在 CreateEscrowTransferOut 中完成）
 	if err = payerDeposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
-		util.Debug(" Cannot update payer deposit status to paid", err)
+		util.Debug(" Cannot update payer deposit status to paid %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能更新需求方托管状态，请确认后再试。")
 		return
 	}
 	if err = payeeDeposit.UpdateStatus(dao.DepositStatusPaid); err != nil {
-		util.Debug(" Cannot update payee deposit status to paid", err)
+		util.Debug(" Cannot update payee deposit status to paid %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能更新解题方托管状态，请确认后再试。")
 		return
 	}
@@ -853,7 +853,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Debug(" Cannot get user from session %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -868,18 +868,18 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	ob_uuid := r.PostFormValue("ob_uuid")
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
-		util.Warning("Failed to convert class to int", err)
+		util.Warning("Failed to convert class to int %v", err)
 		return
 	}
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
-		util.Error("Failed to convert team_id to int", err)
+		util.Error("Failed to convert team_id to int %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
-		util.Error("Failed to convert family_id to int", err)
+		util.Error("Failed to convert family_id to int %v", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -889,7 +889,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		util.Warning("验证提交的台主团队资格出现数据库错误", team_id, err)
+		util.Warning("验证提交的台主团队 %d 资格出现数据库错误: %v", team_id, err)
 		report(w, s_u, "你好，成员资格检查失败，请确认后再试。")
 		return
 	}
@@ -899,7 +899,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		util.Warning("验证提交的关联家庭资格出现数据库错误", family_id, err)
+		util.Warning("验证提交的关联家庭资格出现数据库错误: %v", err)
 		report(w, s_u, "你好，关联家庭资格检查失败，请确认后再试。")
 		return
 	}
@@ -907,10 +907,10 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	t_ob := dao.Objective{Uuid: ob_uuid}
 	if err = t_ob.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			util.Warning("茶话会不存在", ob_uuid, err)
+			util.Warning("茶话会不存在 %s: %v", ob_uuid, err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		} else {
-			util.Warning("获取茶话会失败", ob_uuid, err)
+			util.Warning("获取茶话会失败 %s: %v", ob_uuid, err)
 			report(w, s_u, "你好，茶博士失魂鱼，系统繁忙，请稍后再试。")
 		}
 		return
@@ -918,7 +918,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 检查在此茶围下是否已经存在相同名字的茶台
 	count_title, err := dao.CountProjectByTitleObjectiveId(title, t_ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		util.Info(" Cannot get count of project by title and objective id", err)
+		util.Info(" Cannot get count of project by title and objective id %s: %v", title, err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -931,7 +931,6 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	place_uuid := r.PostFormValue("place_uuid")
 	place := dao.Place{Uuid: place_uuid}
 	if err = place.GetByUuid(); err != nil {
-		util.Warning(" Cannot get place", err)
 		report(w, s_u, "你好，茶博士服务中，眼镜都模糊了，也未能找到你提交的喝茶地方资料，请确认后再试。")
 		return
 	}
@@ -939,12 +938,12 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 检测一下name是否>2中文字，desc是否在17-int(util.Config.ThreadMaxWord)中文字，
 	// 如果不是，返回错误信息
 	if cnStrLen(title) < 2 || cnStrLen(title) > 36 {
-		util.Info("Project name is too short", err)
+		util.Info("Project name is too short %v", err)
 		report(w, s_u, "你好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
 	if cnStrLen(body) < int(util.Config.ThreadMinWord) || cnStrLen(body) > int(util.Config.ThreadMaxWord) {
-		util.Info(" Project description is too long or too short", err)
+		util.Info(" Project description is too long or too short %v", err)
 		report(w, s_u, "你好，茶博士傻眼了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return
 	}
@@ -976,7 +975,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		case dao.ObClassOpenDraft:
 			// 创建开放式草台
 			if err = new_proj.Create(); err != nil {
-				util.Error(" Cannot create open project", err)
+				util.Error(" Cannot create open project %v", err)
 				report(w, s_u, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -995,7 +994,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 			//创建封闭式草台
 			if err = new_proj.Create(); err != nil {
-				util.Error(" Cannot create close project", err)
+				util.Error(" Cannot create close project %v", err)
 				report(w, s_u, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -1006,7 +1005,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 					TeamId:    team_id,
 				}
 				if err = poInviTeams.Create(); err != nil {
-					util.Error(" Cannot save invited teams", err)
+					util.Error(" Cannot save invited teams %v", err)
 					report(w, s_u, "你好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
 				}
@@ -1022,7 +1021,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		ok, err := t_ob.IsInvitedMember(s_u.Id)
 		if !ok {
 			// 当前用户不是茶话会邀请团队成员，不能新开茶台
-			util.Warning(" Cannot create project", err)
+			util.Warning(" Cannot create project %v", err)
 			report(w, s_u, "你好，茶博士惊讶地说，不是此茶话会邀请团队成员不能开新茶台，请确认。")
 			return
 		}
@@ -1045,7 +1044,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 			//创建茶台
 			if err = new_proj.Create(); err != nil {
-				util.Error("Cannot create project", err)
+				util.Error("Cannot create project %v", err)
 				report(w, s_u, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -1056,7 +1055,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 					TeamId:    team_id,
 				}
 				if err = poInviTeams.Create(); err != nil {
-					util.Error(" Cannot save invited teams", err)
+					util.Error(" Cannot save invited teams %v", err)
 					report(w, s_u, "你好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
 				}
@@ -1065,7 +1064,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		// 该茶话会属性不合法
-		util.Warning(" Project class is not valid", err)
+		util.Warning(" Project class is not valid %v", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个茶话会被外星人霸占了，请确认后再试。")
 		return
 	}
@@ -1077,7 +1076,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		UserId:    s_u.Id,
 	}
 	if err = pp.Create(); err != nil {
-		util.Error(" Cannot create project place", err)
+		util.Error(" Cannot create project place %v", err)
 		report(w, s_u, "你好，茶博士抹了抹汗，竟然说茶台地方保存失败，请确认后再试。")
 		return
 	}
@@ -1127,7 +1126,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	// 3. 获取茶话会详情
 	objective := dao.Objective{Uuid: uuid}
 	if err := objective.GetByUuid(); err != nil {
-		util.Debug("获取茶话会失败", "uuid", uuid, "error", err)
+		util.Debug("获取茶话会失败 %v", err)
 		if errors.Is(err, sql.ErrNoRows) {
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到您指定的茶话会。")
 		} else {
@@ -1139,7 +1138,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	// 4. 获取用户相关数据
 	sessUserData, err := prepareUserPageData(&sess, r.Context())
 	if err != nil {
-		util.Debug("准备用户数据失败", "error", err)
+		util.Debug("准备用户数据失败 %v", err)
 		report(w, s_u, "你好，三人行，必有大佬焉，请稍后再试。")
 		return
 	}
@@ -1147,7 +1146,7 @@ func NewProjectGet(w http.ResponseWriter, r *http.Request) {
 	// 5. 准备页面数据
 	obPageData, err := prepareObjectivePageData(objective, sessUserData)
 	if err != nil {
-		util.Debug("准备页面数据失败", "error", err)
+		util.Debug("准备页面数据失败 %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到茶围资料，请稍后再试。")
 		return
 	}
@@ -1173,11 +1172,11 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			util.Debug("Project not found by uuid: ", uuid)
+			util.Debug("Project not found by uuid:  %v", uuid)
 			report(w, s_u, "你好，荡昏寐，饮之以茶。请稍后再试。")
 			return
 		}
-		util.Debug(" Cannot read project by uuid: ", uuid, ", error: ", err)
+		util.Debug(" Cannot read project by uuid:  %v", err)
 		report(w, s_u, "你好，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
@@ -1189,20 +1188,20 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	pD.ProjectBean, err = fetchProjectBean(pr)
 	if err != nil {
-		util.Debug(" Cannot read projectbean by project:", pr.Uuid, err)
+		util.Debug(" Cannot read projectbean by project: %v", err)
 		report(w, s_u, "你好，松影一庭惟见鹤，梨花满地不闻莺，请稍后再试。")
 		return
 	}
 
 	ob, err := pD.ProjectBean.Project.Objective()
 	if err != nil {
-		util.Debug(" Cannot read objective", err)
+		util.Debug(" Cannot read objective %v", err)
 		report(w, s_u, "你好，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 		return
 	}
 	pD.QuoteObjectiveBean, err = fetchObjectiveBean(ob)
 	if err != nil {
-		util.Debug(" Cannot read objective", err)
+		util.Debug(" Cannot read objective %v", err)
 		report(w, s_u, "你好，松影一庭惟见鹤，梨花满地不闻莺。请稍后再试。")
 		return
 	}
@@ -1213,7 +1212,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	thread_normal_slice, err := pD.ProjectBean.Project.ThreadsNormal(ctx)
 	if err != nil {
-		util.Debug(" Cannot read threads given project", err)
+		util.Debug(" Cannot read threads given project %v", err)
 		report(w, s_u, "你好，倦绣佳人幽梦长，金笼鹦鹉唤茶汤。请稍后再试。")
 		return
 	}
@@ -1231,7 +1230,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	tb_normal_slice, err = fetchThreadBeanSlice(thread_normal_slice, r)
 	if err != nil {
-		util.Debug(" Cannot read thread-bean slice", err)
+		util.Debug(" Cannot read thread-bean slice %v", err)
 		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 		return
 	}
@@ -1252,13 +1251,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 		thread_appo, err := pr.ThreadAppointment(ctx)
 		if err != nil {
-			util.Debug(" Cannot read thread appointment", err)
+			util.Debug(" Cannot read thread appointment %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		thread_appo_bean, err := fetchThreadBean(thread_appo, r)
 		if err != nil {
-			util.Debug(" Cannot read thread appointment bean", err)
+			util.Debug(" Cannot read thread appointment bean %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
@@ -1266,13 +1265,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 		thread_seeseek_slice, err := pr.ThreadsSeeSeek(ctx)
 		if err != nil {
-			util.Debug(" Cannot read thread see seek", err)
+			util.Debug(" Cannot read thread see seek %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。，请稍后再试。")
 			return
 		}
 		thread_seeseek_bean_slice, err := fetchThreadBeanSlice(thread_seeseek_slice, r)
 		if err != nil {
-			util.Debug(" Cannot read thread see seek bean slice", err)
+			util.Debug(" Cannot read thread see seek bean slice %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
@@ -1280,13 +1279,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 		thread_brain_fire_slice, err := pr.ThreadsBrainFire(ctx)
 		if err != nil {
-			util.Debug(" Cannot read thread brain fire", err)
+			util.Debug(" Cannot read thread brain fire %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		thread_brainfire_bean_slice, err := fetchThreadBeanSlice(thread_brain_fire_slice, r)
 		if err != nil {
-			util.Debug(" Cannot read thread brain fire bean", err)
+			util.Debug(" Cannot read thread brain fire bean %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
@@ -1294,13 +1293,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 		thread_suggestion_slice, err := pr.ThreadsSuggestion(ctx)
 		if err != nil {
-			util.Debug(" Cannot read thread suggestion", err)
+			util.Debug(" Cannot read thread suggestion %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		thread_suggestion_bean_slice, err := fetchThreadBeanSlice(thread_suggestion_slice, r)
 		if err != nil {
-			util.Debug(" Cannot read thread suggestion bean slice", err)
+			util.Debug(" Cannot read thread suggestion bean slice %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
@@ -1308,13 +1307,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 		thread_goods_slice, err := pr.ThreadsGoods(ctx)
 		if err != nil {
-			util.Debug(" Cannot read thread goods", err)
+			util.Debug(" Cannot read thread goods %v", err)
 			report(w, s_u, "疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		thread_goods_bean_slice, err := fetchThreadBeanSlice(thread_goods_slice, r)
 		if err != nil {
-			util.Debug(" Cannot read thread goods bean slice", err)
+			util.Debug(" Cannot read thread goods bean slice %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
@@ -1322,13 +1321,13 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 		thread_handicraft_slice, err := pr.ThreadsHandicraft(ctx)
 		if err != nil {
-			util.Debug(" Cannot read thread handcraft", err)
+			util.Debug(" Cannot read thread handcraft %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
 		thread_handicraft_bean_slice, err := fetchThreadBeanSlice(thread_handicraft_slice, r)
 		if err != nil {
-			util.Debug(" Cannot read thread handcraft bean slice", err)
+			util.Debug(" Cannot read thread handcraft bean slice %v", err)
 			report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。请稍后再试。")
 			return
 		}
@@ -1357,7 +1356,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	//从会话查获当前浏览用户资料荚
 	s_u, s_default_family, s_survival_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s, r.Context())
 	if err != nil {
-		util.Debug(" Cannot get user-related data from session", s.Email, err)
+		util.Debug(" Cannot get user-related data from session %v", err)
 		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 		return
 	}
@@ -1374,7 +1373,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	if pD.ProjectBean.Project.Class == dao.PrClassClose {
 		is_invited, err := pD.ProjectBean.Project.IsInvitedMember(s_u.Id)
 		if err != nil {
-			util.Debug(" Cannot check invited member", err)
+			util.Debug(" Cannot check invited member %v", err)
 			report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？你真的是受邀请茶团成员吗？")
 			return
 		}
@@ -1400,7 +1399,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 
 	is_master, err := checkProjectMasterPermission(&pr, s_u.Id)
 	if err != nil {
-		util.Debug("Permission check failed", "user_id:", s_u.Id, "error:", err)
+		util.Debug("Permission check failed %v", err)
 		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 		return
 	}
@@ -1409,11 +1408,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	if !is_master {
 		is_admin, err := checkObjectiveAdminPermission(&ob, s_u.Id)
 		if err != nil {
-			util.Debug("Admin permission check failed",
-				"userId", s_u.Id,
-				"objectiveId", ob.Id,
-				"error", err,
-			)
+			util.Debug("Admin permission check failed %v", err)
 			report(w, s_u, "你好，玉烛滴干风里泪，晶帘隔破月中痕。")
 			return
 		}
@@ -1439,7 +1434,7 @@ func ProjectDetail(w http.ResponseWriter, r *http.Request) {
 	// 检查Handicrafts是否完成
 	all_done, err := dao.IsAllHandicraftsCompleted(pr.Id, r.Context())
 	if err != nil && err != sql.ErrNoRows {
-		util.Debug("Handicraft check failed", "error:", err)
+		util.Debug("Handicraft check failed %v", err)
 		report(w, s_u, "你好，疏是枝条艳是花，春妆儿女竞奢华。")
 		return
 	}

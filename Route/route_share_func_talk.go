@@ -39,7 +39,7 @@ func checkCreateProjectPermission(objective dao.Objective, s_u dao.User, w http.
 	case dao.ObClassClose: // 封闭式茶话会
 		isInvited, err := objective.IsInvitedMember(s_u.Id)
 		if err != nil {
-			util.Debug("检查邀请名单失败", "error", err)
+			util.Debug("检查邀请名单失败 %v", err)
 			report(w, s_u, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
 			return false
 		}
@@ -62,7 +62,7 @@ func checkCreateThreadPermission(project dao.Project, s_u dao.User, w http.Respo
 	case dao.PrClassClose: // 封闭式茶台
 		isInvited, err := project.IsInvitedMember(s_u.Id)
 		if err != nil {
-			util.Debug("检查邀请名单失败", "error", err)
+			util.Debug("检查邀请名单失败 %v", err)
 			report(w, s_u, "你好，茶博士满头大汗说，邀请品茶名单被狗叼进了花园，请稍候。")
 			return false
 		}
@@ -104,19 +104,19 @@ func fetchThreadBean(thread dao.Thread, r *http.Request) (tB dao.ThreadBean, err
 	//作者资料
 	tB.Author, err = thread.Author()
 	if err != nil {
-		util.Debug(fmt.Sprintf("Failed to read thread author for thread ID %d: %v", thread.Id, err))
+		util.Debug("Failed to read thread author for thread ID %d: %v", thread.Id, err)
 		return tB, fmt.Errorf("failed to read thread author: %w", err)
 	}
 	//作者发帖时选择的成员身份所属茶团，$事业团队id或者&family家庭id。
 	tB.AuthorFamily, err = dao.GetFamily(thread.FamilyId)
 	if err != nil {
-		util.Debug(" Cannot read thread author family", err)
+		util.Debug(" Cannot read thread author family %v", err)
 		return
 	}
 
 	tB.AuthorTeam, err = dao.GetTeam(thread.TeamId)
 	if err != nil {
-		util.Debug(" Cannot read thread author team", err)
+		util.Debug(" Cannot read thread author team %v", err)
 		return
 	}
 
@@ -127,7 +127,7 @@ func fetchThreadBean(thread dao.Thread, r *http.Request) (tB dao.ThreadBean, err
 	if thread.IsPrivate {
 		p_f_count, err := dao.CountFamilyParentAndChildMembers(thread.FamilyId, r.Context())
 		if err != nil {
-			util.Debug(fmt.Sprintf("Failed to count family members for family ID %d: %v", thread.FamilyId, err))
+			util.Debug("Failed to count family members for family ID %d: %v", thread.FamilyId, err)
 			return tB, fmt.Errorf("failed to count family members: %w", err)
 		}
 		tB.StatsSet.MemberCount = p_f_count
@@ -135,7 +135,7 @@ func fetchThreadBean(thread dao.Thread, r *http.Request) (tB dao.ThreadBean, err
 	} else {
 		teamMembersCount, err := tB.AuthorTeam.NumActiveMembers()
 		if err != nil {
-			util.Debug(fmt.Sprintf("Failed to count team members for team ID %d: %v", tB.AuthorTeam.Id, err))
+			util.Debug("Failed to count team members for team ID %d: %v", tB.AuthorTeam.Id, err)
 			return tB, fmt.Errorf("failed to count team members: %w", err)
 		}
 		tB.StatsSet.MemberCount = teamMembersCount
@@ -201,7 +201,7 @@ func fetchObjectiveBean(ob dao.Objective) (ObjectiveBean dao.ObjectiveBean, err 
 	oB.CreatedAtDate = ob.CreatedAtDate()
 	user, err := ob.Admin()
 	if err != nil {
-		util.Debug(" Cannot read objective author", err)
+		util.Debug(" Cannot read objective author %v", err)
 		return
 	}
 	oB.Author = user
@@ -210,13 +210,13 @@ func fetchObjectiveBean(ob dao.Objective) (ObjectiveBean dao.ObjectiveBean, err 
 
 	oB.AuthorFamily, err = dao.GetFamily(ob.FamilyId)
 	if err != nil {
-		util.Debug(" Cannot read objective author family", err)
+		util.Debug(" Cannot read objective author family %v", err)
 		return
 	}
 
 	oB.AuthorTeam, err = dao.GetTeam(ob.TeamId)
 	if err != nil {
-		util.Debug(" Cannot read objective author team", err)
+		util.Debug(" Cannot read objective author team %v", err)
 		return
 	}
 
@@ -253,7 +253,7 @@ func fetchProjectBean(project dao.Project) (ProjectBean dao.ProjectBean, err err
 	pb.CreatedAtDate = project.CreatedAtDate()
 	author, err := project.Master()
 	if err != nil {
-		util.Debug(" Cannot read project author", err)
+		util.Debug(" Cannot read project author %v", err)
 		return
 	}
 	pb.Author = author
@@ -262,25 +262,25 @@ func fetchProjectBean(project dao.Project) (ProjectBean dao.ProjectBean, err err
 
 	pb.AuthorFamily, err = dao.GetFamily(project.FamilyId)
 	if err != nil {
-		util.Debug(" Cannot read project author family", err)
+		util.Debug(" Cannot read project author family %v", err)
 		return
 	}
 
 	pb.AuthorTeam, err = dao.GetTeam(project.TeamId)
 	if err != nil {
-		util.Debug(" Cannot read project author team", err)
+		util.Debug(" Cannot read project author team %v", err)
 		return
 	}
 
 	pb.Place, err = project.Place()
 	if err != nil {
-		util.Debug("cannot read project place", err)
+		util.Debug("cannot read project place %v", err)
 		return pb, err
 	}
 
 	ok, err := project.IsApproved()
 	if err != nil {
-		util.Debug("cannot read project is approved", project.Id)
+		util.Debug("cannot read project is approved %v", project.Id)
 		return pb, err
 	}
 	pb.IsApproved = ok
@@ -308,7 +308,7 @@ func fetchPostBean(post dao.Post) (PostBean dao.PostBean, err error) {
 	PostBean.CreatedAtDate = post.CreatedAtDate()
 	author, err := post.Author()
 	if err != nil {
-		util.Debug(" Cannot read post author", err)
+		util.Debug(" Cannot read post author %v", err)
 		return
 	}
 	PostBean.Author = author
@@ -317,14 +317,14 @@ func fetchPostBean(post dao.Post) (PostBean dao.PostBean, err error) {
 
 	family, err := dao.GetFamily(post.FamilyId)
 	if err != nil {
-		util.Debug(" Cannot read post author family", err)
+		util.Debug(" Cannot read post author family %v", err)
 		return
 	}
 	PostBean.AuthorFamily = family
 
 	team, err := dao.GetTeam(post.TeamId)
 	if err != nil {
-		util.Debug(" Cannot read post author team", err)
+		util.Debug(" Cannot read post author team %v", err)
 		return
 	}
 	PostBean.AuthorTeam = team

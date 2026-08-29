@@ -34,7 +34,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get s_u from session", err)
+		util.Debug("Cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -42,7 +42,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	// 检测当前会话茶友是否见证者
 	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
-		util.Debug(" Current s_u is not a verifier", s_u.Id)
+		util.Debug(" Current s_u is not a verifier %v", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -63,7 +63,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		//这是发生了数据库操作错误
-		util.Debug("Cannot get SeeSeek by uuid", err)
+		util.Debug("Cannot get SeeSeek by uuid %v", err)
 		report(w, s_u, "处理“看看”记录时发生错误，请稍后再试")
 		return
 	}
@@ -75,33 +75,33 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	// 获取项目信息
 	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
-		util.Debug("Cannot get project by uuid", uuid, err)
+		util.Debug("Cannot get project by uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	// 获取目标信息
 	quoteObjective, err := project.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective by project id", project.Id, err)
+		util.Debug("Cannot get objective by project id %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 	project_bean, err := fetchProjectBean(project)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败，请稍后再试")
 		return
 	}
 	objective_bean, err := fetchObjectiveBean(quoteObjective)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败，请稍后再试")
 		return
 	}
 
 	see_seek_bean, err := fetchSeeSeekBean(see_seek)
 	if err != nil {
-		util.Debug("Cannot fetch SeeSeek bean", err)
+		util.Debug("Cannot fetch SeeSeek bean %v", err)
 		report(w, s_u, "获取“看看”记录详情失败，请稍后再试")
 		return
 	}
@@ -119,7 +119,7 @@ func SeeSeekStep2Get(w http.ResponseWriter, r *http.Request) {
 	// 获取验证者团队
 	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
-		util.Debug("Cannot get verifier team", err)
+		util.Debug("Cannot get verifier team %v", err)
 		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
@@ -151,7 +151,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get s_u from session", err)
+		util.Debug("Cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -206,7 +206,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	// 获取已有的隐患ID列表
 	existingHazards, err := see_seek.GetHazards()
 	if err != nil {
-		util.Debug("Cannot get existing hazards", err)
+		util.Debug("Cannot get existing hazards %v", err)
 		report(w, s_u, "获取已有隐患记录失败")
 		return
 	}
@@ -225,7 +225,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 		// 删除已有的隐患关联记录
 		err = dao.DeleteSeeSeekHazardsBySeeSeekId(see_seek.Id)
 		if err != nil {
-			util.Debug("Cannot delete existing SeeSeekHazards", err)
+			util.Debug("Cannot delete existing SeeSeekHazards %v", err)
 			report(w, s_u, "更新隐患记录时发生错误，请稍后再试")
 			return
 		}
@@ -234,12 +234,12 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 		for _, hazardId := range hazardIds {
 			exist, err := dao.IsHazardIdExists(hazardId)
 			if err != nil {
-				util.Debug("Cannot check hazard ID existence", err)
+				util.Debug("Cannot check hazard ID existence %v", err)
 				report(w, s_u, "验证隐患ID时发生错误，请稍后再试")
 				return
 			}
 			if !exist {
-				util.Debug("Invalid hazard ID", hazardId)
+				util.Debug("Invalid hazard ID %v", hazardId)
 				report(w, s_u, fmt.Sprintf("隐患ID %d 不存在，请检查后再试", hazardId))
 				return
 			}
@@ -254,7 +254,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 					HazardId:  hazardId,
 				}
 				if err := see_seek_hazard.Create(); err != nil {
-					util.Debug("Cannot create SeeSeekHazard", err)
+					util.Debug("Cannot create SeeSeekHazard %v", err)
 					report(w, s_u, "保存隐患记录时发生错误，请稍后再试")
 					return
 				}
@@ -265,7 +265,7 @@ func SeeSeekStep2Post(w http.ResponseWriter, r *http.Request) {
 	// 保存步骤，即更新seeSeek
 	see_seek.Step = dao.SeeSeekStepHazard
 	if err := see_seek.Update(); err != nil {
-		util.Debug("Cannot update SeeSeek step", see_seek.Uuid, err)
+		util.Debug("Cannot update SeeSeek step %v", err)
 		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
@@ -299,14 +299,14 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get s_u from session", err)
+		util.Debug("Cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
-		util.Debug(" Current s_u is not a verifier", s_u.Id)
+		util.Debug(" Current s_u is not a verifier %v", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -325,7 +325,7 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
 			return
 		}
-		util.Debug("Cannot get SeeSeek by uuid", err)
+		util.Debug("Cannot get SeeSeek by uuid %v", err)
 		report(w, s_u, "处理看看记录时发生错误，请稍后再试")
 		return
 	}
@@ -337,35 +337,35 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 
 	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
-		util.Debug("Cannot get project by uuid", uuid, err)
+		util.Debug("Cannot get project by uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	quoteObjective, err := project.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective by project id", project.Id, err)
+		util.Debug("Cannot get objective by project id %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	project_bean, err := fetchProjectBean(project)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败，请稍后再试")
 		return
 	}
 
 	objective_bean, err := fetchObjectiveBean(quoteObjective)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败，请稍后再试")
 		return
 	}
 
 	see_seek_bean, err := fetchSeeSeekBean(see_seek)
 	if err != nil {
-		util.Debug("Cannot fetch SeeSeek bean", err)
+		util.Debug("Cannot fetch SeeSeek bean %v", err)
 		report(w, s_u, "获取看看记录详情失败，请稍后再试")
 		return
 	}
@@ -384,7 +384,7 @@ func SeeSeekStep3Get(w http.ResponseWriter, r *http.Request) {
 
 	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
-		util.Debug("Cannot get verifier team", err)
+		util.Debug("Cannot get verifier team %v", err)
 		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
@@ -417,7 +417,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get s_u from session", err)
+		util.Debug("Cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -467,7 +467,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 	// 获取已有的风险ID列表
 	existingRisks, err := seeSeek.GetRisks()
 	if err != nil {
-		util.Debug("Cannot get existing risks", err)
+		util.Debug("Cannot get existing risks %v", err)
 		report(w, s_u, "获取已有风险记录失败")
 		return
 	}
@@ -486,7 +486,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 		// 删除已有的风险关联记录
 		err = dao.DeleteSeeSeekRisksBySeeSeekId(seeSeek.Id)
 		if err != nil {
-			util.Debug("Cannot delete existing SeeSeekRisks", err)
+			util.Debug("Cannot delete existing SeeSeekRisks %v", err)
 			report(w, s_u, "更新风险记录时发生错误，请稍后再试")
 			return
 		}
@@ -498,7 +498,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 					RiskId:    riskId,
 				}
 				if err := see_seek_risk.Create(); err != nil {
-					util.Debug("Cannot create SeeSeekRisk", err)
+					util.Debug("Cannot create SeeSeekRisk %v", err)
 					report(w, s_u, "保存风险记录时发生错误，请稍后再试")
 					return
 				}
@@ -508,7 +508,7 @@ func SeeSeekStep3Post(w http.ResponseWriter, r *http.Request) {
 
 	seeSeek.Step = dao.SeeSeekStepRisk
 	if err := seeSeek.Update(); err != nil {
-		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
+		util.Debug("Cannot update SeeSeek step %v", err)
 		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
@@ -540,14 +540,14 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get s_u from session", err)
+		util.Debug("Cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
-		util.Debug(" Current s_u is not a verifier", s_u.Id)
+		util.Debug(" Current s_u is not a verifier %v", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -566,7 +566,7 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
 			return
 		}
-		util.Debug("Cannot get SeeSeek by uuid", err)
+		util.Debug("Cannot get SeeSeek by uuid %v", err)
 		report(w, s_u, "处理看看记录时发生错误，请稍后再试")
 		return
 	}
@@ -578,35 +578,35 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 
 	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
-		util.Debug("Cannot get project by uuid", uuid, err)
+		util.Debug("Cannot get project by uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	quoteObjective, err := project.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective by project id", project.Id, err)
+		util.Debug("Cannot get objective by project id %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	project_bean, err := fetchProjectBean(project)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败，请稍后再试")
 		return
 	}
 
 	objective_bean, err := fetchObjectiveBean(quoteObjective)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败，请稍后再试")
 		return
 	}
 
 	see_seek_bean, err := fetchSeeSeekBean(see_seek)
 	if err != nil {
-		util.Debug("Cannot fetch SeeSeek bean", err)
+		util.Debug("Cannot fetch SeeSeek bean %v", err)
 		report(w, s_u, "获取看看记录详情失败，请稍后再试")
 		return
 	}
@@ -617,7 +617,7 @@ func SeeSeekStep4Get(w http.ResponseWriter, r *http.Request) {
 
 	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
-		util.Debug("Cannot get verifier team", err)
+		util.Debug("Cannot get verifier team %v", err)
 		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
@@ -648,7 +648,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get s_u from session", err)
+		util.Debug("Cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -705,7 +705,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	if lookChanged && (lookOutline != "" || lookSkin != "" || lookColor != "" || lookIsDeform || lookIsGraze || lookIsChange) {
 		err = dao.DeleteSeeSeekLooksBySeeSeekId(seeSeek.Id)
 		if err != nil {
-			util.Debug("Cannot delete existing SeeSeekLooks", err)
+			util.Debug("Cannot delete existing SeeSeekLooks %v", err)
 		}
 		seeSeekLook := dao.SeeSeekLook{
 			SeeSeekId: seeSeek.Id,
@@ -719,7 +719,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 			IsChange:  lookIsChange,
 		}
 		if err := seeSeekLook.Create(); err != nil {
-			util.Debug("Cannot create SeeSeekLook", err)
+			util.Debug("Cannot create SeeSeekLook %v", err)
 			report(w, s_u, "保存视觉观察记录时发生错误，请稍后再试")
 			return
 		}
@@ -740,7 +740,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	if listenChanged && (listenSound != "" || listenIsAbnormal) {
 		err = dao.DeleteSeeSeekListensBySeeSeekId(seeSeek.Id)
 		if err != nil {
-			util.Debug("Cannot delete existing SeeSeekListens", err)
+			util.Debug("Cannot delete existing SeeSeekListens %v", err)
 		}
 		seeSeekListen := dao.SeeSeekListen{
 			SeeSeekId:  seeSeek.Id,
@@ -750,7 +750,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 			IsAbnormal: listenIsAbnormal,
 		}
 		if err := seeSeekListen.Create(); err != nil {
-			util.Debug("Cannot create SeeSeekListen", err)
+			util.Debug("Cannot create SeeSeekListen %v", err)
 			report(w, s_u, "保存听觉观察记录时发生错误，请稍后再试")
 			return
 		}
@@ -771,7 +771,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	if smellChanged && (smellOdour != "" || smellIsFoulOdour) {
 		err = dao.DeleteSeeSeekSmellsBySeeSeekId(seeSeek.Id)
 		if err != nil {
-			util.Debug("Cannot delete existing SeeSeekSmells", err)
+			util.Debug("Cannot delete existing SeeSeekSmells %v", err)
 		}
 		seeSeekSmell := dao.SeeSeekSmell{
 			SeeSeekId:   seeSeek.Id,
@@ -781,7 +781,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 			IsFoulOdour: smellIsFoulOdour,
 		}
 		if err := seeSeekSmell.Create(); err != nil {
-			util.Debug("Cannot create SeeSeekSmell", err)
+			util.Debug("Cannot create SeeSeekSmell %v", err)
 			report(w, s_u, "保存嗅觉观察记录时发生错误，请稍后再试")
 			return
 		}
@@ -806,7 +806,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	if touchChanged && (touchTemperature != "" || touchStretch != "" || touchShake != "" || touchIsFever || touchIsStiff || touchIsShake) {
 		err = dao.DeleteSeeSeekTouchesBySeeSeekId(seeSeek.Id)
 		if err != nil {
-			util.Debug("Cannot delete existing SeeSeekTouches", err)
+			util.Debug("Cannot delete existing SeeSeekTouches %v", err)
 		}
 		seeSeekTouch := dao.SeeSeekTouch{
 			SeeSeekId:   seeSeek.Id,
@@ -820,7 +820,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 			IsShake:     touchIsShake,
 		}
 		if err := seeSeekTouch.Create(); err != nil {
-			util.Debug("Cannot create SeeSeekTouch", err)
+			util.Debug("Cannot create SeeSeekTouch %v", err)
 			report(w, s_u, "保存触觉观察记录时发生错误，请稍后再试")
 			return
 		}
@@ -829,7 +829,7 @@ func SeeSeekStep4Post(w http.ResponseWriter, r *http.Request) {
 	// 更新步骤
 	seeSeek.Step = dao.SeeSeekStepObservation
 	if err := seeSeek.Update(); err != nil {
-		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
+		util.Debug("Cannot update SeeSeek step %v", err)
 		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}
@@ -860,14 +860,14 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get s_u from session", err)
+		util.Debug("Cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	is_verifier := dao.IsVerifier(s_u.Id)
 	if !is_verifier {
-		util.Debug(" Current s_u is not a verifier", s_u.Id)
+		util.Debug(" Current s_u is not a verifier %v", s_u.Id)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -886,7 +886,7 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，项目的看看记录不存在，请检查项目详情？")
 			return
 		}
-		util.Debug("Cannot get SeeSeek by uuid", err)
+		util.Debug("Cannot get SeeSeek by uuid %v", err)
 		report(w, s_u, "处理看看记录时发生错误，请稍后再试")
 		return
 	}
@@ -898,35 +898,35 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 
 	project := dao.Project{Id: see_seek.ProjectId}
 	if err := project.Get(); err != nil {
-		util.Debug("Cannot get project by uuid", uuid, err)
+		util.Debug("Cannot get project by uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	quoteObjective, err := project.Objective()
 	if err != nil {
-		util.Debug("Cannot get objective by project id", project.Id, err)
+		util.Debug("Cannot get objective by project id %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
 
 	project_bean, err := fetchProjectBean(project)
 	if err != nil {
-		util.Debug("Cannot fetch project bean", err)
+		util.Debug("Cannot fetch project bean %v", err)
 		report(w, s_u, "获取项目详情失败，请稍后再试")
 		return
 	}
 
 	objective_bean, err := fetchObjectiveBean(quoteObjective)
 	if err != nil {
-		util.Debug("Cannot fetch objective bean", err)
+		util.Debug("Cannot fetch objective bean %v", err)
 		report(w, s_u, "获取目标详情失败，请稍后再试")
 		return
 	}
 
 	see_seek_bean, err := fetchSeeSeekBean(see_seek)
 	if err != nil {
-		util.Debug("Cannot fetch SeeSeek bean", err)
+		util.Debug("Cannot fetch SeeSeek bean %v", err)
 		report(w, s_u, "获取看看记录详情失败，请稍后再试")
 		return
 	}
@@ -937,7 +937,7 @@ func SeeSeekStep5Get(w http.ResponseWriter, r *http.Request) {
 
 	verifier_team, err := dao.GetTeam(dao.TeamIdVerifier)
 	if err != nil {
-		util.Debug("Cannot get verifier team", err)
+		util.Debug("Cannot get verifier team %v", err)
 		report(w, s_u, "获取验证者团队失败，请稍后再试")
 		return
 	}
@@ -968,7 +968,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get s_u from session", err)
+		util.Debug("Cannot get s_u from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -1015,7 +1015,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	// 解析完成时间
 	endTime, err := time.Parse("2006-01-02T15:04", endTimeStr)
 	if err != nil {
-		util.Debug(" Cannot parse end time", endTimeStr, err)
+		util.Debug(" Cannot parse end time %v", err)
 		report(w, s_u, "完成时间格式不正确")
 		return
 	}
@@ -1058,7 +1058,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 			ReportDate:        time.Now(),
 		}
 		if err := examinationReport.Create(); err != nil {
-			util.Debug("Cannot create SeeSeekExaminationReport", err)
+			util.Debug("Cannot create SeeSeekExaminationReport %v", err)
 			report(w, s_u, "保存检测报告时发生错误，请稍后再试")
 			return
 		}
@@ -1107,7 +1107,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err := examinationItem.Create(); err != nil {
-				util.Debug("Cannot create SeeSeekExaminationItem", err)
+				util.Debug("Cannot create SeeSeekExaminationItem %v", err)
 				report(w, s_u, "保存检测项目时发生错误，请稍后再试")
 				return
 			}
@@ -1119,7 +1119,7 @@ func SeeSeekStep5Post(w http.ResponseWriter, r *http.Request) {
 	seeSeek.Status = dao.SeeSeekStatusCompleted
 	seeSeek.EndTime = endTime
 	if err := seeSeek.Update(); err != nil {
-		util.Debug("Cannot update SeeSeek step", seeSeek.Uuid, err)
+		util.Debug("Cannot update SeeSeek step %v", err)
 		report(w, s_u, "保存看看记录步骤时发生错误，请稍后再试")
 		return
 	}

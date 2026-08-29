@@ -39,7 +39,7 @@ func RiskNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -63,7 +63,7 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -98,7 +98,7 @@ func RiskNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := risk.Create(); err != nil {
-		util.Debug("Cannot create risk", err)
+		util.Debug("Cannot create risk %v", err)
 		report(w, s_u, "创建风险记录失败，请重试。")
 		return
 	}
@@ -132,7 +132,7 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -151,7 +151,7 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 
 	risk := dao.Risk{Id: id}
 	if err := risk.GetByIdOrUUID(); err != nil {
-		util.Debug("Cannot get risk by id", id, err)
+		util.Debug("Cannot get risk by id %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -159,7 +159,7 @@ func RiskDetailGet(w http.ResponseWriter, r *http.Request) {
 	// 获取记录者信息
 	recorder, err := dao.GetUser(risk.UserId)
 	if err != nil {
-		util.Debug("Cannot get recorder user", risk.UserId, err)
+		util.Debug("Cannot get recorder user %v", err)
 		// 如果获取记录者失败，使用默认值
 		recorder = dao.User{Id: 0, Name: "未知用户"}
 	}

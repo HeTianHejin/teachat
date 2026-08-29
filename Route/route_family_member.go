@@ -30,13 +30,13 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 	//读取会话资料
 	s, err := session(r)
 	if err != nil {
-		util.Debug("Cannot get session", err)
+		util.Debug("Cannot get session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", s.Email, err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -49,7 +49,7 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 	// 欲声明为家庭成员的茶友资料
 	family_member_user, err := dao.GetUserByID(family_member_user_uuid)
 	if err != nil {
-		util.Debug("cannot get family by uuid", err)
+		util.Debug("cannot get family by uuid %v", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -62,7 +62,7 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	family := dao.Family{Uuid: family_uuid}
 	if err = family.GetByUuid(); err != nil {
-		util.Debug("cannot get family by uuid:", family_uuid, err)
+		util.Debug("cannot get family by uuid: %v", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -85,20 +85,20 @@ func FamilyMemberSignInNewPost(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := session(r)
 	if err != nil {
-		util.Debug(" Cannot get session", err)
+		util.Debug(" Cannot get session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
 	// 解析表单内容，获取当前用户提交的内容
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Debug(" Cannot parse form %v", err)
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
@@ -282,13 +282,13 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := session(r)
 	if err != nil {
-		util.Debug(" Cannot get session", err)
+		util.Debug(" Cannot get session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user", err)
+		util.Debug(" Cannot get user %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -299,7 +299,7 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 		Uuid: family_member_sign_in_uuid,
 	}
 	if err := family_member_sign_in.GetByUuid(); err != nil {
-		util.Debug(" Cannot get family_member_sign_in given uuid", err)
+		util.Debug(" Cannot get family_member_sign_in given uuid %v", err)
 		report(w, s_u, "读取声明书失误，请稍后再试一次。")
 		return
 	}
@@ -341,7 +341,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := session(r)
 	if err != nil {
-		util.Debug(" Cannot get session", err)
+		util.Debug(" Cannot get session %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -374,7 +374,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 		Uuid: family_member_sign_in_uuid,
 	}
 	if err = family_member_sign_in.GetByUuid(); err != nil {
-		util.Debug(" Cannot get family_member_sign_in given uuid", err)
+		util.Debug(" Cannot get family_member_sign_in given uuid %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，厚厚的眼镜不见了，稍后再试。")
 		return
 	}
@@ -601,7 +601,7 @@ func FamilyMemberEditPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = fm.UpdateMemberInfo(); err != nil {
-		util.Debug("更新成员资料失败", err)
+		util.Debug("更新成员资料失败 %v", err)
 		report(w, s_u, "保存失败，请稍后再试")
 		return
 	}

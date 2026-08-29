@@ -48,7 +48,7 @@ func MagicNewGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -56,7 +56,7 @@ func MagicNewGet(w http.ResponseWriter, r *http.Request) {
 	// 获取用户所在的团队
 	userTeams, err := dao.GetUserSurvivalTeams(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug("cannot get user teams", err)
+		util.Debug("cannot get user teams %v", err)
 		userTeams = []dao.Team{} // 如果获取失败，使用空列表
 	}
 
@@ -81,7 +81,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -132,7 +132,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := magic.Create(r.Context()); err != nil {
-		util.Debug("Cannot create magic", err)
+		util.Debug("Cannot create magic %v", err)
 		report(w, s_u, "创建法力记录失败，请重试。")
 		return
 	}
@@ -147,7 +147,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 			Status:  dao.Clear, // 默认清醒状态
 		}
 		if err := magicUser.Create(r.Context()); err != nil {
-			util.Debug("cannot create magic user record", err)
+			util.Debug("cannot create magic user record %v", err)
 			// 不阻止流程，仅记录错误
 		}
 	}
@@ -176,7 +176,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 			Status:  dao.ClearMagicTeamStatus, // 默认清晰状态
 		}
 		if err := magicTeam.Create(r.Context()); err != nil {
-			util.Debug("cannot create magic team record", err)
+			util.Debug("cannot create magic team record %v", err)
 			// 不阻止流程，仅记录错误
 		}
 	}
@@ -210,7 +210,7 @@ func MagicDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -235,7 +235,7 @@ func MagicDetailGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := magic.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("Cannot get magic by id/uuid", magic.Id, magic.Uuid, err)
+		util.Debug("Cannot get magic by id/uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
 		return
 	}
@@ -272,7 +272,7 @@ func MagicListGet(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Debug("Cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -280,7 +280,7 @@ func MagicListGet(w http.ResponseWriter, r *http.Request) {
 	// 获取所有法力
 	magics, err := dao.GetAllMagics(r.Context())
 	if err != nil {
-		util.Debug("Cannot get magics", err)
+		util.Debug("Cannot get magics %v", err)
 		report(w, s_u, "获取法力列表失败，请重试。")
 		return
 	}
@@ -322,7 +322,7 @@ func HandleMagicsUserList(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get user from session", err)
+		util.Debug("cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -338,7 +338,7 @@ func HandleMagicUserEdit(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get user from session", err)
+		util.Debug("cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -356,13 +356,13 @@ func HandleMagicUserEdit(w http.ResponseWriter, r *http.Request) {
 func MagicsUserListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 确保用户拥有默认法力
 	if err := dao.EnsureDefaultMagics(s_u.Id, r.Context()); err != nil {
-		util.Debug("cannot ensure default magics for user:", s_u.Id, err)
+		util.Debug("cannot ensure default magics for user: %v",  err)
 	}
 
 	// 获取MagicUserBean
 	magicUserBean, err := fetchMagicUserBean(s_u, r.Context())
 	if err != nil {
-		util.Debug("cannot fetch magic user bean:", s_u.Id, err)
+		util.Debug("cannot fetch magic user bean: %v",  err)
 		report(w, s_u, "获取茶友法力列表失败，请重试。")
 		return
 	}
@@ -432,7 +432,7 @@ func MagicUserEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取法力用户记录
 	var magicUser dao.MagicUser
 	if err := magicUser.GetById(id, r.Context()); err != nil {
-		util.Debug("cannot get magic user by id", id, err)
+		util.Debug("cannot get magic user by id %v",  err)
 		report(w, s_u, "法力记录不存在。")
 		return
 	}
@@ -464,7 +464,7 @@ func MagicUserEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	var magic dao.Magic
 	magic.Id = magicUser.MagicId
 	if err := magic.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("cannot get magic by id", magicUser.MagicId, err)
+		util.Debug("cannot get magic by id %v",  err)
 		report(w, s_u, "法力信息获取失败。")
 		return
 	}
@@ -500,7 +500,7 @@ func MagicUserEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取原始法力用户记录
 	var magicUser dao.MagicUser
 	if err := magicUser.GetById(id, r.Context()); err != nil {
-		util.Debug("cannot get magic user by id", id, err)
+		util.Debug("cannot get magic user by id %v",  err)
 		report(w, s_u, "法力记录不存在。")
 		return
 	}
@@ -544,7 +544,7 @@ func MagicUserEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	magicUser.Status = dao.MagicUserStatus(status)
 
 	if err := magicUser.Update(); err != nil {
-		util.Debug("cannot update magic user", err)
+		util.Debug("cannot update magic user %v", err)
 		report(w, s_u, "更新法力记录失败，请重试。")
 		return
 	}
@@ -570,7 +570,7 @@ func HandleMagicsTeamList(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get user from session", err)
+		util.Debug("cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -588,7 +588,7 @@ func MagicsTeamListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取团队信息
 	team, err := dao.GetTeamByUUID(uuidStr)
 	if err != nil {
-		util.Debug("cannot get team by uuid", uuidStr, err)
+		util.Debug("cannot get team by uuid %v", err)
 		report(w, s_u, "团队不存在。")
 		return
 	}
@@ -603,7 +603,7 @@ func MagicsTeamListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取MagicTeamBean
 	magicTeamBean, err := fetchMagicTeamBean(team, r.Context())
 	if err != nil {
-		util.Debug("cannot fetch magic team bean:", team.Id, err)
+		util.Debug("cannot fetch magic team bean: %v", err)
 		report(w, s_u, "获取团队法力列表失败，请重试。")
 		return
 	}
@@ -667,7 +667,7 @@ func HandleMagicTeamEdit(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := sess.User()
 	if err != nil {
-		util.Debug("cannot get user from session", err)
+		util.Debug("cannot get user from session %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -698,7 +698,7 @@ func MagicTeamEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取团队法力记录
 	var magicTeam dao.MagicTeam
 	if err := magicTeam.GetById(id, r.Context()); err != nil {
-		util.Debug("cannot get magic team by id", id, err)
+		util.Debug("cannot get magic team by id %v", err)
 		report(w, s_u, "法力记录不存在。")
 		return
 	}
@@ -721,7 +721,7 @@ func MagicTeamEditGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	var magic dao.Magic
 	magic.Id = magicTeam.MagicId
 	if err := magic.GetByIdOrUUID(r.Context()); err != nil {
-		util.Debug("cannot get magic by id", magicTeam.MagicId, err)
+		util.Debug("cannot get magic by id %v", err)
 		report(w, s_u, "法力信息获取失败。")
 		return
 	}
@@ -759,7 +759,7 @@ func MagicTeamEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	// 获取原始团队法力记录
 	var magicTeam dao.MagicTeam
 	if err := magicTeam.GetById(id, r.Context()); err != nil {
-		util.Debug("cannot get magic team by id", id, err)
+		util.Debug("cannot get magic team by id %v", err)
 		report(w, s_u, "法力记录不存在。")
 		return
 	}
@@ -795,7 +795,7 @@ func MagicTeamEditPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	magicTeam.Status = dao.MagicTeamStatus(status)
 
 	if err := magicTeam.Update(); err != nil {
-		util.Debug("cannot update magic team", err)
+		util.Debug("cannot update magic team %v", err)
 		report(w, s_u, "更新法力记录失败，请重试。")
 		return
 	}
