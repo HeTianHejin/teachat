@@ -72,7 +72,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 	post_id, err := strconv.Atoi(r.PostFormValue("post_id"))
 	if err != nil {
-		util.Debug("Failed to convert post_id to int", project_id, err)
+		util.Error("Failed to convert post_id to int", err)
 		report(w, s_u, "你好，闪电茶博士极速服务，任然无法识别提交的品味资料，请确认后再试。")
 		return
 	}
@@ -81,7 +81,7 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	proj := dao.Project{Id: project_id}
 	//检查该茶台是否存在，而且状态不是待友邻蒙评审查草台状态
 	if err = proj.Get(); err != nil {
-		util.Debug(" Cannot get project", err)
+		util.Error("Cannot get project by id %d: %v", project_id, err)
 		report(w, s_u, "你好，鲁莽的茶博士竟然声称这个茶台被火星人顺走了。")
 		return
 	}
@@ -92,19 +92,19 @@ func NewDraftThreadPost(w http.ResponseWriter, r *http.Request) {
 	}
 	if post_id > 0 {
 		if err = post.Get(); err != nil {
-			util.Debug(" Cannot get post given id", post_id, err)
+			util.Error("Cannot get post given id %d: %v", post_id, err)
 			report(w, s_u, "你好，闪电茶博士极速服务，然而无法识别提交的品味资料，请确认后再试。")
 			return
 		}
 		test_proj, err := post.Project()
 		if err != nil {
-			util.Debug(" Cannot get post given id", post_id, err)
+			util.Error("Cannot get project given post %d: %v", post.Id, err)
 			report(w, s_u, "你好，闪电茶博士极速服务，然而无法识别提交的品味资料，请确认后再试。")
 			return
 		}
 		// 检查提及的post和project是否匹配
 		if proj.Id != test_proj.Id {
-			util.Debug(project_id, "post_id and project_id do not match")
+			util.Warning("post_id %d and project_id %d do not match", post_id, project_id)
 			report(w, s_u, "你好，茶博士居然说这个茶台有一点点问题，请确认后再试一次。")
 			return
 		}
@@ -658,13 +658,13 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	}
 	proj, err := thread.Project()
 	if err != nil {
-		util.Debug(thread.Id, " Cannot read project given thread_id")
+		util.Error("Cannot read project given thread_id %d: %v", thread.Id, err)
 		report(w, s_u, "你好，闪电茶博士极速服务中，未能读取茶台资料，请稍后再试。")
 		return
 	}
 	ob, err := proj.Objective()
 	if err != nil {
-		util.Debug(proj.Id, " Cannot read objective given project")
+		util.Error("Cannot read objective given project %d: %v", proj.Id, err)
 		report(w, s_u, "你好，闪电茶博士极速服务中，未能读取茶台资料，请稍后再试。")
 		return
 	}
@@ -672,14 +672,14 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 	//检查用户是否有权限处理这个请求
 	admin_team, err := dao.GetTeam(ob.TeamId)
 	if err != nil {
-		util.Debug(proj.TeamId, " Cannot get team given id")
+		util.Error("Cannot get team given id %d: %v", ob.TeamId, err)
 		report(w, s_u, "你好，闪电茶博士极速服务中，未能读取团队资料，请稍后再试。")
 		return
 	}
 	//检查是否支持team成员
 	is_admin, err := admin_team.IsActiveMember(s_u.Id)
 	if err != nil {
-		util.Debug(admin_team.Id, " Cannot check team membership")
+		util.Error("Cannot check team membership for team %d: %v", admin_team.Id, err)
 		report(w, s_u, "你好，闪电茶博士极速服务中，未能读取团队资料，请稍后再试。")
 		return
 	}
@@ -701,7 +701,7 @@ func ThreadApprove(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err = new_thread_approved.Create(); err != nil {
-		util.Debug(thread.Id, " Cannot create thread approved")
+		util.Error("Cannot create thread approved: %v", err)
 		report(w, s_u, "你好，闪电茶博士极速服务中，未能处理你的请求，请稍后再试。")
 		return
 	}

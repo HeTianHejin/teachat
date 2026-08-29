@@ -28,7 +28,7 @@ func Polite(w http.ResponseWriter, r *http.Request) {
 func PolitePost(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
 	if err != nil {
-		util.Debug("Cannot get session", err)
+		util.Error("Cannot get session: %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}

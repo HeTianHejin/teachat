@@ -858,7 +858,7 @@ func ManageTeamIndexGet(w http.ResponseWriter, r *http.Request) {
 	}
 	teamNormalMembers, err := team.NormalMembers()
 	if err != nil {
-		util.Debug(team.Id, " Cannot get team normal member")
+		util.Error("Cannot get team normal member %d: %v", team.Id, err)
 		report(w, s_u, "你好，茶博士为你效劳中，请稍后再试。")
 		return
 	}
@@ -1334,7 +1334,7 @@ func TeamMembersLeft(w http.ResponseWriter, r *http.Request) {
 	// 查询已离开的成员（status=3）
 	leftMembers, err := dao.GetResignedMembersByTeamId(team.Id)
 	if err != nil {
-		util.Debug(team.Id, "Cannot get resigned members", err)
+		util.Error("Cannot get resigned members for team %d: %v", team.Id, err)
 		report(w, s_u, "你好，茶博士正在努力的查找离开成员，请稍后再试。")
 		return
 	}
@@ -1367,7 +1367,7 @@ func canManageTeam(team *dao.Team, s_u dao.User, w http.ResponseWriter) bool {
 	if !isCoreMember {
 		founder, err := team.Founder()
 		if err != nil {
-			util.Debug(team.Id, "Cannot get team founder")
+			util.Error("Cannot get team founder %d: %v", team.Id, err)
 			report(w, s_u, "你好，茶博士未能找到此茶团资料，请确认后再试。")
 			return false
 		}

@@ -19,7 +19,7 @@ import (
 // 初始化日志
 func init() {
 	// 开发模式默认日志配置
-	InitLogger(false, LevelDebug) // 默认控制台输出，Debug级别
+	InitLogger(true, LevelDebug) // 默认控制台输出，Debug级别
 }
 
 // 配置文件结构体

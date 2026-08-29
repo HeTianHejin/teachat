@@ -65,13 +65,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取此品味的引用茶议（源自）引用茶台
 	quote_project, err := quote_thread.Project()
 	if err != nil {
-		util.Debug(quote_thread.Id, " Cannot get project given thread")
+		util.Error("Cannot get project given thread %d: %v", quote_thread.Id, err)
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 	pD.QuoteProjectBean, err = fetchProjectBean(quote_project)
 	if err != nil {
-		util.Debug(quote_project.Id, " Cannot get project given project")
+		util.Error("Cannot get project given project %d: %v", quote_project.Id, err)
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
@@ -79,13 +79,13 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取此品味的引用茶议（源自）引用茶台，引用的茶围
 	quote_objective, err := quote_project.Objective()
 	if err != nil {
-		util.Debug(quote_project.Id, " Cannot get objective given project")
+		util.Error("Cannot get objective given project %d: %v", quote_project.Id, err)
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
 	pD.QuoteObjectiveBean, err = fetchObjectiveBean(quote_objective)
 	if err != nil {
-		util.Debug(quote_objective.Id, " Cannot get objective given objective")
+		util.Error("Cannot get objective given objective %d: %v", quote_objective.Id, err)
 		report(w, s_u, "你好，身后有余忘缩手，眼前无路想回头。")
 		return
 	}
@@ -117,7 +117,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取已登陆陛下资料
 	s_u, err = s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Error("Cannot get user from session", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -125,7 +125,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 	// 从会话查获当前浏览陛下资料荚
 	s_u, s_default_family, s_all_families, s_default_team, s_survival_teams, s_default_place, s_places, err := fetchSessionUserRelatedData(s, r.Context())
 	if err != nil {
-		util.Debug(" Cannot get user-related data from session", err)
+		util.Error("Cannot get user-related data from session", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -140,14 +140,14 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 
 	pD.IsAdmin, err = checkObjectiveAdminPermission(&quote_objective, s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check objective admin permission", err)
+		util.Error(" Cannot check objective admin permission", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
 
 	pD.IsMaster, err = checkProjectMasterPermission(&quote_project, s_u.Id)
 	if err != nil {
-		util.Debug(" Cannot check project master permission", err)
+		util.Error(" Cannot check project master permission", err)
 		report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 		return
 	}
@@ -155,7 +155,7 @@ func PostDetail(w http.ResponseWriter, r *http.Request) {
 		veri_team := dao.Team{Id: dao.TeamIdVerifier}
 		is_member, err := veri_team.IsActiveMember(s_u.Id)
 		if err != nil {
-			util.Debug("Cannot check verifier team member", err)
+			util.Error("Cannot check verifier team member", err)
 			report(w, s_u, "你好，茶博士失魂鱼，有眼不识泰山。")
 			return
 		}
@@ -200,13 +200,13 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(" Cannot get user from session", err)
+		util.Error("Cannot get user from session", err)
 		report(w, s_u, "你好，未能读取陛下会话信息。请重新登录或联系管理员。")
 		return
 	}
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Error("Cannot parse form", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说人工智能助理飞去热带海岛潜水度假了。")
 		return
 	}
@@ -223,7 +223,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	posted := dao.Post{UserId: s_u.Id, ThreadId: t_thread.Id}
 	posted_exists, err := posted.HasUserPostedInThread(ctx)
 	if err != nil {
-		util.Debug("failed to check has-user-posted-thread", err)
+		util.Error("failed to check has-user-posted-thread", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说人工智能助理飞去热带海岛潜水度假了。")
 		return
 	}
@@ -251,7 +251,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	if te_id_str != "" {
 		team_id, err = strconv.Atoi(te_id_str)
 		if err != nil {
-			util.Debug(" Cannot change team_id to int", te_id_str, err)
+			util.Error("Cannot change team_id to int", err)
 			report(w, s_u, "一年三百六十日，风刀霜剑严相逼，请确认提交的团队编号。")
 			return
 		}
@@ -262,20 +262,20 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	if family_id_str != "" {
 		family_id, err = strconv.Atoi(family_id_str)
 		if err != nil {
-			util.Debug(" Cannot change family_id to int", family_id_str, err)
+			util.Error("Cannot change family_id to int", err)
 			report(w, s_u, "一年三百六十日，风刀霜剑严相逼，请确认提交的家庭编号。")
 			return
 		}
 	}
 	is_private := r.PostFormValue("is_private") == "true"
 
-	if team_id != 0 {
+	if team_id > dao.TeamIdFreelancer || family_id > dao.FamilyIdUnknown {
 		valid, err := validateTeamAndFamilyParams(is_private, team_id, family_id, s_u, w)
 		if !valid && err == nil {
 			return
 		}
 		if err != nil {
-			util.Debug("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
+			util.Error("验证提交的团队和家庭id出现数据库错误", team_id, family_id, err)
 			report(w, s_u, "你好，茶团成员资格检查未通过，请确认后再试。")
 			return
 		}
@@ -284,7 +284,7 @@ func NewPostDraft(w http.ResponseWriter, r *http.Request) {
 	// 茶议所在的茶台
 	t_proj, err := t_thread.Project()
 	if err != nil {
-		util.Debug(" Cannot get project by project id", t_proj.Id, err)
+		util.Error("Cannot get project by project id %d: %v", t_proj.Id, err)
 		report(w, s_u, "你好，未能读取专属茶台资料。")
 		return
 	}

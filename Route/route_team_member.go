@@ -93,7 +93,7 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 	// 读取目标茶团资料
 	t_team, err := dao.GetTeam(team_id)
 	if err != nil {
-		util.Debug(team_id, "Cannot get team by id", err)
+		util.Error("Cannot get team by id %d: %v", team_id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -104,7 +104,7 @@ func MemberResignPost(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，你不是茶团成员，不接受退出声明噢。")
 			return
 		} else {
-			util.Debug("Cannot get team member by team_id %d and user_id %d", t_team.Id, t_user.Id, err)
+			util.Error("Cannot get team member by team_id %d and user_id %d: %v", t_team.Id, t_user.Id, err)
 			report(w, s_u, "你好，未能获取拟退出的茶团资料，请稍后再试。")
 			return
 		}
@@ -203,7 +203,7 @@ func MemberResignGet(w http.ResponseWriter, r *http.Request) {
 	//读取目标茶团资料
 	t_team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(team_uuid, "Cannot get team by uuid", err)
+		util.Error("Cannot get team by uuid %s: %v", team_uuid, err)
 		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
@@ -211,7 +211,7 @@ func MemberResignGet(w http.ResponseWriter, r *http.Request) {
 	//检查目标茶友是否茶团活跃状态成员
 	isActiveMember, err := dao.IsTeamActiveMember(s_u.Id, t_team.Id)
 	if err != nil {
-		util.Debug(s_u.Id, t_team.Id, "Cannot check if user is active member of team", err)
+		util.Error("Cannot check if user %d is active member of team %d: %v", s_u.Id, t_team.Id, err)
 		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 		return
 	}
@@ -253,7 +253,7 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 	//读取目标茶团资料
 	t_team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(team_uuid, "Cannot get team by uuid", err)
+		util.Error("Cannot get team by uuid %s: %v", team_uuid, err)
 		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
@@ -261,13 +261,13 @@ func MemberRoleChanged(w http.ResponseWriter, r *http.Request) {
 	//读取这支茶团已发布的，全部成员角色调整声明
 	role_notices, err := dao.GetMemberRoleNoticesByTeamId(t_team.Id)
 	if err != nil {
-		util.Debug(t_team.Id, "Cannot get team member role change notice by team id", err)
+		util.Error("Cannot get team member role change notice by team id %d: %v", t_team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
 	tmrnBeanSlice, err := fetchTeamMemberRoleNoticeBeanSlice(role_notices)
 	if err != nil {
-		util.Debug("Cannot fetch team member role notice bean slice", err)
+		util.Error("Cannot fetch team member role notice bean slice: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
@@ -329,7 +329,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	//检查提交的id参数格式是否正常
 	team_id_int, err := strconv.Atoi(team_id_str)
 	if err != nil {
-		util.Debug(team_id_str, "Cannot convert team_id to int", err)
+		util.Error("Cannot convert team_id %s to int: %v", team_id_str, err)
 		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 		return
 	}
@@ -345,14 +345,14 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	//读取目标茶团资料
 	t_team, err := dao.GetTeam(team_id_int)
 	if err != nil {
-		util.Debug(team_id_str, "Cannot get team by id", err)
+		util.Error("Cannot get team by id %d: %v", team_id_int, err)
 		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶团，稍后再试。")
 		return
 	}
 	//读取拟调整角色目标茶友资料
 	t_member, err := dao.GetUserByEmail(member_email, r.Context())
 	if err != nil {
-		util.Debug(member_email, "Cannot get user given email", err)
+		util.Error("Cannot get user given email %s: %v", member_email, err)
 		report(w, s_u, "你好，满头大汗的茶博士表示找不到这个茶友，稍后再试。")
 		return
 	}
@@ -364,7 +364,7 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，满头大汗的茶博士表示这个不是茶团的成员，稍后再试。")
 			return
 		} else {
-			util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
+			util.Error("when GetMemberByTeamIdAndUserId() checking team_member: %v", err)
 			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
@@ -374,14 +374,14 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	//先读取茶团CEO成员资料
 	member_ceo, err := t_team.MemberCEO()
 	if err != nil {
-		util.Debug(t_team.Id, "Cannot get team ceo given team id", err)
+		util.Error("Cannot get team ceo given team id %d: %v", t_team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取目标茶团创建人的资料，Founder也可以调整成员角色！包括CEO！太疯狂了？
 	t_founder, err := t_team.Founder()
 	if err != nil {
-		util.Debug(t_team.Id, "Cannot get team founder given team id", err)
+		util.Error("Cannot get team founder given team id %d: %v", t_team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 	}
 	// 准备资料
@@ -409,14 +409,14 @@ func MemberRoleChange(w http.ResponseWriter, r *http.Request) {
 	//读取CEO茶友资料
 	t_ceo, err := dao.GetUser(member_ceo.UserId)
 	if err != nil {
-		util.Debug(member_ceo.UserId, "Cannot get user by id", err)
+		util.Error("Cannot get user by id %d: %v", member_ceo.UserId, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
 
 	m_c_role, err := dao.GetTeamMemberRoleByTeamIdAndUserId(t_team.Id, t_member.Id)
 	if err != nil {
-		util.Debug(t_team.Id, "Cannot get team member role given team id", err)
+		util.Error("Cannot get team member role given team id %d: %v", t_team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，请稍后再试。")
 		return
 	}
@@ -479,7 +479,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	//读取目标茶团资料
 	t_team, err := dao.GetTeam(team_id)
 	if err != nil {
-		util.Debug(team_id, "Cannot get team by id", err)
+		util.Error("Cannot get team by id %d: %v", team_id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -512,7 +512,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 				//目标角色空缺,可以调整
 
 			} else {
-				util.Debug(t_team.Id, new_role, "Cannot get team member by role", err)
+				util.Error("Cannot get team member by role %d: %v", new_role, err)
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
@@ -525,7 +525,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	//目标茶友
 	t_user, err := dao.GetUserByEmail(m_email, r.Context())
 	if err != nil {
-		util.Debug(m_email, "Cannot get user by email", err)
+		util.Error("Cannot get user by email %s: %v", m_email, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -539,7 +539,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	//检查目标茶友是否茶团活跃成员
 	isActiveMember, err := dao.IsTeamActiveMember(t_user.Id, t_team.Id)
 	if err != nil {
-		util.Debug(t_user.Id, t_team.Id, "Cannot check if user is active member of team", err)
+		util.Error("Cannot check if user %d is active member of team %d: %v", t_user.Id, t_team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -550,7 +550,7 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	// 查看目标用户当前角色
 	member, err := dao.GetMemberByTeamIdUserId(t_team.Id, t_user.Id)
 	if err != nil {
-		util.Debug(t_team.Id, " when GetMemberByTeamIdAndUserId() checking team_member", err)
+		util.Error("when GetMemberByTeamIdAndUserId() checking team_member: %v", err)
 		report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 		return
 
@@ -580,14 +580,14 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 	//读取CEO成员资料
 	m_ceo, err := t_team.MemberCEO()
 	if err != nil {
-		util.Debug(t_team.Id, "Cannot get team ceo given team id", err)
+		util.Error("Cannot get team ceo given team id %d: %v", t_team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取目标茶团创建人资料
 	t_founder, err := t_team.Founder()
 	if err != nil {
-		util.Debug(t_team.Id, "Cannot get team founder given team id", err)
+		util.Error("Cannot get team founder given team id %d: %v", t_team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -606,14 +606,14 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 			Status:            0,
 		}
 		if err = team_member_role_notice.Create(); err != nil {
-			util.Debug(team_member_role_notice, "Cannot create team_member_role_notice", err)
+			util.Error("Cannot create team_member_role_notice: %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		//更新成员角色
 		member.Role = new_role
 		if err = member.UpdateRoleStatus(); err != nil {
-			util.Debug(member, "Cannot update member", err)
+			util.Error("Cannot update member: %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
@@ -632,14 +632,14 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 			Status:            0,
 		}
 		if err = team_member_role_notice.Create(); err != nil {
-			util.Debug(team_member_role_notice, "Cannot create team_member_role_notice", err)
+			util.Error("Cannot create team_member_role_notice: %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		// 更新成员角色
 		member.Role = new_role
 		if err = member.UpdateRoleStatus(); err != nil {
-			util.Debug(member, "Cannot update member", err)
+			util.Error("Cannot update member: %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
@@ -647,13 +647,13 @@ func MemberRoleReply(w http.ResponseWriter, r *http.Request) {
 		if new_role == dao.RoleCEO {
 			founder_member, err := dao.GetMemberByTeamIdUserId(t_team.Id, t_founder.Id)
 			if err != nil {
-				util.Debug(t_team.Id, t_founder.Id, "Cannot get founder member given team and user id", err)
+				util.Error("Cannot get founder member given team %d and user %d: %v", t_team.Id, t_founder.Id, err)
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
 			founder_member.Status = dao.TeamMemberStatusActive
 			if err = founder_member.UpdateRoleStatus(); err != nil {
-				util.Debug(founder_member, "Cannot update founder member", err)
+				util.Error("Cannot update founder member: %v", err)
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
@@ -743,21 +743,21 @@ func MemberApplicationDetail(w http.ResponseWriter, r *http.Request) {
 	application_uuid := vals.Get("uuid")
 	application := dao.MemberApplication{Uuid: application_uuid}
 	if err = application.GetByUuid(); err != nil {
-		util.Debug(application_uuid, "cannot get application given uuid", err)
+		util.Error("cannot get application given uuid %s: %v", application_uuid, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	applicant, err := dao.GetUser(application.UserId)
 	if err != nil {
-		util.Debug(application.UserId, "Cannot get user given id", err)
+		util.Error("Cannot get user given id %d: %v", application.UserId, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	team, err := dao.GetTeam(application.TeamId)
 	if err != nil {
-		util.Debug(application.TeamId, "Cannot get team given id", err)
+		util.Error("Cannot get team given id %d: %v", application.TeamId, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -768,7 +768,7 @@ func MemberApplicationDetail(w http.ResponseWriter, r *http.Request) {
 
 	applicant_default_team, err := applicant.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(applicant.Email, "Cannot get default team given user", err)
+		util.Error("Cannot get default team given user %d: %v", applicant.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -788,21 +788,21 @@ func MemberApplicationDetail(w http.ResponseWriter, r *http.Request) {
 func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
-		util.Debug(" Cannot get session", err)
+		util.Error("Cannot get session: %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	// 根据会话信息读取茶友资料
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug(s.Email, "Cannot get user from session", err)
+		util.Error("Cannot get user from session %s: %v", s.Email, err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	//解析表单内容，获取茶友提交的内容
 	err = r.ParseForm()
 	if err != nil {
-		util.Debug(" Cannot parse form", err)
+		util.Error("Cannot parse form: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -811,7 +811,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	application_id_str := r.PostFormValue("application_id")
 	application_id, err := strconv.Atoi(application_id_str)
 	if err != nil {
-		util.Debug(application_id_str, "Cannot convert application_id to int", err)
+		util.Error("Cannot convert application_id %s to int: %v", application_id_str, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -820,7 +820,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	}
 	//读取加盟茶团申请书
 	if err = application.Get(); err != nil {
-		util.Debug(application_id, "Cannot get application given id", err)
+		util.Error("Cannot get application given id %d: %v", application_id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -848,14 +848,14 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	//读取申请人申请加盟的茶团
 	team, err := dao.GetTeam(application.TeamId)
 	if err != nil {
-		util.Debug(application.TeamId, "Cannot get team given id", err)
+		util.Error("Cannot get team given id %d: %v", application.TeamId, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	is_core_member, err := team.IsCoreMember(s_u.Id)
 	if err != nil {
-		util.Debug(team.Id, "Cannot get core members of team", err)
+		util.Error("Cannot get core members of team %d: %v", team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -868,7 +868,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 	//读取申请人资料
 	applicant, err := dao.GetUser(application.UserId)
 	if err != nil {
-		util.Debug(application.UserId, "Cannot get user given id", err)
+		util.Error("Cannot get user given id %d: %v", application.UserId, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -879,7 +879,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		case sql.ErrNoRows:
 			break
 		default:
-			util.Debug(applicant.Email, " when checking team_member", err)
+			util.Error("when checking team_member: %v", err)
 			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
@@ -918,14 +918,14 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		}
 		//将新的茶团成员写入数据库
 		if err = team_member.Create(); err != nil {
-			util.Debug(team_member, "Cannot create team_member", err)
+			util.Error("Cannot create team_member %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
 		//检查茶友加入茶团计数，如果是1，默认的自由人，改设当前团队为默认团队
 		count, err := dao.GetUserSurvivalTeamsCount(applicant.Id)
 		if err != nil {
-			util.Debug(applicant.Email, " Cannot get survival teams count", err)
+			util.Error("Cannot get survival teams count for user %d: %v", applicant.Id, err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
@@ -935,7 +935,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 				TeamId: team.Id,
 			}
 			if err = user_default_team.Create(); err != nil {
-				util.Debug(applicant.Email, " Cannot create user_default_team", err)
+				util.Error("Cannot create user_default_team for user %d: %v", applicant.Id, err)
 				report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 				return
 			}
@@ -944,7 +944,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		//更新申请书的状态为已批准
 		application.Status = dao.MemberApplicationStatusApproved
 		if err = application.Update(); err != nil {
-			util.Debug(application, "Cannot update application", err)
+			util.Error("Cannot update application %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
@@ -957,7 +957,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 			Status:              dao.MemberApplicationStatusApproved,
 		}
 		if err = application_reply.Create(); err != nil {
-			util.Debug(application_reply, "Cannot create application_reply", err)
+			util.Error("Cannot create application_reply %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
@@ -969,7 +969,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		//婉拒加盟
 		application.Status = dao.MemberApplicationStatusRejected
 		if err = application.Update(); err != nil {
-			util.Debug(application, "Cannot update application", err)
+			util.Error("Cannot update application %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
@@ -982,7 +982,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 			Status:              dao.MemberApplicationStatusRejected,
 		}
 		if err = application_reply.Create(); err != nil {
-			util.Debug(application_reply, "Cannot create application_reply", err)
+			util.Error("Cannot create application_reply %v", err)
 			report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 			return
 		}
@@ -1020,7 +1020,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	}
 	// 读取申请书
 	if err = application.GetByUuid(); err != nil {
-		util.Debug(application_uuid, "cannot get application given uuid", err)
+		util.Error("cannot get application given uuid %s: %v", application_uuid, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -1033,14 +1033,14 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	//读取申请人资料
 	applicant, err := dao.GetUser(application.UserId)
 	if err != nil {
-		util.Debug(application.UserId, "Cannot get user given id", err)
+		util.Error("Cannot get user given id %d: %v", application.UserId, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	//读取申请人申请加盟的茶团
 	team, err := dao.GetTeam(application.TeamId)
 	if err != nil {
-		util.Debug(application.TeamId, "Cannot get team given id", err)
+		util.Error("Cannot get team given id %d: %v", application.TeamId, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -1051,7 +1051,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 		case sql.ErrNoRows:
 			break
 		default:
-			util.Debug(applicant.Email, " when checking team_member", err)
+			util.Error("when checking team_member: %v", err)
 			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
@@ -1062,7 +1062,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	// 读取申请人默认所在的茶团
 	applicant_default_team, err := applicant.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(applicant.Email, "Cannot get default team given user", err)
+		util.Error("Cannot get default team given user %d: %v", applicant.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -1070,7 +1070,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	//检查当前会话茶友身份，是否team的管理成员（核心成员）
 	core_members, err := team.CoreMembers()
 	if err != nil {
-		util.Debug(team.Id, "Cannot get core members of team", err)
+		util.Error("Cannot get core members of team %d: %v", team.Id, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -1111,7 +1111,7 @@ func MemberApplicationReview(w http.ResponseWriter, r *http.Request) {
 	//修改申请书状态为已查看
 	application.Status = dao.MemberApplicationStatusViewed
 	if err = application.Update(); err != nil {
-		util.Debug(application.Id, "Cannot update application status", err)
+		util.Error("Cannot update application status for application %d: %v", application.Id, err)
 	}
 
 	//渲染页面
@@ -1138,14 +1138,14 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	team_uuid := r.FormValue("team_uuid")
 	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(team_uuid, "Cannot get team given uuid", err)
+		util.Error("Cannot get team given uuid %s: %v", team_uuid, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 	user_uuid := r.FormValue("user_uuid")
 	app_user, err := dao.GetUserByID(user_uuid)
 	if err != nil {
-		util.Debug(user_uuid, "Cannot get user given uuid", err)
+		util.Error("Cannot get user given uuid %s: %v", user_uuid, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -1169,7 +1169,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 		case sql.ErrNoRows:
 			break
 		default:
-			util.Debug(app_user.Email, " when checking team_member", err)
+			util.Error("when checking team_member: %v", err)
 			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
@@ -1187,7 +1187,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 	}
 	//保存申请书
 	if err = ma.Create(); err != nil {
-		util.Debug(team.Id, "Cannot create member-application", err)
+		util.Error("Cannot create member-application: %v", err)
 		report(w, s_u, "你好，茶博士正在飞速处理所有的技术问题，请耐心等待。")
 		return
 	}
@@ -1221,7 +1221,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	// 读取茶团资料
 	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug("Cannot get team given uuid", team_uuid, err)
+		util.Error("Cannot get team given uuid %s: %v", team_uuid, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -1233,7 +1233,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 		case sql.ErrNoRows:
 			break
 		default:
-			util.Debug(" when checking member_application", s_u.Email, err)
+			util.Error(" when checking member_application: %v", err)
 			report(w, s_u, "你好，茶博士的眼镜被闪电破坏了，请稍后再试。")
 			return
 		}
@@ -1245,7 +1245,7 @@ func NewMemberApplicationForm(w http.ResponseWriter, r *http.Request) {
 	//检查这个茶团是否已经存在该茶友
 	ok, err := team.IsActiveMember(s_u.Id)
 	if err != nil {
-		util.Debug("Cannot check team member", err)
+		util.Error("Cannot check team member: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -1270,13 +1270,13 @@ func MemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 	// 根据会话信息读取茶友资料
 	s, err := session(r)
 	if err != nil {
-		util.Debug(" Cannot get session", err)
+		util.Error("Cannot get session: %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Error("Cannot get user from session: %v", err)
 		report(w, s_u, "你好，满地梨花一片天，请稍后再试一次")
 		return
 	}
@@ -1886,7 +1886,7 @@ func MemberInvitationDetail(w http.ResponseWriter, r *http.Request) {
 	// 读取目标茶团资料
 	team, err := dao.GetTeam(invi.TeamId)
 	if err != nil {
-		util.Debug(invi.TeamId, "Cannot get team by id", err)
+		util.Error("Cannot get team by id %d: %v", invi.TeamId, err)
 		report(w, s_u, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
@@ -1899,14 +1899,14 @@ func MemberInvitationDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取邀请函Bean
 	i_b, err := fetchInvitationBean(invi)
 	if err != nil {
-		util.Debug(invi.Id, "Cannot fetch invitationBean given invitation", err)
+		util.Error("Cannot fetch invitationBean given invitation %d: %v", invi.Id, err)
 		report(w, s_u, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
 	// 读取答复
 	reply, err := invi.Reply()
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		util.Debug(invi.Id, "Cannot get invitation reply", err)
+		util.Error("Cannot get invitation reply %d: %v", invi.Id, err)
 		report(w, s_u, "你好，茶博士正在努力的查找邀请函答复资料，请稍后再试。")
 		return
 	}
@@ -1942,7 +1942,7 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	invi_uuid := vals.Get("uuid")
 	invi, err := dao.GetInvitationByUuid(invi_uuid)
 	if err != nil {
-		util.Debug(" Cannot get invitation given uuid", invi_uuid, err)
+		util.Error("Cannot get invitation given uuid %s: %v", invi_uuid, err)
 		report(w, s_u, "你好，茶博士正在努力的查找邀请函，请稍后再试。")
 		return
 	}
@@ -1950,7 +1950,7 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	//检查一下当前茶友是否有权查看此邀请函,仅本人可以查看
 	// team, err := dao.GetTeam(invi.TeamId)
 	// if err != nil {
-	// 	util.Debug(" Cannot get team by id", err)
+	// 	util.Error("Cannot get team by id %d: %v", invi.TeamId, err)
 	// 	report(w, s_u, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 	// 	return
 	// }
@@ -1963,7 +1963,7 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 
 	i_b, err := fetchInvitationBean(invi)
 	if err != nil {
-		util.Debug(invi.Id, " Cannot fetch invitationBean given invitation", err)
+		util.Error("Cannot fetch invitationBean given invitation %d: %v", invi.Id, err)
 		report(w, s_u, "你好，茶博士正在努力的查找邀请函资料，请稍后再试。")
 		return
 	}
@@ -1973,13 +1973,13 @@ func MemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 		invi.Status = dao.InvitationStatusViewed
 		err = invi.UpdateStatus()
 		if err != nil {
-			util.Debug(s_u.Email, " Cannot update invitation", err)
+			util.Error("Cannot update invitation %d: %v", invi.Id, err)
 			report(w, s_u, "你好，茶博士正在努力的更新邀请函状态，请稍后再试。")
 			return
 		}
 		// 减去茶友1小黑板新通知数
 		if err = dao.SubtractUserNotificationCount(s_u.Id); err != nil {
-			util.Debug(" Cannot subtract user notification count", err)
+			util.Error("Cannot subtract user notification count: %v", err)
 			return
 		}
 
@@ -2003,7 +2003,7 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 	}
 	s_u, err := s.User()
 	if err != nil {
-		util.Debug("Cannot get user from session", err)
+		util.Error("Cannot get user from session: %v", err)
 		http.Redirect(w, r, "/v1/login", http.StatusFound)
 		return
 	}
@@ -2023,7 +2023,7 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 	//查询目标茶团
 	t_team, err := dao.GetTeamByUUID(uuid)
 	if err != nil {
-		util.Debug("Cannot get team by given uuid", err)
+		util.Error("Cannot get team by given uuid %s: %v", uuid, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
@@ -2037,13 +2037,13 @@ func TeamNewApplicationsCheck(w http.ResponseWriter, r *http.Request) {
 	//查询当前茶团未处理的加盟申请书，包含已查看但未处理的
 	applies, err := dao.GetMemberApplicationByTeamIdAndStatus(t_team.Id)
 	if err != nil {
-		util.Debug("Cannot get applys by team id", err)
+		util.Error("Cannot get applys by team id %d: %v", t_team.Id, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
 	apply_bean_slice, err := fetchMemberApplicationBeanSlice(applies)
 	if err != nil {
-		util.Debug("Cannot get apply bean slice", err)
+		util.Error("Cannot get apply bean slice: %v", err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取申请茶团，请稍后再试。")
 		return
 	}
@@ -2089,7 +2089,7 @@ func TeamMemberResigned(w http.ResponseWriter, r *http.Request) {
 	team_uuid := vals.Get("uuid")
 	team, err := dao.GetTeamByUUID(team_uuid)
 	if err != nil {
-		util.Debug(team_uuid, "Cannot get team by uuid", err)
+		util.Error("Cannot get team by uuid %s: %v", team_uuid, err)
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到这个茶团，请稍后再试。")
 		return
 	}
@@ -2107,7 +2107,7 @@ func TeamMemberResigned(w http.ResponseWriter, r *http.Request) {
 
 	resignations, err := dao.GetResignationsByTeamId(team.Id)
 	if err != nil {
-		util.Debug(team.Id, "Cannot get resignations by team id", err)
+		util.Error("Cannot get resignations by team id %d: %v", team.Id, err)
 		report(w, s_u, "你好，茶博士正在努力的查找退出声明，请稍后再试。")
 		return
 	}
@@ -2183,16 +2183,20 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 
 	vals := r.URL.Query()
 	resignation_uuid := vals.Get("uuid")
+	if resignation_uuid == "" {
+		report(w, s_u, "你好，茶博士竟然说，陛下你没有给我退出声明的uuid，请确认。")
+		return
+	}
 	resignation := dao.TeamMemberResignation{Uuid: resignation_uuid}
 	if err = resignation.GetByUuid(); err != nil {
-		util.Debug(resignation_uuid, "Cannot get resignation by uuid", err)
+		util.Error("Cannot get resignation by uuid %s: %v", resignation_uuid, err)
 		report(w, s_u, "你好，茶博士正在努力的查找退出声明，请稍后再试。")
 		return
 	}
 
 	team, err := dao.GetTeam(resignation.TeamId)
 	if err != nil {
-		util.Debug(resignation.TeamId, "Cannot get team by id", err)
+		util.Error("Cannot get team by id %d: %v", resignation.TeamId, err)
 		report(w, s_u, "你好，茶博士正在努力的查找退出声明资料，请稍后再试。")
 		return
 	}
@@ -2203,7 +2207,7 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 
 	member, err := dao.GetUser(resignation.MemberUserId)
 	if err != nil {
-		util.Debug(resignation.MemberUserId, "Cannot get user by id", err)
+		util.Error("Cannot get user by id %d: %v", resignation.MemberUserId, err)
 		report(w, s_u, "你好，茶博士正在努力的查找退出声明资料，请稍后再试。")
 		return
 	}
@@ -2211,7 +2215,7 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 	// 检查团队活跃状态成员数量
 	memberCount, err := team.NumActiveMembers()
 	if err != nil {
-		util.Debug(" Cannot get team member count", err)
+		util.Error("Cannot get team member count: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -2219,7 +2223,7 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 	// 获取CEO
 	ceoMember, err := team.MemberCEO()
 	if err != nil {
-		util.Debug("Cannot get CEO", err)
+		util.Error("Cannot get CEO: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -2227,7 +2231,7 @@ func TeamMemberResignationDetailGet(w http.ResponseWriter, r *http.Request) {
 	// 获取核心成员
 	coreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.Debug("Cannot get core members", err)
+		util.Error("Cannot get core members: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -2343,14 +2347,14 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	resignation_uuid := r.PostFormValue("resignation_uuid")
 	resignation := dao.TeamMemberResignation{Uuid: resignation_uuid}
 	if err = resignation.GetByUuid(); err != nil {
-		util.Debug(resignation_uuid, "Cannot get resignation by uuid", err)
+		util.Error("Cannot get resignation by uuid %s: %v", resignation_uuid, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
 
 	team, err := dao.GetTeam(resignation.TeamId)
 	if err != nil {
-		util.Debug(resignation.TeamId, "Cannot get team by id", err)
+		util.Error("Cannot get team by id %d: %v", resignation.TeamId, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -2358,7 +2362,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	// 检查团队活跃状态成员数量
 	memberCount, err := team.NumActiveMembers()
 	if err != nil {
-		util.Debug("Cannot get team member count", err)
+		util.Error("Cannot get team member count: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -2366,7 +2370,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	// 获取CEO
 	ceoMember, err := team.MemberCEO()
 	if err != nil {
-		util.Debug("Cannot get CEO", err)
+		util.Error("Cannot get CEO: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}
@@ -2374,7 +2378,7 @@ func TeamMemberResignationProcess(w http.ResponseWriter, r *http.Request) {
 	// 获取核心成员
 	coreMembers, err := team.CoreMembers()
 	if err != nil {
-		util.Debug("Cannot get core members", err)
+		util.Error("Cannot get core members: %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
 		return
 	}

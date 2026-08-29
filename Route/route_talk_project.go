@@ -868,18 +868,18 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	ob_uuid := r.PostFormValue("ob_uuid")
 	class, err := strconv.Atoi(r.PostFormValue("class"))
 	if err != nil {
-		util.Debug("Failed to convert class to int", err)
+		util.Warning("Failed to convert class to int", err)
 		return
 	}
 	team_id, err := strconv.Atoi(r.PostFormValue("team_id"))
 	if err != nil {
-		util.Debug(team_id, "Failed to convert team_id to int")
+		util.Error("Failed to convert team_id to int", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
 	family_id, err := strconv.Atoi(r.PostFormValue("family_id"))
 	if err != nil {
-		util.Debug("Failed to convert family_id to int", err)
+		util.Error("Failed to convert family_id to int", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -889,7 +889,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		util.Debug("验证提交的台主团队资格出现数据库错误", team_id, err)
+		util.Warning("验证提交的台主团队资格出现数据库错误", team_id, err)
 		report(w, s_u, "你好，成员资格检查失败，请确认后再试。")
 		return
 	}
@@ -899,7 +899,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil {
-		util.Debug("验证提交的关联家庭资格出现数据库错误", family_id, err)
+		util.Warning("验证提交的关联家庭资格出现数据库错误", family_id, err)
 		report(w, s_u, "你好，关联家庭资格检查失败，请确认后再试。")
 		return
 	}
@@ -907,10 +907,10 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	t_ob := dao.Objective{Uuid: ob_uuid}
 	if err = t_ob.GetByUuid(); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			util.Debug("茶话会不存在", ob_uuid, err)
+			util.Warning("茶话会不存在", ob_uuid, err)
 			report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的茶话会，请确认后再试。")
 		} else {
-			util.Debug("获取茶话会失败", ob_uuid, err)
+			util.Warning("获取茶话会失败", ob_uuid, err)
 			report(w, s_u, "你好，茶博士失魂鱼，系统繁忙，请稍后再试。")
 		}
 		return
@@ -918,7 +918,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 检查在此茶围下是否已经存在相同名字的茶台
 	count_title, err := dao.CountProjectByTitleObjectiveId(title, t_ob.Id)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		util.Debug(" Cannot get count of project by title and objective id", err)
+		util.Info(" Cannot get count of project by title and objective id", err)
 		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
 		return
 	}
@@ -931,7 +931,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	place_uuid := r.PostFormValue("place_uuid")
 	place := dao.Place{Uuid: place_uuid}
 	if err = place.GetByUuid(); err != nil {
-		util.Debug(" Cannot get place", err)
+		util.Warning(" Cannot get place", err)
 		report(w, s_u, "你好，茶博士服务中，眼镜都模糊了，也未能找到你提交的喝茶地方资料，请确认后再试。")
 		return
 	}
@@ -939,12 +939,12 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 	// 检测一下name是否>2中文字，desc是否在17-int(util.Config.ThreadMaxWord)中文字，
 	// 如果不是，返回错误信息
 	if cnStrLen(title) < 2 || cnStrLen(title) > 36 {
-		util.Debug("Project name is too short", err)
+		util.Info("Project name is too short", err)
 		report(w, s_u, "你好，粗声粗气的茶博士竟然说字太少浪费纸张，请确认后再试。")
 		return
 	}
 	if cnStrLen(body) < int(util.Config.ThreadMinWord) || cnStrLen(body) > int(util.Config.ThreadMaxWord) {
-		util.Debug(" Project description is too long or too short", err)
+		util.Info(" Project description is too long or too short", err)
 		report(w, s_u, "你好，茶博士傻眼了，竟然说字数太少或者太多记不住，请确认后再试。")
 		return
 	}
@@ -976,7 +976,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		case dao.ObClassOpenDraft:
 			// 创建开放式草台
 			if err = new_proj.Create(); err != nil {
-				util.Debug(" Cannot create open project", err)
+				util.Error(" Cannot create open project", err)
 				report(w, s_u, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -995,7 +995,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 			//创建封闭式草台
 			if err = new_proj.Create(); err != nil {
-				util.Debug(" Cannot create close project", err)
+				util.Error(" Cannot create close project", err)
 				report(w, s_u, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -1006,7 +1006,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 					TeamId:    team_id,
 				}
 				if err = poInviTeams.Create(); err != nil {
-					util.Debug(" Cannot save invited teams", err)
+					util.Error(" Cannot save invited teams", err)
 					report(w, s_u, "你好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
 				}
@@ -1022,7 +1022,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		ok, err := t_ob.IsInvitedMember(s_u.Id)
 		if !ok {
 			// 当前用户不是茶话会邀请团队成员，不能新开茶台
-			util.Debug(" Cannot create project", err)
+			util.Warning(" Cannot create project", err)
 			report(w, s_u, "你好，茶博士惊讶地说，不是此茶话会邀请团队成员不能开新茶台，请确认。")
 			return
 		}
@@ -1045,7 +1045,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 			//创建茶台
 			if err = new_proj.Create(); err != nil {
-				util.Debug("Cannot create project", err)
+				util.Error("Cannot create project", err)
 				report(w, s_u, "你好，出浴太真冰作影，捧心西子玉为魂。")
 				return
 			}
@@ -1056,7 +1056,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 					TeamId:    team_id,
 				}
 				if err = poInviTeams.Create(); err != nil {
-					util.Debug(" Cannot save invited teams", err)
+					util.Error(" Cannot save invited teams", err)
 					report(w, s_u, "你好，受邀请的茶团名单竟然保存失败，请确认后再试。")
 					return
 				}
@@ -1065,7 +1065,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 
 	default:
 		// 该茶话会属性不合法
-		util.Debug(" Project class is not valid", err)
+		util.Warning(" Project class is not valid", err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个茶话会被外星人霸占了，请确认后再试。")
 		return
 	}
@@ -1077,7 +1077,7 @@ func NewProjectPost(w http.ResponseWriter, r *http.Request) {
 		UserId:    s_u.Id,
 	}
 	if err = pp.Create(); err != nil {
-		util.Debug(" Cannot create project place", err)
+		util.Error(" Cannot create project place", err)
 		report(w, s_u, "你好，茶博士抹了抹汗，竟然说茶台地方保存失败，请确认后再试。")
 		return
 	}

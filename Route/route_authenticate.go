@@ -103,18 +103,18 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	// 检查提交的邮箱是否已经注册过了
 	exist_email, err := dao.UserExistByEmail(newU.Email)
 	if err != nil {
-		util.Debug((fmt.Errorf("检查邮箱存在性时出错: %v, 邮箱: %s", err, newU.Email)), "数据库查询错误")
+		util.Error("检查邮箱存在性时出错: %v, 邮箱: %s", err, newU.Email)
 		report(w, s_u, "你好，茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}
 	if exist_email {
-		util.Debug((fmt.Errorf("重复注册尝试: 邮箱 %s 已注册", newU.Email)), "重复注册")
+		util.Warning("重复注册: 邮箱 %s 已注册", newU.Email)
 		report(w, s_u, "你好，提交注册的邮箱地址已经注册,请确认后再试。")
 		return
 	}
 	// 存储新用户（测试时不作邮箱有效性检查，直接激活账户）
 	if err := newU.Create(); err != nil {
-		util.Debug(" Cannot create user", err)
+		util.Error(" Cannot create user id %d", newU.Id, err)
 		report(w, s_u, "你好，粗鲁的茶博士因找不到笔导致注册失败，请确认情况后重试。")
 		return
 	}

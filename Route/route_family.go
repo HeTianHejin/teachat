@@ -108,14 +108,14 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	// 2. get user's family - 默认显示公开家庭
 	family_slice, err := dao.ParentMemberOpenFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's family given id", err)
+		util.Warning("Cannot get user's family given id %d: %v", s_u.Id, err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
 
 	f_b_slice, err := fetchFamilyBeanSlice(family_slice)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's family", err)
+		util.Warning("Cannot get user's family: %v", err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
@@ -134,7 +134,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 			if errors.Is(err, sql.ErrNoRows) {
 				l_default_family = dao.FamilyUnknown
 			} else {
-				util.Debug(s_u.Id, "Cannot get user's default family", err)
+				util.Warning("Cannot get user's default family for ID %d: %v", s_u.Id, err)
 				report(w, s_u, "你好，乱花渐欲迷人眼，未能查看家庭茶团列表。")
 				return
 			}
@@ -236,14 +236,14 @@ func ParentFamilies(w http.ResponseWriter, r *http.Request) {
 
 	family_slice, err := dao.ChildMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's parent families", err)
+		util.Warning("Cannot get user's parent families for ID %d: %v", s_u.Id, err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有父代家庭茶团。", s_u.Email))
 		return
 	}
 
 	f_b_slice, err := fetchFamilyBeanSlice(family_slice)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		util.Warning("Cannot fetch family beans for ID %d: %v", s_u.Id, err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，未能查看这个用户%s父代家庭茶团列表。", s_u.Email))
 		return
 	}
@@ -278,7 +278,7 @@ func ChildFamilies(w http.ResponseWriter, r *http.Request) {
 	// 查找用户作为父母的家庭，然后查找这些家庭的子女成员，再查找子女的家庭
 	parent_families, err := dao.ParentMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's families", err)
+		util.Warning("Cannot get user's families for ID %d: %v", s_u.Id, err)
 		report(w, s_u, s_u, "你好，茶博士摸摸头，未能查看子代家庭茶团列表。")
 		return
 	}
@@ -296,7 +296,7 @@ func ChildFamilies(w http.ResponseWriter, r *http.Request) {
 
 	f_b_slice, err := fetchFamilyBeanSlice(child_families)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		util.Warning("Cannot fetch family beans for ID %d: %v", s_u.Id, err)
 		report(w, s_u, s_u, "你好，茶博士摸摸头，未能查看子代家庭茶团列表。")
 		return
 	}
@@ -331,7 +331,7 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 	// 查找用户作为父母的家庭
 	my_families, err := dao.ParentMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's families", err)
+		util.Info("Cannot get user %d families: %v", s_u.Id, err)
 		report(w, s_u, s_u, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
 		return
 	}
@@ -364,7 +364,7 @@ func InLawsFamilies(w http.ResponseWriter, r *http.Request) {
 
 	f_b_slice, err := fetchFamilyBeanSlice(inlaw_families)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		util.Info("Cannot fetch family beans for ID %d: %v", s_u.Id, err)
 		report(w, s_u, s_u, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
 		return
 	}
@@ -399,7 +399,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 	// 获取用户声明离开的家庭
 	resign_families, err := dao.ResignMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's resign families", err)
+		util.Info("Cannot get user %d resign families: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
@@ -407,7 +407,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 	// 获取用户已删除的家庭
 	deleted_families, err := dao.GetDeletedFamiliesByAuthorId(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's deleted families", err)
+		util.Info("Cannot get user %d deleted families: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
@@ -417,7 +417,7 @@ func GoneFamilies(w http.ResponseWriter, r *http.Request) {
 
 	f_b_slice, err := fetchFamilyBeanSlice(all_gone_families)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		util.Info("Cannot fetch family beans for ID %d: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
@@ -450,14 +450,14 @@ func HomePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 	}
 	family_slice, err := dao.ParentMemberPrivateFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's private family", err)
+		util.Info("Cannot get user %d private families: %v", s_u.Id, err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
 
 	f_b_slice, err := fetchFamilyBeanSlice(family_slice)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's family", err)
+		util.Info("Cannot fetch family beans for ID %d: %v", s_u.Id, err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 		return
 	}
@@ -491,7 +491,7 @@ func ParentPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 
 	family_slice, err := dao.ChildMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's parent families", err)
+		util.Info("Cannot get user %d parent families: %v", s_u.Id, err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有父代家庭茶团。", s_u.Email))
 		return
 	}
@@ -505,7 +505,7 @@ func ParentPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 
 	f_b_slice, err := fetchFamilyBeanSlice(private_families)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		util.Info("Cannot fetch family beans for ID %d: %v", s_u.Id, err)
 		report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，未能查看这个用户%s父代家庭茶团列表。", s_u.Email))
 		return
 	}
@@ -539,7 +539,7 @@ func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 
 	my_families, err := dao.ParentMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's families", err)
+		util.Info("Cannot get user %d families: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
 		return
 	}
@@ -578,7 +578,7 @@ func InLawsPrivateFamilies(w http.ResponseWriter, r *http.Request) {
 
 	f_b_slice, err := fetchFamilyBeanSlice(inlaw_families)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		util.Info("Cannot fetch family beans for ID %d: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看外家姻亲茶团列表。")
 		return
 	}
@@ -612,14 +612,14 @@ func GonePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 
 	resign_families, err := dao.ResignMemberFamilies(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's resign families", err)
+		util.Info("Cannot get user %d resign families: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
 
 	deleted_families, err := dao.GetDeletedFamiliesByAuthorId(s_u.Id, r.Context())
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot get user's deleted families", err)
+		util.Info("Cannot get user %d deleted families: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
@@ -633,7 +633,7 @@ func GonePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 
 	f_b_slice, err := fetchFamilyBeanSlice(private_gone_families)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot fetch family beans", err)
+		util.Info("Cannot fetch family beans for ID %d: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能查看随风飘逝茶团列表。")
 		return
 	}
@@ -695,7 +695,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	// 3. check user is member of family
 	isMember, err = family.IsMember(s_u.Id)
 	if err != nil {
-		util.Debug(s_u.Id, "Cannot check user is_member of family", err)
+		util.Info("Cannot check user %d is_member of family %d: %v", s_u.Id, family.Id, err)
 		report(w, s_u, "你好，茶博士摸摸满头大汗，说因为外星人突然出现导致未能查看&家庭茶团详情。")
 		return
 	}
@@ -709,7 +709,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 		if err = family_member_sign_in.GetByFamilyIdMemberUserId(); err != nil {
 			if !errors.Is(err, sql.ErrNoRows) {
 				//查询资料出现失误
-				util.Debug("Cannot get family member sign in", err)
+				util.Info("Cannot get family member sign in for user %d and family %d: %v", s_u.Id, family.Id, err)
 				report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 				return
 			}
@@ -735,7 +735,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	//读取目标家庭的资料夹
 	family_bean, err := fetchFamilyBean(family)
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch bean given family", err)
+		util.Info("Cannot fetch bean for family %d: %v", family.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
@@ -744,38 +744,38 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	}
 	f_p_members, err := f.ParentMembers()
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's parent members", err)
+		util.Info("Cannot fetch parent members for family %d: %v", family.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	parent_member_bean_slice, err := fetchFamilyMemberBeanSlice(f_p_members)
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's parent members bean", err)
+		util.Info("Cannot fetch parent members bean for family %d: %v", family.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 
 	c_members, err := f.ChildMembers()
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's child members", err)
+		util.Info("Cannot fetch child members for family %d: %v", family.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	child_member_bean_slice, err := fetchFamilyMemberBeanSlice(c_members)
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's child members", err)
+		util.Info("Cannot fetch child members bean for family %d: %v", family.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	other_members, err := f.OtherMembers()
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's other members", err)
+		util.Info("Cannot fetch other members for family %d: %v", family.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
 	other_member_bean_slice, err := fetchFamilyMemberBeanSlice(other_members)
 	if err != nil {
-		util.Debug(family.Id, "Cannot fetch family's other members bean", err)
+		util.Info("Cannot fetch family's other members bean for family %d: %v", family.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，竟然说这个&家庭茶团没有登记，未能查看&家庭茶团详情。")
 		return
 	}
@@ -913,7 +913,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 
 	//保存到数据库中,返回新家庭茶团的id
 	if err := new_family.Create(); err != nil {
-		util.Debug(s_u.Email, "Cannot create new family", err)
+		util.Error("Cannot create new family for user %d: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
@@ -933,7 +933,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 		author_member.Role = dao.FamilyMemberRoleWife
 	}
 	if err := author_member.Create(); err != nil {
-		util.Debug(s_u.Email, "Cannot create author family member", err)
+		util.Error("Cannot create author family member for user %d: %v", s_u.Id, err)
 		report(w, s_u, "你好，茶博士摸摸头，未能创建新茶团，请稍后再试。")
 		return
 	}
@@ -945,7 +945,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 		if errors.Is(err, sql.ErrNoRows) {
 			df = dao.FamilyUnknown
 		} else {
-			util.Debug(s_u.Id, "Cannot get user's default family", err)
+			util.Info("Cannot get user %d's default family: %v", s_u.Id, err)
 			report(w, s_u, fmt.Sprintf("你好，茶博士摸摸头，竟然说这个用户%s没有默认家庭茶团，未能查看&家庭茶团列表。", s_u.Email))
 			return
 		}
@@ -959,7 +959,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 		}
 		//把这个新家庭茶团设为默认
 		if err := udf.Create(); err != nil {
-			util.Debug(s_u.Email, "Cannot create user's default family", err)
+			util.Error("Cannot create user %d's default family: %v", s_u.Id, err)
 			report(w, s_u, "你好，茶博士摸摸头，未能创建默认家庭茶团，请稍后再试。")
 			return
 		}

@@ -266,18 +266,18 @@ func fetchFamilyBean(family dao.Family) (FamilyBean dao.FamilyBean, err error) {
 	//登记人资料
 	FamilyBean.Founder, err = dao.GetUser(family.AuthorId)
 	if err != nil {
-		util.Debug(family.AuthorId, " Cannot read family founder")
+		util.Error("Cannot read family founder for family %d: %v", family.AuthorId, err)
 		return FamilyBean, err
 	}
 	FamilyBean.FounderTeam, err = FamilyBean.Founder.GetLastDefaultTeam()
 	if err != nil {
-		util.Debug(family.AuthorId, " Cannot read family founder default team")
+		util.Error("Cannot read family founder default team for family %d: %v", family.AuthorId, err)
 		return FamilyBean, err
 	}
 
 	FamilyBean.MemberCount, err = dao.CountFamilyMembers(family.Id)
 	if err != nil {
-		util.Debug(family.AuthorId, " Cannot read family member count")
+		util.Error("Cannot read family member count for family %d: %v", family.Id, err)
 		return FamilyBean, err
 	}
 	return
@@ -433,7 +433,7 @@ func fetchTeamMemberBean(tm dao.TeamMember) (TMB dao.TeamMemberBean, err error) 
 	member_ceo, err := team.MemberCEO()
 	if err != nil {
 		//茶团已经设定了ceo，但是出现了其他错误
-		util.Debug(team.Id, " Cannot get ceo of this team")
+		util.Error("Cannot get ceo of team %d: %v", team.Id, err)
 		return
 	}
 	if member_ceo.UserId == u.Id {

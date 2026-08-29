@@ -44,7 +44,7 @@ func PlaceCollect(w http.ResponseWriter, r *http.Request) {
 	//检查用户是否已经收藏过该地方
 	exist, err := dao.CheckUserPlace(s_u.Id, t_place_id)
 	if err != nil {
-		util.Debug(s_u.Id, t_place_id, "Cannot check user place")
+		util.Debug("Cannot check user %d place %d", s_u.Id, t_place_id)
 		report(w, s_u, "你好，茶博士表示该地方有外星人出没，请稍后再试。")
 		return
 	}
