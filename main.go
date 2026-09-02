@@ -26,8 +26,9 @@ func main() {
 
 	// 静态资源处理
 	const staticPrefix = "/v1/static/"
-	if _, err := os.Stat(util.Config.Static); os.IsNotExist(err) {
-		log.Fatalf("静态资源目录不存在: %s", util.Config.Static)
+	staticDir := util.AbsPath(util.Config.Static)
+	if _, err := os.Stat(staticDir); os.IsNotExist(err) {
+		log.Fatalf("静态资源目录不存在: %s", staticDir)
 	}
 
 	// 创建文件处理器（带缓存控制）
@@ -38,7 +39,7 @@ func main() {
 		})
 	}
 
-	files := cacheControl(http.FileServer(http.Dir(util.Config.Static)))
+	files := cacheControl(http.FileServer(http.Dir(staticDir)))
 
 	// 注册静态资源处理器
 	mux.Handle(staticPrefix, http.StripPrefix(staticPrefix, files))

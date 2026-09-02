@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strconv"
 	util "teachat/Util"
 	"time"
@@ -28,14 +27,12 @@ var DB *sql.DB
 func init() {
 	var err error
 
-	// 获取项目根目录（无论从哪里调用）
-	_, filename, _, _ := runtime.Caller(0)
-	rootDir := filepath.Dir(filepath.Dir(filename)) // 根据实际层级调整
-	// 加载 .env 文件
-	err = godotenv.Load(filepath.Join(rootDir, ".env"))
-	if err != nil {
+	// 统一从 exe 所在目录读取 .env，避免双击运行时找不到配置
+	envPath := filepath.Join(util.AppDir, ".env")
+	if err = godotenv.Load(envPath); err != nil {
 		util.PrintStdout("Error loading .env file")
 	}
+
 	// 从环境变量获取数据库配置
 	dbdriver := os.Getenv("DB_DRIVER")
 	dbhost := os.Getenv("DB_HOST")
@@ -45,6 +42,10 @@ func init() {
 	dbname := os.Getenv("DB_NAME")
 	dbsslmode := os.Getenv("DB_SSLMODE")
 	dbTimeZone := os.Getenv("DB_TIMEZONE")
+	if dbdriver == "" {
+		util.Panic("DB_DRIVER为空，未能从 .env 读取数据库驱动")
+	}
+
 	//数据库连接
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=%s TimeZone=%s",

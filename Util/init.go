@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/joho/godotenv"
 )
 
 /*
@@ -16,8 +18,29 @@ import (
    一些工具函数；
 */
 
+var AppDir string
+
+func appBaseDir() string {
+	if exe, err := os.Executable(); err == nil {
+		return filepath.Dir(exe)
+	}
+	wd, _ := os.Getwd()
+	return wd
+}
+
+func AbsPath(rel string) string {
+	if rel == "" {
+		return AppDir
+	}
+	if filepath.IsAbs(rel) {
+		return rel
+	}
+	return filepath.Join(AppDir, rel)
+}
+
 // 初始化日志
 func init() {
+	AppDir = appBaseDir()
 	// 开发模式默认日志配置
 	InitLogger(true, LevelDebug) // 默认控制台输出，Debug级别
 }
@@ -54,8 +77,11 @@ var Config Configuration
 
 // 读取配置文件内容
 func LoadConfig() error {
+	// 从 exe 所在目录加载 .env（忽略未找到的错误，兼容开发环境/打包环境）
+	_ = godotenv.Load(filepath.Join(AppDir, ".env"))
 
-	file, err := os.Open("config.json")
+	configPath := filepath.Join(AppDir, "config.json")
+	file, err := os.Open(configPath)
 	if err != nil {
 		return fmt.Errorf("打开配置文件失败: %w", err)
 	}
@@ -66,11 +92,12 @@ func LoadConfig() error {
 		return fmt.Errorf("解析配置文件失败: %w", err)
 	}
 
-	// 路径标准化处理
-	Config.ImageDir = filepath.Clean(Config.ImageDir) + string(filepath.Separator)
-	Config.UserImageDir = filepath.Clean(Config.UserImageDir) + string(filepath.Separator)
-	Config.TeamImageDir = filepath.Clean(Config.TeamImageDir) + string(filepath.Separator)
-	Config.TemplatesDir = filepath.Clean(Config.TemplatesDir) + string(filepath.Separator)
+	// 路径标准化处理，支持 exe 直接运行和源码运行
+	Config.Static = filepath.Clean(AbsPath(Config.Static))
+	Config.ImageDir = filepath.Clean(AbsPath(Config.ImageDir)) + string(filepath.Separator)
+	Config.UserImageDir = filepath.Clean(AbsPath(Config.UserImageDir)) + string(filepath.Separator)
+	Config.TeamImageDir = filepath.Clean(AbsPath(Config.TeamImageDir)) + string(filepath.Separator)
+	Config.TemplatesDir = filepath.Clean(AbsPath(Config.TemplatesDir)) + string(filepath.Separator)
 
 	return nil
 }
