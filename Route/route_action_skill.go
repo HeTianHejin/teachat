@@ -72,29 +72,108 @@ func HandleSkillsUserList(w http.ResponseWriter, r *http.Request) {
 	SkillsUserListGet(s_u, w, r)
 }
 
-// GET /v1/skill/new
+// GET /v1/skill/new?user_id=123&team_id=0/456
 func SkillNewGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
-	// 获取用户所在的团队
-	userTeams, err := dao.GetUserSurvivalTeams(s_u.Id, r.Context())
-	if err != nil {
-		util.Debug("cannot get s_u teams %v", err)
-		userTeams = []dao.Team{} // 如果获取失败，使用空列表
+	// 获取user_id参数
+	userId := r.URL.Query().Get("user_id")
+	if userId == "" {
+		report(w, s_u, "你好，缺少用户ID参数，请确认后再试。")
+		return
+	}
+	intUserId, err := strconv.Atoi(userId)
+	if err != nil || intUserId <= dao.UserId_None {
+		report(w, s_u, "你好，无效的用户ID参数，请确认后再试。")
+		return
+	}
+	if intUserId != s_u.Id {
+		report(w, s_u, "你没有权限为其他用户创建技能记录。")
+		return
+	}
+
+	// 获取team_id参数
+	teamIdStr := r.URL.Query().Get("team_id")
+	if teamIdStr == "" {
+		report(w, s_u, "你好，缺少团队ID参数，请确认后再试。")
+		return
+	}
+	intTeamId, err := strconv.Atoi(teamIdStr)
+	if err != nil || intTeamId < 0 || intTeamId == dao.TeamIdFreelancer {
+		report(w, s_u, "你好，无效的团队ID参数，请确认后再试。")
+		return
+	}
+
+	team := dao.Team{Id: 0} //默认声明是个人技能，与团队无关
+	if intTeamId != dao.TeamIdNone {
+		// 获取用户所在的团队
+		team, err = dao.GetTeam(intTeamId)
+		if err != nil {
+			util.Error("cannot fetch team %d, error: %v", intTeamId, err)
+			report(w, s_u, "你好，团队不存在或团队参数无效，请确认后再试。")
+			return
+		}
+		// 检查是否目标团队的核心成员
+		isCoreMember, err := team.IsCoreMember(s_u.Id)
+		if err != nil {
+			util.Error("cannot check userId %d isCoreMember team %d, error: %v", intUserId, intTeamId, err)
+			report(w, s_u, "你好，茶博士找不到放大镜，未能帮忙查询团队资料，请先喝茶。")
+			return
+		}
+		if !isCoreMember {
+			report(w, s_u, "你好，权限不足，必须是核心成员才能为团队登记新技能。")
+			return
+		}
 	}
 
 	var skillData struct {
-		SessUser  dao.User
-		UserTeams []dao.Team
-		ReturnURL string
+		SessUser dao.User
+		Team     dao.Team
 	}
 	skillData.SessUser = s_u
-	skillData.UserTeams = userTeams
-	skillData.ReturnURL = r.URL.Query().Get("return_url")
+	skillData.Team = team
 
 	generateHTML(w, &skillData, "layout", "navbar.private", "skill.new")
 }
 
 // POST /v1/skill/new
 func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
+
+	r.ParseForm()
+	userIdStr := r.PostFormValue("user_id")
+	userId, err := strconv.Atoi(userIdStr)
+	if userIdStr == "" || err != nil || userId != s_u.Id {
+		report(w, s_u, "你好，用户参数无效，请确认后再试。")
+		return
+	}
+
+	teamIdStr := r.PostFormValue("team_id")
+	if teamIdStr == "" {
+		report(w, s_u, "你好，缺少团队ID参数，请确认后再试。")
+		return
+	}
+	teamId, err := strconv.Atoi(teamIdStr)
+	if err != nil || teamId < dao.TeamIdNone || teamId == dao.TeamIdFreelancer {
+		report(w, s_u, "你好，无效的团队ID参数，请确认后再试。")
+		return
+	}
+
+	var team dao.Team
+	if teamId != dao.TeamIdNone {
+		team, err = dao.GetTeam(teamId)
+		if err != nil {
+			report(w, s_u, "你好，团队不存在或团队参数无效，请确认后再试。")
+			return
+		}
+		isCoreMember, err := team.IsCoreMember(s_u.Id)
+		if err != nil {
+			util.Error("check core member failed, user %d team %d: %v", s_u.Id, teamId, err)
+			report(w, s_u, "你好，开水房云雾缭绕，请先喝茶。")
+			return
+		}
+		if !isCoreMember {
+			report(w, s_u, "你好，权限不足，必须是核心成员才能登记团队新技能。")
+			return
+		}
+	}
 
 	// 验证必填字段
 	name := strings.TrimSpace(r.PostFormValue("name"))
@@ -142,14 +221,17 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := skill.Create(r.Context()); err != nil {
-		util.Debug("cannot create skill %v", err)
+		util.Debug("user %d cannot create  skill %v", s_u.Id, err)
 		report(w, s_u, "创建技能记录失败，请重试。")
 		return
 	}
 
+	addMine := r.PostForm.Has("add_to_my_skills")
+	addTeam := r.PostForm.Has("add_to_team_skills")
+
 	// 检查是否添加到个人技能列表
-	addToMySkills := r.PostFormValue("add_to_my_skills") == "1"
-	if addToMySkills {
+	//addToMySkills := r.PostFormValue("add_to_my_skills") == "1"
+	if addMine {
 		skillUser := dao.SkillUser{
 			SkillId: skill.Id,
 			UserId:  s_u.Id,
@@ -157,27 +239,19 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 			Status:  dao.NormalSkillUserStatus, // 默认中能状态
 		}
 		if err := skillUser.Create(r.Context()); err != nil {
-			util.Debug("cannot create skill s_u record %v", err)
+			util.Debug("cannot create skill s_u %d record %v", s_u.Id, err)
 			// 不阻止流程，仅记录错误
 		}
 	}
 
 	// 检查是否添加到团队技能列表
-	teamSkillIds := r.Form["add_to_team_skills"]
-	for _, teamIdStr := range teamSkillIds {
-		teamId, err := strconv.Atoi(teamIdStr)
-		if err != nil || teamId <= 0 {
-			continue
-		}
-		// 验证用户是否为该团队成员
-		team, err := dao.GetTeam(teamId)
-		if err != nil {
-			continue
-		}
-		isMember, err := team.IsActiveMember(s_u.Id)
-		if err != nil || !isMember {
-			continue
-		}
+	addToTeamSkills := r.PostFormValue("add_to_team_skills") == "1"
+	if addTeam && teamId == dao.TeamIdNone {
+		util.Info("user %d add team skill but no team target", s_u.Id)
+		report(w, s_u, "你好，团队参数异常，请先喝茶。")
+		return
+	}
+	if addTeam && addToTeamSkills && teamId != dao.TeamIdNone {
 		// 创建团队技能记录
 		skillTeam := dao.SkillTeam{
 			SkillId: skill.Id,
@@ -186,29 +260,18 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 			Status:  dao.NormalSkillTeamStatus, // 默认正常状态
 		}
 		if err := skillTeam.Create(r.Context()); err != nil {
-			util.Debug("cannot create skill team record %v", err)
+			util.Error("user %d cannot create skill team %d record, error: %v", s_u.Id, teamId, err)
 			// 不阻止流程，仅记录错误
 		}
+
+		// 为用户返回团队技能列表页面
+		teamURL := "/v1/skills/team_list?uuid=" + team.Uuid
+		http.Redirect(w, r, teamURL, http.StatusFound)
+		return
 	}
 
-	// 获取返回URL参数
-	returnURL := r.PostFormValue("return_url")
-	if returnURL == "" {
-		returnURL = r.URL.Query().Get("return_url")
-	}
-	if returnURL == "" {
-		returnURL = "/v1/"
-	} else {
-		// 如果有返回URL，添加新创建的技能ID参数
-		if returnURL != "/v1/" {
-			if strings.Contains(returnURL, "?") {
-				returnURL += fmt.Sprintf("&new_skill_id=%d", skill.Id)
-			} else {
-				returnURL += fmt.Sprintf("?new_skill_id=%d", skill.Id)
-			}
-		}
-	}
-	http.Redirect(w, r, returnURL, http.StatusFound)
+	userURL := "/v1/skills/user_list?uuid=" + s_u.Uuid
+	http.Redirect(w, r, userURL, http.StatusFound)
 }
 
 // GET /v1/skill/detail?id=123

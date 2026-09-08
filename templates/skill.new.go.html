@@ -8,6 +8,8 @@
 
   <div class="panel-body">
     <form method="post" action="/v1/skill/new" class="form-horizontal">
+      <input type="hidden" name="user_id" value="{{ .SessUser.Id }}">
+      <input type="hidden" name="team_id" value="{{ .Team.Id }}">
       <!-- 基本信息 -->
       <div class="panel panel-default">
         <div class="panel-heading">基本信息</div>
@@ -16,7 +18,7 @@
             <label class="col-sm-2 control-label">登记人</label>
             <div class="col-sm-10">
               <p class="form-control-static">
-                <strong>{{ .SessUser.Name }}</strong> 
+                <strong>{{ .SessUser.FullName }}</strong>
                 <small class="text-muted">(ID: {{ .SessUser.Id }})</small>
               </p>
             </div>
@@ -106,33 +108,34 @@
       <div class="panel panel-default">
         <div class="panel-heading">技能绑定选项</div>
         <div class="panel-body">
+
+          {{ if ne .Team.Id 0 }}
           <div class="form-group">
+            <label class="col-sm-2 control-label">团队技能</label>
+            <div class="col-sm-10">
+
+              <div class="checkbox">
+                <label>
+                  <input type="checkbox" name="add_to_team_skills" value="1">
+                  <strong>添加到 {{  .Team.Name }}</strong>
+                  <small class="text-muted">- 勾选将此技能注册为团队掌握的技能</small>
+                </label>
+              </div>
+            </div>
+          </div>
+          {{ end }}
+
+           <div class="form-group">
             <div class="col-sm-offset-2 col-sm-10">
               <div class="checkbox">
                 <label>
-                  <input type="checkbox" name="add_to_my_skills" value="1" checked>
+                  <input type="checkbox" name="add_to_my_skills" value="1">
                   <strong>添加到我的技能</strong>
                   <small class="text-muted">- 勾选表示将此技能注册为自己掌握的技能</small>
                 </label>
               </div>
             </div>
           </div>
-          {{ if .UserTeams }}
-          <div class="form-group">
-            <label class="col-sm-2 control-label">团队技能</label>
-            <div class="col-sm-10">
-              {{ range .UserTeams }}
-              <div class="checkbox">
-                <label>
-                  <input type="checkbox" name="add_to_team_skills" value="{{ .Id }}">
-                  <strong>添加到 {{ .Name }}</strong>
-                  <small class="text-muted">- 将此技能注册为团队掌握的技能</small>
-                </label>
-              </div>
-              {{ end }}
-            </div>
-          </div>
-          {{ end }}
           <div class="help-block">
             <small class="text-info">
               <span class="glyphicon glyphicon-info-sign"></span>
@@ -142,20 +145,19 @@
         </div>
       </div>
 
-      {{ if .ReturnURL }}
-      <input type="hidden" name="return_url" value="{{ .ReturnURL }}">
-      {{ end }}
 
       <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
           <button type="submit" class="btn btn-primary">
             <span class="glyphicon glyphicon-plus"></span> 添加技能
           </button>
-          {{ if .ReturnURL }}
-          <a href="{{ .ReturnURL }}" class="btn btn-default">取消</a>
+
+          {{ if ne .Team.Id 0 }}
+          <a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}" class="btn btn-default">取消</a>
           {{ else }}
-          <a href="/v1/" class="btn btn-default">取消</a>
+          <a href="/v1/skills/user_list" class="btn btn-default">取消</a>
           {{ end }}
+
         </div>
       </div>
     </form>
@@ -163,7 +165,7 @@
 
   <div class="panel-footer">
     <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
-    茶博士：掌握技能是个人成长的重要组成部分，记录技能有助于自我认知和发展规划。
+    茶博士：个人技能和团队技能常见的区别是后者通常需要多人合作才能完成。
   </div>
 </div>
 {{ end }}
