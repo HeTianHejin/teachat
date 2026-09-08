@@ -1143,7 +1143,7 @@ func NewMemberApplication(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user_uuid := r.FormValue("user_uuid")
-	app_user, err := dao.GetUserByID(user_uuid)
+	app_user, err := dao.GetUserByUuidOrId(user_uuid)
 	if err != nil {
 		util.Error("Cannot get user given uuid %s: %v", user_uuid, err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1595,7 +1595,7 @@ func InviteMemberPost(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，请勿冒充八戒骗孙悟空的芭蕉扇哦，稍后再试。")
 		return
 	}
-	author, err := dao.GetUserByID(author_uuid)
+	author, err := dao.GetUserByUuidOrId(author_uuid)
 	if err != nil {
 		util.Debug(" Cannot get author user by uuid %v", err)
 		report(w, s_u, "你好，茶博士正在忙碌中，稍后再试。")
@@ -1769,7 +1769,7 @@ func InviteMemberGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")
 		return
 	}
-	invi_user, err := dao.GetUserByID(user_uuid)
+	invi_user, err := dao.GetUserByUuidOrId(user_uuid)
 	if err != nil {
 		util.Debug(" Cannot get user given uuid %v", err)
 		report(w, s_u, "你好，桃李明年能再发，明年闺中知有谁？请确认后再试")

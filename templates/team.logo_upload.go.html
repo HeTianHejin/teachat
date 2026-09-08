@@ -429,7 +429,7 @@
 
     // 显示错误消息
     function showError(message) {
-        errorMessage.textContent = '<i class="glyphicon glyphicon-exclamation-sign"></i> ' + message;
+        errorMessage.textContent = message;
         errorMessage.style.display = 'block';
         successMessage.style.display = 'none';
         submitBtn.disabled = true;
@@ -437,7 +437,7 @@
 
     // 显示成功消息
     function showSuccess(message) {
-        successMessage.textContent = '<i class="glyphicon glyphicon-ok-sign"></i> ' + message;
+        successMessage.textContent = message;
         successMessage.style.display = 'block';
         errorMessage.style.display = 'none';
     }

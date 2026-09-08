@@ -1151,6 +1151,7 @@ func (team *Team) IsActiveMember(user_id int) (is_member bool, err error) {
 }
 
 // team *Team.IsCoreMember() 检查当前用户是否$事业茶团核心成员（CEO/CTO/CMO/CFO）
+// 不正常状态的成员，不是核心成员
 func (team *Team) IsCoreMember(user_id int) (bool, error) {
 	if team.Id == TeamIdNone {
 		return false, fmt.Errorf("team not found with id: %d", team.Id)
@@ -1164,6 +1165,9 @@ func (team *Team) IsCoreMember(user_id int) (bool, error) {
 			return false, nil
 		}
 		return false, err
+	}
+	if team_member.Status != TeamMemberStatusActive {
+		return false, nil
 	}
 	// 检查是否为核心成员角色
 	return team_member.Role == RoleCEO || team_member.Role == RoleCTO || team_member.Role == RoleCMO || team_member.Role == RoleCFO, nil

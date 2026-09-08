@@ -267,7 +267,7 @@ func UserExistByEmail(email string) (exist bool, err error) {
 }
 
 // Get a single user given the UUID or id
-func GetUserByID(uuid string) (user User, err error) {
+func GetUserByUuidOrId(uuid string) (user User, err error) {
 	if uuid == "" {
 		return user, fmt.Errorf("uuid is empty")
 	}
