@@ -260,7 +260,7 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 			Status:  dao.NormalSkillTeamStatus, // 默认正常状态
 		}
 		if err := skillTeam.Create(r.Context()); err != nil {
-			util.Error("user %d cannot create skill team %d record, error: %v", s_u.Id, teamId, err)
+			util.Error("user %d cannot create skill team %d record: %v", s_u.Id, teamId, err)
 			// 不阻止流程，仅记录错误
 		}
 

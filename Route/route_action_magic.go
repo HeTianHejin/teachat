@@ -223,11 +223,12 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 
 	// 检查是否添加到团队法力列表
 	addToTeamMagics := r.PostFormValue("add_to_team_magics") == "1"
-	if addToTeamMagics && teamId == dao.TeamIdNone {
+	addTeam := r.PostForm.Has("add_to_team_magics")
+	if addTeam && teamId == dao.TeamIdNone {
 		report(w, s_u, "你好，团队参数异常，请先喝茶。")
 		return
 	}
-	if addToTeamMagics && teamId != dao.TeamIdNone {
+	if addTeam && addToTeamMagics && teamId > dao.TeamIdFreelancer {
 		// 创建团队法力记录
 		magicTeam := dao.MagicTeam{
 			MagicId: magic.Id,
@@ -236,7 +237,7 @@ func MagicNewPost(w http.ResponseWriter, r *http.Request) {
 			Status:  dao.ClearMagicTeamStatus, // 默认清晰状态
 		}
 		if err := magicTeam.Create(r.Context()); err != nil {
-			util.Debug("cannot create magic team record %v", err)
+			util.Error("user %d cannot create magic team %d record: %v", s_u.Id, teamId, err)
 			// 不阻止流程，仅记录错误
 		}
 	}
