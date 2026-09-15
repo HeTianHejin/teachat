@@ -19,7 +19,9 @@ type Handicraft struct {
 	Nickname    string
 	Description string // 手工艺总览，任务综合描述
 
-	ProjectId int // 发生的茶台ID，项目
+	ProjectId int    // 发生的茶台ID，项目
+	PlaceId   int    // 实际作业场所ID，关联 places
+	VenueRole string // provider_site / payer_site / third_party / mobile
 
 	InitiatorId int // 策动人ID
 	OwnerId     int // 主理/执行人ID
@@ -87,6 +89,22 @@ const (
 	HandicraftCategoryPublic = iota // 公开
 	HandicraftCategorySecret        // 私密
 )
+
+const (
+	VenueRoleProviderSite = "provider_site"
+	VenueRolePayerSite    = "payer_site"
+	VenueRoleThirdParty   = "third_party"
+	VenueRoleMobile       = "mobile"
+)
+
+func IsValidVenueRole(role string) bool {
+	switch role {
+	case VenueRoleProviderSite, VenueRolePayerSite, VenueRoleThirdParty, VenueRoleMobile:
+		return true
+	default:
+		return false
+	}
+}
 
 // 手工艺类型 - 根据体力需求和技能复杂度划分
 type HandicraftType int
@@ -254,9 +272,9 @@ func (h *Handicraft) Create(ctx context.Context) (err error) {
 	defer cancel()
 
 	statement := `INSERT INTO handicrafts 
-		(uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, initiator_id, owner_id, 
-		 type, category, status, skill_difficulty, magic_difficulty, contributor_count, final_score) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) 
+		(uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, place_id, venue_role, initiator_id, owner_id,
+		 type, category, status, skill_difficulty, magic_difficulty, contributor_count, final_score)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
 		RETURNING id, uuid`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
@@ -264,7 +282,7 @@ func (h *Handicraft) Create(ctx context.Context) (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, Random_UUID(), h.TeaOrderId, h.RecorderUserId, h.Name, h.Nickname, h.Description,
-		h.ProjectId, h.InitiatorId, h.OwnerId, h.Type, h.Category, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount, h.FinalScore).Scan(&h.Id, &h.Uuid)
+		h.ProjectId, h.PlaceId, h.VenueRole, h.InitiatorId, h.OwnerId, h.Type, h.Category, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount, h.FinalScore).Scan(&h.Id, &h.Uuid)
 	return err
 }
 
@@ -276,7 +294,7 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 		return errors.New("invalid Handicraft ID or UUID")
 	}
 	statement := `SELECT id, uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, 
-		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
+		COALESCE(place_id, 0), COALESCE(venue_role, 'provider_site'), initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty,
 		contributor_count, final_score, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
@@ -285,22 +303,22 @@ func (h *Handicraft) GetByIdOrUUID(ctx context.Context) (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, h.Id, h.Uuid).Scan(&h.Id, &h.Uuid, &h.TeaOrderId, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
-		&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
+		&h.ProjectId, &h.PlaceId, &h.VenueRole, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
 		&h.ContributorCount, &h.FinalScore, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
 	return err
 }
 
 // Update() 更新手工艺记录
 func (h *Handicraft) Update() error {
-	statement := `UPDATE handicrafts SET name = $2, nickname = $3, description = $4, 
-		status = $5, skill_difficulty = $6, magic_difficulty = $7, contributor_count = $8, final_score = $9, updated_at = $10  
+	statement := `UPDATE handicrafts SET name = $2, nickname = $3, description = $4, place_id = $5, venue_role = $6,
+		status = $7, skill_difficulty = $8, magic_difficulty = $9, contributor_count = $10, final_score = $11, updated_at = $12
 		WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(h.Id, h.Name, h.Nickname, h.Description, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount, h.FinalScore, time.Now())
+	_, err = stmt.Exec(h.Id, h.Name, h.Nickname, h.Description, h.PlaceId, h.VenueRole, h.Status, h.SkillDifficulty, h.MagicDifficulty, h.ContributorCount, h.FinalScore, time.Now())
 	return err
 }
 
@@ -392,7 +410,7 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 	statement := `SELECT id, uuid, tea_order_id, recorder_user_id, name, nickname, description, project_id, 
-		initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty, 
+		COALESCE(place_id, 0), COALESCE(venue_role, 'provider_site'), initiator_id, owner_id, type, category, status, skill_difficulty, magic_difficulty,
 		contributor_count, final_score, created_at, updated_at, deleted_at
 		FROM handicrafts WHERE project_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC`
 	rows, err := DB.QueryContext(ctx, statement, projectId)
@@ -405,7 +423,7 @@ func GetHandicraftsByProjectId(projectId int, ctx context.Context) ([]Handicraft
 	for rows.Next() {
 		var h Handicraft
 		err := rows.Scan(&h.Id, &h.Uuid, &h.TeaOrderId, &h.RecorderUserId, &h.Name, &h.Nickname, &h.Description,
-			&h.ProjectId, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
+			&h.ProjectId, &h.PlaceId, &h.VenueRole, &h.InitiatorId, &h.OwnerId, &h.Type, &h.Category, &h.Status, &h.SkillDifficulty, &h.MagicDifficulty,
 			&h.ContributorCount, &h.FinalScore, &h.CreatedAt, &h.UpdatedAt, &h.DeletedAt)
 		if err != nil {
 			return nil, err

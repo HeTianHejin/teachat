@@ -245,6 +245,8 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 	magicDifficultyStr := r.FormValue("magic_difficulty")
 	initiatorIdStr := r.FormValue("initiator_id")
 	ownerIdStr := r.FormValue("owner_id")
+	placeIdStr := r.FormValue("place_id")
+	venueRole := r.FormValue("venue_role")
 
 	if name == "" || description == "" {
 		report(w, s_u, "请填写完整的基本信息")
@@ -257,6 +259,15 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 	magicDifficulty, _ := strconv.Atoi(magicDifficultyStr)
 	initiatorId, _ := strconv.Atoi(initiatorIdStr)
 	ownerId, _ := strconv.Atoi(ownerIdStr)
+	placeId, err := strconv.Atoi(placeIdStr)
+	if err != nil || placeId <= 0 {
+		report(w, s_u, "请填写有效的作业场所ID")
+		return
+	}
+	if !dao.IsValidVenueRole(venueRole) {
+		report(w, s_u, "请填写有效的作业场所角色")
+		return
+	}
 
 	if ownerId <= 0 {
 		ownerId = s_u.Id
@@ -277,6 +288,8 @@ func HandicraftNewPost(w http.ResponseWriter, r *http.Request) {
 		Nickname:        nickname,
 		Description:     description,
 		ProjectId:       t_proj.Id,
+		PlaceId:         placeId,
+		VenueRole:       venueRole,
 		InitiatorId:     initiatorId,
 		OwnerId:         ownerId,
 		Type:            dao.HandicraftType(handicraftType),

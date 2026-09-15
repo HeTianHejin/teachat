@@ -8,12 +8,13 @@ import (
 )
 
 /*
-在一个茶围objective目标里，某个项目project被选中"入围"之后，系统将询问围主是否需要启动线下作业服务以解决问题。
--否，意味无需线下行动，没有TeaOrder启动，继续线上讨论即可；
--是，启动tea_order实例，这是一个类似"大观园的诗社活动"，有见证方verify team（主持&裁判），需求方payer team（出题），解题方payee team（作答），一个解题的过程是一个handicraft（手工艺），
-可能需要多个handicraft才能完成work，为了慎独，另外引入监护方（care team）与解题方共同承担责任风险；
---启动tea_order之后，系统会生成一个tea_order实体，记录该解题服务的相关信息；
---一个tea_order可以包含多个handicraft，每个handicraft对应一个具体的解题任务(见handicraft.go文件)；
+在一个茶围objective目标（愿望、需求）里，某个项目project(主意/应对方案）被选中"入围"之后，代表围主管理团队是明确需要启动线下作业服务以解决问题。
+--如果没有“入围”动作，意味无需线下作业行动，没有TeaOrder启动，继续线上讨论即可；
+--如果启动tea_order实例并且获得合规批准，这是一个类似"大观园的诗社活动"，有见证方verify team（主持&裁判），需求方payer team（出题），解题方payee team（作答），一个总解题的过程通常可以拆分为多个部分，一个部分的实操环节对应一个handicraft（手工艺），
+--为了慎独，另外引入可选监护方（care team）与解题方共同承担责任风险；
+--启动tea_order之后，系统会生成一个tea_order实体，记录该解题服务的具体内容；
+--一个tea_order可能包含多个handicraft，每个handicraft对应一个具体的解题任务(见handicraft.go文件)；
+--考虑作业环境影响甚大，手工艺添加主客场标识，以解题方为主视角，如果是在解题方指定地点作业，则为主场，由需求方选定的地方，则是客场（例如上门或者突发事件地点等)；
 (作为存档记录，tea_order涉及的茶围objective与项目project信息及参与方实体将固定（已经完成的order不可删除）以实现历史还原)
 。。。
 */
@@ -21,15 +22,16 @@ type TeaOrder struct {
 	Id   int
 	Uuid string
 
-	ObjectiveId  int    // 茶围目标ID
-	ProjectId    int    // 项目ID
-	UserId       int    // 茶围管理团队成员，选择入围操作者
-	Status       string // tea_order状态：pending/active/pause/completed/cancelled
-	VerifyTeamId int    // 见证方团队ID
-	PayerTeamId  int    // 需求方（出题方）团队ID
-	PayeeTeamId  int    // 解题方团队ID
-	CareTeamId   int    // 监护方团队ID
-
+	ObjectiveId    int         // 茶围目标ID
+	ProjectId      int         // 项目ID
+	UserId         int         // 茶围管理团队成员，选择入围操作者
+	Status         string      // tea_order状态：pending/active/pause/completed/cancelled
+	VerifyTeamId   int         // 见证方团队ID
+	PayerTeamId    int         // 需求方（出题方）团队ID
+	PayeeTeamId    int         // 解题方团队ID
+	CareTeamId     int         // 监护方团队ID
+	ServiceMode    ServiceMode // 服务模式
+	DefaultPlaceId int         //默认地点id
 	// 审批人（见证者）填写，必填
 	// 审批人角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判"违规"情形，将阻止贾宝玉作西厢记类那种"男女礼教脱轨诗"或者禁止薛蟠那种酒色情诗；
 	// 又或者是老师组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核，所以说"见证"记录事件发生的真实性、合规性。
@@ -44,6 +46,7 @@ type TeaOrder struct {
 	CreatedAt  time.Time
 	UpdatedAt  *time.Time
 	DeletedAt  *time.Time //软删除时间（未完成的tea_order可以被取消删除，已完成的tea_order不可删除）
+
 }
 
 const (
@@ -74,6 +77,24 @@ const (
 	WitnessActionForfeit = "罚没" // 见证人对违规恶意/不道德行为的处罚，罚没星茶转入系统特殊团队"公共治理团队"
 	WitnessActionRefund  = "退回" // 见证人对无恶意但超出预设讨论范围的约茶的处理，退款星茶原路退回双方团队
 )
+
+type ServiceMode string
+
+const (
+	ServiceModeCustomerDelivers ServiceMode = "customer_delivers" // 需求方送到解题方场所
+	ServiceModeProviderVisits   ServiceMode = "provider_visits"   // 解题方上门或者到达需求方指定场所
+	ServiceModeThirdPartyVenue  ServiceMode = "third_party_venue" // 第三方（例如道路商场公园等公共场所）
+	ServiceModeMobile           ServiceMode = "mobile"
+)
+
+func (m ServiceMode) IsValid() bool {
+	switch m {
+	case ServiceModeCustomerDelivers, ServiceModeProviderVisits, ServiceModeThirdPartyVenue, ServiceModeMobile:
+		return true
+	default:
+		return false
+	}
+}
 
 // WitnessLog.Create() 创建见证日志
 func (w *WitnessLog) Create(ctx context.Context) (err error) {
@@ -124,7 +145,7 @@ func (w *WitnessLog) GetByTeaOrderId(ctx context.Context) ([]*WitnessLog, error)
 func GetTeaOrdersByStatus(ctx context.Context, status string, page int, pageSize int) ([]*TeaOrder, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE status = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, service_mode, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE status = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return nil, err
@@ -138,7 +159,7 @@ func GetTeaOrdersByStatus(ctx context.Context, status string, page int, pageSize
 	teaOrders := make([]*TeaOrder, 0)
 	for rows.Next() {
 		teaOrder := &TeaOrder{}
-		err := rows.Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
+		err := rows.Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.ServiceMode, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -185,10 +206,10 @@ func (t *TeaOrder) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `INSERT INTO tea_orders (objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	statement := `INSERT INTO tea_orders (objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, service_mode)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 		RETURNING id`
-	err = DB.QueryRowContext(ctx, statement, t.ObjectiveId, t.ProjectId, t.UserId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId).Scan(&t.Id)
+	err = DB.QueryRowContext(ctx, statement, t.ObjectiveId, t.ProjectId, t.UserId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId, t.ServiceMode).Scan(&t.Id)
 	return err
 }
 
@@ -199,13 +220,13 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 	if t.Id <= 0 && t.Uuid == "" {
 		return errors.New("invalid TeaOrder ID or UUID")
 	}
-	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE (id = $1 OR uuid = $2) AND deleted_at IS NULL`
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, service_mode, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE (id = $1 OR uuid = $2) AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRowContext(ctx, t.Id, t.Uuid).Scan(&t.Id, &t.Uuid, &t.ObjectiveId, &t.ProjectId, &t.UserId, &t.Status, &t.VerifyTeamId, &t.PayerTeamId, &t.PayeeTeamId, &t.CareTeamId, &t.TeaTopic, &t.IsApproved, &t.ApproverUserId, &t.ApprovalRejectionReason, &t.ApprovedAt, &t.FinalScore, &t.CreatedAt, &t.UpdatedAt, &t.DeletedAt)
+	err = stmt.QueryRowContext(ctx, t.Id, t.Uuid).Scan(&t.Id, &t.Uuid, &t.ObjectiveId, &t.ProjectId, &t.UserId, &t.Status, &t.VerifyTeamId, &t.PayerTeamId, &t.PayeeTeamId, &t.CareTeamId, &t.ServiceMode, &t.TeaTopic, &t.IsApproved, &t.ApproverUserId, &t.ApprovalRejectionReason, &t.ApprovedAt, &t.FinalScore, &t.CreatedAt, &t.UpdatedAt, &t.DeletedAt)
 	return err
 }
 
@@ -213,14 +234,14 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 func GetTeaOrderByProjectIdAndObjectiveId(ctx context.Context, projectId int, objectiveId int) (*TeaOrder, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE project_id = $1 AND objective_id = $2 AND deleted_at IS NULL`
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, service_mode, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE project_id = $1 AND objective_id = $2 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 	teaOrder := &TeaOrder{}
-	err = stmt.QueryRowContext(ctx, projectId, objectiveId).Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
+	err = stmt.QueryRowContext(ctx, projectId, objectiveId).Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.ServiceMode, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -229,15 +250,15 @@ func GetTeaOrderByProjectIdAndObjectiveId(ctx context.Context, projectId int, ob
 
 // Update 更新茶订单记录
 func (t *TeaOrder) Update() error {
-	statement := `UPDATE tea_orders SET status = $2, tea_topic = $3, is_approved = $4, approver_user_id = $5,
-		approval_rejection_reason = $6, approved_at = $7, final_score = $8, updated_at = $9
+	statement := `UPDATE tea_orders SET status = $2, service_mode = $3, tea_topic = $4, is_approved = $5, approver_user_id = $6,
+		approval_rejection_reason = $7, approved_at = $8, final_score = $9, updated_at = $10
 		WHERE id = $1 AND deleted_at IS NULL`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	_, err = stmt.Exec(t.Id, t.Status, t.TeaTopic, t.IsApproved, t.ApproverUserId,
+	_, err = stmt.Exec(t.Id, t.Status, t.ServiceMode, t.TeaTopic, t.IsApproved, t.ApproverUserId,
 		t.ApprovalRejectionReason, t.ApprovedAt, t.FinalScore, time.Now())
 	return err
 }
@@ -262,7 +283,7 @@ func (t *TeaOrder) Delete() error {
 func GetTeaOrdersByPayerTeamId(ctx context.Context, teamId int, page int, pageSize int) ([]*TeaOrder, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE payer_team_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, service_mode, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE payer_team_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return nil, err
@@ -276,7 +297,7 @@ func GetTeaOrdersByPayerTeamId(ctx context.Context, teamId int, page int, pageSi
 	teaOrders := make([]*TeaOrder, 0)
 	for rows.Next() {
 		teaOrder := &TeaOrder{}
-		err := rows.Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
+		err := rows.Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.ServiceMode, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -292,7 +313,7 @@ func GetTeaOrdersByPayerTeamId(ctx context.Context, teamId int, page int, pageSi
 func GetTeaOrdersByPayeeTeamId(ctx context.Context, teamId int, page int, pageSize int) ([]*TeaOrder, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE payee_team_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	statement := `SELECT id, uuid, objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, service_mode, tea_topic, is_approved, approver_user_id, approval_rejection_reason, approved_at, final_score, created_at, updated_at, deleted_at FROM tea_orders WHERE payee_team_id = $1 AND deleted_at IS NULL ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return nil, err
@@ -306,7 +327,7 @@ func GetTeaOrdersByPayeeTeamId(ctx context.Context, teamId int, page int, pageSi
 	teaOrders := make([]*TeaOrder, 0)
 	for rows.Next() {
 		teaOrder := &TeaOrder{}
-		err := rows.Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
+		err := rows.Scan(&teaOrder.Id, &teaOrder.Uuid, &teaOrder.ObjectiveId, &teaOrder.ProjectId, &teaOrder.UserId, &teaOrder.Status, &teaOrder.VerifyTeamId, &teaOrder.PayerTeamId, &teaOrder.PayeeTeamId, &teaOrder.CareTeamId, &teaOrder.ServiceMode, &teaOrder.TeaTopic, &teaOrder.IsApproved, &teaOrder.ApproverUserId, &teaOrder.ApprovalRejectionReason, &teaOrder.ApprovedAt, &teaOrder.FinalScore, &teaOrder.CreatedAt, &teaOrder.UpdatedAt, &teaOrder.DeletedAt)
 		if err != nil {
 			return nil, err
 		}

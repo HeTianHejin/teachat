@@ -319,6 +319,14 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台监护方，请确认后再试。")
 		return
 	}
+	serviceMode := dao.ServiceMode(r.PostFormValue("service_mode"))
+	if serviceMode == "" {
+		serviceMode = dao.ServiceModeCustomerDelivers
+	}
+	if !serviceMode.IsValid() {
+		report(w, s_u, "你好，茶博士失魂鱼，未能记录有效的服务模式，请确认后再试。")
+		return
+	}
 
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
@@ -484,27 +492,29 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 
 	// 页面数据
 	type pageData struct {
-		SessUser       dao.User      `json:"sessUser"`
-		Objective      dao.Objective `json:"objective"`
-		Project        dao.Project   `json:"project"`
-		GuardianType   string        `json:"guardian_type"`
-		AdminFamily    dao.Family    `json:"admin_family"`
-		AdminTeam      dao.Team      `json:"admin_team"`
-		PayerTeam      dao.Team      `json:"payer_team"`       // 需求方/出题方团队
-		PayeeTeam      dao.Team      `json:"payee_team"`       // 解题方团队
-		VerifierTeam   dao.Team      `json:"verifier_team"`    // 见证者团队（批准、许可方）
-		EscrowTeam     dao.Team      `json:"escrow_team"`      // 茶庄托管团队（预备金托管方）
-		PayerBalanceMg int64         `json:"payer_balance_mg"` // 需求方可用的星茶余额
-		PayeeBalanceMg int64         `json:"payee_balance_mg"` // 解题方可用的星茶余额
-		PrepAmountMg   int64         `json:"prep_amount_mg"`   // 预备金金额（毫克）
-		PayerOk        bool          `json:"payer_ok"`         // 需求方余额是否充足
-		PayeeOk        bool          `json:"payee_ok"`         // 解题方余额是否充足
+		SessUser       dao.User        `json:"sessUser"`
+		Objective      dao.Objective   `json:"objective"`
+		Project        dao.Project     `json:"project"`
+		GuardianType   string          `json:"guardian_type"`
+		ServiceMode    dao.ServiceMode `json:"service_mode"`
+		AdminFamily    dao.Family      `json:"admin_family"`
+		AdminTeam      dao.Team        `json:"admin_team"`
+		PayerTeam      dao.Team        `json:"payer_team"`       // 需求方/出题方团队
+		PayeeTeam      dao.Team        `json:"payee_team"`       // 解题方团队
+		VerifierTeam   dao.Team        `json:"verifier_team"`    // 见证者团队（批准、许可方）
+		EscrowTeam     dao.Team        `json:"escrow_team"`      // 茶庄托管团队（预备金托管方）
+		PayerBalanceMg int64           `json:"payer_balance_mg"` // 需求方可用的星茶余额
+		PayeeBalanceMg int64           `json:"payee_balance_mg"` // 解题方可用的星茶余额
+		PrepAmountMg   int64           `json:"prep_amount_mg"`   // 预备金金额（毫克）
+		PayerOk        bool            `json:"payer_ok"`         // 需求方余额是否充足
+		PayeeOk        bool            `json:"payee_ok"`         // 解题方余额是否充足
 	}
 	pD := pageData{
 		SessUser:       s_u,
 		Objective:      ob,
 		Project:        pr,
 		GuardianType:   guardian_type,
+		ServiceMode:    serviceMode,
 		AdminFamily:    adminFamily,
 		AdminTeam:      adminTeam,
 		PayerTeam:      payerTeam,
@@ -551,6 +561,14 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	guardian_type := r.PostFormValue("guardian_type")
 	if guardian_type == "" {
 		report(w, s_u, "你好，茶博士失魂鱼，未能记录入围茶台监护方，请确认后再试。")
+		return
+	}
+	serviceMode := dao.ServiceMode(r.PostFormValue("service_mode"))
+	if serviceMode == "" {
+		serviceMode = dao.ServiceModeCustomerDelivers
+	}
+	if !serviceMode.IsValid() {
+		report(w, s_u, "你好，茶博士失魂鱼，未能记录有效的服务模式，请确认后再试。")
 		return
 	}
 
@@ -719,6 +737,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	tea_order.VerifyTeamId = dao.TeamIdVerifier
 	tea_order.PayeeTeamId = pr.TeamId
 	tea_order.PayerTeamId = requesterTeamId // 需求方团队ID
+	tea_order.ServiceMode = serviceMode
 
 	// 设置监护方团队ID
 	// 注意：监护方（Guardian）负责监督项目执行，理想情况下应由专业监护团队担任

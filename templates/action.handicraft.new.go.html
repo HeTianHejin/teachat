@@ -64,6 +64,25 @@
                         placeholder="详细描述手工艺内容、操作要点、注意事项等" required minlength="7" maxlength="456"></textarea>
             </div>
           </div>
+
+          <div class="form-group">
+            <label for="place_id" class="col-sm-2 control-label">作业场所ID *</label>
+            <div class="col-sm-10">
+              <input type="number" class="form-control" name="place_id" id="place_id" placeholder="已登记的地方ID" required min="1">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="venue_role" class="col-sm-2 control-label">场所角色 *</label>
+            <div class="col-sm-10">
+              <select class="form-control" name="venue_role" id="venue_role" required>
+                <option value="provider_site" selected>解题方场所（主场）</option>
+                <option value="payer_site">需求方场所（上门）</option>
+                <option value="third_party">第三方场所</option>
+                <option value="mobile">移动或临时场所</option>
+              </select>
+            </div>
+          </div>
         </div>
       </div>
 
