@@ -21,7 +21,7 @@ import (
 
 //var db *sql.DB //数据库实例
 
-// DB 数据库实例，请局变量
+// DB 数据库实例
 var DB *sql.DB
 
 func init() {
@@ -30,21 +30,19 @@ func init() {
 	// 统一从 exe 所在目录读取 .env，避免双击运行时找不到配置
 	envPath := filepath.Join(util.AppDir, ".env")
 	if err = godotenv.Load(envPath); err != nil {
-		util.PrintStdout("Error loading .env file")
+		util.PrintStdout("error load .env file")
+		util.Error("fatal load .env file!")
 	}
 
 	// 从环境变量获取数据库配置
 	dbdriver := os.Getenv("DB_DRIVER")
 	dbhost := os.Getenv("DB_HOST")
-	dbport, _ := strconv.Atoi(os.Getenv("DB_PORT")) // 字符串转整数
+	dbport, _ := strconv.Atoi(os.Getenv("DB_PORT"))
 	dbuser := os.Getenv("DB_USER")
 	dbpassword := os.Getenv("DB_PASSWORD")
 	dbname := os.Getenv("DB_NAME")
 	dbsslmode := os.Getenv("DB_SSLMODE")
 	dbTimeZone := os.Getenv("DB_TIMEZONE")
-	if dbdriver == "" {
-		util.Panic("DB_DRIVER为空，未能从 .env 读取数据库驱动")
-	}
 
 	//数据库连接
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
@@ -52,20 +50,21 @@ func init() {
 		dbhost, dbport, dbuser, dbpassword, dbname, dbsslmode, dbTimeZone)
 	DB, err = sql.Open(dbdriver, psqlInfo)
 	if err != nil {
-		util.Panic("星际迷失->茶棚数据库打开时：%v", err)
+		util.PrintStdout("cannot open database teachat")
+		util.Error("cannot open database teachat: %v", err)
 	}
 	// 配置连接池
-	//DB.SetMaxOpenConns(25)
-	//DB.SetMaxIdleConns(25)
-	DB.SetConnMaxLifetime(5 * time.Minute)
+	DB.SetMaxOpenConns(25)                 // 最多同时打开 25 个连接（并发上限）
+	DB.SetMaxIdleConns(25)                 // 建议和 Open 一致，避免连接抖动
+	DB.SetConnMaxLifetime(2 * time.Minute) // 每个连接最多活 2 分钟，到期后主动回收重建
+	// 可选：DB.SetConnMaxIdleTime(time.Minute) // 空闲连接多久后回收
 
 	//测试数据库连接是否成功
+	//开发阶段，避免go test时从目录加载数据库驱动失败阻断进程，仅记录日志，不Panic，不Fatal
 	if err = DB.Ping(); err != nil {
-		util.Panic("ping teachat database failure - 测试链接茶话会数据库失败：%v", err)
+		util.PrintStdout("ping database teachat failure")
+		util.Error("ping database teachat failure: %v", err)
 	}
-
-	//ok
-	util.PrintStdout("Open tea chat database success, 星际茶棚数据库打开成功")
 
 }
 
