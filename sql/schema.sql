@@ -962,6 +962,8 @@ CREATE TABLE tea_orders (
     payee_team_id         INTEGER REFERENCES teams(id),
     care_team_id          INTEGER REFERENCES teams(id),
     service_mode           VARCHAR(32) NOT NULL DEFAULT 'customer_delivers' CHECK (service_mode IN ('customer_delivers', 'provider_visits', 'third_party_venue', 'mobile')),
+    service_offering_id   INTEGER REFERENCES team_service_offerings(id),
+    service_version_id    INTEGER,
     tea_topic             VARCHAR(64) NOT NULL DEFAULT '-',
     is_approved           BOOLEAN NOT NULL DEFAULT FALSE,
     approver_user_id      INTEGER REFERENCES users(id),
@@ -1530,6 +1532,107 @@ CREATE TABLE footprints (
 
 -- 警示词表
 
+-- ============================================
+-- 团队服务项目表（团队的"可承诺能力"）
+-- 分层语义：服务项目=可承诺能力，技能=能力依据，茶围目标=需求上下文，茶订单=经确认的履约合同。
+-- ============================================
+
+-- 团队服务项目表
+CREATE TABLE team_service_offerings (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    team_id               INTEGER NOT NULL REFERENCES teams(id),
+    name                  VARCHAR(255) NOT NULL,
+    summary               VARCHAR(500),
+    description           TEXT,
+    target_problem        TEXT,
+    deliverables          TEXT,
+    requirements          TEXT,
+    estimated_minutes     INTEGER CHECK (estimated_minutes IS NULL OR estimated_minutes >= 0),
+    price_milligrams      BIGINT NOT NULL DEFAULT 0 CHECK (price_milligrams >= 0),
+    status                INTEGER NOT NULL DEFAULT 0,
+    availability          INTEGER NOT NULL DEFAULT 0,
+    current_version_id    INTEGER,
+    approved_by           INTEGER REFERENCES users(id),
+    approved_at           TIMESTAMPTZ,
+    recorder_user_id      INTEGER NOT NULL REFERENCES users(id),
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    published_at          TIMESTAMPTZ,
+    unpublished_at        TIMESTAMPTZ,
+    retired_at            TIMESTAMPTZ,
+    deleted_at            TIMESTAMPTZ
+);
+
+-- 团队服务项目版本表
+-- 上架即锁定一个不可变快照；后续修改生成新版本，历史茶订单始终显示下单时锁定的旧版本。
+CREATE TABLE team_service_offering_versions (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    service_offering_id   INTEGER NOT NULL REFERENCES team_service_offerings(id),
+    version_no            INTEGER NOT NULL,
+    name                  VARCHAR(255) NOT NULL,
+    summary               VARCHAR(500),
+    description           TEXT,
+    target_problem        TEXT,
+    deliverables          TEXT,
+    requirements          TEXT,
+    estimated_minutes     INTEGER,
+    price_milligrams      BIGINT NOT NULL DEFAULT 0 CHECK (price_milligrams >= 0),
+    is_current            BOOLEAN NOT NULL DEFAULT FALSE,
+    recorder_user_id      INTEGER NOT NULL REFERENCES users(id),
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (service_offering_id, version_no)
+);
+
+-- 服务项目当前版本外键（与版本表互为引用，故建表后追加）
+ALTER TABLE team_service_offerings
+    ADD CONSTRAINT fk_tso_current_version
+    FOREIGN KEY (current_version_id) REFERENCES team_service_offering_versions(id);
+
+-- 团队服务项目技能关联表（能力依据）
+-- 同时记录 team_id，用于约束技能必须属于服务项目的所属团队。
+CREATE TABLE team_service_offering_skills (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    service_offering_id   INTEGER NOT NULL REFERENCES team_service_offerings(id) ON DELETE CASCADE,
+    skill_id              INTEGER NOT NULL REFERENCES skills(id),
+    team_id               INTEGER NOT NULL REFERENCES teams(id),
+    required_level        INTEGER NOT NULL DEFAULT 1 CHECK (required_level >= 1 AND required_level <= 9),
+    is_primary            BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (service_offering_id, skill_id)
+);
+
+-- 团队服务项目生命周期事件表
+-- 记录提交审核、审核结果、上架、暂停、恢复、下架、废止，以及每次锁定的版本。
+CREATE TABLE team_service_offering_events (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    service_offering_id   INTEGER NOT NULL REFERENCES team_service_offerings(id),
+    version_id            INTEGER REFERENCES team_service_offering_versions(id),
+    from_status           INTEGER,
+    to_status             INTEGER NOT NULL,
+    action                VARCHAR(32) NOT NULL,
+    reason                TEXT NOT NULL DEFAULT '-',
+    evidence_id           INTEGER DEFAULT 0,
+    operator_user_id      INTEGER NOT NULL REFERENCES users(id),
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 同一团队内服务项目不可重名（已软删除的除外）
+CREATE UNIQUE INDEX idx_team_service_offerings_team_name
+    ON team_service_offerings(team_id, name) WHERE deleted_at IS NULL;
+
+-- 每个服务项目仅允许一个当前版本
+CREATE UNIQUE INDEX idx_tsov_current
+    ON team_service_offering_versions(service_offering_id) WHERE is_current;
+
+-- 茶订单锁定服务项目及版本，并快照成交价格，使历史订单不受后续调价影响
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_offering_id INTEGER REFERENCES team_service_offerings(id);
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_version_id INTEGER REFERENCES team_service_offering_versions(id);
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS agreed_price_milligrams BIGINT;
+
 
 -- ============================================
 -- 索引创建
@@ -1663,6 +1766,27 @@ CREATE INDEX idx_witness_logs_witness_id ON witness_logs(witness_id);
 CREATE INDEX idx_witness_logs_action ON witness_logs(action);
 CREATE INDEX idx_witness_logs_witness_at ON witness_logs(witness_at DESC);
 
+-- 团队服务项目相关索引
+CREATE INDEX idx_team_service_offerings_team_id ON team_service_offerings(team_id);
+CREATE INDEX idx_team_service_offerings_status ON team_service_offerings(status);
+CREATE INDEX idx_team_service_offerings_recorder_user_id ON team_service_offerings(recorder_user_id);
+CREATE INDEX idx_team_service_offerings_deleted_at ON team_service_offerings(deleted_at);
+CREATE INDEX idx_tso_team_status ON team_service_offerings(team_id, status) WHERE deleted_at IS NULL;
+
+CREATE INDEX idx_tsov_service_offering_id ON team_service_offering_versions(service_offering_id);
+
+CREATE INDEX idx_tsos_service_offering_id ON team_service_offering_skills(service_offering_id);
+CREATE INDEX idx_tsos_skill_id ON team_service_offering_skills(skill_id);
+CREATE INDEX idx_tsos_team_id ON team_service_offering_skills(team_id);
+
+CREATE INDEX idx_tsoe_service_offering_id ON team_service_offering_events(service_offering_id);
+CREATE INDEX idx_tsoe_operator_user_id ON team_service_offering_events(operator_user_id);
+CREATE INDEX idx_tsoe_created_at ON team_service_offering_events(created_at DESC);
+
+-- 茶订单服务项目关联索引
+CREATE INDEX idx_tea_orders_service_offering_id ON tea_orders(service_offering_id);
+CREATE INDEX idx_tea_orders_service_version_id ON tea_orders(service_version_id);
+
 -- ============================================
 -- 表注释
 -- ============================================
@@ -1690,6 +1814,23 @@ COMMENT ON TABLE safety_protections IS '安全防护表';
 COMMENT ON TABLE see_seeks IS '看看检查表';
 COMMENT ON TABLE brain_fires IS '脑火(头脑风暴)表';
 COMMENT ON TABLE suggestions IS '建议表';
+COMMENT ON TABLE team_service_offerings IS '团队服务项目表（团队可承诺能力）';
+COMMENT ON TABLE team_service_offering_versions IS '团队服务项目版本表（上架锁定的不可变快照）';
+COMMENT ON TABLE team_service_offering_skills IS '团队服务项目技能关联表（能力依据）';
+COMMENT ON TABLE team_service_offering_events IS '团队服务项目生命周期事件表';
+COMMENT ON COLUMN team_service_offerings.status IS '0-未知，1-草稿，2-待审核，3-已上架，4-暂停接单，5-已婉拒，6-已下架，7-已废止';
+COMMENT ON COLUMN team_service_offerings.availability IS '0-未知，1-当前可接，2-暂时不可接；"产能已满"由进行中的茶订单数量派生，不落库';
+COMMENT ON COLUMN team_service_offerings.estimated_minutes IS '预计耗时，单位分钟';
+COMMENT ON COLUMN team_service_offerings.price_milligrams IS '服务价格，单位毫克（星茶），1克=1000毫克';
+COMMENT ON COLUMN team_service_offerings.current_version_id IS '当前在架版本ID，未上架为NULL';
+COMMENT ON COLUMN team_service_offerings.approved_by IS '审核人用户ID，须为见证者团队成员，未审核为NULL';
+COMMENT ON COLUMN team_service_offering_versions.is_current IS '是否为当前在架版本，每个服务项目最多一个';
+COMMENT ON COLUMN team_service_offering_skills.required_level IS '要求的团队技能等级，1-9，对应 skill_teams.level';
+COMMENT ON COLUMN team_service_offering_events.action IS '提交审核/审核通过/审核婉拒/暂停接单/恢复接单/下架/废止';
+COMMENT ON COLUMN team_service_offering_events.reason IS '操作原因，默认"-"';
+COMMENT ON COLUMN tea_orders.service_offering_id IS '茶订单对应的团队服务项目';
+COMMENT ON COLUMN tea_orders.service_version_id IS '下单时锁定的服务项目版本，历史订单始终显示该版本';
+COMMENT ON COLUMN tea_orders.agreed_price_milligrams IS '下单时锁定的成交价格快照（毫克）';
 
 -- 消息系统表注释
 COMMENT ON TABLE message_boxes IS '消息盒子表';
