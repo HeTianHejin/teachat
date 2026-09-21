@@ -195,6 +195,22 @@ type TeamServiceOfferingVersion struct {
 	CreatedAt         time.Time
 }
 
+// 服务版本技能要求快照
+// 服务版本发布后，要求记录不再跟随当前服务项目技能关联变化。
+type ServiceVersionSkillRequirement struct {
+	Id                   int
+	Uuid                 string
+	ServiceVersionId     int
+	SkillId              int
+	TeamId               int
+	RoleName             string
+	RequiredLevel        int
+	RequiredCount        int
+	ResponsibilityWeight int
+	IsPrimary            bool
+	CreatedAt            time.Time
+}
+
 // ============================================
 // 服务项目查询列与扫描辅助
 // ============================================
@@ -493,7 +509,22 @@ func insertVersionSnapshot(ctx context.Context, tx *sql.Tx, tso *TeamServiceOffe
 	if err != nil {
 		return nil, err
 	}
+	if err := copyOfferingSkillsToVersion(ctx, tx, version.Id, tso.Id, tso.TeamId); err != nil {
+		return nil, err
+	}
 	return version, nil
+}
+
+// copyOfferingSkillsToVersion 将当前服务项目的能力依据锁定为版本要求。
+func copyOfferingSkillsToVersion(ctx context.Context, tx *sql.Tx, versionId, offeringId, teamId int) error {
+	_, err := tx.ExecContext(ctx, `
+		INSERT INTO service_version_skill_requirements
+			(service_version_id, skill_id, team_id, role_name, required_level, required_count,
+			 responsibility_weight, is_primary, created_at)
+		SELECT $1, skill_id, team_id, '-', required_level, 1, 100, is_primary, CURRENT_TIMESTAMP
+		FROM team_service_offering_skills
+		WHERE service_offering_id = $2 AND team_id = $3`, versionId, offeringId, teamId)
+	return err
 }
 
 // publish 流转到"已上架"：锁定一个新版本并写入事件，全部在一个事务内完成
@@ -768,6 +799,67 @@ func GetTeamServiceOfferingVersionsByOfferingId(offeringId int, ctx context.Cont
 		return nil, err
 	}
 	return versions, nil
+}
+
+// Create 创建服务版本技能要求。要求中的团队必须是服务版本所属服务项目的团队，且技能已登记为团队技能。
+func (r *ServiceVersionSkillRequirement) Create(ctx context.Context) error {
+	if r.ServiceVersionId <= 0 || r.SkillId <= 0 || r.TeamId <= 0 {
+		return errors.New("服务版本技能要求缺少版本、技能或团队")
+	}
+	if r.RequiredLevel < 1 || r.RequiredLevel > 9 {
+		return errors.New("要求的团队技能等级必须在1-9之间")
+	}
+	if r.RequiredCount < 1 {
+		r.RequiredCount = 1
+	}
+	if r.ResponsibilityWeight < 1 {
+		r.ResponsibilityWeight = 100
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `INSERT INTO service_version_skill_requirements
+		(service_version_id, skill_id, team_id, role_name, required_level, required_count,
+		 responsibility_weight, is_primary, created_at)
+		SELECT $1, $2, $3, $4, $5, $6, $7, $8, CURRENT_TIMESTAMP
+		WHERE EXISTS (
+			SELECT 1 FROM team_service_offering_versions v
+			JOIN team_service_offerings o ON o.id = v.service_offering_id
+			WHERE v.id = $1 AND o.team_id = $3 AND o.deleted_at IS NULL
+		) AND EXISTS (
+			SELECT 1 FROM skill_teams
+			WHERE skill_id = $2 AND team_id = $3 AND deleted_at IS NULL
+		)
+		RETURNING id, uuid, created_at`
+	return DB.QueryRowContext(ctx, statement, r.ServiceVersionId, r.SkillId, r.TeamId,
+		r.RoleName, r.RequiredLevel, r.RequiredCount, r.ResponsibilityWeight, r.IsPrimary).
+		Scan(&r.Id, &r.Uuid, &r.CreatedAt)
+}
+
+// GetServiceVersionSkillRequirements 获取服务版本的能力要求，主能力优先。
+func GetServiceVersionSkillRequirements(versionId int, ctx context.Context) ([]*ServiceVersionSkillRequirement, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := DB.QueryContext(ctx, `SELECT id, uuid, service_version_id, skill_id, team_id,
+		role_name, required_level, required_count, responsibility_weight, is_primary, created_at
+		FROM service_version_skill_requirements
+		WHERE service_version_id = $1 ORDER BY is_primary DESC, id`, versionId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	requirements := make([]*ServiceVersionSkillRequirement, 0)
+	for rows.Next() {
+		r := &ServiceVersionSkillRequirement{}
+		if err := rows.Scan(&r.Id, &r.Uuid, &r.ServiceVersionId, &r.SkillId, &r.TeamId,
+			&r.RoleName, &r.RequiredLevel, &r.RequiredCount, &r.ResponsibilityWeight,
+			&r.IsPrimary, &r.CreatedAt); err != nil {
+			return nil, err
+		}
+		requirements = append(requirements, r)
+	}
+	return requirements, rows.Err()
 }
 
 // ============================================

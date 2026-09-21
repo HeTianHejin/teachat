@@ -327,7 +327,6 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能记录有效的服务模式，请确认后再试。")
 		return
 	}
-
 	//获取目标茶台
 	pr := dao.Project{Uuid: uuid}
 	if err = pr.GetByUuid(); err != nil {
@@ -423,6 +422,16 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士失魂鱼，未能获取解题方团队信息，请确认后再试。")
 		return
 	}
+	serviceOfferings, err := dao.GetPublishedTeamServiceOfferingsByTeamId(payeeTeam.Id, r.Context())
+	if err != nil {
+		util.Debug(" Cannot get published service offerings %v", err)
+		serviceOfferings = []*dao.TeamServiceOffering{}
+	}
+	if err != nil {
+		util.Debug(" Cannot get payee team %v", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取解题方团队信息，请确认后再试。")
+		return
+	}
 
 	// 如果是紧急/人道主义/救援/慈善等茶台，则不校验出题方团队是否具备入围资格（职业团队）
 	// 校验解题方团队是否具备入围资格（职业团队）
@@ -492,40 +501,42 @@ func ProjectApproveStep2(w http.ResponseWriter, r *http.Request) {
 
 	// 页面数据
 	type pageData struct {
-		SessUser       dao.User        `json:"sessUser"`
-		Objective      dao.Objective   `json:"objective"`
-		Project        dao.Project     `json:"project"`
-		GuardianType   string          `json:"guardian_type"`
-		ServiceMode    dao.ServiceMode `json:"service_mode"`
-		AdminFamily    dao.Family      `json:"admin_family"`
-		AdminTeam      dao.Team        `json:"admin_team"`
-		PayerTeam      dao.Team        `json:"payer_team"`       // 需求方/出题方团队
-		PayeeTeam      dao.Team        `json:"payee_team"`       // 解题方团队
-		VerifierTeam   dao.Team        `json:"verifier_team"`    // 见证者团队（批准、许可方）
-		EscrowTeam     dao.Team        `json:"escrow_team"`      // 茶庄托管团队（预备金托管方）
-		PayerBalanceMg int64           `json:"payer_balance_mg"` // 需求方可用的星茶余额
-		PayeeBalanceMg int64           `json:"payee_balance_mg"` // 解题方可用的星茶余额
-		PrepAmountMg   int64           `json:"prep_amount_mg"`   // 预备金金额（毫克）
-		PayerOk        bool            `json:"payer_ok"`         // 需求方余额是否充足
-		PayeeOk        bool            `json:"payee_ok"`         // 解题方余额是否充足
+		SessUser         dao.User                   `json:"sessUser"`
+		Objective        dao.Objective              `json:"objective"`
+		Project          dao.Project                `json:"project"`
+		GuardianType     string                     `json:"guardian_type"`
+		ServiceMode      dao.ServiceMode            `json:"service_mode"`
+		AdminFamily      dao.Family                 `json:"admin_family"`
+		AdminTeam        dao.Team                   `json:"admin_team"`
+		PayerTeam        dao.Team                   `json:"payer_team"`       // 需求方/出题方团队
+		PayeeTeam        dao.Team                   `json:"payee_team"`       // 解题方团队
+		VerifierTeam     dao.Team                   `json:"verifier_team"`    // 见证者团队（批准、许可方）
+		EscrowTeam       dao.Team                   `json:"escrow_team"`      // 茶庄托管团队（预备金托管方）
+		PayerBalanceMg   int64                      `json:"payer_balance_mg"` // 需求方可用的星茶余额
+		PayeeBalanceMg   int64                      `json:"payee_balance_mg"` // 解题方可用的星茶余额
+		PrepAmountMg     int64                      `json:"prep_amount_mg"`   // 预备金金额（毫克）
+		PayerOk          bool                       `json:"payer_ok"`         // 需求方余额是否充足
+		PayeeOk          bool                       `json:"payee_ok"`         // 解题方余额是否充足
+		ServiceOfferings []*dao.TeamServiceOffering `json:"service_offerings"`
 	}
 	pD := pageData{
-		SessUser:       s_u,
-		Objective:      ob,
-		Project:        pr,
-		GuardianType:   guardian_type,
-		ServiceMode:    serviceMode,
-		AdminFamily:    adminFamily,
-		AdminTeam:      adminTeam,
-		PayerTeam:      payerTeam,
-		PayeeTeam:      payeeTeam,
-		VerifierTeam:   verifierTeam,
-		EscrowTeam:     escrowTeam,
-		PayerBalanceMg: payerAvailable,
-		PayeeBalanceMg: payeeAvailable,
-		PrepAmountMg:   preparationAmountMg,
-		PayerOk:        payerAvailable >= preparationAmountMg,
-		PayeeOk:        payeeAvailable >= preparationAmountMg,
+		SessUser:         s_u,
+		Objective:        ob,
+		Project:          pr,
+		GuardianType:     guardian_type,
+		ServiceMode:      serviceMode,
+		AdminFamily:      adminFamily,
+		AdminTeam:        adminTeam,
+		PayerTeam:        payerTeam,
+		PayeeTeam:        payeeTeam,
+		VerifierTeam:     verifierTeam,
+		EscrowTeam:       escrowTeam,
+		PayerBalanceMg:   payerAvailable,
+		PayeeBalanceMg:   payeeAvailable,
+		PrepAmountMg:     preparationAmountMg,
+		PayerOk:          payerAvailable >= preparationAmountMg,
+		PayeeOk:          payeeAvailable >= preparationAmountMg,
+		ServiceOfferings: serviceOfferings,
 	}
 
 	// 渲染预备金确认页面
@@ -570,6 +581,14 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	if !serviceMode.IsValid() {
 		report(w, s_u, "你好，茶博士失魂鱼，未能记录有效的服务模式，请确认后再试。")
 		return
+	}
+	serviceVersionId := 0
+	if value := r.PostFormValue("service_version_id"); value != "" {
+		serviceVersionId, err = strconv.Atoi(value)
+		if err != nil || serviceVersionId <= 0 {
+			report(w, s_u, "你好，茶博士未能识别服务项目版本，请确认后再试。")
+			return
+		}
 	}
 
 	//获取目标茶台
@@ -738,6 +757,7 @@ func ProjectApproveStep3(w http.ResponseWriter, r *http.Request) {
 	tea_order.PayeeTeamId = pr.TeamId
 	tea_order.PayerTeamId = requesterTeamId // 需求方团队ID
 	tea_order.ServiceMode = serviceMode
+	tea_order.ServiceVersionId = serviceVersionId
 
 	// 设置监护方团队ID
 	// 注意：监护方（Guardian）负责监督项目执行，理想情况下应由专业监护团队担任

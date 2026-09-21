@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 )
 
@@ -49,6 +50,26 @@ type TeaOrder struct {
 	UpdatedAt  *time.Time
 	DeletedAt  *time.Time //软删除时间（未完成的tea_order可以被取消删除，已完成的tea_order不可删除）
 
+}
+
+// TeaOrderMember 是订单创建时生成的上场名单快照。
+// 成员后来离团、改名或技能等级变化，不影响这份历史记录。
+type TeaOrderMember struct {
+	Id                   int
+	Uuid                 string
+	TeaOrderId           int
+	RequirementId        int
+	TeamId               int
+	TeamMemberId         int
+	UserId               int
+	SkillId              int
+	ServiceRole          string
+	TeamRoleSnapshot     int
+	SkillLevelSnapshot   int
+	ResponsibilityWeight int
+	ParticipationStatus  string
+	JoinedAt             time.Time
+	LeftAt               *time.Time
 }
 
 const (
@@ -203,16 +224,161 @@ func GetPendingTeaOrderCount(ctx context.Context) (int, error) {
 	return count, err
 }
 
-// Create 创建新的茶订单记录
+// Create 创建新的茶订单记录；带服务版本时同时生成订单上场名单快照。
 func (t *TeaOrder) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
+	tx, err := DB.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	committed := false
+	defer func() {
+		if !committed {
+			_ = tx.Rollback()
+		}
+	}()
+
+	var serviceOfferingId interface{}
+	var serviceVersionId interface{}
+	if t.ServiceOfferingId > 0 {
+		serviceOfferingId = t.ServiceOfferingId
+	}
+	if t.ServiceVersionId > 0 {
+		serviceVersionId = t.ServiceVersionId
+		var offeringId, teamId, status, currentVersionId int
+		err = tx.QueryRowContext(ctx, `SELECT o.id, o.team_id, o.status, COALESCE(o.current_version_id, 0)
+			FROM team_service_offering_versions v
+			JOIN team_service_offerings o ON o.id = v.service_offering_id
+			WHERE v.id = $1 AND o.deleted_at IS NULL`, t.ServiceVersionId).Scan(&offeringId, &teamId, &status, &currentVersionId)
+		if err != nil {
+			return fmt.Errorf("服务版本不存在或所属服务已删除: %w", err)
+		}
+		if t.ServiceOfferingId > 0 && t.ServiceOfferingId != offeringId {
+			return errors.New("服务项目与服务版本不匹配")
+		}
+		if t.PayeeTeamId != teamId {
+			return errors.New("服务版本所属团队与订单解题方团队不匹配")
+		}
+		if status != int(PublishedTeamServiceOfferingStatus) || currentVersionId != t.ServiceVersionId {
+			return errors.New("只能使用解题方当前已上架的服务版本")
+		}
+		t.ServiceOfferingId = offeringId
+		serviceOfferingId = offeringId
+	}
+
 	statement := `INSERT INTO tea_orders (objective_id, project_id, user_id, status, verify_team_id, payer_team_id, payee_team_id, care_team_id, service_mode, service_offering_id, service_version_id)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id`
-	err = DB.QueryRowContext(ctx, statement, t.ObjectiveId, t.ProjectId, t.UserId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId, t.ServiceMode, t.ServiceOfferingId, t.ServiceVersionId).Scan(&t.Id)
-	return err
+	err = tx.QueryRowContext(ctx, statement, t.ObjectiveId, t.ProjectId, t.UserId, t.Status, t.VerifyTeamId, t.PayerTeamId, t.PayeeTeamId, t.CareTeamId, t.ServiceMode, serviceOfferingId, serviceVersionId).Scan(&t.Id)
+	if err != nil {
+		return err
+	}
+	if t.ServiceVersionId > 0 {
+		if err = createTeaOrderMemberSnapshots(ctx, tx, t.Id, t.ServiceVersionId, t.PayeeTeamId); err != nil {
+			return err
+		}
+	}
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+	committed = true
+	return nil
+}
+
+// createTeaOrderMemberSnapshots 根据服务版本要求，为每个岗位选择当前活跃且技能达标的成员。
+func createTeaOrderMemberSnapshots(ctx context.Context, tx *sql.Tx, teaOrderId, versionId, payeeTeamId int) error {
+	rows, err := tx.QueryContext(ctx, `SELECT id, skill_id, team_id, role_name, required_level,
+		required_count, responsibility_weight
+		FROM service_version_skill_requirements
+		WHERE service_version_id = $1 ORDER BY id`, versionId)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var requirementId, skillId, teamId, requiredLevel, requiredCount, responsibilityWeight int
+		var roleName string
+		if err := rows.Scan(&requirementId, &skillId, &teamId, &roleName, &requiredLevel,
+			&requiredCount, &responsibilityWeight); err != nil {
+			return err
+		}
+		if teamId != payeeTeamId {
+			return errors.New("服务版本技能要求包含非解题方团队技能")
+		}
+
+		candidates, err := tx.QueryContext(ctx, `SELECT tm.id, tm.user_id, tm.role, su.level
+			FROM team_members tm
+			JOIN skill_users su ON su.user_id = tm.user_id
+			WHERE tm.team_id = $1 AND tm.status = $2 AND tm.deleted_at IS NULL
+			  AND su.skill_id = $3 AND su.level >= $4
+			  AND su.status IN ($5, $6) AND su.deleted_at IS NULL
+			ORDER BY su.level DESC, tm.id
+			LIMIT $7`, teamId, TeamMemberStatusActive, skillId, requiredLevel,
+			NormalSkillUserStatus, StrongSkillUserStatus, requiredCount)
+		if err != nil {
+			return err
+		}
+
+		selected := 0
+		for candidates.Next() {
+			var teamMemberId, userId, teamRole, skillLevel int
+			if err := candidates.Scan(&teamMemberId, &userId, &teamRole, &skillLevel); err != nil {
+				candidates.Close()
+				return err
+			}
+			_, err = tx.ExecContext(ctx, `INSERT INTO tea_order_members
+				(tea_order_id, requirement_id, team_id, team_member_id, user_id, skill_id,
+				 service_role, team_role_snapshot, skill_level_snapshot, responsibility_weight,
+				 participation_status, joined_at)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'assigned', CURRENT_TIMESTAMP)`,
+				teaOrderId, requirementId, teamId, teamMemberId, userId, skillId, roleName,
+				teamRole, skillLevel, responsibilityWeight)
+			if err != nil {
+				candidates.Close()
+				return err
+			}
+			selected++
+		}
+		if err := candidates.Err(); err != nil {
+			candidates.Close()
+			return err
+		}
+		candidates.Close()
+		if selected < requiredCount {
+			return fmt.Errorf("服务版本岗位 %q 没有足够的合适成员，需要%d人，实际%d人", roleName, requiredCount, selected)
+		}
+	}
+	return rows.Err()
+}
+
+// GetTeaOrderMembers 获取订单上场名单快照。
+func GetTeaOrderMembers(ctx context.Context, teaOrderId int) ([]*TeaOrderMember, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := DB.QueryContext(ctx, `SELECT id, uuid, tea_order_id, COALESCE(requirement_id, 0),
+		team_id, team_member_id, user_id, skill_id, service_role, team_role_snapshot,
+		skill_level_snapshot, responsibility_weight, participation_status, joined_at, left_at
+		FROM tea_order_members WHERE tea_order_id = $1 ORDER BY id`, teaOrderId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	members := make([]*TeaOrderMember, 0)
+	for rows.Next() {
+		member := &TeaOrderMember{}
+		if err := rows.Scan(&member.Id, &member.Uuid, &member.TeaOrderId, &member.RequirementId,
+			&member.TeamId, &member.TeamMemberId, &member.UserId, &member.SkillId, &member.ServiceRole,
+			&member.TeamRoleSnapshot, &member.SkillLevelSnapshot, &member.ResponsibilityWeight,
+			&member.ParticipationStatus, &member.JoinedAt, &member.LeftAt); err != nil {
+			return nil, err
+		}
+		members = append(members, member)
+	}
+	return members, rows.Err()
 }
 
 // GetByIdOrUUID 根据ID或UUID获取茶订单记录

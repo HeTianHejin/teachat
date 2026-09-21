@@ -1585,6 +1585,23 @@ CREATE TABLE team_service_offering_versions (
     UNIQUE (service_offering_id, version_no)
 );
 
+-- 服务版本技能要求表（服务版本的能力与岗位快照）
+-- 与当前服务项目技能关联分开保存，保证版本发布后要求不受后续编辑影响。
+CREATE TABLE service_version_skill_requirements (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    service_version_id    INTEGER NOT NULL REFERENCES team_service_offering_versions(id) ON DELETE CASCADE,
+    skill_id              INTEGER NOT NULL REFERENCES skills(id),
+    team_id               INTEGER NOT NULL REFERENCES teams(id),
+    role_name             VARCHAR(128) NOT NULL DEFAULT '-',
+    required_level        INTEGER NOT NULL DEFAULT 1 CHECK (required_level >= 1 AND required_level <= 9),
+    required_count        INTEGER NOT NULL DEFAULT 1 CHECK (required_count >= 1),
+    responsibility_weight INTEGER NOT NULL DEFAULT 100 CHECK (responsibility_weight >= 1 AND responsibility_weight <= 10000),
+    is_primary            BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (service_version_id, skill_id, role_name)
+);
+
 -- 服务项目当前版本外键（与版本表互为引用，故建表后追加）
 ALTER TABLE team_service_offerings
     ADD CONSTRAINT fk_tso_current_version
@@ -1632,6 +1649,27 @@ CREATE UNIQUE INDEX idx_tsov_current
 ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_offering_id INTEGER REFERENCES team_service_offerings(id);
 ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_version_id INTEGER REFERENCES team_service_offering_versions(id);
 ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS agreed_price_milligrams BIGINT;
+
+-- 茶订单上场名单快照
+-- 记录订单创建时实际参与履约的成员及其当时的技能、团队职务和服务岗位。
+CREATE TABLE tea_order_members (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    tea_order_id          INTEGER NOT NULL REFERENCES tea_orders(id) ON DELETE RESTRICT,
+    requirement_id        INTEGER REFERENCES service_version_skill_requirements(id),
+    team_id               INTEGER NOT NULL REFERENCES teams(id),
+    team_member_id        INTEGER NOT NULL REFERENCES team_members(id),
+    user_id               INTEGER NOT NULL REFERENCES users(id),
+    skill_id              INTEGER NOT NULL REFERENCES skills(id),
+    service_role           VARCHAR(128) NOT NULL DEFAULT '-',
+    team_role_snapshot     INTEGER NOT NULL DEFAULT 0,
+    skill_level_snapshot   INTEGER NOT NULL CHECK (skill_level_snapshot >= 1 AND skill_level_snapshot <= 9),
+    responsibility_weight  INTEGER NOT NULL DEFAULT 100 CHECK (responsibility_weight >= 1 AND responsibility_weight <= 10000),
+    participation_status   VARCHAR(32) NOT NULL DEFAULT 'assigned' CHECK (participation_status IN ('assigned', 'active', 'completed', 'withdrawn')),
+    joined_at              TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    left_at                TIMESTAMPTZ,
+    UNIQUE (tea_order_id, team_member_id, requirement_id)
+);
 
 
 -- ============================================
@@ -1779,6 +1817,9 @@ CREATE INDEX idx_tsos_service_offering_id ON team_service_offering_skills(servic
 CREATE INDEX idx_tsos_skill_id ON team_service_offering_skills(skill_id);
 CREATE INDEX idx_tsos_team_id ON team_service_offering_skills(team_id);
 
+CREATE INDEX idx_sv_skill_requirements_version_id ON service_version_skill_requirements(service_version_id);
+CREATE INDEX idx_sv_skill_requirements_skill_team ON service_version_skill_requirements(skill_id, team_id);
+
 CREATE INDEX idx_tsoe_service_offering_id ON team_service_offering_events(service_offering_id);
 CREATE INDEX idx_tsoe_operator_user_id ON team_service_offering_events(operator_user_id);
 CREATE INDEX idx_tsoe_created_at ON team_service_offering_events(created_at DESC);
@@ -1786,6 +1827,10 @@ CREATE INDEX idx_tsoe_created_at ON team_service_offering_events(created_at DESC
 -- 茶订单服务项目关联索引
 CREATE INDEX idx_tea_orders_service_offering_id ON tea_orders(service_offering_id);
 CREATE INDEX idx_tea_orders_service_version_id ON tea_orders(service_version_id);
+
+CREATE INDEX idx_tea_order_members_order_id ON tea_order_members(tea_order_id);
+CREATE INDEX idx_tea_order_members_user_id ON tea_order_members(user_id);
+CREATE INDEX idx_tea_order_members_team_member_id ON tea_order_members(team_member_id);
 
 -- ============================================
 -- 表注释
@@ -1817,6 +1862,7 @@ COMMENT ON TABLE suggestions IS '建议表';
 COMMENT ON TABLE team_service_offerings IS '团队服务项目表（团队可承诺能力）';
 COMMENT ON TABLE team_service_offering_versions IS '团队服务项目版本表（上架锁定的不可变快照）';
 COMMENT ON TABLE team_service_offering_skills IS '团队服务项目技能关联表（能力依据）';
+COMMENT ON TABLE service_version_skill_requirements IS '服务版本技能要求表（服务版本能力与岗位快照）';
 COMMENT ON TABLE team_service_offering_events IS '团队服务项目生命周期事件表';
 COMMENT ON COLUMN team_service_offerings.status IS '0-未知，1-草稿，2-待审核，3-已上架，4-暂停接单，5-已婉拒，6-已下架，7-已废止';
 COMMENT ON COLUMN team_service_offerings.availability IS '0-未知，1-当前可接，2-暂时不可接；"产能已满"由进行中的茶订单数量派生，不落库';
@@ -1831,6 +1877,9 @@ COMMENT ON COLUMN team_service_offering_events.reason IS '操作原因，默认"
 COMMENT ON COLUMN tea_orders.service_offering_id IS '茶订单对应的团队服务项目';
 COMMENT ON COLUMN tea_orders.service_version_id IS '下单时锁定的服务项目版本，历史订单始终显示该版本';
 COMMENT ON COLUMN tea_orders.agreed_price_milligrams IS '下单时锁定的成交价格快照（毫克）';
+COMMENT ON TABLE tea_order_members IS '茶订单上场成员快照表';
+COMMENT ON COLUMN tea_order_members.skill_level_snapshot IS '订单创建时成员技能等级快照';
+COMMENT ON COLUMN tea_order_members.team_role_snapshot IS '订单创建时团队职务快照';
 
 -- 消息系统表注释
 COMMENT ON TABLE message_boxes IS '消息盒子表';
