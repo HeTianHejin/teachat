@@ -1012,6 +1012,7 @@ CREATE TABLE handicrafts (
     status                INTEGER NOT NULL DEFAULT 0,
     skill_difficulty      INTEGER NOT NULL DEFAULT 3,
     magic_difficulty      INTEGER NOT NULL DEFAULT 3,
+    task_weight           INTEGER NOT NULL DEFAULT 100 CHECK (task_weight >= 1 AND task_weight <= 10000),
     contributor_count     INTEGER DEFAULT 0,
     final_score            INTEGER,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1024,10 +1025,14 @@ CREATE TABLE handicraft_ratings (
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     handicraft_id   INTEGER NOT NULL REFERENCES handicrafts(id),
     rater_user_id   INTEGER NOT NULL REFERENCES users(id),  -- 评分员ID
+    rating_type     VARCHAR(16) NOT NULL DEFAULT 'payer' CHECK (rating_type IN ('payer', 'witness', 'self', 'peer')),
+    dimension       VARCHAR(32) NOT NULL DEFAULT 'quality' CHECK (dimension IN ('quality', 'expertise', 'collaboration', 'speed', 'compliance')),
+    evidence_id     INTEGER NOT NULL DEFAULT 0,
+    target_member_id INTEGER,
     raw_score       INTEGER NOT NULL CHECK (raw_score >= 0 AND raw_score <= 100),
     comment         TEXT,      -- 评分备注（可选）
     created_at      TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(handicraft_id, rater_user_id)  -- 防止同一人重复评分
+    UNIQUE(handicraft_id, rater_user_id, rating_type, dimension)  -- 同一来源每个维度只评分一次
 );
 -- 手工艺协助者表
 CREATE TABLE handicraft_contributors (
@@ -1671,6 +1676,38 @@ CREATE TABLE tea_order_members (
     UNIQUE (tea_order_id, team_member_id, requirement_id)
 );
 
+-- 订单任务参与者：记录实际承担的岗位、责任和事实贡献，不由团队职务自动推导成绩。
+CREATE TABLE handicraft_participants (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    handicraft_id         INTEGER NOT NULL REFERENCES handicrafts(id) ON DELETE RESTRICT,
+    tea_order_member_id   INTEGER REFERENCES tea_order_members(id) ON DELETE RESTRICT,
+    user_id               INTEGER NOT NULL REFERENCES users(id),
+    participation_role    VARCHAR(16) NOT NULL DEFAULT 'assistant' CHECK (participation_role IN ('owner', 'assistant', 'reviewer')),
+    responsibility_weight INTEGER NOT NULL DEFAULT 100 CHECK (responsibility_weight >= 1 AND responsibility_weight <= 10000),
+    actual_contribution   INTEGER NOT NULL DEFAULT 100 CHECK (actual_contribution >= 0 AND actual_contribution <= 100),
+    score                 INTEGER CHECK (score >= 0 AND score <= 100),
+    score_reason          TEXT NOT NULL DEFAULT '-',
+    participation_status  VARCHAR(16) NOT NULL DEFAULT 'assigned' CHECK (participation_status IN ('assigned', 'active', 'completed', 'withdrawn')),
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at            TIMESTAMPTZ
+);
+
+-- 订单结算后的个人归因快照。
+CREATE TABLE member_order_scores (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    tea_order_id          INTEGER NOT NULL REFERENCES tea_orders(id) ON DELETE RESTRICT,
+    user_id               INTEGER NOT NULL REFERENCES users(id),
+    contribution_score    NUMERIC(10,4) NOT NULL DEFAULT 0,
+    performance_score     NUMERIC(10,4) NOT NULL DEFAULT 0,
+    responsibility_score  NUMERIC(10,4) NOT NULL DEFAULT 0,
+    evidence_score        NUMERIC(10,4) NOT NULL DEFAULT 0,
+    calculation_version   VARCHAR(32) NOT NULL DEFAULT 'v1',
+    calculated_at         TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(tea_order_id, user_id)
+);
+
 
 -- ============================================
 -- 索引创建
@@ -1831,6 +1868,11 @@ CREATE INDEX idx_tea_orders_service_version_id ON tea_orders(service_version_id)
 CREATE INDEX idx_tea_order_members_order_id ON tea_order_members(tea_order_id);
 CREATE INDEX idx_tea_order_members_user_id ON tea_order_members(user_id);
 CREATE INDEX idx_tea_order_members_team_member_id ON tea_order_members(team_member_id);
+CREATE INDEX idx_handicraft_participants_handicraft_id ON handicraft_participants(handicraft_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_handicraft_participants_user_id ON handicraft_participants(user_id) WHERE deleted_at IS NULL;
+CREATE INDEX idx_handicraft_ratings_handicraft_id ON handicraft_ratings(handicraft_id);
+CREATE INDEX idx_member_order_scores_order_id ON member_order_scores(tea_order_id);
+CREATE INDEX idx_member_order_scores_user_id ON member_order_scores(user_id);
 
 -- ============================================
 -- 表注释
