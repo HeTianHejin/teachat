@@ -204,4 +204,7 @@ type TeamDetail struct {
 	MessageCount int         //用户可见的消息总数
 
 	GroupBean *GroupBean //所属集团资料夹（如果有）
+
+	ServiceOfferings                []*TeamServiceOffering
+	UnpublishedServiceOfferingCount int
 }

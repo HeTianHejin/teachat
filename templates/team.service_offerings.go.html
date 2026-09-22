@@ -1,0 +1,26 @@
+{{ define "content" }}
+
+{{ with .TeamBean }}
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+  <li class="active">已下架服务项目</li>
+</ol>
+
+<h3>已下架服务项目</h3>
+{{ if $.Offerings }}
+{{ range $.Offerings }}
+<div class="panel panel-default">
+  <div class="panel-heading"><strong>{{ .Name }}</strong></div>
+  <div class="panel-body">
+    {{ if .Summary }}<p>{{ .Summary }}</p>{{ end }}
+    <small class="text-muted">{{ .PriceDisplay }}，预计{{ .EstimatedDurationDisplay }}</small>
+  </div>
+</div>
+{{ end }}
+{{ else }}
+<p class="text-muted">暂无已下架服务项目</p>
+{{ end }}
+{{ end }}
+
+{{ end }}

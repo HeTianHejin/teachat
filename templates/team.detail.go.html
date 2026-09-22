@@ -11,7 +11,7 @@
 </ol>
 
 
-<!-- 团队标识（居中） -->
+{{/* 团队标识（居中） */}}
 <div class="row" style="margin: 20px 0;">
   <div class="text-center">
     {{ if .Team.Logo }}
@@ -22,18 +22,33 @@
   </div>
 </div>
 
-  <!-- 服务项目（左侧）和作业成就（星级分数，右侧） -->
+<div>
+  {{/* 服务项目（左侧）和作业成就（星级分数，右侧） */}}
   <div class="col-xs-6 text-left">
-    <!-- range上架的全部服务项目 -->
-    服务项目:
-    <a href="#" class="btn btn-primary btn-block">
+    <strong>服务项目</strong>
+    {{ if .ServiceOfferings }}
+    {{ range .ServiceOfferings }}
+    <div class="well well-sm" style="margin: 8px 0;">
+      <strong>{{ .Name }}</strong>
+      {{ if .Summary }}<div>{{ .Summary }}</div>{{ end }}
+      <small class="text-muted">{{ .PriceDisplay }}，预计{{ .EstimatedDurationDisplay }}</small>
+    </div>
+    {{ end }}
+    {{ else }}
+    <p class="text-muted">暂无已上架服务项目</p>
+    {{ end }}
+    {{ if gt .UnpublishedServiceOfferingCount 0 }}
+    <a href="/v1/team/service_offerings/unpublished?uuid={{ .Team.Uuid }}" class="btn btn-default btn-sm">
+      已下架（{{ .UnpublishedServiceOfferingCount }}）
     </a>
+    {{ end }}
   </div>
   <div class="col-xs-6 text-right">
     作业成就:
-    <!-- range服务项目对应中位数星级分，满分5星，最小单位0.5星 -->
-      <i class="glyphicon glyphicon-star"></i> 
+    {{/* range服务项目对应中位数星级分，满分5星，最小单位0.5星 */}}
+    <i class="glyphicon glyphicon-star"></i> 
   </div>
+</div>
 
 {{/* 这是指定茶团详情展示页面 */}}
 <div class="media">
@@ -130,7 +145,7 @@
     </div>
 
     <div class="my-4">
-      <!-- 团队核心成员功能按钮 -->
+      {{/* 团队核心成员功能按钮 */}}
       {{ if $.IsCoreMember }}
       <div class="btn-group" role="group" style="margin-bottom: 15px;">
         {{ if or $.IsCEO $.IsFounder }}
@@ -184,7 +199,7 @@
       </p>
       {{ end }}
       <hr />
-      <!-- 团队功能导航 -->
+      {{/* 团队功能导航 */}}
       <ul class="nav nav-tabs nav-justified">
         <li class="active"><a href="#">在座成员</a></li>
         <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">星茶账户</a></li>

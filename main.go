@@ -73,6 +73,7 @@ func main() {
 	mux.HandleFunc("/v1/team/new", route.NewTeamGet)
 	mux.HandleFunc("/v1/team/create", route.CreateTeamPost)
 	mux.HandleFunc("/v1/team/detail", route.TeamDetail)
+	mux.HandleFunc("/v1/team/service_offerings/unpublished", route.TeamUnpublishedServiceOfferings)
 	mux.HandleFunc("/v1/team/invitations", route.TeamInvitations)
 	mux.HandleFunc("/v1/team/applications", route.TeamApplications)
 	mux.HandleFunc("/v1/team/members/left", route.TeamMembersLeft)
