@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	"path/filepath"
 	"strconv"
 	util "teachat/Util"
@@ -34,15 +33,24 @@ func init() {
 		util.Error("fatal load .env file!")
 	}
 
-	// 从环境变量获取数据库配置
-	dbdriver := os.Getenv("DB_DRIVER")
-	dbhost := os.Getenv("DB_HOST")
-	dbport, _ := strconv.Atoi(os.Getenv("DB_PORT"))
-	dbuser := os.Getenv("DB_USER")
-	dbpassword := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-	dbsslmode := os.Getenv("DB_SSLMODE")
-	dbTimeZone := os.Getenv("DB_TIMEZONE")
+	// 开发阶段直接硬编码链接数据库，以免go test失败
+	dbdriver := "postgres"
+	dbhost := "127.0.0.1"
+	dbport := 5432
+	dbuser := "robin"
+	dbpassword := "robin"
+	dbname := "teachat"
+	dbsslmode := "disable"
+	dbTimeZone := "Asia/Shanghai"
+	// 生产阶段从环境变量获取数据库配置
+	// dbdriver := os.Getenv("DB_DRIVER")
+	// dbhost := os.Getenv("DB_HOST")
+	// dbport, _ := strconv.Atoi(os.Getenv("DB_PORT"))
+	// dbuser := os.Getenv("DB_USER")
+	// dbpassword := os.Getenv("DB_PASSWORD")
+	// dbname := os.Getenv("DB_NAME")
+	// dbsslmode := os.Getenv("DB_SSLMODE")
+	// dbTimeZone := os.Getenv("DB_TIMEZONE")
 
 	//数据库连接
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+

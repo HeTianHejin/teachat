@@ -23,18 +23,16 @@ type TeaOrder struct {
 	Id   int
 	Uuid string
 
-	ObjectiveId       int         // 茶围目标ID
-	ProjectId         int         // 项目ID
-	UserId            int         // 茶围管理团队成员，选择入围操作者
-	Status            string      // tea_order状态：pending/active/pause/completed/cancelled
-	VerifyTeamId      int         // 见证方团队ID
-	PayerTeamId       int         // 需求方（出题方）团队ID
-	PayeeTeamId       int         // 解题方团队ID
-	CareTeamId        int         // 监护方团队ID
-	ServiceMode       ServiceMode // 服务模式
-	ServiceOfferingId int         // 服务项目ID
-	ServiceVersionId  int         // 服务项目版本ID
-	DefaultPlaceId    int         //默认地点id
+	ObjectiveId    int         // 茶围目标ID
+	ProjectId      int         // 项目ID
+	UserId         int         // 茶围管理团队成员，选择入围操作者
+	Status         string      // tea_order状态：pending/active/pause/completed/cancelled
+	VerifyTeamId   int         // 见证方团队ID
+	PayerTeamId    int         // 需求方（出题方）团队ID
+	PayeeTeamId    int         // 解题方团队ID
+	CareTeamId     int         // 监护方团队ID
+	ServiceMode    ServiceMode // 服务模式
+	DefaultPlaceId int         //默认地点id
 	// 审批人（见证者）填写，必填
 	// 审批人角色是类似大观园海棠诗社活动中的李纨社长角色，批准主题、主持活动及裁判"违规"情形，将阻止贾宝玉作西厢记类那种"男女礼教脱轨诗"或者禁止薛蟠那种酒色情诗；
 	// 又或者是老师组织的多团队协作任务活动里的老师角色，不过在这茶会里不负责技术方面的审核，所以说"见证"记录事件发生的真实性、合规性。
@@ -50,6 +48,8 @@ type TeaOrder struct {
 	UpdatedAt  *time.Time
 	DeletedAt  *time.Time //软删除时间（未完成的tea_order可以被取消删除，已完成的tea_order不可删除）
 
+	ServiceOfferingId int // 服务项目ID
+	ServiceVersionId  int // 服务项目版本ID
 }
 
 // TeaOrderMember 是订单创建时生成的上场名单快照。

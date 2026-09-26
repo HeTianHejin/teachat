@@ -78,12 +78,15 @@ var Config Configuration
 // 读取配置文件内容
 func LoadConfig() error {
 	// 从 exe 所在目录加载 .env（忽略未找到的错误，兼容开发环境/打包环境）
-	_ = godotenv.Load(filepath.Join(AppDir, ".env"))
+	err := godotenv.Load(filepath.Join(AppDir, ".env"))
+	if err != nil {
+		return fmt.Errorf("cannot load .env file: %w", err)
+	}
 
 	configPath := filepath.Join(AppDir, "config.json")
 	file, err := os.Open(configPath)
 	if err != nil {
-		return fmt.Errorf("打开配置文件失败: %w", err)
+		return fmt.Errorf("cannot open config.json file: %w", err)
 	}
 	defer file.Close() // 确保文件关闭
 

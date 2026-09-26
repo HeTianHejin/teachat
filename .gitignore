@@ -14,7 +14,6 @@ test_build
 
 # log file
 *.log
-teachatWeb.log
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
@@ -52,6 +51,3 @@ public/image/team/*.*
 *.tmp
 # Robin-Vscode config file
 .vscode/
-
-# AI
-.codebuddy/

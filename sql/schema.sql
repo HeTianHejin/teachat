@@ -962,8 +962,6 @@ CREATE TABLE tea_orders (
     payee_team_id         INTEGER REFERENCES teams(id),
     care_team_id          INTEGER REFERENCES teams(id),
     service_mode           VARCHAR(32) NOT NULL DEFAULT 'customer_delivers' CHECK (service_mode IN ('customer_delivers', 'provider_visits', 'third_party_venue', 'mobile')),
-    service_offering_id   INTEGER REFERENCES team_service_offerings(id),
-    service_version_id    INTEGER,
     tea_topic             VARCHAR(64) NOT NULL DEFAULT '-',
     is_approved           BOOLEAN NOT NULL DEFAULT FALSE,
     approver_user_id      INTEGER REFERENCES users(id),
@@ -974,6 +972,10 @@ CREATE TABLE tea_orders (
     updated_at            TIMESTAMPTZ,
     deleted_at            TIMESTAMPTZ
 );
+-- 茶订单锁定服务项目及版本，并快照成交价格，使历史订单不受后续调价影响
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_offering_id INTEGER REFERENCES team_service_offerings(id);
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_version_id INTEGER REFERENCES team_service_offering_versions(id);
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS agreed_price_milligrams BIGINT;
 
 -- 部分唯一索引：同一茶围下同一茶台最多只能有一条未完成的茶订单（pending/active/pause）
 CREATE UNIQUE INDEX idx_tea_orders_unique_active
@@ -1649,11 +1651,6 @@ CREATE UNIQUE INDEX idx_team_service_offerings_team_name
 -- 每个服务项目仅允许一个当前版本
 CREATE UNIQUE INDEX idx_tsov_current
     ON team_service_offering_versions(service_offering_id) WHERE is_current;
-
--- 茶订单锁定服务项目及版本，并快照成交价格，使历史订单不受后续调价影响
-ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_offering_id INTEGER REFERENCES team_service_offerings(id);
-ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_version_id INTEGER REFERENCES team_service_offering_versions(id);
-ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS agreed_price_milligrams BIGINT;
 
 -- 茶订单上场名单快照
 -- 记录订单创建时实际参与履约的成员及其当时的技能、团队职务和服务岗位。
