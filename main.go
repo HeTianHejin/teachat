@@ -16,13 +16,17 @@ import (
 
 func main() {
 	util.InitLogger(false, util.LevelDebug)
-	// 初始化配置
+
+	// 从配置文件.env读取配置参数
 	if err := util.LoadConfig(); err != nil {
 		log.Fatalf("fatal! failure to load config: %v", err)
 	}
+
 	if err := util.Config.Validate(); err != nil {
 		log.Fatalf("configuration check failed: %v", err)
 	}
+
+	// 从launch.json文件读取是否链接数据库
 	if os.Getenv("TEACHAT_SKIP_DATABASE") != "true" {
 		if err := dao.InitDB(); err != nil {
 			log.Fatalf("init database teachat failed: %v", err)

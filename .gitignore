@@ -26,6 +26,7 @@ go.work
 go.work.sum
 
 # Robin- debug tmp file
+teachat
 __debug_*
 __debug_bin*
 public/uploads/evidence/
@@ -43,11 +44,11 @@ public/image/team/*.*
 # env file
 .env
 
-
 # Robin- MacOS file
 .DS_Store
 */.DS_Store
 # Robin- MacOS tmp file
 *.tmp
+
 # Robin-Vscode config file
-.vscode/
+#.vscode/

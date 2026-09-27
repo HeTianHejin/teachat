@@ -36,7 +36,7 @@ func InitLogger(writeToFile bool, level int) {
 		file, err := os.OpenFile("error.log",
 			os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			log.Fatalln("Failed to open log file", err)
+			log.Fatalln("fatal! cannot open or create error.log file:", err)
 		}
 		writer = file
 	}
