@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	dao "teachat/DAO"
 	route "teachat/Route"
 	util "teachat/Util"
 	"time"
@@ -14,13 +15,20 @@ import (
 )
 
 func main() {
+	util.InitLogger(false, util.LevelDebug)
 	// 初始化配置
 	if err := util.LoadConfig(); err != nil {
-		log.Fatalf("配置加载失败: %v", err)
+		log.Fatalf("fatal! failure to load config: %v", err)
 	}
 	if err := util.Config.Validate(); err != nil {
-		log.Fatalf("配置校验失败: %v", err)
+		log.Fatalf("configuration check failed: %v", err)
 	}
+	if os.Getenv("TEACHAT_SKIP_DATABASE") != "true" {
+		if err := dao.InitDB(); err != nil {
+			log.Fatalf("init database teachat failed: %v", err)
+		}
+	}
+
 	// 创建路由器
 	mux := http.NewServeMux()
 
@@ -28,7 +36,7 @@ func main() {
 	const staticPrefix = "/v1/static/"
 	staticDir := util.AbsPath(util.Config.Static)
 	if _, err := os.Stat(staticDir); os.IsNotExist(err) {
-		log.Fatalf("静态资源目录不存在: %s", staticDir)
+		log.Fatalf("the static resources folder doesn't exist: %s", staticDir)
 	}
 
 	// 创建文件处理器（带缓存控制）

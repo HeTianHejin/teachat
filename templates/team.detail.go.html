@@ -2,11 +2,11 @@
 
 {{/* 这是指定团队详情展示页面-面包屑导航栏 */}}
 
-{{ with .TeamBean }}{{/* 检测Teambean非空 --开始 */}}
+
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/teams/joined">团队事项</a></li>
-  <li>{{ .Team.Name }}</li>
+  <li>{{ .TeamBean.Team.Name }}</li>
   <li class="=active">$事业茶团详情</li>
 </ol>
 
@@ -14,41 +14,53 @@
 {{/* 团队标识（居中） */}}
 <div class="row" style="margin: 20px 0;">
   <div class="text-center">
-    {{ if .Team.Logo }}
-    <img class="img-circle" src="/v1/static/image/team/{{ .Team.Logo }}.jpeg" alt="{{ .Team.Name }}" style="width: 48px;">
+    {{ if .TeamBean.Team.Logo }}
+    <img class="img-circle" src="/v1/static/image/team/{{ .TeamBean.Team.Logo }}.jpeg" alt="{{ .TeamBean.Team.Name }}" style="width: 48px;">
     {{ else }}
-    <img class="img-circle" src="/v1/static/image/teamLogo.jpeg" alt="{{ .Team.Name }}" style="width: 48px;">
+    <img class="img-circle" src="/v1/static/image/teamLogo.jpeg" alt="{{ .TeamBean.Team.Name }}" style="width: 48px;">
     {{ end }}
   </div>
 </div>
 
-<div>
-  {{/* 服务项目（左侧）和作业成就（星级分数，右侧） */}}
+
+
+{{/* 服务项目（左侧）和作业成就（星级分数，右侧） */}}
+<div class="row">
   <div class="col-xs-6 text-left">
     <strong>服务项目</strong>
     {{ if .ServiceOfferings }}
-    {{ range .ServiceOfferings }}
-    <div class="well well-sm" style="margin: 8px 0;">
-      <strong>{{ .Name }}</strong>
-      {{ if .Summary }}<div>{{ .Summary }}</div>{{ end }}
-      <small class="text-muted">{{ .PriceDisplay }}，预计{{ .EstimatedDurationDisplay }}</small>
-    </div>
-    {{ end }}
+      {{ range .ServiceOfferings }}
+      <div class="well well-sm" style="margin: 8px 0;">
+        <div><strong>{{ .Name }}</strong></div>
+      </div>
+      {{ end }}
     {{ else }}
-    <p class="text-muted">暂无已上架服务项目</p>
+      <p class="text-muted">暂无已上架服务项目</p>
     {{ end }}
+
     {{ if gt .UnpublishedServiceOfferingCount 0 }}
-    <a href="/v1/team/service_offerings/unpublished?uuid={{ .Team.Uuid }}" class="btn btn-default btn-sm">
-      已下架（{{ .UnpublishedServiceOfferingCount }}）
-    </a>
+      <a href="/v1/team/service_offerings/unpublished?uuid={{ .Team.Uuid }}"
+         class="btn btn-default btn-sm">
+        已下架（{{ .UnpublishedServiceOfferingCount }}）
+      </a>
     {{ end }}
   </div>
+
   <div class="col-xs-6 text-right">
-    作业成就:
-    {{/* range服务项目对应中位数星级分，满分5星，最小单位0.5星 */}}
-    <i class="glyphicon glyphicon-star"></i> 
+    作业成就：
+    {{/* 假设 .RatingMedian 是 0~5 的数，步长 1 */}}
+    {{ range $i := (seq 1 5) }}
+      {{ if le $i .RatingMedian }}
+        <i class="bi-star"></i>
+      {{ else if ... 半星逻辑 ... }}
+        <i class="bi-star-empty"></i>
+      {{ else }}
+        <i class="bi-star-empty"></i>
+      {{ end }}
+    {{ end }}
   </div>
 </div>
+
 
 {{/* 这是指定茶团详情展示页面 */}}
 <div class="media">

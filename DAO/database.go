@@ -23,14 +23,12 @@ import (
 // DB 数据库实例
 var DB *sql.DB
 
-func init() {
-	var err error
-
+func InitDB() error {
 	// 统一从 exe 所在目录读取 .env，避免双击运行时找不到配置
 	envPath := filepath.Join(util.AppDir, ".env")
-	if err = godotenv.Load(envPath); err != nil {
+	if err := godotenv.Load(envPath); err != nil {
 		util.PrintStdout("error load .env file")
-		util.Error("fatal load .env file!")
+		util.Error("load .env file: %v", err)
 	}
 
 	// 开发阶段直接硬编码链接数据库，以免go test失败
@@ -56,24 +54,23 @@ func init() {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=%s TimeZone=%s",
 		dbhost, dbport, dbuser, dbpassword, dbname, dbsslmode, dbTimeZone)
-	DB, err = sql.Open(dbdriver, psqlInfo)
+	db, err := sql.Open(dbdriver, psqlInfo)
 	if err != nil {
-		util.PrintStdout("cannot open database teachat")
-		util.Error("cannot open database teachat: %v", err)
+		return fmt.Errorf("cannot open database teachat: %w", err)
 	}
 	// 配置连接池
-	DB.SetMaxOpenConns(25)                 // 最多同时打开 25 个连接（并发上限）
-	DB.SetMaxIdleConns(25)                 // 建议和 Open 一致，避免连接抖动
-	DB.SetConnMaxLifetime(2 * time.Minute) // 每个连接最多活 2 分钟，到期后主动回收重建
+	db.SetMaxOpenConns(25)                 // 最多同时打开 25 个连接（并发上限）
+	db.SetMaxIdleConns(25)                 // 建议和 Open 一致，避免连接抖动
+	db.SetConnMaxLifetime(2 * time.Minute) // 每个连接最多活 2 分钟，到期后主动回收重建
 	// 可选：DB.SetConnMaxIdleTime(time.Minute) // 空闲连接多久后回收
 
-	//测试数据库连接是否成功
-	//开发阶段，避免go test时从目录加载数据库驱动失败阻断进程，仅记录日志，不Panic，不Fatal
-	if err = DB.Ping(); err != nil {
-		util.PrintStdout("ping database teachat failure")
-		util.Error("ping database teachat failure: %v", err)
+	if err := db.Ping(); err != nil {
+		db.Close()
+		return fmt.Errorf("ping database teachat: %w", err)
 	}
 
+	DB = db
+	return nil
 }
 
 // create a random UUID with from RFC 4122

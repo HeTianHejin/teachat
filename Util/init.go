@@ -18,7 +18,7 @@ import (
    一些工具函数；
 */
 
-var AppDir string
+var AppDir = appBaseDir()
 
 func appBaseDir() string {
 	if exe, err := os.Executable(); err == nil {
@@ -36,13 +36,6 @@ func AbsPath(rel string) string {
 		return rel
 	}
 	return filepath.Join(AppDir, rel)
-}
-
-// 初始化日志
-func init() {
-	AppDir = appBaseDir()
-	// 开发模式默认日志配置
-	InitLogger(true, LevelDebug) // 默认控制台输出，Debug级别
 }
 
 // 配置文件结构体
@@ -92,7 +85,7 @@ func LoadConfig() error {
 
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&Config); err != nil {
-		return fmt.Errorf("解析配置文件失败: %w", err)
+		return fmt.Errorf("failed to parse the configuration file: %w", err)
 	}
 
 	// 路径标准化处理，支持 exe 直接运行和源码运行
@@ -107,46 +100,46 @@ func LoadConfig() error {
 
 func (c *Configuration) Validate() error {
 	if c.Address == "" {
-		return errors.New("服务器地址不能为空")
+		return errors.New("server address can't be empty")
 	}
 	if c.ImageDir == "" {
-		return errors.New("图片目录不能为空")
+		return errors.New("the image directory can't be empty")
 	}
 	if c.UserImageDir == "" {
-		return errors.New("用户头像图片目录不能为空")
+		return errors.New("the user avatar image directory can't be empty")
 	}
 	if c.TeamImageDir == "" {
-		return errors.New("团队头像图片目录不能为空")
+		return errors.New("the team avatar image directory can't be empty")
 	}
 	if c.TemplatesDir == "" {
-		return errors.New("模板目录不能为空")
+		return errors.New("template directory cannot be empty")
 	}
 	if c.TemplateExt == "" {
-		return errors.New("模板扩展名不能为空")
+		return errors.New("the template file extension cannot be empty")
 	}
 	if c.MaxInviteTeams == 0 {
-		return errors.New("最大可邀请团队数不能为空")
+		return errors.New("the maximum number of teams that can be invited cannot be empty")
 	}
 	if c.MaxTeamMembers == 0 {
-		return errors.New("团队最大成员数不能为空")
+		return errors.New("the maximum number of team members cannot be empty")
 	}
 	if c.MaxTeamsCount == 0 {
-		return errors.New("个人创建的团队数上限不能为空")
+		return errors.New("the maximum number of teams an individual can create cannot be empty")
 	}
 	if c.MaxSurvivalTeams == 0 {
-		return errors.New("个人最大活跃团队数不能为空")
+		return errors.New("the maximum number of active teams for an individual cannot be empty")
 	}
 	if c.Static == "" {
-		return errors.New("静态文件目录不能为空")
+		return errors.New("the static file directory can't be empty")
 	}
 	if c.ThreadMaxWord == 0 {
-		return errors.New("茶议最大字数限制不能为空")
+		return errors.New("the maximum word limit for the tea discussion cannot be empty")
 	}
 	if c.ThreadMinWord == 0 {
-		return errors.New("茶议最小字数限制不能为空")
+		return errors.New("the minimum word limit for tea discussion cannot be empty")
 	}
 	if c.ImageExt == "" {
-		return errors.New("图片扩展名不能为空")
+		return errors.New("image file extension can't be empty")
 	}
 	return nil
 }
