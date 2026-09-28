@@ -2,8 +2,8 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
-  <li><a href="/v1/group/manage?id={{ .Group.Uuid }}">管理</a></li>
+  <li><a href="/v1/group/detail?uuid={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li><a href="/v1/group/manage?uuid={{ .Group.Uuid }}">管理</a></li>
   <li class="active">查看邀请</li>
 </ol>
 
@@ -52,7 +52,7 @@
 {{ end }}
 
 <div style="margin-top: 20px;">
-  <a class="btn btn-default" href="/v1/group/manage?id={{ .Group.Uuid }}" role="button">返回管理</a>
+  <a class="btn btn-default" href="/v1/group/manage?uuid={{ .Group.Uuid }}" role="button">返回管理</a>
 </div>
 
 {{ end }}

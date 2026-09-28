@@ -203,7 +203,7 @@ func HandleGroupMemberInvitation(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /v1/group/member_invitation?id=xxx
+// GET /v1/group/member_invitation?uuid=xxx
 // 查看集团邀请函详情
 func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -218,7 +218,7 @@ func GroupMemberInvitationRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	invitationUuid := r.URL.Query().Get("id")
+	invitationUuid := r.URL.Query().Get("uuid")
 	invitation, err := dao.GetGroupInvitationByUuid(invitationUuid)
 	if err != nil {
 		util.Debug("Cannot get group invitation %v", err)
@@ -421,7 +421,7 @@ func GroupMemberInvitationReply(w http.ResponseWriter, r *http.Request) {
 			util.Debug("Cannot create invitation reply %v", err)
 		}
 
-		http.Redirect(w, r, "/v1/group/detail?id="+group.Uuid, http.StatusFound)
+		http.Redirect(w, r, "/v1/group/detail?uuid="+group.Uuid, http.StatusFound)
 
 	case 0:
 		// 拒绝邀请

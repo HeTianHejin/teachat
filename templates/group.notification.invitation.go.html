@@ -32,7 +32,7 @@
   <div class="panel-heading">
     <div class="row">
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-        来自：<a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}</a>@集团
+        来自：<a href="/v1/group/detail?uuid={{ .Group.Uuid }}">{{ .Group.Abbreviation }}</a>@集团
       </div>
       <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
         <span style="display: block; font-size: smaller;text-align: center;">
@@ -50,7 +50,7 @@
   </div>
 
   <div class="panel-body">
-    <a href="/v1/group/member_invitation?id={{ .Invitation.Uuid }}">
+    <a href="/v1/group/member_invitation?uuid={{ .Invitation.Uuid }}">
       <h3>集团邀请函</h3>
     </a>
     <p>

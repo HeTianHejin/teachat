@@ -455,7 +455,7 @@ func AddTeamToGroupPost(w http.ResponseWriter, r *http.Request) {
 	report(w, s_u, "你好，团队已成功添加到集团！")
 }
 
-// GET /v1/group/edit?id=xxx
+// GET /v1/group/edit?uuid=xxx
 // 显示编辑集团信息表单
 func EditGroupGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -470,13 +470,13 @@ func EditGroupGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.URL.Query().Get("id")
-	if id == "" {
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
 		report(w, s_u, "你好，缺少集团标识。")
 		return
 	}
 
-	group, err := dao.GetGroupByUUID(id)
+	group, err := dao.GetGroupByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get group by uuid %v", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -570,10 +570,10 @@ func EditGroupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/v1/group/manage?id="+group.Uuid, http.StatusFound)
+	http.Redirect(w, r, "/v1/group/manage?uuid="+group.Uuid, http.StatusFound)
 }
 
-// GET /v1/group/detail?id=xxx
+// GET /v1/group/detail?uuid=xxx
 // 显示集团详情（根据团队UUID或集团UUID）
 func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -685,7 +685,7 @@ func GroupDetailGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "group.detail", "component_team")
 }
 
-// GET /v1/group/manage?id=xxx
+// GET /v1/group/manage?uuid=xxx
 // 显示集团管理页面
 func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -700,13 +700,13 @@ func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.URL.Query().Get("id")
-	if id == "" {
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
 		report(w, s_u, "你好，缺少集团标识。")
 		return
 	}
 
-	group, err := dao.GetGroupByUUID(id)
+	group, err := dao.GetGroupByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get group by uuid %v", err)
 		report(w, s_u, "你好，未能找到该集团。")
@@ -757,7 +757,7 @@ func GroupManageGet(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &pageData, "layout", "navbar.private", "group.manage")
 }
 
-// GET /v1/group/invitations?id=xxx
+// GET /v1/group/invitations?uuid=xxx
 // 显示集团发出的所有邀请函列表
 func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -772,13 +772,13 @@ func GroupInvitationsGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := r.URL.Query().Get("id")
-	if id == "" {
+	uuid := r.URL.Query().Get("uuid")
+	if uuid == "" {
 		report(w, s_u, "你好，缺少集团标识。")
 		return
 	}
 
-	group, err := dao.GetGroupByUUID(id)
+	group, err := dao.GetGroupByUUID(uuid)
 	if err != nil {
 		util.Debug("Cannot get group by uuid %v", err)
 		report(w, s_u, "你好，未能找到该集团。")

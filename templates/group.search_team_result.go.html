@@ -3,7 +3,7 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li><a href="/v1/group/detail?uuid={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
   <li><a href="/v1/group/member_add?uuid={{ .Group.Uuid }}">增加成员</a></li>
   <li class="active">搜索结果</li>
 </ol>
@@ -40,7 +40,7 @@
     <a href="/v1/group/member_add?uuid={{ .Group.Uuid }}" class="btn btn-default">
       <span class="glyphicon glyphicon-search" aria-hidden="true"></span> 重新搜索
     </a>
-    <a href="/v1/group/detail?id={{ .Group.Uuid }}" class="btn btn-default">
+    <a href="/v1/group/detail?uuid={{ .Group.Uuid }}" class="btn btn-default">
       <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span> 返回集团详情
     </a>
   </div>

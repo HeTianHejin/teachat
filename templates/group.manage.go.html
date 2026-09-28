@@ -5,7 +5,7 @@
 {{ with .GroupBean }}
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li><a href="/v1/group/detail?uuid={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
   <li class="active">管理</li>
 </ol>
 {{ end }}
@@ -14,9 +14,9 @@
 <div style="margin: 2rem;">
   <ol class="nav nav-tabs">
     <li class="active"><a href="#top">成员管理</a></li>
-    <li><a href="/v1/group/invitations?id={{ .Group.Uuid }}">查看邀请</a></li>
-    <li><a href="/v1/group/edit?id={{ .Group.Uuid }}">修改资料</a></li>
-    <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">查看详情</a></li>
+    <li><a href="/v1/group/invitations?uuid={{ .Group.Uuid }}">查看邀请</a></li>
+    <li><a href="/v1/group/edit?uuid={{ .Group.Uuid }}">修改资料</a></li>
+    <li><a href="/v1/group/detail?uuid={{ .Group.Uuid }}">查看详情</a></li>
     <li><a href="#">注销集团</a></li>
   </ol>
 </div>

@@ -2,8 +2,8 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
-  <li><a href="/v1/group/manage?id={{ .Group.Uuid }}">管理</a></li>
+  <li><a href="/v1/group/detail?uuid={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li><a href="/v1/group/manage?uuid={{ .Group.Uuid }}">管理</a></li>
   <li class="active">修改资料</li>
 </ol>
 
@@ -32,7 +32,7 @@
 
   <div class="form-group">
     <button type="submit" class="btn btn-primary">保存修改</button>
-    <a href="/v1/group/manage?id={{ .Group.Uuid }}" class="btn btn-default">取消</a>
+    <a href="/v1/group/manage?uuid={{ .Group.Uuid }}" class="btn btn-default">取消</a>
   </div>
 </form>
 

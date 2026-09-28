@@ -46,7 +46,7 @@
             <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
             {{ end }}
               <a href="/v1/user/biography?uuid={{ .GroupBean.Founder.Uuid }}">{{ .GroupBean.Founder.Name }}</a>
-              @<span style="font-style: italic;"><a href="/v1/group/detail?id={{ .GroupBean.FounderTeam.Uuid }}">{{ .GroupBean.FounderTeam.Abbreviation }}</a></span>
+              @<span style="font-style: italic;"><a href="/v1/group/detail?uuid={{ .GroupBean.FounderTeam.Uuid }}">{{ .GroupBean.FounderTeam.Abbreviation }}</a></span>
 
               {{ .GroupBean.CreatedAtDate }}
             </span>
@@ -83,7 +83,7 @@
 
 
     {{ if .CanManage }}
-      <a class="btn btn-default" href="/v1/group/manage?id={{ .GroupBean.Group.Uuid }}" role="button">管理集团</a>
+      <a class="btn btn-default" href="/v1/group/manage?uuid={{ .GroupBean.Group.Uuid }}" role="button">管理集团</a>
     {{ end }}
     
     

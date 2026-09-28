@@ -37,7 +37,7 @@
 {{ range .OtherFamilyBeanSlice }}
 <div class="media" style="opacity: 0.7;">
   <div class="media-left">
-    <a href="/v1/family/detail?id={{ .Family.Uuid }}">
+    <a href="/v1/family/detail?uuid={{ .Family.Uuid }}">
       <img class="media-object" src="/v1/static/bootstrap-icons/house-slash.svg" alt="已离开家庭" height="32" width="32" style="filter: grayscale(100%);">
     </a>
   </div>
@@ -46,7 +46,7 @@
       <div class="panel-heading" style="background-color: #f9f9f9;">
         <div class="row">
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
-            <a href="/v1/family/detail?id={{ .Family.Uuid }}" style="color: #999;">{{ .Family.Name }} 家庭茶团</a>
+            <a href="/v1/family/detail?uuid={{ .Family.Uuid }}" style="color: #999;">{{ .Family.Name }} 家庭茶团</a>
             {{ if .Family.IsDeleted }}
             <span class="label label-default" style="font-size: xx-small; background-color: #999;">已删除</span>
             {{ else }}
@@ -97,7 +97,7 @@
     <i class="bi-diagram-3" style="font-size: 1.5rem; color: #999;"></i>
     家族树</a>
   <span style="margin-inline-start: 2rem;">
-    <a class="btn btn-default" href="/v1/family/detail?id={{ .Family.Uuid }}" role="button">
+    <a class="btn btn-default" href="/v1/family/detail?uuid={{ .Family.Uuid }}" role="button">
       <i class="bi-eye" style="font-size: 1.5rem; color: #999;"></i>
       查看回忆</a>
   </span>

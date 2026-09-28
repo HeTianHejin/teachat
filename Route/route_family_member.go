@@ -24,7 +24,7 @@ func HandleFamilyMemberSignInNew(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /v1/family_member/sign_in_new?id=xxx
+// GET /v1/family_member/sign_in_new?uuid=xxx
 // 给用户返回一张空白的&家庭茶团新成员登记表格（页面）
 func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 	//读取会话资料
@@ -40,7 +40,7 @@ func FamilyMemberSignInNewGet(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
 		return
 	}
-	family_member_user_uuid := r.URL.Query().Get("id")
+	family_member_user_uuid := r.URL.Query().Get("uuid")
 	if family_member_user_uuid == "" {
 		util.Debug("Family member user UUID is empty")
 		report(w, s_u, "你好，柳丝榆荚自芳菲，不管桃飘与李飞。请稍后再试。")
@@ -277,7 +277,7 @@ func HandleFamilyMemberSignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 // 为声明提及新成员办理取阅声明书，
-// GET /v1/family_member/sign_in?id=
+// GET /v1/family_member/sign_in?uuid=
 func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 	// 获取session
 	s, err := session(r)
@@ -293,7 +293,7 @@ func FamilyMemberSignInRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 获取请求参数
-	family_member_sign_in_uuid := r.URL.Query().Get("id")
+	family_member_sign_in_uuid := r.URL.Query().Get("uuid")
 	// 读取增加家庭成员声明资料
 	family_member_sign_in := dao.FamilyMemberSignIn{
 		Uuid: family_member_sign_in_uuid,
@@ -466,7 +466,7 @@ func FamilyMemberSignInReply(w http.ResponseWriter, r *http.Request) {
 			report(w, s_u, "你好，茶博士正在忙碌中，乱花渐欲迷人眼，请稍后再试。")
 			return
 		}
-		http.Redirect(w, r, "/v1/family/detail?id="+(family.Uuid), http.StatusFound)
+		http.Redirect(w, r, "/v1/family/detail?uuid="+(family.Uuid), http.StatusFound)
 		return
 	}
 
@@ -488,7 +488,7 @@ func HandleFamilyMemberEdit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /v1/family_member/edit?id=xxx
+// GET /v1/family_member/edit?uuid=xxx
 func FamilyMemberEditGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -501,7 +501,7 @@ func FamilyMemberEditGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	member_uuid := r.URL.Query().Get("id")
+	member_uuid := r.URL.Query().Get("uuid")
 	fm := dao.FamilyMember{Uuid: member_uuid}
 	if err = fm.GetByUuid(); err != nil {
 		report(w, s_u, "未找到成员资料")
@@ -606,10 +606,10 @@ func FamilyMemberEditPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/v1/family/detail?id="+family.Uuid, http.StatusFound)
+	http.Redirect(w, r, "/v1/family/detail?uuid="+family.Uuid, http.StatusFound)
 }
 
-// GET /v1/family_member/detail?id=xxx
+// GET /v1/family_member/detail?uuid=xxx
 func FamilyMemberDetail(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -622,7 +622,7 @@ func FamilyMemberDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	member_uuid := r.URL.Query().Get("id")
+	member_uuid := r.URL.Query().Get("uuid")
 	fm := dao.FamilyMember{Uuid: member_uuid}
 	if err = fm.GetByUuid(); err != nil {
 		report(w, s_u, "未找到成员资料")

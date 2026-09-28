@@ -41,7 +41,7 @@
     <div class="panel-heading">
       <div class="row">
         <div class="col-xs-6">
-          <a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Name }}</a>
+          <a href="/v1/group/detail?uuid={{ .Group.Uuid }}">{{ .Group.Name }}</a>
         </div>
         <div class="col-xs-6 text-right">
           <span class="label {{ if .Open }}label-success{{ else }}label-default{{ end }}">

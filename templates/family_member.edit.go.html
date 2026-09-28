@@ -3,7 +3,7 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/family/home">家庭事项</a></li>
-  <li><a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}">{{ .FamilyBean.Family.Name }}</a></li>
+  <li><a href="/v1/family/detail?uuid={{ .FamilyBean.Family.Uuid }}">{{ .FamilyBean.Family.Name }}</a></li>
   <li class="active">编辑成员资料</li>
 </ol>
 
@@ -55,7 +55,7 @@
 
       <div class="form-group">
         <button type="submit" class="btn btn-primary">保存</button>
-        <a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}" class="btn btn-default">取消</a>
+        <a href="/v1/family/detail?uuid={{ .FamilyBean.Family.Uuid }}" class="btn btn-default">取消</a>
       </div>
     </form>
   </div>

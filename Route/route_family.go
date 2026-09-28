@@ -26,7 +26,7 @@ func SetDefaultFamily(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// 2. get family id
-	family_uuid := r.URL.Query().Get("id")
+	family_uuid := r.URL.Query().Get("uuid")
 	//check family is valid
 	if family_uuid == dao.FamilyUuidUnknown || family_uuid == "" {
 		report(w, s_u, "你好，茶博士摸摸头竟然说，陛下这个特殊家庭茶团不允许私用呢。")
@@ -168,7 +168,7 @@ func HomeFamilies(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &fSPD, "layout", "navbar.private", "families.home")
 }
 
-// GET /v1/family/tree?id=
+// GET /v1/family/tree?uuid=
 // 查看家族树
 func FamilyTree(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
@@ -183,7 +183,7 @@ func FamilyTree(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	family_uuid := r.URL.Query().Get("id")
+	family_uuid := r.URL.Query().Get("uuid")
 	if family_uuid == dao.FamilyUuidUnknown {
 		report(w, s_u, "盛世无饥馑，四海可为家。")
 		return
@@ -650,7 +650,7 @@ func GonePrivateFamilies(w http.ResponseWriter, r *http.Request) {
 	generateHTML(w, &fSPD, "layout", "navbar.private", "families.gone.private")
 }
 
-// GET /v1/family/detail?id=XXX
+// GET /v1/family/detail?uuid=XXX
 // 查看&家庭茶团详情
 // 需要检查会话用户是否被这个家庭声明为新成员，这影响是否展示新成员声明
 // 如果会话用户是家庭成员，可以直接查看详情，
@@ -672,7 +672,7 @@ func FamilyDetail(w http.ResponseWriter, r *http.Request) {
 	var fD dao.FamilyDetail
 
 	// 2. get family
-	family_uuid := r.URL.Query().Get("id")
+	family_uuid := r.URL.Query().Get("uuid")
 
 	//用户如果没有设置默认家庭，则其uuid为x.
 	//报告无信息可供查看。
@@ -975,7 +975,7 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 	// report(w, text)
 
 	//跳转新建的家庭详情页面
-	http.Redirect(w, r, "/v1/family/detail?id="+new_family.Uuid, http.StatusFound)
+	http.Redirect(w, r, "/v1/family/detail?uuid="+new_family.Uuid, http.StatusFound)
 }
 
 // GET /v1/family/new
@@ -1010,7 +1010,7 @@ func HandleEditFamily(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /v1/family/edit?id=xxx
+// GET /v1/family/edit?uuid=xxx
 func EditFamilyGet(w http.ResponseWriter, r *http.Request) {
 	s, err := session(r)
 	if err != nil {
@@ -1023,7 +1023,7 @@ func EditFamilyGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	family_uuid := r.URL.Query().Get("id")
+	family_uuid := r.URL.Query().Get("uuid")
 	family := dao.Family{Uuid: family_uuid}
 	if err = family.GetByUuid(); err != nil {
 		report(w, s_u, "未找到家庭资料")
@@ -1132,7 +1132,7 @@ func EditFamilyPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/v1/family/detail?id="+family.Uuid, http.StatusFound)
+	http.Redirect(w, r, "/v1/family/detail?uuid="+family.Uuid, http.StatusFound)
 }
 
 // GET /v1/family/friend_team_create?uuid=

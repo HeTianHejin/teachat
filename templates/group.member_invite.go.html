@@ -3,7 +3,7 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/group/detail?id={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
+  <li><a href="/v1/group/detail?uuid={{ .Group.Uuid }}">{{ .Group.Abbreviation }}@集团</a></li>
   <li class="active">邀请团队加入</li>
 </ol>
 
@@ -76,7 +76,7 @@
           <button type="submit" class="btn btn-primary">
             <span class="glyphicon glyphicon-send" aria-hidden="true"></span> 发送邀请函
           </button>
-          <a href="/v1/group/detail?id={{ .Group.Uuid }}" class="btn btn-default">
+          <a href="/v1/group/detail?uuid={{ .Group.Uuid }}" class="btn btn-default">
             <span class="glyphicon glyphicon-remove" aria-hidden="true"></span> 取消
           </a>
         </div>

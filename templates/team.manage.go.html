@@ -25,7 +25,7 @@
         <li class="active"><a href="#top">调整角色</a></li>
         <li><a href="/v1/team/edit?uuid={{ .Team.Uuid }}">编辑</a></li>
         {{ if $.GroupBean }}
-        <li><a href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}">查看集团</a></li>
+        <li><a href="/v1/group/detail?uuid={{ $.GroupBean.Group.Uuid }}">查看集团</a></li>
         {{ else }}
           {{ if or $.IsFounder $.IsCEO }}
           <li><a href="/v1/group/new?team_id={{ .Team.Uuid }}">创建集团</a></li>

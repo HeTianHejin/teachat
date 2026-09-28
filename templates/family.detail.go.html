@@ -13,7 +13,7 @@
 {{ with .FamilyMemberSignIn }}{{/* 检查是否新家庭成员声明为空 -开始  */}}
 <div class="alert alert-info" role="alert">
   注意，你被这个家庭声明为家人，如果属实，
-  <a href="/v1/family_member/sign_in?id={{ .Uuid }}" class="alert-link">请点此查看声明</a>
+  <a href="/v1/family_member/sign_in?uuid={{ .Uuid }}" class="alert-link">请点此查看声明</a>
   ，否则请忽略。
 </div>
 
@@ -69,7 +69,7 @@
       <div class="panel-body">
         <div class="text-center" style="font-size: large;">
           {{ .FamilyBean.Family.Name }}
-            @<span style="font-style: italic;"><a href="/v1/group-of-relatives/detail?id=x">金陵X大家族</a>
+            @<span style="font-style: italic;"><a href="/v1/group-of-relatives/detail?uuid=x">金陵X大家族</a>
             </span>
         </div>
         <span style="white-space: pre-wrap;">
@@ -100,8 +100,8 @@
     <div style="margin: 2rem;">
       <ol class="nav nav-tabs">
         <li class="active"><a href="#">在座成员</a></li>
-        <li><a href="/v1/family_member/signed?id={{ .FamilyBean.Family.Uuid }}">成员变动</a></li>
-        <li><a href="/v1/family_member/resigned?id={{ .FamilyBean.Family.Uuid }}">离巢成员</a></li>
+        <li><a href="/v1/family_member/signed?uuid={{ .FamilyBean.Family.Uuid }}">成员变动</a></li>
+        <li><a href="/v1/family_member/resigned?uuid={{ .FamilyBean.Family.Uuid }}">离巢成员</a></li>
         <li><a href="/v1/goods/family?uuid={{ .FamilyBean.Family.Uuid }}">装备物资</a></li>
       </ol>
     </div>
@@ -119,7 +119,7 @@
   
   <div class="media-body">
     <span style="font-style: italic;">
-      （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
+      （<a href="/v1/family/detail?uuid={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
       <a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
     </span>
 
@@ -136,11 +136,11 @@
     <span style="font-style: italic;">{{ .Member.Email }}</span>
     
     <div style="margin-top: 10px;">
-      <a href="/v1/family_member/detail?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
+      <a href="/v1/family_member/detail?uuid={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
         <i class="bi-eye"></i> 查看详情
       </a>
       {{ if $.IsParent }}
-      <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
+      <a href="/v1/family_member/edit?uuid={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
         <i class="bi-pencil"></i> 编辑
       </a>
       {{ end }}
@@ -161,7 +161,7 @@
   </div>
   <div class="media-body">
     <span style="font-style: italic;">
-      （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
+      （<a href="/v1/family/detail?uuid={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
       <a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
     </span>
 
@@ -178,11 +178,11 @@
     <span style="font-style: italic;">{{ .Member.Email }}</span>
     
     <div style="margin-top: 10px;">
-      <a href="/v1/family_member/detail?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
+      <a href="/v1/family_member/detail?uuid={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
         <i class="bi-eye"></i> 查看详情
       </a>
       {{ if $.IsParent }}
-      <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
+      <a href="/v1/family_member/edit?uuid={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
         <i class="bi-pencil"></i> 编辑
       </a>
       {{ end }}
@@ -203,7 +203,7 @@
   </div>
   <div class="media-body">
     <span style="font-style: italic;">
-      （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
+      （<a href="/v1/family/detail?uuid={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>,
       <a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
     </span>
 
@@ -220,11 +220,11 @@
     <span style="font-style: italic;">{{ .Member.Email }}</span>
     
     <div style="margin-top: 10px;">
-      <a href="/v1/family_member/detail?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
+      <a href="/v1/family_member/detail?uuid={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-info">
         <i class="bi-eye"></i> 查看详情
       </a>
       {{ if $.IsParent }}
-      <a href="/v1/family_member/edit?id={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
+      <a href="/v1/family_member/edit?uuid={{ .FamilyMember.Uuid }}" class="btn btn-xs btn-default">
         <i class="bi-pencil"></i> 编辑
       </a>
       {{ end }}

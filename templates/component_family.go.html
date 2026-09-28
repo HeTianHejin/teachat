@@ -5,7 +5,7 @@
     <span class="label label-{{ if .Family.IsMarried }}success{{ else }}default{{ end }}">
       {{ .Family.GetStatus }}
     </span>
-    <a href="/v1/family/detail?id={{ .Family.Uuid }}" class="btn btn-xs btn-info pull-right">
+    <a href="/v1/family/detail?uuid={{ .Family.Uuid }}" class="btn btn-xs btn-info pull-right">
       <span class="glyphicon glyphicon-eye-open"></span> 查看详情
     </a>
   </div>

@@ -2,7 +2,7 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
-  <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+  <li><a href="/v1/family/detail?uuid={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
   <li class="active">添加成员</li>
 </ol>
 
@@ -46,7 +46,7 @@
         <button class="btn btn-primary" type="submit">
           <span class="glyphicon glyphicon-search"></span> 查找茶友
         </button>
-        <a href="/v1/family/detail?id={{ .Family.Uuid }}" class="btn btn-default">返回</a>
+        <a href="/v1/family/detail?uuid={{ .Family.Uuid }}" class="btn btn-default">返回</a>
       </div>
     </form>
   </div>

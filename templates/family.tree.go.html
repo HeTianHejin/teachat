@@ -3,7 +3,7 @@
 <ol class="breadcrumb">
   <li>大堂</li>
   <li><a href="/v1/family/home">家庭事项</a></li>
-  <li><a href="/v1/family/detail?id={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
+  <li><a href="/v1/family/detail?uuid={{ .Family.Uuid }}">{{ .Family.Name }}</a></li>
   <li class="active">家族树</li>
 </ol>
 
@@ -41,7 +41,7 @@
     </div>
   </div>
   <div class="panel-footer">
-    <a href="/v1/family/detail?id={{ .Family.Uuid }}" class="btn btn-default">
+    <a href="/v1/family/detail?uuid={{ .Family.Uuid }}" class="btn btn-default">
       <i class="glyphicon glyphicon-arrow-left"></i> 返回家庭详情
     </a>
   </div>

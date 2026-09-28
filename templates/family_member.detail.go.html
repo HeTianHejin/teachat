@@ -3,7 +3,7 @@
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/family/home">家庭事项</a></li>
-  <li><a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}">{{ .FamilyBean.Family.Name }}</a></li>
+  <li><a href="/v1/family/detail?uuid={{ .FamilyBean.Family.Uuid }}">{{ .FamilyBean.Family.Name }}</a></li>
   <li class="active">成员详情</li>
 </ol>
 
@@ -63,7 +63,7 @@
       <dd>{{ .FamilyMemberBean.FamilyMember.CreatedAtDate }}</dd>
 
       <dt>默认家庭</dt>
-      <dd><a href="/v1/family/detail?id={{ .FamilyMemberBean.MemberDefaultFamily.Uuid }}">{{ .FamilyMemberBean.MemberDefaultFamily.Name }}</a></dd>
+      <dd><a href="/v1/family/detail?uuid={{ .FamilyMemberBean.MemberDefaultFamily.Uuid }}">{{ .FamilyMemberBean.MemberDefaultFamily.Name }}</a></dd>
 
       <dt>默认团队</dt>
       <dd><a href="/v1/team/detail?uuid={{ .FamilyMemberBean.MemberDefaultTeam.Uuid }}">{{ .FamilyMemberBean.MemberDefaultTeam.Abbreviation }}</a></dd>
@@ -72,9 +72,9 @@
     <hr>
 
     <div class="form-group">
-      <a href="/v1/family/detail?id={{ .FamilyBean.Family.Uuid }}" class="btn btn-default">返回家庭</a>
+      <a href="/v1/family/detail?uuid={{ .FamilyBean.Family.Uuid }}" class="btn btn-default">返回家庭</a>
       {{ if .IsParent }}
-      <a href="/v1/family_member/edit?id={{ .FamilyMemberBean.FamilyMember.Uuid }}" class="btn btn-primary">
+      <a href="/v1/family_member/edit?uuid={{ .FamilyMemberBean.FamilyMember.Uuid }}" class="btn btn-primary">
         <i class="bi-pencil"></i> 编辑
       </a>
       {{ end }}
