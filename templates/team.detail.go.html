@@ -2,12 +2,11 @@
 
 {{/* 这是指定团队详情展示页面-面包屑导航栏 */}}
 
-
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
   <li><a href="/v1/teams/joined">团队事项</a></li>
   <li>{{ .TeamBean.Team.Name }}</li>
-  <li class="=active">$事业茶团详情</li>
+  <li class="=active">事业茶团详情</li>
 </ol>
 
 
@@ -15,7 +14,8 @@
 <div class="row" style="margin: 20px 0;">
   <div class="text-center">
     {{ if .TeamBean.Team.Logo }}
-    <img class="img-circle" src="/v1/static/image/team/{{ .TeamBean.Team.Logo }}.jpeg" alt="{{ .TeamBean.Team.Name }}" style="width: 48px;">
+    <img class="img-circle" src="/v1/static/image/team/{{ .TeamBean.Team.Logo }}.jpeg" alt="{{ .TeamBean.Team.Name }}"
+      style="width: 48px;">
     {{ else }}
     <img class="img-circle" src="/v1/static/image/teamLogo.jpeg" alt="{{ .TeamBean.Team.Name }}" style="width: 48px;">
     {{ end }}
@@ -29,35 +29,36 @@
   <div class="col-xs-6 text-left">
     <strong>服务项目</strong>
     {{ if .ServiceOfferings }}
-      {{ range .ServiceOfferings }}
-      <div class="well well-sm" style="margin: 8px 0;">
-        <div><strong>{{ .Name }}</strong></div>
-      </div>
-      {{ end }}
+    {{ range .ServiceOfferings }}
+    <div class="well well-sm" style="margin: 8px 0;">
+      <div><strong>{{ .Name }}</strong></div>
+    </div>
+    {{ end }}
     {{ else }}
-      <p class="text-muted">暂无已上架服务项目</p>
+    <p class="text-muted">暂无已上架服务项目</p>
     {{ end }}
 
     {{ if gt .UnpublishedServiceOfferingCount 0 }}
-      <a href="/v1/team/service_offerings/unpublished?uuid={{ .Team.Uuid }}"
-         class="btn btn-default btn-sm">
-        已下架（{{ .UnpublishedServiceOfferingCount }}）
-      </a>
+    <a href="/v1/team/service_offerings/unpublished?uuid={{ .TeamBean.Team.Uuid }}" class="btn btn-default btn-sm">
+      已下架（{{ .UnpublishedServiceOfferingCount }}）
+    </a>
     {{ end }}
   </div>
 
   <div class="col-xs-6 text-right">
     作业成就：
-    {{/* 假设 .RatingMedian 是 0~5 的数，步长 1 */}}
-    {{ range $i := (seq 1 5) }}
-      {{ if le $i .RatingMedian }}
-        <i class="bi-star"></i>
-      {{ else if ... 半星逻辑 ... }}
-        <i class="bi-star-empty"></i>
-      {{ else }}
-        <i class="bi-star-empty"></i>
-      {{ end }}
+    {{/* 假设 .RatingMedian 是 0~10 的数，步长 1
+    {{ range $i := (seq 1 10) }}
+    {{ if le $i .RatingMedian }}
+    <i class="bi bi-star-fill"></i>
+    {{ else if ... 半星逻辑 ... }}
+    <i class="bi bi-star-half"></i>
+    {{ else }}
+    <i class="bi bi-star"></i>
     {{ end }}
+    {{ end }}
+    */}}
+    <i class="bi bi-star"></i>
   </div>
 </div>
 
@@ -66,7 +67,7 @@
 <div class="media">
 
   <div class="media-left">
-    {{ template "component_avatar_name_gender" .Founder }}
+    {{ template "component_avatar_name_gender" .TeamBean.Founder }}
   </div>
 
   <div class="media-body">
@@ -76,77 +77,82 @@
 
           <div class="col-xs-4">
             <span style="font-style: italic;">
-              （<a href="/v1/family/detail?id={{ .FounderDefaultFamily.Uuid }}" title="查看家庭详情">
-                {{ .FounderDefaultFamily.Name }}</a>）
+              （<a href="/v1/family/detail?uuid={{ .TeamBean.FounderDefaultFamily.Uuid }}" title="查看家庭详情">
+                {{ .TeamBean.FounderDefaultFamily.Name }}</a>）
             </span>
           </div>
 
           <div class="col-xs-4 text-center">
-            {{ if .Team.IsPrivate }}
+            {{ if .TeamBean.Team.IsPrivate }}
             <span class="label label-danger">私密</span>
             {{ end }}
-            <span class="label {{ if .Team.IsProfessional }}label-info{{ else if .Team.IsAmateur }}label-warning{{ else }}label-default{{ end }}">{{ .Team.NatureName }}</span>
-            {{ if .Team.IsOpen }}
+            <span
+              class="label {{ if .TeamBean.Team.IsProfessional }}label-info{{ else if .TeamBean.Team.IsAmateur }}label-warning{{ else }}label-default{{ end }}">{{
+              .TeamBean.Team.NatureName }}</span>
+            {{ if .TeamBean.Team.IsOpen }}
             <i class="bi-people" style="font-size: 2rem;"></i>
 
-            <span class="label label-success">{{ .Team.TeamProperty }}</span>
-              {{ else }}
-              <i class="bi-people-fill" style="font-size: 2rem;"></i>
-              <span class="label label-default">{{ .Team.TeamProperty }}</span>
-                {{ end }}
+            <span class="label label-success">{{ .TeamBean.Team.TeamProperty }}</span>
+            {{ else }}
+            <i class="bi-people-fill" style="font-size: 2rem;"></i>
+            <span class="label label-default">{{ .TeamBean.Team.TeamProperty }}</span>
+            {{ end }}
 
           </div>
 
           <div class="col-xs-4 text-right">
-            {{ .CreatedAtDate }}
+            {{ .TeamBean.CreatedAtDate }}
           </div>
         </div>
       </div>
       <div class="panel-body">
         <div class="text-center" style="font-size: large;">
-          {{ .Team.Name }}
+          {{ .TeamBean.Team.Name }}
           @<span style="font-style: italic;">
-            {{ if $.GroupBean }}
-            <a href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}">{{ $.GroupBean.Group.Abbreviation }}</a>
-            {{ else }}喝茶集团{{ end }}
+            {{ if .GroupBean }}
+            <a href="/v1/group/detail?uuid={{ .GroupBean.Group.Uuid }}">{{ .GroupBean.Group.Abbreviation }}</a>
+            {{ else }}
+            喝茶集团
+            {{ end }}
           </span>
         </div>
 
-        {{ if .Team.Tags }}
+        {{ if .TeamBean.Team.Tags }}
         <div style="margin-top: 10px;">
           <i class="glyphicon glyphicon-tags"></i>
-          {{ range .Team.GetTags }}
+          {{ range .TeamBean.Team.GetTags }}
           <span class="label label-info" style="margin-right: 5px;">{{ . }}</span>
           {{ end }}
         </div>
         {{ end }}
 
         <span style="white-space: pre-wrap;">
-          {{ .Team.Mission }}
+          {{ .TeamBean.Team.Mission }}
         </span>
 
       </div>
       <div class="panel-footer">
         <span style="margin-inline-end: 20px;" title="团号">
           <span class="glyphicon glyphicon-flag" aria-hidden="true"></span>
-          {{ .Team.Id }}
+          {{ .TeamBean.Team.Id }}
         </span>
 
         <span style="margin-inline-end: 20px;" title="成员数">
           <span class="glyphicon glyphicon-user" aria-hidden="true"></span>
-          {{ .MembersCount }}
+          {{ .TeamBean.MembersCount }}
         </span>
 
-        {{ if $.IsMember }}
+        {{ if .IsMember }}
         <span style="margin-inline-end: 20px;" title="团队消息盒">
-          {{ if $.MessageBox }}
-          <a href="/v1/message_box/detail?uuid={{ $.MessageBox.Uuid }}" style="text-decoration: none; color: inherit;">
+          {{ if .MessageBox }}
+          <a href="/v1/message_box/detail?uuid={{ .MessageBox.Uuid }}" style="text-decoration: none; color: inherit;">
             <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
-            {{ if gt $.MessageCount 0 }}<span class="badge" style="background-color: #d9534f;">{{ $.MessageCount
-              }}</span>{{ end }}
+            {{ if gt .MessageCount 0 }}<span class="badge" style="background-color: #d9534f;">{{ .MessageCount
+              }}</span>
+            {{ end }}
           </a>
           {{ else }}
-          <a href="/v1/message_box/detail?team_uuid={{ .Team.Uuid }}" style="text-decoration: none; color: inherit;">
+          <a href="/v1/message_box/detail?team_uuid={{ .TeamBean.Team.Uuid }}" style="text-decoration: none; color: inherit;">
             <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span>
           </a>
           {{ end }}
@@ -158,46 +164,46 @@
 
     <div class="my-4">
       {{/* 团队核心成员功能按钮 */}}
-      {{ if $.IsCoreMember }}
+      {{ if .IsCoreMember }}
       <div class="btn-group" role="group" style="margin-bottom: 15px;">
-        {{ if or $.IsCEO $.IsFounder }}
-        <a href="/v1/team/manage?uuid={{ .Team.Uuid }}" class="btn btn-primary">
+        {{ if or .IsCEO .IsFounder }}
+        <a href="/v1/team/manage?uuid={{ .TeamBean.Team.Uuid }}" class="btn btn-primary">
           <i class="glyphicon glyphicon-cog"></i> 管理团队
         </a>
         {{ end }}
 
-        {{ if or $.IsCEO $.IsFounder }}
-        {{ if $.GroupBean }}
-        <a href="/v1/group/detail?id={{ $.GroupBean.Group.Uuid }}" class="btn btn-info">
+        {{ if or .IsCEO .IsFounder }}
+        {{ if .GroupBean }}
+        <a href="/v1/group/detail?uuid={{ .GroupBean.Group.Uuid }}" class="btn btn-info">
           <i class="glyphicon glyphicon-th-large"></i> 查看所属集团
         </a>
         {{ else }}
-        <a href="/v1/group/new?team_id={{ .Team.Uuid }}" class="btn btn-success">
+        <a href="/v1/group/new?team_id={{ .TeamBean.Team.Id }}" class="btn btn-success">
           <i class="glyphicon glyphicon-plus"></i> 创建集团
         </a>
         {{ end }}
         {{ end }}
 
-        <a href="/v1/team/applications?uuid={{ .Team.Uuid }}" class="btn btn-default">
-          <i class="glyphicon glyphicon-inbox"></i> 查看申请{{ if $.HasApplication }}<span class="badge">!</span>{{ end }}
+        <a href="/v1/team/applications?uuid={{ .TeamBean.Team.Uuid }}" class="btn btn-default">
+          <i class="glyphicon glyphicon-inbox"></i> 查看申请{{ if .HasApplication }}<span class="badge">!</span>{{ end }}
         </a>
-        <a href="/v1/team/invitations?uuid={{ .Team.Uuid }}" class="btn btn-default">
+        <a href="/v1/team/invitations?uuid={{ .TeamBean.Team.Uuid }}" class="btn btn-default">
           <i class="glyphicon glyphicon-send"></i> 查看邀请
         </a>
-        <a href="/v1/team/resignations?uuid={{ .Team.Uuid }}" class="btn btn-default">
-          <i class="glyphicon glyphicon-log-out"></i> 查看退团{{ if $.HasResignation }}<span class="badge">!</span>{{ end }}
+        <a href="/v1/team/resignations?uuid={{ .TeamBean.Team.Uuid }}" class="btn btn-default">
+          <i class="glyphicon glyphicon-log-out"></i> 查看退团{{ if .HasResignation }}<span class="badge">!</span>{{ end }}
         </a>
       </div>
       {{ end }}
-      {{ if .Team.IsOpen }}
+      {{ if .TeamBean.Team.IsOpen }}
       {{ if $.IsMember }}
 
       {{ else }}{{/* 不是茶团成员 */}}
       <div class="text-right">
-        <a href="/v1/team_member/application/new?uuid={{ .Team.Uuid }}">申请加盟</a>
-        {{ if .Team.IsOpen }}
+        <a href="/v1/team_member/application/new?uuid={{ .TeamBean.Team.Uuid }}">申请加盟</a>
+        {{ if .TeamBean.Team.IsOpen }}
         <span style="margin: 0 10px;">|</span>
-        <a href="/v1/message/announcement/send?team_uuid={{ .Team.Uuid }}" style="color: #28a745;">
+        <a href="/v1/message/announcement/send?team_uuid={{ .TeamBean.Team.Uuid }}" style="color: #28a745;">
           <i class="bi bi-megaphone"></i> 发送布告
         </a>
         {{ end }}
@@ -214,17 +220,16 @@
       {{/* 团队功能导航 */}}
       <ul class="nav nav-tabs nav-justified">
         <li class="active"><a href="#">在座成员</a></li>
-        <li><a href="/v1/tea/team/account?team_id={{ .Team.Id }}">星茶账户</a></li>
-        <li><a href="/v1/skills/team_list?uuid={{ .Team.Uuid }}">技能</a></li>
-        <li><a href="/v1/magics/team_list?uuid={{ .Team.Uuid }}">法力</a></li>
-        <li><a href="/v1/goods/team?uuid={{ .Team.Uuid }}">装备物资</a></li>
+        <li><a href="/v1/tea/team/account?team_id={{ .TeamBean.Team.Id }}">星茶账户</a></li>
+        <li><a href="/v1/skills/team_list?uuid={{ .TeamBean.Team.Uuid }}">技能</a></li>
+        <li><a href="/v1/magics/team_list?uuid={{ .TeamBean.Team.Uuid }}">法力</a></li>
+        <li><a href="/v1/goods/team?uuid={{ .TeamBean.Team.Uuid }}">装备物资</a></li>
 
-        <li><a href="/v1/team_member/role_changed?uuid={{ .Team.Uuid }}">角色变动</a></li>
-        <li><a href="/v1/team/members/left?uuid={{ .Team.Uuid }}">离开成员</a></li>
+        <li><a href="/v1/team_member/role_changed?uuid={{ .TeamBean.Team.Uuid }}">角色变动</a></li>
+        <li><a href="/v1/team/members/left?uuid={{ .TeamBean.Team.Uuid }}">离开成员</a></li>
       </ul>
     </div>
 
-    {{ end }}{{/* 检测Teambean非空 --结束 */}}
 
     {{/* 这是茶团核心成员展示页面 */}}
     {{ range .CoreMemberBeanSlice }}
@@ -236,7 +241,7 @@
       <div class="media-body">
 
         <span style="font-style: italic;">
-          （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>，
+          （<a href="/v1/family/detail?uuid={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>，
           <a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
         </span>
 
@@ -261,20 +266,20 @@
             class="btn btn-sm btn-info">
             <i class="bi bi-envelope"></i> 发送纸条
           </a>
-          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
+          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Id }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-success">
             <i class="bi bi-book"></i> 作业本
           </a>
           {{ if $.IsVerifierTeamMember }}
-          <a href="/v1/verifier/workspace?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}" class="btn btn-sm btn-warning">
+          <a href="/v1/verifier/workspace?team_id={{ $.TeamBean.Team.Id }}&member_id={{ .Member.Id }}"
+            class="btn btn-sm btn-warning">
             <i class="bi bi-clipboard-check"></i> 见证工作间
             {{ if gt $.PendingOrderCount 0 }}
             <span class="badge">{{ $.PendingOrderCount }}</span>
             {{ end }}
           </a>
           {{ else }}
-          <a href="/v1/work-desk?team_id={{ $.TeamBean.Team.Uuid }}"
-            class="btn btn-sm btn-primary">
+          <a href="/v1/work-desk?team_id={{ $.TeamBean.Team.Id }}" class="btn btn-sm btn-primary">
             <i class="bi bi-pc-display-horizontal"></i> 工作台
           </a>
           {{ end }}
@@ -296,7 +301,7 @@
       <div class="media-body">
 
         <span style="font-style: italic;">
-          （<a href="/v1/family/detail?id={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>，
+          （<a href="/v1/family/detail?uuid={{ .MemberDefaultFamily.Uuid }}">{{ .MemberDefaultFamily.Name }}</a>，
           <a href="/v1/team/detail?uuid={{ .MemberDefaultTeam.Uuid }}">{{ .MemberDefaultTeam.Abbreviation }}</a>）
         </span>
 
@@ -321,20 +326,19 @@
             class="btn btn-sm btn-primary">
             <i class="bi bi-envelope"></i> 发送纸条
           </a>
-          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
+          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Id }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-success">
             <i class="bi bi-Journal-text"></i> 工作簿
           </a>
           {{ if $.IsVerifierTeamMember }}
-          <a href="/v1/verifier/workspace?team_uuid={{ $.TeamBean.Team.Uuid }}" class="btn btn-sm btn-warning">
+          <a href="/v1/verifier/workspace?team_id={{ $.TeamBean.Team.Id }}" class="btn btn-sm btn-warning">
             <i class="bi bi-clipboard-check"></i> 见证工作间
             {{ if gt $.PendingOrderCount 0 }}
             <span class="badge">{{ $.PendingOrderCount }}</span>
             {{ end }}
           </a>
           {{ else }}
-          <a href="/v1/work-desk?team_id={{ $.TeamBean.Team.Uuid }}"
-            class="btn btn-sm btn-primary">
+          <a href="/v1/work-desk?team_id={{ $.TeamBean.Team.Id }}" class="btn btn-sm btn-primary">
             <i class="bi bi-pc-display-horizontal"></i> 工作台
           </a>
           {{ end }}
