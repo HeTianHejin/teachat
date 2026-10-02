@@ -1,0 +1,133 @@
+{{ define "content" }}
+
+{{ with .TeamBean }}
+<ol class="breadcrumb">
+	<li><a href="/v1/">大堂</a></li>
+	<li><a href="/v1/team/detail?uuid={{ .Team.Uuid }}">{{ .Team.Name }}</a></li>
+	<li class="active">服务项目管理</li>
+</ol>
+
+<h3>服务项目管理</h3>
+<p><a href="/v1/team/service_offerings/unpublished?uuid={{ .Team.Uuid }}">查看已下架项目</a></p>
+
+{{ if $.IsManager }}
+<div class="panel panel-default">
+	<div class="panel-heading"><strong>{{ if $.Editing }}编辑服务项目{{ else }}创建服务项目{{ end }}</strong></div>
+	<div class="panel-body">
+		<form method="post" action="/v1/team/service_offerings" class="form-horizontal">
+			<input type="hidden" name="uuid" value="{{ .Team.Uuid }}">
+			{{ if $.Editing }}<input type="hidden" name="action" value="update"><input type="hidden" name="offering_uuid" value="{{ $.Editing.Uuid }}">{{ else }}<input type="hidden" name="action" value="create">{{ end }}
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="offering-name">项目名称 *</label>
+				<div class="col-sm-10"><input class="form-control" id="offering-name" name="name" required maxlength="255" value="{{ if $.Editing }}{{ $.Editing.Name }}{{ end }}"></div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="offering-summary">项目简介</label>
+				<div class="col-sm-10"><textarea class="form-control" id="offering-summary" name="summary" rows="2" maxlength="500">{{ if $.Editing }}{{ $.Editing.Summary }}{{ end }}</textarea></div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="offering-description">详细描述</label>
+				<div class="col-sm-10"><textarea class="form-control" id="offering-description" name="description" rows="4">{{ if $.Editing }}{{ $.Editing.Description }}{{ end }}</textarea></div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="offering-problem">解决的问题</label>
+				<div class="col-sm-10"><textarea class="form-control" id="offering-problem" name="target_problem" rows="2">{{ if $.Editing }}{{ $.Editing.TargetProblem }}{{ end }}</textarea></div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="offering-deliverables">交付物</label>
+				<div class="col-sm-10"><textarea class="form-control" id="offering-deliverables" name="deliverables" rows="2">{{ if $.Editing }}{{ $.Editing.Deliverables }}{{ end }}</textarea></div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="offering-requirements">需求方配合条件</label>
+				<div class="col-sm-10"><textarea class="form-control" id="offering-requirements" name="requirements" rows="2">{{ if $.Editing }}{{ $.Editing.Requirements }}{{ end }}</textarea></div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="offering-minutes">预计耗时（分钟）</label>
+				<div class="col-sm-10"><input class="form-control" id="offering-minutes" name="estimated_minutes" type="number" min="0" value="{{ if $.Editing }}{{ $.Editing.EstimatedMinutes }}{{ else }}0{{ end }}"></div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label" for="offering-price">价格（毫克星茶）</label>
+				<div class="col-sm-10"><input class="form-control" id="offering-price" name="price_milligrams" type="number" min="0" step="1" value="{{ if $.Editing }}{{ $.Editing.PriceMilligrams }}{{ else }}0{{ end }}"></div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-10">
+					<button class="btn btn-primary" type="submit">{{ if $.Editing }}保存修改{{ else }}创建草稿{{ end }}</button>
+					{{ if $.Editing }} <a class="btn btn-default" href="/v1/team/service_offerings?uuid={{ .Team.Uuid }}">取消编辑</a>{{ end }}
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+{{ end }}
+
+<h4>项目列表</h4>
+{{ if $.Offerings }}
+{{ range $.Offerings }}
+<div class="panel panel-default">
+	<div class="panel-heading">
+		<strong>{{ .Name }}</strong>
+		<span class="label label-default">{{ .Status.StatusString }}</span>
+		{{ if and $.IsManager .IsEditable }}<a class="pull-right" href="/v1/team/service_offerings?uuid={{ $.TeamBean.Team.Uuid }}&offering_uuid={{ .Uuid }}">编辑</a>{{ end }}
+	</div>
+	<div class="panel-body">
+		{{ if .Summary }}<p>{{ .Summary }}</p>{{ end }}
+		{{ if .Description }}<p>{{ .Description }}</p>{{ end }}
+		<p class="text-muted">{{ .PriceDisplay }}，预计{{ .EstimatedDurationDisplay }}，接单状态：{{ .Availability.AvailabilityString }}</p>
+
+		{{ if or $.IsManager (and $.IsVerifier (eq .Status 2)) }}
+		<div class="btn-group">
+			{{ if and $.IsManager (or (eq .Status 1) (or (eq .Status 5) (eq .Status 6))) }}
+			<form method="post" action="/v1/team/service_offerings" style="display:inline">
+				<input type="hidden" name="uuid" value="{{ $.TeamBean.Team.Uuid }}"><input type="hidden" name="offering_uuid" value="{{ .Uuid }}">
+				<button class="btn btn-default" type="submit" name="action" value="submit">提交审核</button>
+			</form>
+			{{ end }}
+			{{ if and $.IsVerifier (eq .Status 2) }}
+			<form method="post" action="/v1/team/service_offerings" style="display:inline">
+				<input type="hidden" name="uuid" value="{{ $.TeamBean.Team.Uuid }}"><input type="hidden" name="offering_uuid" value="{{ .Uuid }}">
+				<button class="btn btn-success" type="submit" name="action" value="approve">审核通过并上架</button>
+			</form>
+			<form method="post" action="/v1/team/service_offerings" style="display:inline">
+				<input type="hidden" name="uuid" value="{{ $.TeamBean.Team.Uuid }}"><input type="hidden" name="offering_uuid" value="{{ .Uuid }}">
+				<input class="form-control" name="reason" placeholder="婉拒原因" required>
+				<button class="btn btn-warning" type="submit" name="action" value="reject">婉拒</button>
+			</form>
+			{{ end }}
+			{{ if and $.IsManager (eq .Status 3) }}
+			<form method="post" action="/v1/team/service_offerings" style="display:inline">
+				<input type="hidden" name="uuid" value="{{ $.TeamBean.Team.Uuid }}"><input type="hidden" name="offering_uuid" value="{{ .Uuid }}">
+				<input class="form-control" name="reason" placeholder="暂停原因" required>
+				<button class="btn btn-warning" type="submit" name="action" value="pause">暂停接单</button>
+			</form>
+			<form method="post" action="/v1/team/service_offerings" style="display:inline">
+				<input type="hidden" name="uuid" value="{{ $.TeamBean.Team.Uuid }}"><input type="hidden" name="offering_uuid" value="{{ .Uuid }}">
+				<input class="form-control" name="reason" placeholder="下架原因" required>
+				<button class="btn btn-default" type="submit" name="action" value="unpublish">下架</button>
+			</form>
+			{{ end }}
+			{{ if and $.IsManager (eq .Status 4) }}
+			<form method="post" action="/v1/team/service_offerings" style="display:inline">
+				<input type="hidden" name="uuid" value="{{ $.TeamBean.Team.Uuid }}"><input type="hidden" name="offering_uuid" value="{{ .Uuid }}">
+				<button class="btn btn-success" type="submit" name="action" value="resume">恢复接单</button>
+				<input class="form-control" name="reason" placeholder="下架原因">
+				<button class="btn btn-default" type="submit" name="action" value="unpublish">下架</button>
+			</form>
+			{{ end }}
+			{{ if and $.IsManager (ne .Status 7) }}
+			<form method="post" action="/v1/team/service_offerings" style="display:inline">
+				<input type="hidden" name="uuid" value="{{ $.TeamBean.Team.Uuid }}"><input type="hidden" name="offering_uuid" value="{{ .Uuid }}">
+				<input class="form-control" name="reason" placeholder="废止原因" required>
+				<button class="btn btn-danger" type="submit" name="action" value="retire">废止</button>
+			</form>
+			{{ end }}
+		</div>
+		{{ end }}
+	</div>
+</div>
+{{ end }}
+{{ else }}
+<p class="text-muted">暂无服务项目</p>
+{{ end }}
+{{ end }}
+
+{{ end }}

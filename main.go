@@ -104,6 +104,7 @@ func main() {
 
 	// 团队服务项目
 	mux.HandleFunc("/v1/team/service_offerings/unpublished", route.TeamUnpublishedServiceOfferings)
+	mux.HandleFunc("/v1/team/service_offerings", route.TeamServiceOfferings)
 
 	// 茶友个人与团队关系
 	mux.HandleFunc("/v1/team/default", route.SetDefaultTeam)
