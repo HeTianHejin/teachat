@@ -18,7 +18,7 @@ func HandleWorkDesk(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /v1/work-desk?team_id=xxx
+// GET /v1/work-desk?team_uuid=xxx
 // 团队工作台，展示本团参与的茶订单简要列表，按"需求方/解题方"Tab区分
 func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 	sess, err := session(r)
@@ -33,7 +33,7 @@ func WorkDeskGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	teamUuid := r.URL.Query().Get("team_id")
+	teamUuid := r.URL.Query().Get("team_uuid")
 	if teamUuid == "" {
 		report(w, s_u, "你好，茶博士失魂鱼，未能找到指定的团队。")
 		return

@@ -26,9 +26,9 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 如果有team_id参数，检查用户是否为该团队的CEO或创建人
-	teamId := r.URL.Query().Get("team_id")
-	if teamId != "" {
-		team, err := dao.GetTeamByUUID(teamId)
+	teamUuid := r.URL.Query().Get("team_uuid")
+	if teamUuid != "" {
+		team, err := dao.GetTeamByUUID(teamUuid)
 		if err != nil {
 			util.Debug("Cannot get team by uuid %v", err)
 			report(w, s_u, "你好，未能找到指定的团队。")
@@ -68,7 +68,7 @@ func NewGroupGet(w http.ResponseWriter, r *http.Request) {
 	}
 	pageData.SessUser = s_u
 	pageData.Teams = teams
-	pageData.PreSelectedTeam = teamId
+	pageData.PreSelectedTeam = teamUuid
 	pageData.IndustryTags = industryTags
 
 	generateHTML(w, &pageData, "layout", "navbar.private", "group.new")

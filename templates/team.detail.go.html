@@ -178,7 +178,7 @@
           <i class="glyphicon glyphicon-th-large"></i> 查看所属集团
         </a>
         {{ else }}
-        <a href="/v1/group/new?team_id={{ .TeamBean.Team.Id }}" class="btn btn-success">
+        <a href="/v1/group/new?team_uuid={{ .TeamBean.Team.Uuid }}" class="btn btn-success">
           <i class="glyphicon glyphicon-plus"></i> 创建集团
         </a>
         {{ end }}
@@ -266,12 +266,12 @@
             class="btn btn-sm btn-info">
             <i class="bi bi-envelope"></i> 发送纸条
           </a>
-          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Id }}&member_id={{ .Member.Id }}"
+          <a href="/v1/workbook/list?team_uuid={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-success">
             <i class="bi bi-book"></i> 作业本
           </a>
           {{ if $.IsVerifierTeamMember }}
-          <a href="/v1/verifier/workspace?team_id={{ $.TeamBean.Team.Id }}&member_id={{ .Member.Id }}"
+          <a href="/v1/verifier/workspace?team_uuid={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-warning">
             <i class="bi bi-clipboard-check"></i> 见证工作间
             {{ if gt $.PendingOrderCount 0 }}
@@ -279,7 +279,7 @@
             {{ end }}
           </a>
           {{ else }}
-          <a href="/v1/work-desk?team_id={{ $.TeamBean.Team.Id }}" class="btn btn-sm btn-primary">
+          <a href="/v1/work-desk?team_uuid={{ $.TeamBean.Team.Uuid }}" class="btn btn-sm btn-primary">
             <i class="bi bi-pc-display-horizontal"></i> 工作台
           </a>
           {{ end }}
@@ -326,19 +326,19 @@
             class="btn btn-sm btn-primary">
             <i class="bi bi-envelope"></i> 发送纸条
           </a>
-          <a href="/v1/workbook/list?team_id={{ $.TeamBean.Team.Id }}&member_id={{ .Member.Id }}"
+          <a href="/v1/workbook/list?team_uuid={{ $.TeamBean.Team.Uuid }}&member_id={{ .Member.Id }}"
             class="btn btn-sm btn-success">
             <i class="bi bi-Journal-text"></i> 工作簿
           </a>
           {{ if $.IsVerifierTeamMember }}
-          <a href="/v1/verifier/workspace?team_id={{ $.TeamBean.Team.Id }}" class="btn btn-sm btn-warning">
+          <a href="/v1/verifier/workspace?team_uuid={{ $.TeamBean.Team.Uuid }}" class="btn btn-sm btn-warning">
             <i class="bi bi-clipboard-check"></i> 见证工作间
             {{ if gt $.PendingOrderCount 0 }}
             <span class="badge">{{ $.PendingOrderCount }}</span>
             {{ end }}
           </a>
           {{ else }}
-          <a href="/v1/work-desk?team_id={{ $.TeamBean.Team.Id }}" class="btn btn-sm btn-primary">
+          <a href="/v1/work-desk?team_uuid={{ $.TeamBean.Team.Uuid }}" class="btn btn-sm btn-primary">
             <i class="bi bi-pc-display-horizontal"></i> 工作台
           </a>
           {{ end }}
