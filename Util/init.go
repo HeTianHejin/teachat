@@ -122,11 +122,11 @@ func (c *Configuration) Validate() error {
 	// if c.TeamImageDir == "" {
 	// 	return errors.New("the team avatar image directory can't be empty")
 	// }
-	if c.TemplatesDir == "" {
-		return errors.New("template directory cannot be empty")
+	if c.TemplatesDir != "templates/" {
+		return errors.New("template directory must: templates/")
 	}
-	if c.TemplateExt == "" {
-		return errors.New("the template file extension cannot be empty")
+	if c.TemplateExt != ".go.html" {
+		return errors.New("the template file extension must: .go.html")
 	}
 	// if c.MaxInviteTeams == 0 {
 	// 	return errors.New("the maximum number of teams that can be invited cannot be empty")
@@ -140,8 +140,8 @@ func (c *Configuration) Validate() error {
 	// if c.MaxSurvivalTeams == 0 {
 	// 	return errors.New("the maximum number of active teams for an individual cannot be empty")
 	// }
-	if c.Static == "" {
-		return errors.New("the static file directory can't be empty")
+	if c.Static != "public" {
+		return errors.New("the static file directory must: public")
 	}
 	// if c.ThreadMaxWord == 0 {
 	// 	return errors.New("the maximum word limit for the tea discussion cannot be empty")
@@ -149,9 +149,9 @@ func (c *Configuration) Validate() error {
 	// if c.ThreadMinWord == 0 {
 	// 	return errors.New("the minimum word limit for tea discussion cannot be empty")
 	// }
-	if c.ImageExt == "" {
-		return errors.New("image file extension can't be empty")
-	}
+	// if c.ImageExt == "" {
+	// 	return errors.New("image file extension can't be empty")
+	// }
 	return nil
 }
 
