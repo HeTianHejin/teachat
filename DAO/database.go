@@ -3,43 +3,50 @@ package dao
 import (
 	"database/sql"
 	"fmt"
-	"os"
-	"path/filepath"
 	"strconv"
 	util "teachat/Util"
 	"time"
 	"uuid"
 
-	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	// "github.com/joho/godotenv"
 )
 
 /*
    涉及数据库存取操作的定义和一些方法
 */
 
-//var db *sql.DB //数据库实例
-
 // DB 数据库实例
 var DB *sql.DB
 
 func InitDB() error {
-	// 统一从 exe 所在目录读取 .env，避免双击运行时找不到配置
-	envPath := filepath.Join(util.AppDir, ".env")
-	if err := godotenv.Load(envPath); err != nil {
-		util.PrintStdout("error load .env file")
-		util.Error("load .env file: %v", err)
-	}
 
-	// 生产阶段从环境变量获取数据库配置
-	dbdriver := os.Getenv("DB_DRIVER")
-	dbhost := os.Getenv("DB_HOST")
-	dbport, _ := strconv.Atoi(os.Getenv("DB_PORT"))
-	dbuser := os.Getenv("DB_USER")
-	dbpassword := os.Getenv("DB_PASSWORD")
-	dbname := os.Getenv("DB_NAME")
-	dbsslmode := os.Getenv("DB_SSLMODE")
-	dbTimeZone := os.Getenv("DB_TIMEZONE")
+	// 开发阶段，便利go run / test 测试，直接从config.json文件获取数据库配置
+	dbhost := util.Config.DB_HOST
+	dbport := int(util.Config.DB_PORT)
+	dbuser := util.Config.DB_USER
+	dbpassword := util.Config.DB_PASSWORD
+	dbname := util.Config.DB_NAME
+	dbsslmode := util.Config.DB_SSLMODE
+	dbTimeZone := util.Config.DB_TIMEZONE
+	dbdriver := util.Config.DB_DRIVER
+
+	// 生产阶段
+	// 从 exe 所在目录读取 .env，避免windows环境下双击运行时找不到配置
+	// envPath := filepath.Join(util.AppDir, ".env")
+	// if err := godotenv.Load(envPath); err != nil {
+	// 	fmt.Println("error load .env file")
+	// 	util.Error("load .env file: %v", err)
+	// }
+	// 从环境变量获取数据库配置
+	// dbdriver := os.Getenv("DB_DRIVER")
+	// dbhost := os.Getenv("DB_HOST")
+	// dbport, _ := strconv.Atoi(os.Getenv("DB_PORT"))
+	// dbuser := os.Getenv("DB_USER")
+	// dbpassword := os.Getenv("DB_PASSWORD")
+	// dbname := os.Getenv("DB_NAME")
+	// dbsslmode := os.Getenv("DB_SSLMODE")
+	// dbTimeZone := os.Getenv("DB_TIMEZONE")
 
 	//数据库连接
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
@@ -64,8 +71,8 @@ func InitDB() error {
 	return nil
 }
 
-func Random_UUID() (uuidString string) {
-	uuidString = uuid.NewV4().String()
+func Random_UUID() (uuidV4String string) {
+	uuidV4String = uuid.NewV4().String()
 	return
 }
 

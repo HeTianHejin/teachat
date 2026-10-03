@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -17,7 +18,7 @@ import (
 func main() {
 	util.InitLogger(false, util.LevelDebug)
 
-	// 从配置文件.env读取配置参数
+	// 读取配置参数
 	if err := util.LoadConfig(); err != nil {
 		log.Fatalf("fatal! failure to load config: %v", err)
 	}
@@ -38,7 +39,10 @@ func main() {
 
 	// 静态资源处理
 	const staticPrefix = "/v1/static/"
-	staticDir := util.AbsPath(util.Config.Static)
+	// 生产阶段
+	//staticDir := util.AbsPath(util.Config.Static)
+	staticDir := util.Config.Static
+
 	if _, err := os.Stat(staticDir); os.IsNotExist(err) {
 		log.Fatalf("the static resources folder doesn't exist: %s", staticDir)
 	}
@@ -456,7 +460,7 @@ func main() {
 	}()
 	// 启动服务器
 	log.Printf("服务器启动，监听地址: %s", util.Config.Address)
-	util.PrintStdout("teachat", util.Version(), "星际茶棚一>开门迎客")
+	fmt.Println("teachat", util.Version(), "星际茶棚一>开门迎客")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("服务器启动失败: %v", err)
 	}

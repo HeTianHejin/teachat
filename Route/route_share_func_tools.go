@@ -110,9 +110,12 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 	// 手动解析模板并处理错误
 	templates, err := tmpl.ParseFiles(files...)
 	if err != nil {
-		// 添加详细的错误日志和HTTP错误响应
-		util.PrintStdout("模板解析错误: ", err)
-		http.Error(w, "*** 茶博士: 茶壶不见了，无法烧水冲茶，陛下稍安勿躁 ***", http.StatusInternalServerError)
+		fmt.Println("Template parsing error: ", err)
+		// 添加详细的错误日志
+		util.Error("template parsing: %v", err)
+
+		// HTTP错误响应
+		http.Error(w, "茶博士: 开水壶被英国人借走了，无法烧水冲茶，陛下稍等，正从美国人借微波炉。Dr. Tea: The kettle has been borrowed by the British, so we can't boil water for tea. Your Majesty, please wait a moment, We are borrowing a microwave from the Americans.", http.StatusInternalServerError)
 		return
 	}
 
@@ -122,10 +125,11 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 
 	// 执行模板渲染
 	if err = templates.ExecuteTemplate(w, "layout", template_data); err != nil {
+		fmt.Println("template rendering error: ", err)
 		// 添加详细的错误日志
-		util.PrintStdout("模板渲染错误: ", err)
+		util.Error("template rendering: %v", err)
 		// 避免在错误响应中泄露敏感信息
-		http.Error(w, "*** 茶博士: 茶壶不见了，无法烧水冲茶，陛下稍安勿躁 ***", http.StatusInternalServerError)
+		http.Error(w, "茶博士: 开水壶被英国人借走了，无法烧水冲茶，陛下稍等，正从美国人借微波炉。Dr. Tea: The kettle has been borrowed by the British, so we can't boil water for tea. Your Majesty, please wait a moment, We are borrowing a microwave from the Americans.", http.StatusInternalServerError)
 	}
 }
 
@@ -352,7 +356,7 @@ func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	// 从请求中解包出单个上传文件
 	file, fileHeader, err := r.FormFile("avatar")
 	if err != nil {
-		util.Debug("avatar upload formFile error: %v", err)
+		util.Error("avatar upload formFile error: %v", err)
 		return errors.New("获取头像文件失败，请稍后再试。")
 	}
 	// 确保文件在函数执行完毕后关闭
@@ -361,17 +365,17 @@ func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	// 获取文件大小，注意：客户端提供的文件大小可能不准确
 	size := fileHeader.Size
 	if size > 30*1024 {
-		util.Debug("avatar upload file size over 30kb,error: %v", err)
+		util.Error("avatar upload file size over 30kb,error: %v", err)
 		return errors.New("文件大小超过30kb,茶博士接不住。")
 	}
 	// 实际读取文件大小进行校验，以防止客户端伪造
 	fileBytes, err := io.ReadAll(file)
 	if err != nil {
-		util.Debug("avatar upload read file error: %v", err)
+		util.Error("avatar upload read file error: %v", err)
 		return errors.New("读取头像文件失败，请稍后再试。")
 	}
 	if len(fileBytes) > 30*1024 {
-		util.Debug("avatar upload file size over 30kb,error: %v", err)
+		util.Error("avatar upload file size over 30kb,error: %v", err)
 		return errors.New("文件大小超过30kb,茶博士接不住。")
 	}
 
@@ -379,7 +383,7 @@ func saveUploadAvatar(r *http.Request, uuid, avatarType string) error {
 	filename := fileHeader.Filename
 	ext := strings.ToLower(path.Ext(filename))
 	if ext != ".jpeg" && ext != ".jpg" {
-		util.Debug("avatar upload file ext error: %v", err)
+		util.Error("avatar upload file ext error: %v", err)
 		return errors.New("注意头像图片文件类型, 目前仅限jpeg格式图片上传。")
 	}
 
