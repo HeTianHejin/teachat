@@ -1,0 +1,81 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li><a href="/v1/verifier/workspace?tab=services">见证工作间 · 服务项目</a></li>
+  <li class="active">服务项目审核</li>
+</ol>
+
+<div class="page-header">
+  <h1><i class="bi bi-clipboard-check"></i> {{ .Offering.Name }}</h1>
+  <p class="lead">{{ .Team.Name }} · {{ .Offering.Status.StatusString }}</p>
+</div>
+
+<dl class="dl-horizontal">
+  <dt>项目简介</dt><dd>{{ if .Offering.Summary }}{{ .Offering.Summary }}{{ else }}-{{ end }}</dd>
+  <dt>详细描述</dt><dd>{{ if .Offering.Description }}{{ .Offering.Description }}{{ else }}-{{ end }}</dd>
+  <dt>解决的问题</dt><dd>{{ if .Offering.TargetProblem }}{{ .Offering.TargetProblem }}{{ else }}-{{ end }}</dd>
+  <dt>交付物</dt><dd>{{ if .Offering.Deliverables }}{{ .Offering.Deliverables }}{{ else }}-{{ end }}</dd>
+  <dt>需求方配合条件</dt><dd>{{ if .Offering.Requirements }}{{ .Offering.Requirements }}{{ else }}-{{ end }}</dd>
+  <dt>预计耗时</dt><dd>{{ .Offering.EstimatedDurationDisplay }}</dd>
+  <dt>服务价格</dt><dd>{{ .Offering.PriceDisplay }}</dd>
+  <dt>登记人</dt><dd>ID: {{ .Offering.RecorderUserId }}</dd>
+  <dt>创建时间</dt><dd>{{ .Offering.CreatedDateTime }}</dd>
+</dl>
+
+<div class="panel panel-default">
+  <div class="panel-heading"><strong>团队技能依据</strong></div>
+  <div class="panel-body">
+    {{ if .Skills }}
+    <ul class="list-unstyled">
+      {{ range .Skills }}<li>{{ if .IsPrimary }}<i class="bi bi-star-fill"></i> {{ end }}{{ .Name }}，要求等级 {{ .Level }}</li>{{ end }}
+    </ul>
+    {{ else }}<p class="text-muted">未关联技能依据</p>{{ end }}
+  </div>
+</div>
+
+{{ if .IsPending }}
+<div class="panel panel-success">
+  <div class="panel-heading"><strong>审核决定</strong></div>
+  <div class="panel-body">
+    <form method="post" action="/v1/verifier/service-offering/review" class="form-inline">
+      <input type="hidden" name="uuid" value="{{ .Offering.Uuid }}">
+      <button class="btn btn-success" type="submit" name="action" value="approve"><i class="bi bi-check-circle"></i> 通过并上架</button>
+    </form>
+    <form method="post" action="/v1/verifier/service-offering/review" style="margin-top: 12px;">
+      <input type="hidden" name="uuid" value="{{ .Offering.Uuid }}">
+      <div class="form-group" style="width: 100%;">
+        <label for="reject-reason">婉拒原因</label>
+        <textarea class="form-control" id="reject-reason" name="reason" rows="3" required maxlength="2000" style="width: 100%;"></textarea>
+      </div>
+      <button class="btn btn-warning" type="submit" name="action" value="reject"><i class="bi bi-x-circle"></i> 婉拒</button>
+    </form>
+  </div>
+</div>
+{{ end }}
+
+<div class="panel panel-default">
+  <div class="panel-heading"><strong>生命周期记录</strong></div>
+  <div class="panel-body">
+    {{ if .Events }}
+    <table class="table table-striped">
+      <thead><tr><th>操作</th><th>状态变化</th><th>原因</th><th>操作人</th><th>时间</th></tr></thead>
+      <tbody>
+        {{ range .Events }}
+        <tr>
+          <td>{{ .Action }}</td>
+          <td>{{ .FromStatus.StatusString }} → {{ .ToStatus.StatusString }}</td>
+          <td>{{ .Reason }}</td>
+          <td>ID: {{ .OperatorUserId }}</td>
+          <td>{{ .CreatedAt.Format "2006-01-02 15:04:05" }}</td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+    {{ else }}<p class="text-muted">暂无生命周期记录</p>{{ end }}
+  </div>
+</div>
+
+<a class="btn btn-default" href="/v1/verifier/workspace?tab=services"><i class="bi bi-arrow-left"></i> 返回服务项目列表</a>
+
+{{ end }}

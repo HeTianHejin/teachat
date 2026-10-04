@@ -323,7 +323,9 @@ func main() {
 	mux.HandleFunc("/v1/balance/fairnessmug", route.FairnessMug)
 
 	// 见证者工作间路由
-	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace)        // 见证者工作间页面
+	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace) // 见证者工作间页面
+	mux.HandleFunc("/v1/verifier/service-offering/detail", route.HandleVerifierServiceOfferingDetail)
+	mux.HandleFunc("/v1/verifier/service-offering/review", route.HandleVerifierServiceOfferingReview)
 	mux.HandleFunc("/v1/verifier/order/approve", route.HandleVerifierOrderApprove) // 审批茶订单
 	mux.HandleFunc("/v1/verifier/order/reject", route.HandleVerifierOrderReject)   // 拒绝茶订单
 	mux.HandleFunc("/v1/verifier/order/forfeit", route.HandleVerifierOrderForfeit) // 罚没茶订单（恶意/不道德内容）

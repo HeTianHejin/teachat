@@ -31,8 +31,9 @@ type TeamServiceOffering struct {
 	PriceMilligrams  int64  //价格，单位毫克（星茶），1克=1000毫克
 	Status           TeamServiceOfferingStatus
 	Availability     TeamServiceOfferingAvailability
-	CurrentVersionId int //当前在架版本ID，未上架为0
-	ApprovedBy       int //审核人（见证者团队成员）用户ID，未审核为0
+	TeamName         string //查询展示用，不落库
+	CurrentVersionId int    //当前在架版本ID，未上架为0
+	ApprovedBy       int    //审核人（见证者团队成员）用户ID，未审核为0
 	ApprovedAt       *time.Time
 	RecorderUserId   int //登记人用户ID
 	CreatedAt        time.Time
@@ -224,12 +225,15 @@ const serviceOfferingColumns = `id, uuid, team_id, name, summary, description, t
 // scanTeamServiceOffering 按 serviceOfferingColumns 的顺序扫描一行
 func scanTeamServiceOffering(row interface {
 	Scan(dest ...interface{}) error
-}, tso *TeamServiceOffering) error {
-	return row.Scan(
+}, tso *TeamServiceOffering, extraDest ...interface{}) error {
+	dest := []interface{}{
 		&tso.Id, &tso.Uuid, &tso.TeamId, &tso.Name, &tso.Summary, &tso.Description, &tso.TargetProblem,
 		&tso.Deliverables, &tso.Requirements, &tso.EstimatedMinutes, &tso.PriceMilligrams, &tso.Status,
 		&tso.Availability, &tso.CurrentVersionId, &tso.ApprovedBy, &tso.ApprovedAt, &tso.RecorderUserId,
-		&tso.CreatedAt, &tso.UpdatedAt, &tso.PublishedAt, &tso.UnpublishedAt, &tso.RetiredAt, &tso.DeletedAt)
+		&tso.CreatedAt, &tso.UpdatedAt, &tso.PublishedAt, &tso.UnpublishedAt, &tso.RetiredAt, &tso.DeletedAt,
+	}
+	dest = append(dest, extraDest...)
+	return row.Scan(dest...)
 }
 
 // ============================================
@@ -693,6 +697,51 @@ func GetTeamServiceOfferingsByTeamId(teamId int, onlyPublished bool, ctx context
 // GetPublishedTeamServiceOfferingsByTeamId 获取团队已上架的服务项目列表
 func GetPublishedTeamServiceOfferingsByTeamId(teamId int, ctx context.Context) ([]*TeamServiceOffering, error) {
 	return GetTeamServiceOfferingsByTeamId(teamId, true, ctx)
+}
+
+// GetPendingTeamServiceOfferings 获取全局待审核服务项目列表，按提交时间分页。
+func GetPendingTeamServiceOfferings(ctx context.Context, page, pageSize int) ([]*TeamServiceOffering, error) {
+	if page < 0 {
+		page = 0
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT o.*, t.name FROM (
+		SELECT ` + serviceOfferingColumns + ` FROM team_service_offerings
+		WHERE status = $1 AND deleted_at IS NULL
+		ORDER BY created_at ASC, id ASC LIMIT $2 OFFSET $3
+	) o JOIN teams t ON t.id = o.team_id
+	ORDER BY o.created_at ASC, o.id ASC`
+	rows, err := DB.QueryContext(ctx, statement, PendingTeamServiceOfferingStatus, pageSize, page*pageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	offerings := make([]*TeamServiceOffering, 0)
+	for rows.Next() {
+		offering := &TeamServiceOffering{}
+		if err = scanTeamServiceOffering(rows, offering, &offering.TeamName); err != nil {
+			return nil, err
+		}
+		offerings = append(offerings, offering)
+	}
+	return offerings, rows.Err()
+}
+
+// CountPendingTeamServiceOfferings 获取全局待审核服务项目数量。
+func CountPendingTeamServiceOfferings(ctx context.Context) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	var count int
+	err := DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM team_service_offerings
+		WHERE status = $1 AND deleted_at IS NULL`, PendingTeamServiceOfferingStatus).Scan(&count)
+	return count, err
 }
 
 // CountTeamServiceOfferingsByTeamIdAndStatus 统计团队指定状态的服务项目数量

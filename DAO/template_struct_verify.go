@@ -1,16 +1,24 @@
 package dao
 
 type VerifierWorkspagePageData struct {
-	SessUser            User
-	PendingOrders       []*TeaOrderBean
-	ActiveOrders        []*TeaOrderBean
-	CancelledOrders     []*TeaOrderBean
-	CompletedOrders     []*TeaOrderBean
-	PendingOrderCount   int
-	ActiveOrderCount    int
-	PauseOrderCount     int
-	CancelledOrderCount int
-	CompletedOrderCount int
+	SessUser                    User
+	PendingOrders               []*TeaOrderBean
+	ActiveOrders                []*TeaOrderBean
+	CancelledOrders             []*TeaOrderBean
+	CompletedOrders             []*TeaOrderBean
+	PendingServiceOfferings     []*TeamServiceOffering
+	PendingServiceOfferingCount int
+	ActiveWorkspaceTab          string
+	ServicePage                 int
+	PreviousServicePage         int
+	HasPreviousServicePage      bool
+	HasNextServicePage          bool
+	NextServicePage             int
+	PendingOrderCount           int
+	ActiveOrderCount            int
+	PauseOrderCount             int
+	CancelledOrderCount         int
+	CompletedOrderCount         int
 }
 type TeaOrderBean struct {
 	TeaOrder         *TeaOrder

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+	"strconv"
 	dao "teachat/DAO"
 	util "teachat/Util"
 	"time"
@@ -41,6 +42,34 @@ func VerifierWorkspaceGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	ctx := r.Context()
+	activeWorkspaceTab := r.URL.Query().Get("tab")
+	if activeWorkspaceTab != "services" {
+		activeWorkspaceTab = "orders"
+	}
+	servicePage := 0
+	if pageValue, parseErr := strconv.Atoi(r.URL.Query().Get("service_page")); parseErr == nil && pageValue > 0 {
+		servicePage = pageValue
+	}
+	const servicePageSize = 20
+	pendingServiceOfferingCount, err := dao.CountPendingTeamServiceOfferings(ctx)
+	if err != nil {
+		util.Debug("Cannot get pending service offering count %v", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取待审核服务项目数量。请稍后再试。")
+		return
+	}
+	maxServicePage := 0
+	if pendingServiceOfferingCount > 0 {
+		maxServicePage = (pendingServiceOfferingCount - 1) / servicePageSize
+	}
+	if servicePage > maxServicePage {
+		servicePage = maxServicePage
+	}
+	pendingServiceOfferings, err := dao.GetPendingTeamServiceOfferings(ctx, servicePage, servicePageSize)
+	if err != nil {
+		util.Debug("Cannot get pending service offerings %v", err)
+		report(w, s_u, "你好，茶博士失魂鱼，未能获取待审核服务项目。请稍后再试。")
+		return
+	}
 
 	// 获取各状态的茶订单数量
 	pendingCount, err := dao.GetTeaOrderCountByStatus(ctx, dao.TeaOrderStatusPending)
@@ -138,16 +167,24 @@ func VerifierWorkspaceGet(w http.ResponseWriter, r *http.Request) {
 
 	// 准备页面数据
 	pageData := dao.VerifierWorkspagePageData{
-		SessUser:            s_u,
-		PendingOrders:       pendingOrderBeans,
-		ActiveOrders:        activeOrderBeans,
-		CancelledOrders:     cancelledOrderBeans,
-		CompletedOrders:     completedOrderBeans,
-		PendingOrderCount:   pendingCount,
-		ActiveOrderCount:    activeCount,
-		PauseOrderCount:     pauseCount,
-		CancelledOrderCount: cancelledCount,
-		CompletedOrderCount: completedCount,
+		SessUser:                    s_u,
+		PendingOrders:               pendingOrderBeans,
+		ActiveOrders:                activeOrderBeans,
+		CancelledOrders:             cancelledOrderBeans,
+		CompletedOrders:             completedOrderBeans,
+		PendingServiceOfferings:     pendingServiceOfferings,
+		PendingServiceOfferingCount: pendingServiceOfferingCount,
+		ActiveWorkspaceTab:          activeWorkspaceTab,
+		ServicePage:                 servicePage,
+		PreviousServicePage:         servicePage - 1,
+		HasPreviousServicePage:      servicePage > 0,
+		HasNextServicePage:          (servicePage+1)*servicePageSize < pendingServiceOfferingCount,
+		NextServicePage:             servicePage + 1,
+		PendingOrderCount:           pendingCount,
+		ActiveOrderCount:            activeCount,
+		PauseOrderCount:             pauseCount,
+		CancelledOrderCount:         cancelledCount,
+		CompletedOrderCount:         completedCount,
 	}
 
 	// 渲染页面

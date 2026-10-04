@@ -13,6 +13,38 @@
   <p class="lead">作为见证者团队成员，您可以审批、监督和管理茶订单活动。</p>
 </div>
 
+<ul class="nav nav-tabs" id="workspaceTabs">
+  <li {{ if ne .ActiveWorkspaceTab "services" }}class="active"{{ end }}><a href="/v1/verifier/workspace?tab=orders">茶订单</a></li>
+  <li {{ if eq .ActiveWorkspaceTab "services" }}class="active"{{ end }}><a href="/v1/verifier/workspace?tab=services" id="servicesTab">服务项目 {{ if gt .PendingServiceOfferingCount 0 }}<span class="badge">{{ .PendingServiceOfferingCount }}</span>{{ end }}</a></li>
+</ul>
+
+{{ if eq .ActiveWorkspaceTab "services" }}
+<div class="tab-content" style="padding-top: 15px;">
+  {{ if .PendingServiceOfferings }}
+  {{ range .PendingServiceOfferings }}
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <strong>{{ .Name }}</strong>
+      <span class="label label-warning">待审核</span>
+    </div>
+    <div class="panel-body">
+      <p><strong>所属团队：</strong>{{ .TeamName }}</p>
+      {{ if .Summary }}<p>{{ .Summary }}</p>{{ end }}
+      <p class="text-muted">{{ .PriceDisplay }}，预计{{ .EstimatedDurationDisplay }}，提交于 {{ .CreatedDateTime }}</p>
+      <div class="text-right"><a class="btn btn-info btn-sm" href="/v1/verifier/service-offering/detail?uuid={{ .Uuid }}">查看详情并处理</a></div>
+    </div>
+  </div>
+  {{ end }}
+  {{ else }}
+  <div class="alert alert-info"><i class="bi-info-circle"></i> 暂无待审核的服务项目。</div>
+  {{ end }}
+  <div class="clearfix">
+    {{ if .HasPreviousServicePage }}<a class="btn btn-default pull-left" href="/v1/verifier/workspace?tab=services&amp;service_page={{ .PreviousServicePage }}">上一页</a>{{ end }}
+    {{ if .HasNextServicePage }}<a class="btn btn-default pull-right" href="/v1/verifier/workspace?tab=services&amp;service_page={{ .NextServicePage }}">下一页</a>{{ end }}
+  </div>
+</div>
+{{ else }}
+
 <!-- 快速操作区 -->
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -166,5 +198,7 @@ $(document).ready(function() {
   });
 });
 </script>
+
+{{ end }}
 
 {{ end }}
