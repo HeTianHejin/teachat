@@ -434,11 +434,11 @@ func main() {
 	// 	defer ticker.Stop()
 
 	// 	for range ticker.C {
-	// 		log.Println("开始处理过期转账...")
+	// 		log.Println("开始处理过期转账...start processing expired transfers...")
 	// 		if err := route.ProcessExpiredTransfersJob(); err != nil {
-	// 			log.Printf("处理过期转账失败: %v", err)
+	// 			log.Printf("处理过期转账失败, start processing expired transfers: %v", err)
 	// 		} else {
-	// 			log.Println("过期转账处理完成")
+	// 			log.Println("过期转账处理完成, expired transfer has been processed")
 	// 		}
 	// 	}
 	// }()
@@ -449,23 +449,23 @@ func main() {
 
 	go func() {
 		<-quit
-		log.Println("接收到关闭信号，正在停止服务器...")
+		log.Println("received shutdown signal, stopping the teachat server...")
 
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {
-			log.Fatalf("服务器强制关闭: %v", err)
+			log.Fatalf("服务器强制关闭，teachat app was forcibly shut down: %v", err)
 		} else {
-			log.Println("服务器已优雅停止")
+			log.Println("服务器已优雅停止，teachat app has been gracefully stopped")
 		}
 	}()
 	// 启动服务器
-	log.Printf("服务器启动，监听地址: %s", util.Config.Address)
-	fmt.Println("teachat", util.Version(), "星际茶棚一>开门迎客")
+	log.Printf("服务器启动，监听地址，teachat server started, listening on address: %s", util.Config.Address)
+	fmt.Println("teachat", util.Version(), "星际茶棚，开门迎客 Interstellar Tea House, open for business")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("服务器启动失败: %v", err)
+		log.Fatalf("teachat server failed to start: %v", err)
 	}
-	log.Println("服务器已停止")
-	log.Println("星际茶棚 --> 打烊休息")
+	log.Println("teachat app has stopped running")
+	log.Println("星际茶棚，打烊休息 Interstellar Tea House, closed for the day")
 }
