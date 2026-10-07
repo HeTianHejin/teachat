@@ -79,7 +79,7 @@ func GetTeam(teamID int) (Team, error) {
 	// defer cancel()
 
 	const query = `SELECT id, uuid, name, mission, founder_id, 
-                  created_at, class, nature, abbreviation, logo, is_private, updated_at, deleted_at, tags 
+                  created_at, class, nature, abbreviation, logo, is_private, updated_at, deleted_at, tags, primary_industry_tag_id, industry_path 
                   FROM teams WHERE id = $1`
 
 	var team Team
@@ -87,6 +87,7 @@ func GetTeam(teamID int) (Team, error) {
 		&team.Id, &team.Uuid, &team.Name, &team.Mission,
 		&team.FounderId, &team.CreatedAt, &team.Class, &team.Nature,
 		&team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags,
+		&team.PrimaryIndustryTagID, &team.IndustryPath,
 	)
 
 	if err != nil {
@@ -106,7 +107,7 @@ func GetTeamsByIds(teamIDs []int) ([]Team, error) {
 	}
 
 	query := `SELECT id, uuid, name, mission, founder_id, created_at, class, nature,
-	          abbreviation, logo, is_private, updated_at, deleted_at, tags 
+	          abbreviation, logo, is_private, updated_at, deleted_at, tags, primary_industry_tag_id, industry_path 
 	          FROM teams WHERE id = ANY($1) AND deleted_at IS NULL`
 
 	rows, err := DB.Query(query, teamIDs)
@@ -120,7 +121,7 @@ func GetTeamsByIds(teamIDs []int) ([]Team, error) {
 		var team Team
 		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission,
 			&team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation,
-			&team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags); err != nil {
+			&team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return nil, err
 		}
 		teams = append(teams, team)
@@ -163,11 +164,29 @@ type Team struct {
 	Nature       int    // 团队性质：0-未知/特殊，1-职业，2-业余
 	Abbreviation string // 队名简称
 	Logo         string // $事业茶团标志
-	Tags         string // 分类标签，逗号分隔，如"诗词书法,文化艺术"
+	Tags         string // 分类标签；业余团队=用户自由填写（逗号分隔），职业团队=系统按行业代码生成的展示快照
 	IsPrivate    bool   // 是否私密：true-私密团队（不公开但可接收通知），false-公开团队
-	CreatedAt    time.Time
-	UpdatedAt    *time.Time
-	DeletedAt    *time.Time // 软删除时间戳，NULL表示未删除
+
+	// 行业分类（职业团队专用，参考《国民经济行业分类》）
+	PrimaryIndustryTagID int    // 主行业标签 id（industry_tags.id）；0 表示未设置，即业余团队
+	IndustryPath         string // 行业代码路径，如 "C/C13"，用于按 code 前缀上卷搜索
+
+	CreatedAt time.Time
+	UpdatedAt *time.Time
+	DeletedAt *time.Time // 软删除时间戳，NULL表示未删除
+}
+
+// teamSelectColumns teams 表标准查询列，顺序与 scanTeam 一致
+const teamSelectColumns = "id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, deleted_at, tags, primary_industry_tag_id, industry_path"
+
+// scanTeam 按 teamSelectColumns 的顺序扫描一行 teams 记录
+func scanTeam(scanner interface{ Scan(dest ...any) error }) (Team, error) {
+	var team Team
+	err := scanner.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId,
+		&team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo,
+		&team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags,
+		&team.PrimaryIndustryTagID, &team.IndustryPath)
+	return team, err
 }
 
 // 某个team加入某个group记录
@@ -629,13 +648,13 @@ func SearchTeamByAbbreviation(keyword string, limit int, ctx context.Context) ([
 	defer cancel()
 
 	teams := []Team{}
-	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, deleted_at, tags FROM teams WHERE abbreviation LIKE $1 AND deleted_at IS NULL AND is_private = false LIMIT $2", "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, "SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, deleted_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE abbreviation LIKE $1 AND deleted_at IS NULL AND is_private = false LIMIT $2", "%"+keyword+"%", limit)
 	if err != nil {
 		return teams, err
 	}
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return teams, err
 		}
 		teams = append(teams, team)
@@ -662,7 +681,7 @@ func (udteam *UserDefaultTeam) Create() (err error) {
 // GetLastDefaultTeam() 根据user.Id从user_default_teams表和teams表，获取用户最后记录的1个team
 func (user *User) GetLastDefaultTeam() (team Team, err error) {
 	team = Team{}
-	err = DB.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 AND teams.deleted_at IS NULL ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags, teams.primary_industry_tag_id, teams.industry_path FROM teams JOIN user_default_teams ON teams.id = user_default_teams.team_id WHERE user_default_teams.user_id = $1 AND teams.deleted_at IS NULL ORDER BY user_default_teams.created_at DESC", user.Id).Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	return
 }
 
@@ -679,7 +698,7 @@ func GetUserSurvivalTeams(user_id int, ctx context.Context) ([]Team, error) {
 	defer cancel()
 
 	query := `
-        SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags
+        SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags, teams.primary_industry_tag_id, teams.industry_path
         FROM teams
         JOIN team_members ON teams.id = team_members.team_id
         WHERE team_members.user_id = $1 AND team_members.status = $2 AND teams.deleted_at IS NULL`
@@ -696,7 +715,7 @@ func GetUserSurvivalTeams(user_id int, ctx context.Context) ([]Team, error) {
 
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return nil, err
 		}
 		teams = append(teams, team)
@@ -771,13 +790,13 @@ func GetUserAllProfessionalTeamsId(user_id int) (team_ids []int, err error) {
 // 获取用户创建的全部$事业茶团，FounderId = UserId
 // AWS CodeWhisperer assist in writing
 func (user *User) HoldTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE founder_id = $1 AND deleted_at IS NULL", user.Id)
+	rows, err := DB.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE founder_id = $1 AND deleted_at IS NULL", user.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return
 		}
 		teams = append(teams, team)
@@ -792,13 +811,13 @@ func (user *User) HoldTeams() (teams []Team, err error) {
 // 用户担任CEO的$事业茶团，team_member.role = 1
 // AWS CodeWhisperer assist in writing
 func (user *User) CeoTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = $2 AND teams.deleted_at IS NULL", user.Id, RoleCEO)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags, teams.primary_industry_tag_id, teams.industry_path FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = $2 AND teams.deleted_at IS NULL", user.Id, RoleCEO)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return
 		}
 		teams = append(teams, team)
@@ -812,13 +831,13 @@ func (user *User) CeoTeams() (teams []Team, err error) {
 
 // user.FounderTeams() 用户创建的全部$事业茶团，team.FounderId = user.Id, return teams []team
 func (usre *User) FounderTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams WHERE teams.founder_id = $1 AND teams.deleted_at IS NULL", usre.Id)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags, teams.primary_industry_tag_id, teams.industry_path FROM teams WHERE teams.founder_id = $1 AND teams.deleted_at IS NULL", usre.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return
 		}
 		teams = append(teams, team)
@@ -834,13 +853,13 @@ func (usre *User) FounderTeams() (teams []Team, err error) {
 // 用户担任核心高管成员的全部$事业茶团，team_member.role in (1,2,3,4)
 // AWS CodeWhisperer assist in writing
 func (user *User) CoreExecTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role IN ($2, $3, $4, $5) AND teams.deleted_at IS NULL", user.Id, RoleCEO, RoleCTO, RoleCMO, RoleCFO)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags, teams.primary_industry_tag_id, teams.industry_path FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role IN ($2, $3, $4, $5) AND teams.deleted_at IS NULL", user.Id, RoleCEO, RoleCTO, RoleCMO, RoleCFO)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return
 		}
 		teams = append(teams, team)
@@ -855,13 +874,13 @@ func (user *User) CoreExecTeams() (teams []Team, err error) {
 // 用户作为普通成员的全部$事业茶团，team_member.role = 5
 // AWS CodeWhisperer assist in writing
 func (user *User) NormalExecTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = $2 AND teams.deleted_at IS NULL", user.Id, RoleTaster)
+	rows, err := DB.Query("SELECT teams.id, teams.uuid, teams.name, teams.mission, teams.founder_id, teams.created_at, teams.class, teams.nature, teams.abbreviation, teams.logo, teams.is_private, teams.updated_at, teams.tags, teams.primary_industry_tag_id, teams.industry_path FROM teams, team_members WHERE team_members.user_id = $1 AND team_members.team_id = teams.id AND team_members.role = $2 AND teams.deleted_at IS NULL", user.Id, RoleTaster)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return
 		}
 		teams = append(teams, team)
@@ -894,8 +913,8 @@ func (team *Team) Create() (err error) {
 // AWS CodeWhisperer assist in writing
 func (invitation *Invitation) Team() (team Team, err error) {
 	team = Team{}
-	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", invitation.TeamId).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE id = $1 AND deleted_at IS NULL", invitation.TeamId).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	return
 }
 
@@ -972,12 +991,12 @@ func GetTeamByID(uuid string) (team Team, err error) {
 	}
 	// 先以uuid查询，如果不存在，再以id查询
 	team = Team{}
-	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE uuid = $1 AND deleted_at IS NULL", uuid).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE uuid = $1 AND deleted_at IS NULL", uuid).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", uuid).
-				Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+			err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE id = $1 AND deleted_at IS NULL", uuid).
+				Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 		} else {
 			return team, fmt.Errorf("查询团队失败:参数: %s, %v", uuid, err)
 		}
@@ -989,8 +1008,8 @@ func GetTeamByID(uuid string) (team Team, err error) {
 func GetTeamByUUID(uuid string) (team Team, err error) {
 
 	team = Team{}
-	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE uuid = $1 AND deleted_at IS NULL", uuid).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE uuid = $1 AND deleted_at IS NULL", uuid).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	return
 }
 
@@ -999,8 +1018,8 @@ func (team *Team) Get() (err error) {
 	if team.Id == TeamIdNone {
 		return fmt.Errorf("team not found with id: %d", team.Id)
 	}
-	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", team.Id).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE id = $1 AND deleted_at IS NULL", team.Id).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	return
 }
 
@@ -1347,15 +1366,15 @@ func (teamMember *TeamMember) UpdateFirstCEO(founder_id, new_ceo_user_id int) (e
 // 根据teamMember.teamId获取Team()，返回成员所在team的信息
 func (teamMember *TeamMember) Team() (team Team, err error) {
 	team = Team{}
-	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id = $1 AND deleted_at IS NULL", teamMember.TeamId).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE id = $1 AND deleted_at IS NULL", teamMember.TeamId).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	return
 }
 
 // GetTeamByName()
 func (team *Team) GetByName() (err error) {
-	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE name = $1 AND deleted_at IS NULL", team.Name).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE name = $1 AND deleted_at IS NULL", team.Name).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	return
 }
 
@@ -1363,13 +1382,13 @@ func (team *Team) GetByName() (err error) {
 // 根据ProjectId从LicenceTeam获取[]TeamId,然后用teamId，获取对应的Team，最后返回[]team
 // 获取一个封闭式茶台的全部受邀请$事业茶团
 func (project *Project) InvitedTeams() (teams []Team, err error) {
-	rows, err := DB.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE id IN (SELECT team_id FROM project_invited_teams WHERE project_id = $1) AND deleted_at IS NULL", project.Id)
+	rows, err := DB.Query("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE id IN (SELECT team_id FROM project_invited_teams WHERE project_id = $1) AND deleted_at IS NULL", project.Id)
 	if err != nil {
 		return
 	}
 	for rows.Next() {
 		team := Team{}
-		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags); err != nil {
+		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return
 		}
 		teams = append(teams, team)
@@ -1383,16 +1402,16 @@ func (project *Project) InvitedTeams() (teams []Team, err error) {
 
 // GetTeamByAbbreviation()
 func (team *Team) GetByAbbreviation() (err error) {
-	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags FROM teams WHERE abbreviation = $1 AND deleted_at IS NULL", team.Abbreviation).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags)
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE abbreviation = $1 AND deleted_at IS NULL", team.Abbreviation).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	return
 }
 
 // GetGroupFirstTeam 根据group.first_team_id获取team
 func GetGroupFirstTeam(groupID int) (team Team, err error) {
 	team = Team{}
-	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, deleted_at, tags FROM teams WHERE id = (SELECT first_team_id FROM groups WHERE id = $1)", groupID).
-		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags)
+	err = DB.QueryRow("SELECT id, uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, is_private, updated_at, deleted_at, tags, primary_industry_tag_id, industry_path FROM teams WHERE id = (SELECT first_team_id FROM groups WHERE id = $1)", groupID).
+		Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission, &team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.DeletedAt, &team.Tags, &team.PrimaryIndustryTagID, &team.IndustryPath)
 	return
 }
 
@@ -1441,16 +1460,16 @@ func (team *Team) TeamProperty() string {
 func (team *Team) Update() error {
 	now := time.Now()
 	team.UpdatedAt = &now
-	statement := `UPDATE teams SET name = $1, mission = $2, class = $3, nature = $4,
+	statement := `UPDATE teams SET primary_industry_tag_id = $10, industry_path = $11, name = $1, mission = $2, class = $3, nature = $4,
 	              abbreviation = $5, logo = $6, tags = $7, is_private = $8, updated_at = $9 
-	              WHERE id = $10`
+	              WHERE id = $12`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
 	_, err = stmt.Exec(team.Name, team.Mission, team.Class, team.Nature, team.Abbreviation,
-		team.Logo, team.Tags, team.IsPrivate, now, team.Id)
+		team.Logo, team.Tags, team.IsPrivate, now, team.PrimaryIndustryTagID, team.IndustryPath, team.Id)
 	return err
 }
 
@@ -1528,7 +1547,7 @@ func (team *Team) UpdateIsPrivate() (err error) {
 
 // CreateWithTx 在事务中创建$事业茶团
 func (team *Team) CreateWithTx(tx *sql.Tx) (err error) {
-	err = tx.QueryRow("INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, tags, is_private) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING id, uuid", Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Nature, team.Abbreviation, team.Logo, team.Tags, team.IsPrivate).Scan(&team.Id, &team.Uuid)
+	err = tx.QueryRow("INSERT INTO teams (uuid, name, mission, founder_id, created_at, class, nature, abbreviation, logo, tags, is_private, primary_industry_tag_id, industry_path) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id, uuid", Random_UUID(), team.Name, team.Mission, team.FounderId, time.Now(), team.Class, team.Nature, team.Abbreviation, team.Logo, team.Tags, team.IsPrivate, team.PrimaryIndustryTagID, team.IndustryPath).Scan(&team.Id, &team.Uuid)
 	return
 }
 
@@ -1776,7 +1795,7 @@ func findSpouse(familyId, ceoGender int) (FamilyMember, error) {
 func fetchFreelancerTeam(ctx context.Context) (Team, error) {
 
 	const query = `SELECT id, uuid, name, mission, founder_id, created_at, class, nature,
-	               abbreviation, logo, is_private, updated_at, tags 
+	               abbreviation, logo, is_private, updated_at, tags, primary_industry_tag_id, industry_path 
 	               FROM teams WHERE id = $1`
 
 	var team Team
@@ -1784,6 +1803,7 @@ func fetchFreelancerTeam(ctx context.Context) (Team, error) {
 		&team.Id, &team.Uuid, &team.Name, &team.Mission,
 		&team.FounderId, &team.CreatedAt, &team.Class, &team.Nature,
 		&team.Abbreviation, &team.Logo, &team.IsPrivate, &team.UpdatedAt, &team.Tags,
+		&team.PrimaryIndustryTagID, &team.IndustryPath,
 	)
 
 	if err != nil {

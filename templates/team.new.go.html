@@ -64,18 +64,142 @@
           required></textarea>
       </div>
 
-      <div class="form-group">
-        <label for="tags">分类标签（用逗号分隔）</label>
-        <input type="text" class="form-control" name="tags" id="tags" list="industry-tag-list"
-               placeholder="如：信息传输、软件和信息技术服务业" 
-               maxlength="200" />
-        <datalist id="industry-tag-list">
-          {{ range .IndustryTags }}
-          <option value="{{ .Name }}">{{ .Name }}</option>
-          {{ end }}
-        </datalist>
-        <p class="help-block" id="tags-help">职业团队请从行业白名单中选择标签，用逗号分隔；业余团队可自由填写。私密团队不会显示在公开列表中。</p>
+      <div class="form-group" id="amateur-tags-group">
+        <label for="tags">分类标签（用逗号分隔，最多 5 个）</label>
+        <input type="text" class="form-control" name="tags" id="tags"
+               placeholder="如：诗词书法,手作茶饮,徒步" maxlength="200" />
+        <p class="help-block">业余团队可自由填写，逗号分隔；超过 5 个或过长的标签会被自动裁剪。</p>
       </div>
+
+      <div class="form-group" id="professional-tags-group">
+        <label>行业分类（职业团队必选，至少选到“大类”）</label>
+        <div class="row">
+          <div class="col-sm-3">
+            <select class="form-control" id="industry-level1">
+              <option value="">门类</option>
+              {{ range .IndustryTags }}
+              <option value="{{ .Id }}">{{ .Code }} {{ .Name }}</option>
+              {{ end }}
+            </select>
+          </div>
+          <div class="col-sm-3">
+            <select class="form-control" id="industry-level2" disabled>
+              <option value="">大类</option>
+            </select>
+          </div>
+          <div class="col-sm-3">
+            <select class="form-control" id="industry-level3" disabled>
+              <option value="">中类（可选）</option>
+            </select>
+          </div>
+          <div class="col-sm-3">
+            <select class="form-control" id="industry-level4" disabled>
+              <option value="">小类（可选）</option>
+            </select>
+          </div>
+        </div>
+        <input type="hidden" name="primary_industry_tag_id" id="primary_industry_tag_id" value="" />
+        <p class="help-block" id="industry-path-preview">请选择行业门类 → 大类，可继续细分到中类/小类。</p>
+      </div>
+
+      <script>window.__INDUSTRY_CHAIN = [];</script>
+      <script>
+        (function () {
+          var selects = [];
+          for (var i = 1; i <= 4; i++) {
+            selects.push(document.getElementById('industry-level' + i));
+          }
+          var hidden = document.getElementById('primary_industry_tag_id');
+          var preview = document.getElementById('industry-path-preview');
+          var proGroup = document.getElementById('professional-tags-group');
+          var amateurGroup = document.getElementById('amateur-tags-group');
+          var chain = window.__INDUSTRY_CHAIN || [];
+
+          function natureValue() {
+            var el = document.querySelector('input[name="nature"]:checked');
+            return el ? el.value : '';
+          }
+
+          function toggleByNature() {
+            var isPro = natureValue() === '1';
+            if (proGroup) proGroup.style.display = isPro ? '' : 'none';
+            if (amateurGroup) amateurGroup.style.display = isPro ? 'none' : '';
+          }
+
+          function fill(select, items, placeholder) {
+            var html = '<option value="">' + placeholder + '</option>';
+            for (var i = 0; i < items.length; i++) {
+              html += '<option value="' + items[i].id + '">' + items[i].code + ' ' + items[i].name + '</option>';
+            }
+            select.innerHTML = html;
+            select.disabled = items.length === 0;
+          }
+
+          function syncSelection() {
+            var id = '';
+            var names = [];
+            for (var i = 0; i < selects.length; i++) {
+              var sel = selects[i];
+              if (!sel || !sel.value) { break; }
+              id = sel.value;
+              names.push(sel.options[sel.selectedIndex].text);
+            }
+            if (hidden) { hidden.value = id; }
+            if (preview) {
+              preview.textContent = id
+                ? '已选择：' + names.join(' › ')
+                : '请选择行业门类 → 大类，可继续细分到中类/小类。';
+            }
+          }
+
+          function load(select, parentId, done) {
+            fetch('/v1/team/industry_children?parent=' + encodeURIComponent(parentId))
+              .then(function (r) { return r.ok ? r.json() : []; })
+              .then(function (items) { fill(select, items || [], '请选择'); if (done) { done(); } })
+              .catch(function () { fill(select, [], '请选择'); if (done) { done(); } });
+          }
+
+          for (var i = 0; i < selects.length; i++) {
+            (function (index) {
+              var sel = selects[index];
+              if (!sel) { return; }
+              sel.addEventListener('change', function () {
+                for (var j = index + 1; j < selects.length; j++) {
+                  fill(selects[j], [], '请选择');
+                }
+                if (sel.value && index + 1 < selects.length) {
+                  load(selects[index + 1], sel.value, null);
+                }
+                syncSelection();
+              });
+            })(i);
+          }
+
+          var radios = document.querySelectorAll('input[name="nature"]');
+          for (var k = 0; k < radios.length; k++) {
+            radios[k].addEventListener('change', toggleByNature);
+          }
+
+          function prefill() {
+            var idx = 0;
+            function step() {
+              if (idx >= chain.length || idx >= selects.length) { syncSelection(); return; }
+              var sel = selects[idx];
+              if (!sel) { syncSelection(); return; }
+              sel.value = String(chain[idx]);
+              if (idx + 1 < selects.length) {
+                load(selects[idx + 1], chain[idx], function () { idx++; step(); });
+              } else {
+                idx++; step();
+              }
+            }
+            step();
+          }
+
+          toggleByNature();
+          if (chain.length) { prefill(); } else { syncSelection(); }
+        })();
+      </script>
 
       <div class="form-group; col-xs-offset-5 col-sm-offset-5 col-md-offset-5 col-lg-offset-5">
         <button type="submit" class="btn btn-default">提交</button>

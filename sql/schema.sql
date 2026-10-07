@@ -118,6 +118,16 @@ CREATE INDEX IF NOT EXISTS idx_teams_class_private_deleted ON teams(class, is_pr
 CREATE INDEX IF NOT EXISTS idx_teams_nature ON teams(nature);
 CREATE INDEX IF NOT EXISTS idx_teams_nature_class ON teams(nature, class);
 
+-- 为teams表添加行业分类字段（职业团队专用）
+-- primary_industry_tag_id：主行业标签 id（对应 industry_tags.id，0 表示未设置，即业余团队）
+-- industry_path：行业代码路径，如 "C/C13"，用于按 code 前缀上卷搜索（门类搜索命中其下大类/中类/小类）
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS primary_industry_tag_id INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE teams ADD COLUMN IF NOT EXISTS industry_path VARCHAR(64) NOT NULL DEFAULT '';
+-- 行业代码路径前缀搜索索引
+CREATE INDEX IF NOT EXISTS idx_teams_industry_path ON teams(industry_path varchar_pattern_ops);
+COMMENT ON COLUMN teams.primary_industry_tag_id IS '主行业标签 id（industry_tags.id），仅职业团队有值；0 表示未设置';
+COMMENT ON COLUMN teams.industry_path IS '行业代码路径，如 "C/C13"，以 / 分隔，用于 code 前缀上卷搜索';
+
 -- 团队成员表
 CREATE TABLE team_members (
     id                    SERIAL PRIMARY KEY,
@@ -202,11 +212,15 @@ CREATE TABLE group_invitation_replies (
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 行业分类白名单表
+-- 行业分类白名单表（参考《国民经济行业分类》GB/T 4754—2017）
+-- 自引用树：level 1=门类(20) 2=大类(97) 3=中类(473) 4=小类(1380)
 -- 用于约束职业团队的标签必须从该白名单中选取
 CREATE TABLE industry_tags (
     id                    SERIAL PRIMARY KEY,
-    name                  VARCHAR(100) NOT NULL UNIQUE,
+    code                  VARCHAR(8) NOT NULL UNIQUE,
+    name                  VARCHAR(100) NOT NULL,
+    level                 SMALLINT NOT NULL,
+    parent_id             INTEGER REFERENCES industry_tags(id),
     category              VARCHAR(20),
     description           TEXT,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -220,11 +234,16 @@ CREATE INDEX IF NOT EXISTS idx_group_invitation_replies_invitation_id ON group_i
 CREATE INDEX IF NOT EXISTS idx_group_invitation_replies_user_id ON group_invitation_replies(user_id);
 CREATE INDEX IF NOT EXISTS idx_industry_tags_category ON industry_tags(category);
 CREATE INDEX IF NOT EXISTS idx_industry_tags_name ON industry_tags(name);
+CREATE INDEX IF NOT EXISTS idx_industry_tags_parent_id ON industry_tags(parent_id);
+CREATE INDEX IF NOT EXISTS idx_industry_tags_level ON industry_tags(level);
 
 -- 添加注释
 COMMENT ON TABLE group_invitations IS '集团邀请函表';
 COMMENT ON TABLE group_invitation_replies IS '集团邀请函回复表';
-COMMENT ON TABLE industry_tags IS '职业团队行业分类白名单表，参考《国民经济行业分类》门类';
+COMMENT ON TABLE industry_tags IS '职业团队行业分类白名单表（参考《国民经济行业分类》GB/T 4754—2017），自引用树：门类/大类/中类/小类';
+COMMENT ON COLUMN industry_tags.code IS '完整标准代码：门类为字母(A-T)，大类为字母+2位数字，中类为字母+3位，小类为字母+4位';
+COMMENT ON COLUMN industry_tags.level IS '层级：1=门类 2=大类 3=中类 4=小类';
+COMMENT ON COLUMN industry_tags.parent_id IS '父节点 id；门类为 NULL';
 COMMENT ON COLUMN group_invitations.status IS '0: 待处理, 1: 已查看, 2: 已接受, 3: 已拒绝, 4: 已过期';
 COMMENT ON COLUMN group_invitations.level IS '团队在集团中的等级：1-最高级，2-次级，3-次次级...';
 

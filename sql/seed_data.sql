@@ -137,10 +137,13 @@ INSERT INTO team_group_memberships (group_id, team_id) VALUES
 (1, 3);
 
 -- ============================================
--- 行业分类白名单（参考《国民经济行业分类》20个门类）
+-- 用于创建职业团队时必选的行业标签
+-- 行业分类白名单 - 第 1 层：门类（参考《国民经济行业分类》GB/T 4754—2017，共 20 个）
+-- 第 2 层（大类 97 个）及中类/小类见 sql/industry_tags_seed.sql
 -- ============================================
 
-INSERT INTO industry_tags (name, category, description) VALUES
+WITH legacy(name, category, description) AS (
+VALUES
 ('农、林、牧、渔业', 'A', '农业、林业、畜牧业、渔业以及农、林、牧、渔专业及辅助性活动'),
 ('采矿业', 'B', '煤炭开采和洗选业、石油和天然气开采业、黑色金属矿采选业、有色金属矿采选业、非金属矿采选业、开采专业及辅助性活动'),
 ('制造业', 'C', '食品制造、纺织、木材加工、家具制造、造纸、印刷、石油加工、化工、医药、金属制品、汽车制造、电气机械和器材制造、计算机通信和其他电子设备制造等'),
@@ -160,7 +163,15 @@ INSERT INTO industry_tags (name, category, description) VALUES
 ('卫生和社会工作', 'Q', '卫生、社会工作'),
 ('文化、体育和娱乐业', 'R', '新闻和出版业、广播影视录音制作业、文化艺术业、体育、娱乐业'),
 ('公共管理、社会保障和社会组织', 'S', '国家机构、人民政协民主党派、社会保障、群众团体社会团体和其他成员组织、基层群众自治组织'),
-('国际组织', 'T', '国际组织');
+('国际组织', 'T', '国际组织')
+)
+INSERT INTO industry_tags (code, name, level, parent_id, category, description)
+SELECT category, name, 1, NULL, category, description FROM legacy
+ON CONFLICT (code) DO UPDATE SET
+    name = EXCLUDED.name,
+    level = EXCLUDED.level,
+    category = EXCLUDED.category,
+    description = EXCLUDED.description;
 
 -- ============================================
 -- 修复序列

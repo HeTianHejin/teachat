@@ -347,7 +347,7 @@ func GetMembersByGroupId(groupId int) ([]GroupMember, error) {
 // GetTeamsByGroupId 获取集团的所有团队
 func GetTeamsByGroupId(groupId int) ([]Team, error) {
 	query := `SELECT t.id, t.uuid, t.name, t.mission, t.founder_id, t.created_at, 
-          t.class, t.nature, t.abbreviation, t.logo, t.updated_at, t.deleted_at 
+          t.class, t.nature, t.abbreviation, t.logo, t.updated_at, t.deleted_at, t.primary_industry_tag_id, t.industry_path 
           FROM teams t 
           INNER JOIN group_members gm ON t.id = gm.team_id 
           WHERE gm.group_id = $1 AND gm.deleted_at IS NULL AND t.deleted_at IS NULL 
@@ -363,7 +363,7 @@ func GetTeamsByGroupId(groupId int) ([]Team, error) {
 		var team Team
 		if err = rows.Scan(&team.Id, &team.Uuid, &team.Name, &team.Mission,
 			&team.FounderId, &team.CreatedAt, &team.Class, &team.Nature, &team.Abbreviation,
-			&team.Logo, &team.UpdatedAt, &team.DeletedAt); err != nil {
+			&team.Logo, &team.UpdatedAt, &team.DeletedAt, &team.PrimaryIndustryTagID, &team.IndustryPath); err != nil {
 			return nil, err
 		}
 		teams = append(teams, team)

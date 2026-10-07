@@ -97,6 +97,8 @@ func main() {
 	// 团队资料更新
 	mux.HandleFunc("/v1/team/edit", route.HandleEditTeam)
 	mux.HandleFunc("/v1/team/logo", route.TeamLogoUpload)
+	// 行业分类级联下拉（职业团队专用）
+	mux.HandleFunc("/v1/team/industry_children", route.IndustryTagChildren)
 	// 团队成员增减
 	mux.HandleFunc("/v1/team/invitations", route.TeamInvitations)
 	mux.HandleFunc("/v1/team/applications", route.TeamApplications)
