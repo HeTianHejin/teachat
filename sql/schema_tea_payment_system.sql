@@ -11,9 +11,6 @@
 -- DROP SCHEMA IF EXISTS tea CASCADE;
 -- ============================================
 
--- 删除旧的tea schema及其所有对象
-DROP SCHEMA IF EXISTS tea CASCADE;
-
 -- 创建全新的tea schema
 CREATE SCHEMA tea;
 

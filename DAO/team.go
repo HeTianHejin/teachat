@@ -56,8 +56,8 @@ const (
 
 const (
 	TeamNatureUnknown      = 0 // 未知/特殊，系统预设团队默认使用
-	TeamNatureProfessional = 1 // 职业团队：按行业分类指引填写标签，可承接普通茶订单
-	TeamNatureAmateur      = 2 // 业余团队：兴趣爱好，标签可自由填写，可以承接慈善、人道主义、紧急救援等茶订单
+	TeamNatureProfessional = 1 // 职业团队：按行业分类指引填写标签
+	TeamNatureAmateur      = 2 // 业余团队：兴趣爱好，标签可自由填写
 )
 
 var (
