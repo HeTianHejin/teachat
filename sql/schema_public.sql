@@ -3,8 +3,9 @@
 -- 创建数据库(如果需要)
 --CREATE USER robin WITH PASSWORD 'robin';
 --ALTER USER robin SUPERUSER;
---DROP DATABASE IF EXISTS teachat;
---CREATE DATABASE teachat OWNER robin;
+DROP DATABASE IF EXISTS teachat;
+CREATE DATABASE teachat OWNER robin;
+\set ON_ERROR_STOP on
 -- 连接到新数据库
 \c teachat
 
@@ -141,16 +142,6 @@ CREATE TABLE team_members (
     deleted_at            TIMESTAMPTZ
 );
 
--- 某个team加入某个group记录
--- 注意：一个team只能加入一个group一次，已加入的team不能再加入其他group
-CREATE TABLE team_group_memberships (
-    id                    SERIAL PRIMARY KEY,
-    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
-    group_id              INTEGER REFERENCES groups(id),
-    team_id               INTEGER REFERENCES teams(id) UNIQUE,
-    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
 -- 集团表
 -- 用于管理多个团队的集合，支持复杂的多团队协作场景
 CREATE TABLE groups (
@@ -171,6 +162,16 @@ CREATE TABLE groups (
 );
 -- 为groups表添加nature字段（兼容旧数据库）
 ALTER TABLE groups ADD COLUMN IF NOT EXISTS nature INTEGER DEFAULT 0;
+
+-- 某个team加入某个group记录
+-- 注意：一个team只能加入一个group一次，已加入的team不能再加入其他group
+CREATE TABLE team_group_memberships (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    group_id              INTEGER REFERENCES groups(id),
+    team_id               INTEGER REFERENCES teams(id) UNIQUE,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 
 -- 集团成员表
 -- 记录团队在集团中的成员资格和层级关系
@@ -991,10 +992,6 @@ CREATE TABLE tea_orders (
     updated_at            TIMESTAMPTZ,
     deleted_at            TIMESTAMPTZ
 );
--- 茶订单锁定服务项目及版本，并快照成交价格，使历史订单不受后续调价影响
-ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_offering_id INTEGER REFERENCES team_service_offerings(id);
-ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_version_id INTEGER REFERENCES team_service_offering_versions(id);
-ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS agreed_price_milligrams BIGINT;
 
 -- 部分唯一索引：同一茶围下同一茶台最多只能有一条未完成的茶订单（pending/active/pause）
 CREATE UNIQUE INDEX idx_tea_orders_unique_active
@@ -1610,6 +1607,11 @@ CREATE TABLE team_service_offering_versions (
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (service_offering_id, version_no)
 );
+
+-- 茶订单锁定服务项目及版本，并快照成交价格，使历史订单不受后续调价影响
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_offering_id INTEGER REFERENCES team_service_offerings(id);
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS service_version_id INTEGER REFERENCES team_service_offering_versions(id);
+ALTER TABLE tea_orders ADD COLUMN IF NOT EXISTS agreed_price_milligrams BIGINT;
 
 -- 服务版本技能要求表（服务版本的能力与岗位快照）
 -- 与当前服务项目技能关联分开保存，保证版本发布后要求不受后续编辑影响。
