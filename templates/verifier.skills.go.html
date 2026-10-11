@@ -1,0 +1,46 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/verifier/workspace">见证工作间</a></li>
+  <li class="active">技能登记审核</li>
+</ol>
+
+<div class="page-header">
+  <h2><i class="bi-clipboard-check"></i> 技能登记审核</h2>
+  <p class="text-muted">仅审核是否适合公开展示，不构成对技能真实性、资质或效果的认证。</p>
+</div>
+
+{{ if .Skills }}
+  {{ range .Skills }}
+  <section class="panel panel-default">
+    <div class="panel-heading">
+      <strong>{{ .Name }}</strong>
+      <span class="label label-warning pull-right">待审核</span>
+    </div>
+    <div class="panel-body">
+      {{ if .Nickname }}<p><strong>别名：</strong>{{ .Nickname }}</p>{{ end }}
+      <p>{{ .Description }}</p>
+      <p class="text-muted">登记用户 #{{ .UserId }} · {{ .CategoryString }} · 提交于 {{ .CreatedDateTime }}</p>
+      <p class="text-warning">
+        请重点阻止违法伤害或恐吓、色情服务、赌博作弊等明显不适合公开教学研究的内容；依据具体描述判断，避免仅凭技能名称推断。
+      </p>
+      <form method="post" action="/v1/verifier/skill/review" class="form-inline">
+        <input type="hidden" name="uuid" value="{{ .Uuid }}">
+        <button type="submit" name="action" value="approve" class="btn btn-success">
+          <i class="bi-check-circle"></i> 允许展示
+        </button>
+        <div class="form-group" style="margin-inline-start: 8px;">
+          <input type="text" class="form-control" name="reason" maxlength="500" placeholder="婉拒原因（必填）">
+        </div>
+        <button type="submit" name="action" value="reject" class="btn btn-danger">
+          <i class="bi-x-circle"></i> 婉拒展示
+        </button>
+      </form>
+    </div>
+  </section>
+  {{ end }}
+{{ else }}
+  <div class="alert alert-info">暂无待审核的技能登记。</div>
+{{ end }}
+
+{{ end }}

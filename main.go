@@ -280,6 +280,8 @@ func main() {
 	//defined in route_action_skill.go
 	mux.HandleFunc("/v1/skill/new", route.HandleNewSkill)
 	mux.HandleFunc("/v1/skill/detail", route.HandleSkillDetail)
+	mux.HandleFunc("/v1/skill/update", route.HandleSkillUpdate)
+	mux.HandleFunc("/v1/skill/submit-review", route.HandleSkillSubmitForReview)
 	mux.HandleFunc("/v1/skill_user/edit", route.HandleSkillUserEdit)
 	mux.HandleFunc("/v1/skill_team/edit", route.HandleSkillTeamEdit)
 
@@ -328,6 +330,8 @@ func main() {
 	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace) // 见证者工作间页面
 	mux.HandleFunc("/v1/verifier/service-offering/detail", route.HandleVerifierServiceOfferingDetail)
 	mux.HandleFunc("/v1/verifier/service-offering/review", route.HandleVerifierServiceOfferingReview)
+	mux.HandleFunc("/v1/verifier/skills", route.HandleVerifierSkills)
+	mux.HandleFunc("/v1/verifier/skill/review", route.HandleVerifierSkillReview)
 	mux.HandleFunc("/v1/verifier/order/approve", route.HandleVerifierOrderApprove) // 审批茶订单
 	mux.HandleFunc("/v1/verifier/order/reject", route.HandleVerifierOrderReject)   // 拒绝茶订单
 	mux.HandleFunc("/v1/verifier/order/forfeit", route.HandleVerifierOrderForfeit) // 罚没茶订单（恶意/不道德内容）

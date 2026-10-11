@@ -17,6 +17,19 @@
   </div>
 
   <div class="panel-body">
+    {{ if .UnpublishedSkills }}
+    <h4>草稿与审核中技能 <span class="badge">{{ len .UnpublishedSkills }}</span></h4>
+    <div class="list-group">
+      {{ range .UnpublishedSkills }}
+      <a class="list-group-item" href="/v1/skill/detail?id={{ .Id }}">
+        <strong>{{ .Name }}</strong>
+        <span class="label {{ if eq .ReviewStatus 4 }}label-danger{{ else if eq .ReviewStatus 2 }}label-info{{ else }}label-warning{{ end }} pull-right">{{ .ReviewStatus.String }}</span>
+        {{ if .ReviewReason }}<div class="text-muted">婉拒原因：{{ .ReviewReason }}</div>{{ end }}
+      </a>
+      {{ end }}
+    </div>
+    {{ end }}
+
     {{ if .SkillUserBean.Skills }}
       <!-- 分页选项卡 -->
       <ul class="nav nav-tabs" role="tablist">

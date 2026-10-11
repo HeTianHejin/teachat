@@ -148,8 +148,11 @@
 
       <div class="form-group">
         <div class="col-sm-offset-2 col-sm-10">
-          <button type="submit" class="btn btn-primary">
-            <span class="glyphicon glyphicon-plus"></span> 添加技能
+          <button type="submit" name="action" value="draft" class="btn btn-default">
+            <span class="glyphicon glyphicon-save"></span> 保存草稿
+          </button>
+          <button type="submit" name="action" value="submit" class="btn btn-primary">
+            <span class="glyphicon glyphicon-send"></span> 提交见证者审核
           </button>
 
           {{ if ne .Team.Id 0 }}
@@ -165,7 +168,7 @@
 
   <div class="panel-footer">
     <i class="bi-info-square" style="font-size: 2rem; color: black;"></i>
-    茶博士：个人技能和团队技能常见的区别是后者通常需要多人合作才能完成。
+    茶博士：新技能先保存为草稿；提交见证者审核并通过后，才会出现在技能目录和个人/团队技能列表。审核仅决定是否适合公开展示，不代表平台认证。
   </div>
 </div>
 {{ end }}

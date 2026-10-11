@@ -51,6 +51,28 @@
 
         <p>{{ $skill.Description }}</p>
 
+        <div class="well well-sm" style="margin-bottom: 0;">
+          <strong>履约案例：</strong>
+          {{ if .Cases }}
+            已完成案例 {{ len .Cases }} 笔
+            <ul class="list-unstyled" style="margin: 8px 0 0;">
+              {{ range .Cases }}
+              <li style="margin-bottom: 6px;">
+                <a href="/v1/handicraft/detail?uuid={{ .Uuid }}">{{ .Name }}</a>
+                {{ if .TeaTopic }}<span class="text-muted">· {{ .TeaTopic }}</span>{{ end }}
+                {{ if gt .TeamId 0 }}<span class="text-muted">· 当时团队 #{{ .TeamId }}</span>{{ end }}
+                <small class="text-muted">· 记录于 {{ .RecordedDateTime }}</small>
+              </li>
+              {{ end }}
+            </ul>
+          {{ else }}
+            暂无已完成案例
+          {{ end }}
+          <p class="text-muted" style="margin: 8px 0 0;">
+            案例为订单作业记录，仅供参考，不代表平台认证或能力保证。
+          </p>
+        </div>
+
         <p>
           <div style="text-align: center; margin-top: 10px;">
             <span style="margin-right: 15px;">

@@ -22,10 +22,53 @@ type Skill struct {
 	DifficultyLevel DifficultyLevel // 掌握作业能力的学习课程难度等级(1-5)，例如，学习驾驶汽车需要先识字，再阅读理解交通规则，伴随反复上公共道路积累行驶经验...
 	Category        SkillCategory   // 分类：0、未知类型，1、通用软技能：如沟通，健康与情绪管理等，2、通用硬技能：可以设立试卷考试的科目技能，如：驾驶车辆，控制计算机，拧螺丝...
 	Level           int             // 等级，
+	ReviewStatus    SkillReviewStatus
+	ReviewReason    string
 	CreatedAt       time.Time
 	UpdatedAt       *time.Time
 	DeletedAt       *time.Time //软删除
 }
+
+type SkillReviewStatus int
+
+const (
+	UnknownSkillReviewStatus SkillReviewStatus = iota
+	DraftSkillReviewStatus
+	PendingSkillReviewStatus
+	ApprovedSkillReviewStatus
+	RejectedSkillReviewStatus
+)
+
+func (s SkillReviewStatus) String() string {
+	switch s {
+	case DraftSkillReviewStatus:
+		return "草稿"
+	case PendingSkillReviewStatus:
+		return "待见证者审核"
+	case ApprovedSkillReviewStatus:
+		return "审核通过"
+	case RejectedSkillReviewStatus:
+		return "婉拒展示"
+	default:
+		return "未知状态"
+	}
+}
+
+// PersonalSkillCase 是用户通过已完成订单积累的技能案例记录。
+type PersonalSkillCase struct {
+	SkillId      int
+	HandicraftId int
+	Uuid         string
+	Name         string
+	TeaTopic     string
+	TeamId       int
+	RecordedAt   time.Time
+}
+
+func (c PersonalSkillCase) RecordedDateTime() string {
+	return c.RecordedAt.Format(FMT_DATE_TIME_CN)
+}
+
 type SkillCategory int
 
 const (
@@ -118,9 +161,9 @@ func (s *Skill) Create(ctx context.Context) (err error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `INSERT INTO skills 
-		(uuid, user_id, name, nickname, description, strength_level, difficulty_level, category, level) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+	statement := `INSERT INTO skills
+		(uuid, user_id, name, nickname, description, strength_level, difficulty_level, category, level, review_status)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		RETURNING id, uuid`
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
@@ -128,8 +171,132 @@ func (s *Skill) Create(ctx context.Context) (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, Random_UUID(), s.UserId, s.Name, s.Nickname, s.Description,
-		s.StrengthLevel, s.DifficultyLevel, s.Category, s.Level).Scan(&s.Id, &s.Uuid)
+		s.StrengthLevel, s.DifficultyLevel, s.Category, s.Level, DraftSkillReviewStatus).Scan(&s.Id, &s.Uuid)
 	return err
+}
+
+func (s *Skill) SubmitForReview(ctx context.Context, ownerId int) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	result, err := DB.ExecContext(ctx, `UPDATE skills SET review_status = $3, review_reason = '',
+		updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2
+		AND review_status IN ($4, $5) AND deleted_at IS NULL`,
+		s.Id, ownerId, PendingSkillReviewStatus, DraftSkillReviewStatus, RejectedSkillReviewStatus)
+	if err != nil {
+		return err
+	}
+	updated, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if updated != 1 {
+		return errors.New("技能不属于当前用户，或当前状态不能提交审核")
+	}
+	s.ReviewStatus = PendingSkillReviewStatus
+	s.ReviewReason = ""
+	return nil
+}
+
+func (s *Skill) UpdateUnpublished(ctx context.Context, ownerId int) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	result, err := DB.ExecContext(ctx, `UPDATE skills SET name = $3, nickname = $4, description = $5,
+		strength_level = $6, difficulty_level = $7, category = $8, level = $9,
+		updated_at = CURRENT_TIMESTAMP WHERE id = $1 AND user_id = $2
+		AND review_status IN ($10, $11) AND deleted_at IS NULL`,
+		s.Id, ownerId, s.Name, s.Nickname, s.Description, s.StrengthLevel, s.DifficultyLevel,
+		s.Category, s.Level, DraftSkillReviewStatus, RejectedSkillReviewStatus)
+	if err != nil {
+		return err
+	}
+	updated, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if updated != 1 {
+		return errors.New("技能不属于当前用户，或当前状态不能编辑")
+	}
+	return nil
+}
+
+func GetPendingSkills(ctx context.Context) ([]Skill, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := DB.QueryContext(ctx, `SELECT id, uuid, COALESCE(user_id, 0), name, nickname, description,
+		strength_level, difficulty_level, category, level, review_reason, created_at
+		FROM skills WHERE review_status = $1 AND deleted_at IS NULL ORDER BY created_at, id`, PendingSkillReviewStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	skills := make([]Skill, 0)
+	for rows.Next() {
+		var skill Skill
+		if err := rows.Scan(&skill.Id, &skill.Uuid, &skill.UserId, &skill.Name, &skill.Nickname,
+			&skill.Description, &skill.StrengthLevel, &skill.DifficultyLevel, &skill.Category,
+			&skill.Level, &skill.ReviewReason, &skill.CreatedAt); err != nil {
+			return nil, err
+		}
+		skills = append(skills, skill)
+	}
+	return skills, rows.Err()
+}
+
+func GetUserUnpublishedSkills(userId int, ctx context.Context) ([]Skill, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	rows, err := DB.QueryContext(ctx, `SELECT id, uuid, user_id, name, nickname, description,
+		strength_level, difficulty_level, category, level, review_status, review_reason,
+		created_at, updated_at, deleted_at FROM skills
+		WHERE user_id = $1 AND review_status <> $2 AND deleted_at IS NULL
+		ORDER BY created_at DESC, id DESC`, userId, ApprovedSkillReviewStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	skills := make([]Skill, 0)
+	for rows.Next() {
+		var skill Skill
+		if err := rows.Scan(&skill.Id, &skill.Uuid, &skill.UserId, &skill.Name, &skill.Nickname,
+			&skill.Description, &skill.StrengthLevel, &skill.DifficultyLevel, &skill.Category,
+			&skill.Level, &skill.ReviewStatus, &skill.ReviewReason, &skill.CreatedAt,
+			&skill.UpdatedAt, &skill.DeletedAt); err != nil {
+			return nil, err
+		}
+		skills = append(skills, skill)
+	}
+	return skills, rows.Err()
+}
+
+func (s *Skill) Review(ctx context.Context, reviewerId int, approved bool, reason string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	status := RejectedSkillReviewStatus
+	if approved {
+		status = ApprovedSkillReviewStatus
+		reason = ""
+	}
+	result, err := DB.ExecContext(ctx, `UPDATE skills SET review_status = $2, review_reason = $3,
+		reviewed_by = $4, reviewed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $1 AND review_status = $5 AND user_id <> $4 AND deleted_at IS NULL`,
+		s.Id, status, reason, reviewerId, PendingSkillReviewStatus)
+	if err != nil {
+		return err
+	}
+	updated, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if updated != 1 {
+		return errors.New("技能已被其他操作处理或不在待审核状态")
+	}
+	s.ReviewStatus = status
+	s.ReviewReason = reason
+	return nil
 }
 
 // Skill.GetByIdOrUUID 根据ID或UUID获取技能
@@ -140,7 +307,7 @@ func (s *Skill) GetByIdOrUUID(ctx context.Context) (err error) {
 		return errors.New("invalid Skill ID or UUID")
 	}
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
-		category, level, created_at, updated_at, deleted_at
+		category, level, review_status, review_reason, created_at, updated_at, deleted_at
 		FROM skills WHERE (id=$1 OR uuid=$2) AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
@@ -148,8 +315,24 @@ func (s *Skill) GetByIdOrUUID(ctx context.Context) (err error) {
 	}
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, s.Id, s.Uuid).Scan(&s.Id, &s.Uuid, &s.UserId, &s.Name, &s.Nickname, &s.Description,
-		&s.StrengthLevel, &s.DifficultyLevel, &s.Category, &s.Level, &s.CreatedAt, &s.UpdatedAt, &s.DeletedAt)
+		&s.StrengthLevel, &s.DifficultyLevel, &s.Category, &s.Level, &s.ReviewStatus, &s.ReviewReason,
+		&s.CreatedAt, &s.UpdatedAt, &s.DeletedAt)
 	return err
+}
+
+func (s *Skill) GetPendingByIdOrUUID(ctx context.Context) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	if s.Id <= 0 && s.Uuid == "" {
+		return errors.New("invalid Skill ID or UUID")
+	}
+	return DB.QueryRowContext(ctx, `SELECT id, uuid, COALESCE(user_id, 0), name, nickname, description,
+		strength_level, difficulty_level, category, level, review_status, review_reason,
+		created_at, updated_at, deleted_at
+		FROM skills WHERE (id = $1 OR uuid = $2) AND deleted_at IS NULL`, s.Id, s.Uuid).Scan(
+		&s.Id, &s.Uuid, &s.UserId, &s.Name, &s.Nickname, &s.Description, &s.StrengthLevel,
+		&s.DifficultyLevel, &s.Category, &s.Level, &s.ReviewStatus, &s.ReviewReason,
+		&s.CreatedAt, &s.UpdatedAt, &s.DeletedAt)
 }
 
 // Skill.Update 更新技能
@@ -256,8 +439,8 @@ func GetSkillsByCategory(category SkillCategory, ctx context.Context) ([]Skill, 
 	defer cancel()
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
-		FROM skills WHERE category = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := DB.QueryContext(ctx, statement, category)
+		FROM skills WHERE category = $1 AND review_status = $2 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
+	rows, err := DB.QueryContext(ctx, statement, category, ApprovedSkillReviewStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -285,8 +468,8 @@ func GetSkillsByStrengthLevel(strengthLevel StrengthLevel, ctx context.Context) 
 	defer cancel()
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
-		FROM skills WHERE strength_level = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := DB.QueryContext(ctx, statement, strengthLevel)
+		FROM skills WHERE strength_level = $1 AND review_status = $2 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
+	rows, err := DB.QueryContext(ctx, statement, strengthLevel, ApprovedSkillReviewStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -314,8 +497,8 @@ func GetSkillsByDifficultyLevel(difficultyLevel DifficultyLevel, ctx context.Con
 	defer cancel()
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
-		FROM skills WHERE difficulty_level = $1 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
-	rows, err := DB.QueryContext(ctx, statement, difficultyLevel)
+		FROM skills WHERE difficulty_level = $1 AND review_status = $2 AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`
+	rows, err := DB.QueryContext(ctx, statement, difficultyLevel, ApprovedSkillReviewStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -343,8 +526,8 @@ func GetSkillsByRecordUserId(userId int, ctx context.Context) ([]Skill, error) {
 	defer cancel()
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level,
 		category, level, created_at, updated_at, deleted_at
-		FROM skills WHERE user_id = $1 AND deleted_at IS NULL ORDER BY category, level DESC, created_at DESC`
-	rows, err := DB.QueryContext(ctx, statement, userId)
+		FROM skills WHERE user_id = $1 AND review_status = $2 AND deleted_at IS NULL ORDER BY category, level DESC, created_at DESC`
+	rows, err := DB.QueryContext(ctx, statement, userId, ApprovedSkillReviewStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -377,6 +560,49 @@ func CountSkillsByRecordUserId(userId int, ctx context.Context) (int, error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+// GetPersonalSkillCases 获取用户在已完成订单中的个人技能案例。
+func GetPersonalSkillCases(userId int, ctx context.Context) ([]PersonalSkillCase, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT DISTINCT hs.skill_id, h.id, h.uuid, h.name, o.tea_topic,
+		COALESCE(o.payee_team_id, 0), h.created_at
+		FROM handicraft_skills hs
+		JOIN handicrafts h ON h.id = hs.handicraft_id
+		JOIN tea_orders o ON o.id = h.tea_order_id
+		WHERE hs.deleted_at IS NULL AND h.deleted_at IS NULL
+		  AND o.deleted_at IS NULL AND o.status = $2 AND h.status = $3
+		  AND EXISTS (
+			SELECT 1
+			FROM handicraft_participants hp
+			JOIN tea_order_members tom ON tom.id = hp.tea_order_member_id
+			WHERE hp.handicraft_id = h.id AND hp.user_id = $1
+			  AND hp.deleted_at IS NULL AND hp.participation_status = 'completed'
+			  AND tom.user_id = $1 AND tom.skill_id = hs.skill_id
+		  )
+		ORDER BY h.created_at DESC, h.id DESC`
+
+	rows, err := DB.QueryContext(ctx, statement, userId, TeaOrderStatusCompleted, Completed)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	cases := make([]PersonalSkillCase, 0)
+	for rows.Next() {
+		var skillCase PersonalSkillCase
+		if err := rows.Scan(&skillCase.SkillId, &skillCase.HandicraftId, &skillCase.Uuid,
+			&skillCase.Name, &skillCase.TeaTopic, &skillCase.TeamId, &skillCase.RecordedAt); err != nil {
+			return nil, err
+		}
+		cases = append(cases, skillCase)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return cases, nil
 }
 
 // SkillUser CRUD 方法
@@ -517,13 +743,13 @@ func (s *Skill) GetById(id int, ctx context.Context) error {
 	defer cancel()
 	statement := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
 		category, level, created_at, updated_at, deleted_at
-		FROM skills WHERE id = $1 AND deleted_at IS NULL`
+		FROM skills WHERE id = $1 AND review_status = $2 AND deleted_at IS NULL`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	return stmt.QueryRowContext(ctx, id).Scan(&s.Id, &s.Uuid, &s.UserId, &s.Name, &s.Nickname, &s.Description,
+	return stmt.QueryRowContext(ctx, id, ApprovedSkillReviewStatus).Scan(&s.Id, &s.Uuid, &s.UserId, &s.Name, &s.Nickname, &s.Description,
 		&s.StrengthLevel, &s.DifficultyLevel, &s.Category, &s.Level, &s.CreatedAt, &s.UpdatedAt, &s.DeletedAt)
 }
 
@@ -549,8 +775,10 @@ func GetSkillsBySkillUsers(skillUsers []SkillUser, ctx context.Context) ([]Skill
 
 	statement := fmt.Sprintf(`SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level,
 		category, level, created_at, updated_at, deleted_at
-		FROM skills WHERE id IN (%s) AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`,
-		strings.Join(placeholders, ","))
+		FROM skills WHERE id IN (%s) AND review_status = $%d AND deleted_at IS NULL ORDER BY level DESC, created_at DESC`,
+		strings.Join(placeholders, ","), len(skillIds)+1)
+
+	args = append(args, ApprovedSkillReviewStatus)
 
 	rows, err := DB.QueryContext(ctx, statement, args...)
 	if err != nil {
@@ -581,9 +809,9 @@ func (u *User) LoadAllSkills(ctx context.Context) ([]Skill, error) {
 	statement := `SELECT s.id, s.uuid, s.user_id, s.name, s.nickname, s.description, 
 		s.strength_level, s.difficulty_level, s.category, s.level, s.created_at, s.updated_at, s.deleted_at
 		FROM skills s INNER JOIN skill_users su ON s.id = su.skill_id 
-		WHERE su.user_id = $1 AND s.deleted_at IS NULL AND su.deleted_at IS NULL 
+		WHERE su.user_id = $1 AND s.review_status = $2 AND s.deleted_at IS NULL AND su.deleted_at IS NULL
 		ORDER BY su.level DESC, su.created_at DESC`
-	rows, err := DB.QueryContext(ctx, statement, u.Id)
+	rows, err := DB.QueryContext(ctx, statement, u.Id, ApprovedSkillReviewStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -783,11 +1011,12 @@ func SearchSkillByName(keyword string, limit int, ctx context.Context) ([]Skill,
 	defer cancel()
 	query := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
               category, level, created_at, updated_at, deleted_at FROM skills 
-              WHERE (name ILIKE $1 OR nickname ILIKE $1 OR description ILIKE $1) AND deleted_at IS NULL
+							WHERE (name ILIKE $1 OR nickname ILIKE $1 OR description ILIKE $1)
+								AND review_status = $3 AND deleted_at IS NULL
               ORDER BY name 
               LIMIT $2`
 
-	rows, err := DB.QueryContext(ctx, query, "%"+keyword+"%", limit)
+	rows, err := DB.QueryContext(ctx, query, "%"+keyword+"%", limit, ApprovedSkillReviewStatus)
 	if err != nil {
 		return nil, err
 	}
@@ -816,10 +1045,10 @@ func GetAllSkills(ctx context.Context) ([]Skill, error) {
 	defer cancel()
 	query := `SELECT id, uuid, user_id, name, nickname, description, strength_level, difficulty_level, 
               category, level, created_at, updated_at, deleted_at FROM skills 
-              WHERE deleted_at IS NULL
+			  WHERE review_status = $1 AND deleted_at IS NULL
               ORDER BY category, name`
 
-	rows, err := DB.QueryContext(ctx, query)
+	rows, err := DB.QueryContext(ctx, query, ApprovedSkillReviewStatus)
 	if err != nil {
 		return nil, err
 	}

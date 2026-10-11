@@ -18,6 +18,12 @@
   <li {{ if eq .ActiveWorkspaceTab "services" }}class="active"{{ end }}><a href="/v1/verifier/workspace?tab=services" id="servicesTab">服务项目 {{ if gt .PendingServiceOfferingCount 0 }}<span class="badge">{{ .PendingServiceOfferingCount }}</span>{{ end }}</a></li>
 </ul>
 
+<div class="text-right" style="margin: 12px 0;">
+  <a href="/v1/verifier/skills" class="btn btn-default btn-sm">
+    <i class="bi-card-checklist"></i> 技能登记审核
+  </a>
+</div>
+
 {{ if eq .ActiveWorkspaceTab "services" }}
 <div class="tab-content" style="padding-top: 15px;">
   {{ if .PendingServiceOfferings }}

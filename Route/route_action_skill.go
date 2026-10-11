@@ -264,14 +264,99 @@ func SkillNewPost(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 			// 不阻止流程，仅记录错误
 		}
 
-		// 为用户返回团队技能列表页面
-		teamURL := "/v1/skills/team_list?uuid=" + team.Uuid
-		http.Redirect(w, r, teamURL, http.StatusFound)
-		return
 	}
 
-	userURL := "/v1/skills/user_list?uuid=" + s_u.Uuid
-	http.Redirect(w, r, userURL, http.StatusFound)
+	if r.PostFormValue("action") == "submit" {
+		if err := skill.SubmitForReview(r.Context(), s_u.Id); err != nil {
+			util.Debug("user %d cannot submit skill %d for review: %v", s_u.Id, skill.Id, err)
+			report(w, s_u, "提交技能审核失败，请重试。")
+			return
+		}
+	}
+	http.Redirect(w, r, "/v1/skill/detail?id="+strconv.Itoa(skill.Id), http.StatusSeeOther)
+}
+
+func HandleSkillSubmitForReview(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	user, err := sess.User()
+	if err != nil {
+		report(w, user, "无法读取当前用户信息。")
+		return
+	}
+	id, err := strconv.Atoi(r.PostFormValue("id"))
+	if err != nil || id <= 0 {
+		report(w, user, "技能参数无效。")
+		return
+	}
+	skill := dao.Skill{Id: id}
+	if err := skill.SubmitForReview(r.Context(), user.Id); err != nil {
+		report(w, user, "提交技能审核失败，请确认该技能属于您且仍可提交。")
+		return
+	}
+	http.Redirect(w, r, "/v1/skill/detail?id="+strconv.Itoa(id), http.StatusSeeOther)
+}
+
+func HandleSkillUpdate(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	sess, err := session(r)
+	if err != nil {
+		http.Redirect(w, r, "/v1/login", http.StatusFound)
+		return
+	}
+	user, err := sess.User()
+	if err != nil {
+		report(w, user, "无法读取当前用户信息。")
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Invalid form", http.StatusBadRequest)
+		return
+	}
+	id, err := strconv.Atoi(r.PostFormValue("id"))
+	if err != nil || id <= 0 {
+		report(w, user, "技能参数无效。")
+		return
+	}
+	name := strings.TrimSpace(r.PostFormValue("name"))
+	description := strings.TrimSpace(r.PostFormValue("description"))
+	if name == "" || description == "" {
+		report(w, user, "技能名称和描述不能为空。")
+		return
+	}
+	category, _ := strconv.Atoi(r.PostFormValue("category"))
+	strength, _ := strconv.Atoi(r.PostFormValue("strength_level"))
+	difficulty, _ := strconv.Atoi(r.PostFormValue("difficulty_level"))
+	level, _ := strconv.Atoi(r.PostFormValue("level"))
+	if category < 1 || category > 2 || strength < 1 || strength > 5 || difficulty < 1 || difficulty > 5 || level < 1 || level > 5 {
+		report(w, user, "技能分类或等级参数无效。")
+		return
+	}
+	skill := dao.Skill{
+		Id:              id,
+		Name:            name,
+		Nickname:        strings.TrimSpace(r.PostFormValue("nickname")),
+		Description:     description,
+		Category:        dao.SkillCategory(category),
+		StrengthLevel:   dao.StrengthLevel(strength),
+		DifficultyLevel: dao.DifficultyLevel(difficulty),
+		Level:           level,
+	}
+	if err := skill.UpdateUnpublished(r.Context(), user.Id); err != nil {
+		report(w, user, "保存技能修改失败，请确认该技能仍处于草稿或婉拒状态。")
+		return
+	}
+	http.Redirect(w, r, "/v1/skill/detail?id="+strconv.Itoa(id), http.StatusSeeOther)
 }
 
 // GET /v1/skill/detail?id=123
@@ -296,18 +381,22 @@ func SkillDetailGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 		skill.Uuid = uuidStr
 	}
 
-	if err := skill.GetByIdOrUUID(r.Context()); err != nil {
+	if err := skill.GetPendingByIdOrUUID(r.Context()); err != nil {
 		util.Debug("cannot get skill by id/uuid %v", err)
 		report(w, s_u, "你好，假作真时真亦假，无为有处有还无？")
+		return
+	}
+	if skill.ReviewStatus != dao.ApprovedSkillReviewStatus && skill.UserId != s_u.Id && !dao.IsVerifier(s_u.Id) {
+		report(w, s_u, "你好，未能找到指定的技能记录。")
 		return
 	}
 
 	var skillData struct {
 		SessUser dao.User
-		Skill    dao.Skill
+		Skill    *dao.Skill
 	}
 	skillData.SessUser = s_u
-	skillData.Skill = skill
+	skillData.Skill = &skill
 
 	generateHTML(w, &skillData, "layout", "navbar.private", "skill.detail")
 }
@@ -327,6 +416,12 @@ func SkillsUserListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "获取茶友技能列表失败，请重试。")
 		return
 	}
+	unpublishedSkills, err := dao.GetUserUnpublishedSkills(s_u.Id, r.Context())
+	if err != nil {
+		util.Debug("cannot fetch unpublished skills for user %d: %v", s_u.Id, err)
+		report(w, s_u, "获取草稿和审核中技能失败，请重试。")
+		return
+	}
 
 	// 创建技能与用户技能的映射
 	skillUserMap := make(map[int]dao.SkillUser)
@@ -338,6 +433,18 @@ func SkillsUserListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	type SkillWithUserInfo struct {
 		Skill     dao.Skill
 		SkillUser dao.SkillUser
+		Cases     []dao.PersonalSkillCase
+	}
+
+	personalCases, err := dao.GetPersonalSkillCases(s_u.Id, r.Context())
+	if err != nil {
+		util.Debug("cannot fetch personal skill cases for user %d: %v", s_u.Id, err)
+		report(w, s_u, "获取个人技能案例失败，请重试。")
+		return
+	}
+	casesBySkill := make(map[int][]dao.PersonalSkillCase)
+	for _, skillCase := range personalCases {
+		casesBySkill[skillCase.SkillId] = append(casesBySkill[skillCase.SkillId], skillCase)
 	}
 
 	// 按技能类型分组
@@ -347,6 +454,7 @@ func SkillsUserListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 			skillWithInfo := SkillWithUserInfo{
 				Skill:     skill,
 				SkillUser: skillUser,
+				Cases:     casesBySkill[skill.Id],
 			}
 			switch skill.Category {
 			case dao.GeneralHardSkill:
@@ -358,16 +466,18 @@ func SkillsUserListGet(s_u dao.User, w http.ResponseWriter, r *http.Request) {
 	}
 
 	var SkillDetailTemplateData struct {
-		SessUser       dao.User
-		SkillUserBean  dao.SkillUserBean
-		HardSkills     []SkillWithUserInfo
-		SoftSkills     []SkillWithUserInfo
-		HardSkillCount int
-		SoftSkillCount int
+		SessUser          dao.User
+		SkillUserBean     dao.SkillUserBean
+		UnpublishedSkills []dao.Skill
+		HardSkills        []SkillWithUserInfo
+		SoftSkills        []SkillWithUserInfo
+		HardSkillCount    int
+		SoftSkillCount    int
 	}
 
 	SkillDetailTemplateData.SessUser = s_u
 	SkillDetailTemplateData.SkillUserBean = skillUserBean
+	SkillDetailTemplateData.UnpublishedSkills = unpublishedSkills
 	SkillDetailTemplateData.HardSkills = hardSkills
 	SkillDetailTemplateData.SoftSkills = softSkills
 	SkillDetailTemplateData.HardSkillCount = len(hardSkills)

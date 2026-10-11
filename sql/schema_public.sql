@@ -891,6 +891,10 @@ CREATE TABLE skills (
     difficulty_level      INTEGER NOT NULL DEFAULT 3,
     category              INTEGER NOT NULL DEFAULT 2,
     level                 INTEGER NOT NULL DEFAULT 1,
+    review_status         INTEGER NOT NULL DEFAULT 3 CHECK (review_status BETWEEN 1 AND 4),
+    review_reason         TEXT NOT NULL DEFAULT '',
+    reviewed_by           INTEGER REFERENCES users(id),
+    reviewed_at           TIMESTAMPTZ,
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at            TIMESTAMPTZ,
     deleted_at            TIMESTAMPTZ
@@ -1736,6 +1740,7 @@ CREATE INDEX idx_skills_category ON skills(category);
 CREATE INDEX idx_skills_strength_level ON skills(strength_level);
 CREATE INDEX idx_skills_difficulty_level ON skills(difficulty_level);
 CREATE INDEX idx_skills_level ON skills(level);
+CREATE INDEX idx_skills_review_status ON skills(review_status) WHERE deleted_at IS NULL;
 CREATE INDEX idx_skills_deleted_at ON skills(deleted_at);
 
 CREATE INDEX idx_skill_users_user_id ON skill_users(user_id);

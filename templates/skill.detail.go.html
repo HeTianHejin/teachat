@@ -12,8 +12,84 @@
     <span class="label label-{{ if .Skill.IsHighLevel }}success{{ else }}default{{ end }} pull-right">
       {{ .Skill.Level }}级
     </span>
+    {{ if eq .Skill.ReviewStatus 1 }}
+    <span class="label label-warning pull-right" style="margin-inline-end: 8px;">草稿</span>
+    {{ else if eq .Skill.ReviewStatus 2 }}
+    <span class="label label-info pull-right" style="margin-inline-end: 8px;">待见证者审核</span>
+    {{ else if eq .Skill.ReviewStatus 3 }}
+    <span class="label label-success pull-right" style="margin-inline-end: 8px;">允许展示</span>
+    {{ else if eq .Skill.ReviewStatus 4 }}
+    <span class="label label-danger pull-right" style="margin-inline-end: 8px;">婉拒展示</span>
+    {{ end }}
   </div>
   <div class="panel-body">
+
+    {{ if eq .Skill.ReviewStatus 4 }}
+    <div class="alert alert-warning">
+      <strong>婉拒原因：</strong>{{ .Skill.ReviewReason }}
+    </div>
+    {{ end }}
+    {{ if or (eq .Skill.ReviewStatus 1) (eq .Skill.ReviewStatus 4) }}
+    {{ if eq .Skill.UserId .SessUser.Id }}
+    <form method="post" action="/v1/skill/update" class="panel panel-default">
+      <div class="panel-heading"><strong>修改技能登记</strong></div>
+      <div class="panel-body">
+        <input type="hidden" name="id" value="{{ .Skill.Id }}">
+        <div class="form-group">
+          <label for="skill-name">技能名称</label>
+          <input class="form-control" id="skill-name" name="name" maxlength="255" required value="{{ .Skill.Name }}">
+        </div>
+        <div class="form-group">
+          <label for="skill-nickname">技能别名</label>
+          <input class="form-control" id="skill-nickname" name="nickname" maxlength="255" value="{{ .Skill.Nickname }}">
+        </div>
+        <div class="form-group">
+          <label for="skill-description">详细描述</label>
+          <textarea class="form-control" id="skill-description" name="description" rows="4" required>{{ .Skill.Description }}</textarea>
+        </div>
+        <div class="row">
+          <div class="col-sm-6 form-group">
+            <label for="skill-category">技能类型</label>
+            <select class="form-control" id="skill-category" name="category">
+              <option value="1" {{ if eq .Skill.Category 1 }}selected{{ end }}>通用软技能</option>
+              <option value="2" {{ if eq .Skill.Category 2 }}selected{{ end }}>通用硬技能</option>
+            </select>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label for="skill-level">技能等级</label>
+            <select class="form-control" id="skill-level" name="level">
+              {{ range seq 1 5 }}<option value="{{ . }}" {{ if eq . $.Skill.Level }}selected{{ end }}>{{ . }}级</option>{{ end }}
+            </select>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label for="skill-strength">体力要求</label>
+            <select class="form-control" id="skill-strength" name="strength_level">
+              {{ range seq 1 5 }}<option value="{{ . }}" {{ if eq . $.Skill.StrengthLevel }}selected{{ end }}>{{ . }}</option>{{ end }}
+            </select>
+          </div>
+          <div class="col-sm-6 form-group">
+            <label for="skill-difficulty">掌握难度</label>
+            <select class="form-control" id="skill-difficulty" name="difficulty_level">
+              {{ range seq 1 5 }}<option value="{{ . }}" {{ if eq . $.Skill.DifficultyLevel }}selected{{ end }}>{{ . }}</option>{{ end }}
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-default"><span class="glyphicon glyphicon-save"></span> 保存修改</button>
+      </div>
+    </form>
+    <form method="post" action="/v1/skill/submit-review" class="text-right" style="margin-bottom: 15px;">
+      <input type="hidden" name="id" value="{{ .Skill.Id }}">
+      <button type="submit" class="btn btn-primary">
+        <span class="glyphicon glyphicon-send"></span> 提交见证者审核
+      </button>
+    </form>
+    {{ end }}
+    {{ end }}
+    {{ if ne .Skill.ReviewStatus 3 }}
+    <div class="alert alert-info">
+      此技能尚未公开展示。见证者审核仅判断内容是否适合公开，不代表平台对技能真实性、资质或效果作出认证。
+    </div>
+    {{ end }}
     
     <!-- 基本信息 -->
     <div class="row">
