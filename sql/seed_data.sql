@@ -1,13 +1,16 @@
 -- TeaChat 预填充数据
 -- 用于开发和测试环境的初始数据
 
+-- 确保选择teachat数据库
+-- \c teachat
+
 -- ============================================
 -- 预设用户数据
 -- ============================================
 
 INSERT INTO users (id, uuid, name, family_name, given_name, alias_name, email, password, biography, role, gender, avatar) VALUES
-(1, '396d7fac-2f29-44a7-7f77-63cbaf423438', '太空船长', 'Luo', 'Zengdong', '粗茶船长', 'teachat-captain@spacetravels.com', 'df2983700ffecb52e6649f0cb3981b66537083a4', '我是太空船长，欢迎来到星际茶会！', 'captain', 1, 'teaSet'),
-(2, '070a7e98-d5ab-4506-4e59-093a053bc32b', '稻香老农', '李', '纨', '稻香老农', 'teachat-verifier@storetravels.com', 'df2983700ffecb52e6649f0cb3981b66537083a4', '我是见证团队，欢迎来到星际茶会！', 'traveller', 0, 'teaSet');
+(1, '396d7fac-2f29-44a7-7f77-63cbaf423438', '太空船长', 'Luo', 'Zengdong', '粗茶船长', 'teachat-captain@spacetravels.com', '$2a$10$JWf84LSbH.88qAELA/ofM.OaybTDqJaG7bzovD0o8/OT7GvJaGBQ6', '我是太空船长，欢迎来到星际茶会！', 'captain', 1, 'teaSet'),
+(2, '070a7e98-d5ab-4506-4e59-093a053bc32b', '稻香老农', '李', '纨', '稻香老农', 'teachat-verifier@storetravels.com', '$2a$10$JWf84LSbH.88qAELA/ofM.OaybTDqJaG7bzovD0o8/OT7GvJaGBQ6', '我是见证团队CEO，欢迎来到星际茶会！', 'traveller', 0, 'teaSet');
 
 -- ============================================
 -- 预设团队数据
@@ -49,7 +52,7 @@ INSERT INTO environments (name, summary,user_id, temperature, humidity, pm25, no
 ('室内普通环境', '室内正常环境，温度适宜，光线较好，通风良好', 1, 3, 3, 5, 4, 2, 5, 5, 5, 3, 5, 5, 5, 4),
 ('室外晴朗天气', '室外正常环境，温度适宜，光线强烈，通风非常好', 1, 3, 3, 5, 4, 2, 5, 5, 5, 3, 5, 5, 5, 4),
 ('普通家庭', '普通的家庭环境，温度适宜，光线良好，通风良好', 1, 3, 3, 5, 4, 2, 5, 5, 5, 3, 5, 5, 5, 4),
-('车辆维修车间', '一般的车辆维修车间，光线足，通风好，但有一些机械噪音，轻微尾气等', 1, 3, 3, 5, 4, 2, 5, 5, 5, 3, 5, 5, 5, 4),
+('车辆维修车间', '一般的车辆维修车间，光线足，通风好，但有一些机械噪音，轻微尾气等', 1, 3, 3, 5, 4, 2, 5, 5, 5, 3, 5, 5, 5, 4);
 
 -- ============================================
 -- 安全隐患数据

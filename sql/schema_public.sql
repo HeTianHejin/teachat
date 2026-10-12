@@ -108,8 +108,6 @@ CREATE TABLE teams (
 -- 为teams表添加is_private字段
 -- 私密团队不公开显示，但可以接收通知和作业进度
 ALTER TABLE teams ADD COLUMN IF NOT EXISTS is_private BOOLEAN DEFAULT false;
--- 为teams表添加nature字段（兼容旧数据库）
-ALTER TABLE teams ADD COLUMN IF NOT EXISTS nature INTEGER DEFAULT 0;
 COMMENT ON COLUMN teams.is_private IS '是否私密：true-私密团队（不公开但可接收通知），false-公开团队';
 -- 为is_private字段创建索引以优化查询
 CREATE INDEX IF NOT EXISTS idx_teams_is_private ON teams(is_private);
@@ -160,8 +158,6 @@ CREATE TABLE groups (
     updated_at            TIMESTAMPTZ,
     deleted_at            TIMESTAMPTZ
 );
--- 为groups表添加nature字段（兼容旧数据库）
-ALTER TABLE groups ADD COLUMN IF NOT EXISTS nature INTEGER DEFAULT 0;
 
 -- 某个team加入某个group记录
 -- 注意：一个team只能加入一个group一次，已加入的team不能再加入其他group

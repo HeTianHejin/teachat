@@ -148,7 +148,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	util.Debug(newU.Email, "注册新账号ok")
+	util.Debug(newU.Email, "Successfully registered a new account")
 
 	t := ""
 	displayName := newU.DisplayName()
@@ -240,7 +240,7 @@ func Authenticate(w http.ResponseWriter, r *http.Request) {
 
 		} else {
 			// 密码不匹配
-			util.Debug("failed to authenticate user %v", err)
+			util.Debug("failed to authenticate user %s: %v", s_u.Email, err)
 			s_u = dao.UserUnknown
 			report(w, s_u, "闷头喝茶的茶博士嘀咕说，请确认输入时姿势是否正确，键盘大小写灯是否有亮光？")
 			return

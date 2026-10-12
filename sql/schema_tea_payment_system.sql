@@ -7,8 +7,11 @@
 -- 用户获得星茶来自向茶庄团队购买（1元/克）
 -- 如果需要兑现，就向茶庄出售星茶（1克/元）
 
+-- 确保选择teachat数据库
+-- \c teachat
+
 -- 删除脚本（重建前执行）：
--- DROP SCHEMA IF EXISTS tea CASCADE;
+ DROP SCHEMA IF EXISTS tea CASCADE;
 -- ============================================
 
 -- 创建全新的tea schema
