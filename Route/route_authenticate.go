@@ -153,9 +153,9 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	t := ""
 	displayName := newU.DisplayName()
 	if newU.Gender == dao.User_Gender_Female {
-		t = fmt.Sprintf("%s 女士，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", displayName)
+		t = fmt.Sprintf("%s 女士，注册成功，愿你拥有美好品茶时光！请<a href=\"/v1/login\">登船</a>", displayName)
 	} else {
-		t = fmt.Sprintf("%s 先生，你好，注册成功！请登船，祝愿你拥有美好品茶时光。", displayName)
+		t = fmt.Sprintf("%s 先生，注册成功，愿你拥有美好品茶时光！请<a href=\"/v1/login\">登船</a>", displayName)
 	}
 	report(w, newU, t)
 

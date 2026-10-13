@@ -449,10 +449,9 @@ func main() {
 	// 	}
 	// }()
 
-	// 设置优雅关闭
+	// 监听系统退出信号，优雅关闭
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
 	go func() {
 		<-quit
 		log.Println("received shutdown signal, stopping the teachat server...")
@@ -461,17 +460,17 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {
-			log.Fatalf("服务器强制关闭，teachat app was forcibly shut down: %v", err)
+			util.Error("服务器强制关闭，ERROR! teachat app was forcibly shut down: %v", err)
 		} else {
-			log.Println("服务器已优雅停止，teachat app has been gracefully stopped")
+			log.Println("星际茶棚，打烊休息 Interstellar Tea House, closed for the day")
 		}
 	}()
+
 	// 启动服务器
-	log.Printf("服务器启动，监听地址，teachat server started, listening on address: %s", util.Config.Address)
-	fmt.Println("teachat", util.Version(), "星际茶棚，开门迎客 Interstellar Tea House, open for business")
+	util.Info("teachat %s server started, listening on address: %s", util.Version(), util.Config.Address)
+	fmt.Println("星际茶棚，开门迎客 Interstellar Tea House, open for business")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		log.Fatalf("teachat server failed to start: %v", err)
+		util.Error("teachat server failed to start: %v", err)
 	}
-	log.Println("teachat app has stopped running")
-	log.Println("星际茶棚，打烊休息 Interstellar Tea House, closed for the day")
+
 }
