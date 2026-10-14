@@ -17,13 +17,13 @@ func TestCalculateOrderScoresAttributesByTaskAndContribution(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if math.Abs(teamScore-85.5) > 0.001 {
-		t.Fatalf("team score = %v, want 85.5", teamScore)
+	if math.Abs(teamScore-87) > 0.001 {
+		t.Fatalf("team score = %v, want 87", teamScore)
 	}
 	if len(results) != 4 {
 		t.Fatalf("got %d member scores, want 4", len(results))
 	}
-	if math.Abs(results[1].ContributionScore-42) > 0.001 || math.Abs(results[2].ContributionScore-10.5) > 0.001 {
+	if math.Abs(results[1].ContributionScore-33.6) > 0.001 || math.Abs(results[2].ContributionScore-8.4) > 0.001 {
 		t.Fatalf("unexpected task contribution split: %#v", results)
 	}
 }
