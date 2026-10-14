@@ -219,6 +219,12 @@ func HandleTeaOrderDetail(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
+	if !hasAccess {
+		// 历史订单参与者即使已离开团队，仍可通过订单成员快照查看该订单。
+		if isOrderMember, memberErr := dao.IsTeaOrderMember(r.Context(), teaOrder.Id, s_u.Id); memberErr == nil && isOrderMember {
+			hasAccess = true
+		}
+	}
 
 	if !hasAccess {
 		report(w, s_u, "你好，您没有权限查看该茶订单详情。")
@@ -245,23 +251,26 @@ func HandleTeaOrderDetail(w http.ResponseWriter, r *http.Request) {
 	// 获取来源标识（从哪个页面跳转来的）
 	referer := r.URL.Query().Get("from")
 	teamUuid := r.URL.Query().Get("team_id")
+	workbookUserUuid := r.URL.Query().Get("user_uuid")
 
 	// 准备页面数据
 	type DetailPageData struct {
-		SessUser     dao.User
-		TeaOrderBean *dao.TeaOrderBean
-		WitnessLogs  []*dao.WitnessLog
-		IsVerifier   bool
-		Referer      string // "workdesk" 或 "verifier" 或空
-		TeamUuid     string // 若从工作台跳转，带回团队UUID用于返回链接
+		SessUser         dao.User
+		TeaOrderBean     *dao.TeaOrderBean
+		WitnessLogs      []*dao.WitnessLog
+		IsVerifier       bool
+		Referer          string // "workdesk"、"verifier"、"workbook" 或空
+		TeamUuid         string // 若从工作台跳转，带回团队UUID用于返回链接
+		WorkbookUserUuid string
 	}
 	pageData := DetailPageData{
-		SessUser:     s_u,
-		TeaOrderBean: teaOrderBean,
-		WitnessLogs:  witnessLogs,
-		IsVerifier:   isVerifier,
-		Referer:      referer,
-		TeamUuid:     teamUuid,
+		SessUser:         s_u,
+		TeaOrderBean:     teaOrderBean,
+		WitnessLogs:      witnessLogs,
+		IsVerifier:       isVerifier,
+		Referer:          referer,
+		TeamUuid:         teamUuid,
+		WorkbookUserUuid: workbookUserUuid,
 	}
 
 	// 渲染详情页面

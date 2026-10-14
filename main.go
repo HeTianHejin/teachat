@@ -75,14 +75,15 @@ func main() {
 	mux.HandleFunc("/v1/user/reset", route.Reset)
 	mux.HandleFunc("/v1/user/avatar", route.AvatarUploadUser)
 
-	mux.HandleFunc("/v1/users/connection_follow", route.Follow)
-
 	// defined in route_auth.go
 	mux.HandleFunc("/v1/login", route.LoginGet)
 	mux.HandleFunc("/v1/logout", route.Logout)
 	mux.HandleFunc("/v1/signup", route.SignupGet)
 	mux.HandleFunc("/v1/signup_account", route.SignupPost)
 	mux.HandleFunc("/v1/authenticate", route.Authenticate)
+
+	// defined in route_workbook
+	mux.HandleFunc("/v1/workbook/user", route.WorkbookUser)
 
 	// defined in route_team.go
 	// 团队基础事项
@@ -460,8 +461,9 @@ func main() {
 		defer cancel()
 
 		if err := server.Shutdown(ctx); err != nil {
-			util.Error("服务器强制关闭，ERROR! teachat app was forcibly shut down: %v", err)
+			util.Error("teachat app was forcibly shut down: %v", err)
 		} else {
+			util.Info("teachat app has been gracefully stopped")
 			log.Println("星际茶棚，打烊休息 Interstellar Tea House, closed for the day")
 		}
 	}()

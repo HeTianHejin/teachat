@@ -72,6 +72,15 @@ type TeaOrderMember struct {
 	LeftAt               *time.Time
 }
 
+// CompletedTeaOrderSummary 是作业本中一条已完成订单的概要。
+type CompletedTeaOrderSummary struct {
+	Uuid        string
+	CreatedAt   time.Time
+	TeamIds     string
+	ServiceName string
+	PlaceName   string
+}
+
 const (
 	TeaOrderStatusPending   = "pending"   // 待处理
 	TeaOrderStatusActive    = "active"    // 活动中
@@ -396,6 +405,88 @@ func (t *TeaOrder) GetByIdOrUUID(ctx context.Context) (err error) {
 	defer stmt.Close()
 	err = stmt.QueryRowContext(ctx, t.Id, t.Uuid).Scan(&t.Id, &t.Uuid, &t.ObjectiveId, &t.ProjectId, &t.UserId, &t.Status, &t.VerifyTeamId, &t.PayerTeamId, &t.PayeeTeamId, &t.CareTeamId, &t.ServiceMode, &t.ServiceOfferingId, &t.ServiceVersionId, &t.TeaTopic, &t.IsApproved, &t.ApproverUserId, &t.ApprovalRejectionReason, &t.ApprovedAt, &t.FinalScore, &t.CreatedAt, &t.UpdatedAt, &t.DeletedAt)
 	return err
+}
+
+// GetCompletedTeaOrderSummariesByUserId 分页获取用户实际参与的已完成订单概要。
+func GetCompletedTeaOrderSummariesByUserId(ctx context.Context, userId, page, pageSize int) ([]CompletedTeaOrderSummary, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `WITH participant_orders AS (
+		SELECT o.id, o.uuid, o.created_at, o.project_id, o.service_version_id, o.service_offering_id,
+			string_agg(DISTINCT tom.team_id::text, ', ' ORDER BY tom.team_id::text) AS team_ids
+		FROM tea_orders o
+		JOIN handicrafts h ON h.tea_order_id = o.id AND h.deleted_at IS NULL
+		JOIN handicraft_participants hp ON hp.handicraft_id = h.id AND hp.deleted_at IS NULL
+			AND hp.participation_status = 'completed'
+		JOIN tea_order_members tom ON tom.id = hp.tea_order_member_id AND tom.user_id = $1
+		WHERE o.status = $2 AND o.deleted_at IS NULL
+		  AND NOT EXISTS (
+			SELECT 1 FROM tea.tea_order_deposits deposit
+			WHERE deposit.tea_order_id = o.id AND deposit.deleted_at IS NULL AND deposit.status = 6
+		  )
+		GROUP BY o.id
+	)
+	SELECT po.uuid, po.created_at, COALESCE(po.team_ids, ''),
+		COALESCE(NULLIF(version.name, ''), NULLIF(offering.name, ''), '未记录'),
+		COALESCE(place.name, '未记录')
+	FROM participant_orders po
+	LEFT JOIN team_service_offering_versions version ON version.id = po.service_version_id
+	LEFT JOIN team_service_offerings offering ON offering.id = po.service_offering_id
+	LEFT JOIN LATERAL (
+		SELECT p.name
+		FROM project_place pp
+		JOIN places p ON p.id = pp.place_id
+		WHERE pp.project_id = po.project_id
+		ORDER BY pp.created_at DESC
+		LIMIT 1
+	) place ON TRUE
+	ORDER BY po.created_at DESC, po.id DESC LIMIT $3 OFFSET $4`
+	rows, err := DB.QueryContext(ctx, statement, userId, TeaOrderStatusCompleted, pageSize, (page-1)*pageSize)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	summaries := make([]CompletedTeaOrderSummary, 0)
+	for rows.Next() {
+		var summary CompletedTeaOrderSummary
+		if err := rows.Scan(&summary.Uuid, &summary.CreatedAt, &summary.TeamIds, &summary.ServiceName, &summary.PlaceName); err != nil {
+			return nil, err
+		}
+		summaries = append(summaries, summary)
+	}
+	return summaries, rows.Err()
+}
+
+// GetCompletedTeaOrderSummaryCountByUserId 统计用户实际参与的已完成订单数。
+func GetCompletedTeaOrderSummaryCountByUserId(ctx context.Context, userId int) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT COUNT(DISTINCT o.id)
+		FROM tea_orders o
+		JOIN handicrafts h ON h.tea_order_id = o.id AND h.deleted_at IS NULL
+		JOIN handicraft_participants hp ON hp.handicraft_id = h.id AND hp.deleted_at IS NULL
+			AND hp.participation_status = 'completed'
+		JOIN tea_order_members tom ON tom.id = hp.tea_order_member_id AND tom.user_id = $1
+		WHERE o.status = $2 AND o.deleted_at IS NULL
+		  AND NOT EXISTS (
+			SELECT 1 FROM tea.tea_order_deposits deposit
+			WHERE deposit.tea_order_id = o.id AND deposit.deleted_at IS NULL AND deposit.status = 6
+		  )`
+	var count int
+	err := DB.QueryRowContext(ctx, statement, userId, TeaOrderStatusCompleted).Scan(&count)
+	return count, err
+}
+
+// IsTeaOrderMember 检查用户是否出现在订单成员快照中。
+func IsTeaOrderMember(ctx context.Context, teaOrderId, userId int) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	var exists bool
+	err := DB.QueryRowContext(ctx, `SELECT EXISTS (
+		SELECT 1 FROM tea_order_members WHERE tea_order_id = $1 AND user_id = $2
+	)`, teaOrderId, userId).Scan(&exists)
+	return exists, err
 }
 
 // GetTeaOrderByProjectIdAndObjectiveId 根据项目ID和茶围目标ID获取茶订单记录

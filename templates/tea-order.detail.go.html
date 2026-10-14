@@ -4,11 +4,15 @@
 
 <ol class="breadcrumb">
   <li><a href="/v1/">大堂</a></li>
+  {{ if eq .Referer "workbook" }}
+  <li><a href="/v1/workbook/user?uuid={{ .WorkbookUserUuid }}">作业本</a></li>
+  {{ else }}
   <li><a href="/v1/teams/joined">团队事项</a></li>
   {{ if .TeamUuid }}
   <li><a href="/v1/work-desk?team_id={{ .TeamUuid }}">工作台</a></li>
   {{ else }}
   <li><a href="/v1/verifier/workspace">见证工作间</a></li>
+  {{ end }}
   {{ end }}
   <li class="active">茶订单详情</li>
 </ol>
@@ -92,7 +96,11 @@
 
 <div class="panel panel-default">
   <div class="panel-body">
-    {{ if .TeamUuid }}
+    {{ if eq .Referer "workbook" }}
+    <a href="/v1/workbook/user?uuid={{ .WorkbookUserUuid }}" class="btn btn-default btn-lg">
+      <i class="bi-arrow-left"></i> 返回作业本
+    </a>
+    {{ else if .TeamUuid }}
     <a href="/v1/work-desk?team_id={{ .TeamUuid }}" class="btn btn-default btn-lg">
       <i class="bi-arrow-left"></i> 返回工作台
     </a>

@@ -46,9 +46,9 @@ func NewAppointmentGet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "uuid is required", http.StatusBadRequest)
 		return
 	}
-	// 如果当前用户不是验证者，则返回错误信息
+	// 如果当前用户不是见证者，则返回错误信息
 	if !dao.IsVerifier(s_u.Id) {
-		report(w, s_u, "你好，世人都晓神仙好，只有金银忘不了！请稍后再试。")
+		report(w, s_u, "你好，需要见证者权限，请确认后再试。")
 		return
 	}
 	// 根据uuid获取项目

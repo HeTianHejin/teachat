@@ -1,0 +1,59 @@
+{{ define "content" }}
+
+<ol class="breadcrumb">
+  <li><a href="/v1/">大堂</a></li>
+  <li>{{ .TargetUser.FullName }}</li>
+  <li class="active">作业本</li>
+</ol>
+
+<div class="page-header">
+  <h1>{{ .TargetUser.FullName }} 的作业本</h1>
+  <p>已完成订单参与记录 {{ .TotalCount }} 条</p>
+</div>
+
+{{ if .Orders }}
+<div class="table-responsive">
+  <table class="table table-striped table-hover">
+    <thead>
+      <tr>
+        <th>时间</th>
+        <th>地点</th>
+        <th>参与团队 ID</th>
+        <th>服务项目</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{ range .Orders }}
+      <tr>
+        <td><a href="/v1/tea-order/detail?uuid={{ .Uuid }}&from=workbook&user_uuid={{ $.TargetUser.Uuid }}">{{ .CreatedAt.Format "2006-01-02 15:04" }}</a></td>
+        <td>{{ .PlaceName }}</td>
+        <td>{{ if .TeamIds }}{{ .TeamIds }}{{ else }}未记录{{ end }}</td>
+        <td><a href="/v1/tea-order/detail?uuid={{ .Uuid }}&from=workbook&user_uuid={{ $.TargetUser.Uuid }}">{{ .ServiceName }}</a></td>
+      </tr>
+      {{ end }}
+    </tbody>
+  </table>
+</div>
+{{ else }}
+<div class="alert alert-info">暂时没有已完成订单参与记录。</div>
+{{ end }}
+
+{{ if gt .TotalPages 1 }}
+<nav aria-label="作业本分页">
+  <ul class="pagination">
+    {{ if .HasPrev }}
+    <li><a href="/v1/workbook/user?uuid={{ .TargetUser.Uuid }}&page={{ subtract .CurrentPage 1 }}" aria-label="上一页">上一页</a></li>
+    {{ else }}
+    <li class="disabled"><span>上一页</span></li>
+    {{ end }}
+    <li class="active"><span>{{ .CurrentPage }} / {{ .TotalPages }}</span></li>
+    {{ if .HasNext }}
+    <li><a href="/v1/workbook/user?uuid={{ .TargetUser.Uuid }}&page={{ add .CurrentPage 1 }}" aria-label="下一页">下一页</a></li>
+    {{ else }}
+    <li class="disabled"><span>下一页</span></li>
+    {{ end }}
+  </ul>
+</nav>
+{{ end }}
+
+{{ end }}

@@ -199,8 +199,3 @@ func Forgot(w http.ResponseWriter, r *http.Request) {
 func Reset(w http.ResponseWriter, r *http.Request) {
 	panic("not implemented")
 }
-
-// GET /v1/users/connection_follow
-func Follow(w http.ResponseWriter, r *http.Request) {
-	generateHTML(w, nil, "layout", "navbar.private", "connection.follow")
-}
