@@ -7,6 +7,14 @@
   <li class="active">已下架服务项目</li>
 </ol>
 
+<h3>服务项目管理</h3>
+
+{{/* 服务项目管理导航 */}}
+<ul class="nav nav-tabs nav-justified">
+	<li><a href="/v1/team/service_offerings?uuid={{ .Team.Uuid }}">项目列表</a></li>
+	<li  class="active"><a href="#">已下架项目</a></li>
+</ul>
+
 <h3>已下架服务项目</h3>
 {{ if $.Offerings }}
 {{ range $.Offerings }}
