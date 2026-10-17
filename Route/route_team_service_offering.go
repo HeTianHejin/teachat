@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 	dao "teachat/DAO"
 )
 
@@ -148,11 +149,29 @@ func teamServiceOfferingsPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		//服务项目名称重名检查，不允许重复，不允许修改为已存在的名称，名称中不能包含特殊字符或者空格
+		//服务项目名称重名检查，不允许重复，不允许修改为已存在的名称，
 		name := r.FormValue("name")
 		if name == "" {
 			report(w, *user, "服务项目名称不能为空。")
 			return
+		}
+		//名称中不能包含空格
+		if strings.Contains(name, " ") || strings.Contains(name, "\t") {
+			report(w, *user, "服务项目名称不能包含空格。")
+			return
+		}
+		// 中文字符总数<=9,英文字符总数<=18,数字总数<=18,其他字符总数<=9
+		if cnStrLen(name) > 9 {
+			report(w, *user, "服务项目名称不能超过9个中文字符。")
+			return
+		}
+		//不能包含特殊字符:.,;:'"!?@#$%^&*()_+=[]{}|\/<>~
+		specialChars := `.,;:'"!?@#$%^&*()_+=[]{}|\/<>~`
+		for _, char := range specialChars {
+			if strings.ContainsRune(name, char) {
+				report(w, *user, "服务项目名称不能包含特殊字符: "+specialChars)
+				return
+			}
 		}
 		existingOffering, err := dao.GetTeamServiceOfferingByName(team.Id, name, r.Context())
 		if err == nil && existingOffering != nil {
@@ -164,7 +183,7 @@ func teamServiceOfferingsPost(w http.ResponseWriter, r *http.Request) {
 
 		offering := &dao.TeamServiceOffering{
 			TeamId:           team.Id,
-			Name:             r.FormValue("name"),
+			Name:             name,
 			Summary:          r.FormValue("summary"),
 			Description:      r.FormValue("description"),
 			TargetProblem:    r.FormValue("target_problem"),
