@@ -21,7 +21,7 @@ type TeamServiceOffering struct {
 	Id               int
 	Uuid             string
 	TeamId           int
-	Name             string
+	Name             string //服务项目名称
 	Summary          string //服务项目简介
 	Description      string //服务项目详细描述
 	TargetProblem    string //服务项目解决的目标问题
@@ -173,16 +173,20 @@ const (
 
 // 服务版本
 // 上架服务项目是锁定一个版本，后续修改服务时创建新版本
-// 服务 v1 上架, 订单 A 使用 v1
-// 团队修改服务
-// 服务 v2 创建并上架
-// 订单 A 仍然显示 v1
-// 新订单使用 v2
+// 版本号采用语义化三位 major.minor.patch：
+//
+//	major: CEO 变动时递增
+//	minor: 核心成员(CTO/CMO/CFO)变动时递增
+//	patch: 普通成员(品茶师)变动时递增
+//
+// 首次上架强制 1.0.0，后续 Resume/重新上架按实际变动累加。
 type TeamServiceOfferingVersion struct {
 	Id                int
 	Uuid              string
 	ServiceOfferingId int    //所属服务项目ID
-	VersionNo         int    //版本号，从1开始递增
+	VersionMajor      int    //版本号第1位：CEO变动时递增
+	VersionMinor      int    //版本号第2位：核心成员变动时递增
+	VersionPatch      int    //版本号第3位：普通成员变动时递增
 	Name              string //服务项目名称，冗余自 TeamServiceOffering.name
 	Summary           string //服务项目简介，冗余自 TeamServiceOffering.summary
 	Description       string //服务项目详细描述，冗余自 TeamServiceOffering.description
@@ -194,6 +198,24 @@ type TeamServiceOfferingVersion struct {
 	IsCurrent         bool   //是否为当前在架版本
 	RecorderUserId    int    //登记人id
 	CreatedAt         time.Time
+}
+
+// VersionString 返回语义化版本号字符串，如 "1.2.3"
+func (v *TeamServiceOfferingVersion) VersionString() string {
+	return fmt.Sprintf("%d.%d.%d", v.VersionMajor, v.VersionMinor, v.VersionPatch)
+}
+
+// 服务项目版本成员快照
+// 记录每个版本创建时团队的成员构成，用于后续版本对比判断成员变动
+type TeamServiceOfferingVersionMember struct {
+	Id        int
+	VersionId int
+	UserId    int
+	Role      int
+	IsCeo     bool
+	IsCore    bool
+	IsNormal  bool
+	CreatedAt time.Time
 }
 
 // 服务版本技能要求快照
@@ -475,19 +497,28 @@ func (tso *TeamServiceOffering) transition(ctx context.Context, to TeamServiceOf
 	return nil
 }
 
-// insertVersionSnapshot 在当前事务中把服务项目的内容锁定为一个新版本快照
-// version_no 由数据库取当前最大值加一，唯一索引保证同一项目内版本号不重复。
+// insertVersionSnapshot 在当前事务中把服务项目的内容锁定为一个新版本快照。
+// 版本号根据团队成员变动计算：首次上架为 1.0.0，后续按 CEO/核心成员/普通成员变动累加对应位。
 func insertVersionSnapshot(ctx context.Context, tx *sql.Tx, tso *TeamServiceOffering,
 	recorderUserId int, now time.Time) (*TeamServiceOfferingVersion, error) {
 
 	// 先释放旧的当前版本，满足"每个服务项目最多一个当前版本"的唯一约束
-	if _, err := tx.ExecContext(ctx, `UPDATE team_service_offering_versions SET is_current = FALSE 
+	if _, err := tx.ExecContext(ctx, `UPDATE team_service_offering_versions SET is_current = FALSE
 		WHERE service_offering_id = $1 AND is_current`, tso.Id); err != nil {
+		return nil, err
+	}
+
+	// 计算新版本号
+	major, minor, patch, err := calculateNextVersion(ctx, tx, tso)
+	if err != nil {
 		return nil, err
 	}
 
 	version := &TeamServiceOfferingVersion{
 		ServiceOfferingId: tso.Id,
+		VersionMajor:      major,
+		VersionMinor:      minor,
+		VersionPatch:      patch,
 		Name:              tso.Name,
 		Summary:           tso.Summary,
 		Description:       tso.Description,
@@ -500,19 +531,25 @@ func insertVersionSnapshot(ctx context.Context, tx *sql.Tx, tso *TeamServiceOffe
 		RecorderUserId:    recorderUserId,
 		CreatedAt:         now,
 	}
-	statement := `INSERT INTO team_service_offering_versions 
-		(service_offering_id, version_no, name, summary, description, target_problem, deliverables, 
-		 requirements, estimated_minutes, price_milligrams, is_current, recorder_user_id, created_at) 
-		VALUES ($1, (SELECT COALESCE(MAX(version_no), 0) + 1 FROM team_service_offering_versions 
-			WHERE service_offering_id = $1), $2, $3, $4, $5, $6, $7, $8, $9, TRUE, $10, $11) 
-		RETURNING id, uuid, version_no`
-	err := tx.QueryRowContext(ctx, statement, version.ServiceOfferingId, version.Name, version.Summary,
+	statement := `INSERT INTO team_service_offering_versions
+		(service_offering_id, version_major, version_minor, version_patch, name, summary, description, target_problem, deliverables,
+		 requirements, estimated_minutes, price_milligrams, is_current, recorder_user_id, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, TRUE, $13, $14)
+		RETURNING id, uuid`
+	err = tx.QueryRowContext(ctx, statement, version.ServiceOfferingId, version.VersionMajor,
+		version.VersionMinor, version.VersionPatch, version.Name, version.Summary,
 		version.Description, version.TargetProblem, version.Deliverables, version.Requirements,
 		version.EstimatedMinutes, version.PriceMilligrams, version.RecorderUserId,
-		version.CreatedAt).Scan(&version.Id, &version.Uuid, &version.VersionNo)
+		version.CreatedAt).Scan(&version.Id, &version.Uuid)
 	if err != nil {
 		return nil, err
 	}
+
+	// 写入版本成员快照
+	if err := insertVersionMembers(ctx, tx, version.Id, tso.TeamId); err != nil {
+		return nil, err
+	}
+
 	if err := copyOfferingSkillsToVersion(ctx, tx, version.Id, tso.Id, tso.TeamId); err != nil {
 		return nil, err
 	}
@@ -529,6 +566,196 @@ func copyOfferingSkillsToVersion(ctx context.Context, tx *sql.Tx, versionId, off
 		FROM team_service_offering_skills
 		WHERE service_offering_id = $2 AND team_id = $3`, versionId, offeringId, teamId)
 	return err
+}
+
+// calculateNextVersion 计算下一个版本号。
+// 首次上架（无历史版本）→ 1.0.0
+// 有历史版本 → 对比上一个版本的成员快照，按变动规则累加对应位：
+//
+//	major: CEO user_id 变化
+//	minor: 核心成员(CTO/CMO/CFO) user_id 集合变化
+//	patch: 普通成员(品茶师) user_id 集合变化
+func calculateNextVersion(ctx context.Context, tx *sql.Tx, tso *TeamServiceOffering) (major, minor, patch int, err error) {
+	// 查询上一个版本
+	var lastMajor, lastMinor, lastPatch int
+	err = tx.QueryRowContext(ctx, `
+		SELECT version_major, version_minor, version_patch
+		FROM team_service_offering_versions
+		WHERE service_offering_id = $1
+		ORDER BY version_major DESC, version_minor DESC, version_patch DESC
+		LIMIT 1`, tso.Id).Scan(&lastMajor, &lastMinor, &lastPatch)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			// 首次上架，强制 1.0.0
+			return 1, 0, 0, nil
+		}
+		return 0, 0, 0, err
+	}
+
+	// 获取上一个版本的成员快照
+	lastMembers, err := getVersionMembers(ctx, tx, tso.Id)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	// 获取当前团队成员
+	team := &Team{Id: tso.TeamId}
+	currentCEO, _ := team.MemberCEO()
+	currentCore, _ := team.CoreMembers()
+	currentNormal, _ := team.NormalMembers()
+
+	// 提取 user_id 集合用于对比
+	lastCEO := 0
+	lastCoreSet := make(map[int]struct{})
+	lastNormalSet := make(map[int]struct{})
+	for _, m := range lastMembers {
+		if m.IsCeo {
+			lastCEO = m.UserId
+		}
+		if m.IsCore {
+			lastCoreSet[m.UserId] = struct{}{}
+		}
+		if m.IsNormal {
+			lastNormalSet[m.UserId] = struct{}{}
+		}
+	}
+
+	major = lastMajor
+	minor = lastMinor
+	patch = lastPatch
+
+	// 对比 CEO
+	if currentCEO.UserId != lastCEO {
+		major++
+		minor = 0
+		patch = 0
+		return
+	}
+
+	// 对比核心成员（排除CEO）
+	currentCoreSet := make(map[int]struct{})
+	for _, m := range currentCore {
+		if m.Role != RoleCEO {
+			currentCoreSet[m.UserId] = struct{}{}
+		}
+	}
+	if !mapIntEqual(currentCoreSet, lastCoreSet) {
+		minor++
+		patch = 0
+		return
+	}
+
+	// 对比普通成员
+	currentNormalSet := make(map[int]struct{})
+	for _, m := range currentNormal {
+		currentNormalSet[m.UserId] = struct{}{}
+	}
+	if !mapIntEqual(currentNormalSet, lastNormalSet) {
+		patch++
+		return
+	}
+
+	// 无成员变动，仅 patch+1（内容修改导致的重新上架）
+	patch++
+	return
+}
+
+// getVersionMembers 获取指定服务项目的最新版本的成员快照。
+// 通过 service_offering_id 查询，返回该服务项目最新版本的成员列表。
+func getVersionMembers(ctx context.Context, tx *sql.Tx, offeringId int) ([]TeamServiceOfferingVersionMember, error) {
+	rows, err := tx.QueryContext(ctx, `
+		SELECT m.user_id, m.role, m.is_ceo, m.is_core, m.is_normal
+		FROM team_service_offering_version_members m
+		JOIN team_service_offering_versions v ON v.id = m.version_id
+		WHERE v.service_offering_id = $1
+		  AND v.id = (
+			  SELECT id FROM team_service_offering_versions
+			  WHERE service_offering_id = $1
+			  ORDER BY version_major DESC, version_minor DESC, version_patch DESC
+			  LIMIT 1
+		  )`, offeringId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var members []TeamServiceOfferingVersionMember
+	for rows.Next() {
+		var m TeamServiceOfferingVersionMember
+		if err := rows.Scan(&m.UserId, &m.Role, &m.IsCeo, &m.IsCore, &m.IsNormal); err != nil {
+			return nil, err
+		}
+		members = append(members, m)
+	}
+	return members, rows.Err()
+}
+
+// insertVersionMembers 将当前团队成员写入版本成员快照。
+func insertVersionMembers(ctx context.Context, tx *sql.Tx, versionId, teamId int) error {
+	team := &Team{Id: teamId}
+
+	// CEO
+	ceo, err := team.MemberCEO()
+	if err != nil {
+		return err
+	}
+	if ceo.UserId > 0 {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO team_service_offering_version_members
+			(version_id, user_id, role, is_ceo, is_core, is_normal, created_at)
+			VALUES ($1, $2, $3, TRUE, FALSE, FALSE, CURRENT_TIMESTAMP)`,
+			versionId, ceo.UserId, ceo.Role); err != nil {
+			return err
+		}
+	}
+
+	// 核心成员（CEO已在上面写入，这里只写CTO/CMO/CFO）
+	coreMembers, err := team.CoreMembers()
+	if err != nil {
+		return err
+	}
+	for _, m := range coreMembers {
+		if m.Role == RoleCEO {
+			continue // CEO 已单独写入
+		}
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO team_service_offering_version_members
+			(version_id, user_id, role, is_ceo, is_core, is_normal, created_at)
+			VALUES ($1, $2, $3, FALSE, TRUE, FALSE, CURRENT_TIMESTAMP)`,
+			versionId, m.UserId, m.Role); err != nil {
+			return err
+		}
+	}
+
+	// 普通成员
+	normalMembers, err := team.NormalMembers()
+	if err != nil {
+		return err
+	}
+	for _, m := range normalMembers {
+		if _, err := tx.ExecContext(ctx, `
+			INSERT INTO team_service_offering_version_members
+			(version_id, user_id, role, is_ceo, is_core, is_normal, created_at)
+			VALUES ($1, $2, $3, FALSE, FALSE, TRUE, CURRENT_TIMESTAMP)`,
+			versionId, m.UserId, m.Role); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// mapIntEqual 比较两个 int 集合是否相等。
+func mapIntEqual(a, b map[int]struct{}) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k := range a {
+		if _, ok := b[k]; !ok {
+			return false
+		}
+	}
+	return true
 }
 
 // publish 流转到"已上架"：锁定一个新版本并写入事件，全部在一个事务内完成
@@ -798,13 +1025,13 @@ func GetTeamServiceOfferingVersionById(versionId int, ctx context.Context) (*Tea
 	defer cancel()
 
 	version := &TeamServiceOfferingVersion{}
-	statement := `SELECT id, uuid, service_offering_id, version_no, name, summary, description, 
-		target_problem, deliverables, requirements, estimated_minutes, price_milligrams, 
-		is_current, recorder_user_id, created_at 
+	statement := `SELECT id, uuid, service_offering_id, version_major, version_minor, version_patch, name, summary, description,
+		target_problem, deliverables, requirements, estimated_minutes, price_milligrams,
+		is_current, recorder_user_id, created_at
 		FROM team_service_offering_versions WHERE id = $1`
 	err := DB.QueryRowContext(ctx, statement, versionId).Scan(
-		&version.Id, &version.Uuid, &version.ServiceOfferingId, &version.VersionNo, &version.Name,
-		&version.Summary, &version.Description, &version.TargetProblem, &version.Deliverables,
+		&version.Id, &version.Uuid, &version.ServiceOfferingId, &version.VersionMajor, &version.VersionMinor, &version.VersionPatch,
+		&version.Name, &version.Summary, &version.Description, &version.TargetProblem, &version.Deliverables,
 		&version.Requirements, &version.EstimatedMinutes, &version.PriceMilligrams,
 		&version.IsCurrent, &version.RecorderUserId, &version.CreatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -821,11 +1048,11 @@ func GetTeamServiceOfferingVersionsByOfferingId(offeringId int, ctx context.Cont
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	statement := `SELECT id, uuid, service_offering_id, version_no, name, summary, description, 
-		target_problem, deliverables, requirements, estimated_minutes, price_milligrams, 
-		is_current, recorder_user_id, created_at 
-		FROM team_service_offering_versions WHERE service_offering_id = $1 
-		ORDER BY version_no DESC`
+	statement := `SELECT id, uuid, service_offering_id, version_major, version_minor, version_patch, name, summary, description,
+		target_problem, deliverables, requirements, estimated_minutes, price_milligrams,
+		is_current, recorder_user_id, created_at
+		FROM team_service_offering_versions WHERE service_offering_id = $1
+		ORDER BY version_major DESC, version_minor DESC, version_patch DESC`
 	rows, err := DB.QueryContext(ctx, statement, offeringId)
 	if err != nil {
 		return nil, err
@@ -835,7 +1062,7 @@ func GetTeamServiceOfferingVersionsByOfferingId(offeringId int, ctx context.Cont
 	versions := make([]*TeamServiceOfferingVersion, 0)
 	for rows.Next() {
 		version := &TeamServiceOfferingVersion{}
-		if err = rows.Scan(&version.Id, &version.Uuid, &version.ServiceOfferingId, &version.VersionNo,
+		if err = rows.Scan(&version.Id, &version.Uuid, &version.ServiceOfferingId, &version.VersionMajor, &version.VersionMinor, &version.VersionPatch,
 			&version.Name, &version.Summary, &version.Description, &version.TargetProblem,
 			&version.Deliverables, &version.Requirements, &version.EstimatedMinutes,
 			&version.PriceMilligrams, &version.IsCurrent, &version.RecorderUserId,
@@ -1097,4 +1324,22 @@ func GetTeamServiceOfferingSkillsByOfferingId(offeringId int, ctx context.Contex
 		return nil, err
 	}
 	return skills, nil
+}
+
+func GetTeamServiceOfferingByName(teamId int, name string, ctx context.Context) (*TeamServiceOffering, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	statement := `SELECT id, uuid, team_id, name, summary, description, target_problem, deliverables, requirements, estimated_minutes, price_milligrams, status, created_at, updated_at 
+		FROM team_service_offerings 
+		WHERE team_id = $1 AND name = $2 AND deleted_at IS NULL`
+	row := DB.QueryRowContext(ctx, statement, teamId, name)
+	offering := &TeamServiceOffering{}
+	if err := row.Scan(&offering.Id, &offering.Uuid, &offering.TeamId, &offering.Name, &offering.Summary, &offering.Description, &offering.TargetProblem, &offering.Deliverables, &offering.Requirements, &offering.EstimatedMinutes, &offering.PriceMilligrams, &offering.Status, &offering.CreatedAt, &offering.UpdatedAt); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return offering, nil
 }

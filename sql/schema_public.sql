@@ -1589,11 +1589,17 @@ CREATE TABLE team_service_offerings (
 
 -- 团队服务项目版本表
 -- 上架即锁定一个不可变快照；后续修改生成新版本，历史茶订单始终显示下单时锁定的旧版本。
+-- 版本号采用语义化三位：major.minor.patch
+--   major: CEO 变动时递增
+--   minor: 核心成员(CTO/CMO/CFO)变动时递增
+--   patch: 普通成员(品茶师)变动时递增
 CREATE TABLE team_service_offering_versions (
     id                    SERIAL PRIMARY KEY,
     uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     service_offering_id   INTEGER NOT NULL REFERENCES team_service_offerings(id),
-    version_no            INTEGER NOT NULL,
+    version_major         INTEGER NOT NULL DEFAULT 1,
+    version_minor         INTEGER NOT NULL DEFAULT 0,
+    version_patch         INTEGER NOT NULL DEFAULT 0,
     name                  VARCHAR(255) NOT NULL,
     summary               VARCHAR(500),
     description           TEXT,
@@ -1605,7 +1611,7 @@ CREATE TABLE team_service_offering_versions (
     is_current            BOOLEAN NOT NULL DEFAULT FALSE,
     recorder_user_id      INTEGER NOT NULL REFERENCES users(id),
     created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (service_offering_id, version_no)
+    UNIQUE (service_offering_id, version_major, version_minor, version_patch)
 );
 
 -- 茶订单锁定服务项目及版本，并快照成交价格，使历史订单不受后续调价影响
@@ -1869,6 +1875,22 @@ CREATE INDEX idx_tso_team_status ON team_service_offerings(team_id, status) WHER
 
 CREATE INDEX idx_tsov_service_offering_id ON team_service_offering_versions(service_offering_id);
 
+-- 服务项目版本成员快照表
+-- 记录每个版本创建时团队的成员构成，用于后续版本对比判断成员变动
+CREATE TABLE team_service_offering_version_members (
+    id                    SERIAL PRIMARY KEY,
+    version_id            INTEGER NOT NULL REFERENCES team_service_offering_versions(id) ON DELETE CASCADE,
+    user_id               INTEGER NOT NULL REFERENCES users(id),
+    role                  INTEGER NOT NULL DEFAULT 0,
+    is_ceo                BOOLEAN NOT NULL DEFAULT FALSE,
+    is_core               BOOLEAN NOT NULL DEFAULT FALSE,
+    is_normal             BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at            TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (version_id, user_id)
+);
+
+COMMENT ON TABLE team_service_offering_version_members IS '服务项目版本成员快照表（记录版本创建时的团队成员构成）';
+
 CREATE INDEX idx_tsos_service_offering_id ON team_service_offering_skills(service_offering_id);
 CREATE INDEX idx_tsos_skill_id ON team_service_offering_skills(skill_id);
 CREATE INDEX idx_tsos_team_id ON team_service_offering_skills(team_id);
@@ -1931,6 +1953,9 @@ COMMENT ON COLUMN team_service_offerings.estimated_minutes IS '预计耗时，�
 COMMENT ON COLUMN team_service_offerings.price_milligrams IS '服务价格，单位毫克（星茶），1克=1000毫克';
 COMMENT ON COLUMN team_service_offerings.current_version_id IS '当前在架版本ID，未上架为NULL';
 COMMENT ON COLUMN team_service_offerings.approved_by IS '审核人用户ID，须为见证者团队成员，未审核为NULL';
+COMMENT ON COLUMN team_service_offering_versions.version_major IS '版本号第1位：CEO变动时递增';
+COMMENT ON COLUMN team_service_offering_versions.version_minor IS '版本号第2位：核心成员(CTO/CMO/CFO)变动时递增';
+COMMENT ON COLUMN team_service_offering_versions.version_patch IS '版本号第3位：普通成员(品茶师)变动时递增';
 COMMENT ON COLUMN team_service_offering_versions.is_current IS '是否为当前在架版本，每个服务项目最多一个';
 COMMENT ON COLUMN team_service_offering_skills.required_level IS '要求的团队技能等级，1-9，对应 skill_teams.level';
 COMMENT ON COLUMN team_service_offering_events.action IS '提交审核/审核通过/审核婉拒/暂停接单/恢复接单/下架/废止';

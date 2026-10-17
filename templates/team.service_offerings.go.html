@@ -27,6 +27,7 @@
 	<div class="panel-heading">
 		<strong>{{ .Name }}</strong>
 		<span class="label label-default">{{ .Status.StatusString }}</span>
+		{{ if .VersionString }}<span class="label label-info" title="版本号与团队成员挂钩：第1位=CEO变动，第2位=核心成员变动，第3位=普通成员变动">v{{ .VersionString }}</span>{{ end }}
 		{{ if and $.IsManager .IsEditable }}<a class="pull-right" href="/v1/team/service_offerings?uuid={{ $.TeamBean.Team.Uuid }}&offering_uuid={{ .Uuid }}">编辑</a>{{ end }}
 	</div>
 	<div class="panel-body">
@@ -99,6 +100,15 @@
 			<div class="form-group">
 				<label class="col-sm-2 control-label" for="offering-name">项目名称 *</label>
 				<div class="col-sm-10"><input class="form-control" id="offering-name" name="name" required maxlength="255" value="{{ if $.Editing }}{{ $.Editing.Name }}{{ end }}"></div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-2 control-label">版本号</label>
+				<div class="col-sm-10">
+					<p class="form-control-static">
+						<strong>1.0.0</strong>
+						<small class="text-muted">（首次上架时确定，与团队成员挂钩：第1位=CEO变动，第2位=核心成员变动，第3位=普通成员变动）</small>
+					</p>
+				</div>
 			</div>
 			<div class="form-group">
 				<label class="col-sm-2 control-label" for="offering-summary">项目简介</label>

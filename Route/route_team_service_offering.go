@@ -89,14 +89,30 @@ func teamServiceOfferingsGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	// 为每个已上架/暂停的服务项目加载当前版本号
+	type offeringWithVersion struct {
+		*dao.TeamServiceOffering
+		VersionString string
+	}
+	offeringsWithVersion := make([]offeringWithVersion, 0, len(offerings))
+	for _, o := range offerings {
+		owv := offeringWithVersion{TeamServiceOffering: o}
+		if o.CurrentVersionId > 0 {
+			if ver, err := dao.GetTeamServiceOfferingVersionById(o.CurrentVersionId, r.Context()); err == nil {
+				owv.VersionString = ver.VersionString()
+			}
+		}
+		offeringsWithVersion = append(offeringsWithVersion, owv)
+	}
+
 	pageData := struct {
 		SessUser   dao.User
 		TeamBean   dao.TeamBean
-		Offerings  []*dao.TeamServiceOffering
+		Offerings  []offeringWithVersion
 		Editing    *dao.TeamServiceOffering
 		IsManager  bool
 		IsVerifier bool
-	}{SessUser: *user, TeamBean: teamBean, Offerings: offerings, Editing: editing, IsManager: isManager, IsVerifier: isVerifier}
+	}{SessUser: *user, TeamBean: teamBean, Offerings: offeringsWithVersion, Editing: editing, IsManager: isManager, IsVerifier: isVerifier}
 	generateHTML(w, &pageData, "layout", "navbar.private", "team.service_offerings")
 }
 
@@ -127,15 +143,35 @@ func teamServiceOfferingsPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		price, parseErr := strconv.ParseInt(r.FormValue("price_milligrams"), 10, 64)
-		if parseErr != nil || price < 0 {
-			report(w, *user, "服务价格必须是大于或等于零的毫克数。")
+		if parseErr != nil || price < 10 {
+			report(w, *user, "服务价格必须是大于或等于10的毫克数。")
 			return
 		}
+
+		//服务项目名称重名检查，不允许重复，不允许修改为已存在的名称，名称中不能包含特殊字符或者空格
+		name := r.FormValue("name")
+		if name == "" {
+			report(w, *user, "服务项目名称不能为空。")
+			return
+		}
+		existingOffering, err := dao.GetTeamServiceOfferingByName(team.Id, name, r.Context())
+		if err == nil && existingOffering != nil {
+			if action == "create" || (action == "update" && existingOffering.Uuid != r.FormValue("offering_uuid")) {
+				report(w, *user, "服务项目名称已存在，请选择其他名称。")
+				return
+			}
+		}
+
 		offering := &dao.TeamServiceOffering{
-			TeamId: team.Id, Name: r.FormValue("name"), Summary: r.FormValue("summary"),
-			Description: r.FormValue("description"), TargetProblem: r.FormValue("target_problem"),
-			Deliverables: r.FormValue("deliverables"), Requirements: r.FormValue("requirements"),
-			EstimatedMinutes: minutes, PriceMilligrams: price, RecorderUserId: user.Id,
+			TeamId:           team.Id,
+			Name:             r.FormValue("name"),
+			Summary:          r.FormValue("summary"),
+			Description:      r.FormValue("description"),
+			TargetProblem:    r.FormValue("target_problem"),
+			Deliverables:     r.FormValue("deliverables"),
+			Requirements:     r.FormValue("requirements"),
+			EstimatedMinutes: minutes, PriceMilligrams: price,
+			RecorderUserId: user.Id,
 		}
 		if action == "create" {
 			err = offering.Create(r.Context())
