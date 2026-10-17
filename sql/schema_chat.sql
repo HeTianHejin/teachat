@@ -1,13 +1,9 @@
--- TeaChat 数据库架构定义
+-- TeaChat 核心业务 schema
+-- 可独立重建；完整数据库重建请执行 sql/schema.sql。
 
--- 创建数据库(如果需要)
---CREATE USER robin WITH PASSWORD 'robin';
---ALTER USER robin SUPERUSER;
-DROP DATABASE IF EXISTS teachat;
-CREATE DATABASE teachat OWNER robin;
-\set ON_ERROR_STOP on
--- 连接到新数据库
-\c teachat
+DROP SCHEMA IF EXISTS chat CASCADE;
+CREATE SCHEMA chat;
+SET search_path TO chat, public;
 
 -- ============================================
 -- 核心用户与组织表
@@ -895,6 +891,9 @@ CREATE TABLE skills (
     updated_at            TIMESTAMPTZ,
     deleted_at            TIMESTAMPTZ
 );
+
+CREATE INDEX IF NOT EXISTS idx_skills_review_status
+    ON skills(review_status) WHERE deleted_at IS NULL;
 
 -- 用户技能记录表
 CREATE TABLE skill_users (

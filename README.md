@@ -98,10 +98,7 @@
 
 ### 快速启动
 1. 克隆项目
-2. 创建数据库并执行脚本：
-   - `psql -f sql/schema.sql`
-   - `psql -f sql/seed_data.sql`
-   - `psql -f sql/tea_paymeng_system.sql`
+2. 重建开发数据库：`psql -f sql/schema.sql`（连接到 `postgres`，删除并重建 `teachat`，创建 `chat` 和 `tea` schema，并导入开发种子数据）
 3. 配置 `config.json` 中的数据库连接与服务地址
 4. 启动应用：
    - `go run main.go`

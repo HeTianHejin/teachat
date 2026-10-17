@@ -16,6 +16,7 @@
 
 -- 创建全新的tea schema
 CREATE SCHEMA tea;
+SET search_path TO tea, chat, public;
 
 -- ============================================
 -- 第一部分：用户相关表结构
