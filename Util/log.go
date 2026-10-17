@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"runtime"
@@ -22,8 +23,10 @@ const (
 )
 
 var (
-	logger   *log.Logger
-	logLevel int = LevelDebug
+	logger      *log.Logger
+	infoLogger  *log.Logger
+	errorLogger *log.Logger
+	logLevel    int = LevelDebug
 )
 
 // InitLogger 初始化日志配置
@@ -31,20 +34,29 @@ var (
 // level: 日志级别
 func InitLogger(writeToFile bool, level int) {
 	logLevel = level
-	var writer = os.Stdout
+	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+	infoLogger = nil
+	errorLogger = nil
 	if writeToFile {
-		file, err := os.OpenFile("error.log",
+		infoFile, err := os.OpenFile("info.log",
 			os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
+			log.Fatalln("fatal! cannot open or create info.log file:", err)
+		}
+		errorFile, err := os.OpenFile("error.log",
+			os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		if err != nil {
+			_ = infoFile.Close()
 			log.Fatalln("fatal! cannot open or create error.log file:", err)
 		}
-		writer = file
+		flags := log.Ldate | log.Ltime | log.Lshortfile
+		infoLogger = log.New(io.MultiWriter(os.Stdout, infoFile), "", flags)
+		errorLogger = log.New(io.MultiWriter(os.Stdout, errorFile), "", flags)
 	}
-	logger = log.New(writer, "", log.Ldate|log.Ltime|log.Lshortfile)
 }
 
 // logWithCaller 根据调用栈信息记录日志
-func logWithCaller(skip int, prefix string, format string, v ...any) {
+func logWithCaller(target *log.Logger, skip int, prefix string, format string, v ...any) {
 	if logger == nil {
 		InitLogger(false, LevelDebug)
 	}
@@ -56,37 +68,40 @@ func logWithCaller(skip int, prefix string, format string, v ...any) {
 	}
 
 	msg := fmt.Sprintf(format, v...)
-	logger.SetPrefix(prefix + " ")
-	logger.Output(2, fmt.Sprintf("%s:%d - %s", file, line, msg))
+	entry := fmt.Sprintf("%s %s:%d - %s", prefix, file, line, msg)
+	logger.Output(2, entry)
+	if target != nil {
+		target.Output(2, entry)
+	}
 }
 
 // 支持格式化的日志函数
 func Debug(format string, v ...any) {
 	if logLevel <= LevelDebug {
-		logWithCaller(1, "DEBUG", format, v...)
+		logWithCaller(nil, 1, "DEBUG", format, v...)
 	}
 }
 
 func Info(format string, v ...any) {
 	if logLevel <= LevelInfo {
-		logWithCaller(1, "INFO", format, v...)
+		logWithCaller(infoLogger, 1, "INFO", format, v...)
 	}
 }
 
 func Warning(format string, v ...any) {
 	if logLevel <= LevelWarning {
-		logWithCaller(1, "WARNING", format, v...)
+		logWithCaller(errorLogger, 1, "WARNING", format, v...)
 	}
 }
 
 func Error(format string, v ...any) {
 	if logLevel <= LevelError {
-		logWithCaller(1, "ERROR", format, v...)
+		logWithCaller(errorLogger, 1, "ERROR", format, v...)
 	}
 }
 
 func Panic(format string, v ...any) {
 	msg := fmt.Sprintf(format, v...)
-	logWithCaller(1, "PANIC", "%s", msg)
+	logWithCaller(errorLogger, 1, "PANIC", "%s", msg)
 	panic(msg)
 }

@@ -16,7 +16,8 @@ import (
 )
 
 func main() {
-	util.InitLogger(false, util.LevelDebug)
+	util.InitLogger(true, util.LevelDebug)
+	defer util.Info("teachat process exiting")
 
 	// 读取配置参数
 	if err := util.LoadConfig(); err != nil {
