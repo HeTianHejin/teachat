@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -454,9 +453,7 @@ func main() {
 	// 监听系统退出信号，优雅关闭
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	done := make(chan struct{})
 	go func() {
-		defer close(done)
 		<-quit
 		log.Println("received shutdown signal, stopping the teachat server...")
 
@@ -466,16 +463,15 @@ func main() {
 		if err := server.Shutdown(ctx); err != nil {
 			util.Error("teachat app was forcibly shut down: %v", err)
 		} else {
-			util.Info("teachat app has been gracefully stopped")
+			log.Println("teachat app has been gracefully stopped")
 		}
 	}()
 
 	// 启动服务器
 	util.Info("teachat %s server started, listening on address: %s", util.Version(), util.Config.Address)
-	fmt.Println("星际茶棚，开门迎客 Interstellar Tea House, open for business")
+	log.Println("星际茶棚，开门迎客 Interstellar Tea House, open for business")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		util.Error("teachat server failed to start: %v", err)
 	}
-	<-done // 等待 shutdown 完成，保证日志写入后再退出
 
 }
