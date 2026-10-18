@@ -1,8 +1,8 @@
 module teachat
 
-go 1.27.0
+go 1.27.1
 
 require (
 	github.com/lib/pq v1.12.3
-	golang.org/x/crypto v0.57.0
+	golang.org/x/crypto v0.58.0
 )
