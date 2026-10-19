@@ -99,7 +99,7 @@
 			{{ if $.Editing }}<input type="hidden" name="action" value="update"><input type="hidden" name="offering_uuid" value="{{ $.Editing.Uuid }}">{{ else }}<input type="hidden" name="action" value="create">{{ end }}
 			<div class="form-group">
 				<label class="col-sm-2 control-label" for="offering-name">项目名称 *</label>
-				<small class="text-muted">（注意检查名称中没有混杂空格或者特殊符号</small>
+				<small class="text-muted">（注意检查名称中没有混杂空格或者特殊符号）</small>
 				<div class="col-sm-10"><input class="form-control" id="offering-name" name="name" required maxlength="255" value="{{ if $.Editing }}{{ $.Editing.Name }}{{ end }}"></div>
 			</div>
 			<div class="form-group">
