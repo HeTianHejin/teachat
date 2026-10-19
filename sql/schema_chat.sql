@@ -892,9 +892,6 @@ CREATE TABLE skills (
     deleted_at            TIMESTAMPTZ
 );
 
-CREATE INDEX IF NOT EXISTS idx_skills_review_status
-    ON skills(review_status) WHERE deleted_at IS NULL;
-
 -- 用户技能记录表
 CREATE TABLE skill_users (
     id                    SERIAL PRIMARY KEY,

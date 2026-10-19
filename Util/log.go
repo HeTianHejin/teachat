@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"runtime"
@@ -23,10 +22,10 @@ const (
 )
 
 var (
-	logger      *log.Logger
-	infoLogger  *log.Logger
-	errorLogger *log.Logger
-	logLevel    int = LevelDebug
+	loggerStdout *log.Logger
+	infoLogger   *log.Logger
+	errorLogger  *log.Logger
+	logLevel     int = LevelDebug
 )
 
 // InitLogger 初始化日志配置
@@ -34,7 +33,9 @@ var (
 // level: 日志级别
 func InitLogger(writeToFile bool, level int) {
 	logLevel = level
-	logger = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+	// 设置日志输出到标准输出
+	loggerStdout = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+	// 设置日志输出到文件
 	infoLogger = nil
 	errorLogger = nil
 	if writeToFile {
@@ -50,14 +51,14 @@ func InitLogger(writeToFile bool, level int) {
 			log.Fatalln("fatal! cannot open or create error.log file:", err)
 		}
 		flags := log.Ldate | log.Ltime | log.Lshortfile
-		infoLogger = log.New(io.MultiWriter(os.Stdout, infoFile), "", flags)
-		errorLogger = log.New(io.MultiWriter(os.Stdout, errorFile), "", flags)
+		infoLogger = log.New(infoFile, "", flags)
+		errorLogger = log.New(errorFile, "", flags)
 	}
 }
 
 // logWithCaller 根据调用栈信息记录日志
 func logWithCaller(target *log.Logger, skip int, prefix string, format string, v ...any) {
-	if logger == nil {
+	if loggerStdout == nil {
 		InitLogger(false, LevelDebug)
 	}
 
@@ -69,7 +70,7 @@ func logWithCaller(target *log.Logger, skip int, prefix string, format string, v
 
 	msg := fmt.Sprintf(format, v...)
 	entry := fmt.Sprintf("%s %s:%d - %s", prefix, file, line, msg)
-	logger.Output(2, entry)
+	loggerStdout.Output(2, entry)
 	if target != nil {
 		target.Output(2, entry)
 	}
@@ -78,7 +79,7 @@ func logWithCaller(target *log.Logger, skip int, prefix string, format string, v
 // 支持格式化的日志函数
 func Debug(format string, v ...any) {
 	if logLevel <= LevelDebug {
-		logWithCaller(nil, 1, "DEBUG", format, v...)
+		logWithCaller(loggerStdout, 1, "DEBUG", format, v...)
 	}
 }
 
@@ -90,7 +91,7 @@ func Info(format string, v ...any) {
 
 func Warning(format string, v ...any) {
 	if logLevel <= LevelWarning {
-		logWithCaller(errorLogger, 1, "WARNING", format, v...)
+		logWithCaller(infoLogger, 1, "WARNING", format, v...)
 	}
 }
 
