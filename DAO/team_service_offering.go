@@ -1238,7 +1238,8 @@ func GetServiceOfferingEventsByOfferingId(offeringId int, ctx context.Context) (
 // ============================================
 
 // Create 创建服务项目与团队技能的关联
-// 通过 EXISTS 子句校验：服务项目与技能必须属于同一团队，且技能须已登记为该团队的技能。
+// 通过 EXISTS 子句校验：服务项目与技能必须属于同一团队，技能须已登记为该团队的团队技能，
+// 且团队技能状态必须为"正常"，技能本身须已审核通过。
 func (tsos *TeamServiceOfferingSkill) Create(ctx context.Context) error {
 	if tsos.ServiceOfferingId <= 0 {
 		return errors.New("技能关联必须属于某个服务项目")
@@ -1254,13 +1255,13 @@ func (tsos *TeamServiceOfferingSkill) Create(ctx context.Context) error {
 
 	statement := `INSERT INTO team_service_offering_skills 
 		(service_offering_id, skill_id, team_id, required_level, is_primary, created_at) 
-		SELECT $1, $2, $3, $4, $5, $6 
+		SELECT $1, $2, $3, $4, $5, CURRENT_TIMESTAMP 
 		WHERE EXISTS (SELECT 1 FROM team_service_offerings 
 			WHERE id = $1 AND team_id = $3 AND deleted_at IS NULL) 
 		  AND EXISTS (SELECT 1 FROM skill_teams 
-			WHERE skill_id = $2 AND team_id = $3 AND deleted_at IS NULL)
+			WHERE skill_id = $2 AND team_id = $3 AND status >= $6 AND deleted_at IS NULL)
 		  AND EXISTS (SELECT 1 FROM skills
-			WHERE id = $2 AND review_status = $6 AND deleted_at IS NULL)
+			WHERE id = $2 AND review_status = $7 AND deleted_at IS NULL)
 		RETURNING id, uuid`
 	stmt, err := DB.PrepareContext(ctx, statement)
 	if err != nil {
@@ -1269,9 +1270,9 @@ func (tsos *TeamServiceOfferingSkill) Create(ctx context.Context) error {
 	defer stmt.Close()
 
 	err = stmt.QueryRowContext(ctx, tsos.ServiceOfferingId, tsos.SkillId, tsos.TeamId,
-		tsos.RequiredLevel, tsos.IsPrimary, ApprovedSkillReviewStatus).Scan(&tsos.Id, &tsos.Uuid)
+		tsos.RequiredLevel, tsos.IsPrimary, NormalSkillTeamStatus, ApprovedSkillReviewStatus).Scan(&tsos.Id, &tsos.Uuid)
 	if errors.Is(err, sql.ErrNoRows) {
-		return errors.New("技能关联失败：服务项目与技能必须属于同一团队，且技能须已登记为该团队的团队技能")
+		return errors.New("技能关联失败：服务项目与技能必须属于同一团队，且技能须已登记为该团队状态正常的团队技能")
 	}
 	return err
 }

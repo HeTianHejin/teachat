@@ -978,6 +978,44 @@ func GetTeamSkills(teamId int, ctx context.Context) ([]SkillTeam, error) {
 	return teamSkills, nil
 }
 
+// TeamSkillDetail 团队技能及其技能名称，用于服务项目关联技能的选择展示
+type TeamSkillDetail struct {
+	SkillTeam
+	SkillName string
+}
+
+// GetNormalTeamSkillDetails 获取团队状态为"正常"的团队技能列表（含技能名称）。
+// 技能本身须已审核通过。新建/编辑服务项目时只能关联该列表中的团队技能。
+func GetNormalTeamSkillDetails(teamId int, ctx context.Context) ([]TeamSkillDetail, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	statement := `SELECT st.id, st.uuid, st.skill_id, st.team_id, st.level, st.status,
+		st.created_at, st.updated_at, st.deleted_at, s.name
+		FROM skill_teams st JOIN skills s ON s.id = st.skill_id
+		WHERE st.team_id = $1 AND st.status >= $2 AND st.deleted_at IS NULL
+		  AND s.review_status = $3 AND s.deleted_at IS NULL
+		ORDER BY st.level DESC, st.created_at DESC`
+	rows, err := DB.QueryContext(ctx, statement, teamId, NormalSkillTeamStatus, ApprovedSkillReviewStatus)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	details := make([]TeamSkillDetail, 0)
+	for rows.Next() {
+		var d TeamSkillDetail
+		if err := rows.Scan(&d.Id, &d.Uuid, &d.SkillId, &d.TeamId, &d.Level, &d.Status,
+			&d.CreatedAt, &d.UpdatedAt, &d.DeletedAt, &d.SkillName); err != nil {
+			return nil, err
+		}
+		details = append(details, d)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return details, nil
+}
+
 // CountTeamSkills 统计团队拥有的【团队技能记录】数量
 func CountTeamSkills(teamId int, ctx context.Context) (int, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)

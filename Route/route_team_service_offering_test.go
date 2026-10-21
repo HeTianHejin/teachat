@@ -15,11 +15,13 @@ func TestTeamServiceOfferingsTemplateRendersPublishedActions(t *testing.T) {
 		VersionString string
 	}
 	pageData := struct {
-		TeamBean   dao.TeamBean
-		Offerings  []offeringWithVersion
-		Editing    *dao.TeamServiceOffering
-		IsManager  bool
-		IsVerifier bool
+		TeamBean        dao.TeamBean
+		Offerings       []offeringWithVersion
+		Editing         *dao.TeamServiceOffering
+		TeamSkills      []dao.TeamSkillDetail
+		EditingSkillIds map[int]bool
+		IsManager       bool
+		IsVerifier      bool
 	}{
 		TeamBean: dao.TeamBean{Team: dao.Team{Uuid: "team-uuid", Name: "测试团队"}},
 		Offerings: []offeringWithVersion{{
@@ -29,7 +31,12 @@ func TestTeamServiceOfferingsTemplateRendersPublishedActions(t *testing.T) {
 			},
 			VersionString: "1.0.0",
 		}},
-		IsManager: true,
+		TeamSkills: []dao.TeamSkillDetail{{
+			SkillTeam: dao.SkillTeam{SkillId: 7, Level: 3, Status: dao.NormalSkillTeamStatus},
+			SkillName: "茶艺冲泡",
+		}},
+		EditingSkillIds: map[int]bool{7: true},
+		IsManager:       true,
 	}
 
 	tmpl, err := template.ParseFiles("../templates/team.service_offerings.go.html")
@@ -46,5 +53,8 @@ func TestTeamServiceOfferingsTemplateRendersPublishedActions(t *testing.T) {
 	}
 	if !strings.Contains(out, "v1.0.0") {
 		t.Fatalf("version label missing from output: %s", out)
+	}
+	if !strings.Contains(out, `name="skill_ids"`) || !strings.Contains(out, "茶艺冲泡") {
+		t.Fatalf("team skill checkboxes missing from output: %s", out)
 	}
 }

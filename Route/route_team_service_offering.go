@@ -1,6 +1,7 @@
 package route
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -90,6 +91,24 @@ func teamServiceOfferingsGet(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	// 新建/编辑服务项目只能关联本团队状态为"正常"的团队技能
+	teamSkills, err := dao.GetNormalTeamSkillDetails(team.Id, r.Context())
+	if err != nil {
+		report(w, *user, "你好，茶博士未能帮忙查看团队技能，请稍后再试。")
+		return
+	}
+	// 编辑时回显已关联的团队技能
+	editingSkillIds := make(map[int]bool)
+	if editing != nil {
+		links, err := dao.GetTeamServiceOfferingSkillsByOfferingId(editing.Id, r.Context())
+		if err != nil {
+			report(w, *user, "你好，茶博士未能帮忙查看服务项目的能力依据，请稍后再试。")
+			return
+		}
+		for _, link := range links {
+			editingSkillIds[link.SkillId] = true
+		}
+	}
 	// 为每个已上架/暂停的服务项目加载当前版本号
 	type offeringWithVersion struct {
 		*dao.TeamServiceOffering
@@ -107,13 +126,16 @@ func teamServiceOfferingsGet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pageData := struct {
-		SessUser   dao.User
-		TeamBean   dao.TeamBean
-		Offerings  []offeringWithVersion
-		Editing    *dao.TeamServiceOffering
-		IsManager  bool
-		IsVerifier bool
-	}{SessUser: *user, TeamBean: teamBean, Offerings: offeringsWithVersion, Editing: editing, IsManager: isManager, IsVerifier: isVerifier}
+		SessUser        dao.User
+		TeamBean        dao.TeamBean
+		Offerings       []offeringWithVersion
+		Editing         *dao.TeamServiceOffering
+		TeamSkills      []dao.TeamSkillDetail
+		EditingSkillIds map[int]bool
+		IsManager       bool
+		IsVerifier      bool
+	}{SessUser: *user, TeamBean: teamBean, Offerings: offeringsWithVersion, Editing: editing,
+		TeamSkills: teamSkills, EditingSkillIds: editingSkillIds, IsManager: isManager, IsVerifier: isVerifier}
 	generateHTML(w, &pageData, "layout", "navbar.private", "team.service_offerings")
 }
 
@@ -181,6 +203,35 @@ func teamServiceOfferingsPost(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		// 服务项目须至少关联一个本团队状态为"正常"的团队技能
+		teamSkills, err := dao.GetNormalTeamSkillDetails(team.Id, r.Context())
+		if err != nil {
+			report(w, *user, "你好，茶博士未能帮忙查看团队技能，请稍后再试。")
+			return
+		}
+		skillLevels := make(map[int]int, len(teamSkills))
+		for _, ts := range teamSkills {
+			skillLevels[ts.SkillId] = ts.Level
+		}
+		selectedSkillIds := make([]int, 0, len(r.Form["skill_ids"]))
+		seenSkillIds := make(map[int]bool)
+		for _, v := range r.Form["skill_ids"] {
+			skillId, parseErr := strconv.Atoi(v)
+			if parseErr != nil || seenSkillIds[skillId] {
+				continue
+			}
+			seenSkillIds[skillId] = true
+			if _, ok := skillLevels[skillId]; !ok {
+				report(w, *user, "只能关联本团队已登记且状态为正常的团队技能。")
+				return
+			}
+			selectedSkillIds = append(selectedSkillIds, skillId)
+		}
+		if len(selectedSkillIds) == 0 {
+			report(w, *user, "服务项目须至少关联一个状态正常的团队技能。")
+			return
+		}
+
 		offering := &dao.TeamServiceOffering{
 			TeamId:           team.Id,
 			Name:             name,
@@ -194,6 +245,9 @@ func teamServiceOfferingsPost(w http.ResponseWriter, r *http.Request) {
 		}
 		if action == "create" {
 			err = offering.Create(r.Context())
+			if err == nil {
+				err = createOfferingSkillLinks(offering.Id, team.Id, selectedSkillIds, skillLevels, r.Context())
+			}
 		} else {
 			offering.Uuid = r.FormValue("offering_uuid")
 			err = offering.GetByIdOrUUID(r.Context())
@@ -211,6 +265,9 @@ func teamServiceOfferingsPost(w http.ResponseWriter, r *http.Request) {
 				offering.PriceMilligrams = price
 				offering.RecorderUserId = user.Id
 				err = offering.Update(r.Context())
+			}
+			if err == nil {
+				err = syncOfferingSkillLinks(offering.Id, team.Id, selectedSkillIds, skillLevels, r.Context())
 			}
 		}
 		if err != nil {
@@ -283,6 +340,50 @@ func teamServiceOfferingsPost(w http.ResponseWriter, r *http.Request) {
 
 func redirectToTeamServiceOfferings(w http.ResponseWriter, r *http.Request, teamUUID string) {
 	http.Redirect(w, r, "/v1/team/service_offerings?uuid="+teamUUID, http.StatusSeeOther)
+}
+
+// createOfferingSkillLinks 为服务项目批量创建团队技能关联，要求等级取团队技能当前等级。
+func createOfferingSkillLinks(offeringId, teamId int, skillIds []int, skillLevels map[int]int, ctx context.Context) error {
+	for _, skillId := range skillIds {
+		link := &dao.TeamServiceOfferingSkill{
+			ServiceOfferingId: offeringId,
+			SkillId:           skillId,
+			TeamId:            teamId,
+			RequiredLevel:     skillLevels[skillId],
+		}
+		if err := link.Create(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// syncOfferingSkillLinks 将服务项目的团队技能关联同步为选中集合：删除未选中的，补充新选中的。
+func syncOfferingSkillLinks(offeringId, teamId int, skillIds []int, skillLevels map[int]int, ctx context.Context) error {
+	existing, err := dao.GetTeamServiceOfferingSkillsByOfferingId(offeringId, ctx)
+	if err != nil {
+		return err
+	}
+	selected := make(map[int]bool, len(skillIds))
+	for _, skillId := range skillIds {
+		selected[skillId] = true
+	}
+	existingIds := make(map[int]bool, len(existing))
+	for _, link := range existing {
+		existingIds[link.SkillId] = true
+		if !selected[link.SkillId] {
+			if err := link.Delete(ctx); err != nil {
+				return err
+			}
+		}
+	}
+	toAdd := make([]int, 0, len(skillIds))
+	for _, skillId := range skillIds {
+		if !existingIds[skillId] {
+			toAdd = append(toAdd, skillId)
+		}
+	}
+	return createOfferingSkillLinks(offeringId, teamId, toAdd, skillLevels, ctx)
 }
 
 // GET /v1/team/service_offerings/unpublished?uuid=
