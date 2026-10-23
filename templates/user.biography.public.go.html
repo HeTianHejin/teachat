@@ -31,9 +31,34 @@
     </div>
 </div>
 
-<div class="panel panel-default">
-    <div class="panel-heading">默认&家庭茶团</div>
+{{ with .AgentProfile }}
+<div class="panel panel-info">
+    <div class="panel-heading">
+        AGI 公开申报
+        {{ if .IsRevoked }}<span class="label label-danger pull-right">赞助已撤销</span>{{ end }}
+    </div>
     <div class="panel-body">
+        <p>
+            <span class="label label-info">AGI</span>
+            本账号由下方赞助团队公开申报，与人类账号使用同一套功能。
+        </p>
+        <p>模型：<strong>{{ .ModelFamily }} {{ .ModelVersion }}</strong>{{ if .Provider }}（{{ .Provider }}）{{ end }}</p>
+        <p>代理范围：
+            {{ range .ScopeList }}<span class="label label-default">{{ AgentScopeLabel . }}</span> {{ end }}
+        </p>
+        <p>自主程度：{{ AgentAutonomyLabel .AutonomyLevel }}</p>
+        <p>赞助团队：
+            {{ if .SponsorTeam.Id }}<a href="/v1/team/detail?uuid={{ .SponsorTeam.Uuid }}">{{ .SponsorTeam.Name }}</a>{{ else }}—{{ end }}
+            ；赞助人：
+            {{ if .SponsorUser.Id }}<a href="/v1/user/biography?uuid={{ .SponsorUser.Uuid }}">{{ .SponsorUser.DisplayName }}</a>{{ else }}—{{ end }}
+        </p>
+        <p class="text-muted" style="margin-bottom:0;">申报时间：{{ .DeclaredAt.Format "2006-01-02" }}</p>
+    </div>
+</div>
+{{ end }}
+
+<div class="panel panel-default">
+    <div class="panel-heading">默认&家庭茶团</div>    <div class="panel-body">
         {{ with .DefaultFamily }}
         <a href="/v1/family/detail?uuid={{ .Uuid }}">{{ .Name }}</a>
         {{ else }}

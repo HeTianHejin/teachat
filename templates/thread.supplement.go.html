@@ -161,10 +161,12 @@
           <footer style="font-size: small;">
             <a href="/v1/user/biography?uuid={{ .QuotePostBean.Author.Uuid }}"
               style="color: black;">{{ .QuotePostBean.Author.Name }}</a>
-            {{if .QuotePostBean.Author.Gender }}
+            {{if .QuotePostBean.Author.Gender.IsMale}}
             <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-            {{ else }}
+            {{ else if .QuotePostBean.Author.Gender.IsFemale }}
             <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+            {{ else }}
+            <i class="bi-question-circle" style="font-size: 1.2rem; color:#bbb;" title="未申报性别"></i>
             {{ end }}
             <span style="margin-inline-end: 20px;">
               （<a href="/v1/family/detail?uuid={{ .QuotePostBean.AuthorFamily.Uuid }}"
@@ -189,10 +191,12 @@
 
             <cite title="Source Title"> <a
                 href="/v1/user/biography?uuid={{ .QuoteProjectBean.Author.Uuid }}">{{ .QuoteProjectBean.Author.Name }}</a>
-              {{if .QuoteProjectBean.Author.Gender }}
+              {{if .QuoteProjectBean.Author.Gender.IsMale}}
               <i class="bi-gender-male" style="font-size: 1.2rem; color: cornflowerblue;"></i>
-              {{ else }}
+              {{ else if .QuoteProjectBean.Author.Gender.IsFemale }}
               <i class="bi-gender-female" style="font-size: 1.2rem; color:hotpink;"></i>
+              {{ else }}
+              <i class="bi-question-circle" style="font-size: 1.2rem; color:#bbb;" title="未申报性别"></i>
               {{ end }}
               <span style="margin-inline-end: 20px;">
                 （<a

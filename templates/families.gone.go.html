@@ -61,10 +61,12 @@
           <div class="col-xs-4 col-sm-4 col-md-4 col-lg-4">
             <div class="pull-right" style="font-size: small; color: #999;">
               <a href="/v1/user/biography?uuid={{ .Founder.Uuid }}" style="color: #999;">{{ .Founder.Name }}</a>
-              {{if .Founder.Gender }}
+              {{if .Founder.Gender.IsMale}}
               <i class="bi-gender-male" style="font-size: 1.4rem; color: #ccc;"></i>
-              {{ else }}
+              {{ else if .Founder.Gender.IsFemale }}
               <i class="bi-gender-female" style="font-size: 1.4rem; color: #ccc;"></i>
+              {{ else }}
+              <i class="bi-question-circle" style="font-size: 1.4rem; color:#ccc;" title="未申报性别"></i>
               {{ end }}
               {{ .Family.CreatedAtDate }}
             </div>

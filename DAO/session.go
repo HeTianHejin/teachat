@@ -17,7 +17,7 @@ type Session struct {
 	Email     string
 	UserId    int
 	CreatedAt time.Time
-	Gender    int
+	Gender    Gender
 }
 
 // Create a new session for an existing user

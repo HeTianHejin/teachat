@@ -21,6 +21,88 @@ import (
 	"unicode/utf8"
 )
 
+// templateFuncs 页面模板可用的自定义函数集合。
+// 提取为包级变量，便于测试统一校验所有模板文件。
+var templateFuncs = template.FuncMap{
+	"GetEnvironmentLevelDescription": dao.GetEnvironmentLevelDescription,
+	"GetStarIcons": func(level int) string {
+		if level < 1 || level > 5 {
+			return ""
+		}
+		stars := ""
+		for i := 0; i < level; i++ {
+			stars += `<span class="glyphicon glyphicon-star" style="color: #f39c12;"></span>`
+		}
+		return stars
+	},
+	"RiskSeverityLevelString": dao.RiskSeverityLevelString,
+	"AvailabilityString":      dao.GoodsAvailabilityString,
+	"mul": func(a, b int) int {
+		return a * b
+	},
+	"sub": func(a, b int64) int64 {
+		return a - b
+	},
+	"subtract": func(a, b int) int {
+		return a - b
+	},
+	"add": func(a, b int) int {
+		return a + b
+	},
+	"max": func(a, b int) int {
+		if a > b {
+			return a
+		}
+		return b
+	},
+	"min": func(a, b int) int {
+		if a < b {
+			return a
+		}
+		return b
+	},
+	"seq": func(start, end int) []int {
+		var items []int
+		for i := start; i <= end; i++ {
+			items = append(items, i)
+		}
+		return items
+	},
+	"iterate": func(count int) []int {
+		var items []int
+		for i := 0; i < count; i++ {
+			items = append(items, i)
+		}
+		return items
+	},
+	"split": func(s, sep string) []string {
+		return strings.Split(s, sep)
+	},
+	"trim": func(s string) string {
+		return strings.TrimSpace(s)
+	},
+	"UserDisplayName": func(user any) string {
+		switch v := user.(type) {
+		case dao.User:
+			return v.DisplayName()
+		case *dao.User:
+			if v == nil {
+				return ""
+			}
+			return v.DisplayName()
+		case nil:
+			return ""
+		default:
+			return fmt.Sprint(user)
+		}
+	},
+	"RoleName":           dao.TeamMemberRoleName,
+	"GroupRoleName":      dao.GroupRoleName,
+	"AgentScopeLabel":    dao.AgentScopeLabel,
+	"AgentAutonomyLabel": dao.AgentAutonomyLabel,
+	"FormatFloat":        util.FormatFloat,
+}
+
 // 处理器把页面模版和需求数据揉合后，由这个方法，将填写好的页面“制作“成HTML格式，调用http响应方法，发送给浏览器端客户
 func generateHTML(w http.ResponseWriter, template_data any, filenames ...string) {
 	var files []string
@@ -29,83 +111,7 @@ func generateHTML(w http.ResponseWriter, template_data any, filenames ...string)
 	}
 
 	// 创建模板并添加自定义函数
-	tmpl := template.New("layout").Funcs(template.FuncMap{
-		"GetEnvironmentLevelDescription": dao.GetEnvironmentLevelDescription,
-		"GetStarIcons": func(level int) string {
-			if level < 1 || level > 5 {
-				return ""
-			}
-			stars := ""
-			for i := 0; i < level; i++ {
-				stars += `<span class="glyphicon glyphicon-star" style="color: #f39c12;"></span>`
-			}
-			return stars
-		},
-		"RiskSeverityLevelString": dao.RiskSeverityLevelString,
-		"AvailabilityString":      dao.GoodsAvailabilityString,
-		"mul": func(a, b int) int {
-			return a * b
-		},
-		"sub": func(a, b int64) int64 {
-			return a - b
-		},
-		"subtract": func(a, b int) int {
-			return a - b
-		},
-		"add": func(a, b int) int {
-			return a + b
-		},
-		"max": func(a, b int) int {
-			if a > b {
-				return a
-			}
-			return b
-		},
-		"min": func(a, b int) int {
-			if a < b {
-				return a
-			}
-			return b
-		},
-		"seq": func(start, end int) []int {
-			var items []int
-			for i := start; i <= end; i++ {
-				items = append(items, i)
-			}
-			return items
-		},
-		"iterate": func(count int) []int {
-			var items []int
-			for i := 0; i < count; i++ {
-				items = append(items, i)
-			}
-			return items
-		},
-		"split": func(s, sep string) []string {
-			return strings.Split(s, sep)
-		},
-		"trim": func(s string) string {
-			return strings.TrimSpace(s)
-		},
-		"UserDisplayName": func(user any) string {
-			switch v := user.(type) {
-			case dao.User:
-				return v.DisplayName()
-			case *dao.User:
-				if v == nil {
-					return ""
-				}
-				return v.DisplayName()
-			case nil:
-				return ""
-			default:
-				return fmt.Sprint(user)
-			}
-		},
-		"RoleName":      dao.TeamMemberRoleName,
-		"GroupRoleName": dao.GroupRoleName,
-		"FormatFloat":   util.FormatFloat,
-	})
+	tmpl := template.New("layout").Funcs(templateFuncs)
 
 	// 手动解析模板并处理错误
 	templates, err := tmpl.ParseFiles(files...)
@@ -469,6 +475,81 @@ func saveUploadedFile(file multipart.File, header *multipart.FileHeader, userId 
 	}
 
 	return relativePath, fileSize, nil
+}
+
+// genderGreeting 返回带称谓的称呼。未申报性别时使用中性“茶友”，
+// 不允许再默认成“女士”或“先生”。
+func genderGreeting(u dao.User) string {
+	if honorific := u.Gender.Honorific(); honorific != "" {
+		return fmt.Sprintf("%s %s", u.DisplayName(), honorific)
+	}
+	return fmt.Sprintf("%s 茶友", u.DisplayName())
+}
+
+// requireAgentScope 页面型动作的统一代理范围校验。
+// 人类用户直接放行；AGI 账号必须在公开申报的代理范围内。
+// 返回 false 时已经输出提示页，调用方应立即 return。
+func requireAgentScope(w http.ResponseWriter, s_u dao.User, scope string) bool {
+	allowed, err := dao.CheckAgentScope(s_u, scope)
+	if err != nil {
+		util.Error("检查代理范围失败 user=%d scope=%s: %v", s_u.Id, scope, err)
+		report(w, s_u, "你好，茶博士核对代理权限时打了个喷嚏，请稍后再试。")
+		return false
+	}
+	if allowed {
+		return true
+	}
+	report(w, s_u, fmt.Sprintf("你好，当前 AGI 代理账号未申报「%s」代理范围，无法执行该操作。", dao.AgentScopeLabel(scope)))
+	return false
+}
+
+// RequireAgentScopeHTML 包装页面型处理器，在进入业务逻辑前统一校验代理范围。
+// 会话不存在时交给原处理器处理（保持原有的登录跳转/提示行为）。
+func RequireAgentScopeHTML(scope string, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s, err := session(r)
+		if err != nil {
+			next(w, r)
+			return
+		}
+		s_u, err := s.User()
+		if err != nil {
+			next(w, r)
+			return
+		}
+		if !requireAgentScope(w, s_u, scope) {
+			return
+		}
+		next(w, r)
+	}
+}
+
+// RequireAgentScopeAPI 包装 JSON API 处理器，校验失败返回 403。
+// 会话不存在时交给原处理器处理（保持原有的 401 行为）。
+func RequireAgentScopeAPI(scope string, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		s, err := session(r)
+		if err != nil {
+			next(w, r)
+			return
+		}
+		s_u, err := s.User()
+		if err != nil {
+			next(w, r)
+			return
+		}
+		allowed, err := dao.CheckAgentScope(s_u, scope)
+		if err != nil {
+			util.Error("检查代理范围失败 user=%d scope=%s: %v", s_u.Id, scope, err)
+			respondWithError(w, http.StatusForbidden, "检查代理权限失败")
+			return
+		}
+		if !allowed {
+			respondWithError(w, http.StatusForbidden, fmt.Sprintf("当前 AGI 代理账号未申报「%s」代理范围，无法执行该操作", dao.AgentScopeLabel(scope)))
+			return
+		}
+		next(w, r)
+	}
 }
 
 // 茶博士向茶客回话的方法，包括但不限于意外事件和通知、感谢等等提示。

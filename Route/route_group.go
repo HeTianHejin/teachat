@@ -223,12 +223,7 @@ func CreateGroupPost(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// 提示用户新集团草稿保存成功
-		text := ""
-		if s_u.Gender == dao.User_Gender_Female {
-			text = fmt.Sprintf("%s 女士，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, group.Name)
-		} else {
-			text = fmt.Sprintf("%s 先生，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, group.Name)
-		}
+		text := fmt.Sprintf("%s，你好，登记 %s 集团草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", genderGreeting(s_u), group.Name)
 		report(w, s_u, text)
 	} else {
 		switch group.Class {

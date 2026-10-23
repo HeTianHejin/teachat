@@ -65,10 +65,13 @@
 
             <label for="name">家庭茶团名称：</label>
             <div class="form-group">
-                {{ if .SessUser.Gender }}
+                {{ if .SessUser.Gender.IsMale }}
                 <input type="text" class="form-control" readonly id="name" value="{{ .SessUser.Name }}&*" />
-                {{ else }}
+                {{ else if .SessUser.Gender.IsFemale }}
                 <input type="text" class="form-control" readonly id="name" value="*&{{ .SessUser.Name }}" />
+                {{ else }}
+                <input type="text" class="form-control" readonly id="name" value="{{ .SessUser.Name }}&*" disabled />
+                <span class="text-danger">当前身份未申报性别，无法创建&家庭茶团。</span>
                 {{ end }}
                 <small class="form-text text-muted">
                     <span class="text-info">★ 系统自动生成名称，"*"代表配偶占位符</span><br/>

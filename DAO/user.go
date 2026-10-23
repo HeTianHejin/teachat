@@ -21,7 +21,7 @@ type User struct {
 	CreatedAt  time.Time
 	Biography  string
 	Role       string
-	Gender     int // 0: "女",1: "男",
+	Gender     Gender // GenderUnknown 表示未申报/不适用（如 AGI）
 	Avatar     string
 	UpdatedAt  *time.Time
 
@@ -89,36 +89,27 @@ const UserUUIDUnknown = "x"
 
 // 系统预设“游客”用户
 var UserUnknown = User{
-	Id:   UserId_None,
-	Uuid: UserUUIDUnknown,
-	Name: "游客",
+	Id:     UserId_None,
+	Uuid:   UserUUIDUnknown,
+	Name:   "游客",
+	Gender: GenderUnknown, // 游客不申报性别，避免被渲染成“女”
 }
 
 var UserRole = map[string]string{
-	"captain": "太空船长",
-
-	// 茶博士 ——古时专指陆羽。陆羽著《茶经》，唐德宗李适曾当面称陆羽为“茶博士”。
-	// 茶博士 -teaOffice，是古代中华传统文化对茶馆工作人员的昵称，这里是指茶棚专业技术职务人员
-	"teaoffice":    "茶博士",
-	"traveller":    "太空旅客",
-	"hijacker":     "劫机者",
-	"zebra":        "莽撞者",
-	"troublemaker": "捣乱者",
-	"UFO":          "外星人",
+	"human": "ren lei",
+	"AGI":   "ren gong zhi neng",
+	"UFO":   "wai xing ren",
 }
 
 const (
 	// 用户角色
-	User_Role_Captain      = "captain"      //太空船长
-	User_Role_TeaOffice    = "teaoffice"    //茶博士
-	User_Role_Traveller    = "traveller"    //太空普通旅客
-	User_Role_Hijacker     = "hijacker"     //劫机者
-	User_Role_Zebra        = "zebra"        //莽撞者
-	User_Role_Troublemaker = "troublemaker" //捣乱者
-	User_Role_UFO          = "UFO"          //外星人
-	// 用户性别
-	User_Gender_Female = 0 // 女
-	User_Gender_Male   = 1 // 男
+	User_Role_Human = "human" //人类
+	User_Role_AGI   = "AGI"   //人工智能
+	User_Role_UFO   = "UFO"   //外星人
+	// 用户性别（保留旧常量名，实际类型为可空的 Gender）
+	User_Gender_Unknown = GenderUnknown // 未申报/不适用
+	User_Gender_Female  = GenderFemale  // 女
+	User_Gender_Male    = GenderMale    // 男
 )
 
 // SearchUserByNameKeyword() 根据给出的关键词（keyword）,从users的姓名字段中模糊查询用户，返回[]User,err
@@ -160,7 +151,7 @@ type UserUnactivated struct {
 	CreatedAt  time.Time
 	Biography  string
 	Role       string
-	Gender     int
+	Gender     Gender
 	Avatar     string
 }
 
@@ -396,7 +387,8 @@ func Get2GenderRandomUserIdExceptId(id int) (user_ids []int, err error) {
 	user_ids = []int{}
 
 	// 先随机获取一个女士id
-	statement := "SELECT id FROM users WHERE id != $1 AND gender = 0 ORDER BY RANDOM()"
+	// 显式排除已申报的 AGI/UFO：代理即便误填性别，也不进入人类配对池
+	statement := "SELECT id FROM users WHERE id != $1 AND gender = 0 AND (role IS NULL OR role NOT IN ('AGI','UFO')) ORDER BY RANDOM()"
 	stmt, err := DB.Prepare(statement)
 	if err != nil {
 		return
@@ -409,7 +401,7 @@ func Get2GenderRandomUserIdExceptId(id int) (user_ids []int, err error) {
 	user_ids = append(user_ids, lady_id)
 
 	// 再随机获取一个男士id
-	statement = "SELECT user_id FROM users WHERE id != $1 AND gender = 1 ORDER BY RANDOM()"
+	statement = "SELECT id FROM users WHERE id != $1 AND gender = 1 AND (role IS NULL OR role NOT IN ('AGI','UFO')) ORDER BY RANDOM()"
 	stmt, err = DB.Prepare(statement)
 	if err != nil {
 		return

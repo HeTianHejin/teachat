@@ -22,10 +22,12 @@
             <div class="panel panel-default">
                   <div class="panel-heading">
                       <span class="lead">{{ UserDisplayName .SessUser }}</span>
-                      {{if .SessUser.Gender }}
+                      {{if .SessUser.Gender.IsMale}}
                       <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-                      {{ else }}
+                      {{ else if .SessUser.Gender.IsFemale }}
                       <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+                      {{ else }}
+                      <i class="bi-question-circle" style="font-size: 1.4rem; color:#bbb;" title="未申报性别"></i>
                       {{ end }}
                       <span style="font-style: italic;"><a href="/v1/team/detail?uuid={{ .SessUser.GetLastDefaultTeam.Uuid }}">{{ .SessUser.GetLastDefaultTeam.Abbreviation }}</a></span>
                   </div>
@@ -43,6 +45,27 @@
       </div>
 </div>
 
+
+{{ with .AgentProfile }}
+<div class="panel panel-info">
+    <div class="panel-heading">
+        AGI 公开申报
+        {{ if .IsRevoked }}<span class="label label-danger pull-right">赞助已撤销</span>{{ end }}
+    </div>
+    <div class="panel-body">
+        <p>模型：<strong>{{ .ModelFamily }} {{ .ModelVersion }}</strong>{{ if .Provider }}（{{ .Provider }}）{{ end }}</p>
+        <p>代理范围：
+            {{ range .ScopeList }}<span class="label label-default">{{ AgentScopeLabel . }}</span> {{ end }}
+        </p>
+        <p>自主程度：{{ AgentAutonomyLabel .AutonomyLevel }}</p>
+        <p>赞助团队：
+            {{ if .SponsorTeam.Id }}<a href="/v1/team/detail?uuid={{ .SponsorTeam.Uuid }}">{{ .SponsorTeam.Name }}</a>{{ else }}—{{ end }}
+            ；赞助人：
+            {{ if .SponsorUser.Id }}<a href="/v1/user/biography?uuid={{ .SponsorUser.Uuid }}">{{ .SponsorUser.DisplayName }}</a>{{ else }}—{{ end }}
+        </p>
+    </div>
+</div>
+{{ end }}
 
 {{if .IsAuthor }}
 

@@ -136,6 +136,34 @@ CREATE TABLE team_members (
     deleted_at            TIMESTAMPTZ
 );
 
+-- AGI 代理账号申报表
+-- 与 users 一对一：只有 role = 'AGI' 的用户才拥有记录。
+-- 公开申报的内容均可修改，但赞助团队与赞助人是责任归属，撤销时写入 revoked_at。
+CREATE TABLE agent_profiles (
+    id                    SERIAL PRIMARY KEY,
+    uuid                  VARCHAR(64) NOT NULL UNIQUE DEFAULT gen_random_uuid(),
+    user_id               INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+    sponsor_team_id       INTEGER NOT NULL REFERENCES teams(id),
+    sponsor_user_id       INTEGER NOT NULL REFERENCES users(id),
+    model_family          VARCHAR(128) NOT NULL,
+    model_version         VARCHAR(128) NOT NULL,
+    provider              VARCHAR(128) NOT NULL DEFAULT '',
+    agency_scope          VARCHAR(500) NOT NULL DEFAULT '',
+    autonomy_level        INTEGER NOT NULL DEFAULT 1,
+    declared_at           TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ,
+    revoked_at            TIMESTAMPTZ,
+    revoked_reason        TEXT
+);
+
+CREATE INDEX idx_agent_profiles_sponsor_team ON agent_profiles(sponsor_team_id);
+CREATE INDEX idx_agent_profiles_sponsor_user ON agent_profiles(sponsor_user_id);
+
+COMMENT ON TABLE agent_profiles IS 'AGI代理账号的公开申报资料，赞助团队与赞助人承担背书责任';
+COMMENT ON COLUMN agent_profiles.agency_scope IS '代理范围白名单，逗号分隔：read,post,thread,trade,sign';
+COMMENT ON COLUMN agent_profiles.autonomy_level IS '自主程度：1-辅助，2-受监督，3-自主';
+COMMENT ON COLUMN agent_profiles.revoked_at IS '赞助关系撤销时间，NULL表示有效';
+
 -- 集团表
 -- 用于管理多个团队的集合，支持复杂的多团队协作场景
 CREATE TABLE groups (

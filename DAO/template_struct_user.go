@@ -12,6 +12,7 @@ type UserDefaultDataBean struct {
 
 	DefaultPlace Place //目标茶友首选品茶地点
 
+	AgentProfile *AgentProfile // AGI 代理申报资料，人类用户为 nil
 }
 
 // 用户数据结构

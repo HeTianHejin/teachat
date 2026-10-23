@@ -28,10 +28,12 @@
       <div class="media-body">
         <h4>
           {{ UserDisplayName .User }}
-          {{ if .User.Gender }}
+          {{ if .User.Gender.IsMale }}
           <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-          {{ else }}
+          {{ else if .User.Gender.IsFemale }}
           <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+          {{ else }}
+          <i class="bi-question-circle" style="font-size: 1.4rem; color:#bbb;" title="未申报性别"></i>
           {{ end }}
         </h4>
         <p>

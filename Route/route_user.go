@@ -50,6 +50,15 @@ func Biography(w http.ResponseWriter, r *http.Request) {
 	// 准备页面数据
 	uB.SessUser = s_u
 
+	// AGI 代理账号：加载公开申报资料（模型、代理范围、赞助团队与赞助人）
+	if user.IsAGI() {
+		if profile, profileErr := dao.GetAgentProfileByUserId(user.Id); profileErr == nil {
+			_ = profile.FillDisplay()
+			uB.AgentProfile = &profile
+		} else {
+			util.Debug("Cannot get agent profile for user %d: %v", user.Id, profileErr)
+		}
+	}
 	//检查登录者是否简介所有者本人？
 	if user.Id == s_u.Id {
 		//是本人,则打开编辑页

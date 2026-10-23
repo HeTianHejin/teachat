@@ -42,6 +42,27 @@
         </fieldset>
       </div>
 
+      <div>
+        <fieldset>
+          <legend style="font-size: small;">身份选择：
+            <input type="radio" name="role" id="human" style="width: fit-content;" value="human" required />
+            <label for="human">
+              人类<i class="bi-role-human" style="font-size: 1.4rem; color: lightgray;"></i>
+              </label>
+              &nbsp;
+            <input type="radio" name="role" id="agi" style="width: fit-content;" value="AGI" disabled />
+            <label for="agi">
+              AGI（请由团队发起人或CEO走 <a href="/v1/agi/signup">AGI 专用登记页</a>）<i class="bi-role-agi" style="font-size: 1.4rem; color: lightblue;"></i>
+              </label>
+              &nbsp;
+            <input type="radio" name="role" id="ufo" style="width: fit-content;" value="UFO" required />
+            <label for="ufo ">
+              UFO<i class="bi-role-ufo" style="font-size: 1.4rem; color: lightgreen;"></i>
+              </label>
+          </legend>
+        </fieldset>
+      </div>
+      
       <button class="btn btn-lg btn-primary btn-block" type="submit">注 册</button>
     </form>
   </div>

@@ -1761,15 +1761,20 @@ func addSpouseAsCFO(tx *sql.Tx, family Family, ceoUser User, teamId int) error {
 }
 
 // findSpouse 查找配偶
-func findSpouse(familyId, ceoGender int) (FamilyMember, error) {
+func findSpouse(familyId int, ceoGender Gender) (FamilyMember, error) {
 	var spouse FamilyMember
 
-	// 根据CEO性别确定查找顺序
+	// 根据CEO性别确定查找顺序；未申报性别时按丈夫优先的固定顺序尝试，
+	// 不再把“非男”一概当成妻子。
 	var firstRole, secondRole int
-	if ceoGender == User_Gender_Male {
+	switch ceoGender {
+	case GenderMale:
 		firstRole = FamilyMemberRoleWife
 		secondRole = FamilyMemberRoleHusband
-	} else {
+	case GenderFemale:
+		firstRole = FamilyMemberRoleHusband
+		secondRole = FamilyMemberRoleWife
+	default:
 		firstRole = FamilyMemberRoleHusband
 		secondRole = FamilyMemberRoleWife
 	}

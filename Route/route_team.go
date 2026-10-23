@@ -35,7 +35,13 @@ func SetDefaultTeam(w http.ResponseWriter, r *http.Request) {
 		report(w, s_u, "你好，茶博士竟然说，陛下你不能将特殊茶团作为默认茶团，请确认。")
 		return
 	case dao.TeamUUIDSpaceshipCrew:
-		if s_u.Role != "captain" && s_u.Role != "teaoffice" {
+		isActiveMember, err := dao.IsTeamActiveMember(s_u.Id, dao.TeamIdSpaceshipCrew)
+		if err != nil {
+			util.Debug("Cannot check if user is active member of team %v", err)
+			report(w, s_u, "你好，茶博士失魂鱼，未能核验茶团成员资格，请稍后再试。")
+			return
+		}
+		if !isActiveMember {
 			report(w, s_u, "你好，不是飞船服务团队成员不能将此团队作为默认茶团，请确认。")
 			return
 		}
@@ -281,12 +287,7 @@ func CreateTeamPost(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		// 提示用户新茶团草稿保存成功
-		text := ""
-		if s_u.Gender == dao.User_Gender_Female {
-			text = fmt.Sprintf("%s 女士，你好，登记 %s 草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
-		} else {
-			text = fmt.Sprintf("%s 先生，你好，登记 %s 草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", s_u.Name, new_team.Name)
-		}
+		text := fmt.Sprintf("%s，你好，登记 %s 草稿已准备妥当，稍等有缘茶友评审通过之后，即行昭告天下。", genderGreeting(s_u), new_team.Name)
 		report(w, s_u, text)
 	} else {
 		switch new_team.Class {

@@ -896,9 +896,16 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// 家庭茶团沿用“丈夫/妻子”制度语义，必须由已申报性别的茶友发起。
+	// 未申报性别（如 AGI 代理用户）不再被默认归入“妻子”角色。
+	if !s_u.Gender.Valid() {
+		report(w, s_u, "你好，茶博士摸摸头，&家庭茶团需要明确的丈夫/妻子角色，当前身份未申报性别，未能创建新茶团。")
+		return
+	}
+
 	// 家庭名称规则：丈夫&妻子，
 	// 使用占位符*生成家庭名称，防止冒用他人姓名
-	if s_u.Gender == dao.User_Gender_Male {
+	if s_u.Gender.IsMale() {
 		new_family.Name = s_u.FullName() + "&*"
 	} else {
 		new_family.Name = "*&" + s_u.FullName()
@@ -926,10 +933,10 @@ func NewFamilyPost(w http.ResponseWriter, r *http.Request) {
 		IsAdult:  true,
 	}
 	//根据茶友性别，设置其相应的男主
-	if s_u.Gender == dao.User_Gender_Male {
+	if s_u.Gender.IsMale() {
 		author_member.Role = dao.FamilyMemberRoleHusband
 	} else {
-		//或者女主角色
+		//否则为女主角色（前面已校验性别必然已申报）
 		author_member.Role = dao.FamilyMemberRoleWife
 	}
 	if err := author_member.Create(); err != nil {

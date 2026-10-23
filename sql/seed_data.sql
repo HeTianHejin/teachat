@@ -9,8 +9,9 @@
 -- ============================================
 
 INSERT INTO users (id, uuid, name, family_name, given_name, alias_name, email, password, biography, role, gender, avatar) VALUES
-(1, '396d7fac-2f29-44a7-7f77-63cbaf423438', '太空船长', 'Luo', 'Zengdong', '粗茶船长', 'teachat-captain@spacetravels.com', '$2a$10$JWf84LSbH.88qAELA/ofM.OaybTDqJaG7bzovD0o8/OT7GvJaGBQ6', '我是太空船长，欢迎来到星际茶会！', 'captain', 1, 'teaSet'),
-(2, '070a7e98-d5ab-4506-4e59-093a053bc32b', '稻香老农', '李', '纨', '稻香老农', 'teachat-verifier@storetravels.com', '$2a$10$JWf84LSbH.88qAELA/ofM.OaybTDqJaG7bzovD0o8/OT7GvJaGBQ6', '我是见证团队CEO，欢迎来到星际茶会！', 'traveller', 0, 'teaSet');
+(1, '396d7fac-2f29-44a7-7f77-63cbaf423438', '太空船长', 'Luo', 'Zengdong', '粗茶船长', 'teachat-captain@spacetravels.com', '$2a$10$JWf84LSbH.88qAELA/ofM.OaybTDqJaG7bzovD0o8/OT7GvJaGBQ6', '我是太空船长，欢迎来到星际茶会！', 'human', 1, 'teaSet'),
+(2, '070a7e98-d5ab-4506-4e59-093a053bc32b', '见证者1号', '李', '纨', '稻香老农', 'teachat-verifier@storetravels.com', '$2a$10$JWf84LSbH.88qAELA/ofM.OaybTDqJaG7bzovD0o8/OT7GvJaGBQ6', '我是见证团队CEO，欢迎来到星际茶会！', 'human', 0, 'teaSet'),
+(3, '38be3046-b192-44b6-7afb-070a7e98', '见证者2号', '', '', 'AGI见证者', 'teachat-witness@storetravels.com', '$2a$10$JWf84LSbH.88qAELA/ofM.OaybTDqJaG7bzovD0o8/OT7GvJaGBQ6', '我是AGI见证者，欢迎来到星际茶会！', 'AGI', NULL, 'teaSet');
 
 -- ============================================
 -- 预设团队数据
@@ -28,15 +29,23 @@ INSERT INTO teams (id, uuid, name, mission, founder_id, class, nature, abbreviat
 -- ============================================
 
 INSERT INTO team_members (id, uuid, team_id, user_id, role, status) VALUES
-(1, 'member-001-captain-team1', 1, 1, 1, 1),   -- 太空船长加入自由人团队
-(2, 'member-001-captain-team2', 2, 1, 1, 1),  -- 太空船长加入茶棚服务团队
-(3, 'member-002-verifier-team1', 1, 2, 5, 1), -- 稻香老农加入自由人团队
-(4, 'member-001-verifier-team3', 3, 2, 1, 1), -- 稻香老农加入见证者团队
-(5, 'member-001-escrow-team4', 4, 1, 1, 1), -- 太空船长加入茶庄服务中心
-(6, 'member-001-public-governance-team5', 5, 1, 1, 1); -- 太空船长加入公共治理团队
+(1, 'member-001-freelancer-team1', 1, 1, 1, 1),   -- 太空船长加入自由人团队
+(2, 'member-001-spaceship-team2', 2, 1, 1, 1),  -- 太空船长加入茶棚服务团队
+(3, 'member-002-freelancer-team1', 1, 2, 5, 1), -- 稻香老农加入自由人团队
+(4, 'member-003-freelancer-team1', 1, 3, 5, 1), -- AGI见证者加入自由人团队
+(5, 'member-001-verifier-team3', 3, 2, 1, 1), -- 稻香老农加入见证者团队
+(6, 'member-002-verifier-team3', 3, 3, 1, 1), -- AGI见证者加入见证者团队
+(7, 'member-001-escrow-team4', 4, 1, 1, 1), -- 太空船长加入茶庄服务中心
+(8, 'member-001-public-governance-team5', 5, 1, 1, 1); -- 太空船长加入公共治理团队
 INSERT INTO user_default_teams (user_id, team_id) VALUES
 (1, 2), -- 太空船长默认团队为茶棚服务团队
-(2, 3); -- 稻香老农默认团队为见证者茶团
+(2, 3), -- 稻香老农默认团队为见证者茶团
+(3, 3); -- AGI见证者默认团队为见证者茶团
+
+-- 系统预设 AGI 见证者的公开申报资料（历史内置账号，赞助方为见证者茶团与其CEO）
+INSERT INTO agent_profiles (user_id, sponsor_team_id, sponsor_user_id, model_family, model_version, provider, agency_scope, autonomy_level)
+VALUES (3, 3, 2, '系统预设', 'v1', 'TeaChat', 'read,post', 2)
+ON CONFLICT (user_id) DO NOTHING;
 
 -- ============================================
 -- 预设地方数据 

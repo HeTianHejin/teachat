@@ -52,14 +52,20 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 	s_u := dao.UserUnknown
 	// 读取用户提交的资料
 	email := r.PostFormValue("email")
-	password := r.PostFormValue("password")
-	biography := r.PostFormValue("biography")
-	gender, err := strconv.Atoi(r.PostFormValue("gender"))
-	if err != nil {
-		report(w, s_u, "你好，请确认您的洗手间服务选择是否正确。")
+	role, ok_role := dao.NormalizeUserRole(r.PostFormValue("role"))
+	if !ok_role {
+		report(w, s_u, "你好，请确认您的身份选择是否正确。")
 		return
 	}
-	if gender != dao.User_Gender_Female && gender != dao.User_Gender_Male {
+	// AGI 代理账号必须由团队发起人或CEO在专用页面登记，以便绑定受委托团队。
+	if role == dao.User_Role_AGI {
+		report(w, s_u, "你好，AGI 代理账号需由团队发起人或CEO通过 /v1/agi/signup 专用页面登记，以便声明模型与代理范围。")
+		return
+	}
+	password := r.PostFormValue("password")
+	biography := r.PostFormValue("biography")
+	gender, err := dao.ParseGender(r.PostFormValue("gender"))
+	if err != nil {
 		report(w, s_u, "你好，请确认您的洗手间服务选择是否正确。")
 		return
 	}
@@ -91,7 +97,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 		Email:      email,
 		Password:   string(hashedPassword),
 		Biography:  biography,
-		Role:       "traveller",
+		Role:       role,
 		Gender:     gender,
 		Avatar:     "teaSet",
 	}
@@ -150,13 +156,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 
 	util.Debug(newU.Email, "Successfully registered a new account")
 
-	t := ""
-	displayName := newU.DisplayName()
-	if newU.Gender == dao.User_Gender_Female {
-		t = fmt.Sprintf("%s 女士，注册成功，愿你拥有美好品茶时光！请<a href=\"/v1/login\">登船</a>", displayName)
-	} else {
-		t = fmt.Sprintf("%s 先生，注册成功，愿你拥有美好品茶时光！请<a href=\"/v1/login\">登船</a>", displayName)
-	}
+	t := fmt.Sprintf("%s，注册成功，愿你拥有美好品茶时光！请<a href=\"/v1/login\">登船</a>", genderGreeting(newU))
 	report(w, newU, t)
 
 }

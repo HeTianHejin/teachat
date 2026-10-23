@@ -24,10 +24,12 @@
           <i class="glyphicon glyphicon-user" style="color: #667eea; margin-right: 6px;"></i>
           <strong>{{ .Author.Name }}</strong>
           <span style="margin-left: 8px;">
-            {{if .Author.Gender }}
+            {{if .Author.Gender.IsMale}}
             <i class="bi-gender-male" style="font-size: 1.5rem; color: cornflowerblue; vertical-align: middle;"></i>
-            {{ else }}
+            {{ else if .Author.Gender.IsFemale }}
             <i class="bi-gender-female" style="font-size: 1.5rem; color: hotpink; vertical-align: middle;"></i>
+            {{ else }}
+            <i class="bi-question-circle" style="font-size: 1.5rem; color: #bbb; vertical-align: middle;" title="未申报性别"></i>
             {{ end }}
           </span>
         </h4>

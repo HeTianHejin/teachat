@@ -33,14 +33,18 @@
                 </p>
 
                 <p class="text-right">
-                    {{if .Author.Gender }}
+                    {{if .Author.Gender.IsMale}}
                     男主人：
                     <a href="/v1/user/biography?uuid={{ .Author.Uuid }}">{{ .Author.Name }} </a>
                     <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-                    {{ else }}
+                    {{ else if .Author.Gender.IsFemale }}
                     女主人：
                     <a href="/v1/user/biography?uuid={{ .Author.Uuid }}">{{ .Author.Name }} </a>
                     <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+                    {{ else }}
+                    家庭成员：
+                    <a href="/v1/user/biography?uuid={{ .Author.Uuid }}">{{ .Author.Name }} </a>
+                    <i class="bi-question-circle" style="font-size: 1.4rem; color:#bbb;" title="未申报性别"></i>
                     {{ end }}
                 </p>
 

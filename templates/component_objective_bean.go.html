@@ -43,10 +43,12 @@
                         <span style="margin-inline-end: 30px;">
                             <span style="font-size: small;">
                                 {{ .Author.Name }}
-                                {{if .Author.Gender }}
+                                {{if .Author.Gender.IsMale}}
                                 <i class="bi-gender-male" style="font-size: 1.4rem; color: cornflowerblue;"></i>
-                                {{ else }}
+                                {{ else if .Author.Gender.IsFemale }}
                                 <i class="bi-gender-female" style="font-size: 1.4rem; color:hotpink;"></i>
+                                {{ else }}
+                                <i class="bi-question-circle" style="font-size: 1.4rem; color:#bbb;" title="未申报性别"></i>
                                 {{ end }}
                                 （关联家庭：<a href="/v1/family/detail?uuid={{ .AuthorFamily.Uuid }}">{{ .AuthorFamily.Name }}</a>，
                                 管理团队：<a href="/v1/team/detail?uuid={{ .AuthorTeam.Uuid }}">{{ .AuthorTeam.Abbreviation }}</a>）</span>
