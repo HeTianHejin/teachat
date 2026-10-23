@@ -280,13 +280,20 @@ func GetTeaUserAccountAPI(w http.ResponseWriter, r *http.Request) {
 // FreezeTeaUserAccountAPI 冻结用户星茶账户（管理员功能）
 func FreezeTeaUserAccountAPI(w http.ResponseWriter, r *http.Request) {
 	// 验证管理员权限
-	user, err := getCurrentUserFromSession(r)
+	s_u, err := getCurrentUserFromSession(r)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "请先登录")
 		return
 	}
 
-	if user.Role != dao.User_Role_Captain && user.Role != dao.User_Role_TeaOffice {
+	teamId := dao.TeamIdSpaceshipCrew
+	isActiveMember, err := dao.IsTeamActiveMember(s_u.Id, teamId)
+	if err != nil {
+		util.Debug("check team %d active member error: %v", teamId, err)
+		respondWithError(w, http.StatusInternalServerError, "检查权限失败")
+		return
+	}
+	if !isActiveMember {
 		respondWithError(w, http.StatusForbidden, "无权限执行此操作")
 		return
 	}
@@ -335,7 +342,14 @@ func UnfreezeTeaUserAccountAPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if user.Role != dao.User_Role_Captain && user.Role != dao.User_Role_TeaOffice {
+	isActiveMember, err := dao.IsTeamActiveMember(user.Id, dao.TeamIdSpaceshipCrew)
+	if err != nil {
+		util.Debug("check team %d active member error: %v", dao.TeamIdSpaceshipCrew, err)
+		respondWithError(w, http.StatusInternalServerError, "检查权限失败")
+		return
+	}
+
+	if !isActiveMember {
 		respondWithError(w, http.StatusForbidden, "无权限执行此操作")
 		return
 	}
