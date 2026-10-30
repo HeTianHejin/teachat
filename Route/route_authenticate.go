@@ -156,7 +156,7 @@ func SignupPost(w http.ResponseWriter, r *http.Request) {
 
 	util.Debug(newU.Email, "Successfully registered a new account")
 
-	t := fmt.Sprintf("%s，注册成功，愿你拥有美好品茶时光！请<a href=\"/v1/login\">登船</a>", genderGreeting(newU))
+	t := fmt.Sprintf("%s，注册成功，愿你拥有美好品茶时光！请<a href=\"/v1/login\"> 登船</a>", genderGreeting(newU))
 	report(w, newU, t)
 
 }

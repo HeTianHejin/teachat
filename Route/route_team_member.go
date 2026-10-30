@@ -963,7 +963,7 @@ func MemberApplicationReply(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//报告批准加盟成功消息
-		report(w, s_u, "你好，已经批准新成员 "+applicant.Name+" 加盟 "+team.Name+" 茶团。")
+		report(w, s_u, "你好，已经批准新成员 "+applicant.Name+" 加盟 "+team.Name+" 茶团。<a href=\"/v1/team/detail?uuid="+team.Uuid+"\"> 查看团队</a>")
 		return
 	case 0:
 		//婉拒加盟
