@@ -2026,7 +2026,7 @@ func TeaTeamFromTeamExpiredTransfers(teamId, page, limit int, ctx context.Contex
 		FROM tea.team_to_team_transfer_out
 		WHERE to_team_id = $1 AND (status = $2 OR (status = $3 AND expires_at < NOW())) 
 		ORDER BY created_at DESC
-		LIMIT $3 OFFSET $4`, teamId, TeaTransferStatusExpired, TeaTransferStatusPendingReceipt,
+		LIMIT $4 OFFSET $5`, teamId, TeaTransferStatusExpired, TeaTransferStatusPendingReceipt,
 		limit, (page-1)*limit)
 	if err != nil {
 		return nil, fmt.Errorf("查询团队作为接收方的已过期来自其他团队转账记录失败: %v", err)
