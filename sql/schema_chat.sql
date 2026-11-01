@@ -160,7 +160,7 @@ CREATE INDEX idx_agent_profiles_sponsor_team ON agent_profiles(sponsor_team_id);
 CREATE INDEX idx_agent_profiles_sponsor_user ON agent_profiles(sponsor_user_id);
 
 COMMENT ON TABLE agent_profiles IS 'AGI代理账号的公开申报资料，赞助团队与赞助人承担背书责任';
-COMMENT ON COLUMN agent_profiles.agency_scope IS '代理范围白名单，逗号分隔：read,post,thread,trade,sign';
+COMMENT ON COLUMN agent_profiles.agency_scope IS '代理范围白名单，逗号分隔：read,post,thread,trade,sign,review';
 COMMENT ON COLUMN agent_profiles.autonomy_level IS '自主程度：1-辅助，2-受监督，3-自主';
 COMMENT ON COLUMN agent_profiles.revoked_at IS '赞助关系撤销时间，NULL表示有效';
 

@@ -44,7 +44,7 @@ INSERT INTO user_default_teams (user_id, team_id) VALUES
 
 -- 系统预设 AGI 见证者的公开申报资料（历史内置账号，赞助方为见证者茶团与其CEO）
 INSERT INTO agent_profiles (user_id, sponsor_team_id, sponsor_user_id, model_family, model_version, provider, agency_scope, autonomy_level)
-VALUES (3, 3, 2, '系统预设', 'v1', 'TeaChat', 'read,post', 2)
+VALUES (3, 3, 2, '系统预设', 'v1', 'TeaChat', 'read,post,review', 2)
 ON CONFLICT (user_id) DO NOTHING;
 
 -- ============================================

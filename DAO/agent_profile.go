@@ -17,6 +17,7 @@ const (
 	AgentScopeThread = "thread" // 发起新的茶议
 	AgentScopeTrade  = "trade"  // 发起星茶相关操作
 	AgentScopeSign   = "sign"   // 代表受委托团队签署声明
+	AgentScopeReview = "review" // 代表受委托团队执行审核判定（技能、服务、订单审批等）
 )
 
 // AgentScopeOption 代理范围选项，供注册表单与页面展示使用。
@@ -33,6 +34,7 @@ var AgentScopeOptions = []AgentScopeOption{
 	{Key: AgentScopeThread, Label: "发起茶议", Desc: "发起新的茶议主题"},
 	{Key: AgentScopeTrade, Label: "星茶操作", Desc: "代表受委托团队发起星茶操作"},
 	{Key: AgentScopeSign, Label: "代表签署", Desc: "代表受委托团队签署声明"},
+	{Key: AgentScopeReview, Label: "代表审核", Desc: "代表受委托团队执行审核判定（技能、服务、订单审批等）"},
 }
 
 // AGI 自主程度。

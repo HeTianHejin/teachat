@@ -334,14 +334,15 @@ func main() {
 	// 见证者工作间路由
 	mux.HandleFunc("/v1/verifier/workspace", route.HandleVerifierWorkspace) // 见证者工作间页面
 	mux.HandleFunc("/v1/verifier/service-offering/detail", route.HandleVerifierServiceOfferingDetail)
-	mux.HandleFunc("/v1/verifier/service-offering/review", route.HandleVerifierServiceOfferingReview)
+	// 以下为写操作，必须按约定用 AgentScopeReview 包裹，限制仅申报了「代表审核」范围的 AGI 才能执行审核判定。
+	mux.HandleFunc("/v1/verifier/service-offering/review", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierServiceOfferingReview))
 	mux.HandleFunc("/v1/verifier/skills", route.HandleVerifierSkills)
-	mux.HandleFunc("/v1/verifier/skill/review", route.HandleVerifierSkillReview)
-	mux.HandleFunc("/v1/verifier/order/approve", route.HandleVerifierOrderApprove) // 审批茶订单
-	mux.HandleFunc("/v1/verifier/order/reject", route.HandleVerifierOrderReject)   // 拒绝茶订单
-	mux.HandleFunc("/v1/verifier/order/forfeit", route.HandleVerifierOrderForfeit) // 罚没茶订单（恶意/不道德内容）
-	mux.HandleFunc("/v1/verifier/order/pause", route.HandleVerifierOrderPause)     // 暂停茶订单
-	mux.HandleFunc("/v1/verifier/order/cancel", route.HandleVerifierOrderCancel)   // 终止茶订单
+	mux.HandleFunc("/v1/verifier/skill/review", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierSkillReview))
+	mux.HandleFunc("/v1/verifier/order/approve", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierOrderApprove))     // 审批茶订单
+	mux.HandleFunc("/v1/verifier/order/reject", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierOrderReject))       // 拒绝茶订单
+	mux.HandleFunc("/v1/verifier/order/forfeit", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierOrderForfeit))    // 罚没茶订单（恶意/不道德内容）
+	mux.HandleFunc("/v1/verifier/order/pause", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierOrderPause))        // 暂停茶订单
+	mux.HandleFunc("/v1/verifier/order/cancel", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierOrderCancel))      // 终止茶订单
 
 	// 茶订单详情路由（见证者及参与团队均可查看）
 	mux.HandleFunc("/v1/tea-order/detail", route.HandleTeaOrderDetail)

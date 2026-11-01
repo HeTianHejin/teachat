@@ -23,6 +23,28 @@ func TestNormalizeAgencyScopes(t *testing.T) {
 	}
 }
 
+func TestAgentScopeReviewRegistered(t *testing.T) {
+	got, err := NormalizeAgencyScopes([]string{"read", "review"})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(got) != 2 || got[1] != AgentScopeReview {
+		t.Fatalf("expected review scope normalized, got %v", got)
+	}
+	if !profileHasScopeOption(AgentScopeReview) {
+		t.Fatal("review scope must be present in AgentScopeOptions whitelist")
+	}
+}
+
+func profileHasScopeOption(scope string) bool {
+	for _, opt := range AgentScopeOptions {
+		if opt.Key == scope {
+			return true
+		}
+	}
+	return false
+}
+
 func TestAgentProfileHasScope(t *testing.T) {
 	profile := AgentProfile{AgencyScope: "read, post"}
 	if !profile.HasScope(AgentScopePost) {
