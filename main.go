@@ -344,6 +344,10 @@ func main() {
 	mux.HandleFunc("/v1/verifier/order/pause", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierOrderPause))        // 暂停茶订单
 	mux.HandleFunc("/v1/verifier/order/cancel", route.RequireAgentScopeHTML(dao.AgentScopeReview, route.HandleVerifierOrderCancel))      // 终止茶订单
 
+	// 见证者团队的 AGI 登录后可用的 JSON 接口：读取待审核列表并提交审核决定。
+	mux.HandleFunc("/v1/api/verifier/skills", route.HandleVerifierSkillsAPI)                                                              // 待审核技能列表API
+	mux.HandleFunc("/v1/api/verifier/skill/review", route.RequireAgentScopeAPI(dao.AgentScopeReview, route.HandleVerifierSkillReviewAPI)) // 技能审核API
+
 	// 茶订单详情路由（见证者及参与团队均可查看）
 	mux.HandleFunc("/v1/tea-order/detail", route.HandleTeaOrderDetail)
 
