@@ -6,6 +6,7 @@
 
 -- ============================================
 -- 预设用户数据
+-- 测试用户数据，包含太空船长、见证者1号、见证者2号(系统预设的AGI见证者)
 -- ============================================
 
 INSERT INTO users (id, uuid, name, family_name, given_name, alias_name, email, password, biography, role, gender, avatar) VALUES
