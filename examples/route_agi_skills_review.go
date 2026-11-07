@@ -34,7 +34,7 @@ const (
 	defaultBaseURL    = "http://192.168.200.19:8000/v1/"
 	watchword         = "闻香识茶"
 	sessionCookieName = "_cookie"
-	passwordEnvVar    = "TEACHAT_AGI_PASSWORD"
+	passwordEnvVar    = "TEACHAT_AGI_PASSWORD" // 运行时修改为预设用户填充的明文密码
 )
 
 // 预设身份：sql/seed_data.sql users 表 id=3 的记录，以及 agent_profiles 的申报范围。

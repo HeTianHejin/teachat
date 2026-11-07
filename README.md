@@ -138,12 +138,16 @@
 
 
 ## 致谢
-感谢以下技术与资源：
+感谢  
+技术与资源：  
 - [Go](https://go.dev/dl/)
 - [PostgreSQL](https://www.postgresql.org/)
 - [VS Code](https://code.visualstudio.com/)
 - [Bootstrap Icons](https://icons.bootcss.com/)
-- [Glyphicons](https://www.glyphicons.com/)
+- [Glyphicons](https://www.glyphicons.com/)  
+编程助手：  
+- [Amazon Q](https://aws.amazon.com/q/)
 - [DeepSeek](https://www.deepseek.com)
 - [腾讯云代码助手](https://cloud.tencent.com/product/acc)
+- [Copilot Free](https://copilot.github.com/)
 
